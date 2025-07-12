@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -42,35 +43,42 @@ public class ClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) MethodInvocation methodInv,
-        @Advice.Local("method") Method method,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final Method method;
+      private final Context context;
+      private final Scope scope;
 
-      method = methodInv.getMethod();
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!clientInstrumenter().shouldStart(parentContext, method)) {
-        return;
+      public AdviceScope(Method method, Context context, Scope scope) {
+        this.method = method;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = clientInstrumenter().start(parentContext, method);
-      scope = context.makeCurrent();
+      public void exit(@Nullable Throwable throwable) {
+        scope.close();
+        clientInstrumenter().end(context, method, null, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(0) MethodInvocation methodInv) {
+      Method method = methodInv.getMethod();
+      Context parentContext = Java8BytecodeBridge.currentContext();
+      if (!clientInstrumenter().shouldStart(parentContext, method)) {
+        return null;
+      }
+      Context context = clientInstrumenter().start(parentContext, method);
+      return new AdviceScope(method, context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("method") Method method,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
       }
-      scope.close();
-      clientInstrumenter().end(context, method, null, throwable);
     }
   }
 }

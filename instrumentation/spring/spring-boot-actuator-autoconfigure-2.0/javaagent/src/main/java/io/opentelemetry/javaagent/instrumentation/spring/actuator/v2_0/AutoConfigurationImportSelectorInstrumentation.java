@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,8 +34,10 @@ public class AutoConfigurationImportSelectorInstrumentation implements TypeInstr
   @SuppressWarnings("unused")
   public static class GetCandidateConfigurationsAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) List<String> configurations) {
+    public static List<String> onExit(@Advice.Return List<String> originalConfigurations) {
+      List<String> configurations = originalConfigurations;
       if (configurations.contains(
           "org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration")) {
         List<String> configs = new ArrayList<>(configurations.size() + 1);
@@ -44,6 +47,7 @@ public class AutoConfigurationImportSelectorInstrumentation implements TypeInstr
         configs.add(OpenTelemetryMeterRegistryAutoConfiguration.class.getName());
         configurations = configs;
       }
+      return configurations;
     }
   }
 }

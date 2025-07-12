@@ -16,6 +16,8 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.util.ErrorHandler;
@@ -39,12 +41,14 @@ public class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstr
   @SuppressWarnings("unused")
   public static class WrapErrorHandlerAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 1, readOnly = false) ErrorHandler errorHandler) {
+    public static ErrorHandler onEnter(@Advice.Argument(1) ErrorHandler originalErrorHandler) {
+      ErrorHandler errorHandler = originalErrorHandler;
       if (errorHandler != null) {
         errorHandler = new ErrorHandlerWrapper(errorHandler);
       }
+      return errorHandler;
     }
   }
 

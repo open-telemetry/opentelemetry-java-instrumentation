@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.server.ServerWebExchange;
@@ -45,28 +46,31 @@ public class DispatcherHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
+    public static Mono<Void> methodExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Return(readOnly = false) Mono<Void> mono) {
+        @Advice.Return Mono<Void> originalMono) {
+      Mono<Void> mono = originalMono;
       if (mono != null) {
         // note: it seems like this code should go in @OnMethodExit of
         // HandlerAdapterInstrumentation.HandleAdvice instead, but for some reason "GET to bad
         // endpoint annotation API fail Mono" test fails with that placement
         mono = AdviceUtils.end(mono, exchange);
       }
+      return mono;
     }
   }
 
   @SuppressWarnings("unused")
   public static class HandleResultAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Argument(0) ServerWebExchange exchange,
-        @Advice.Return(readOnly = false) Mono<Void> mono) {
-      mono = AdviceUtils.wrapMono(mono, exchange.getAttribute(AdviceUtils.CONTEXT));
+    public static Mono<Void> methodExit(
+        @Advice.Argument(0) ServerWebExchange exchange, @Advice.Return Mono<Void> mono) {
+      return AdviceUtils.wrapMono(mono, exchange.getAttribute(AdviceUtils.CONTEXT));
     }
   }
 }

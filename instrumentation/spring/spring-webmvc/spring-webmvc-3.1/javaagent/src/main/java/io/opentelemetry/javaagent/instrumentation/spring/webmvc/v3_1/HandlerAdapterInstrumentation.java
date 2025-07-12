@@ -16,13 +16,14 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.spring.webmvc.IsGrailsHandler;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -54,49 +55,65 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ControllerAdvice {
 
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope enter(HttpServletRequest request, Object handler) {
+        // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
+        if (IsGrailsHandler.isGrailsHandler(handler)) {
+          // skip creating handler span for grails, grails instrumentation will take care of it
+          return null;
+        }
+
+        Context parentContext = Context.current();
+
+        // don't start a new top-level span
+        if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+          return null;
+        }
+
+        // Name the parent span based on the matching pattern
+        HttpServerRoute.update(
+            parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
+
+        if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
+          return null;
+        }
+
+        // Now create a span for handler/controller execution.
+        Context context = handlerInstrumenter().start(parentContext, handler);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void exit(Object handler, @Nullable Throwable throwable) {
+        scope.close();
+        handlerInstrumenter().end(context, handler, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void nameResourceAndStartSpan(
-        @Advice.Argument(0) HttpServletRequest request,
-        @Advice.Argument(2) Object handler,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      // TODO (trask) should there be a way to customize Instrumenter.shouldStart()?
-      if (IsGrailsHandler.isGrailsHandler(handler)) {
-        // skip creating handler span for grails, grails instrumentation will take care of it
-        return;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-
-      // don't start a new top-level span
-      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-        return;
-      }
-
-      // Name the parent span based on the matching pattern
-      HttpServerRoute.update(
-          parentContext, CONTROLLER, SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME, request);
-
-      if (!handlerInstrumenter().shouldStart(parentContext, handler)) {
-        return;
-      }
-
-      // Now create a span for handler/controller execution.
-      context = handlerInstrumenter().start(parentContext, handler);
-      scope = context.makeCurrent();
+    public static AdviceScope nameResourceAndStartSpan(
+        @Advice.Argument(0) HttpServletRequest request, @Advice.Argument(2) Object handler) {
+      return AdviceScope.enter(request, handler);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(2) Object handler,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+
+      if (adviceScope != null) {
+        adviceScope.exit(handler, throwable);
       }
-      scope.close();
-      handlerInstrumenter().end(context, handler, null, throwable);
     }
   }
 }

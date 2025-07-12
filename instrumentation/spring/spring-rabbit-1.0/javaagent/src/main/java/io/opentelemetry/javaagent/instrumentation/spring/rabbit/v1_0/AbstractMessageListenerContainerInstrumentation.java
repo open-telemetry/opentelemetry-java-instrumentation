@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -40,34 +41,46 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
   @SuppressWarnings("unused")
   public static class InvokeListenerAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) Object data,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (!(data instanceof Message)) {
-        return;
+
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
+      public void exit(@Nullable Throwable throwable, Message message) {
+        scope.close();
+        instrumenter().end(context, message, null, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(1) Object data) {
+      if (!(data instanceof Message)) {
+        return null;
+      }
       Context parentContext = Java8BytecodeBridge.currentContext();
       Message message = (Message) data;
-      if (instrumenter().shouldStart(parentContext, message)) {
-        context = instrumenter().start(parentContext, message);
-        scope = context.makeCurrent();
+      if (!instrumenter().shouldStart(parentContext, message)) {
+        return null;
       }
+      Context context = instrumenter().start(parentContext, message);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onEnter(
         @Advice.Argument(1) Object data,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null || !(data instanceof Message)) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope == null || !(data instanceof Message)) {
         return;
       }
-      scope.close();
-      instrumenter().end(context, (Message) data, null, throwable);
+      adviceScope.exit(throwable, (Message) data);
     }
   }
 }
