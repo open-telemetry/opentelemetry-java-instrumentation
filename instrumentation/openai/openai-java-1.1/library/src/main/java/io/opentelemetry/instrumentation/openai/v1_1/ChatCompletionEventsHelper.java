@@ -99,7 +99,7 @@ final class ChatCompletionEventsHelper {
     } else if (content.isArrayOfContentParts()) {
       return joinContentParts(content.asArrayOfContentParts());
     } else {
-      throw new IllegalStateException("Unhandled content type for " + content);
+      return "";
     }
   }
 
@@ -121,7 +121,7 @@ final class ChatCompletionEventsHelper {
           .filter(Objects::nonNull)
           .collect(Collectors.joining());
     } else {
-      throw new IllegalStateException("Unhandled content type for " + content);
+      return "";
     }
   }
 
@@ -131,7 +131,7 @@ final class ChatCompletionEventsHelper {
     } else if (content.isArrayOfContentParts()) {
       return joinContentParts(content.asArrayOfContentParts());
     } else {
-      throw new IllegalStateException("Unhandled content type for " + content);
+      return "";
     }
   }
 
@@ -141,7 +141,7 @@ final class ChatCompletionEventsHelper {
     } else if (content.isArrayOfContentParts()) {
       return joinContentParts(content.asArrayOfContentParts());
     } else {
-      throw new IllegalStateException("Unhandled content type for " + content);
+      return "";
     }
   }
 
@@ -154,7 +154,7 @@ final class ChatCompletionEventsHelper {
           .filter(Objects::nonNull)
           .collect(Collectors.joining());
     } else {
-      throw new IllegalStateException("Unhandled content type for " + content);
+      return "";
     }
   }
 
