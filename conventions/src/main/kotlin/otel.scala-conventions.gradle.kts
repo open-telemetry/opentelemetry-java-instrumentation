@@ -5,6 +5,7 @@ plugins {
 }
 
 dependencies {
+  compileOnly("org.scala-lang:scala-library:2.11.12")
   testCompileOnly("org.scala-lang:scala-library:2.11.12")
 }
 

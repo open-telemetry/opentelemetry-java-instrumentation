@@ -1,0 +1,91 @@
+---
+id: 0641ca62-d6c3-485c-bf3b-7c10617be01e
+name: chat_completions
+request:
+  url: /chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o-mini",
+        "frequency_penalty" : 0,
+        "max_completion_tokens" : 100,
+        "presence_penalty" : 0,
+        "response_format" : {
+          "type" : "text"
+        },
+        "seed" : 100,
+        "stop" : [ "foo" ],
+        "temperature" : 1,
+        "top_p" : 1
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |
+    {
+      "id": "chatcmpl-BpWWJHSu0uRkjmdDA1qyxaNuho1VY",
+      "object": "chat.completion",
+      "created": 1751619435,
+      "model": "gpt-4o-mini-2024-07-18",
+      "choices": [
+        {
+          "index": 0,
+          "message": {
+            "role": "assistant",
+            "content": "Southern Ocean.",
+            "refusal": null,
+            "annotations": []
+          },
+          "logprobs": null,
+          "finish_reason": "stop"
+        }
+      ],
+      "usage": {
+        "prompt_tokens": 22,
+        "completion_tokens": 3,
+        "total_tokens": 25,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "service_tier": "default",
+      "system_fingerprint": "fp_34a54ae93c"
+    }
+  headers:
+    Date: "Fri, 04 Jul 2025 08:57:15 GMT"
+    Content-Type: application/json
+    access-control-expose-headers: X-Request-ID
+    openai-organization: test_organization
+    openai-processing-ms: "284"
+    openai-version: 2020-10-01
+    x-envoy-upstream-service-time: "287"
+    x-ratelimit-limit-requests: "5000"
+    x-ratelimit-limit-tokens: "4000000"
+    x-ratelimit-remaining-requests: "4999"
+    x-ratelimit-remaining-tokens: "3999983"
+    x-ratelimit-reset-requests: 12ms
+    x-ratelimit-reset-tokens: 0s
+    x-request-id: req_791a559a64d9f537e6a412e5947d99b7
+    strict-transport-security: max-age=31536000; includeSubDomains; preload
+    cf-cache-status: DYNAMIC
+    Set-Cookie: test_set_cookie
+    X-Content-Type-Options: nosniff
+    Server: cloudflare
+    CF-RAY: 959d69fcb973648c-NRT
+    alt-svc: h3=":443"; ma=86400
+uuid: 0641ca62-d6c3-485c-bf3b-7c10617be01e
+persistent: true
+insertionIndex: 6

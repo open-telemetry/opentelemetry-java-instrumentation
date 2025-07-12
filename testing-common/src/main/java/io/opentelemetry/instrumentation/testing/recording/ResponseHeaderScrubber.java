@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.recording;
+package io.opentelemetry.instrumentation.testing.recording;
 
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.extension.Parameters;
@@ -27,6 +27,12 @@ public final class ResponseHeaderScrubber extends ResponseTransformer {
       switch (header.key()) {
         case "Set-Cookie":
           scrubbed = scrubbed.plus(HttpHeader.httpHeader("Set-Cookie", "test_set_cookie"));
+          break;
+        // While we could potentially make these configurable, it's simpler to just handle
+        // the cases across any gen AI instrumentation in one place here.
+        case "openai-organization":
+          scrubbed =
+              scrubbed.plus(HttpHeader.httpHeader("openai-organization", "test_organization"));
           break;
         default:
           scrubbed = scrubbed.plus(header);
