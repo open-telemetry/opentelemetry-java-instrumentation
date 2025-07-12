@@ -97,16 +97,34 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  val testSuites = testing.suites.withType(JvmTestSuite::class)
+
+  val stableSemconvSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}StableSemconv") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.semconv-stability.opt-in=database")
+      systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    }
+  }
+
+  val experimentalSuites = testSuites.map { suite ->
+    register<Test>("${suite.name}Experimental") {
+      testClassesDirs = suite.sources.output.classesDirs
+      classpath = suite.sources.runtimeClasspath
+
+      jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+      systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    }
   }
 
   check {
-    dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites, stableSemconvSuites, experimentalSuites)
   }
 }

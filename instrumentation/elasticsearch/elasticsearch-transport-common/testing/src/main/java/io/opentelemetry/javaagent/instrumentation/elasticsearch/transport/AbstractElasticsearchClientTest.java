@@ -44,6 +44,9 @@ abstract class AbstractElasticsearchClientTest {
   protected static final AttributeKey<Long> ELASTICSEARCH_VERSION =
       AttributeKey.longKey("elasticsearch.version");
 
+  protected static final String EXPERIMENTAL_FLAG =
+      "otel.instrumentation.elasticsearch.experimental-span-attributes";
+
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -94,6 +97,20 @@ abstract class AbstractElasticsearchClientTest {
     Result<GetResponse> result = new Result<>();
     client().prepareGet(indexName, indexType, id).execute(new ResultListener<>(result));
     return result.get();
+  }
+
+  protected static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return null;
+    }
+    return value;
+  }
+
+  protected static Long experimental(long value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return null;
+    }
+    return value;
   }
 
   static class Result<RESPONSE> {
