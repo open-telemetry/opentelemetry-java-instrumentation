@@ -20,6 +20,7 @@ public final class R2dbcTelemetryBuilder {
   private boolean statementSanitizationEnabled = true;
   private Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
       spanNameExtractorTransformer = Function.identity();
+  private boolean sqlCommenterEnabled;
 
   R2dbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     instrumenterBuilder = new R2dbcInstrumenterBuilder(openTelemetry);
@@ -53,10 +54,24 @@ public final class R2dbcTelemetryBuilder {
   }
 
   /**
+   * Sets whether to augment sql query with comment containing the tracing information. See <a
+   * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
+   *
+   * <p>WARNING: augmenting queries with tracing context will make query texts unique, which may
+   * have adverse impact on database performance. Consult with database experts before enabling.
+   */
+  @CanIgnoreReturnValue
+  public R2dbcTelemetryBuilder setEnableSqlCommenter(boolean sqlCommenterEnabled) {
+    this.sqlCommenterEnabled = sqlCommenterEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link R2dbcTelemetry} with the settings of this {@link R2dbcTelemetryBuilder}.
    */
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
-        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled));
+        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled),
+        sqlCommenterEnabled);
   }
 }

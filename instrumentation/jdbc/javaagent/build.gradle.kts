@@ -62,9 +62,18 @@ tasks {
     include("**/SlickTest.*")
   }
 
+  val testSqlCommenter by registering(Test::class) {
+    filter {
+      includeTestsMatching("SqlCommenterTest")
+    }
+    include("**/SqlCommenterTest.*")
+    jvmArgs("-Dotel.instrumentation.jdbc.sqlcommenter.enabled=true")
+  }
+
   test {
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
@@ -73,6 +82,7 @@ tasks {
   val testStableSemconv by registering(Test::class) {
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("SqlCommenterTest")
       excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
@@ -96,6 +106,7 @@ tasks {
 
   check {
     dependsOn(testSlick)
+    dependsOn(testSqlCommenter)
     dependsOn(testStableSemconv)
     dependsOn(testSlickStableSemconv)
     dependsOn(testCaptureParameters)
