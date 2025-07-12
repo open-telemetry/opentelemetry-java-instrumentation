@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.extension;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
@@ -14,7 +15,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -46,26 +49,86 @@ import javax.annotation.Nullable;
  *         string_key: value
  * </pre>
  */
-final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
+public final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
+  private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
+
+  private static final Map<String, String> JAVA_MAPPING_RULES = new HashMap<>();
+  private static final Map<String, String> GENERAL_MAPPING_RULES = new HashMap<>();
 
   // The node at .instrumentation.java
   private final DeclarativeConfigProperties instrumentationJavaNode;
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+  private final DeclarativeConfigProperties instrumentationGeneralNode;
+
+  static {
+    JAVA_MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+    JAVA_MAPPING_RULES.put(
+        "otel.javaagent.logging.application.logs-buffer-max-records",
+        "agent.logging.output.application.logs_buffer_max_records");
+
+    // todo not supported in SDK yet (this is strictly typed)
+    //    GENERAL_MAPPING_RULES.put("otel.instrumentation.http.known-methods",
+    // "http.known_methods");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.client.capture-request-headers",
+        "http.client.request_captured_headers");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.client.capture-response-headers",
+        "http.client.response_captured_headers");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.server.capture-request-headers",
+        "http.server.request_captured_headers");
+    GENERAL_MAPPING_RULES.put(
+        "otel.instrumentation.http.server.capture-response-headers",
+        "http.server.response_captured_headers");
+  }
+
+  private final Map<String, Object> earlyInitProperties;
+
+  private static Map<String, String> getPeerServiceMapping(
+      DeclarativeConfigPropertiesBridge bridge) {
+    List<DeclarativeConfigProperties> configProperties =
+        bridge
+            .instrumentationGeneralNode
+            .getStructured("peer", empty())
+            .getStructuredList("service_mapping", Collections.emptyList());
+    return configProperties.stream()
+        .collect(
+            Collectors.toMap(
+                e -> Objects.requireNonNull(e.getString("peer"), "peer must not be null"),
+                e -> Objects.requireNonNull(e.getString("service"), "service must not be null")));
+  }
+
+  public DeclarativeConfigPropertiesBridge(
+      ConfigProvider configProvider, Map<String, Object> earlyInitProperties) {
+    this.earlyInitProperties = earlyInitProperties;
+    DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
+    if (inst == null) {
+      inst = DeclarativeConfigProperties.empty();
+    }
+    instrumentationJavaNode = inst.getStructured("java", empty());
+    instrumentationGeneralNode = inst.getStructured("general", empty());
   }
 
   @Nullable
   @Override
   public String getString(String propertyName) {
+    Object value = earlyInitProperties.get(propertyName);
+    if (value != null) {
+      return value.toString();
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getString);
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
+    Object value = earlyInitProperties.get(propertyName);
+    if (value != null) {
+      return (Boolean) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
@@ -108,6 +171,10 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   @Override
   public Map<String, String> getMap(String propertyName) {
+    if ("otel.instrumentation.common.peer-service-mapping".equals(propertyName)) {
+      return getPeerServiceMapping(this);
+    }
+
     DeclarativeConfigProperties propertyValue =
         getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
@@ -130,28 +197,46 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (instrumentationJavaNode == null) {
-      return null;
+    String generalPath = GENERAL_MAPPING_RULES.get(property);
+    if (generalPath != null) {
+      return splitOnDot(generalPath, instrumentationGeneralNode, extractor);
     }
+    String javaPath = getJavaPath(property);
+    if (javaPath != null) {
+      return splitOnDot(javaPath, instrumentationJavaNode, extractor);
+    }
+    return null;
+  }
 
-    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
-      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
-    }
-    // Split the remainder of the property on "."
-    String[] segments = property.split("\\.");
+  private static <T> T splitOnDot(
+      String path,
+      DeclarativeConfigProperties target,
+      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
+    // Split the remainder of the property on ".", and walk to the N-1 entry
+    String[] segments = path.split("\\.");
     if (segments.length == 0) {
       return null;
     }
-
-    // Extract the value by walking to the N-1 entry
-    DeclarativeConfigProperties target = instrumentationJavaNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());
       }
     }
     String lastPart = segments[segments.length - 1];
-
     return extractor.apply(target, lastPart);
+  }
+
+  private static String getJavaPath(String property) {
+    String special = JAVA_MAPPING_RULES.get(property);
+    if (special != null) {
+      return special;
+    }
+
+    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      return property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
+    } else if (property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
+      return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
+    }
+    return property;
   }
 }
