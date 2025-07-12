@@ -34,9 +34,9 @@ public final class Servlet5Singletons {
   private static final ServletHelper<HttpServletRequest, HttpServletResponse> HELPER =
       new ServletHelper<>(INSTRUMENTER, Servlet5Accessor.INSTANCE);
 
-  private static final VirtualField<Servlet, MappingResolver.Factory> SERVLET_MAPPING_RESOLVER =
+  public static final VirtualField<Servlet, MappingResolver.Factory> SERVLET_MAPPING_RESOLVER =
       VirtualField.find(Servlet.class, MappingResolver.Factory.class);
-  private static final VirtualField<Filter, MappingResolver.Factory> FILTER_MAPPING_RESOLVER =
+  public static final VirtualField<Filter, MappingResolver.Factory> FILTER_MAPPING_RESOLVER =
       VirtualField.find(Filter.class, MappingResolver.Factory.class);
 
   private static final Instrumenter<ClassAndMethod, Void> RESPONSE_INSTRUMENTER =
