@@ -3,8 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.testing.provider;
+package io.opentelemetry.javaagent.testing.provider;
 
+import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.testing.exporter.AgentTestingExporterFactory;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ConsoleExporterModel;
@@ -25,12 +27,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class TestExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
+@AutoService(DeclarativeConfigurationCustomizerProvider.class)
+public class AgentTestExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
+    AgentTestingExporterFactory.init();
+
     customizer.addModelCustomizer(
         model -> {
-          System.out.println("TestExporterCustomizerProvider");
+          System.out.println("AgentTestExporterCustomizerProvider");
           System.out.println(model.toString());
 
           if (model.getTracerProvider() == null) {
@@ -48,7 +53,7 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
 
   private static void addTracerProvider(OpenTelemetryConfigurationModel model) {
     List<SpanProcessorModel> processors = new ArrayList<>();
-    processors.add(getProcessorModel(new SpanExporterModel().withAdditionalProperty("test", null)));
+    processors.add(getProcessorModel(new SpanExporterModel().withAdditionalProperty("agent_test", null)));
     processors.add(
         getProcessorModel(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
     model.withTracerProvider(new TracerProviderModel().withProcessors(processors));
@@ -69,7 +74,7 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
                             new SimpleLogRecordProcessorModel()
                                 .withExporter(
                                     new LogRecordExporterModel()
-                                        .withAdditionalProperty("test", null))))));
+                                        .withAdditionalProperty("agent_test", null))))));
   }
 
   private static void addMeterProvider(OpenTelemetryConfigurationModel model) {
@@ -85,6 +90,6 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
                                 .withInterval(1000000)
                                 .withExporter(
                                     new PushMetricExporterModel()
-                                        .withAdditionalProperty("test", null))))));
+                                        .withAdditionalProperty("agent_test", null))))));
   }
 }

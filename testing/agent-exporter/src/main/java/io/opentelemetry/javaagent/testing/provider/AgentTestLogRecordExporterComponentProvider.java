@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.testing.provider;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.logs.export.LogRecordExporter;
 import java.util.Objects;
 
-public class TestLogRecordExporterComponentProvider
+@SuppressWarnings("rawtypes")
+@AutoService(ComponentProvider.class)
+public class AgentTestLogRecordExporterComponentProvider
     implements ComponentProvider<LogRecordExporter> {
 
   private static LogRecordExporter logRecordExporter;
@@ -22,7 +25,7 @@ public class TestLogRecordExporterComponentProvider
 
   @Override
   public String getName() {
-    return "test";
+    return "agent_test";
   }
 
   @Override
@@ -31,6 +34,6 @@ public class TestLogRecordExporterComponentProvider
   }
 
   public static void setLogRecordExporter(LogRecordExporter logRecordExporter) {
-    TestLogRecordExporterComponentProvider.logRecordExporter = logRecordExporter;
+    AgentTestLogRecordExporterComponentProvider.logRecordExporter = logRecordExporter;
   }
 }
