@@ -47,6 +47,7 @@ configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
   exclude("org.apache.groovy", "groovy-json")
   exclude("org.spockframework", "spock-core")
+  exclude("io.opentelemetry", "opentelemetry-sdk-extension-incubator")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
