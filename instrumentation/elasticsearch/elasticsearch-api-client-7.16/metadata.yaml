@@ -1,0 +1,2 @@
+description: This instrumentation provides client spans for Elasticsearch API client requests for
+  version 7 of the client. Versions 8.10 and later have native support for OpenTelemetry.

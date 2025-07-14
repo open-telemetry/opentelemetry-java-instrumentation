@@ -12,12 +12,14 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule {
+public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public JaxrsAnnotationsInstrumentationModule() {
     super("jaxrs", "jaxrs-3.0", "jaxrs-annotations", "jaxrs-3.0-annotations");
   }
@@ -43,5 +45,10 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
     // this instrumentation only when it was not already set by a jax-rs framework instrumentation.
     // This instrumentation uses complex type matcher, disabling it can improve startup performance.
     return super.defaultEnabled(config) && ExperimentalConfig.get().controllerTelemetryEnabled();
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
