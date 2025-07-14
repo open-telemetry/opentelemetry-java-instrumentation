@@ -8,13 +8,12 @@ package io.opentelemetry.instrumentation.awssdk.v1_11;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 
 final class RequestAccess {
+  private static final String LAMBDA_REQUEST_CLASS_PREFIX = "com.amazonaws.services.lambda.model.";
   private static final String SECRETS_MANAGER_REQUEST_CLASS_PREFIX =
       "com.amazonaws.services.secretsmanager.model.";
-  private static final String LAMBDA_REQUEST_CLASS_PREFIX = "com.amazonaws.services.lambda.model.";
   private static final String STEP_FUNCTIONS_REQUEST_CLASS_PREFIX =
       "com.amazonaws.services.stepfunctions.model.";
 
@@ -34,11 +33,7 @@ final class RequestAccess {
     }
     try {
       Object config = access.getLambdaConfiguration.invoke(request);
-      if (config == null) {
-        return null;
-      }
-      Method method = config.getClass().getMethod("getFunctionArn");
-      return (String) method.invoke(config);
+      return invokeOrNull(access.getLambdaArnFromConfiguration, config);
     } catch (Throwable t) {
       return null;
     }
@@ -130,6 +125,7 @@ final class RequestAccess {
 
   @Nullable private final MethodHandle getBucketName;
   @Nullable private final MethodHandle getLambdaConfiguration;
+  @Nullable private final MethodHandle getLambdaArnFromConfiguration;
   @Nullable private final MethodHandle getLambdaName;
   @Nullable private final MethodHandle getLambdaResourceMappingId;
   @Nullable private final MethodHandle getQueueUrl;
@@ -153,6 +149,8 @@ final class RequestAccess {
 
     boolean isLambda = clz.getName().startsWith(LAMBDA_REQUEST_CLASS_PREFIX);
     getLambdaConfiguration = isLambda ? findLambdaGetConfigurationMethod(clz) : null;
+    getLambdaArnFromConfiguration =
+        getLambdaConfiguration != null ? findGetLambdaArnMethod() : null;
     getLambdaName = isLambda ? findAccessorOrNull(clz, "getFunctionName") : null;
     getLambdaResourceMappingId = isLambda ? findAccessorOrNull(clz, "getUUID") : null;
     boolean isSecretsManager = clz.getName().startsWith(SECRETS_MANAGER_REQUEST_CLASS_PREFIX);
@@ -184,6 +182,17 @@ final class RequestAccess {
       Class<?> returnType =
           Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
       return findAccessorOrNull(clz, "getConfiguration", returnType);
+    } catch (Throwable t) {
+      return null;
+    }
+  }
+
+  @Nullable
+  private static MethodHandle findGetLambdaArnMethod() {
+    try {
+      Class<?> lambdaConfigurationClass =
+          Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
+      return findAccessorOrNull(lambdaConfigurationClass, "getFunctionArn");
     } catch (Throwable t) {
       return null;
     }
