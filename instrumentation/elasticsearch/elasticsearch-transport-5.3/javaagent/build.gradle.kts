@@ -69,19 +69,25 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  val testExperimental by registering(Test::class) {
+    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }

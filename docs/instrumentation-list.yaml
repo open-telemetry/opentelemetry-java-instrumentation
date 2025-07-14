@@ -77,6 +77,8 @@ libraries:
       - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
       - com.typesafe.akka:akka-actor_2.11:[2.5,)
   - name: akka-http-10.0
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Akka HTTP client and server.
     source_path: instrumentation/akka/akka-http-10.0
     scope:
       name: io.opentelemetry.akka-http-10.0
@@ -565,6 +567,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.0
+    description: This instrumentation provides CLIENT spans and metrics for version
+      5 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
       name: io.opentelemetry.apache-httpclient-5.0
@@ -589,7 +593,28 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-5.2
+    description: This instrumentation provides a library integration that enables
+      CLIENT spans and metrics for the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
     scope:
       name: io.opentelemetry.apache-httpclient-5.2
@@ -636,6 +661,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-shenyu-2.4
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Shenyu Context and extracts meta data in order to attach it to existing SERVER spans and HTTP server metrics.
     source_path: instrumentation/apache-shenyu-2.4
     scope:
       name: io.opentelemetry.apache-shenyu-2.4
@@ -644,11 +671,14 @@ libraries:
       - org.apache.shenyu:shenyu-web:[2.4.0,)
     configurations:
     - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
-      description: Enables experimental span attributes for Apache Shenyu instrumentation.
+      description: |
+        Enables experimental `apache-shenyu.meta.` prefixed span attributes like `app-name`, `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path`, and `rpc-ext`.
       type: boolean
       default: false
   armeria:
   - name: armeria-1.3
+    description: This instrumentation enables CLIENT spans and metrics for the Armeria
+      HTTP client and server.
     source_path: instrumentation/armeria/armeria-1.3
     scope:
       name: io.opentelemetry.armeria-1.3
@@ -742,6 +772,8 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: armeria-grpc-1.14
+    description: This instrumentation enables CLIENT spans and metrics for the Armeria
+      gRPC client and server.
     source_path: instrumentation/armeria/armeria-grpc-1.14
     scope:
       name: io.opentelemetry.armeria-grpc-1.14
@@ -750,6 +782,8 @@ libraries:
       - com.linecorp.armeria:armeria-grpc:[1.14.0,)
   async:
   - name: async-http-client-1.9
+    description: This instrumentation provides CLIENT spans and metrics for version
+      1 of the AsyncHttpClient (AHC) HTTP client.
     source_path: instrumentation/async-http-client/async-http-client-1.9
     scope:
       name: io.opentelemetry.async-http-client-1.9
@@ -790,6 +824,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: async-http-client-2.0
+    description: This instrumentation provides CLIENT spans and metrics for version
+      2 of the AsyncHttpClient (AHC) HTTP client.
     source_path: instrumentation/async-http-client/async-http-client-2.0
     scope:
       name: io.opentelemetry.async-http-client-2.0
@@ -1297,6 +1333,9 @@ libraries:
       default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
+    description: This instrumentation provides client spans for Elasticsearch API
+      client requests for version 7 of the client. Versions 8.10 and later have native
+      support for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -1305,6 +1344,7 @@ libraries:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
   - name: elasticsearch-rest-5.0
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -1319,7 +1359,23 @@ libraries:
         may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-6.4
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -1332,7 +1388,23 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-7.0
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -1347,7 +1419,24 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-transport-5.0
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -1355,7 +1444,75 @@ libraries:
       javaagent:
       - org.elasticsearch.client:transport:[5.0.0,5.3.0)
       - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
   - name: elasticsearch-transport-5.3
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -1363,7 +1520,85 @@ libraries:
       javaagent:
       - org.elasticsearch.client:transport:[5.3.0,6.0.0)
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.search.types
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.request.write.version
+          type: LONG
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.broadcast.failed
+          type: LONG
+        - name: elasticsearch.shard.broadcast.successful
+          type: LONG
+        - name: elasticsearch.shard.broadcast.total
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
   - name: elasticsearch-transport-6.0
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -1371,6 +1606,80 @@ libraries:
       javaagent:
       - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
       - org.elasticsearch.client:transport:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.request.write.version
+          type: LONG
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
   executors:
   - name: executors
     description: |
@@ -1392,6 +1701,8 @@ libraries:
       default: false
   finagle:
   - name: finagle-http-23.11
+    description: |
+      This instrumentation for Finagle HTTP clients and servers ensures that telemetry is correctly generated by the underlying Netty instrumentation. It augments existing telemetry by bridging the gap between Finagle's abstractions and Netty's pipeline, primarily for context propagation.
     source_path: instrumentation/finagle-http-23.11
     scope:
       name: io.opentelemetry.finagle-http-23.11
@@ -1399,89 +1710,11 @@ libraries:
       javaagent:
       - com.twitter:finagle-http_2.13:[23.11.0,]
       - com.twitter:finagle-http_2.12:[23.11.0,]
-    telemetry:
-    - when: otel.instrumentation.http.client.emit-experimental-telemetry=true,otel.instrumentation.http.server.emit-experimental-telemetry=true
-      metrics:
-      - name: http.client.request.duration
-        description: Duration of HTTP client requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      - name: http.client.response.body.size
-        description: Size of HTTP client response bodies.
-        type: HISTOGRAM
-        unit: By
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      - name: http.server.active_requests
-        description: Number of active HTTP server requests.
-        type: LONG_SUM
-        unit: requests
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: url.scheme
-          type: STRING
-      - name: http.server.request.body.size
-        description: Size of HTTP server request bodies.
-        type: HISTOGRAM
-        unit: By
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: url.scheme
-          type: STRING
-      - name: http.server.request.duration
-        description: Duration of HTTP server requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: url.scheme
-          type: STRING
-      - name: http.server.response.body.size
-        description: Size of HTTP server response bodies.
-        type: HISTOGRAM
-        unit: By
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: url.scheme
-          type: STRING
   finatra:
   - name: finatra-2.9
+    description: This instrumentation for the Finatra web framework augments the telemetry
+      generated by the underlying Netty instrumentation. It provides more specific,
+      high-level context, such as route information, to the spans generated by Netty.
     source_path: instrumentation/finatra-2.9
     scope:
       name: io.opentelemetry.finatra-2.9
@@ -1490,23 +1723,7 @@ libraries:
       - com.twitter:finatra-http_2.11:[2.9.0,]
       - com.twitter:finatra-http_2.12:[2.9.0,]
     telemetry:
-    - when: -Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true
-      metrics:
-      - name: http.server.request.duration
-        description: Duration of HTTP server requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: http.route
-          type: STRING
-        - name: network.protocol.version
-          type: STRING
-        - name: url.scheme
-          type: STRING
+    - when: default
       spans:
       - span_kind: INTERNAL
         attributes:
