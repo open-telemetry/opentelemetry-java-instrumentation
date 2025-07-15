@@ -65,6 +65,13 @@ publishing {
       }
     }
   }
+
+  repositories {
+    maven {
+      name = "ReleaseRepo"
+      url = File(project.rootDir.path, "releaseRepo").toURI()
+    }
+  }
 }
 
 fun artifactPrefix(p: Project, archivesBaseName: String): String {
