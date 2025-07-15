@@ -31,12 +31,10 @@ final class RequestAccess {
     if (access.getLambdaConfiguration == null) {
       return null;
     }
-    try {
-      Object config = access.getLambdaConfiguration.invoke(request);
-      return invokeOrNull(access.getLambdaArnFromConfiguration, config);
-    } catch (Throwable t) {
-      return null;
-    }
+    Object config = invokeOrNull(access.getLambdaConfiguration, request, Object.class);
+    return config != null
+        ? invokeOrNull(LambdaFunctionConfigurationAccess.getLambdaArnFromConfiguration, config)
+        : null;
   }
 
   @Nullable
@@ -113,11 +111,17 @@ final class RequestAccess {
 
   @Nullable
   private static String invokeOrNull(@Nullable MethodHandle method, Object obj) {
+    return invokeOrNull(method, obj, String.class);
+  }
+
+  @Nullable
+  private static <T> T invokeOrNull(
+      @Nullable MethodHandle method, Object obj, Class<T> returnType) {
     if (method == null) {
       return null;
     }
     try {
-      return (String) method.invoke(obj);
+      return returnType.cast(method.invoke(obj));
     } catch (Throwable t) {
       return null;
     }
@@ -125,7 +129,6 @@ final class RequestAccess {
 
   @Nullable private final MethodHandle getBucketName;
   @Nullable private final MethodHandle getLambdaConfiguration;
-  @Nullable private final MethodHandle getLambdaArnFromConfiguration;
   @Nullable private final MethodHandle getLambdaName;
   @Nullable private final MethodHandle getLambdaResourceMappingId;
   @Nullable private final MethodHandle getQueueUrl;
@@ -149,8 +152,6 @@ final class RequestAccess {
 
     boolean isLambda = clz.getName().startsWith(LAMBDA_REQUEST_CLASS_PREFIX);
     getLambdaConfiguration = isLambda ? findLambdaGetConfigurationMethod(clz) : null;
-    getLambdaArnFromConfiguration =
-        getLambdaConfiguration != null ? findGetLambdaArnMethod() : null;
     getLambdaName = isLambda ? findAccessorOrNull(clz, "getFunctionName") : null;
     getLambdaResourceMappingId = isLambda ? findAccessorOrNull(clz, "getUUID") : null;
     boolean isSecretsManager = clz.getName().startsWith(SECRETS_MANAGER_REQUEST_CLASS_PREFIX);
@@ -187,14 +188,18 @@ final class RequestAccess {
     }
   }
 
-  @Nullable
-  private static MethodHandle findGetLambdaArnMethod() {
-    try {
-      Class<?> lambdaConfigurationClass =
-          Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
-      return findAccessorOrNull(lambdaConfigurationClass, "getFunctionArn");
-    } catch (Throwable t) {
-      return null;
+  private static class LambdaFunctionConfigurationAccess {
+    static final MethodHandle getLambdaArnFromConfiguration = findGetLambdaArnMethod();
+
+    @Nullable
+    private static MethodHandle findGetLambdaArnMethod() {
+      try {
+        Class<?> lambdaConfigurationClass =
+            Class.forName("com.amazonaws.services.lambda.model.FunctionConfiguration");
+        return findAccessorOrNull(lambdaConfigurationClass, "getFunctionArn");
+      } catch (Throwable t) {
+        return null;
+      }
     }
   }
 }
