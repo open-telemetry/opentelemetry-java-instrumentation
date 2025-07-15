@@ -324,12 +324,12 @@ public enum JdbcConnectionUrlParser {
       portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
       int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
 
-      int paramLoc = jdbcUrl.indexOf("?", dbLoc);
+      int paramLoc = dbLoc != -1 ? jdbcUrl.indexOf("?", dbLoc) : -1;
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
         builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
-      } else {
+      } else if (dbLoc != -1) {
         builder.db(jdbcUrl.substring(dbLoc + 1));
       }
 
@@ -337,16 +337,17 @@ public enum JdbcConnectionUrlParser {
         return MARIA_ADDRESS.doParse(jdbcUrl, builder);
       }
 
+      dbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
       if (portLoc > 0) {
         hostEndLoc = portLoc;
-        int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : (dbLoc > 0 ? dbLoc : jdbcUrl.length());
+        int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
         try {
           builder.port(Integer.parseInt(jdbcUrl.substring(portLoc + 1, portEndLoc)));
         } catch (NumberFormatException e) {
           logger.log(FINE, e.getMessage(), e);
         }
       } else {
-        hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : (dbLoc > 0 ? dbLoc : jdbcUrl.length());
+        hostEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
       }
 
       if (ipv6End > 0) {

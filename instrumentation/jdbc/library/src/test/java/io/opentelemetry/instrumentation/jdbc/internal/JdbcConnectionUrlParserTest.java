@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.MYSQL;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -150,6 +148,27 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host")
             .setPort(3306)
             .setDb("mdbdb")
+            .build(),
+        arg("jdbc:mysql:loadbalance://localhost")
+            .setShortUrl("mysql:loadbalance://localhost:3306")
+            .setSystem("mysql")
+            .setSubtype("loadbalance")
+            .setHost("localhost")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:loadbalance://host:3306") // with port but no slash
+            .setShortUrl("mysql:loadbalance://host:3306")
+            .setSystem("mysql")
+            .setSubtype("loadbalance")
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:failover://[::1]:3306") // IPv6 without slash
+            .setShortUrl("mysql:failover://::1:3306")
+            .setSystem("mysql")
+            .setSubtype("failover")
+            .setHost("::1")
+            .setPort(3306)
             .build());
   }
 
@@ -332,6 +351,27 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(33)
             .setDb("mdbdb")
+            .build(),
+        arg("jdbc:mariadb:loadbalance://localhost")
+            .setShortUrl("mariadb:loadbalance://localhost:3306")
+            .setSystem("mariadb")
+            .setSubtype("loadbalance")
+            .setHost("localhost")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mariadb:loadbalance://host:3306") // with port but no slash
+            .setShortUrl("mariadb:loadbalance://host:3306")
+            .setSystem("mariadb")
+            .setSubtype("loadbalance")
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mariadb:failover://[::1]:3306") // IPv6 without slash
+            .setShortUrl("mariadb:failover://::1:3306")
+            .setSystem("mariadb")
+            .setSubtype("failover")
+            .setHost("::1")
+            .setPort(3306)
             .build());
   }
 
@@ -1376,17 +1416,5 @@ class JdbcConnectionUrlParserTest {
       list.add(arguments(arg));
     }
     return list.stream();
-  }
-
-  @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "mysql:loadbalance://string_without_slash",
-        "mysql:loadbalance://host:3306", // with port but no slash
-        "mariadb:failover://[::1]:3306" // IPv6 without slash
-      })
-  void testMysqlUrlsWithoutSlashDoNotThrowException(String url) {
-    assertThatCode(() -> MYSQL.doParse(url, DEFAULT.toBuilder().system("mysql")))
-        .doesNotThrowAnyException();
   }
 }
