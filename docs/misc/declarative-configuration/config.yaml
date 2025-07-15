@@ -59,6 +59,40 @@ instrumentation/development:
         enabled: true # was "otel.javaagent.add-thread-details" = "true"
 
 # These cannot be used in the Java Agent, because they are read in early stages,
-# but the Spring starter can use them.
+# but the Spring starter may use them (need to be discussed).
 disabled: false # was: "otel.sdk.enabled"
 log_level: info # is not used is Spring starter yet
+
+# Note: The following properties still have to be specified with system properties or
+# environment variables, because they are read in early stages of the application startup:
+# User facing:
+# - otel.javaagent.enabled
+# - otel.javaagent.debug
+# - otel.javaagent.extensions
+# - otel.javaagent.logging
+# - otel.javaagent.logging.application.logs-buffer-max-records
+# - otel.javaagent.configuration-file (although you shouldn't need this with declarative configuration)
+# - otel.javaagent.experimental.field-injection.enabled
+# - otel.javaagent.experimental.security-manager-support.enabled
+# Internal:
+# - otel.javaagent.experimental.thread-propagation-debugger.enabled
+# - otel.javaagent.testing.fail-on-context-leak
+
+# These properties could be read from declarative configuration in the future, but are not yet.
+# Issue: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14192
+# - otel.experimental.javascript-snippet
+# - otel.instrumentation.aws-sdk.experimental-record-individual-http-error
+# - otel.instrumentation.aws-sdk.experimental-span-attributes
+# - otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
+# - otel.instrumentation.common.db-statement-sanitizer.enabled
+# - otel.instrumentation.common.logging.span-id
+# - otel.instrumentation.common.logging.trace-flags
+# - otel.instrumentation.common.logging.trace-id
+# - otel.instrumentation.experimental.span-suppression-strategy
+# - otel.instrumentation.genai.capture-message-content
+# - otel.instrumentation.jdbc.experimental.capture-query-parameters
+# - otel.instrumentation.jdbc.experimental.transaction.enabled
+# - otel.instrumentation.log4j-context-data.add-baggage
+# - otel.instrumentation.messaging.experimental.capture-headers
+# - otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+# - otel.semconv-stability.opt-in
