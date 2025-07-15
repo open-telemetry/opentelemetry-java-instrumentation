@@ -9,6 +9,10 @@ import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singlet
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import javax.annotation.Nullable;
+import play.api.mvc.Action;
+import play.api.mvc.Result;
+import scala.concurrent.Future;
 
 /** Container used to carry state between enter and exit advices */
 public final class AdviceScope {
@@ -27,10 +31,7 @@ public final class AdviceScope {
     return context;
   }
 
-  public Scope getScope() {
-    return scope;
-  }
-
+  @Nullable
   public static AdviceScope start(Context parentContext, ActionData actionData) {
     if (!instrumenter().shouldStart(parentContext, actionData)) {
       return null;
@@ -46,8 +47,14 @@ public final class AdviceScope {
     }
   }
 
-  public void end(Throwable throwable) {
+  public void end(Throwable throwable, Future<Result> responseFuture, Action<?> thisAction) {
     closeScope();
-    instrumenter().end(context, actionData, null, throwable);
+
+    if (throwable == null) {
+      responseFuture.onComplete(
+          new RequestCompleteCallback(getContext()), thisAction.executionContext());
+    } else {
+      instrumenter().end(context, actionData, null, throwable);
+    }
   }
 }

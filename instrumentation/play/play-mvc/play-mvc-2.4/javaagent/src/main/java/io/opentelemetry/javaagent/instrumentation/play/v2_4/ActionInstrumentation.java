@@ -17,6 +17,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -65,8 +66,8 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) Request<?> req,
         @Advice.Return(readOnly = false) Future<Result> responseFuture,
-        @Advice.Enter AdviceScope actionScope) {
-      if (actionScope == null || actionScope.getScope() == null) {
+        @Advice.Enter @Nullable AdviceScope actionScope) {
+      if (actionScope == null) {
         return;
       }
       actionScope.closeScope();
@@ -74,13 +75,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
       updateSpan(actionScope.getContext(), req);
 
       // span finished in RequestCompleteCallback
-      if (throwable == null) {
-        responseFuture.onComplete(
-            new RequestCompleteCallback(actionScope.getContext()),
-            ((Action<?>) thisAction).executionContext());
-      } else {
-        actionScope.end(throwable);
-      }
+      actionScope.end(throwable, responseFuture, (Action<?>) thisAction);
     }
   }
 }
