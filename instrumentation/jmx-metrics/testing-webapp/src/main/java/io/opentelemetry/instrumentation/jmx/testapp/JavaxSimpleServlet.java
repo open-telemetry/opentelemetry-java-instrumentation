@@ -16,7 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet(urlPatterns = "/javax/*", name = "javaxServlet")
 public class JavaxSimpleServlet extends HttpServlet {
 
-  private static final long serialVersionUID = 3726145372238690099L;
+  private static final long serialVersionUID = 1L;
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {

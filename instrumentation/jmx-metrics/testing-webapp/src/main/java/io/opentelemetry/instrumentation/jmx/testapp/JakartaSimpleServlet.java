@@ -16,7 +16,7 @@ import java.io.PrintWriter;
 @WebServlet(urlPatterns = "/jakarta/*", name = "jakartaServlet")
 public class JakartaSimpleServlet extends HttpServlet {
 
-  private static final long serialVersionUID = 3726145372238690099L;
+  private static final long serialVersionUID = 1L;
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
