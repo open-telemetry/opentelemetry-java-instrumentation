@@ -19,24 +19,22 @@ import scala.concurrent.Future;
 /** Container used to carry state between enter and exit advices */
 public final class AdviceScope {
 
-  private final ActionData actionData;
   private final Context context;
   private final Scope scope;
 
-  public AdviceScope(Context context, Scope scope, ActionData actionData) {
-    this.actionData = actionData;
+  public AdviceScope(Context context, Scope scope) {
     this.context = context;
     this.scope = scope;
   }
 
   @Nullable
-  public static AdviceScope start(Context parentContext, ActionData actionData) {
-    if (!instrumenter().shouldStart(parentContext, actionData)) {
+  public static AdviceScope start(Context parentContext) {
+    if (!instrumenter().shouldStart(parentContext, null)) {
       return null;
     }
 
-    Context context = instrumenter().start(parentContext, actionData);
-    return new AdviceScope(context, context.makeCurrent(), actionData);
+    Context context = instrumenter().start(parentContext, null);
+    return new AdviceScope(context, context.makeCurrent());
   }
 
   public void closeScope() {
@@ -55,7 +53,7 @@ public final class AdviceScope {
       responseFuture.onComplete(
           new RequestCompleteCallback(context), thisAction.executionContext());
     } else {
-      instrumenter().end(context, actionData, null, throwable);
+      instrumenter().end(context, null, null, throwable);
     }
   }
 }

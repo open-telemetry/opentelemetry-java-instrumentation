@@ -115,7 +115,6 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
   public SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
     span.hasName("play.request").hasKind(INTERNAL);
-
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasException(new IllegalArgumentException(EXCEPTION.getBody()));

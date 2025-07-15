@@ -17,17 +17,17 @@ import scala.Option;
 
 public final class Play24Singletons {
   private static final String SPAN_NAME = "play.request";
-  private static final Instrumenter<ActionData, Void> INSTRUMENTER;
+  private static final Instrumenter<Void, Void> INSTRUMENTER;
 
   static {
     INSTRUMENTER =
-        Instrumenter.<ActionData, Void>builder(
+        Instrumenter.<Void, Void>builder(
                 GlobalOpenTelemetry.get(), "io.opentelemetry.play-mvc-2.4", s -> SPAN_NAME)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }
 
-  public static Instrumenter<ActionData, Void> instrumenter() {
+  public static Instrumenter<Void, Void> instrumenter() {
     return INSTRUMENTER;
   }
 

@@ -12,10 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -49,14 +47,8 @@ public class ActionInstrumentation implements TypeInstrumentation {
   public static class ApplyAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(
-        @Advice.This Object target,
-        @Advice.Origin Method method,
-        @Advice.Argument(0) Request<?> req) {
-      Context parentContext = currentContext();
-
-      ActionData actionData = new ActionData(target.getClass(), method);
-      return AdviceScope.start(parentContext, actionData);
+    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
+      return AdviceScope.start(currentContext());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
