@@ -31,7 +31,7 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.AgentListener;
-import io.opentelemetry.javaagent.extension.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesUtil;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
