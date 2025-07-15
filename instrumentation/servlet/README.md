@@ -2,11 +2,11 @@
 
 ## Settings
 
-| System property                                                        | Type    | Default | Description                                         |
-|------------------------------------------------------------------------| ------- | ------- |-----------------------------------------------------|
-| `otel.instrumentation.servlet.experimental-span-attributes`            | Boolean | `false` | Enable the capture of experimental span attributes. |
-| `otel.instrumentation.servlet.experimental.capture-request-parameters` | List    | Empty   | Request parameters to be captured (experimental).   |
-| `otel.experimental.javascript-snippet`                                 | String  | Empty   | Experimental setting to inject a JavaScript snippet into servlet responses. |
+| System property                                                        | Type    | Default | Description                                                                                    |
+|------------------------------------------------------------------------|---------|---------|------------------------------------------------------------------------------------------------|
+| `otel.instrumentation.servlet.experimental-span-attributes`            | Boolean | `false` | Enable the capture of experimental span attributes.                                            |
+| `otel.instrumentation.servlet.experimental.capture-request-parameters` | List    | Empty   | Request parameters to be captured (experimental).                                              |
+| `otel.experimental.javascript-snippet`                                 | String  | Empty   | Experimental setting to inject a JavaScript snippet into servlet responses (before `</body>`). |
 
 ### A word about version
 
@@ -87,5 +87,3 @@ Of course, still adhering to OpenTelemetry
 `HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
 and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
 around their invocations.
-
-
