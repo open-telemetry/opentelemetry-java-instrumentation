@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMetho
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -24,6 +25,7 @@ import org.springframework.remoting.rmi.RmiBasedExporter;
 import org.springframework.remoting.support.RemoteInvocation;
 
 public class ServerInstrumentation implements TypeInstrumentation {
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("org.springframework.remoting.rmi.RmiBasedExporter");
@@ -41,49 +43,59 @@ public class ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      private final ClassAndMethod request;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(
+          CallDepth callDepth, ClassAndMethod request, Context context, Scope scope) {
+        this.callDepth = callDepth;
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public static AdviceScope enter(
+          CallDepth callDepth, RmiBasedExporter rmiExporter, RemoteInvocation remoteInvocation) {
+        if (callDepth.getAndIncrement() > 0) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
+        Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
+        Class<?> serverClass = rmiExporter.getService().getClass();
+        String methodName = remoteInvocation.getMethodName();
+        ClassAndMethod request = ClassAndMethod.create(serverClass, methodName);
+
+        if (!serverInstrumenter().shouldStart(parentContext, request)) {
+          return new AdviceScope(callDepth, request, null, null);
+        }
+
+        Context context = serverInstrumenter().start(parentContext, request);
+        return new AdviceScope(callDepth, request, context, context.makeCurrent());
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
+          return;
+        }
+        scope.close();
+        serverInstrumenter().end(context, request, null, throwable);
+      }
+    }
+
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This RmiBasedExporter thisObject,
-        @Advice.Argument(0) RemoteInvocation remoteInv,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      callDepth = CallDepth.forClass(RmiBasedExporter.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
-      }
-
-      Context parentContext = THREAD_LOCAL_CONTEXT.getAndResetContext();
-      Class<?> serverClass = thisObject.getService().getClass();
-      String methodName = remoteInv.getMethodName();
-      request = ClassAndMethod.create(serverClass, methodName);
-
-      if (!serverInstrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = serverInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(
+        @Advice.This RmiBasedExporter thisObject, @Advice.Argument(0) RemoteInvocation remoteInv) {
+      return AdviceScope.enter(CallDepth.forClass(RmiBasedExporter.class), thisObject, remoteInv);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-      serverInstrumenter().end(context, request, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.exit(throwable);
     }
   }
 }
