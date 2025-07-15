@@ -6,7 +6,7 @@
 |------------------------------------------------------------------------| ------- | ------- |-----------------------------------------------------|
 | `otel.instrumentation.servlet.experimental-span-attributes`            | Boolean | `false` | Enable the capture of experimental span attributes. |
 | `otel.instrumentation.servlet.experimental.capture-request-parameters` | List    | Empty   | Request parameters to be captured (experimental).   |
-
+| `otel.experimental.javascript-snippet`                                 | String  | Empty   | Experimental setting to inject a JavaScript snippet into servlet responses. |
 ### A word about version
 
 We support Servlet API starting from version 2.2.
@@ -86,3 +86,5 @@ Of course, still adhering to OpenTelemetry
 `HttpServletResponseInstrumentation` instruments `javax.servlet.http.HttpServletResponse.sendError`
 and `javax.servlet.http.HttpServletResponse.sendRedirect` methods to create new `INTERNAL` spans
 around their invocations.
+
+
