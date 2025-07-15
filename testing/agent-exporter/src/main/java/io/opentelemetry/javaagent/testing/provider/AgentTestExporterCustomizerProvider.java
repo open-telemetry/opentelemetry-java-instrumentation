@@ -35,9 +35,6 @@ public class AgentTestExporterCustomizerProvider implements DeclarativeConfigura
 
     customizer.addModelCustomizer(
         model -> {
-          System.out.println("AgentTestExporterCustomizerProvider");
-          System.out.println(model.toString());
-
           if (model.getTracerProvider() == null) {
             addTracerProvider(model);
           }

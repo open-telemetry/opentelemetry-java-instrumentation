@@ -30,9 +30,6 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     customizer.addModelCustomizer(
         model -> {
-          System.out.println("TestExporterCustomizerProvider");
-          System.out.println(model.toString());
-
           if (model.getTracerProvider() == null) {
             addTracerProvider(model);
           }
