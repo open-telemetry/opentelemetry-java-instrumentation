@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_LAMBDA_ARN;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_LAMBDA_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.request;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.response;
 
@@ -20,6 +22,11 @@ enum AwsSdkRequestType {
   KINESIS(request("aws.stream.name", "StreamName")),
   DYNAMODB(request("aws.table.name", "TableName")),
   BEDROCK_RUNTIME(),
+  LAMBDA(
+      request(AWS_LAMBDA_NAME.getKey(), "FunctionName"),
+      request(AttributeKeys.AWS_LAMBDA_RESOURCE_MAPPING_ID.getKey(), "UUID"),
+      response(AWS_LAMBDA_ARN.getKey(), "Configuration.FunctionArn"),
+      response(AttributeKeys.AWS_LAMBDA_RESOURCE_MAPPING_ID.getKey(), "UUID")),
   SECRETSMANAGER(response(AttributeKeys.AWS_SECRETSMANAGER_SECRET_ARN.getKey(), "ARN")),
   SNS(
       /*
@@ -47,6 +54,8 @@ enum AwsSdkRequestType {
 
   private static class AttributeKeys {
     // Copied from AwsIncubatingAttributes
+    private static final AttributeKey<String> AWS_LAMBDA_RESOURCE_MAPPING_ID =
+        stringKey("aws.lambda.resource_mapping.id");
     static final AttributeKey<String> AWS_SECRETSMANAGER_SECRET_ARN =
         stringKey("aws.secretsmanager.secret.arn");
     static final AttributeKey<String> AWS_SNS_TOPIC_ARN = stringKey("aws.sns.topic.arn");
