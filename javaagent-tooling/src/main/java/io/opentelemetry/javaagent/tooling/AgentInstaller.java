@@ -492,6 +492,7 @@ public class AgentInstaller {
       Thread thread = new Thread(this::runAgentListeners);
       thread.setName("delayed-agent-listeners");
       thread.setDaemon(true);
+      thread.setContextClassLoader(null);
       thread.start();
     }
 
