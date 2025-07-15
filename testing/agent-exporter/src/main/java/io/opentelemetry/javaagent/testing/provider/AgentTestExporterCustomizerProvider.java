@@ -28,7 +28,8 @@ import java.util.Collections;
 import java.util.List;
 
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
-public class AgentTestExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
+public class AgentTestExporterCustomizerProvider
+    implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     AgentTestingExporterFactory.init();
@@ -50,7 +51,8 @@ public class AgentTestExporterCustomizerProvider implements DeclarativeConfigura
 
   private static void addTracerProvider(OpenTelemetryConfigurationModel model) {
     List<SpanProcessorModel> processors = new ArrayList<>();
-    processors.add(getProcessorModel(new SpanExporterModel().withAdditionalProperty("agent_test", null)));
+    processors.add(
+        getProcessorModel(new SpanExporterModel().withAdditionalProperty("agent_test", null)));
     processors.add(
         getProcessorModel(new SpanExporterModel().withConsole(new ConsoleExporterModel())));
     model.withTracerProvider(new TracerProviderModel().withProcessors(processors));
