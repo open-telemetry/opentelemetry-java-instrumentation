@@ -6,11 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 
 import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.updateSpan;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import javax.annotation.Nullable;
 import play.api.mvc.Action;
+import play.api.mvc.Request;
 import play.api.mvc.Result;
 import scala.concurrent.Future;
 
@@ -25,10 +27,6 @@ public final class AdviceScope {
     this.actionData = actionData;
     this.context = context;
     this.scope = scope;
-  }
-
-  public Context getContext() {
-    return context;
   }
 
   @Nullable
@@ -47,12 +45,15 @@ public final class AdviceScope {
     }
   }
 
-  public void end(Throwable throwable, Future<Result> responseFuture, Action<?> thisAction) {
+  public void end(
+      Throwable throwable, Future<Result> responseFuture, Action<?> thisAction, Request<?> req) {
     closeScope();
+    updateSpan(context, req);
 
     if (throwable == null) {
+      // span finished in RequestCompleteCallback
       responseFuture.onComplete(
-          new RequestCompleteCallback(getContext()), thisAction.executionContext());
+          new RequestCompleteCallback(context), thisAction.executionContext());
     } else {
       instrumenter().end(context, actionData, null, throwable);
     }
