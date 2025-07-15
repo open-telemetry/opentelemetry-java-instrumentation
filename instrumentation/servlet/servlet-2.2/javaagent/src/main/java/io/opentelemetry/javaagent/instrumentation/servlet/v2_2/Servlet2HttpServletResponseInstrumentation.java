@@ -7,12 +7,12 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v2_2.Servlet2Singletons.RESPONSE_STATUS;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -63,7 +63,7 @@ public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.This HttpServletResponse response) {
-      VirtualField.find(ServletResponse.class, Integer.class).set(response, 302);
+      RESPONSE_STATUS.set(response, 302);
     }
   }
 
@@ -73,7 +73,7 @@ public class Servlet2HttpServletResponseInstrumentation implements TypeInstrumen
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This HttpServletResponse response, @Advice.Argument(0) Integer status) {
-      VirtualField.find(ServletResponse.class, Integer.class).set(response, status);
+      RESPONSE_STATUS.set(response, status);
     }
   }
 }
