@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.oshi;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.AgentListener;
-import io.opentelemetry.javaagent.extension.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.reflect.Method;
