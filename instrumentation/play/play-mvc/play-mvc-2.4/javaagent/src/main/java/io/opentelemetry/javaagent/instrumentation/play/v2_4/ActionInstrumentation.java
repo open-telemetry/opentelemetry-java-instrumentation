@@ -57,7 +57,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopTraceOnResponse(
-        @Advice.This Object thisAction,
+        @Advice.This Action<?> thisAction,
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) Request<?> req,
         @Advice.Return(readOnly = false) Future<Result> responseFuture,
@@ -66,43 +66,43 @@ public class ActionInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      actionScope.end(throwable, responseFuture, (Action<?>) thisAction, req);
-    }
-  }
-
-  public static class AdviceScope {
-    private final Context context;
-    private final Scope scope;
-
-    public AdviceScope(Context context, Scope scope) {
-      this.context = context;
-      this.scope = scope;
+      actionScope.end(throwable, responseFuture, thisAction, req);
     }
 
-    @Nullable
-    public static AdviceScope start(Context parentContext) {
-      if (!instrumenter().shouldStart(parentContext, null)) {
-        return null;
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
-      Context context = instrumenter().start(parentContext, null);
-      return new AdviceScope(context, context.makeCurrent());
-    }
+      @Nullable
+      public static AdviceScope start(Context parentContext) {
+        if (!instrumenter().shouldStart(parentContext, null)) {
+          return null;
+        }
 
-    public void end(
-        @Nullable Throwable throwable,
-        Future<Result> responseFuture,
-        Action<?> thisAction,
-        Request<?> req) {
-      scope.close();
-      updateSpan(context, req);
+        Context context = instrumenter().start(parentContext, null);
+        return new AdviceScope(context, context.makeCurrent());
+      }
 
-      if (throwable == null) {
-        // span finished in RequestCompleteCallback
-        responseFuture.onComplete(
-            new RequestCompleteCallback(context), thisAction.executionContext());
-      } else {
-        instrumenter().end(context, null, null, throwable);
+      public void end(
+          @Nullable Throwable throwable,
+          Future<Result> responseFuture,
+          Action<?> thisAction,
+          Request<?> req) {
+        scope.close();
+        updateSpan(context, req);
+
+        if (throwable == null) {
+          // span finished in RequestCompleteCallback
+          responseFuture.onComplete(
+              new RequestCompleteCallback(context), thisAction.executionContext());
+        } else {
+          instrumenter().end(context, null, null, throwable);
+        }
       }
     }
   }
