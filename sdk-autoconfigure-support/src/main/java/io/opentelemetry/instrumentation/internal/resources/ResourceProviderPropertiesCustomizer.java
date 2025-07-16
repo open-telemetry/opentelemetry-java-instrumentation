@@ -53,7 +53,7 @@ public class ResourceProviderPropertiesCustomizer implements AutoConfigurationCu
         "cloudfoundry");
     // for testing
     DISABLED_BY_DEFAULT_RESOURCE_PROVIDERS.put(
-        "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider",
+        "io.opentelemetry.instrumentation.internal.resources.ResourceProviderPropertiesCustomizerTest$Provider",
         "test");
   }
 
