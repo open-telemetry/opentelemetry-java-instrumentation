@@ -2441,6 +2441,8 @@ libraries:
       - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
   kafka:
   - name: kafka-clients-0.11
+    description: |
+      This instrumentation provides messaging spans and metrics for Apache Kafka 0.11 clients. It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
     scope:
       name: io.opentelemetry.kafka-clients-0.11
@@ -2456,7 +2458,17 @@ libraries:
       description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
       type: boolean
       default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for Kafka instrumentation.
+      type: boolean
+      default: false
   - name: kafka-clients-2.6
+    description: |
+      This instrumentation provides a library integeration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
     scope:
       name: io.opentelemetry.kafka-clients-2.6
@@ -4212,6 +4224,10 @@ internal:
   source_path: instrumentation/internal/internal-reflection
   scope:
     name: io.opentelemetry.internal-reflection
+- name: opentelemetry-api-1.52
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.52
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.52
 - name: opentelemetry-instrumentation-api
   source_path: instrumentation/opentelemetry-instrumentation-api
   scope:
