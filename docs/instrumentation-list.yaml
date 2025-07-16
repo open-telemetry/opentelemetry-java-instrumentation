@@ -5,7 +5,7 @@
 libraries:
   activej:
   - name: activej-http-6.0
-    description: This instrumentation provides SERVER spans and metrics for the ActiveJ
+    description: this instrumentation enables SERVER spans and metrics for the ActiveJ
       HTTP server.
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
@@ -260,7 +260,7 @@ libraries:
   apache:
   - name: apache-dbcp-2.0
     description: |
-      This instrumentation provides database connection pools metrics for Apache DBCP.
+      this instrumentation enables database connection pools metrics for Apache DBCP.
       The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
     source_path: instrumentation/apache-dbcp-2.0
     scope:
@@ -382,7 +382,7 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: apache-httpasyncclient-4.1
-    description: This instrumentation provides CLIENT spans and metrics for the Apache
+    description: this instrumentation enables CLIENT spans and metrics for the Apache
       HttpAsyncClient.
     source_path: instrumentation/apache-httpasyncclient-4.1
     scope:
@@ -428,7 +428,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-2.0
-    description: This instrumentation provides CLIENT spans and metrics for versions
+    description: this instrumentation enables CLIENT spans and metrics for versions
       2 and 3 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
@@ -472,7 +472,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
-    description: This instrumentation provides CLIENT spans and metrics for version
+    description: this instrumentation enables CLIENT spans and metrics for version
       4 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
@@ -567,7 +567,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.0
-    description: This instrumentation provides CLIENT spans and metrics for version
+    description: This instrumentation enables CLIENT spans and metrics for version
       5 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
@@ -662,7 +662,7 @@ libraries:
           type: STRING
   - name: apache-shenyu-2.4
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Shenyu Context and extracts meta data in order to attach it to existing SERVER spans and HTTP server metrics.
+      This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
     source_path: instrumentation/apache-shenyu-2.4
     scope:
       name: io.opentelemetry.apache-shenyu-2.4
@@ -672,13 +672,13 @@ libraries:
     configurations:
     - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
       description: |
-        Enables experimental `apache-shenyu.meta.` prefixed span attributes like `app-name`, `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path`, and `rpc-ext`.
+        Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`, `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and `rpc-ext`.
       type: boolean
       default: false
   armeria:
   - name: armeria-1.3
-    description: This instrumentation enables CLIENT spans and metrics for the Armeria
-      HTTP client and server.
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Armeria HTTP client and server.
     source_path: instrumentation/armeria/armeria-1.3
     scope:
       name: io.opentelemetry.armeria-1.3
@@ -772,8 +772,8 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: armeria-grpc-1.14
-    description: This instrumentation enables CLIENT spans and metrics for the Armeria
-      gRPC client and server.
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Armeria gRPC client and server.
     source_path: instrumentation/armeria/armeria-grpc-1.14
     scope:
       name: io.opentelemetry.armeria-grpc-1.14
@@ -782,7 +782,7 @@ libraries:
       - com.linecorp.armeria:armeria-grpc:[1.14.0,)
   async:
   - name: async-http-client-1.9
-    description: This instrumentation provides CLIENT spans and metrics for version
+    description: This instrumentation enables CLIENT spans and metrics for version
       1 of the AsyncHttpClient (AHC) HTTP client.
     source_path: instrumentation/async-http-client/async-http-client-1.9
     scope:
@@ -824,7 +824,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: async-http-client-2.0
-    description: This instrumentation provides CLIENT spans and metrics for version
+    description: This instrumentation enables CLIENT spans and metrics for version
       2 of the AsyncHttpClient (AHC) HTTP client.
     source_path: instrumentation/async-http-client/async-http-client-2.0
     scope:
@@ -1119,7 +1119,7 @@ libraries:
   camel:
   - name: camel-2.20
     description: |
-      This instrumentation provides tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+      this instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -1333,9 +1333,9 @@ libraries:
       default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
-    description: This instrumentation provides client spans for Elasticsearch API
-      client requests for version 7 of the client. Versions 8.10 and later have native
-      support for OpenTelemetry.
+    description: this instrumentation enables client spans for Elasticsearch API client
+      requests for version 7 of the client. Versions 8.10 and later have native support
+      for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -1344,7 +1344,7 @@ libraries:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
   - name: elasticsearch-rest-5.0
-    description: This instrumentation provides tracing for Elasticsearch REST clients.
+    description: this instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -1375,7 +1375,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-6.4
-    description: This instrumentation provides tracing for Elasticsearch REST clients.
+    description: this instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -1404,7 +1404,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-7.0
-    description: This instrumentation provides tracing for Elasticsearch REST clients.
+    description: this instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -1436,7 +1436,7 @@ libraries:
           type: STRING
   - name: elasticsearch-transport-5.0
     description: |
-      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      this instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -1512,7 +1512,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-5.3
     description: |
-      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      this instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -1598,7 +1598,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-6.0
     description: |
-      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      this instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -2442,7 +2442,7 @@ libraries:
   kafka:
   - name: kafka-clients-0.11
     description: |
-      This instrumentation provides messaging spans and metrics for Apache Kafka 0.11 clients. It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
+      This instrumentation enables messaging spans and metrics for Apache Kafka 0.11 clients. It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
     scope:
       name: io.opentelemetry.kafka-clients-0.11

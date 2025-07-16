@@ -1,1 +1,1 @@
-description: This instrumentation provides SERVER spans and metrics for the ActiveJ HTTP server.
+description: this instrumentation enables SERVER spans and metrics for the ActiveJ HTTP server.

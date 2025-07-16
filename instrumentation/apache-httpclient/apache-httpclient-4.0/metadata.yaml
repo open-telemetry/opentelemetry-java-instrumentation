@@ -1,1 +1,1 @@
-description: This instrumentation provides CLIENT spans and metrics for version 4 of the Apache HttpClient.
+description: this instrumentation enables CLIENT spans and metrics for version 4 of the Apache HttpClient.

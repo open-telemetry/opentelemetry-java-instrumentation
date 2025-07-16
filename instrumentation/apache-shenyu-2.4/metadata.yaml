@@ -1,11 +1,11 @@
 description: >
-  This instrumentation does not emit telemetry on its own. Instead, it hooks into the Shenyu Context
-  and extracts meta data in order to attach it to existing SERVER spans and HTTP server metrics.
+  This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER
+  spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
 configurations:
   - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
     description: > 
-      Enables experimental `apache-shenyu.meta.` prefixed span attributes like `app-name`,
-      `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path`, and
+      Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`,
+      `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and
       `rpc-ext`.
     type: boolean
     default: false
