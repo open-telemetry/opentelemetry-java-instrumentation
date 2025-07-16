@@ -1,1 +1,1 @@
-description: this instrumentation enables CLIENT spans and metrics for the Apache HttpAsyncClient.
+description: This instrumentation enables CLIENT spans and metrics for the Apache HttpAsyncClient.
