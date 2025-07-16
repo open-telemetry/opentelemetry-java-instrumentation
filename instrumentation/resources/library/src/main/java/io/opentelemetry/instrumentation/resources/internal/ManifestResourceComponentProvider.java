@@ -19,6 +19,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class ManifestResourceComponentProvider extends ResourceComponentProvider {
   public ManifestResourceComponentProvider() {
-    super("manifest", () -> new ManifestResourceProvider().createUnconditional());
+    super("manifest", () -> new ManifestResourceProvider().create());
   }
 }
