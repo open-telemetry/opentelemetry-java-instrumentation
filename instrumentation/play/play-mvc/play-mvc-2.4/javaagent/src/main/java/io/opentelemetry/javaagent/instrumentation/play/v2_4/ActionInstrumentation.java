@@ -8,10 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.play.v2_4;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_4.Play24Singletons.updateSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -63,6 +67,47 @@ public class ActionInstrumentation implements TypeInstrumentation {
       }
 
       actionScope.end(throwable, responseFuture, (Action<?>) thisAction, req);
+    }
+  }
+
+  public static class AdviceScope {
+
+    private final Context context;
+    private final Scope scope;
+
+    public AdviceScope(Context context, Scope scope) {
+      this.context = context;
+      this.scope = scope;
+    }
+
+    @Nullable
+    public static AdviceScope start(Context parentContext) {
+      if (!instrumenter().shouldStart(parentContext, null)) {
+        return null;
+      }
+
+      Context context = instrumenter().start(parentContext, null);
+      return new AdviceScope(context, context.makeCurrent());
+    }
+
+    public void closeScope() {
+      if (scope != null) {
+        scope.close();
+      }
+    }
+
+    public void end(
+        Throwable throwable, Future<Result> responseFuture, Action<?> thisAction, Request<?> req) {
+      closeScope();
+      updateSpan(context, req);
+
+      if (throwable == null) {
+        // span finished in RequestCompleteCallback
+        responseFuture.onComplete(
+            new RequestCompleteCallback(context), thisAction.executionContext());
+      } else {
+        instrumenter().end(context, null, null, throwable);
+      }
     }
   }
 }
