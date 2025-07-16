@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public class ResourceCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
 
-  private static final List<String> NEEDED_DETECTORS = Arrays.asList("distribution", "service");
+  private static final List<String> REQUIRED_DETECTORS = Arrays.asList("distribution", "service");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
@@ -50,7 +50,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
                   .flatMap(detector -> detector.getAdditionalProperties().keySet().stream())
                   .collect(Collectors.toSet());
 
-          for (String name : NEEDED_DETECTORS) {
+          for (String name : REQUIRED_DETECTORS) {
             if (!names.contains(name)) {
               ExperimentalResourceDetectorModel detector = new ExperimentalResourceDetectorModel();
               detector.getAdditionalProperties().put(name, null);
