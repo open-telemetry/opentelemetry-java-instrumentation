@@ -1,3 +1,6 @@
+description: >
+  This instrumentation provides messaging spans and metrics for Apache Kafka 0.11 clients.
+  It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
 configurations:
   - name: otel.instrumentation.kafka.producer-propagation.enabled
     description: Enable context propagation for kafka message producers.
@@ -5,5 +8,13 @@ configurations:
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
     description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: A comma-separated list of header names to capture as span attributes.
+    type: list
+    default: ''
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: Enables experimental receive telemetry for Kafka instrumentation.
     type: boolean
     default: false

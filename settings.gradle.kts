@@ -20,7 +20,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.0.2"
+  id("com.gradle.develocity") version "4.1"
 }
 
 dependencyResolutionManagement {
@@ -441,6 +441,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")

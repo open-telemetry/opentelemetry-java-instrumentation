@@ -172,8 +172,7 @@ tasks {
     val token = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
 
     var query = "?name=opentelemetry-java-instrumentation-$stableVersion"
-    // uncomment to automatically publish the release
-    // query += "&publishingType=AUTOMATIC"
+    query += "&publishingType=AUTOMATIC"
 
     doFirst {
       val bundle = generateReleaseBundle.get().outputs.files.singleFile
@@ -190,9 +189,6 @@ tasks {
         )
         .header("authorization", "Bearer $token")
         .build()
-      httpClient.newCall(request).execute().use { response ->
-        response.body.string()
-      }
 
       httpClient.newCall(request).execute().use { response ->
         if (response.code != 201) throw GradleException("Unexpected response status ${response.code} while uploading the release bundle")

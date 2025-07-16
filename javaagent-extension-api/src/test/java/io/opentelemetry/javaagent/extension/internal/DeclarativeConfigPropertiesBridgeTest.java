@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension;
+package io.opentelemetry.javaagent.extension.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,7 +44,10 @@ class DeclarativeConfigPropertiesBridgeTest {
           + "      map_key:\n"
           + "        string_key1: value1\n"
           + "        string_key2: value2\n"
-          + "        bool_key: true\n";
+          + "        bool_key: true\n"
+          + "    acme:\n"
+          + "      full_name:\n"
+          + "        preserved: true";
 
   private ConfigProperties bridge;
   private ConfigProperties emptyBridge;
@@ -132,5 +135,9 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(Arrays.asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
+
+    // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
+    // as for otel.instrumentation.*)
+    assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
   }
 }
