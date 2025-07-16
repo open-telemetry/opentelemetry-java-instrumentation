@@ -44,6 +44,15 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
   }
 
   private static void addTracerProvider(OpenTelemetryConfigurationModel model) {
+    // adds the following to the configuration:
+    //    tracer_provider:
+    //      processors:
+    //        - simple:
+    //            exporter:
+    //              test:
+    //        - simple:
+    //            exporter:
+    //              console:
     List<SpanProcessorModel> processors = new ArrayList<>();
     processors.add(getProcessorModel(new SpanExporterModel().withAdditionalProperty("test", null)));
     processors.add(
@@ -57,6 +66,12 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
   }
 
   private static void addLoggerProvider(OpenTelemetryConfigurationModel model) {
+    // adds the following to the configuration:
+    //    logger_provider:
+    //      processors:
+    //        - simple:
+    //            exporter:
+    //              test:
     model.withLoggerProvider(
         new LoggerProviderModel()
             .withProcessors(
@@ -70,6 +85,13 @@ public class TestExporterCustomizerProvider implements DeclarativeConfigurationC
   }
 
   private static void addMeterProvider(OpenTelemetryConfigurationModel model) {
+    // adds the following to the configuration:
+    //    meter_provider:
+    //      readers:
+    //        - periodic:
+    //            interval: 1000000
+    //            exporter:
+    //              test:
     model.withMeterProvider(
         new MeterProviderModel()
             .withReaders(

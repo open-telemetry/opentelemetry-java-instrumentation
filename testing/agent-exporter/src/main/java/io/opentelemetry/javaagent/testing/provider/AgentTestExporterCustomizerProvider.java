@@ -50,6 +50,15 @@ public class AgentTestExporterCustomizerProvider
   }
 
   private static void addTracerProvider(OpenTelemetryConfigurationModel model) {
+    // adds the following to the configuration:
+    //    tracer_provider:
+    //      processors:
+    //        - simple:
+    //            exporter:
+    //              agent_test:
+    //        - simple:
+    //            exporter:
+    //              console:
     List<SpanProcessorModel> processors = new ArrayList<>();
     processors.add(
         getProcessorModel(new SpanExporterModel().withAdditionalProperty("agent_test", null)));
@@ -64,6 +73,12 @@ public class AgentTestExporterCustomizerProvider
   }
 
   private static void addLoggerProvider(OpenTelemetryConfigurationModel model) {
+    // adds the following to the configuration:
+    //    logger_provider:
+    //      processors:
+    //        - simple:
+    //            exporter:
+    //              agent_test:
     model.withLoggerProvider(
         new LoggerProviderModel()
             .withProcessors(
@@ -77,6 +92,13 @@ public class AgentTestExporterCustomizerProvider
   }
 
   private static void addMeterProvider(OpenTelemetryConfigurationModel model) {
+    // adds the following to the configuration:
+    //    meter_provider:
+    //      readers:
+    //        - periodic:
+    //            interval: 1000000
+    //            exporter:
+    //              agent_test:
     model.withMeterProvider(
         new MeterProviderModel()
             .withReaders(
