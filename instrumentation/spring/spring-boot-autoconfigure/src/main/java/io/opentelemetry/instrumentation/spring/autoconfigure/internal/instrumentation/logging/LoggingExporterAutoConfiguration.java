@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging;
 
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.instrumentation.logging.LoggingSpanExporterConfigurer;
+import io.opentelemetry.instrumentation.internal.logging.LoggingSpanExporterConfigurer;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Conditional(SdkEnabled.class)
 // for backward compatibility with declarative configuration
-@ConditionalOnProperty(name = "otel.log_level", havingValue = "debug")
+@ConditionalOnProperty(name = "otel.debug", havingValue = "true")
 @ConditionalOnClass(LoggingSpanExporter.class)
 @Configuration
 public class LoggingExporterAutoConfiguration {
