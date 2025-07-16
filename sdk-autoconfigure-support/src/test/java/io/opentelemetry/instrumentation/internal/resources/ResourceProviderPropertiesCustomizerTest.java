@@ -30,6 +30,10 @@ import org.junit.jupiter.api.TestFactory;
  */
 public class ResourceProviderPropertiesCustomizerTest {
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static final class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
@@ -62,7 +66,7 @@ public class ResourceProviderPropertiesCustomizerTest {
   @TestFactory
   Stream<DynamicTest> enabledTestCases() {
     String className =
-        "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider";
+        "io.opentelemetry.instrumentation.internal.resources.ResourceProviderPropertiesCustomizerTest$Provider";
     return Stream.of(
             new EnabledTestCase(
                 "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
