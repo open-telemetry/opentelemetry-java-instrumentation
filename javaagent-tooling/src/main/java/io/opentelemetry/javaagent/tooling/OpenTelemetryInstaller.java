@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.extension.DeclarativeConfigPropertiesBridge;
+import io.opentelemetry.javaagent.extension.internal.DeclarativeConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
