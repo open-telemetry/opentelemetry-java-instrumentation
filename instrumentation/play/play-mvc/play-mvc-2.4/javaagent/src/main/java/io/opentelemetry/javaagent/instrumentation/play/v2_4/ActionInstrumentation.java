@@ -71,7 +71,6 @@ public class ActionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-
     private final Context context;
     private final Scope scope;
 
@@ -90,15 +89,12 @@ public class ActionInstrumentation implements TypeInstrumentation {
       return new AdviceScope(context, context.makeCurrent());
     }
 
-    public void closeScope() {
-      if (scope != null) {
-        scope.close();
-      }
-    }
-
     public void end(
-        Throwable throwable, Future<Result> responseFuture, Action<?> thisAction, Request<?> req) {
-      closeScope();
+        @Nullable Throwable throwable,
+        Future<Result> responseFuture,
+        Action<?> thisAction,
+        Request<?> req) {
+      scope.close();
       updateSpan(context, req);
 
       if (throwable == null) {
