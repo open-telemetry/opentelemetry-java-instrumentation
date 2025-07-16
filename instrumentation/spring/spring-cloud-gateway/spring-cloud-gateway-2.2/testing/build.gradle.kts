@@ -15,10 +15,6 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
 }
 
-configurations.configureEach {
-  // conflicting version of snake yaml
-  exclude("io.opentelemetry", "opentelemetry-sdk-extension-incubator")
-}
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")

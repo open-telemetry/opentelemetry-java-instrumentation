@@ -1,5 +1,8 @@
 otel:
   experimental:
+    metrics:
+      view:
+        config: [ a,b ]
     resource:
       disabled:
         keys: [ a,b ]

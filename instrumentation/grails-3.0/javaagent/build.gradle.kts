@@ -47,8 +47,6 @@ configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
   exclude("org.apache.groovy", "groovy-json")
   exclude("org.spockframework", "spock-core")
-  // conflicting version of snake yaml
-  exclude("io.opentelemetry", "opentelemetry-sdk-extension-incubator")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
