@@ -56,7 +56,7 @@ final class CamelRoutePolicy extends RoutePolicySupport {
       return null;
     }
     Context context = instrumenter().start(parentContext, request);
-    ActiveContextManager.activate(context, request);
+    ActiveContextManager.activate(context, exchange);
     return context;
   }
 
@@ -80,7 +80,11 @@ final class CamelRoutePolicy extends RoutePolicySupport {
   /** Route exchange done. Get active CAMEL span, finish, remove from CAMEL holder. */
   @Override
   public void onExchangeDone(Route route, Exchange exchange) {
+    SpanDecorator sd = getSpanDecorator(route.getEndpoint());
     Context context = ActiveContextManager.deactivate(exchange);
+    CamelRequest request =
+      CamelRequest.create(sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, SpanKind.INTERNAL);
+    instrumenter().end(context, request, null, exchange.getException());
     logger.log(FINE, "[Route finished] Receiver span finished {0}", context);
   }
 }

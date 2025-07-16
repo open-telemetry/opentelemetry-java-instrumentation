@@ -180,6 +180,7 @@ include(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-sha
 include(":instrumentation:c3p0-0.9:javaagent")
 include(":instrumentation:c3p0-0.9:library")
 include(":instrumentation:c3p0-0.9:testing")
+include(":instrumentation:camel-2.20:bootstrap")
 include(":instrumentation:camel-2.20:javaagent")
 include(":instrumentation:camel-2.20:javaagent-unit-tests")
 include(":instrumentation:cassandra:cassandra-3.0:javaagent")

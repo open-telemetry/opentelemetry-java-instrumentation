@@ -23,13 +23,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
-import static io.opentelemetry.javaagent.instrumentation.apachecamel.CamelSingletons.instrumenter;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.bootstrap.apachecamel.ContextWithScope;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import org.apache.camel.Exchange;
 
 /** Utility class for managing active contexts as a stack associated with an exchange. */
@@ -45,13 +43,12 @@ class ActiveContextManager {
    * This method activates the supplied context for the supplied exchange. If an existing context is
    * found for the exchange it will be pushed onto a stack.
    *
-   * @param context The exchange
-   * @param request The context
+   * @param context The context
+   * @param exchange The exchange
    */
-  public static void activate(Context context, CamelRequest request) {
-    Exchange exchange = request.getExchange();
+  public static void activate(Context context, Exchange exchange) {
     ContextWithScope parent = exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
-    ContextWithScope contextWithScope = ContextWithScope.activate(parent, context, request);
+    ContextWithScope contextWithScope = ContextWithScope.activate(parent, context);
     exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope);
     logger.log(FINE, "Activated a span: {0}", contextWithScope);
   }
@@ -68,50 +65,13 @@ class ActiveContextManager {
         exchange.getProperty(ACTIVE_CONTEXT_PROPERTY, ContextWithScope.class);
 
     if (contextWithScope != null) {
-      contextWithScope.deactivate(exchange.getException());
+      contextWithScope.deactivate();
       exchange.setProperty(ACTIVE_CONTEXT_PROPERTY, contextWithScope.getParent());
       logger.log(FINE, "Deactivated span: {0}", contextWithScope);
-      return contextWithScope.context;
+      return contextWithScope.getContext();
     }
 
     return null;
   }
 
-  private static class ContextWithScope {
-    @Nullable private final ContextWithScope parent;
-    @Nullable private final Context context;
-    private final CamelRequest request;
-    @Nullable private final Scope scope;
-
-    public ContextWithScope(
-        ContextWithScope parent, Context context, CamelRequest request, Scope scope) {
-      this.parent = parent;
-      this.context = context;
-      this.request = request;
-      this.scope = scope;
-    }
-
-    public static ContextWithScope activate(
-        ContextWithScope parent, Context context, CamelRequest request) {
-      Scope scope = context != null ? context.makeCurrent() : null;
-      return new ContextWithScope(parent, context, request, scope);
-    }
-
-    public ContextWithScope getParent() {
-      return parent;
-    }
-
-    public void deactivate(Exception exception) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-      instrumenter().end(context, request, null, exception);
-    }
-
-    @Override
-    public String toString() {
-      return "ContextWithScope [context=" + context + ", scope=" + scope + "]";
-    }
-  }
 }

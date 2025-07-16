@@ -30,6 +30,7 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+  bootstrap(project(":instrumentation:camel-2.20:bootstrap"))
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
