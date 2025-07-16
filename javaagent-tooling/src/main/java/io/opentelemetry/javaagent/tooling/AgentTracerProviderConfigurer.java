@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling;
 
-import static io.opentelemetry.instrumentation.logging.LoggingSpanExporterConfigurer.enableLoggingExporter;
+import static io.opentelemetry.instrumentation.internal.logging.LoggingSpanExporterConfigurer.enableLoggingExporter;
 import static io.opentelemetry.javaagent.tooling.AgentInstaller.JAVAAGENT_ENABLED_CONFIG;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.thread.AddThreadDetailsSpanProcessor;
+import io.opentelemetry.instrumentation.internal.thread.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
