@@ -5,9 +5,13 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -48,9 +52,28 @@ public final class JdbcInstrumenterFactory {
         openTelemetry,
         emptyList(),
         true,
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
+        isStatementSanitizationEnabled(openTelemetry),
         captureQueryParameters);
+  }
+
+  private static boolean isStatementSanitizationEnabled(OpenTelemetry openTelemetry) {
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      ConfigProvider configProvider = ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
+      // we might want to pull the config bridge to instrumentation-api-incubator which we can
+      // use here
+      DeclarativeConfigProperties properties = configProvider.getInstrumentationConfig();
+      if (properties == null) {
+        properties = DeclarativeConfigProperties.empty();
+      }
+      return properties
+          .getStructured("java", empty())
+          .getStructured("common", empty())
+          .getStructured("db_statement_sanitizer", empty())
+          .getBoolean("enabled", true);
+    }
+
+    return ConfigPropertiesUtil.getBoolean(
+        "otel.instrumentation.common.db-statement-sanitizer.enabled", true);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(

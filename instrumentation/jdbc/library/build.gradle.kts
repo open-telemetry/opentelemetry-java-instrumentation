@@ -65,3 +65,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }
+
+// todo remove when the next release is published
+configurations.all {
+  resolutionStrategy {
+    force("io.opentelemetry:opentelemetry-api-incubator:1.53.0-alpha-SNAPSHOT")
+  }
+}
