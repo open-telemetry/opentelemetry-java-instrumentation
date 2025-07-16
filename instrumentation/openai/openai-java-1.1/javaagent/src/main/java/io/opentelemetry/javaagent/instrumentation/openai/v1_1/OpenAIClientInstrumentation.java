@@ -32,7 +32,7 @@ public class OpenAIClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
-    @Advice.OnMethodExit
+    @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static OpenAIClient onExit(@Advice.Return OpenAIClient client) {
       return TELEMETRY.wrap(client);

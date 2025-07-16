@@ -9,6 +9,7 @@ import com.openai.core.RequestOptions;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.services.blocking.chat.ChatCompletionService;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -18,14 +19,17 @@ final class InstrumentedChatCompletionService
     extends DelegatingInvocationHandler<ChatCompletionService, InstrumentedChatCompletionService> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
+  private final Logger eventLogger;
   private final boolean captureMessageContent;
 
   InstrumentedChatCompletionService(
       ChatCompletionService delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
+      Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
     this.instrumenter = instrumenter;
+    this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
 
@@ -76,9 +80,9 @@ final class InstrumentedChatCompletionService
   private ChatCompletion createWithLogs(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        chatCompletionCreateParams, captureMessageContent);
+        eventLogger, chatCompletionCreateParams, captureMessageContent);
     ChatCompletion result = delegate.create(chatCompletionCreateParams, requestOptions);
-    ChatCompletionEventsHelper.emitCompletionLogEvents(result, captureMessageContent);
+    ChatCompletionEventsHelper.emitCompletionLogEvents(eventLogger, result, captureMessageContent);
     return result;
   }
 }

@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.openai.v1_1.OpenAITelemetryBuilder.INSTRUMENTATION_NAME;
+import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_SYSTEM;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
@@ -19,7 +19,6 @@ import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
 import com.openai.models.chat.completions.ChatCompletionSystemMessageParam;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
@@ -34,14 +33,10 @@ import javax.annotation.Nullable;
 
 final class ChatCompletionEventsHelper {
 
-  private static final Logger eventLogger =
-      GlobalOpenTelemetry.get().getLogsBridge().get(INSTRUMENTATION_NAME);
-
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
-  private static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
 
   public static void emitPromptLogEvents(
-      ChatCompletionCreateParams request, boolean captureMessageContent) {
+      Logger eventLogger, ChatCompletionCreateParams request, boolean captureMessageContent) {
     for (ChatCompletionMessageParam msg : request.messages()) {
       String eventType;
       Map<String, Value<?>> body = new HashMap<>();
@@ -89,7 +84,7 @@ final class ChatCompletionEventsHelper {
       } else {
         continue;
       }
-      newEvent(eventType).setBody(Value.of(body)).emit();
+      newEvent(eventLogger, eventType).setBody(Value.of(body)).emit();
     }
   }
 
@@ -165,7 +160,7 @@ final class ChatCompletionEventsHelper {
   }
 
   public static void emitCompletionLogEvents(
-      ChatCompletion completion, boolean captureMessageContent) {
+      Logger eventLogger, ChatCompletion completion, boolean captureMessageContent) {
     for (ChatCompletion.Choice choice : completion.choices()) {
       ChatCompletionMessage choiceMsg = choice.message();
       Map<String, Value<?>> message = new HashMap<>();
@@ -184,11 +179,12 @@ final class ChatCompletionEventsHelper {
                             .collect(Collectors.toList())));
               });
       emitCompletionLogEvent(
-          choice.index(), choice.finishReason().toString(), Value.of(message), null);
+          eventLogger, choice.index(), choice.finishReason().toString(), Value.of(message), null);
     }
   }
 
   public static void emitCompletionLogEvent(
+      Logger eventLogger,
       long index,
       String finishReason,
       Value<?> eventMessageObject,
@@ -197,14 +193,14 @@ final class ChatCompletionEventsHelper {
     body.put("finish_reason", Value.of(finishReason));
     body.put("index", Value.of(index));
     body.put("message", eventMessageObject);
-    LogRecordBuilder builder = newEvent("gen_ai.choice").setBody(Value.of(body));
+    LogRecordBuilder builder = newEvent(eventLogger, "gen_ai.choice").setBody(Value.of(body));
     if (contextOverride != null) {
       builder.setContext(contextOverride);
     }
     builder.emit();
   }
 
-  private static LogRecordBuilder newEvent(String name) {
+  private static LogRecordBuilder newEvent(Logger eventLogger, String name) {
     return eventLogger
         .logRecordBuilder()
         .setAttribute(EVENT_NAME, name)

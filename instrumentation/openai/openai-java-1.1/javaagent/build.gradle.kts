@@ -19,9 +19,6 @@ dependencies {
   library("com.openai:openai-java:1.1.0")
 
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
-
-  // needed for latest dep tests
-  testCompileOnly("com.google.errorprone:error_prone_annotations")
 }
 
 tasks {

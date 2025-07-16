@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
@@ -52,6 +53,7 @@ public final class OpenAITelemetryBuilder {
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter();
 
-    return new OpenAITelemetry(chatInstrumenter, captureMessageContent);
+    Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
+    return new OpenAITelemetry(chatInstrumenter, eventLogger, captureMessageContent);
   }
 }

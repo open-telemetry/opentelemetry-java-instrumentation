@@ -8,22 +8,25 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-@SuppressWarnings("IdentifierName") // Want to match library's convention
-final class InstrumentedOpenAIClient
-    extends DelegatingInvocationHandler<OpenAIClient, InstrumentedOpenAIClient> {
+final class InstrumentedOpenAiClient
+    extends DelegatingInvocationHandler<OpenAIClient, InstrumentedOpenAiClient> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
+  private final Logger eventLogger;
   private final boolean captureMessageContent;
 
-  InstrumentedOpenAIClient(
+  InstrumentedOpenAiClient(
       OpenAIClient delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
+      Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
     this.chatInstrumenter = chatInstrumenter;
+    this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
 
@@ -37,7 +40,8 @@ final class InstrumentedOpenAIClient
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
     if (methodName.equals("chat") && parameterTypes.length == 0) {
-      return new InstrumentedChatService(delegate.chat(), chatInstrumenter, captureMessageContent)
+      return new InstrumentedChatService(
+              delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
     return super.invoke(proxy, method, args);
