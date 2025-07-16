@@ -1100,6 +1100,9 @@ libraries:
       default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
+    description: This instrumentation provides client spans for Elasticsearch API
+      client requests for version 7 of the client. Versions 8.10 and later have native
+      support for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -1108,6 +1111,7 @@ libraries:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
   - name: elasticsearch-rest-5.0
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -1138,6 +1142,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-6.4
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -1166,6 +1171,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-7.0
+    description: This instrumentation provides tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -1196,6 +1202,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-transport-5.0
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -1203,6 +1211,11 @@ libraries:
       javaagent:
       - org.elasticsearch.client:transport:[5.0.0,5.3.0)
       - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       spans:
@@ -1265,6 +1278,8 @@ libraries:
         - name: network.peer.port
           type: LONG
   - name: elasticsearch-transport-5.3
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -1272,6 +1287,11 @@ libraries:
       javaagent:
       - org.elasticsearch.client:transport:[5.3.0,6.0.0)
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       spans:
@@ -1344,6 +1364,8 @@ libraries:
         - name: network.peer.port
           type: LONG
   - name: elasticsearch-transport-6.0
+    description: |
+      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -1351,6 +1373,11 @@ libraries:
       javaagent:
       - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
       - org.elasticsearch.client:transport:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       spans:
@@ -3279,7 +3306,6 @@ libraries:
       - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
-    description: Instruments the Spring Batch framework.
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
     scope:
@@ -3287,31 +3313,7 @@ libraries:
     target_versions:
       javaagent:
       - org.springframework.batch:spring-batch-core:[3.0.0.RELEASE,5)
-    configurations:
-    - name: otel.instrumentation.spring-batch.experimental-span-attributes
-      description: Adds the experimental attribute `job.system` to spans.
-      type: boolean
-      default: false
-    - name: otel.instrumentation.spring-batch.experimental.chunk.new-trace
-      description: When enabled, a new root span will be created for each chunk processing.
-        Please note that this may lead to a high number of spans being created.
-      type: boolean
-      default: false
-    - name: otel.instrumentation.spring-batch.item.enabled
-      description: When enabled, spans will be created for each item processed. Please
-        note that this may lead to a high number of spans being created.
-      type: boolean
-      default: false
-    telemetry:
-    - when: otel.instrumentation.spring-batch.experimental-span-attributes=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: job.system
-          type: STRING
   - name: spring-boot-actuator-autoconfigure-2.0
-    description: |
-      This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from Spring Boot Actuator. It does not produce telemetry on its own.
     disabled_by_default: true
     source_path: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
     scope:
@@ -3320,14 +3322,10 @@ libraries:
       javaagent:
       - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
   - name: spring-boot-resources
-    description: |
-      This instrumentation automatically detects the `service.name` and `service.version` for Spring Boot applications and sets them as resource attributes.
     source_path: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
   - name: spring-cloud-aws-3.0
-    description: |
-      This instrumentation provides tracing for Spring Cloud AWS SQS, versions 3.0.0 and newer. It augments the existing AWS SDK 2.2 instrumentation by providing higher-level tracing for SQS operations, capturing details specific to Spring Cloud AWS SQS usage and linking them to the underlying AWS SDK traces.
     source_path: instrumentation/spring/spring-cloud-aws-3.0
     minimum_java_version: 17
     scope:
@@ -3336,24 +3334,13 @@ libraries:
       javaagent:
       - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
   - name: spring-cloud-gateway-2.0
-    description: |
-      This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
     scope:
       name: io.opentelemetry.spring-cloud-gateway-2.0
     target_versions:
       javaagent:
       - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
-    configurations:
-    - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
-      description: Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
-        `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on
-        spans.
-      type: boolean
-      default: false
   - name: spring-core-2.0
-    description: |
-      This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating new telemetry itself.
     source_path: instrumentation/spring/spring-core-2.0
     minimum_java_version: 17
     scope:
@@ -3362,8 +3349,6 @@ libraries:
       javaagent:
       - org.springframework:spring-core:[2.0,]
   - name: spring-data-1.8
-    description: |
-      This instrumentation enhances tracing for Spring Data operations. It works in conjunction with other instrumentations, such as JDBC, to provide additional context and details for database interactions initiated through Spring Data.
     source_path: instrumentation/spring/spring-data/spring-data-1.8
     scope:
       name: io.opentelemetry.spring-data-1.8
@@ -3371,23 +3356,6 @@ libraries:
       javaagent:
       - org.springframework:spring-aop:[1.2,]
       - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
   - name: spring-integration-4.1
     source_path: instrumentation/spring/spring-integration-4.1
     scope:

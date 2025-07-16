@@ -27,7 +27,7 @@ No targets are enabled by default. The supported target environments are listed 
 
 - [activemq](javaagent/activemq.md)
 - [camel](javaagent/camel.md)
-- [jetty](javaagent/jetty.md)
+- [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](javaagent/wildfly.md)
@@ -370,6 +370,40 @@ rules:
         dropNegativeValues: true
         desc: Recent CPU utilization for the process as reported by the JVM.
 ```
+
+### Aggregation over multiple MBean instances
+
+Sometimes, multiple MBean instances are registered with distinct names and we need to capture the aggregate value over all the instances.
+
+For example, the JVM exposes the number of GC executions in the `CollectionCount` attribute of the MBean instances returned by `java.lang:name=*,type=GarbageCollector` query,
+there are multiple instances each with a distinct value for the `name` parameter.
+
+To capture the total number of GC executions across all those instances in a single metric, we can use the following configuration
+where the `name` parameter in the MBean name is NOT mapped to a metric attribute.
+
+```yaml
+  - bean: java.lang:name=*,type=GarbageCollector
+    mapping:
+      CollectionCount:
+        metric: custom.jvm.gc.count
+        unit: '{collection}'
+        type: counter
+        desc: JVM GC execution count
+```
+
+When two or more MBean parameters are used, it is also possible to perform a partial aggregation:
+- parameters not mapped as metric attributes are discarded
+- parameters mapped as metric attributes with `param(<mbeanParam>)` are preserved
+- values are aggregated with mapped metric attributes
+
+The applied aggregation depends on the metric type:
+- `counter` or `updowncounter`: sum aggregation
+- `gauge`: last-value aggregation
+
+As a consequence, it is not recommended to use it for `gauge` metrics when querying more than one MBean instance as it would produce unpredictable results.
+
+When there is only a single MBean instance, using a `gauge` metric produces the expected value, hence allowing to avoid mapping all the MBean parameters
+to metric attributes.
 
 ### General Syntax
 

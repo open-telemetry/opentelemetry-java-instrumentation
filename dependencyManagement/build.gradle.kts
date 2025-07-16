@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.51.0"
+val otelSdkVersion = "1.52.0"
 val otelContribVersion = "1.47.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -120,7 +120,7 @@ val DEPENDENCIES = listOf(
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
-  "org.snakeyaml:snakeyaml-engine:2.9",
+  "org.snakeyaml:snakeyaml-engine:2.10",
   "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.12"
 )
 

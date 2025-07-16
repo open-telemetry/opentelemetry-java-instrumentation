@@ -1,0 +1,2 @@
+description: >
+  This instrumentation provides a library integeration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
