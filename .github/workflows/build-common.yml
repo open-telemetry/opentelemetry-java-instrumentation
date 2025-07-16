@@ -194,7 +194,7 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Build
-        run: ./gradlew check spdxSbom -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        run: ./gradlew check javadoc spdxSbom -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check for jApiCmp diffs
         # The jApiCmp diff compares current to latest, which isn't appropriate for release branches
