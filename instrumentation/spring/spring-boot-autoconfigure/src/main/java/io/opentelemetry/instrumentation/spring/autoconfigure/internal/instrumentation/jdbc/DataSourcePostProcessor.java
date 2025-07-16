@@ -11,7 +11,10 @@ import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.sql.DataSource;
+import org.aopalliance.intercept.MethodInterceptor;
+import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.scope.ScopedProxyUtils;
+import org.springframework.aop.support.AopUtils;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.core.Ordered;
@@ -50,22 +53,32 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
         && !isRoutingDatasource(bean)
         && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
-      return JdbcTelemetry.builder(openTelemetryProvider.getObject())
-          .setStatementSanitizationEnabled(
-              InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                  configPropertiesProvider.getObject(),
-                  "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
-          .setCaptureQueryParameters(
-              configPropertiesProvider
-                  .getObject()
-                  .getBoolean(
-                      "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
-          .setTransactionInstrumenterEnabled(
-              configPropertiesProvider
-                  .getObject()
-                  .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false))
-          .build()
-          .wrap(dataSource);
+      DataSource wrapped =
+          JdbcTelemetry.builder(openTelemetryProvider.getObject())
+              .setStatementSanitizationEnabled(
+                  InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                      configPropertiesProvider.getObject(),
+                      "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+              .setCaptureQueryParameters(
+                  configPropertiesProvider
+                      .getObject()
+                      .getBoolean(
+                          "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
+              .setTransactionInstrumenterEnabled(
+                  configPropertiesProvider
+                      .getObject()
+                      .getBoolean(
+                          "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
+              .build()
+              .wrap(dataSource);
+      ProxyFactory proxyFactory = new ProxyFactory(new Class<?>[] {DataSource.class});
+      proxyFactory.setTarget(bean);
+      proxyFactory.addAdvice(
+          (MethodInterceptor)
+              invocation ->
+                  AopUtils.invokeJoinpointUsingReflection(
+                      wrapped, invocation.getMethod(), invocation.getArguments()));
+      return proxyFactory.getProxy();
     }
     return bean;
   }
