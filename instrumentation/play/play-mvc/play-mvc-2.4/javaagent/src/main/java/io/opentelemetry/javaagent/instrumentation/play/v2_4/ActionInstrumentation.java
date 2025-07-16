@@ -50,25 +50,6 @@ public class ActionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
-      return AdviceScope.start(currentContext());
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopTraceOnResponse(
-        @Advice.This Action<?> thisAction,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Argument(0) Request<?> req,
-        @Advice.Return(readOnly = false) Future<Result> responseFuture,
-        @Advice.Enter @Nullable AdviceScope actionScope) {
-      if (actionScope == null) {
-        return;
-      }
-
-      actionScope.end(throwable, responseFuture, thisAction, req);
-    }
-
     public static class AdviceScope {
       private final Context context;
       private final Scope scope;
@@ -104,6 +85,25 @@ public class ActionInstrumentation implements TypeInstrumentation {
           instrumenter().end(context, null, null, throwable);
         }
       }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(0) Request<?> req) {
+      return AdviceScope.start(currentContext());
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopTraceOnResponse(
+        @Advice.This Action<?> thisAction,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Argument(0) Request<?> req,
+        @Advice.Return(readOnly = false) Future<Result> responseFuture,
+        @Advice.Enter @Nullable AdviceScope actionScope) {
+      if (actionScope == null) {
+        return;
+      }
+
+      actionScope.end(throwable, responseFuture, thisAction, req);
     }
   }
 }
