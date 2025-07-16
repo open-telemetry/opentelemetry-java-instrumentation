@@ -82,8 +82,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
           // not using responseFuture.onComplete() because that doesn't guarantee this handler span
           // will be completed before the server span completes
           responseFuture =
-              ResponseFutureWrapper.wrap(
-                  responseFuture, context, ((Action<?>) thisAction).executionContext());
+              ResponseFutureWrapper.wrap(responseFuture, context, thisAction.executionContext());
         } else {
           instrumenter().end(context, null, null, throwable);
         }
