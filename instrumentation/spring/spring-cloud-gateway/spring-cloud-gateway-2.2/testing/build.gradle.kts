@@ -15,7 +15,6 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
 }
 
-
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.spring-cloud-gateway.experimental-span-attributes=true")
 
