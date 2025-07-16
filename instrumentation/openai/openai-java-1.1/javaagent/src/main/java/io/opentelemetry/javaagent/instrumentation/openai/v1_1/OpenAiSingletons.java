@@ -9,8 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.openai.v1_1.OpenAITelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
-@SuppressWarnings("IdentifierName") // Want to match library's convention
-public final class OpenAISingletons {
+public final class OpenAiSingletons {
   public static final OpenAITelemetry TELEMETRY =
       OpenAITelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureMessageContent(
@@ -18,5 +17,5 @@ public final class OpenAISingletons {
                   .getBoolean("otel.instrumentation.genai.capture-message-content", false))
           .build();
 
-  private OpenAISingletons() {}
+  private OpenAiSingletons() {}
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
-import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAISingletons.TELEMETRY;
+import static io.opentelemetry.javaagent.instrumentation.openai.v1_1.OpenAiSingletons.TELEMETRY;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
@@ -16,8 +16,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-@SuppressWarnings("IdentifierName") // Want to match library's convention
-public class OpenAIClientInstrumentation implements TypeInstrumentation {
+public class OpenAiClientInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return named("com.openai.client.okhttp.OpenAIOkHttpClient$Builder");
@@ -27,7 +26,7 @@ public class OpenAIClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("build").and(returns(named("com.openai.client.OpenAIClient"))),
-        OpenAIClientInstrumentation.class.getName() + "$BuildAdvice");
+        OpenAiClientInstrumentation.class.getName() + "$BuildAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -15,9 +15,8 @@ import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-@SuppressWarnings("IdentifierName") // Want to match library's convention
-public class OpenAIInstrumentationModule extends InstrumentationModule {
-  public OpenAIInstrumentationModule() {
+public class OpenAiInstrumentationModule extends InstrumentationModule {
+  public OpenAiInstrumentationModule() {
     super("openai-java", "openai-java-1.1", "openai");
   }
 
@@ -28,6 +27,6 @@ public class OpenAIInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new OpenAIClientInstrumentation());
+    return singletonList(new OpenAiClientInstrumentation());
   }
 }
