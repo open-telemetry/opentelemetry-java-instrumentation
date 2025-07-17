@@ -65,4 +65,8 @@ tasks {
   sourcesJar {
     dependsOn(quarkusGenerateCode)
   }
+
+  javadoc {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
+  }
 }
