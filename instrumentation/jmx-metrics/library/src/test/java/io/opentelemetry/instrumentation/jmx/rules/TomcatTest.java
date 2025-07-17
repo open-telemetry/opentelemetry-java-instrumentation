@@ -32,7 +32,6 @@ public class TomcatTest extends TargetSystemTest {
     jvmArgs.add(javaAgentJvmArgument());
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
-    // testing with a basic tomcat image as test application to capture JVM metrics
     GenericContainer<?> target =
         new GenericContainer<>(dockerImageName)
             .withEnv("CATALINA_OPTS", String.join(" ", jvmArgs))

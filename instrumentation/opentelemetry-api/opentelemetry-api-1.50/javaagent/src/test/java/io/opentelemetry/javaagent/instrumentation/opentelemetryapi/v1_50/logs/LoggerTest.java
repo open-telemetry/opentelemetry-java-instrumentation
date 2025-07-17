@@ -20,7 +20,6 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import io.opentelemetry.sdk.trace.IdGenerator;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
@@ -81,8 +80,7 @@ class LoggerTest {
                         logRecordData -> {
                           assertThat(logRecordData.getInstrumentationScopeInfo().getName())
                               .isEqualTo(instrumentationName);
-                          assertThat(((ExtendedLogRecordData) logRecordData).getEventName())
-                              .isEqualTo("eventName");
+                          assertThat(logRecordData.getEventName()).isEqualTo("eventName");
                           assertThat(logRecordData.getInstrumentationScopeInfo().getVersion())
                               .isEqualTo("1.2.3");
                           assertThat(logRecordData.getTimestampEpochNanos()).isGreaterThan(0);
