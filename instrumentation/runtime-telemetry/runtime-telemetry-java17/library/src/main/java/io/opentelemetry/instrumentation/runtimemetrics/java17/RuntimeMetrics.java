@@ -103,6 +103,7 @@ public final class RuntimeMetrics implements AutoCloseable {
       recordingStream.onMetadata(event -> startUpLatch.countDown());
       Thread daemonRunner = new Thread(recordingStream::start, "OpenTelemetry JFR-Metrics-Runner");
       daemonRunner.setDaemon(true);
+      daemonRunner.setContextClassLoader(null);
       daemonRunner.start();
     }
 

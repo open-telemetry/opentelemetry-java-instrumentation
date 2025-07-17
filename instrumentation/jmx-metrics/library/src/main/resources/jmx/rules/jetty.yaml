@@ -1,0 +1,83 @@
+---
+rules:
+
+  # Thread metrics
+  - beans:
+      # Jetty 12 and later
+      - org.eclipse.jetty.util.thread:context=*,type=queuedthreadpool,id=*
+      # Jetty 9 to 11
+      - org.eclipse.jetty.util.thread:type=queuedthreadpool,id=*
+    # usually a single mbean instance exists, thus the metric is aggregated (sum for updowncounter)
+    prefix: jetty.thread.
+    unit: "{thread}"
+    type: updowncounter
+    mapping:
+      # jetty.thread.count
+      threads:
+        metric: count
+        desc: The current number of threads
+      # jetty.thread.limit
+      maxThreads:
+        metric: limit
+        desc: The configured maximum number of threads in the pool
+      # jetty.thread.idle.count
+      idleThreads:
+        metric: idle.count
+        desc: The current number of idle threads
+      # jetty.thread.busy.count
+      busyThreads:
+        metric: busy.count
+        desc: The current number of busy threads
+      # jetty.thread.queue.size
+      queueSize:
+        metric: queue.size
+        desc: The current job queue size
+
+  - bean: org.eclipse.jetty.io:context=*,type=managedselector,id=*
+    mapping:
+      # jetty.select.count
+      selectCount:
+        metric: jetty.select.count
+        type: counter
+        unit: "{operation}"
+        desc: The number of select calls
+
+  # Session metrics for Jetty 12
+  - bean: org.eclipse.jetty.session:context=*,type=defaultsessioncache,id=*
+    # Usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
+    # gauge metrics will return invalid (last-value) with more than 1 mbean instance, thus none
+    # is included in this provided configuration.
+    prefix: jetty.session.
+    unit: "{session}"
+    metricAttribute:
+      # 'context' corresponds to the webapp context path
+      jetty.context: param(context)
+    mapping:
+      # jetty.session.count
+      sessionsCurrent:
+        metric: count
+        type: updowncounter
+        desc: Current number of active sessions
+
+  # Session metrics for Jetty 9 to 11
+  - bean: org.eclipse.jetty.server.session:context=*,type=sessionhandler,id=*
+    # Usually a single mbean instance exists per context, thus the metric is aggregated: sum for counter,
+    # gauge metrics will return invalid (last-value) with more than 1 mbean instance, thus none
+    # is included in this provided configuration.
+    prefix: jetty.session.
+    metricAttribute:
+      # 'context' corresponds to the webapp context path
+      jetty.context: param(context)
+    mapping:
+      # jetty.session.created.count
+      sessionsCreated:
+        metric: created.count
+        unit: "{session}"
+        type: counter
+        desc: The total number of created sessions
+      # jetty.session.duration.sum
+      sessionTimeTotal:
+        metric: duration.sum
+        unit: s
+        type: counter
+        desc: The cumulated session duration
