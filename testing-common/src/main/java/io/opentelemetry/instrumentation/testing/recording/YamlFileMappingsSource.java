@@ -3,23 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.recording;
+package io.opentelemetry.instrumentation.testing.recording;
 
 import static com.github.tomakehurst.wiremock.common.AbstractFileSource.byFileExtension;
 import static com.github.tomakehurst.wiremock.common.Exceptions.throwUnchecked;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.cfg.JsonNodeFeature;
-import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
-import com.fasterxml.jackson.dataformat.yaml.YAMLMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.common.Json;
 import com.github.tomakehurst.wiremock.common.JsonException;
@@ -29,6 +17,18 @@ import com.github.tomakehurst.wiremock.standalone.MappingFileException;
 import com.github.tomakehurst.wiremock.standalone.MappingsSource;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
 import com.github.tomakehurst.wiremock.stubbing.StubMappings;
+import io.opentelemetry.testing.internal.jackson.annotation.JsonInclude.Include;
+import io.opentelemetry.testing.internal.jackson.core.JsonGenerator;
+import io.opentelemetry.testing.internal.jackson.core.JsonParser;
+import io.opentelemetry.testing.internal.jackson.core.JsonProcessingException;
+import io.opentelemetry.testing.internal.jackson.databind.DeserializationFeature;
+import io.opentelemetry.testing.internal.jackson.databind.ObjectMapper;
+import io.opentelemetry.testing.internal.jackson.databind.ObjectWriter;
+import io.opentelemetry.testing.internal.jackson.databind.SerializationFeature;
+import io.opentelemetry.testing.internal.jackson.databind.cfg.JsonNodeFeature;
+import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLGenerator;
+import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLMapper;
+import io.opentelemetry.testing.internal.jackson.datatype.jsr310.JavaTimeModule;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
