@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.resources.ManifestResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 
 /**
- * Declarative config host resource provider.
+ * Declarative config manifest resource provider.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
