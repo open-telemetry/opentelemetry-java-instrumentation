@@ -5,23 +5,20 @@
 
 package io.opentelemetry.instrumentation.testing.recording;
 
-import com.github.tomakehurst.wiremock.common.FileSource;
-import com.github.tomakehurst.wiremock.extension.Parameters;
-import com.github.tomakehurst.wiremock.extension.ResponseTransformer;
+import com.github.tomakehurst.wiremock.extension.ResponseTransformerV2;
 import com.github.tomakehurst.wiremock.http.HttpHeader;
 import com.github.tomakehurst.wiremock.http.HttpHeaders;
-import com.github.tomakehurst.wiremock.http.Request;
 import com.github.tomakehurst.wiremock.http.Response;
+import com.github.tomakehurst.wiremock.stubbing.ServeEvent;
 
-public final class ResponseHeaderScrubber extends ResponseTransformer {
+public final class ResponseHeaderScrubber implements ResponseTransformerV2 {
   @Override
   public String getName() {
     return "scrub-response-header";
   }
 
   @Override
-  public Response transform(
-      Request request, Response response, FileSource fileSource, Parameters parameters) {
+  public Response transform(Response response, ServeEvent serveEvent) {
     HttpHeaders scrubbed = HttpHeaders.noHeaders();
     for (HttpHeader header : response.getHeaders().all()) {
       switch (header.key()) {
