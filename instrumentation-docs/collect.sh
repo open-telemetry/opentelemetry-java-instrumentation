@@ -84,10 +84,11 @@ readonly INSTRUMENTATIONS=(
 #  "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7TestExperimental"
 
 #  "spring:spring-batch-3.0:javaagent:test"
-  "spring:spring-data:spring-data-1.8:javaagent:test"
-#  "spring:spring-data:spring-data-3.0:testing:test"
-#  "spring:spring-data:spring-data-3.0:testing:reactiveTest"
-#  "spring:spring-data:spring-data-3.0:testing:testStableSemconv"
+#  "spring:spring-data:spring-data-1.8:javaagent:test"
+
+  "spring:spring-integration-4.1:javaagent:test"
+  "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
+  "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
 
 )
 
