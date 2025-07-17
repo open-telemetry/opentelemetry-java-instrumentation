@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### 🌟 New javaagent instrumentation
+
+- Add initial instrumentation for OpenAI client
+  ([#14221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14221))
+
+### 🌟 New library instrumentation
+
+- Add initial instrumentation for OpenAI client
+  ([#14221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14221))
+
 ### 📈 Enhancements
 
 - Implement stable semantic conventions for `code.*` attributes with opt-in support
