@@ -27,7 +27,7 @@ class DeclarativeConfigPropertiesBridgeTest {
 
   @BeforeEach
   void setup() {
-    bridge = create("config.yaml", Collections.emptyMap());
+    bridge = create(Collections.emptyMap());
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
@@ -37,11 +37,12 @@ class DeclarativeConfigPropertiesBridgeTest {
             Objects.requireNonNull(SdkConfigProvider.create(emptyModel)), Collections.emptyMap());
   }
 
-  private static DeclarativeConfigPropertiesBridge create(
-      String name, Map<String, Object> earlyInitProperties) {
+  private static DeclarativeConfigPropertiesBridge create(Map<String, Object> earlyInitProperties) {
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(
-            DeclarativeConfigPropertiesBridgeTest.class.getClassLoader().getResourceAsStream(name));
+            DeclarativeConfigPropertiesBridgeTest.class
+                .getClassLoader()
+                .getResourceAsStream("config.yaml"));
     SdkConfigProvider configProvider = SdkConfigProvider.create(model);
     return new DeclarativeConfigPropertiesBridge(
         Objects.requireNonNull(configProvider), earlyInitProperties);
@@ -129,7 +130,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     Map<String, Object> earlyInitProperties = new HashMap<>();
     earlyInitProperties.put("otel.javaagent.debug", true);
     earlyInitProperties.put("otel.javaagent.logging", "application");
-    DeclarativeConfigPropertiesBridge bridge = create("config.yaml", earlyInitProperties);
+    DeclarativeConfigPropertiesBridge bridge = create(earlyInitProperties);
 
     assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
     assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
