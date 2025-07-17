@@ -11,7 +11,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
 /**
- * Declarative config host resource provider.
+ * Declarative config spring resource provider.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
