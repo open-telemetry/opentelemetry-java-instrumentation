@@ -6,7 +6,7 @@ plugins {
 dependencies {
   // If tests fail when updating this, update the list of relocate based on any
   // class conflict reported in the failure.
-  implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
+  implementation("com.github.tomakehurst:wiremock-jre8:3.0.1")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.18.2")
 }
