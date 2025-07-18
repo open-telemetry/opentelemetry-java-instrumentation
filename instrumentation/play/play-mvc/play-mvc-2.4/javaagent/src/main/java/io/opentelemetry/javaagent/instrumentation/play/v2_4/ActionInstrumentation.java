@@ -97,7 +97,7 @@ public class ActionInstrumentation implements TypeInstrumentation {
         @Advice.This Action<?> thisAction,
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) Request<?> req,
-        @Advice.Return(readOnly = false) Future<Result> responseFuture,
+        @Advice.Return Future<Result> responseFuture,
         @Advice.Enter @Nullable AdviceScope actionScope) {
       if (actionScope == null) {
         return;

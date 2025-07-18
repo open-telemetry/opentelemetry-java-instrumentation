@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.play.v2_6.Play26Singletons.updateSpan;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -68,23 +69,25 @@ public class ActionInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void end(
+      public Future<Result> end(
           @Nullable Throwable throwable,
           Future<Result> responseFuture,
           Action<?> thisAction,
           Request<?> req) {
         scope.close();
+        updateSpan(context, req);
 
         if (throwable == null) {
           // span is finished when future completes
           // not using responseFuture.onComplete() because that doesn't guarantee this handler span
           // will be completed before the server span completes
           responseFuture =
-              ResponseFutureWrapper.wrap(
-                  responseFuture, context, thisAction.executionContext(), req);
+              ResponseFutureWrapper.wrap(responseFuture, context, thisAction.executionContext());
         } else {
           instrumenter().end(context, null, null, throwable);
         }
+
+        return responseFuture;
       }
     }
 
@@ -94,17 +97,18 @@ public class ActionInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopTraceOnResponse(
+    @Advice.AssignReturned.ToReturned
+    public static Future<Result> stopTraceOnResponse(
         @Advice.This Action<?> thisAction,
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(0) Request<?> req,
-        @Advice.Return(readOnly = false) Future<Result> responseFuture,
+        @Advice.Return Future<Result> responseFuture,
         @Advice.Enter @Nullable AdviceScope actionScope) {
       if (actionScope == null) {
-        return;
+        return responseFuture;
       }
 
-      actionScope.end(throwable, responseFuture, thisAction, req);
+      return actionScope.end(throwable, responseFuture, thisAction, req);
     }
   }
 }
