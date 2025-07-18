@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.extension.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
-import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.time.Duration;
@@ -50,36 +49,37 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
+final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
-  private static final String OTEL_JAVA_AGENT_PREFIX = "otel.javaagent.";
 
-  private static final Map<String, String> JAVA_MAPPING_RULES = new HashMap<>();
+  private final PropertyTranslator translator;
+  @Nullable private final DeclarativeConfigProperties baseNode;
 
-  // The node at .instrumentation.java
-  private final DeclarativeConfigProperties instrumentationJavaNode;
-
-  static {
-    JAVA_MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
+  static DeclarativeConfigPropertiesBridge fromInstrumentationConfig(
+      @Nullable DeclarativeConfigProperties instrumentationConfig, PropertyTranslator translator) {
+    if (instrumentationConfig == null) {
+      instrumentationConfig = DeclarativeConfigProperties.empty();
+    }
+    return new DeclarativeConfigPropertiesBridge(
+        instrumentationConfig.getStructured("java", empty()), translator);
   }
 
-  private final Map<String, Object> earlyInitProperties;
+  static DeclarativeConfigPropertiesBridge create(
+      @Nullable DeclarativeConfigProperties node, PropertyTranslator translator) {
+    return new DeclarativeConfigPropertiesBridge(node, translator);
+  }
 
-  public DeclarativeConfigPropertiesBridge(
-      ConfigProvider configProvider, Map<String, Object> earlyInitProperties) {
-    this.earlyInitProperties = earlyInitProperties;
-    DeclarativeConfigProperties inst = configProvider.getInstrumentationConfig();
-    if (inst == null) {
-      inst = DeclarativeConfigProperties.empty();
-    }
-    instrumentationJavaNode = inst.getStructured("java", empty());
+  private DeclarativeConfigPropertiesBridge(
+      @Nullable DeclarativeConfigProperties baseNode, PropertyTranslator translator) {
+    this.baseNode = baseNode;
+    this.translator = translator;
   }
 
   @Nullable
   @Override
   public String getString(String propertyName) {
-    Object value = earlyInitProperties.get(propertyName);
+    Object value = translator.get(propertyName);
     if (value != null) {
       return value.toString();
     }
@@ -89,7 +89,7 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
-    Object value = earlyInitProperties.get(propertyName);
+    Object value = translator.get(propertyName);
     if (value != null) {
       return (Boolean) value;
     }
@@ -99,24 +99,40 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   @Override
   public Integer getInt(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Integer) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getInt);
   }
 
   @Nullable
   @Override
   public Long getLong(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Long) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
   }
 
   @Nullable
   @Override
   public Double getDouble(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Double) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getDouble);
   }
 
   @Nullable
   @Override
   public Duration getDuration(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Duration) value;
+    }
     Long millis = getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
     if (millis == null) {
       return null;
@@ -124,8 +140,13 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     return Duration.ofMillis(millis);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (List<String>) value;
+    }
     List<String> propertyValue =
         getPropertyValue(
             propertyName,
@@ -133,8 +154,13 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
     return propertyValue == null ? Collections.emptyList() : propertyValue;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String propertyName) {
+    Object fixed = translator.get(propertyName);
+    if (fixed != null) {
+      return (Map<String, String>) fixed;
+    }
     DeclarativeConfigProperties propertyValue =
         getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
@@ -157,38 +183,41 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    return splitOnDot(getJavaPath(property), instrumentationJavaNode, extractor);
-  }
+    if (baseNode == null) {
+      return null;
+    }
 
-  private static <T> T splitOnDot(
-      String path,
-      DeclarativeConfigProperties target,
-      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    // Split the remainder of the property on ".", and walk to the N-1 entry
-    String[] segments = path.split("\\.");
+    String[] segments = getSegments(translator.translateProperty(property));
     if (segments.length == 0) {
       return null;
     }
+
+    // Extract the value by walking to the N-1 entry
+    DeclarativeConfigProperties target = baseNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());
       }
     }
     String lastPart = segments[segments.length - 1];
+
     return extractor.apply(target, lastPart);
   }
 
-  private static String getJavaPath(String property) {
-    String special = JAVA_MAPPING_RULES.get(property);
-    if (special != null) {
-      return special;
+  private static String[] getSegments(String property) {
+    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
+    }
+    // Split the remainder of the property on "."
+    return property.replace('-', '_').split("\\.");
+  }
+
+  static String yamlPath(String property) {
+    String[] segments = getSegments(property);
+    if (segments.length == 0) {
+      throw new IllegalArgumentException("Invalid property: " + property);
     }
 
-    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
-      return property.substring(OTEL_INSTRUMENTATION_PREFIX.length()).replace('-', '_');
-    } else if (property.startsWith(OTEL_JAVA_AGENT_PREFIX)) {
-      return "agent." + property.substring(OTEL_JAVA_AGENT_PREFIX.length()).replace('-', '_');
-    }
-    return property;
+    return "'instrumentation/development' / 'java' / '" + String.join("' / '", segments) + "'";
   }
 }
