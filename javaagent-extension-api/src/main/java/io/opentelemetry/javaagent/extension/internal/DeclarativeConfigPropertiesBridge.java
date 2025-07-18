@@ -62,9 +62,6 @@ public final class DeclarativeConfigPropertiesBridge implements ConfigProperties
 
   static {
     JAVA_MAPPING_RULES.put("otel.instrumentation.common.default-enabled", "common.default.enabled");
-    JAVA_MAPPING_RULES.put(
-        "otel.javaagent.logging.application.logs-buffer-max-records",
-        "agent.logging.output.application.logs_buffer_max_records");
   }
 
   private final Map<String, Object> earlyInitProperties;
