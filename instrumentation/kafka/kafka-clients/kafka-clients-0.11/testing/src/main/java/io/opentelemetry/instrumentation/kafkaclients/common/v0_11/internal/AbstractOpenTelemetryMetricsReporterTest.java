@@ -57,7 +57,6 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("OtelInternalJavadoc")
 @Testcontainers
 public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
