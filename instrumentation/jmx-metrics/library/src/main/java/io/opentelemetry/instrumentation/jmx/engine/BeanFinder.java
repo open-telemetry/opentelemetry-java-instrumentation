@@ -35,6 +35,7 @@ class BeanFinder {
           runnable -> {
             Thread result = new Thread(runnable, "jmx_bean_finder");
             result.setDaemon(true);
+            result.setContextClassLoader(null);
             return result;
           });
   private final long discoveryDelay;

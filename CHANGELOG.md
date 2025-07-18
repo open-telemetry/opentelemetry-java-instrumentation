@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+## Version 2.18.0 (2025-07-17)
+
+### 🌟 New javaagent instrumentation
+
+- Add initial instrumentation for OpenAI client
+  ([#14221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14221))
+
+### 🌟 New library instrumentation
+
+- Add initial instrumentation for OpenAI client
+  ([#14221](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14221))
+
+### 📈 Enhancements
+
+- Implement stable semantic conventions for `code.*` attributes with opt-in support
+  ([#13860](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13860))
+- Add span kind configuration support for method instrumentation and declarative tooling
+  ([#14014](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14014))
+- Add support for vendor-specific declarative configuration properties
+  ([#14016](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14016))
+- Add auto-instrumentation support for AWS Secrets Manager SDK v1
+  ([#14027](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14027))
+- Add `aws.sns.topic.arn` semantic convention support for AWS SNS SDK v1 and v2
+  ([#14035](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14035))
+- Remove `thread.name` attribute from experimental JVM metrics
+  ([#14061](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14061))
+- Enhance and align Jetty JMX metrics with OpenTelemetry semantic conventions
+  ([#14067](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14067))
+- Add support for latest spring-cloud-aws versions
+  ([#14207](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14207))
+- Add JDBC parameter capture support for `PreparedStatement.setObject()` method
+  ([#14219](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14219))
+- Add `aws.lambda.resource.mapping.id` and experimental Lambda attributes for AWS Lambda SDK
+  ([#14229](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14229))
+- Clear context class loader from OpenTelemetry internal threads to prevent leaks
+  ([#14241](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14241))
+
+### 🛠️ Bug fixes
+
+- Fix JDBC URL parser StringIndexOutOfBoundsException with malformed connection strings
+  ([#14151](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14151))
+- Fix empty units in JMX state metrics definitions
+  ([#14194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14194))
+
 ## Version 2.17.0 (2025-06-20)
 
 ### Migration notes
