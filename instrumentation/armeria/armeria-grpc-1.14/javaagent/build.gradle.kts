@@ -53,3 +53,8 @@ afterEvaluate {
     add("testCompileProtoPath", platform(project(":dependencyManagement")))
   }
 }
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectSpans", true)
+}

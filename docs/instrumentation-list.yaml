@@ -5,7 +5,7 @@
 libraries:
   activej:
   - name: activej-http-6.0
-    description: This instrumentation provides SERVER spans and metrics for the ActiveJ
+    description: This instrumentation enables SERVER spans and metrics for the ActiveJ
       HTTP server.
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
@@ -77,6 +77,8 @@ libraries:
       - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
       - com.typesafe.akka:akka-actor_2.11:[2.5,)
   - name: akka-http-10.0
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Akka HTTP client and server.
     source_path: instrumentation/akka/akka-http-10.0
     scope:
       name: io.opentelemetry.akka-http-10.0
@@ -258,7 +260,7 @@ libraries:
   apache:
   - name: apache-dbcp-2.0
     description: |
-      This instrumentation provides database connection pools metrics for Apache DBCP.
+      This instrumentation enables database connection pools metrics for Apache DBCP.
       The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
     source_path: instrumentation/apache-dbcp-2.0
     scope:
@@ -380,7 +382,7 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: apache-httpasyncclient-4.1
-    description: This instrumentation provides CLIENT spans and metrics for the Apache
+    description: This instrumentation enables CLIENT spans and metrics for the Apache
       HttpAsyncClient.
     source_path: instrumentation/apache-httpasyncclient-4.1
     scope:
@@ -426,7 +428,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-2.0
-    description: This instrumentation provides CLIENT spans and metrics for versions
+    description: This instrumentation enables CLIENT spans and metrics for versions
       2 and 3 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
@@ -470,7 +472,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
-    description: This instrumentation provides CLIENT spans and metrics for version
+    description: This instrumentation enables CLIENT spans and metrics for version
       4 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
@@ -565,6 +567,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.0
+    description: This instrumentation enables CLIENT spans and metrics for version
+      5 of the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
       name: io.opentelemetry.apache-httpclient-5.0
@@ -589,14 +593,76 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-httpclient-5.2
+    description: This instrumentation provides a library integration that enables
+      CLIENT spans and metrics for the Apache HttpClient.
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
     scope:
       name: io.opentelemetry.apache-httpclient-5.2
     target_versions:
       library:
       - org.apache.httpcomponents.client5:httpclient5:5.2.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: apache-shenyu-2.4
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
     source_path: instrumentation/apache-shenyu-2.4
     scope:
       name: io.opentelemetry.apache-shenyu-2.4
@@ -605,11 +671,14 @@ libraries:
       - org.apache.shenyu:shenyu-web:[2.4.0,)
     configurations:
     - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
-      description: Enables experimental span attributes for Apache Shenyu instrumentation.
+      description: |
+        Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`, `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and `rpc-ext`.
       type: boolean
       default: false
   armeria:
   - name: armeria-1.3
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Armeria HTTP client and server.
     source_path: instrumentation/armeria/armeria-1.3
     scope:
       name: io.opentelemetry.armeria-1.3
@@ -618,7 +687,93 @@ libraries:
       - com.linecorp.armeria:armeria:[1.3.0,)
       library:
       - com.linecorp.armeria:armeria:1.3.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: armeria-grpc-1.14
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Armeria gRPC client and server.
     source_path: instrumentation/armeria/armeria-grpc-1.14
     scope:
       name: io.opentelemetry.armeria-grpc-1.14
@@ -627,19 +782,97 @@ libraries:
       - com.linecorp.armeria:armeria-grpc:[1.14.0,)
   async:
   - name: async-http-client-1.9
+    description: This instrumentation enables CLIENT spans and metrics for version
+      1 of the AsyncHttpClient (AHC) HTTP client.
     source_path: instrumentation/async-http-client/async-http-client-1.9
     scope:
       name: io.opentelemetry.async-http-client-1.9
     target_versions:
       javaagent:
       - com.ning:async-http-client:[1.9.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: async-http-client-2.0
+    description: This instrumentation enables CLIENT spans and metrics for version
+      2 of the AsyncHttpClient (AHC) HTTP client.
     source_path: instrumentation/async-http-client/async-http-client-2.0
     scope:
       name: io.opentelemetry.async-http-client-2.0
     target_versions:
       javaagent:
       - org.asynchttpclient:async-http-client:[2.0.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   avaje:
   - name: avaje-jex-3.0
     description: |
@@ -886,7 +1119,7 @@ libraries:
   camel:
   - name: camel-2.20
     description: |
-      This instrumentation provides tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+      This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -1100,9 +1333,9 @@ libraries:
       default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
-    description: This instrumentation provides client spans for Elasticsearch API
-      client requests for version 7 of the client. Versions 8.10 and later have native
-      support for OpenTelemetry.
+    description: This instrumentation enables client spans for Elasticsearch API client
+      requests for version 7 of the client. Versions 8.10 and later have native support
+      for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -1111,7 +1344,7 @@ libraries:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
   - name: elasticsearch-rest-5.0
-    description: This instrumentation provides tracing for Elasticsearch REST clients.
+    description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -1142,7 +1375,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-6.4
-    description: This instrumentation provides tracing for Elasticsearch REST clients.
+    description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -1171,7 +1404,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-7.0
-    description: This instrumentation provides tracing for Elasticsearch REST clients.
+    description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -1203,7 +1436,7 @@ libraries:
           type: STRING
   - name: elasticsearch-transport-5.0
     description: |
-      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -1279,7 +1512,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-5.3
     description: |
-      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -1365,7 +1598,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-6.0
     description: |
-      This instrumentation provides client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -1468,6 +1701,8 @@ libraries:
       default: false
   finagle:
   - name: finagle-http-23.11
+    description: |
+      This instrumentation for Finagle HTTP clients and servers ensures that telemetry is correctly generated by the underlying Netty instrumentation. It augments existing telemetry by bridging the gap between Finagle's abstractions and Netty's pipeline, primarily for context propagation.
     source_path: instrumentation/finagle-http-23.11
     scope:
       name: io.opentelemetry.finagle-http-23.11
@@ -1477,6 +1712,9 @@ libraries:
       - com.twitter:finagle-http_2.12:[23.11.0,]
   finatra:
   - name: finatra-2.9
+    description: This instrumentation for the Finatra web framework augments the telemetry
+      generated by the underlying Netty instrumentation. It provides more specific,
+      high-level context, such as route information, to the spans generated by Netty.
     source_path: instrumentation/finatra-2.9
     scope:
       name: io.opentelemetry.finatra-2.9
@@ -1484,6 +1722,15 @@ libraries:
       javaagent:
       - com.twitter:finatra-http_2.11:[2.9.0,]
       - com.twitter:finatra-http_2.12:[2.9.0,]
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   geode:
   - name: geode-1.4
     source_path: instrumentation/geode-1.4
@@ -2194,6 +2441,8 @@ libraries:
       - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
   kafka:
   - name: kafka-clients-0.11
+    description: |
+      This instrumentation enables messaging spans and metrics for Apache Kafka 0.11 clients. It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
     scope:
       name: io.opentelemetry.kafka-clients-0.11
@@ -2209,7 +2458,17 @@ libraries:
       description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
       type: boolean
       default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for Kafka instrumentation.
+      type: boolean
+      default: false
   - name: kafka-clients-2.6
+    description: |
+      This instrumentation provides a library integeration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
     scope:
       name: io.opentelemetry.kafka-clients-2.6
@@ -3965,6 +4224,10 @@ internal:
   source_path: instrumentation/internal/internal-reflection
   scope:
     name: io.opentelemetry.internal-reflection
+- name: opentelemetry-api-1.52
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.52
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.52
 - name: opentelemetry-instrumentation-api
   source_path: instrumentation/opentelemetry-instrumentation-api
   scope:
