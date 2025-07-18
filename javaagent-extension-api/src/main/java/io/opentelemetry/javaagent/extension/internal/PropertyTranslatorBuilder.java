@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.internal;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -18,11 +19,13 @@ public class PropertyTranslatorBuilder {
 
   PropertyTranslatorBuilder() {}
 
+  @CanIgnoreReturnValue
   public PropertyTranslatorBuilder addTranslation(String propertyName, String yamlPath) {
     translationMap.put(propertyName, yamlPath);
     return this;
   }
 
+  @CanIgnoreReturnValue
   public PropertyTranslatorBuilder addFixedValue(String propertyName, Object value) {
     fixedValues.put(propertyName, value);
     return this;

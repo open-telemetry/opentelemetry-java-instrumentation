@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.extension.internal;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+@SuppressWarnings("NonApiType")
 class PropertyTranslator {
   // lookup order matters - we choose the first match
   private final LinkedHashMap<String, String> translationMap;
