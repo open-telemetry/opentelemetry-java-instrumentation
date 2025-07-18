@@ -69,4 +69,8 @@ tasks {
   javadoc {
     dependsOn(compileQuarkusGeneratedSourcesJava)
   }
+
+  checkstyleMain {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
+  }
 }
