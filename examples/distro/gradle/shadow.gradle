@@ -13,6 +13,7 @@ ext.relocatePackages = { shadowJar ->
   shadowJar.relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
   shadowJar.relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
   shadowJar.relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+  shadowJar.relocate("io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common")
 
   // relocate the OpenTelemetry extensions that are used by instrumentation modules
   // these extensions live in the AgentClassLoader, and are injected into the user's class loader
