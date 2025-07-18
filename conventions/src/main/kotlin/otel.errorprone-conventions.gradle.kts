@@ -140,6 +140,7 @@ tasks {
         if ((project.path.endsWith(":testing") || name.contains("Test")) && !project.name.equals("custom-checks")) {
           // This check causes too many failures, ignore the ones in tests
           disable("OtelCanIgnoreReturnValueSuggester")
+          disable("OtelInternalJavadoc")
         }
       }
     }
