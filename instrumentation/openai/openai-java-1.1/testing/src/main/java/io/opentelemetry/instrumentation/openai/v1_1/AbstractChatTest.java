@@ -27,6 +27,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiSystemIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.COMPLETION;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -35,16 +36,19 @@ import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.core.JsonObject;
 import com.openai.core.JsonValue;
+import com.openai.core.http.StreamResponse;
 import com.openai.errors.OpenAIIoException;
 import com.openai.models.FunctionDefinition;
 import com.openai.models.FunctionParameters;
 import com.openai.models.ResponseFormatText;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
+import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionDeveloperMessageParam;
 import com.openai.models.chat.completions.ChatCompletionMessageParam;
 import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
+import com.openai.models.chat.completions.ChatCompletionStreamOptions;
 import com.openai.models.chat.completions.ChatCompletionSystemMessageParam;
 import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
@@ -62,7 +66,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -857,6 +863,642 @@ public abstract class AbstractChatTest {
                         equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
                     .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+  }
+
+  @Test
+  void stream() {
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .build();
+
+    List<ChatCompletionChunk> chunks;
+    try (StreamResponse<ChatCompletionChunk> result =
+        getClient().chat().completions().createStreaming(params)) {
+      chunks = result.stream().collect(Collectors.toList());
+    }
+
+    String fullMessage =
+        chunks.stream()
+            .map(
+                cc -> {
+                  if (cc.choices().isEmpty()) {
+                    return Optional.<String>empty();
+                  }
+                  return cc.choices().get(0).delta().content();
+                })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.joining());
+
+    String content = "Atlantic Ocean.";
+    assertThat(fullMessage).isEqualTo(content);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_SYSTEM, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                satisfies(
+                                    GEN_AI_RESPONSE_FINISH_REASONS,
+                                    reasons -> reasons.containsExactly("stop"))))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL,
+                                                TEST_CHAT_RESPONSE_MODEL)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+            log -> {
+              log.hasAttributesSatisfyingExactly(
+                      equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                  .hasSpanContext(spanCtx)
+                  .hasBody(
+                      Value.of(
+                          KeyValue.of("finish_reason", Value.of("stop")),
+                          KeyValue.of("index", Value.of(0)),
+                          KeyValue.of(
+                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
+            });
+  }
+
+  @Test
+  void streamIncludeUsage() {
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build())
+            .build();
+
+    List<ChatCompletionChunk> chunks;
+    try (StreamResponse<ChatCompletionChunk> result =
+        getClient().chat().completions().createStreaming(params)) {
+      chunks = result.stream().collect(Collectors.toList());
+    }
+
+    String fullMessage =
+        chunks.stream()
+            .map(
+                cc -> {
+                  if (cc.choices().isEmpty()) {
+                    return Optional.<String>empty();
+                  }
+                  return cc.choices().get(0).delta().content();
+                })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.joining());
+
+    String content = "South Atlantic Ocean";
+    assertThat(fullMessage).isEqualTo(content);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_SYSTEM, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                satisfies(
+                                    GEN_AI_RESPONSE_FINISH_REASONS,
+                                    reasons -> reasons.containsExactly("stop")),
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 3L)))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL)))),
+            metric ->
+                metric
+                    .hasName("gen_ai.client.token.usage")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(22.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                                point ->
+                                    point
+                                        .hasSum(3.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                            equalTo(GEN_AI_TOKEN_TYPE, COMPLETION)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+            log -> {
+              log.hasAttributesSatisfyingExactly(
+                      equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                  .hasSpanContext(spanCtx)
+                  .hasBody(
+                      Value.of(
+                          KeyValue.of("finish_reason", Value.of("stop")),
+                          KeyValue.of("index", Value.of(0)),
+                          KeyValue.of(
+                              "message", Value.of(KeyValue.of("content", Value.of(content))))));
+            });
+  }
+
+  @Test
+  void streamMultipleChoices() {
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .n(2)
+            .build();
+
+    List<ChatCompletionChunk> chunks;
+    try (StreamResponse<ChatCompletionChunk> result =
+        getClient().chat().completions().createStreaming(params)) {
+      chunks = result.stream().collect(Collectors.toList());
+    }
+
+    StringBuilder content1Builder = new StringBuilder();
+    StringBuilder content2Builder = new StringBuilder();
+    for (ChatCompletionChunk chunk : chunks) {
+      if (chunk.choices().isEmpty()) {
+        continue;
+      }
+      ChatCompletionChunk.Choice choice = chunk.choices().get(0);
+      switch ((int) choice.index()) {
+        case 0:
+          content1Builder.append(choice.delta().content().orElse(""));
+          break;
+        case 1:
+          content2Builder.append(choice.delta().content().orElse(""));
+          break;
+        default:
+          // fallthrough
+      }
+    }
+
+    String content1 = "Atlantic Ocean.";
+    assertThat(content1Builder.toString()).isEqualTo(content1);
+    String content2 = "South Atlantic Ocean.";
+    assertThat(content2Builder.toString()).isEqualTo(content2);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_SYSTEM, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                satisfies(
+                                    GEN_AI_RESPONSE_FINISH_REASONS,
+                                    reasons -> reasons.containsExactly("stop", "stop"))))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL,
+                                                TEST_CHAT_RESPONSE_MODEL)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message", Value.of(KeyValue.of("content", Value.of(content1)))))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(1)),
+                            KeyValue.of(
+                                "message", Value.of(KeyValue.of("content", Value.of(content2)))))));
+  }
+
+  @Test
+  void streamToolCalls() {
+    List<ChatCompletionMessageParam> chatMessages = new ArrayList<>();
+    chatMessages.add(createSystemMessage("You are a helpful assistant providing weather updates."));
+    chatMessages.add(createUserMessage("What is the weather in New York City and London?"));
+
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(chatMessages)
+            .model(TEST_CHAT_MODEL)
+            .addTool(buildGetWeatherToolDefinition())
+            .build();
+
+    List<ChatCompletionChunk> chunks;
+    try (StreamResponse<ChatCompletionChunk> result =
+        getClient().chat().completions().createStreaming(params)) {
+      chunks = result.stream().collect(Collectors.toList());
+    }
+
+    List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
+
+    ChatCompletionMessageToolCall.Builder currentToolCall = null;
+    ChatCompletionMessageToolCall.Function.Builder currentFunction = null;
+    StringBuilder currentArgs = null;
+
+    for (ChatCompletionChunk chunk : chunks) {
+      List<ChatCompletionChunk.Choice.Delta.ToolCall> calls =
+          chunk.choices().get(0).delta().toolCalls().orElse(emptyList());
+      if (calls.isEmpty()) {
+        continue;
+      }
+      for (ChatCompletionChunk.Choice.Delta.ToolCall call : calls) {
+        if (call.id().isPresent()) {
+          if (currentToolCall != null) {
+            currentFunction.arguments(currentArgs.toString());
+            currentToolCall.function(currentFunction.build());
+            toolCalls.add(currentToolCall.build());
+          }
+          currentToolCall = ChatCompletionMessageToolCall.builder().id(call.id().get());
+          currentFunction = ChatCompletionMessageToolCall.Function.builder();
+          currentArgs = new StringBuilder();
+        }
+        if (call.function().isPresent()) {
+          if (call.function().get().name().isPresent()) {
+            currentFunction.name(call.function().get().name().get());
+          }
+          if (call.function().get().arguments().isPresent()) {
+            currentArgs.append(call.function().get().arguments().get());
+          }
+        }
+      }
+    }
+    if (currentToolCall != null) {
+      currentFunction.arguments(currentArgs.toString());
+      currentToolCall.function(currentFunction.build());
+      toolCalls.add(currentToolCall.build());
+    }
+
+    String newYorkCallId =
+        toolCalls.stream()
+            .filter(call -> call.function().arguments().contains("New York"))
+            .map(ChatCompletionMessageToolCall::id)
+            .findFirst()
+            .get();
+    String londonCallId =
+        toolCalls.stream()
+            .filter(call -> call.function().arguments().contains("London"))
+            .map(ChatCompletionMessageToolCall::id)
+            .findFirst()
+            .get();
+
+    assertThat(newYorkCallId).startsWith("call_");
+    assertThat(londonCallId).startsWith("call_");
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_SYSTEM, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                satisfies(
+                                    GEN_AI_RESPONSE_FINISH_REASONS,
+                                    reasons -> reasons.containsExactly("tool_calls"))))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL,
+                                                TEST_CHAT_RESPONSE_MODEL)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI),
+                        equalTo(EVENT_NAME, "gen_ai.system.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "You are a helpful assistant providing weather updates.")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content",
+                                Value.of("What is the weather in New York City and London?")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("tool_calls")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message",
+                                Value.of(
+                                    KeyValue.of(
+                                        "tool_calls",
+                                        Value.of(
+                                            Value.of(
+                                                KeyValue.of(
+                                                    "function",
+                                                    Value.of(
+                                                        KeyValue.of(
+                                                            "name", Value.of("get_weather")),
+                                                        KeyValue.of(
+                                                            "arguments",
+                                                            Value.of(
+                                                                "{\"location\": \"New York City\"}")))),
+                                                KeyValue.of("id", Value.of(newYorkCallId)),
+                                                KeyValue.of("type", Value.of("function"))),
+                                            Value.of(
+                                                KeyValue.of(
+                                                    "function",
+                                                    Value.of(
+                                                        KeyValue.of(
+                                                            "name", Value.of("get_weather")),
+                                                        KeyValue.of(
+                                                            "arguments",
+                                                            Value.of(
+                                                                "{\"location\": \"London\"}")))),
+                                                KeyValue.of("id", Value.of(londonCallId)),
+                                                KeyValue.of("type", Value.of("function"))))))))));
+
+    getTesting().clearData();
+
+    ChatCompletionMessageParam assistantMessage = createAssistantMessage(toolCalls);
+
+    chatMessages.add(assistantMessage);
+    chatMessages.add(createToolMessage("25 degrees and sunny", newYorkCallId));
+    chatMessages.add(createToolMessage("15 degrees and raining", londonCallId));
+
+    params =
+        ChatCompletionCreateParams.builder()
+            .messages(chatMessages)
+            .model(TEST_CHAT_MODEL)
+            .addTool(buildGetWeatherToolDefinition())
+            .build();
+
+    try (StreamResponse<ChatCompletionChunk> result =
+        getClient().chat().completions().createStreaming(params)) {
+      chunks = result.stream().collect(Collectors.toList());
+    }
+
+    String finalAnswer =
+        chunks.stream()
+            .map(
+                cc -> {
+                  if (cc.choices().isEmpty()) {
+                    return Optional.<String>empty();
+                  }
+                  return cc.choices().get(0).delta().content();
+                })
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.joining());
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_SYSTEM, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                satisfies(
+                                    GEN_AI_RESPONSE_FINISH_REASONS,
+                                    reasons -> reasons.containsExactly("stop"))))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                            equalTo(
+                                                GEN_AI_RESPONSE_MODEL,
+                                                TEST_CHAT_RESPONSE_MODEL)))));
+
+    SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI),
+                        equalTo(EVENT_NAME, "gen_ai.system.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content",
+                                Value.of(
+                                    "You are a helpful assistant providing weather updates.")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "content",
+                                Value.of("What is the weather in New York City and London?")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI),
+                        equalTo(EVENT_NAME, "gen_ai.assistant.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of(
+                                "tool_calls",
+                                Value.of(
+                                    Value.of(
+                                        KeyValue.of(
+                                            "function",
+                                            Value.of(
+                                                KeyValue.of("name", Value.of("get_weather")),
+                                                KeyValue.of(
+                                                    "arguments",
+                                                    Value.of(
+                                                        "{\"location\": \"New York City\"}")))),
+                                        KeyValue.of("id", Value.of(newYorkCallId)),
+                                        KeyValue.of("type", Value.of("function"))),
+                                    Value.of(
+                                        KeyValue.of(
+                                            "function",
+                                            Value.of(
+                                                KeyValue.of("name", Value.of("get_weather")),
+                                                KeyValue.of(
+                                                    "arguments",
+                                                    Value.of("{\"location\": \"London\"}")))),
+                                        KeyValue.of("id", Value.of(londonCallId)),
+                                        KeyValue.of("type", Value.of("function"))))))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("id", Value.of(newYorkCallId)),
+                            KeyValue.of("content", Value.of("25 degrees and sunny")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.tool.message"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("id", Value.of(londonCallId)),
+                            KeyValue.of("content", Value.of("15 degrees and raining")))),
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
+                    .hasSpanContext(spanCtx1)
+                    .hasBody(
+                        Value.of(
+                            KeyValue.of("finish_reason", Value.of("stop")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of(
+                                "message",
+                                Value.of(KeyValue.of("content", Value.of(finalAnswer)))))));
   }
 
   protected static ChatCompletionMessageParam createUserMessage(String content) {
