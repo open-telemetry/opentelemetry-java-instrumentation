@@ -1501,6 +1501,65 @@ public abstract class AbstractChatTest {
                                 Value.of(KeyValue.of("content", Value.of(finalAnswer)))))));
   }
 
+  @Test
+  void streamConnectionError() {
+    OpenAIClient client =
+        wrap(
+            OpenAIOkHttpClient.builder()
+                .baseUrl("http://localhost:9999/v5")
+                .apiKey("testing")
+                .maxRetries(0)
+                .build());
+
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .build();
+
+    Throwable thrown = catchThrowable(() -> client.chat().completions().createStreaming(params));
+    assertThat(thrown).isInstanceOf(OpenAIIoException.class);
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasException(thrown)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_SYSTEM, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
+
+    getTesting()
+        .waitAndAssertMetrics(
+            INSTRUMENTATION_NAME,
+            metric ->
+                metric
+                    .hasName("gen_ai.client.operation.duration")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_SYSTEM, "openai"),
+                                            equalTo(GEN_AI_OPERATION_NAME, "chat"),
+                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL)))));
+
+    SpanContext spanCtx = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
+
+    getTesting()
+        .waitAndAssertLogRecords(
+            log ->
+                log.hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_SYSTEM, OPENAI), equalTo(EVENT_NAME, "gen_ai.user.message"))
+                    .hasSpanContext(spanCtx)
+                    .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))));
+  }
+
   protected static ChatCompletionMessageParam createUserMessage(String content) {
     return ChatCompletionMessageParam.ofUser(
         ChatCompletionUserMessageParam.builder()
