@@ -55,7 +55,7 @@ public final class CountedHelper extends MetricsAnnotationHelper {
       Counted countedAnnotation = method.getAnnotation(Counted.class);
       counter =
           METER
-              .counterBuilder(countedAnnotation.value())
+              .counterBuilder(countedAnnotation.name())
               .setDescription(countedAnnotation.description())
               .setUnit(countedAnnotation.unit())
               .build();

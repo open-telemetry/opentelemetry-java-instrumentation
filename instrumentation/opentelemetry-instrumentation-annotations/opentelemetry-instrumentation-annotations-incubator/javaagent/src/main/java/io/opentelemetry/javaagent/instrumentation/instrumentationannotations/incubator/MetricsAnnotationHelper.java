@@ -50,9 +50,9 @@ public abstract class MetricsAnnotationHelper {
     if (annotation == null) {
       return null;
     }
-    String value = annotation.value();
-    if (!value.isEmpty()) {
-      return value;
+    String name = annotation.name();
+    if (!name.isEmpty()) {
+      return name;
     } else if (parameter.isNamePresent()) {
       return parameter.getName();
     } else {

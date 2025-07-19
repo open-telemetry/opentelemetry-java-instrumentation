@@ -70,7 +70,7 @@ public final class TimedHelper extends MetricsAnnotationHelper {
       Timed timedAnnotation = method.getAnnotation(Timed.class);
       histogram =
           METER
-              .histogramBuilder(timedAnnotation.value())
+              .histogramBuilder(timedAnnotation.name())
               .setDescription(timedAnnotation.description())
               .setUnit("s")
               .build();
