@@ -78,7 +78,7 @@ graalvmNative {
     useJUnitPlatform()
     setForkEvery(1)
   }
-
+/*
   // see https://github.com/junit-team/junit5/wiki/Upgrading-to-JUnit-5.13
   // should not be needed after updating native build tools to 0.11.0
   val initializeAtBuildTime = listOf(
@@ -102,4 +102,5 @@ graalvmNative {
       buildArgs.add("--initialize-at-build-time=${initializeAtBuildTime.joinToString(",")}")
     }
   }
+ */
 }
