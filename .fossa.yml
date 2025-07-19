@@ -9,6 +9,9 @@ targets:
       target: ':instrumentation-annotations'
     - type: gradle
       path: ./
+      target: ':instrumentation-annotations-incubator'
+    - type: gradle
+      path: ./
       target: ':instrumentation-annotations-support'
     - type: gradle
       path: ./
@@ -205,9 +208,6 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-extension-kotlin-1.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-instrumentation-api:javaagent'
@@ -778,6 +778,15 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-1.16:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-incubator:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'
