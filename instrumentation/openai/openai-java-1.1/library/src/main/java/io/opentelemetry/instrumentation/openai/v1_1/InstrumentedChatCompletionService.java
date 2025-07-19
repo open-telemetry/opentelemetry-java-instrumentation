@@ -100,7 +100,7 @@ final class InstrumentedChatCompletionService
     return result;
   }
 
-  public StreamResponse<ChatCompletionChunk> createStreaming(
+  private StreamResponse<ChatCompletionChunk> createStreaming(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
     Context parentCtx = Context.current();
     if (!instrumenter.shouldStart(parentCtx, chatCompletionCreateParams)) {
