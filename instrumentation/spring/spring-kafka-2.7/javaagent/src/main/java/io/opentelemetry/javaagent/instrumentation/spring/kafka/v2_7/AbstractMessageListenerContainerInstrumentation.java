@@ -14,6 +14,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.kafka.listener.RecordInterceptor;
@@ -43,9 +44,11 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
   @SuppressWarnings("unused")
   public static class GetRecordInterceptorAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void onExit(
-        @Advice.Return(readOnly = false) RecordInterceptor<K, V> interceptor) {
+    public static <K, V> RecordInterceptor<K, V> onExit(
+        @Advice.Return RecordInterceptor<K, V> originalInterceptor) {
+      RecordInterceptor<K, V> interceptor = originalInterceptor;
 
       if (interceptor == null
           || !interceptor
@@ -55,6 +58,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
                   "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
         interceptor = telemetry().createRecordInterceptor(interceptor);
       }
+      return interceptor;
     }
   }
 }

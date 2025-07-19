@@ -17,5 +17,11 @@ final class AwsExperimentalAttributes {
   static final AttributeKey<String> AWS_STREAM_NAME = stringKey("aws.stream.name");
   static final AttributeKey<String> AWS_TABLE_NAME = stringKey("aws.table.name");
 
+  // Work is underway to add these two keys to the SemConv AWS registry, in line with other AWS
+  // resources.
+  // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/registry/attributes/aws.md#amazon-lambda-attributes
+  static final AttributeKey<String> AWS_LAMBDA_ARN = stringKey("aws.lambda.function.arn");
+  static final AttributeKey<String> AWS_LAMBDA_NAME = stringKey("aws.lambda.function.name");
+
   private AwsExperimentalAttributes() {}
 }

@@ -201,7 +201,9 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1"),
+                            satisfies(
+                                ClientAttributes.CLIENT_ADDRESS,
+                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
                                 AttributeKey.stringArrayKey("http.request.header.key"),
                                 Collections.singletonList("value")),
