@@ -61,6 +61,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {
