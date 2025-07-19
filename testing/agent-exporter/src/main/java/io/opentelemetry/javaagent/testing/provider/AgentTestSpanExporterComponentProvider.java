@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.testing.provider;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Objects;
 
-public class TestSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
+@SuppressWarnings("rawtypes")
+@AutoService(ComponentProvider.class)
+public class AgentTestSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
 
   private static SpanExporter spanExporter;
 
@@ -21,7 +24,7 @@ public class TestSpanExporterComponentProvider implements ComponentProvider<Span
 
   @Override
   public String getName() {
-    return "test";
+    return "agent_test";
   }
 
   @Override
@@ -30,6 +33,6 @@ public class TestSpanExporterComponentProvider implements ComponentProvider<Span
   }
 
   public static void setSpanExporter(SpanExporter spanExporter) {
-    TestSpanExporterComponentProvider.spanExporter = spanExporter;
+    AgentTestSpanExporterComponentProvider.spanExporter = spanExporter;
   }
 }
