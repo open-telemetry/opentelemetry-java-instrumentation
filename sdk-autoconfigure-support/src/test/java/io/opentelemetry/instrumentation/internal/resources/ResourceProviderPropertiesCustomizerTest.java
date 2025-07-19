@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.resources;
+package io.opentelemetry.instrumentation.internal.resources;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -24,8 +24,16 @@ import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public class ResourceProviderPropertiesCustomizerTest {
 
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
   public static final class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
@@ -58,7 +66,7 @@ public class ResourceProviderPropertiesCustomizerTest {
   @TestFactory
   Stream<DynamicTest> enabledTestCases() {
     String className =
-        "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider";
+        "io.opentelemetry.instrumentation.internal.resources.ResourceProviderPropertiesCustomizerTest$Provider";
     return Stream.of(
             new EnabledTestCase(
                 "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
