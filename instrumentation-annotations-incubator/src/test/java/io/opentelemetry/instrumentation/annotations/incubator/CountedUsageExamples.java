@@ -7,9 +7,10 @@ package io.opentelemetry.instrumentation.annotations.incubator;
 
 public class CountedUsageExamples {
 
-  @Counted("customizedName")
+  @Counted(name = "customizedName")
   public void method() {}
 
-  @Counted("methodWithAttributes")
-  public void attributes(@Attribute String attribute1, @Attribute("attribute2") long attribute2) {}
+  @Counted(name = "methodWithAttributes")
+  public void attributes(
+      @Attribute String attribute1, @Attribute(name = "attribute2") long attribute2) {}
 }

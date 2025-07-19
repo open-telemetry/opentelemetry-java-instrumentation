@@ -18,42 +18,42 @@ public class CountedExample {
   public static final String METRIC_UNIT = "ms";
   public static final String TO_STRING = "I am a to string object.";
 
-  @Counted(METRIC_NAME)
+  @Counted(name = METRIC_NAME)
   public void exampleWithName() {}
 
-  @Counted(value = "example.with.description.count", description = METRIC_DESCRIPTION)
+  @Counted(name = "example.with.description.count", description = METRIC_DESCRIPTION)
   public void exampleWithDescription() {}
 
-  @Counted(value = "example.with.unit.count", unit = METRIC_UNIT)
+  @Counted(name = "example.with.unit.count", unit = METRIC_UNIT)
   public void exampleWithUnit() {}
 
-  @Counted("example.with.static.attributes.count")
+  @Counted(name = "example.with.static.attributes.count")
   @StaticAttribute(name = "key1", value = "value1")
   @StaticAttribute(name = "key2", value = "value2")
   @StaticAttribute(name = "key2", value = "value2")
   public void exampleWithStaticAttributes() {}
 
-  @Counted("example.with.attributes.count")
+  @Counted(name = "example.with.attributes.count")
   public void exampleWithAttributes(
       @Attribute String attribute1,
-      @Attribute("custom_attr1") long attribute2,
-      @Attribute("custom_attr2") ToStringObject toStringObject) {}
+      @Attribute(name = "custom_attr1") long attribute2,
+      @Attribute(name = "custom_attr2") ToStringObject toStringObject) {}
 
-  @Counted(value = "example.with.return.count")
+  @Counted(name = "example.with.return.count")
   @ReturnValueAttribute("returnValue")
   public ToStringObject exampleWithReturnValueAttribute() {
     return new ToStringObject();
   }
 
-  @Counted("example.with.exception.count")
+  @Counted(name = "example.with.exception.count")
   public void exampleWithException() {
     throw new IllegalStateException("test exception.");
   }
 
-  @Counted("example.ignore.count")
+  @Counted(name = "example.ignore.count")
   public void exampleIgnore() {}
 
-  @Counted(value = "example.completable.future.count")
+  @Counted(name = "example.completable.future.count")
   @ReturnValueAttribute("returnValue")
   public CompletableFuture<String> completableFuture(CompletableFuture<String> future) {
     return future;

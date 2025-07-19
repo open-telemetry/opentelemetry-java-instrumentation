@@ -37,5 +37,5 @@ public @interface Attribute {
    * `javac`, the parameter name will be used instead. If the parameter name is not available, e.g.,
    * because the code was not compiled with that flag, the attribute will be ignored.
    */
-  String value() default "";
+  String name() default "";
 }

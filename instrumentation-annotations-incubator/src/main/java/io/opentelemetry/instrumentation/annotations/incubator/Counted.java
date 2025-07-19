@@ -40,7 +40,7 @@ public @interface Counted {
    * <p>The name should follow the metric naming rules: <a
    * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-name-syntax">https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md#instrument-name-syntax</a>
    */
-  String value();
+  String name();
 
   /**
    * Description of the metric.

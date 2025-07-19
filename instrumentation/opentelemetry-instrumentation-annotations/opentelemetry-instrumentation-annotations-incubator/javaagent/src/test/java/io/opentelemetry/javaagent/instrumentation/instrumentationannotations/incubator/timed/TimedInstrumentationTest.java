@@ -122,7 +122,7 @@ class TimedInstrumentationTest {
   }
 
   @Test
-  void testExampleWithReturnValueAttribute() {
+  void testExampleWithReturnNameAttribute() {
     new TimedExample().exampleWithReturnValueAttribute();
     testing.waitAndAssertMetrics(
         TIMED_INSTRUMENTATION_NAME,

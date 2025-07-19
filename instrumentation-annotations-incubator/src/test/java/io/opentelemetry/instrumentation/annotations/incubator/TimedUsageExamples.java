@@ -7,9 +7,10 @@ package io.opentelemetry.instrumentation.annotations.incubator;
 
 public class TimedUsageExamples {
 
-  @Timed("customizedName")
+  @Timed(name = "customizedName")
   public void method() {}
 
-  @Timed("methodWithAttributes")
-  public void attributes(@Attribute String attribute1, @Attribute("attribute2") long attribute2) {}
+  @Timed(name = "methodWithAttributes")
+  public void attributes(
+      @Attribute String attribute1, @Attribute(name = "attribute2") long attribute2) {}
 }
