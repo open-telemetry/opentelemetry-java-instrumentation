@@ -15,19 +15,15 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-public class TomcatIntegrationTest extends TargetSystemTest {
+public class TomcatTest extends TargetSystemTest {
 
   @ParameterizedTest
-  @CsvSource({
-    "tomcat:10.0, https://tomcat.apache.org/tomcat-10.0-doc/appdev/sample/sample.war",
-    "tomcat:9.0, https://tomcat.apache.org/tomcat-9.0-doc/appdev/sample/sample.war"
-  })
-  void testCollectedMetrics(String dockerImageName, String sampleWebApplicationUrl)
-      throws Exception {
+  @ValueSource(strings = {"tomcat:10.0", "tomcat:9.0"})
+  void testCollectedMetrics(String dockerImageName) {
     List<String> yamlFiles = Collections.singletonList("tomcat.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
@@ -43,15 +39,14 @@ public class TomcatIntegrationTest extends TargetSystemTest {
             .withExposedPorts(8080)
             .waitingFor(Wait.forListeningPorts(8080));
 
-    copyFilesToTarget(target, yamlFiles);
-
-    startTarget(target);
+    copyAgentToTarget(target);
+    copyYamlFilesToTarget(target, yamlFiles);
 
     // Deploy example web application to the tomcat to enable reporting tomcat.session.active.count
     // metric
-    target.execInContainer("rm", "-fr", "/usr/local/tomcat/webapps/ROOT");
-    target.execInContainer(
-        "curl", sampleWebApplicationUrl, "-o", "/usr/local/tomcat/webapps/ROOT.war");
+    copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/ROOT.war");
+
+    startTarget(target);
 
     verifyMetrics(createMetricsVerifier());
   }

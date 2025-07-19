@@ -19,9 +19,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.images.builder.ImageFromDockerfile;
 
-public class JettyIntegrationTest extends TargetSystemTest {
+public class JettyTest extends TargetSystemTest {
 
   private static final int JETTY_PORT = 8080;
 
@@ -48,25 +47,20 @@ public class JettyIntegrationTest extends TargetSystemTest {
       // with older versions deployment and session management are available by default
       jettyModules.add("stats");
     }
-    String addModulesArg = "--add-to-startd=" + String.join(",", jettyModules);
+    String moduleArg = "--module=" + String.join(",", jettyModules);
 
     GenericContainer<?> container =
-        new GenericContainer<>(
-                new ImageFromDockerfile()
-                    .withDockerfileFromBuilder(
-                        builder ->
-                            builder
-                                .from("jetty:" + jettyMajorVersion)
-                                .run("java", "-jar", "/usr/local/jetty/start.jar", addModulesArg)
-                                .run("mkdir -p /var/lib/jetty/webapps/ROOT/")
-                                .run("touch /var/lib/jetty/webapps/ROOT/index.html")
-                                .build()))
+        new GenericContainer<>("jetty:" + jettyMajorVersion)
+            .withCommand(moduleArg)
             .withEnv("JAVA_OPTIONS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(JETTY_PORT)
             .waitingFor(Wait.forListeningPorts(JETTY_PORT));
 
-    copyFilesToTarget(container, yamlFiles);
+    copyAgentToTarget(container);
+    copyYamlFilesToTarget(container, yamlFiles);
+    // Deploy example web application for session-related metrics
+    copyTestWebAppToTarget(container, "/var/lib/jetty/webapps/ROOT.war");
 
     startTarget(container);
 

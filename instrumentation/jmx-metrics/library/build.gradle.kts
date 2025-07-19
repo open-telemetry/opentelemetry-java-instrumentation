@@ -21,15 +21,20 @@ tasks {
   test {
     // get packaged agent jar for testing
     val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
-
     dependsOn(shadowTask)
+
+    val testAppTask = project(":instrumentation:jmx-metrics:testing-webapp").tasks.named<War>("war")
+    dependsOn(testAppTask)
 
     inputs.files(layout.files(shadowTask))
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
-      jvmArgs("-Dio.opentelemetry.javaagent.path=${shadowTask.archiveFile.get()}")
+      jvmArgs(
+        "-Dio.opentelemetry.javaagent.path=${shadowTask.archiveFile.get()}",
+        "-Dio.opentelemetry.testapp.path=${testAppTask.get().archiveFile.get().asFile.absolutePath}"
+      )
     }
   }
 }
