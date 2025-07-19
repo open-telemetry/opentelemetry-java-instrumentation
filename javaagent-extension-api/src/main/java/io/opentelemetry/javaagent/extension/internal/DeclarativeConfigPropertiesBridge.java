@@ -45,51 +45,94 @@ import javax.annotation.Nullable;
  *       common:
  *         string_key: value
  * </pre>
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  // The node at .instrumentation.java
-  private final DeclarativeConfigProperties instrumentationJavaNode;
+  private final PropertyTranslator translator;
+  @Nullable private final DeclarativeConfigProperties baseNode;
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+  static DeclarativeConfigPropertiesBridge fromInstrumentationConfig(
+      @Nullable DeclarativeConfigProperties instrumentationConfig, PropertyTranslator translator) {
+    if (instrumentationConfig == null) {
+      instrumentationConfig = DeclarativeConfigProperties.empty();
+    }
+    return new DeclarativeConfigPropertiesBridge(
+        instrumentationConfig.getStructured("java", empty()), translator);
+  }
+
+  static DeclarativeConfigPropertiesBridge create(
+      @Nullable DeclarativeConfigProperties node, PropertyTranslator translator) {
+    return new DeclarativeConfigPropertiesBridge(node, translator);
+  }
+
+  private DeclarativeConfigPropertiesBridge(
+      @Nullable DeclarativeConfigProperties baseNode, PropertyTranslator translator) {
+    this.baseNode = baseNode;
+    this.translator = translator;
   }
 
   @Nullable
   @Override
   public String getString(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return value.toString();
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getString);
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Boolean) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
   }
 
   @Nullable
   @Override
   public Integer getInt(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Integer) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getInt);
   }
 
   @Nullable
   @Override
   public Long getLong(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Long) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
   }
 
   @Nullable
   @Override
   public Double getDouble(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Double) value;
+    }
     return getPropertyValue(propertyName, DeclarativeConfigProperties::getDouble);
   }
 
   @Nullable
   @Override
   public Duration getDuration(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (Duration) value;
+    }
     Long millis = getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
     if (millis == null) {
       return null;
@@ -97,8 +140,13 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return Duration.ofMillis(millis);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String propertyName) {
+    Object value = translator.get(propertyName);
+    if (value != null) {
+      return (List<String>) value;
+    }
     List<String> propertyValue =
         getPropertyValue(
             propertyName,
@@ -106,8 +154,13 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return propertyValue == null ? Collections.emptyList() : propertyValue;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String propertyName) {
+    Object fixed = translator.get(propertyName);
+    if (fixed != null) {
+      return (Map<String, String>) fixed;
+    }
     DeclarativeConfigProperties propertyValue =
         getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
@@ -130,21 +183,17 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   private <T> T getPropertyValue(
       String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (instrumentationJavaNode == null) {
+    if (baseNode == null) {
       return null;
     }
 
-    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
-      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
-    }
-    // Split the remainder of the property on "."
-    String[] segments = property.split("\\.");
+    String[] segments = getSegments(translator.translateProperty(property));
     if (segments.length == 0) {
       return null;
     }
 
     // Extract the value by walking to the N-1 entry
-    DeclarativeConfigProperties target = instrumentationJavaNode;
+    DeclarativeConfigProperties target = baseNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());
@@ -153,5 +202,22 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     String lastPart = segments[segments.length - 1];
 
     return extractor.apply(target, lastPart);
+  }
+
+  private static String[] getSegments(String property) {
+    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
+    }
+    // Split the remainder of the property on "."
+    return property.replace('-', '_').split("\\.");
+  }
+
+  static String yamlPath(String property) {
+    String[] segments = getSegments(property);
+    if (segments.length == 0) {
+      throw new IllegalArgumentException("Invalid property: " + property);
+    }
+
+    return "'instrumentation/development' / 'java' / '" + String.join("' / '", segments) + "'";
   }
 }

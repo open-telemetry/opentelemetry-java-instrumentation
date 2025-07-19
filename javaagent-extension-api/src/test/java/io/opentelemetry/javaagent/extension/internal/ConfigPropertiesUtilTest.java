@@ -84,4 +84,11 @@ class ConfigPropertiesUtilTest {
       assertThat(configProperties.getString("testProperty")).isEqualTo(null);
     }
   }
+
+  @Test
+  void propertyYamlPath() {
+    assertThat(ConfigPropertiesUtil.propertyYamlPath("google.otel.auth.target.signals"))
+        .isEqualTo(
+            "'instrumentation/development' / 'java' / 'google' / 'otel' / 'auth' / 'target' / 'signals'");
+  }
 }
