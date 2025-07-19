@@ -47,13 +47,6 @@ graalvmNative {
 
   binaries.all {
     resources.autodetect()
-
-    // see https://github.com/junit-team/junit5/wiki/Upgrading-to-JUnit-5.13
-    // should not be needed after updating native build tools to 0.11.0
-    val initializeAtBuildTime = listOf(
-      "org.junit.platform.commons.logging.LoggerFactory\$DelegatingLogger"
-    )
-    buildArgs.add("--initialize-at-build-time=${initializeAtBuildTime.joinToString(",")}")
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
