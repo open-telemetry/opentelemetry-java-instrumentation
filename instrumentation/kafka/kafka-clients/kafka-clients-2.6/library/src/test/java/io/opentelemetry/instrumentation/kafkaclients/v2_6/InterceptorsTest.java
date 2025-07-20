@@ -18,10 +18,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -42,6 +44,11 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              AttributeKey.stringArrayKey("messaging.header.baggage"),
+                              Arrays.asList(
+                                  "test-baggage-key-1=test-baggage-value-1",
+                                  "test-baggage-key-2=test-baggage-value-2")),
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                           equalTo(MESSAGING_OPERATION, "publish"),
@@ -64,6 +71,11 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringArrayKey("messaging.header.baggage"),
+                                Arrays.asList(
+                                    "test-baggage-key-1=test-baggage-value-1",
+                                    "test-baggage-key-2=test-baggage-value-2")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
@@ -78,6 +90,11 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpanContext.get()))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                AttributeKey.stringArrayKey("messaging.header.baggage"),
+                                Arrays.asList(
+                                    "test-baggage-key-1=test-baggage-value-1",
+                                    "test-baggage-key-2=test-baggage-value-2")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "process"),
