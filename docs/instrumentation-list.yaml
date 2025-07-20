@@ -3644,6 +3644,8 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: spring-integration-4.1
+    description: This instrumentation enables PRODUCER and CONSUMER spans for Spring
+      Integration.
     source_path: instrumentation/spring/spring-integration-4.1
     scope:
       name: io.opentelemetry.spring-integration-4.1
@@ -3652,6 +3654,39 @@ libraries:
       - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
       library:
       - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,5.+)
+    configurations:
+    - name: otel.instrumentation.spring-integration.producer.enabled
+      description: |
+        Create producer spans when messages are sent to an output channel. Enable when you're using a messaging library that doesn't have its own instrumentation for generating producer spans. Note that the detection of output channels only works for Spring Cloud Stream `DirectWithAttributesChannel`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.spring-integration.global-channel-interceptor-patterns
+      description: An array of Spring channel name patterns that will be intercepted.
+      type: list
+      default: '*'
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.header.test_message_header
+          type: STRING_ARRAY
+        - name: messaging.operation
+          type: STRING
+    - when: otel.instrumentation.spring-integration.producer.enabled=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.operation
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.operation
+          type: STRING
   - name: spring-jms-2.0
     source_path: instrumentation/spring/spring-jms/spring-jms-2.0
     scope:
@@ -3659,6 +3694,31 @@ libraries:
     target_versions:
       javaagent:
       - org.springframework:spring-jms:[2.0,6)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+    - when: otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: spring-jms-6.0
     source_path: instrumentation/spring/spring-jms/spring-jms-6.0
     minimum_java_version: 17

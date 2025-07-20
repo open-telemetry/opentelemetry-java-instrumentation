@@ -86,13 +86,27 @@ readonly INSTRUMENTATIONS=(
 #  "spring:spring-batch-3.0:javaagent:test"
 #  "spring:spring-data:spring-data-1.8:javaagent:test"
 
-  "spring:spring-integration-4.1:javaagent:test"
-  "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
-  "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
+#  "spring:spring-integration-4.1:javaagent:test"
+#  "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
+#  "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
+
+#  "spring:spring-jms:spring-jms-2.0:javaagent:test"
+#  "spring:spring-kafka-2.7:javaagent:test"
+#  "spring:spring-kafka-2.7:javaagent:testNoReceiveTelemetry"
+#  "spring:spring-pulsar-1.0:javaagent:test"
+#  "spring:spring-rabbit-1.0:javaagent:test"
+#  "spring:spring-rmi-4.0:javaagent:test"
+#  "spring:spring-scheduling-3.1:javaagent:test"
+#  "spring:spring-scheduling-3.1:javaagent:testExperimental"
+  "spring:spring-security-config-6.0:library:test"
+
+
+
 
 )
 
 readonly COLIMA_INSTRUMENTATIONS=(
+#  "spring:spring-jms:spring-jms-6.0:javaagent:test"
 #  "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
 #  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
 #  "oracle-ucp-11.2:javaagent:test"
