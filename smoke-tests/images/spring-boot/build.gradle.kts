@@ -59,4 +59,13 @@ tasks {
   artifacts {
     add("springBootJar", bootJar)
   }
+  
+  // Fix task dependency issue: sourcesJar needs to depend on bootBuildInfo
+  sourcesJar {
+    dependsOn("bootBuildInfo")
+  }
+
+  javadocJar {
+    dependsOn("bootBuildInfo")
+  }
 }
