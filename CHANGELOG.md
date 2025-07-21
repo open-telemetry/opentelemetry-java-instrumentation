@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Backport: Shade new `io.opentelemetry.common` package in the bootstrap class loader
+  ([#14283](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14283))
+
 ## Version 2.18.0 (2025-07-17)
 
 ### 🌟 New javaagent instrumentation
