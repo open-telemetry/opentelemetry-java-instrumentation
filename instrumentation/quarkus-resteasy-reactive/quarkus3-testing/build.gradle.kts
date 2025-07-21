@@ -34,3 +34,7 @@ tasks.named("compileJava").configure {
 tasks.named("sourcesJar").configure {
   dependsOn(tasks.named("compileQuarkusGeneratedSourcesJava"))
 }
+
+tasks.configureEach {
+  notCompatibleWithConfigurationCache("TODO")
+}

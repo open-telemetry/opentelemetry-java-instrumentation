@@ -34,3 +34,7 @@ tasks.named("checkstyleTest").configure {
 tasks.named("compileTestJava").configure {
   dependsOn(tasks.named("compileQuarkusTestGeneratedSourcesJava"))
 }
+
+tasks.configureEach {
+  notCompatibleWithConfigurationCache("TODO")
+}
