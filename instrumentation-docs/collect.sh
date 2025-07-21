@@ -99,7 +99,8 @@ readonly INSTRUMENTATIONS=(
 #  "spring:spring-scheduling-3.1:javaagent:test"
 #  "spring:spring-scheduling-3.1:javaagent:testExperimental"
 
-  "spring:spring-web:spring-web-3.1:library:test"
+#  "spring:spring-web:spring-web-3.1:library:test"
+  "spring:spring-web:spring-web-6.0:javaagent:test"
 
 )
 

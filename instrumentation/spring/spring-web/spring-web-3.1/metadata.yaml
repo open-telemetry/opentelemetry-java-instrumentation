@@ -1,2 +1,4 @@
-description: This instrumentation provides a library integration that enables capturing HTTP client
-  spans and metrics for Spring's RestTemplate. The java agent instrumentation
+description: >
+  This instrumentation provides a library integration that enables capturing HTTP client spans and
+  metrics for Spring's RestTemplate. The agent integration enriches HTTP server spans and metrics
+  with route information.
