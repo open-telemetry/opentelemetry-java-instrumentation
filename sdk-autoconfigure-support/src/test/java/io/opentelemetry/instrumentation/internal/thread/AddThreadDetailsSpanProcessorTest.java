@@ -16,10 +16,6 @@ import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import org.junit.jupiter.api.Test;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 class AddThreadDetailsSpanProcessorTest {
 
   private final ReadWriteSpan span = mock(ReadWriteSpan.class);
