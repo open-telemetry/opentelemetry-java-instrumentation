@@ -24,16 +24,8 @@ import org.assertj.core.util.Strings;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.TestFactory;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 public class ResourceProviderPropertiesCustomizerTest {
 
-  /**
-   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
-   * any time.
-   */
   public static final class Provider implements ResourceProvider {
     @Override
     public Resource createResource(ConfigProperties config) {
