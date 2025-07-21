@@ -87,6 +87,9 @@ targets:
       target: ':instrumentation:c3p0-0.9:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:camel-2.20:bootstrap'
+    - type: gradle
+      path: ./
       target: ':instrumentation:camel-2.20:javaagent'
     - type: gradle
       path: ./
