@@ -36,3 +36,22 @@ This option can be used to let agent run with all privileges without being affec
 
 [1] Disclaimer: agent can provide application means for escaping security manager sandbox. Do not use
 this option if your application relies on security manager to run untrusted code.
+
+## JavaScript snippet injection
+
+This experimental feature allows you to inject JavaScript code into HTML responses from servlet applications. The agent will look for the `</head>` tag in HTML responses, and inject the configured JavaScript snippet before the closing `</head>` tag.
+
+This feature is designed for integrating client-side monitoring.
+We plan to integrate OpenTelemetry's own client-side monitoring solution by default once it's available
+(see the [browser instrumentation proposal](https://github.com/open-telemetry/community/blob/main/projects/browser-phase-1.md)).
+
+| System property                         | Environment variable                    | Purpose                                                                                                                                                                      |
+|-----------------------------------------|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| otel.experimental.javascript-snippet    | OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET    | JavaScript code to inject into HTML responses before the closing `</head>` tag. The value should be a complete JavaScript snippet including `<script>` tags if needed, e.g. `-Dotel.experimental.javascript-snippet="<script>console.log('Hello world!');</script>"` |
+
+**Important notes:**
+
+- This only works with servlet-based applications currently
+- The snippet is injected only into HTML responses that contain a `</head>` tag
+- The agent will attempt to preserve the original character encoding of the response
+- If the response already has a `Content-Length` header, it will be updated to reflect the additional content

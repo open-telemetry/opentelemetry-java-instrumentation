@@ -70,6 +70,7 @@ jobs:
         if: steps.unzip-patch.outputs.exists == 'true'
         run: |
           git apply "${{ runner.temp }}/patch"
+          git add licenses
           git commit -a -m "./gradlew ${{ steps.gradle-task.outputs.name }}"
           git push
 
