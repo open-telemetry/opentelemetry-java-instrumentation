@@ -104,7 +104,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.7.0-alpha")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.3"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
