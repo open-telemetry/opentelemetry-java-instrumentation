@@ -5,7 +5,7 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.51.0"
+val otelSdkVersion = "1.52.0"
 val otelContribVersion = "1.47.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
@@ -97,7 +97,7 @@ val DEPENDENCIES = listOf(
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",
-  "commons-io:commons-io:2.19.0",
+  "commons-io:commons-io:2.20.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.5",
   "commons-validator:commons-validator:1.10.0",

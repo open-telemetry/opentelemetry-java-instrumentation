@@ -19,6 +19,12 @@ sourceSets {
       protoShadedDeps.file("build/extracted/shadow"),
       "builtBy" to ":testing:proto-shaded-for-testing:extractShadowJar"
     )
+
+    val wiremockShadedDeps = project(":testing:wiremock-shaded-for-testing")
+    output.dir(
+      wiremockShadedDeps.file("build/extracted/shadow"),
+      "builtBy" to ":testing:wiremock-shaded-for-testing:extractShadowJar"
+    )
   }
 }
 
@@ -56,6 +62,8 @@ dependencies {
 
   compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":testing:proto-shaded-for-testing", configuration = "shadow"))
+  // used to record LLM responses in gen AI tests
+  compileOnly(project(":testing:wiremock-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
@@ -87,5 +95,10 @@ dependencies {
 tasks {
   javadoc {
     enabled = false
+  }
+
+  jar {
+    // When there are duplicates between multiple shaded dependencies, just ignore them.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   }
 }

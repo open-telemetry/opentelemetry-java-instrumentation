@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.TracerProvider;
+import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.SdkEnabled;
@@ -18,7 +19,6 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
-import io.opentelemetry.sdk.autoconfigure.internal.ComponentLoader;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -107,17 +107,11 @@ public class OpenTelemetryAutoConfiguration {
         OtelSpringProperties otelSpringProperties,
         OpenTelemetrySdkComponentLoader componentLoader) {
 
-      return AutoConfigureUtil.setComponentLoader(
-              AutoConfigureUtil.setConfigPropertiesCustomizer(
-                  AutoConfiguredOpenTelemetrySdk.builder(),
-                  c ->
-                      SpringConfigProperties.create(
-                          env,
-                          otlpExporterProperties,
-                          resourceProperties,
-                          otelSpringProperties,
-                          c)),
-              componentLoader)
+      return AutoConfigureUtil.setConfigPropertiesCustomizer(
+              AutoConfiguredOpenTelemetrySdk.builder().setComponentLoader(componentLoader),
+              c ->
+                  SpringConfigProperties.create(
+                      env, otlpExporterProperties, resourceProperties, otelSpringProperties, c))
           .build();
     }
 
@@ -170,8 +164,9 @@ public class OpenTelemetryAutoConfiguration {
   @ConditionalOnMissingBean({ConfigProperties.class})
   static class FallbackConfigProperties {
     @Bean
-    public ConfigProperties otelProperties() {
-      return DefaultConfigProperties.create(Collections.emptyMap());
+    public ConfigProperties otelProperties(ApplicationContext applicationContext) {
+      return DefaultConfigProperties.create(
+          Collections.emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
     }
   }
 

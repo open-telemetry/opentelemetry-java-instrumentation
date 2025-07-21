@@ -25,8 +25,8 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.bootstrap.apachecamel.ContextWithScope;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.apachecamel.ContextWithScope;
 import java.util.logging.Logger;
 import org.apache.camel.Exchange;
 
@@ -73,5 +73,4 @@ class ActiveContextManager {
 
     return null;
   }
-
 }
