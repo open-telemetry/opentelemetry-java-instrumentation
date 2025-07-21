@@ -194,8 +194,7 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Build
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew check spdxSbom -x javadoc -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
+        run: ./gradlew check javadoc sourcesJar spdxSbom -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check for jApiCmp diffs
         # The jApiCmp diff compares current to latest, which isn't appropriate for release branches
@@ -512,12 +511,10 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Local publish of artifacts
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
+        run: ./gradlew publishToMavenLocal
 
       - name: Local publish of gradle plugins
-        # javadoc task fails sporadically fetching https://docs.oracle.com/javase/8/docs/api/
-        run: ./gradlew publishToMavenLocal -x javadoc
+        run: ./gradlew publishToMavenLocal
         working-directory: gradle-plugins
 
       - name: Build distro
