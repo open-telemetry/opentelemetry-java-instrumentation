@@ -1,6 +1,46 @@
 plugins {
-  id("org.unbroken-dome.xjc")
   id("otel.javaagent-instrumentation")
+}
+
+// Configuration for XJC code generation
+val xjcTool by configurations.creating
+
+val generateXjcSources = tasks.register<JavaExec>("generateXjcSources") {
+  val schemaDir = file("src/test/schema")
+  val outputDir = layout.buildDirectory.dir("generated/sources/xjc/java/test").get().asFile
+
+  inputs.dir(schemaDir)
+  outputs.dir(outputDir)
+
+  classpath = xjcTool
+  mainClass.set("com.sun.tools.xjc.XJCFacade")
+
+  args(
+    "-d",
+    outputDir.absolutePath,
+    "-p",
+    "io.opentelemetry.test.hello_web_service",
+    file("$schemaDir/hello.xsd").absolutePath
+  )
+
+  doFirst {
+    outputDir.mkdirs()
+  }
+}
+
+sourceSets {
+  test {
+    java {
+      srcDir(generateXjcSources.map { it.outputs.files.singleFile })
+    }
+    resources {
+      srcDirs("src/test/schema")
+    }
+  }
+}
+
+tasks.compileTestJava {
+  dependsOn(generateXjcSources)
 }
 
 muzzle {
@@ -11,14 +51,6 @@ muzzle {
     // broken versions, jars don't contain classes
     skip("3.0.11.RELEASE", "3.1.0")
     assertInverse.set(true)
-  }
-}
-
-sourceSets {
-  test {
-    resources {
-      srcDirs("src/test/schema")
-    }
   }
 }
 
@@ -49,6 +81,11 @@ dependencies {
   testImplementation("com.google.guava:guava")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+
+  // XJC tool dependencies
+  xjcTool("com.sun.xml.bind:jaxb-xjc:2.3.3")
+  xjcTool("com.sun.xml.bind:jaxb-impl:2.3.3")
+  xjcTool("com.sun.xml.bind:jaxb-core:2.3.0.1")
 }
 
 tasks.withType<Test>().configureEach {
