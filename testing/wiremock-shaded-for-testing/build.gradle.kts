@@ -8,7 +8,7 @@ dependencies {
   // class conflict reported in the failure.
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.google.errorprone:error_prone_annotations")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.1")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2")
 }
 
 tasks {
