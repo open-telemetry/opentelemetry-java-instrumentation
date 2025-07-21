@@ -83,7 +83,8 @@ final class CamelRoutePolicy extends RoutePolicySupport {
     SpanDecorator sd = getSpanDecorator(route.getEndpoint());
     Context context = ActiveContextManager.deactivate(exchange);
     CamelRequest request =
-      CamelRequest.create(sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, SpanKind.INTERNAL);
+        CamelRequest.create(
+            sd, exchange, route.getEndpoint(), CamelDirection.INBOUND, SpanKind.INTERNAL);
     instrumenter().end(context, request, null, exchange.getException());
     logger.log(FINE, "[Route finished] Receiver span finished {0}", context);
   }

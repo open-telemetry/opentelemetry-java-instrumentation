@@ -88,12 +88,8 @@ final class CamelEventNotifier extends EventNotifierSupport {
     Exchange exchange = event.getExchange();
     Context context = ActiveContextManager.deactivate(exchange);
     CamelRequest request =
-      CamelRequest.create(
-          sd,
-          exchange,
-          event.getEndpoint(),
-          CamelDirection.OUTBOUND,
-          sd.getInitiatorSpanKind());
+        CamelRequest.create(
+            sd, exchange, event.getEndpoint(), CamelDirection.OUTBOUND, sd.getInitiatorSpanKind());
     instrumenter().end(context, request, null, exchange.getException());
     logger.log(FINE, "[Exchange sent] Initiator span finished: {0}", context);
   }
