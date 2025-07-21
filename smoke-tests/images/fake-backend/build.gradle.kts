@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -71,4 +72,8 @@ tasks {
     dependsOn(windowsBackendImageBuild)
     images.add("ghcr.io/$repo/smoke-test-fake-backend-windows:$extraTag")
   }
+}
+
+tasks.withType<JibTask>().configureEach {
+  notCompatibleWithConfigurationCache("see https://github.com/GoogleContainerTools/jib/issues/3132")
 }

@@ -1,3 +1,4 @@
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -145,4 +146,8 @@ tasks.matching { it.name.startsWith("create") || it.name.startsWith("dist") }.co
   // Improved task inputs for better incremental builds
   inputs.property("playVersion", playVer)
   inputs.property("scalaVersion", scalaVer)
+}
+
+tasks.withType<JibTask>().configureEach {
+  notCompatibleWithConfigurationCache("see https://github.com/GoogleContainerTools/jib/issues/3132")
 }

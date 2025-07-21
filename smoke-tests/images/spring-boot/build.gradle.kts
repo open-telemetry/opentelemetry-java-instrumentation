@@ -1,3 +1,4 @@
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -68,4 +69,8 @@ tasks {
   javadocJar {
     dependsOn("bootBuildInfo")
   }
+}
+
+tasks.withType<JibTask>().configureEach {
+  notCompatibleWithConfigurationCache("see https://github.com/GoogleContainerTools/jib/issues/3132")
 }
