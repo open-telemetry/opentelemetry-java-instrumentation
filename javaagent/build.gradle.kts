@@ -178,8 +178,7 @@ tasks {
 
     excludeBootstrapClasses()
     // remove MPL licensed content
-    exclude("okhttp3/internal/publicsuffix/NOTICE")
-    exclude("okhttp3/internal/publicsuffix/publicsuffixes.gz")
+    exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 

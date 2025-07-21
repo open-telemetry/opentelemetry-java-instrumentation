@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awssdk.v2_2.recording;
+package io.opentelemetry.instrumentation.testing.recording;
 
 import com.github.tomakehurst.wiremock.common.FileSource;
 import com.github.tomakehurst.wiremock.extension.Parameters;
@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.extension.StubMappingTransformer;
 import com.github.tomakehurst.wiremock.matching.ContentPattern;
 import com.github.tomakehurst.wiremock.matching.EqualToJsonPattern;
 import com.github.tomakehurst.wiremock.stubbing.StubMapping;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.List;
 
 public final class PrettyPrintEqualToJsonStubMappingTransformer extends StubMappingTransformer {
@@ -20,6 +21,7 @@ public final class PrettyPrintEqualToJsonStubMappingTransformer extends StubMapp
   }
 
   @Override
+  @CanIgnoreReturnValue
   public StubMapping transform(StubMapping stubMapping, FileSource files, Parameters parameters) {
     List<ContentPattern<?>> patterns = stubMapping.getRequest().getBodyPatterns();
     if (patterns != null) {
