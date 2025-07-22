@@ -5,18 +5,18 @@
 
 package io.opentelemetry.javaagent.testing.exporter;
 
-import io.opentelemetry.javaagent.testing.provider.TestLogRecordExporterComponentProvider;
-import io.opentelemetry.javaagent.testing.provider.TestMetricExporterComponentProvider;
-import io.opentelemetry.javaagent.testing.provider.TestSpanExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.AgentTestLogRecordExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.AgentTestMetricExporterComponentProvider;
+import io.opentelemetry.javaagent.testing.provider.AgentTestSpanExporterComponentProvider;
 
-class TestExportersUtil {
+public class TestExportersUtil {
   private TestExportersUtil() {}
 
-  static void initTestExporters() {
-    TestSpanExporterComponentProvider.setSpanExporter(AgentTestingExporterFactory.spanExporter);
-    TestMetricExporterComponentProvider.setMetricExporter(
+  public static void initTestExporters() {
+    AgentTestSpanExporterComponentProvider.setSpanExporter(AgentTestingExporterFactory.spanExporter);
+    AgentTestMetricExporterComponentProvider.setMetricExporter(
         AgentTestingExporterFactory.metricExporter);
-    TestLogRecordExporterComponentProvider.setLogRecordExporter(
+    AgentTestLogRecordExporterComponentProvider.setLogRecordExporter(
         AgentTestingExporterFactory.logExporter);
   }
 }
