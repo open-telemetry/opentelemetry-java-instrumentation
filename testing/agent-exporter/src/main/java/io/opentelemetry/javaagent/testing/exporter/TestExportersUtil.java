@@ -13,7 +13,8 @@ public class TestExportersUtil {
   private TestExportersUtil() {}
 
   public static void initTestExporters() {
-    AgentTestSpanExporterComponentProvider.setSpanExporter(AgentTestingExporterFactory.spanExporter);
+    AgentTestSpanExporterComponentProvider.setSpanExporter(
+        AgentTestingExporterFactory.spanExporter);
     AgentTestMetricExporterComponentProvider.setMetricExporter(
         AgentTestingExporterFactory.metricExporter);
     AgentTestLogRecordExporterComponentProvider.setLogRecordExporter(
