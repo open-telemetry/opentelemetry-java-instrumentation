@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesUtil;
+import io.opentelemetry.javaagent.extension.internal.ConfigPropertyTranslator;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -42,21 +42,20 @@ public final class OpenTelemetryInstaller {
       return SdkAutoconfigureAccess.create(
           sdk,
           Resource.getDefault(),
-          ConfigPropertiesUtil.resolveInstrumentationConfig(
-              configProvider.getInstrumentationConfig(),
-              ConfigPropertiesUtil.propertyTranslatorBuilder()
-                  .addTranslation(
-                      "otel.instrumentation.common.default-enabled", "common.default.enabled")
-                  .addTranslation("otel.javaagent", "agent")
-                  // these properties are used to initialize the SDK before the configuration file
-                  // is loaded
-                  // for consistency, we pass them to the bridge, so that they can be read later
-                  // with the same
-                  // value from the {@link DeclarativeConfigPropertiesBridge}
-                  .addFixedValue(
-                      "otel.javaagent.debug", earlyConfig.getBoolean("otel.javaagent.debug", false))
-                  .addFixedValue(
-                      "otel.javaagent.logging", earlyConfig.getString("otel.javaagent.logging"))),
+          ConfigPropertyTranslator.builder()
+              .addTranslation(
+                  "otel.instrumentation.common.default-enabled", "common.default.enabled")
+              .addTranslation("otel.javaagent", "agent")
+              // these properties are used to initialize the SDK before the configuration file
+              // is loaded
+              // for consistency, we pass them to the bridge, so that they can be read later
+              // with the same
+              // value from the {@link DeclarativeConfigPropertiesBridge}
+              .addFixedValue(
+                  "otel.javaagent.debug", earlyConfig.getBoolean("otel.javaagent.debug", false))
+              .addFixedValue(
+                  "otel.javaagent.logging", earlyConfig.getString("otel.javaagent.logging"))
+              .resolveInstrumentationConfig(configProvider.getInstrumentationConfig()),
           configProvider);
     }
 
