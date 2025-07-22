@@ -53,25 +53,11 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  private final PropertyTranslator translator;
+  private final ConfigPropertyTranslator translator;
   @Nullable private final DeclarativeConfigProperties baseNode;
 
-  static DeclarativeConfigPropertiesBridge fromInstrumentationConfig(
-      @Nullable DeclarativeConfigProperties instrumentationConfig, PropertyTranslator translator) {
-    if (instrumentationConfig == null) {
-      instrumentationConfig = DeclarativeConfigProperties.empty();
-    }
-    return new DeclarativeConfigPropertiesBridge(
-        instrumentationConfig.getStructured("java", empty()), translator);
-  }
-
-  static DeclarativeConfigPropertiesBridge create(
-      @Nullable DeclarativeConfigProperties node, PropertyTranslator translator) {
-    return new DeclarativeConfigPropertiesBridge(node, translator);
-  }
-
-  private DeclarativeConfigPropertiesBridge(
-      @Nullable DeclarativeConfigProperties baseNode, PropertyTranslator translator) {
+  DeclarativeConfigPropertiesBridge(
+      @Nullable DeclarativeConfigProperties baseNode, ConfigPropertyTranslator translator) {
     this.baseNode = baseNode;
     this.translator = translator;
   }
