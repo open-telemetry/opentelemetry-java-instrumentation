@@ -935,7 +935,8 @@ libraries:
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-      description: Enables experimental receive telemetry for AWS SDK instrumentation.
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.capture-headers
@@ -977,7 +978,8 @@ libraries:
       - software.amazon.awssdk:lambda:2.2.0
     configurations:
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-      description: Enables experimental receive telemetry for AWS SDK instrumentation.
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.capture-headers
@@ -1324,11 +1326,11 @@ libraries:
       - io.dropwizard:dropwizard-views:(,3.0.0)
     configurations:
     - name: otel.instrumentation.common.experimental.view-telemetry.enabled
-      description: Enables experimental view telemetry.
+      description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables experimental controller telemetry.
+      description: Enables the creation of experimental controller (INTERNAL) spans.
       type: boolean
       default: false
   elasticsearch:
@@ -2463,7 +2465,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-      description: Enables experimental receive telemetry for Kafka instrumentation.
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
   - name: kafka-clients-2.6
@@ -2880,6 +2883,88 @@ libraries:
         - name: server.address
           type: STRING
         - name: server.port
+          type: LONG
+  openai:
+  - name: openai-java-1.1
+    description: This instrumentation enables Gen AI client spans and metrics for
+      OpenAI Java SDK 1.1+.
+    source_path: instrumentation/openai/openai-java-1.1
+    scope:
+      name: io.opentelemetry.openai-java-1.1
+    target_versions:
+      javaagent:
+      - com.openai:openai-java:[1.1.0,)
+      library:
+      - com.openai:openai-java:1.1.0
+    configurations:
+    - name: otel.instrumentation.genai.capture-message-content
+      description: |
+        Enables including the full content of user and assistant messages in emitted log events. Note that full content can have data privacy and size concerns, and care should be taken when enabling this.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: gen_ai.client.operation.duration
+        description: GenAI operation duration.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.response.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+      - name: gen_ai.client.token.usage
+        description: Measures number of input and output tokens used.
+        type: HISTOGRAM
+        unit: token
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.response.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+        - name: gen_ai.token.type
+          type: STRING
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.frequency_penalty
+          type: DOUBLE
+        - name: gen_ai.request.max_tokens
+          type: LONG
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.request.presence_penalty
+          type: DOUBLE
+        - name: gen_ai.request.seed
+          type: LONG
+        - name: gen_ai.request.stop_sequences
+          type: STRING_ARRAY
+        - name: gen_ai.request.temperature
+          type: DOUBLE
+        - name: gen_ai.request.top_p
+          type: DOUBLE
+        - name: gen_ai.response.finish_reasons
+          type: STRING_ARRAY
+        - name: gen_ai.response.id
+          type: STRING
+        - name: gen_ai.response.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+        - name: gen_ai.usage.input_tokens
+          type: LONG
+        - name: gen_ai.usage.output_tokens
           type: LONG
   opensearch:
   - name: opensearch-rest-1.0
@@ -3565,6 +3650,7 @@ libraries:
       - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
+    description: Instruments the Spring Batch framework.
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
     scope:
@@ -3572,7 +3658,31 @@ libraries:
     target_versions:
       javaagent:
       - org.springframework.batch:spring-batch-core:[3.0.0.RELEASE,5)
+    configurations:
+    - name: otel.instrumentation.spring-batch.experimental-span-attributes
+      description: Adds the experimental attribute `job.system` to spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.spring-batch.experimental.chunk.new-trace
+      description: When enabled, a new root span will be created for each chunk processing.
+        Please note that this may lead to a high number of spans being created.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.spring-batch.item.enabled
+      description: When enabled, spans will be created for each item processed. Please
+        note that this may lead to a high number of spans being created.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.spring-batch.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: job.system
+          type: STRING
   - name: spring-boot-actuator-autoconfigure-2.0
+    description: |
+      This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from Spring Boot Actuator. It does not produce telemetry on its own.
     disabled_by_default: true
     source_path: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
     scope:
@@ -3581,10 +3691,14 @@ libraries:
       javaagent:
       - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
   - name: spring-boot-resources
+    description: |
+      This instrumentation automatically detects the `service.name` and `service.version` for Spring Boot applications and sets them as resource attributes.
     source_path: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
   - name: spring-cloud-aws-3.0
+    description: |
+      This instrumentation enhances tracing for Spring Cloud AWS. It augments the existing AWS SDK instrumentation by providing higher-level tracing for SQS operations, capturing details specific to Spring Cloud AWS SQS usage and linking them to the underlying AWS SDK traces.
     source_path: instrumentation/spring/spring-cloud-aws-3.0
     minimum_java_version: 17
     scope:
@@ -3593,13 +3707,23 @@ libraries:
       javaagent:
       - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
   - name: spring-cloud-gateway-2.0
+    description: |
+      This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
     scope:
       name: io.opentelemetry.spring-cloud-gateway-2.0
     target_versions:
       javaagent:
       - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
+    configurations:
+    - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
+      description: |
+        Enables experimental `spring-cloud-gateway.route` attributes (e.g., `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
+      type: boolean
+      default: false
   - name: spring-core-2.0
+    description: |
+      This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
     source_path: instrumentation/spring/spring-core-2.0
     minimum_java_version: 17
     scope:
@@ -3608,6 +3732,8 @@ libraries:
       javaagent:
       - org.springframework:spring-core:[2.0,]
   - name: spring-data-1.8
+    description: |
+      This instrumentation enhances tracing for Spring Data operations. It works in conjunction with other instrumentations, such as JDBC, to provide additional context and details for database interactions initiated through Spring Data.
     source_path: instrumentation/spring/spring-data/spring-data-1.8
     scope:
       name: io.opentelemetry.spring-data-1.8
@@ -3615,7 +3741,18 @@ libraries:
       javaagent:
       - org.springframework:spring-aop:[1.2,]
       - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: spring-integration-4.1
+    description: This instrumentation enables PRODUCER and CONSUMER spans for Spring
+      Integration.
     source_path: instrumentation/spring/spring-integration-4.1
     scope:
       name: io.opentelemetry.spring-integration-4.1
@@ -3624,14 +3761,74 @@ libraries:
       - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
       library:
       - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,5.+)
+    configurations:
+    - name: otel.instrumentation.spring-integration.producer.enabled
+      description: |
+        Create producer spans when messages are sent to an output channel. Enable when you're using a messaging library that doesn't have its own instrumentation for generating producer spans. Note that the detection of output channels only works for Spring Cloud Stream `DirectWithAttributesChannel`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.spring-integration.global-channel-interceptor-patterns
+      description: An array of Spring channel name patterns that will be intercepted.
+      type: list
+      default: '*'
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.header.test_message_header
+          type: STRING_ARRAY
+        - name: messaging.operation
+          type: STRING
+    - when: otel.instrumentation.spring-integration.producer.enabled=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.operation
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.operation
+          type: STRING
   - name: spring-jms-2.0
+    description: This instrumentation enables the generation of CONSUMER spans for
+      Spring JMS.
     source_path: instrumentation/spring/spring-jms/spring-jms-2.0
     scope:
       name: io.opentelemetry.spring-jms-2.0
     target_versions:
       javaagent:
       - org.springframework:spring-jms:[2.0,6)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: spring-jms-6.0
+    description: This instrumentation enables the generation of CONSUMER spans for
+      Spring JMS.
     source_path: instrumentation/spring/spring-jms/spring-jms-6.0
     minimum_java_version: 17
     scope:
@@ -3639,14 +3836,108 @@ libraries:
     target_versions:
       javaagent:
       - org.springframework:spring-jms:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.header.test_message_header
+          type: STRING_ARRAY
+        - name: messaging.header.test_message_int_header
+          type: STRING_ARRAY
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: spring-kafka-2.7
+    description: This instrumentation enables CONSUMER spans for Spring Kafka listeners.
     source_path: instrumentation/spring/spring-kafka-2.7
     scope:
       name: io.opentelemetry.spring-kafka-2.7
     target_versions:
       javaagent:
       - org.springframework.kafka:spring-kafka:[2.7.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables capturing experimental span attribute `kafka.record.queue_time_ms`
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.consumer.group
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true,otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.consumer.group
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: spring-pulsar-1.0
+    description: This instrumentation enables CONSUMER spans for Spring Pulsar listeners.
     source_path: instrumentation/spring/spring-pulsar-1.0
     minimum_java_version: 17
     scope:
@@ -3654,28 +3945,143 @@ libraries:
     target_versions:
       javaagent:
       - org.springframework.pulsar:spring-pulsar:[1.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.pulsar.experimental-span-attributes
+      description: |
+        Enables capturing experimental span attribute `messaging.pulsar.message.type` on PRODUCER spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+    - when: otel.instrumentation.pulsar.experimental-span-attributes=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: spring-rabbit-1.0
+    description: This instrumentation enables CONSUMER spans for Spring RabbitMQ listeners.
     source_path: instrumentation/spring/spring-rabbit-1.0
     scope:
       name: io.opentelemetry.spring-rabbit-1.0
     target_versions:
       javaagent:
       - org.springframework.amqp:spring-rabbit:(,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.header.test_message_header
+          type: STRING_ARRAY
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: spring-rmi-4.0
+    description: This instrumentation enables CLIENT and SERVER spans for Spring RMI
+      applications.
     source_path: instrumentation/spring/spring-rmi-4.0
     scope:
       name: io.opentelemetry.spring-rmi-4.0
     target_versions:
       javaagent:
       - org.springframework:spring-context:[4.0.0.RELEASE,6)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
   - name: spring-scheduling-3.1
+    description: This instrumentation enables tracing for Spring Scheduling tasks.
     source_path: instrumentation/spring/spring-scheduling-3.1
     scope:
       name: io.opentelemetry.spring-scheduling-3.1
     target_versions:
       javaagent:
       - org.springframework:spring-context:[3.1.0.RELEASE,]
+    configurations:
+    - name: otel.instrumentation.spring-scheduling.experimental-span-attributes
+      description: Adds the experimental span attribute `job.system` with the value
+        `spring_scheduling`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.spring-scheduling.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
   - name: spring-security-config-6.0
+    description: |
+      This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
+      NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
     source_path: instrumentation/spring/spring-security-config-6.0
     minimum_java_version: 17
     scope:
@@ -3689,29 +4095,38 @@ libraries:
       - org.springframework:spring-web:6.0.0
       - jakarta.servlet:jakarta.servlet-api:6.0.0
       - org.springframework.security:spring-security-web:6.0.0
+    configurations:
+    - name: otel.instrumentation.common.enduser.id.enabled
+      description: Enables capturing the enduser.id attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.enduser.role.enabled
+      description: Enables capturing the enduser.role attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.enduser.scope.enabled
+      description: Enables capturing the enduser.scope attribute.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
+      description: Prefix of granted authorities identifying roles to capture in the
+        `enduser.role` semantic attribute.
+      type: string
+      default: ROLE_
+    - name: otel.instrumentation.spring-security.scope.role.granted-authority-prefix
+      description: Prefix of granted authorities identifying scopes to capture in
+        the `enduser.scopes` semantic attribute.
+      type: string
+      default: SCOPE_
   - name: spring-web-3.1
+    description: |
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate. The agent integration enriches HTTP server spans and metrics with route information.
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
       name: io.opentelemetry.spring-web-3.1
     target_versions:
       javaagent:
       - org.springframework:spring-web:[3.1.0.RELEASE,6)
-  - name: spring-web-6.0
-    source_path: instrumentation/spring/spring-web/spring-web-6.0
-    scope:
-      name: io.opentelemetry.spring-web-6.0
-    target_versions:
-      javaagent:
-      - org.springframework:spring-web:[6.0.0,)
-  - name: spring-webflux-5.0
-    source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
-    scope:
-      name: io.opentelemetry.spring-webflux-5.0
-    target_versions:
-      javaagent:
-      - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
-      - org.springframework:spring-webflux:[5.0.0.RELEASE,)
-      - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
     telemetry:
     - when: default
       metrics:
@@ -3728,25 +4143,266 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: spring-web-6.0
+    description: This instrumentation enriches HTTP server spans and metrics with
+      route information.
+    source_path: instrumentation/spring/spring-web/spring-web-6.0
+    scope:
+      name: io.opentelemetry.spring-web-6.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-web:[6.0.0,)
+  - name: spring-webflux-5.0
+    description: |
+      This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also optionally enables experimental controller (INTERNAL) spans.
+    source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
+    scope:
+      name: io.opentelemetry.spring-webflux-5.0
+    target_versions:
+      javaagent:
+      - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
+      - org.springframework:spring-webflux:[5.0.0.RELEASE,)
+      - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: spring-webflux-5.3
+    description: |
+      This instrumentation provides a library integration for the Spring WebFlux WebClient and Webflux server versions 5.3+ that enables HTTP client and server spans and metrics.
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
     scope:
       name: io.opentelemetry.spring-webflux-5.3
     target_versions:
       library:
       - org.springframework:spring-webflux:5.3.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: spring-webmvc-3.1
+    description: |
+      This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 3.1+.
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
     scope:
       name: io.opentelemetry.spring-webmvc-3.1
     target_versions:
       javaagent:
       - org.springframework:spring-webmvc:[3.1.0.RELEASE,6)
+    configurations:
+    - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
+      description: |
+        Enables the capture of experimental span attributes `spring-webmvc-view-name` and `spring-webmvc.view.type`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+      description: Enables the creation of experimental view (INTERNAL) spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.spring-webmvc.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: spring-webmvc.view.type
+          type: STRING
   - name: spring-webmvc-5.3
+    description: |
+      This instrumentation provides a library integration for Spring WebMVC controllers, that enables the creation of HTTP server spans and metrics for requests processed by the Spring servlet container.
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
     scope:
       name: io.opentelemetry.spring-webmvc-5.3
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: spring-webmvc-6.0
+    description: |
+      This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 6.0+.
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
     minimum_java_version: 17
     scope:
@@ -3754,6 +4410,39 @@ libraries:
     target_versions:
       javaagent:
       - org.springframework:spring-webmvc:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
+      description: |
+        Enables the capture of experimental span attributes `spring-webmvc-view-name` and `spring-webmvc.view.type`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+      description: Enables the creation of experimental view (INTERNAL) spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.spring-webmvc.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: spring-webmvc.view.type
+          type: STRING
   - name: spring-ws-2.0
     disabled_by_default: true
     source_path: instrumentation/spring/spring-ws-2.0
