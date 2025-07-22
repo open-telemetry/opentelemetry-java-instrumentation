@@ -3650,7 +3650,8 @@ libraries:
       - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
-    description: Instruments the Spring Batch framework.
+    description: This instrumentation enables INTERNAL spans for jobs run by the Spring
+      Batch framework.
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
     scope:
@@ -3886,10 +3887,12 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: default
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true
       spans:
       - span_kind: CONSUMER
         attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
         - name: messaging.batch.message_count
           type: LONG
         - name: messaging.client_id
@@ -3910,12 +3913,10 @@ libraries:
           type: STRING
         - name: messaging.system
           type: STRING
-    - when: otel.instrumentation.kafka.experimental-span-attributes=true,otel.instrumentation.messaging.experimental.receive-telemetry.enabled=true
+    - when: default
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: kafka.record.queue_time_ms
-          type: LONG
         - name: messaging.batch.message_count
           type: LONG
         - name: messaging.client_id

@@ -1,5 +1,5 @@
 disabled_by_default: true
-description: Instruments the Spring Batch framework.
+description: This instrumentation enables INTERNAL spans for jobs run by the Spring Batch framework.
 configurations:
   - name: otel.instrumentation.spring-batch.experimental-span-attributes
     type: boolean
