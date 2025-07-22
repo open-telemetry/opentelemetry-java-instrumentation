@@ -42,18 +42,15 @@ public class DocSynchronization {
   private static final List<String> INSTRUMENTATION_EXCLUSIONS =
       List.of("resources", "spring-boot-resources");
 
-  private final HttpClient client;
-
-  public DocSynchronization(HttpClient client) {
-    this.client = client;
-  }
+  private DocSynchronization() {}
 
   /**
    * Retrieves contents of the disable page from the main branch of the documentation site.
    *
    * @return the file content as a string
    */
-  private String getDocumentationDisableList() throws IOException, InterruptedException {
+  private static String getDocumentationDisableList(HttpClient client)
+      throws IOException, InterruptedException {
     HttpRequest request =
         HttpRequest.newBuilder().uri(URI.create(DOCUMENTATION_DISABLE_LIST)).build();
 
@@ -168,10 +165,9 @@ public class DocSynchronization {
 
   public static void main(String[] args) {
     HttpClient client = HttpClient.newHttpClient();
-    DocSynchronization synchronization = new DocSynchronization(client);
 
     try {
-      String content = synchronization.getDocumentationDisableList();
+      String content = getDocumentationDisableList(client);
       List<String> disabledList = parseDocumentationDisabledList(content);
 
       String instrumentationListContent = Objects.requireNonNull(getInstrumentationList());
