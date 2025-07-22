@@ -197,7 +197,7 @@ data will be excluded from git and just generated on demand.
 Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
 emitted by default or via a configuration option.
 
-# Doc Synchronization
+## Doc Synchronization
 
 The documentation site has a section that lists all the instrumentations in the context of
 documenting how to disable them.
