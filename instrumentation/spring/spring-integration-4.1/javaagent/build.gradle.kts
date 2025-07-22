@@ -48,7 +48,7 @@ tasks {
     include("**/SpringIntegrationAndRabbitTest.*")
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
-    systemProperty("metaDataConfig", "otel.instrumentation.rabbitmq.enabled=true,otel.instrumentation.spring-rabbit.enabled=true")
+    systemProperty("metaDataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
 
   val testWithProducerInstrumentation by registering(Test::class) {
