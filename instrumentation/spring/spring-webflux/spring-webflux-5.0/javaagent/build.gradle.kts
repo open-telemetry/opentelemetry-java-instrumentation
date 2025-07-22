@@ -61,6 +61,8 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.spring-webflux.experimental-span-attributes=true")
@@ -69,11 +71,11 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("metaDataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
+  systemProperty("testLatestDeps", latestDepTest)
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("collectSpans", true)
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 if (latestDepTest) {
   // spring 6 requires java 17
