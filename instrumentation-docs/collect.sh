@@ -10,6 +10,7 @@ readonly INSTRUMENTATIONS=(
   # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
   "activej-http-6.0:javaagent:test"
   "akka:akka-http-10.0:javaagent:test"
+  "armeria:armeria-grpc-1.14:javaagent:test"
   "apache-httpasyncclient-4.1:javaagent:test"
   "alibaba-druid-1.0:javaagent:test"
   "alibaba-druid-1.0:javaagent:testStableSemconv"
@@ -82,6 +83,13 @@ readonly INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7Test"
   "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7TestStableSemconv"
   "elasticsearch:elasticsearch-transport-6.0:javaagent:elasticsearch7TestExperimental"
+  "apache-httpclient:apache-httpclient-5.2:library:test"
+  "armeria:armeria-1.3:javaagent:test"
+  "async-http-client:async-http-client-1.9:javaagent:test"
+  "async-http-client:async-http-client-2.0:javaagent:test"
+  "apache-dubbo-2.7:javaagent:testDubbo"
+  "finagle-http-23.11:javaagent:test"
+  "finatra-2.9:javaagent:test"
 )
 
 readonly COLIMA_INSTRUMENTATIONS=(

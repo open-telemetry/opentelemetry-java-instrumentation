@@ -1,5 +1,5 @@
 description: >
-  This instrumentation provides tracing for Apache Camel 2.x applications by generating spans for
+  This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for
   each route execution. For Camel versions 3.5 and newer, users should instead use the native
   'camel-opentelemetry' component provided directly by the Camel project.
 configurations:
