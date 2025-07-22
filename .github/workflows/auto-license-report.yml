@@ -43,7 +43,7 @@ jobs:
       - id: create-patch
         name: Create patch file
         run: |
-          git add -N licenses
+          git add -N --ignore-removal licenses
           git diff > patch
           if [ -s patch ]; then
             echo "exists=true" >> "$GITHUB_OUTPUT"

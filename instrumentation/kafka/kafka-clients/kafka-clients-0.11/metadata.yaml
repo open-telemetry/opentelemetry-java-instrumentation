@@ -1,5 +1,5 @@
 description: >
-  This instrumentation provides messaging spans and metrics for Apache Kafka 0.11 clients.
+  This instrumentation enables messaging spans and metrics for Apache Kafka 0.11 clients.
   It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
 configurations:
   - name: otel.instrumentation.kafka.producer-propagation.enabled
