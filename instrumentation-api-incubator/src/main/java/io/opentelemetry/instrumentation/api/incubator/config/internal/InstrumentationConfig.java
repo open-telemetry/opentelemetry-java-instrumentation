@@ -112,15 +112,15 @@ public interface InstrumentationConfig {
 
   /**
    * Returns a {@link DeclarativeConfigProperties} for the given instrumentation name, or {@code
-   * null} if no declarative configuration <b>not used at all</b>.
+   * null} if declarative configuration is <b>not used at all</b>.
    *
    * <p>Declarative configuration is used to configure instrumentation properties in a declarative
    * way, such as through YAML or JSON files.
    *
    * @param node the name of the instrumentation (e.g. "log4j"), the vendor name (e.g. "google"), or
-   *     "common" for common Java settings that don't apply to other languages
+   *     "common" for common Java settings that don't apply to other languages.
    * @return the declarative configuration properties for the given node name, or {@code * null} if
-   *     no declarative configuration <b>not used at all</b>.
+   *     declarative configuration is <b>not used at all</b>.
    */
   DeclarativeConfigProperties getDeclarativeConfig(String node);
 
