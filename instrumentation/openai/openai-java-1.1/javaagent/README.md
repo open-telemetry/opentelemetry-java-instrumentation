@@ -2,4 +2,4 @@
 
 | System property                                      | Type    | Default | Description                              |
 |------------------------------------------------------|---------|---------|------------------------------------------|
-| `otel.instrumentation.genai.capture-message-content` | Boolean | `false` | record content of user and LLM messages. |
+| `otel.instrumentation.genai.capture-message-content` | Boolean | `false` | Record content of user and LLM messages. |
