@@ -1,0 +1,4 @@
+<jboss-web>
+  <!-- add an explicit limit for sessions, otherwise negative value is filtered out -->
+  <max-active-sessions>42</max-active-sessions>
+</jboss-web>
