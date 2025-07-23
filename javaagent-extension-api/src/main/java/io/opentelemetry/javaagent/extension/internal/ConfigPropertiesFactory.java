@@ -22,7 +22,7 @@ import javax.annotation.Nullable;
  * any time.
  */
 @SuppressWarnings("NonApiType")
-public class ConfigPropertyTranslator {
+public class ConfigPropertiesFactory {
   // lookup order matters - we choose the first match
   private final LinkedHashMap<String, String> translationMap;
   private final Map<String, Object> fixedValues;
@@ -31,7 +31,7 @@ public class ConfigPropertyTranslator {
     return new Builder();
   }
 
-  ConfigPropertyTranslator(
+  ConfigPropertiesFactory(
       LinkedHashMap<String, String> translationMap, Map<String, Object> fixedValues) {
     this.translationMap = translationMap;
     this.fixedValues = fixedValues;
@@ -100,7 +100,7 @@ public class ConfigPropertyTranslator {
 
     public ConfigProperties resolveConfig(@Nullable DeclarativeConfigProperties config) {
       return new DeclarativeConfigPropertiesBridge(
-          config, new ConfigPropertyTranslator(translationMap, fixedValues));
+          config, new ConfigPropertiesFactory(translationMap, fixedValues));
     }
   }
 }
