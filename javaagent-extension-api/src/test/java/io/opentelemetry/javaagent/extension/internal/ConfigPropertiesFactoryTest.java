@@ -21,7 +21,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 @SuppressWarnings("DoNotMockAutoValue")
-class ConfigPropertyTranslatorTest {
+class ConfigPropertiesFactoryTest {
   @Test
   void shouldUseConfigPropertiesForAutoConfiguration() {
     ConfigProperties configPropertiesMock = mock(ConfigProperties.class);
@@ -33,7 +33,7 @@ class ConfigPropertyTranslatorTest {
           .thenReturn(configPropertiesMock);
 
       ConfigProperties configProperties =
-          ConfigPropertyTranslator.builder().resolveConfigProperties(sdkMock);
+          ConfigPropertiesFactory.builder().resolveConfigProperties(sdkMock);
 
       assertThat(configProperties).isSameAs(configPropertiesMock);
     }
@@ -62,7 +62,7 @@ class ConfigPropertyTranslatorTest {
           .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
-          ConfigPropertyTranslator.builder().resolveConfigProperties(sdkMock);
+          ConfigPropertiesFactory.builder().resolveConfigProperties(sdkMock);
 
       assertThat(configProperties.getString(propertyName)).isEqualTo(expectedValue);
     }
@@ -82,7 +82,7 @@ class ConfigPropertyTranslatorTest {
           .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
-          ConfigPropertyTranslator.builder().resolveConfigProperties(sdkMock);
+          ConfigPropertiesFactory.builder().resolveConfigProperties(sdkMock);
 
       assertThat(configProperties.getString("testProperty")).isEqualTo(null);
     }

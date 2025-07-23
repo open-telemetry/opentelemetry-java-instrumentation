@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.extension.internal.ConfigPropertyTranslator;
+import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesFactory;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -42,7 +42,7 @@ public final class OpenTelemetryInstaller {
       return SdkAutoconfigureAccess.create(
           sdk,
           Resource.getDefault(),
-          ConfigPropertyTranslator.builder()
+          ConfigPropertiesFactory.builder()
               .addTranslation(
                   "otel.instrumentation.common.default-enabled", "common.default.enabled")
               .addTranslation("otel.javaagent", "agent")
