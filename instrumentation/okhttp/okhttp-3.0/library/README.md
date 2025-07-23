@@ -39,8 +39,6 @@ import io.opentelemetry.instrumentation.okhttp.v3_0.OkHttpTelemetry;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 
-import java.util.concurrent.ExecutorService;
-
 public class OkHttpConfiguration {
 
   //Use this Call.Factory implementation for making standard http client calls.
