@@ -144,6 +144,16 @@
       enabled: false,
     },
     {
+      // wiremock 3+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'com.github.tomakehurst:wiremock-jre8'
+      ],
+    },
+    {
       // intentionally using Spring Boot 2 in this smoke tests
       // new versions of Spring Boot 3 are tested with
       // https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/dc4330e0a3060bd7d8c4090ad0b8fc4727e68113/settings.gradle.kts#L43-L45

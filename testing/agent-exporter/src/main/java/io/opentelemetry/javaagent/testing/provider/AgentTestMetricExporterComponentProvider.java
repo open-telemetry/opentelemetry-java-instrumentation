@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.testing.provider;
 
+import com.google.auto.service.AutoService;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.metrics.export.MetricExporter;
 import java.util.Objects;
 
-public class TestMetricExporterComponentProvider implements ComponentProvider<MetricExporter> {
+@SuppressWarnings("rawtypes")
+@AutoService(ComponentProvider.class)
+public class AgentTestMetricExporterComponentProvider implements ComponentProvider<MetricExporter> {
 
   private static MetricExporter metricExporter;
 
@@ -21,7 +24,7 @@ public class TestMetricExporterComponentProvider implements ComponentProvider<Me
 
   @Override
   public String getName() {
-    return "test";
+    return "agent_test";
   }
 
   @Override
@@ -30,6 +33,6 @@ public class TestMetricExporterComponentProvider implements ComponentProvider<Me
   }
 
   public static void setMetricExporter(MetricExporter metricExporter) {
-    TestMetricExporterComponentProvider.metricExporter = metricExporter;
+    AgentTestMetricExporterComponentProvider.metricExporter = metricExporter;
   }
 }

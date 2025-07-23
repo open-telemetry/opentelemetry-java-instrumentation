@@ -1,0 +1,59 @@
+---
+id: 70431a6b-8879-4ece-a010-cb14a507a091
+name: chat_completions
+request:
+  url: /chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o-mini",
+        "stream" : true
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |+
+    data: {"id":"chatcmpl-BuYarH1A2li9SaCpSoQpbD7VYp9eq","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-BuYarH1A2li9SaCpSoQpbD7VYp9eq","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":"Atlantic"},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-BuYarH1A2li9SaCpSoQpbD7VYp9eq","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" Ocean"},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-BuYarH1A2li9SaCpSoQpbD7VYp9eq","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":"."},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-BuYarH1A2li9SaCpSoQpbD7VYp9eq","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
+
+    data: [DONE]
+
+  headers:
+    Date: "Fri, 18 Jul 2025 06:10:45 GMT"
+    Content-Type: text/event-stream; charset=utf-8
+    access-control-expose-headers: X-Request-ID
+    openai-organization: test_organization
+    openai-processing-ms: "149"
+    openai-project: proj_Pf1eM5R55Z35wBy4rt8PxAGq
+    openai-version: 2020-10-01
+    x-envoy-upstream-service-time: "151"
+    x-ratelimit-limit-requests: "5000"
+    x-ratelimit-limit-tokens: "4000000"
+    x-ratelimit-remaining-requests: "4999"
+    x-ratelimit-remaining-tokens: "3999983"
+    x-ratelimit-reset-requests: 12ms
+    x-ratelimit-reset-tokens: 0s
+    x-request-id: req_d5030fd2b49fb21828c03fc77c6b2ade
+    strict-transport-security: max-age=31536000; includeSubDomains; preload
+    cf-cache-status: DYNAMIC
+    Set-Cookie: test_set_cookie
+    X-Content-Type-Options: nosniff
+    Server: cloudflare
+    CF-RAY: 960fd154aca8e3a1-NRT
+    alt-svc: h3=":443"; ma=86400
+uuid: 70431a6b-8879-4ece-a010-cb14a507a091
+persistent: true
+insertionIndex: 14

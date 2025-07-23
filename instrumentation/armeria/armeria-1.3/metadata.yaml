@@ -1,0 +1,1 @@
+description: This instrumentation enables CLIENT and SERVER spans and metrics for the Armeria HTTP client and server.
