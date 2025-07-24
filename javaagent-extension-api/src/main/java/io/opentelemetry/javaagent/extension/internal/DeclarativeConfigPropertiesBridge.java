@@ -126,11 +126,12 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return Duration.ofMillis(millis);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String propertyName) {
-    List<String> value = translator.get(propertyName);
+    Object value = translator.get(propertyName);
     if (value != null) {
-      return value;
+      return (List<String>) value;
     }
     List<String> propertyValue =
         getPropertyValue(
@@ -139,11 +140,12 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return propertyValue == null ? Collections.emptyList() : propertyValue;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String propertyName) {
-    Map<String, String> fixed = translator.get(propertyName);
+    Object fixed = translator.get(propertyName);
     if (fixed != null) {
-      return fixed;
+      return (Map<String, String>) fixed;
     }
     DeclarativeConfigProperties propertyValue =
         getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);

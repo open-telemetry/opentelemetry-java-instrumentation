@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.extension.internal;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.annotation.Nullable;
 
 @SuppressWarnings("NonApiType")
 class ConfigPropertiesTranslator {
@@ -30,9 +29,8 @@ class ConfigPropertiesTranslator {
     return property;
   }
 
-  @SuppressWarnings("unchecked")
   @Nullable
-  public <T> T get(String propertyName) {
-    return (T) fixedValues.get(propertyName);
+  public Object get(String propertyName) {
+    return fixedValues.get(propertyName);
   }
 }
