@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
-import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesFactory;
+import io.opentelemetry.javaagent.extension.internal.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -47,7 +47,7 @@ public final class OpenTelemetryInstaller {
           // the Resource from the original instance is also the default Resource,
           // so this is functionally equivalent
           Resource.getDefault(),
-          ConfigPropertiesFactory.builder()
+          new DeclarativeConfigPropertiesBridgeBuilder()
               .addTranslation(
                   "otel.instrumentation.common.default-enabled", "common.default.enabled")
               .addTranslation("otel.javaagent", "agent")

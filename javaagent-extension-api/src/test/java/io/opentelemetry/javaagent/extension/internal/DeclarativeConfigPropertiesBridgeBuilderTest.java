@@ -1,8 +1,3 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package io.opentelemetry.javaagent.extension.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,8 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
-@SuppressWarnings("DoNotMockAutoValue")
-class ConfigPropertiesFactoryTest {
+class DeclarativeConfigPropertiesBridgeBuilderTest {
   @Test
   void shouldUseConfigPropertiesForAutoConfiguration() {
     ConfigProperties configPropertiesMock = mock(ConfigProperties.class);
@@ -33,7 +27,7 @@ class ConfigPropertiesFactoryTest {
           .thenReturn(configPropertiesMock);
 
       ConfigProperties configProperties =
-          ConfigPropertiesFactory.builder().resolveConfigProperties(sdkMock);
+          new DeclarativeConfigPropertiesBridgeBuilder().resolveConfigProperties(sdkMock);
 
       assertThat(configProperties).isSameAs(configPropertiesMock);
     }
@@ -62,7 +56,7 @@ class ConfigPropertiesFactoryTest {
           .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
-          ConfigPropertiesFactory.builder().resolveConfigProperties(sdkMock);
+          new DeclarativeConfigPropertiesBridgeBuilder().resolveConfigProperties(sdkMock);
 
       assertThat(configProperties.getString(propertyName)).isEqualTo(expectedValue);
     }
@@ -82,7 +76,7 @@ class ConfigPropertiesFactoryTest {
           .thenReturn(configProviderMock);
 
       ConfigProperties configProperties =
-          ConfigPropertiesFactory.builder().resolveConfigProperties(sdkMock);
+          new DeclarativeConfigPropertiesBridgeBuilder().resolveConfigProperties(sdkMock);
 
       assertThat(configProperties.getString("testProperty")).isEqualTo(null);
     }
