@@ -20,7 +20,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-class JvmTargetSystemTest extends TargetSystemTest {
+class JvmTest extends TargetSystemTest {
 
   @ParameterizedTest
   @ValueSource(
@@ -47,7 +47,8 @@ class JvmTargetSystemTest extends TargetSystemTest {
             .withExposedPorts(8080)
             .waitingFor(Wait.forListeningPorts(8080));
 
-    copyFilesToTarget(target, yamlFiles);
+    copyAgentToTarget(target);
+    copyYamlFilesToTarget(target, yamlFiles);
 
     startTarget(target);
 

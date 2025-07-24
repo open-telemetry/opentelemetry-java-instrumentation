@@ -6,11 +6,11 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.52.0"
-val otelContribVersion = "1.47.0-alpha"
+val otelContribVersion = "1.48.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.27"
+val groovyVersion = "4.0.28"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -93,7 +93,7 @@ val DEPENDENCIES = listOf(
   "com.uber.nullaway:nullaway:0.12.7",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.9.0",
-  "commons-codec:commons-codec:1.18.0",
+  "commons-codec:commons-codec:1.19.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",
