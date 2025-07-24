@@ -2471,7 +2471,7 @@ libraries:
       default: false
   - name: kafka-clients-2.6
     description: |
-      This instrumentation provides a library integeration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
+      This instrumentation provides a library integration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
     scope:
       name: io.opentelemetry.kafka-clients-2.6
