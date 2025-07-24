@@ -39,18 +39,21 @@ public final class OpenTelemetryInstaller {
     setForceFlush(sdk);
 
     if (configProvider != null) {
+      // We create a new instance of AutoConfiguredOpenTelemetrySdk, which has a ConfigProperties
+      // instance that can be used to read properties from the configuration file.
+      // This allows most instrumentations to be unaware of which configuration style is used.
       return SdkAutoconfigureAccess.create(
           sdk,
+          // the Resource from the original instance is also the default Resource,
+          // so this is functionally equivalent
           Resource.getDefault(),
           ConfigPropertiesFactory.builder()
               .addTranslation(
                   "otel.instrumentation.common.default-enabled", "common.default.enabled")
               .addTranslation("otel.javaagent", "agent")
               // these properties are used to initialize the SDK before the configuration file
-              // is loaded
-              // for consistency, we pass them to the bridge, so that they can be read later
-              // with the same
-              // value from the {@link DeclarativeConfigPropertiesBridge}
+              // is loaded for consistency, we pass them to the bridge, so that they can be read
+              // later with the same value from the {@link DeclarativeConfigPropertiesBridge}
               .addFixedValue(
                   "otel.javaagent.debug", earlyConfig.getBoolean("otel.javaagent.debug", false))
               .addFixedValue(
