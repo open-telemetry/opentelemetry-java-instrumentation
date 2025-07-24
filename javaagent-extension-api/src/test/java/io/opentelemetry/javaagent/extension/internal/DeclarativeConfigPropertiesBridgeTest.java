@@ -27,19 +27,20 @@ class DeclarativeConfigPropertiesBridgeTest {
 
   @BeforeEach
   void setup() {
-    bridge = create(ConfigPropertiesFactory.builder());
+    bridge = create(new DeclarativeConfigPropertiesBridgeBuilder());
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        ConfigPropertiesFactory.builder()
+        new DeclarativeConfigPropertiesBridgeBuilder()
             .resolveInstrumentationConfig(
                 Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
-  private static ConfigProperties create(ConfigPropertiesFactory.Builder builder) {
+  private static ConfigProperties create(
+      DeclarativeConfigPropertiesBridgeBuilder builder) {
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(
             DeclarativeConfigPropertiesBridgeTest.class
@@ -124,7 +125,7 @@ class DeclarativeConfigPropertiesBridgeTest {
   @Test
   void vendorTranslation() {
     ConfigProperties propertiesBridge =
-        create(ConfigPropertiesFactory.builder().addTranslation("acme", "acme.full_name"));
+        create(new DeclarativeConfigPropertiesBridgeBuilder().addTranslation("acme", "acme.full_name"));
     assertThat(propertiesBridge.getBoolean("acme.preserved")).isTrue();
   }
 
@@ -132,7 +133,7 @@ class DeclarativeConfigPropertiesBridgeTest {
   void agentCommonTranslation() {
     assertThat(
             create(
-                    ConfigPropertiesFactory.builder()
+                    new DeclarativeConfigPropertiesBridgeBuilder()
                         .addTranslation(
                             "otel.instrumentation.common.default-enabled",
                             "common.default.enabled"))
@@ -144,7 +145,7 @@ class DeclarativeConfigPropertiesBridgeTest {
   void agentTranslation() {
     ConfigProperties bridge =
         create(
-            ConfigPropertiesFactory.builder()
+            new DeclarativeConfigPropertiesBridgeBuilder()
                 .addTranslation("otel.javaagent", "agent")
                 .addFixedValue("otel.javaagent.debug", true)
                 .addFixedValue("otel.javaagent.logging", "application"));

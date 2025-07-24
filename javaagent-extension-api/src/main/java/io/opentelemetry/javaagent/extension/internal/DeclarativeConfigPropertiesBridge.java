@@ -53,11 +53,11 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  private final ConfigPropertiesFactory translator;
+  private final ConfigPropertiesTranslator translator;
   @Nullable private final DeclarativeConfigProperties baseNode;
 
   DeclarativeConfigPropertiesBridge(
-      @Nullable DeclarativeConfigProperties baseNode, ConfigPropertiesFactory translator) {
+      @Nullable DeclarativeConfigProperties baseNode, ConfigPropertiesTranslator translator) {
     this.baseNode = baseNode;
     this.translator = translator;
   }
