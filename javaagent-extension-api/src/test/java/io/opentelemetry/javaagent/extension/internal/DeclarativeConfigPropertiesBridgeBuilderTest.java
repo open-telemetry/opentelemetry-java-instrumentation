@@ -78,7 +78,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
       ConfigProperties configProperties =
           new DeclarativeConfigPropertiesBridgeBuilder().resolveConfigProperties(sdkMock);
 
-      assertThat(configProperties.getString("testProperty")).isEqualTo(null);
+      assertThat(configProperties.getString("testProperty")).isNull();
     }
   }
 }
