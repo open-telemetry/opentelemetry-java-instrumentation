@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.extension.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
@@ -13,8 +18,11 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
+ * values for properties.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class DeclarativeConfigPropertiesBridgeBuilder {
   private final LinkedHashMap<String, String> translationMap = new LinkedHashMap<>();

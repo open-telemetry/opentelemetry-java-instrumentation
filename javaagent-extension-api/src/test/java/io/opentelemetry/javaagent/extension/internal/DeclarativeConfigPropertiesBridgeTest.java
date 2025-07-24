@@ -39,8 +39,7 @@ class DeclarativeConfigPropertiesBridgeTest {
                 Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
-  private static ConfigProperties create(
-      DeclarativeConfigPropertiesBridgeBuilder builder) {
+  private static ConfigProperties create(DeclarativeConfigPropertiesBridgeBuilder builder) {
     OpenTelemetryConfigurationModel model =
         DeclarativeConfiguration.parse(
             DeclarativeConfigPropertiesBridgeTest.class
@@ -125,7 +124,9 @@ class DeclarativeConfigPropertiesBridgeTest {
   @Test
   void vendorTranslation() {
     ConfigProperties propertiesBridge =
-        create(new DeclarativeConfigPropertiesBridgeBuilder().addTranslation("acme", "acme.full_name"));
+        create(
+            new DeclarativeConfigPropertiesBridgeBuilder()
+                .addTranslation("acme", "acme.full_name"));
     assertThat(propertiesBridge.getBoolean("acme.preserved")).isTrue();
   }
 

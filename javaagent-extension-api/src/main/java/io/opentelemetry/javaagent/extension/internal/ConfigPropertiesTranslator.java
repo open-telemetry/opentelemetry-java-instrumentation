@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.extension.internal;
 
-
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -30,8 +29,8 @@ class ConfigPropertiesTranslator {
     return property;
   }
 
+  @Nullable
   public Object get(String propertyName) {
     return fixedValues.get(propertyName);
   }
-
 }
