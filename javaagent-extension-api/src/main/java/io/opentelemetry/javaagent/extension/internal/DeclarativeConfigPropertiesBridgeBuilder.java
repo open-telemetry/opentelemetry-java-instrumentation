@@ -58,11 +58,8 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
     if (instrumentationConfig == null) {
       instrumentationConfig = DeclarativeConfigProperties.empty();
     }
-    return resolveConfig(instrumentationConfig.getStructured("java", empty()));
-  }
-
-  public ConfigProperties resolveConfig(@Nullable DeclarativeConfigProperties config) {
     return new DeclarativeConfigPropertiesBridge(
-        config, new ConfigPropertiesTranslator(translationMap, fixedValues));
+        instrumentationConfig.getStructured("java", empty()),
+        new ConfigPropertiesTranslator(translationMap, fixedValues));
   }
 }
