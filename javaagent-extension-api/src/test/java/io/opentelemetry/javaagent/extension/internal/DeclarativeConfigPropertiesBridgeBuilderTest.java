@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
+@SuppressWarnings("DoNotMockAutoValue")
 class DeclarativeConfigPropertiesBridgeBuilderTest {
   @Test
   void shouldUseConfigPropertiesForAutoConfiguration() {
