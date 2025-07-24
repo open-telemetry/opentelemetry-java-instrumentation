@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
@@ -45,6 +46,13 @@ public final class OpenAITelemetry {
   /** Wraps the provided OpenAIClient, enabling telemetry for it. */
   public OpenAIClient wrap(OpenAIClient client) {
     return new InstrumentedOpenAiClient(
+            client, chatInstrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  /** Wraps the provided OpenAIClientAsync, enabling telemetry for it. */
+  public OpenAIClientAsync wrap(OpenAIClientAsync client) {
+    return new InstrumentedOpenAiClientAsync(
             client, chatInstrumenter, eventLogger, captureMessageContent)
         .createProxy();
   }

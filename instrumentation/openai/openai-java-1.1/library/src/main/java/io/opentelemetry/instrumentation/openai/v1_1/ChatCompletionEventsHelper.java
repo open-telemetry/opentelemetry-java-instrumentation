@@ -29,14 +29,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 
 final class ChatCompletionEventsHelper {
 
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
 
   public static void emitPromptLogEvents(
-      Logger eventLogger, ChatCompletionCreateParams request, boolean captureMessageContent) {
+      Context ctx,
+      Logger eventLogger,
+      ChatCompletionCreateParams request,
+      boolean captureMessageContent) {
     for (ChatCompletionMessageParam msg : request.messages()) {
       String eventType;
       Map<String, Value<?>> body = new HashMap<>();
@@ -84,7 +86,7 @@ final class ChatCompletionEventsHelper {
       } else {
         continue;
       }
-      newEvent(eventLogger, eventType).setBody(Value.of(body)).emit();
+      newEvent(eventLogger, eventType).setContext(ctx).setBody(Value.of(body)).emit();
     }
   }
 
@@ -160,7 +162,7 @@ final class ChatCompletionEventsHelper {
   }
 
   public static void emitCompletionLogEvents(
-      Logger eventLogger, ChatCompletion completion, boolean captureMessageContent) {
+      Context ctx, Logger eventLogger, ChatCompletion completion, boolean captureMessageContent) {
     for (ChatCompletion.Choice choice : completion.choices()) {
       ChatCompletionMessage choiceMsg = choice.message();
       Map<String, Value<?>> message = new HashMap<>();
@@ -179,25 +181,21 @@ final class ChatCompletionEventsHelper {
                             .collect(Collectors.toList())));
               });
       emitCompletionLogEvent(
-          eventLogger, choice.index(), choice.finishReason().toString(), Value.of(message), null);
+          ctx, eventLogger, choice.index(), choice.finishReason().toString(), Value.of(message));
     }
   }
 
   public static void emitCompletionLogEvent(
+      Context ctx,
       Logger eventLogger,
       long index,
       String finishReason,
-      Value<?> eventMessageObject,
-      @Nullable Context contextOverride) {
+      Value<?> eventMessageObject) {
     Map<String, Value<?>> body = new HashMap<>();
     body.put("finish_reason", Value.of(finishReason));
     body.put("index", Value.of(index));
     body.put("message", eventMessageObject);
-    LogRecordBuilder builder = newEvent(eventLogger, "gen_ai.choice").setBody(Value.of(body));
-    if (contextOverride != null) {
-      builder.setContext(contextOverride);
-    }
-    builder.emit();
+    newEvent(eventLogger, "gen_ai.choice").setContext(ctx).setBody(Value.of(body)).emit();
   }
 
   private static LogRecordBuilder newEvent(Logger eventLogger, String name) {

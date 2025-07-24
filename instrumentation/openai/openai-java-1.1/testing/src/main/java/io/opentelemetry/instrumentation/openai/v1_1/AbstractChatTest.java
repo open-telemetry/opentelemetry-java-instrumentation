@@ -33,9 +33,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
+import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
 import com.openai.core.JsonObject;
 import com.openai.core.JsonValue;
+import com.openai.core.http.AsyncStreamResponse;
 import com.openai.core.http.StreamResponse;
 import com.openai.errors.OpenAIIoException;
 import com.openai.models.FunctionDefinition;
@@ -67,12 +70,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.Parameter;
+import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.EnumSource;
 
+@ParameterizedClass
+@EnumSource(AbstractChatTest.TestType.class)
 public abstract class AbstractChatTest {
+  enum TestType {
+    SYNC,
+    SYNC_FROM_ASYNC,
+    ASYNC,
+    ASYNC_FROM_SYNC,
+  }
+
   protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.openai-java-1.1";
 
   private static final String API_URL = "https://api.openai.com/v1";
@@ -90,7 +106,9 @@ public abstract class AbstractChatTest {
 
   protected abstract OpenAIClient wrap(OpenAIClient client);
 
-  protected OpenAIClient getRawClient() {
+  protected abstract OpenAIClientAsync wrap(OpenAIClientAsync client);
+
+  protected final OpenAIClient getRawClient() {
     OpenAIOkHttpClient.Builder builder =
         OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
     if (recording.isRecording()) {
@@ -101,12 +119,95 @@ public abstract class AbstractChatTest {
     return builder.build();
   }
 
-  protected OpenAIClient getClient() {
+  protected final OpenAIClientAsync getRawClientAsync() {
+    OpenAIOkHttpClientAsync.Builder builder =
+        OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
+    if (recording.isRecording()) {
+      builder.apiKey(System.getenv("OPENAI_API_KEY"));
+    } else {
+      builder.apiKey("unused");
+    }
+    return builder.build();
+  }
+
+  protected final OpenAIClient getClient() {
     return wrap(getRawClient());
+  }
+
+  protected final OpenAIClientAsync getClientAsync() {
+    return wrap(getRawClientAsync());
   }
 
   protected abstract List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
       Consumer<SpanDataAssert> span);
+
+  @Parameter TestType testType;
+
+  protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
+    return doCompletions(params, getClient(), getClientAsync());
+  }
+
+  protected final ChatCompletion doCompletions(
+      ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
+    switch (testType) {
+      case SYNC:
+        return client.chat().completions().create(params);
+      case SYNC_FROM_ASYNC:
+        return clientAsync.sync().chat().completions().create(params);
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        OpenAIClientAsync cl = testType == TestType.ASYNC ? clientAsync : client.async();
+        try {
+          return cl.chat().completions().create(params).join();
+        } catch (CompletionException e) {
+          if (e.getCause() instanceof OpenAIIoException) {
+            throw ((OpenAIIoException) e.getCause());
+          }
+          throw e;
+        }
+    }
+    throw new AssertionError();
+  }
+
+  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+      ChatCompletionCreateParams params) {
+    return doCompletionsStreaming(params, getClient(), getClientAsync());
+  }
+
+  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+      ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
+    switch (testType) {
+      case SYNC:
+        try (StreamResponse<ChatCompletionChunk> result =
+            client.chat().completions().createStreaming(params)) {
+          return result.stream().collect(Collectors.toList());
+        }
+      case SYNC_FROM_ASYNC:
+        try (StreamResponse<ChatCompletionChunk> result =
+            clientAsync.sync().chat().completions().createStreaming(params)) {
+          return result.stream().collect(Collectors.toList());
+        }
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        {
+          OpenAIClientAsync cl = testType == TestType.ASYNC ? clientAsync : client.async();
+          AsyncStreamResponse<ChatCompletionChunk> stream =
+              cl.chat().completions().createStreaming(params);
+          List<ChatCompletionChunk> result = new ArrayList<>();
+          stream.subscribe(result::add);
+          try {
+            stream.onCompleteFuture().join();
+          } catch (CompletionException e) {
+            if (e.getCause() instanceof OpenAIIoException) {
+              throw ((OpenAIIoException) e.getCause());
+            }
+            throw e;
+          }
+          return result;
+        }
+    }
+    throw new AssertionError();
+  }
 
   @Test
   void basic() {
@@ -116,7 +217,7 @@ public abstract class AbstractChatTest {
             .model(TEST_CHAT_MODEL)
             .build();
 
-    ChatCompletion response = getClient().chat().completions().create(params);
+    ChatCompletion response = doCompletions(params);
     String content = "Atlantic Ocean";
     assertThat(response.choices().get(0).message().content()).hasValue(content);
 
@@ -217,7 +318,7 @@ public abstract class AbstractChatTest {
             .model(TEST_CHAT_MODEL)
             .build();
 
-    ChatCompletion response = getClient().chat().completions().create(params);
+    ChatCompletion response = doCompletions(params);
     String content = "Tomato.";
     assertThat(response.choices().get(0).message().content()).hasValue(content);
 
@@ -271,7 +372,7 @@ public abstract class AbstractChatTest {
             .responseFormat(ResponseFormatText.builder().build())
             .build();
 
-    ChatCompletion response = getClient().chat().completions().create(params);
+    ChatCompletion response = doCompletions(params);
     String content = "Southern Ocean.";
     assertThat(response.choices().get(0).message().content()).hasValue(content);
 
@@ -376,7 +477,7 @@ public abstract class AbstractChatTest {
             .n(2)
             .build();
 
-    ChatCompletion response = getClient().chat().completions().create(params);
+    ChatCompletion response = doCompletions(params);
     String content1 = "South Atlantic Ocean.";
     assertThat(response.choices().get(0).message().content()).hasValue(content1);
     String content2 = "Atlantic Ocean.";
@@ -489,7 +590,7 @@ public abstract class AbstractChatTest {
             .addTool(buildGetWeatherToolDefinition())
             .build();
 
-    ChatCompletion response = getClient().chat().completions().create(params);
+    ChatCompletion response = doCompletions(params);
 
     assertThat(response.choices().get(0).message().content()).isEmpty();
 
@@ -815,6 +916,13 @@ public abstract class AbstractChatTest {
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
+    OpenAIClientAsync clientAsync =
+        wrap(
+            OpenAIOkHttpClientAsync.builder()
+                .baseUrl("http://localhost:9999/v5")
+                .apiKey("testing")
+                .maxRetries(0)
+                .build());
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
@@ -822,7 +930,7 @@ public abstract class AbstractChatTest {
             .model(TEST_CHAT_MODEL)
             .build();
 
-    Throwable thrown = catchThrowable(() -> client.chat().completions().create(params));
+    Throwable thrown = catchThrowable(() -> doCompletions(params, client, clientAsync));
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()
@@ -873,11 +981,7 @@ public abstract class AbstractChatTest {
             .model(TEST_CHAT_MODEL)
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        getClient().chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
 
     String fullMessage =
         chunks.stream()
@@ -962,11 +1066,7 @@ public abstract class AbstractChatTest {
             .streamOptions(ChatCompletionStreamOptions.builder().includeUsage(true).build())
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        getClient().chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
 
     String fullMessage =
         chunks.stream()
@@ -1078,11 +1178,7 @@ public abstract class AbstractChatTest {
             .n(2)
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        getClient().chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
 
     StringBuilder content1Builder = new StringBuilder();
     StringBuilder content2Builder = new StringBuilder();
@@ -1188,11 +1284,7 @@ public abstract class AbstractChatTest {
             .addTool(buildGetWeatherToolDefinition())
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        getClient().chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
 
     List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
 
@@ -1363,10 +1455,7 @@ public abstract class AbstractChatTest {
             .addTool(buildGetWeatherToolDefinition())
             .build();
 
-    try (StreamResponse<ChatCompletionChunk> result =
-        getClient().chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    chunks = doCompletionsStreaming(params);
 
     String finalAnswer =
         chunks.stream()
@@ -1510,6 +1599,13 @@ public abstract class AbstractChatTest {
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
+    OpenAIClientAsync clientAsync =
+        wrap(
+            OpenAIOkHttpClientAsync.builder()
+                .baseUrl("http://localhost:9999/v5")
+                .apiKey("testing")
+                .maxRetries(0)
+                .build());
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
@@ -1517,7 +1613,7 @@ public abstract class AbstractChatTest {
             .model(TEST_CHAT_MODEL)
             .build();
 
-    Throwable thrown = catchThrowable(() -> client.chat().completions().createStreaming(params));
+    Throwable thrown = catchThrowable(() -> doCompletionsStreaming(params, client, clientAsync));
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()

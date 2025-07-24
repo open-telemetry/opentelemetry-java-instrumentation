@@ -5,22 +5,22 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-final class InstrumentedOpenAiClient
-    extends DelegatingInvocationHandler<OpenAIClient, InstrumentedOpenAiClient> {
+final class InstrumentedOpenAiClientAsync
+    extends DelegatingInvocationHandler<OpenAIClientAsync, InstrumentedOpenAiClientAsync> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
-  InstrumentedOpenAiClient(
-      OpenAIClient delegate,
+  InstrumentedOpenAiClientAsync(
+      OpenAIClientAsync delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
@@ -31,8 +31,8 @@ final class InstrumentedOpenAiClient
   }
 
   @Override
-  protected Class<OpenAIClient> getProxyType() {
-    return OpenAIClient.class;
+  protected Class<OpenAIClientAsync> getProxyType() {
+    return OpenAIClientAsync.class;
   }
 
   @Override
@@ -40,13 +40,13 @@ final class InstrumentedOpenAiClient
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
     if (methodName.equals("chat") && parameterTypes.length == 0) {
-      return new InstrumentedChatService(
+      return new InstrumentedChatServiceAsync(
               delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
-    if (methodName.equals("async") && parameterTypes.length == 0) {
-      return new InstrumentedOpenAiClientAsync(
-              delegate.async(), chatInstrumenter, eventLogger, captureMessageContent)
+    if (methodName.equals("sync") && parameterTypes.length == 0) {
+      return new InstrumentedOpenAiClient(
+              delegate.sync(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
     return super.invoke(proxy, method, args);
