@@ -115,7 +115,7 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
     if (configProvider == null) {
-      // declarative config is not supported at all
+      // declarative config is not used
       return null;
     }
 
