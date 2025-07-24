@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.extension.internal;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 @SuppressWarnings("NonApiType")
 class ConfigPropertiesTranslator {
