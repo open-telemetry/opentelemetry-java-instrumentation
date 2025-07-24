@@ -12,7 +12,7 @@ import java.util.concurrent.CompletableFuture;
 final class CompletableFutureWrapper {
   private CompletableFutureWrapper() {}
 
-  public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
+  static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
     future.whenComplete(
         (T value, Throwable throwable) -> {
