@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.0"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.10.6"
+    id("org.graalvm.buildtools.native") version "0.11.0"
   }
 }
 
@@ -103,6 +103,7 @@ include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")
 include(":testing:proto-shaded-for-testing")
+include(":testing:wiremock-shaded-for-testing")
 include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
@@ -342,6 +343,7 @@ include(":instrumentation:jms:jms-common:javaagent")
 include(":instrumentation:jms:jms-common:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
+include(":instrumentation:jmx-metrics:testing-webapp")
 include(":instrumentation:jodd-http-4.2:javaagent")
 include(":instrumentation:jodd-http-4.2:javaagent-unit-tests")
 include(":instrumentation:jsf:jsf-jakarta-common:javaagent")
@@ -419,6 +421,9 @@ include(":instrumentation:okhttp:okhttp-2.2:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:library")
 include(":instrumentation:okhttp:okhttp-3.0:testing")
+include(":instrumentation:openai:openai-java-1.1:javaagent")
+include(":instrumentation:openai:openai-java-1.1:library")
+include(":instrumentation:openai:openai-java-1.1:testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
