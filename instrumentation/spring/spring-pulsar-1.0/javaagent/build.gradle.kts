@@ -25,6 +25,7 @@ dependencies {
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
@@ -61,8 +62,11 @@ tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectSpans", true)
   }
 
   check {

@@ -51,6 +51,9 @@ import org.springframework.web.servlet.view.RedirectView;
 public abstract class AbstractSpringBootBasedTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
+  private static final String EXPERIMENTAL_SPAN_CONFIG =
+      "otel.instrumentation.spring-webmvc.experimental-span-attributes";
+
   protected abstract ConfigurableApplicationContext context();
 
   protected abstract Class<?> securityConfigClass();
@@ -177,7 +180,8 @@ public abstract class AbstractSpringBootBasedTest
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
-                AttributeKey.stringKey("spring-webmvc.view.type"), RedirectView.class.getName()));
+                AttributeKey.stringKey("spring-webmvc.view.type"),
+                experimental(RedirectView.class.getName())));
     return span;
   }
 
@@ -206,6 +210,13 @@ public abstract class AbstractSpringBootBasedTest
                       satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
     return span;
+  }
+
+  private static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_SPAN_CONFIG)) {
+      return null;
+    }
+    return value;
   }
 
   private static String getHandlerSpanName(ServerEndpoint endpoint) {

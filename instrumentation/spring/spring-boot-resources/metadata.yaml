@@ -1,0 +1,14 @@
+description: >
+  This instrumentation automatically detects the `service.name` and `service.version` for Spring
+  Boot applications and sets them as resource attributes.
+  
+  It uses the following strategies (first successful wins):
+    - Check for the SPRING_APPLICATION_NAME environment variable
+    - Check for spring.application.name system property
+    - Check for application.properties file on the classpath
+    - Check for application.properties in the current working dir
+    - Check for application.yml on the classpath
+    - Check for application.yml in the current working dir
+    - Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
+    - Check for --spring.application.name program argument via sun.java.command system property
+

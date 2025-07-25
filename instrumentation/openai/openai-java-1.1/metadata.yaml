@@ -1,0 +1,9 @@
+description: This instrumentation enables Gen AI client spans and metrics for OpenAI Java SDK 1.1+.
+configurations:
+  - name: otel.instrumentation.genai.capture-message-content
+    type: boolean
+    default: false
+    description: >
+      Enables including the full content of user and assistant messages in emitted log events.
+      Note that full content can have data privacy and size concerns, and care should be taken when
+      enabling this.

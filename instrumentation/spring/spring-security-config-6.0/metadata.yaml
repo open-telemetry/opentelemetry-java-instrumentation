@@ -1,0 +1,26 @@
+description: >
+  This instrumentation does not emit any telemetry on its own. Instead, it captures enduser
+  attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
+  
+  NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
+configurations:
+  - name: otel.instrumentation.common.enduser.id.enabled
+    description: Enables capturing the enduser.id attribute.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.enduser.role.enabled
+    description: Enables capturing the enduser.role attribute.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.enduser.scope.enabled
+    description: Enables capturing the enduser.scope attribute.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.spring-security.enduser.role.granted-authority-prefix
+    description: Prefix of granted authorities identifying roles to capture in the `enduser.role` semantic attribute.
+    type: String
+    default: "ROLE_"
+  - name: otel.instrumentation.spring-security.scope.role.granted-authority-prefix
+    description: Prefix of granted authorities identifying scopes to capture in the `enduser.scopes` semantic attribute.
+    type: String
+    default: "SCOPE_"
