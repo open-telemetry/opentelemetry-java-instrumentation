@@ -51,6 +51,13 @@ jobs:
             echo "::set-output name=has_diff::false"
           fi
 
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: otelbot-token
+        with:
+          app-id: 1295839
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
       - name: Use CLA approved github bot
         if: steps.diffcheck.outputs.has_diff == 'true'
         # IMPORTANT do not call the .github/scripts/use-cla-approved-bot.sh
