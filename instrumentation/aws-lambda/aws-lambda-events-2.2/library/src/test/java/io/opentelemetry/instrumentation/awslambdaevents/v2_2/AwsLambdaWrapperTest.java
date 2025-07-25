@@ -177,8 +177,7 @@ public class AwsLambdaWrapperTest {
     }
   }
 
-  @SuppressWarnings("UnusedMethod")
-  private static class CustomType {
+  static class CustomType {
     String key;
     String value;
 

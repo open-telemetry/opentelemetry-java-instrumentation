@@ -143,7 +143,7 @@ public final class RxJava2AsyncOperationEndStrategy implements AsyncOperationEnd
 
     private final Context context;
 
-    protected EndOnFirstNotificationConsumer(Context context) {
+    EndOnFirstNotificationConsumer(Context context) {
       this.context = context;
     }
 
@@ -152,7 +152,7 @@ public final class RxJava2AsyncOperationEndStrategy implements AsyncOperationEnd
       accept(null, null);
     }
 
-    public void onCancelOrDispose() {
+    void onCancelOrDispose() {
       if (compareAndSet(false, true)) {
         if (captureExperimentalSpanAttributes) {
           Span.fromContext(context).setAttribute(CANCELED_ATTRIBUTE_KEY, true);
@@ -173,6 +173,6 @@ public final class RxJava2AsyncOperationEndStrategy implements AsyncOperationEnd
       }
     }
 
-    protected abstract void end(Object response, Throwable error);
+    abstract void end(Object response, Throwable error);
   }
 }

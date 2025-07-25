@@ -294,6 +294,12 @@ class EntityManagerTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
+    final String methodName;
+    final String resource;
+    final boolean attach;
+    final boolean flushOnCommit;
+    final BiConsumer<EntityManager, Value> sessionMethodTest;
+    final Function<EntityManager, Query> queryBuildMethod;
 
     Parameter(String methodName, String resource, Function<EntityManager, Query> queryBuildMethod) {
       this.methodName = methodName;
@@ -317,13 +323,6 @@ class EntityManagerTest extends AbstractHibernateTest {
       this.sessionMethodTest = sessionMethodTest;
       this.queryBuildMethod = null;
     }
-
-    public final String methodName;
-    public final String resource;
-    public final boolean attach;
-    public final boolean flushOnCommit;
-    public final BiConsumer<EntityManager, Value> sessionMethodTest;
-    public final Function<EntityManager, Query> queryBuildMethod;
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation

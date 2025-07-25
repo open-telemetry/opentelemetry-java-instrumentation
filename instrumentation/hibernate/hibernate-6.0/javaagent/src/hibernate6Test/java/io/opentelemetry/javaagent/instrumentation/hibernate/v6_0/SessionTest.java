@@ -773,6 +773,12 @@ class SessionTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
+    final String methodName;
+    final String resource;
+    final Function<Session, SelectionQuery<?>> queryBuildMethod;
+    final BiConsumer<Session, Value> sessionMethodTest;
+    final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
+
     Parameter(
         String methodName,
         String resource,
@@ -785,12 +791,6 @@ class SessionTest extends AbstractHibernateTest {
       this.queryBuildMethod = queryBuildMethod;
       this.statelessSessionMethodTest = statelessSessionMethodTest;
     }
-
-    public final String methodName;
-    public final String resource;
-    public final Function<Session, SelectionQuery<?>> queryBuildMethod;
-    public final BiConsumer<Session, Value> sessionMethodTest;
-    public final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
   }
 
   private static SpanDataAssert assertSessionSpan(

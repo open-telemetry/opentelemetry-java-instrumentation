@@ -83,25 +83,24 @@ class ActiveContextManager {
     private final CamelRequest request;
     @Nullable private final Scope scope;
 
-    public ContextWithScope(
-        ContextWithScope parent, Context context, CamelRequest request, Scope scope) {
+    ContextWithScope(ContextWithScope parent, Context context, CamelRequest request, Scope scope) {
       this.parent = parent;
       this.context = context;
       this.request = request;
       this.scope = scope;
     }
 
-    public static ContextWithScope activate(
+    static ContextWithScope activate(
         ContextWithScope parent, Context context, CamelRequest request) {
       Scope scope = context != null ? context.makeCurrent() : null;
       return new ContextWithScope(parent, context, request, scope);
     }
 
-    public ContextWithScope getParent() {
+    ContextWithScope getParent() {
       return parent;
     }
 
-    public void deactivate(Exception exception) {
+    void deactivate(Exception exception) {
       if (scope == null) {
         return;
       }

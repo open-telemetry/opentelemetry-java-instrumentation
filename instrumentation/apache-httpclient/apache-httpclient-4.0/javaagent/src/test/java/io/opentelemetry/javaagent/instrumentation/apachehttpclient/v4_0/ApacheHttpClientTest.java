@@ -211,7 +211,7 @@ public class ApacheHttpClientTest {
   private static class HttpResponseHandler implements ResponseHandler<Void> {
     private final HttpClientResult requestResult;
 
-    public HttpResponseHandler(HttpClientResult requestResult) {
+    HttpResponseHandler(HttpClientResult requestResult) {
       this.requestResult = requestResult;
     }
 

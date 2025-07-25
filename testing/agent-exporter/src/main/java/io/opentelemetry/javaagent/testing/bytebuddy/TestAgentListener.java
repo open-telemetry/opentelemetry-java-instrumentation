@@ -167,7 +167,7 @@ public class TestAgentListener implements AgentBuilder.Listener {
   private static class AbortTransformationException extends RuntimeException {
     private static final long serialVersionUID = 1L;
 
-    public AbortTransformationException(String message) {
+    AbortTransformationException(String message) {
       super(message);
     }
   }

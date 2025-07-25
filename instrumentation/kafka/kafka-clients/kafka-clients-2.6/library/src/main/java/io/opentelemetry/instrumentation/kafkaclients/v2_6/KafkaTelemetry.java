@@ -298,7 +298,7 @@ public final class KafkaTelemetry {
     private final Context context;
     private final KafkaProducerRequest request;
 
-    public ProducerCallback(
+    ProducerCallback(
         Callback callback, Context parentContext, Context context, KafkaProducerRequest request) {
       this.callback = callback;
       this.parentContext = parentContext;

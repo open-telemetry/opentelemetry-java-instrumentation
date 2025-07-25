@@ -340,14 +340,14 @@ class CassandraClientTest {
   }
 
   private static class Parameter {
-    public final String keyspace;
-    public final String statement;
-    public final String expectedStatement;
-    public final String spanName;
-    public final String operation;
-    public final String table;
+    final String keyspace;
+    final String statement;
+    final String expectedStatement;
+    final String spanName;
+    final String operation;
+    final String table;
 
-    public Parameter(
+    Parameter(
         String keyspace,
         String statement,
         String expectedStatement,

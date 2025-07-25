@@ -312,7 +312,7 @@ final class ReferenceCollectingClassVisitor extends ClassVisitor {
   private class AdviceReferenceMethodVisitor extends MethodVisitor {
     private int currentLineNumber = -1;
 
-    public AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
+    AdviceReferenceMethodVisitor(MethodVisitor methodVisitor) {
       super(AsmApi.VERSION, methodVisitor);
     }
 

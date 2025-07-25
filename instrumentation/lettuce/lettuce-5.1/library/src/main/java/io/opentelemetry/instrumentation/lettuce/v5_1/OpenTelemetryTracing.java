@@ -125,7 +125,7 @@ final class OpenTelemetryTracing implements Tracing {
       this.context = Context.current();
     }
 
-    public Context getSpanContext() {
+    Context getSpanContext() {
       return context;
     }
   }
@@ -259,7 +259,7 @@ final class OpenTelemetryTracing implements Tracing {
     // Added and called in 6.0+
     // @Override
     @CanIgnoreReturnValue
-    @SuppressWarnings("UnusedMethod")
+    @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
       start();
       long startNanos = System.nanoTime();
