@@ -317,9 +317,9 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   }
 
   private static class Container {
-    public final String imageName;
-    public final String containerId;
-    public final InspectContainerResponse inspectResponse;
+    final String imageName;
+    final String containerId;
+    final InspectContainerResponse inspectResponse;
 
     private Container(
         String imageName, String containerId, InspectContainerResponse inspectResponse) {

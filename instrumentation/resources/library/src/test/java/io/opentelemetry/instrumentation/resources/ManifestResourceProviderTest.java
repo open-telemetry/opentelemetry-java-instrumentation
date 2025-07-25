@@ -32,7 +32,7 @@ class ManifestResourceProviderTest {
     private final InputStream input;
     private final Resource existing;
 
-    public TestCase(
+    TestCase(
         String name,
         String expectedName,
         String expectedVersion,
