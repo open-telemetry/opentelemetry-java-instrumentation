@@ -6,6 +6,7 @@
 
 set -euo pipefail
 
+# shellcheck source=instrumentation-docs/instrumentations.sh
 source "$(dirname "$0")/instrumentations.sh"
 
 readonly TELEMETRY_DIR_NAME=".telemetry"

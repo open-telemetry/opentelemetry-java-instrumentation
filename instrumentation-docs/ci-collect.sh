@@ -5,6 +5,7 @@
 
 set -euo pipefail
 
+# shellcheck source=instrumentation-docs/instrumentations.sh
 source "$(dirname "$0")/instrumentations.sh"
 
 ALL_TASKS=()
