@@ -17,8 +17,10 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.provider.EnumSource;
 
 @ParameterizedClass
+@EnumSource(AbstractOpenAiTest.TestType.class)
 abstract class AbstractOpenAiTest {
   enum TestType {
     SYNC,

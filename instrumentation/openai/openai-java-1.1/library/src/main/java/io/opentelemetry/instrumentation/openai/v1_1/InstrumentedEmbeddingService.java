@@ -1,6 +1,10 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.openai.v1_1;
 
-import java.lang.reflect.Method;
 import com.openai.core.RequestOptions;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
@@ -8,13 +12,15 @@ import com.openai.services.blocking.EmbeddingService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import java.lang.reflect.Method;
 
 final class InstrumentedEmbeddingService
     extends DelegatingInvocationHandler<EmbeddingService, InstrumentedEmbeddingService> {
 
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter;
 
-  public InstrumentedEmbeddingService(EmbeddingService delegate,
+  public InstrumentedEmbeddingService(
+      EmbeddingService delegate,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> instrumenter) {
     super(delegate);
     this.instrumenter = instrumenter;

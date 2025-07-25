@@ -58,7 +58,7 @@ public final class OpenAITelemetry {
   /** Wraps the provided OpenAIClientAsync, enabling telemetry for it. */
   public OpenAIClientAsync wrap(OpenAIClientAsync client) {
     return new InstrumentedOpenAiClientAsync(
-            client, chatInstrumenter, eventLogger, captureMessageContent)
+            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
         .createProxy();
   }
 }

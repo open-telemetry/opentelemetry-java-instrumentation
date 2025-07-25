@@ -49,9 +49,17 @@ final class InstrumentedOpenAiClient
               delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
+    if (methodName.equals("embeddings") && parameterTypes.length == 0) {
+      return new InstrumentedEmbeddingService(delegate.embeddings(), embeddingInstrumenter)
+          .createProxy();
+    }
     if (methodName.equals("async") && parameterTypes.length == 0) {
       return new InstrumentedOpenAiClientAsync(
-              delegate.async(), chatInstrumenter, eventLogger, captureMessageContent)
+              delegate.async(),
+              chatInstrumenter,
+              embeddingInstrumenter,
+              eventLogger,
+              captureMessageContent)
           .createProxy();
     }
     return super.invoke(proxy, method, args);

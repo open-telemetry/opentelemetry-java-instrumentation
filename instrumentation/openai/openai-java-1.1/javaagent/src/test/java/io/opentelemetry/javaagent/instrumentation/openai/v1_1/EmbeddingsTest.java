@@ -3,33 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.openai.v1_1;
-
-import static java.util.Collections.singletonList;
+package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
+import io.opentelemetry.instrumentation.openai.v1_1.AbstractEmbeddingsTest;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class EmbeddingsTest extends AbstractEmbeddingsTest {
 
   @RegisterExtension
-  private static final LibraryInstrumentationExtension testing =
-      LibraryInstrumentationExtension.create();
-
-  private static OpenAITelemetry telemetry;
-
-  @BeforeAll
-  static void setup() {
-    telemetry =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).setCaptureMessageContent(true).build();
-  }
+  private static final AgentInstrumentationExtension testing =
+      AgentInstrumentationExtension.create();
 
   @Override
   protected InstrumentationExtension getTesting() {
@@ -38,16 +29,21 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
 
   @Override
   protected OpenAIClient wrap(OpenAIClient client) {
-    return telemetry.wrap(client);
+    return client;
   }
 
   @Override
   protected OpenAIClientAsync wrap(OpenAIClientAsync client) {
-    return telemetry.wrap(client);
+    return client;
   }
 
   @Override
-  protected List<Consumer<SpanDataAssert>> maybeWithTransportSpan(Consumer<SpanDataAssert> span) {
-    return singletonList(span);
+  protected final List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
+      Consumer<SpanDataAssert> span) {
+    List<Consumer<SpanDataAssert>> result = new ArrayList<>();
+    result.add(span);
+    // Do a very simple assertion since the telemetry is not part of this library.
+    result.add(s -> s.hasName("POST"));
+    return result;
   }
 }

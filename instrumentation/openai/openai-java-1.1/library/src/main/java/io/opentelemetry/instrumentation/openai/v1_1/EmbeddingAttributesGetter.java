@@ -1,14 +1,20 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static java.util.Collections.singletonList;
 
-import java.util.List;
-import javax.annotation.Nullable;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
+import java.util.List;
+import javax.annotation.Nullable;
 
-enum EmbeddingAttributesGetter implements GenAiAttributesGetter<EmbeddingCreateParams, CreateEmbeddingResponse> {
+enum EmbeddingAttributesGetter
+    implements GenAiAttributesGetter<EmbeddingCreateParams, CreateEmbeddingResponse> {
   INSTANCE;
 
   @Override
@@ -80,23 +86,24 @@ enum EmbeddingAttributesGetter implements GenAiAttributesGetter<EmbeddingCreateP
     return null;
   }
 
+  @Nullable
   @Override
-  public List<String> getResponseFinishReasons(EmbeddingCreateParams request,
-      @Nullable CreateEmbeddingResponse response) {
+  public List<String> getResponseFinishReasons(
+      EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getResponseId(EmbeddingCreateParams request,
-      @Nullable CreateEmbeddingResponse response) {
+  public String getResponseId(
+      EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
     return null;
   }
 
   @Nullable
   @Override
-  public String getResponseModel(EmbeddingCreateParams request,
-      @Nullable CreateEmbeddingResponse response) {
+  public String getResponseModel(
+      EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
     if (response == null) {
       return null;
     }
@@ -105,8 +112,8 @@ enum EmbeddingAttributesGetter implements GenAiAttributesGetter<EmbeddingCreateP
 
   @Nullable
   @Override
-  public Long getUsageInputTokens(EmbeddingCreateParams request,
-      @Nullable CreateEmbeddingResponse response) {
+  public Long getUsageInputTokens(
+      EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
     if (response == null) {
       return null;
     }
@@ -115,8 +122,8 @@ enum EmbeddingAttributesGetter implements GenAiAttributesGetter<EmbeddingCreateP
 
   @Nullable
   @Override
-  public Long getUsageOutputTokens(EmbeddingCreateParams request,
-      @Nullable CreateEmbeddingResponse response) {
+  public Long getUsageOutputTokens(
+      EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
     return null;
   }
 }

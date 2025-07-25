@@ -60,11 +60,13 @@ public final class OpenAITelemetryBuilder {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 GenAiSpanNameExtractor.create(EmbeddingAttributesGetter.INSTANCE))
-            .addAttributesExtractor(GenAiAttributesExtractor.create(EmbeddingAttributesGetter.INSTANCE))
+            .addAttributesExtractor(
+                GenAiAttributesExtractor.create(EmbeddingAttributesGetter.INSTANCE))
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter();
 
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
-    return new OpenAITelemetry(chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
+    return new OpenAITelemetry(
+        chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
   }
 }
