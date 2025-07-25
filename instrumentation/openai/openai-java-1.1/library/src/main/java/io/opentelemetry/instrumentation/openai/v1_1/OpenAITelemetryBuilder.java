@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.models.embeddings.CreateEmbeddingResponse;
+import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
@@ -53,7 +55,16 @@ public final class OpenAITelemetryBuilder {
             .addOperationMetrics(GenAiClientMetrics.get())
             .buildInstrumenter();
 
+    Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter =
+        Instrumenter.<EmbeddingCreateParams, CreateEmbeddingResponse>builder(
+                openTelemetry,
+                INSTRUMENTATION_NAME,
+                GenAiSpanNameExtractor.create(EmbeddingAttributesGetter.INSTANCE))
+            .addAttributesExtractor(GenAiAttributesExtractor.create(EmbeddingAttributesGetter.INSTANCE))
+            .addOperationMetrics(GenAiClientMetrics.get())
+            .buildInstrumenter();
+
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
-    return new OpenAITelemetry(chatInstrumenter, eventLogger, captureMessageContent);
+    return new OpenAITelemetry(chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
   }
 }

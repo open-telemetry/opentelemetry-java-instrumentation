@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import com.openai.client.OpenAIClient;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.models.embeddings.CreateEmbeddingResponse;
+import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
@@ -16,16 +18,19 @@ final class InstrumentedOpenAiClient
     extends DelegatingInvocationHandler<OpenAIClient, InstrumentedOpenAiClient> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
+  private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
   InstrumentedOpenAiClient(
       OpenAIClient delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
+      Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
     this.chatInstrumenter = chatInstrumenter;
+    this.embeddingInstrumenter = embeddingInstrumenter;
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
