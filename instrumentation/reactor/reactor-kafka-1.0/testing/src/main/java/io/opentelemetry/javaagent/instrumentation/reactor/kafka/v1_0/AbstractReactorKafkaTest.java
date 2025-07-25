@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -70,6 +71,21 @@ public abstract class AbstractReactorKafkaTest {
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  protected static final AttributeKey<List<String>> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringArrayKey("messaging.kafka.bootstrap.servers");
+
+  protected static AttributeAssertion bootstrapServersAssertion() {
+    return satisfies(
+        MESSAGING_KAFKA_BOOTSTRAP_SERVERS,
+        listAssert -> {
+          if (Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes")) {
+            listAssert.isNotEmpty().allSatisfy(server -> assertThat(server).isNotEmpty());
+          } else {
+            listAssert.isNullOrEmpty();
+          }
+        });
+  }
 
   static KafkaContainer kafka;
   protected static KafkaSender<String, String> sender;
@@ -192,6 +208,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "publish"),
+                bootstrapServersAssertion(),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("producer")),
@@ -212,6 +229,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION, "receive"),
+                bootstrapServersAssertion(),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
@@ -231,6 +249,7 @@ public abstract class AbstractReactorKafkaTest {
                 equalTo(MESSAGING_SYSTEM, "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, record.topic()),
                 equalTo(MESSAGING_OPERATION, "process"),
+                bootstrapServersAssertion(),
                 satisfies(
                     AttributeKey.stringKey("messaging.client_id"),
                     stringAssert -> stringAssert.startsWith("consumer")),
