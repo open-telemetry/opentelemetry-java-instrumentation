@@ -7,20 +7,20 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
-import com.openai.services.blocking.ChatService;
+import com.openai.services.async.ChatServiceAsync;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-final class InstrumentedChatService
-    extends DelegatingInvocationHandler<ChatService, InstrumentedChatService> {
+final class InstrumentedChatServiceAsync
+    extends DelegatingInvocationHandler<ChatServiceAsync, InstrumentedChatServiceAsync> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
-  InstrumentedChatService(
-      ChatService delegate,
+  InstrumentedChatServiceAsync(
+      ChatServiceAsync delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
@@ -31,8 +31,8 @@ final class InstrumentedChatService
   }
 
   @Override
-  protected Class<ChatService> getProxyType() {
-    return ChatService.class;
+  protected Class<ChatServiceAsync> getProxyType() {
+    return ChatServiceAsync.class;
   }
 
   @Override
@@ -40,7 +40,7 @@ final class InstrumentedChatService
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
     if (methodName.equals("completions") && parameterTypes.length == 0) {
-      return new InstrumentedChatCompletionService(
+      return new InstrumentedChatCompletionServiceAsync(
               delegate.completions(), instrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }

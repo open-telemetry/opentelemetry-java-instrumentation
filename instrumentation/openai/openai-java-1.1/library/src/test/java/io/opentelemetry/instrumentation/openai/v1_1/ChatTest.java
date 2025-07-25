@@ -26,7 +26,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.openai.client.OpenAIClient;
-import com.openai.core.http.StreamResponse;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
@@ -73,24 +73,35 @@ class ChatTest extends AbstractChatTest {
   }
 
   @Override
+  protected OpenAIClientAsync wrap(OpenAIClientAsync client) {
+    return telemetry.wrap(client);
+  }
+
+  @Override
   // OpenAI SDK does not expose OkHttp client in a way we can wrap.
   protected final List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
       Consumer<SpanDataAssert> span) {
     return singletonList(span);
   }
 
+  private OpenAIClient clientNoCaptureContent() {
+    return OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
+  }
+
+  private OpenAIClientAsync clientAsyncNoCaptureContent() {
+    return OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClientAsync());
+  }
+
   @Test
   void basicNoCaptureContent() {
-    OpenAIClient client =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
-
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
             .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
-    ChatCompletion response = client.chat().completions().create(params);
+    ChatCompletion response =
+        doCompletions(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
     String content = "Atlantic Ocean";
     assertThat(response.choices().get(0).message().content()).hasValue(content);
 
@@ -179,9 +190,6 @@ class ChatTest extends AbstractChatTest {
 
   @Test
   void multipleChoicesNoCaptureContent() {
-    OpenAIClient client =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
-
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
             .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
@@ -189,7 +197,8 @@ class ChatTest extends AbstractChatTest {
             .n(2)
             .build();
 
-    ChatCompletion response = client.chat().completions().create(params);
+    ChatCompletion response =
+        doCompletions(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
     String content1 = "South Atlantic Ocean.";
     assertThat(response.choices().get(0).message().content()).hasValue(content1);
     String content2 = "Atlantic Ocean.";
@@ -288,9 +297,6 @@ class ChatTest extends AbstractChatTest {
 
   @Test
   void toolCallsNoCaptureContent() {
-    OpenAIClient client =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
-
     List<ChatCompletionMessageParam> chatMessages = new ArrayList<>();
     chatMessages.add(createSystemMessage("You are a helpful assistant providing weather updates."));
     chatMessages.add(createUserMessage("What is the weather in New York City and London?"));
@@ -302,7 +308,8 @@ class ChatTest extends AbstractChatTest {
             .addTool(buildGetWeatherToolDefinition())
             .build();
 
-    ChatCompletion response = client.chat().completions().create(params);
+    ChatCompletion response =
+        doCompletions(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
 
     assertThat(response.choices().get(0).message().content()).isEmpty();
 
@@ -441,14 +448,10 @@ class ChatTest extends AbstractChatTest {
     chatMessages.add(createToolMessage("25 degrees and sunny", newYorkCallId));
     chatMessages.add(createToolMessage("15 degrees and raining", londonCallId));
 
-    client
-        .chat()
-        .completions()
-        .create(
-            ChatCompletionCreateParams.builder()
-                .messages(chatMessages)
-                .model(TEST_CHAT_MODEL)
-                .build());
+    doCompletions(
+        ChatCompletionCreateParams.builder().messages(chatMessages).model(TEST_CHAT_MODEL).build(),
+        clientNoCaptureContent(),
+        clientAsyncNoCaptureContent());
 
     getTesting()
         .waitAndAssertTraces(
@@ -572,20 +575,14 @@ class ChatTest extends AbstractChatTest {
 
   @Test
   void streamNoCaptureContent() {
-    OpenAIClient client =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
-
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
             .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
             .model(TEST_CHAT_MODEL)
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        client.chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks =
+        doCompletionsStreaming(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
 
     String fullMessage =
         chunks.stream()
@@ -662,9 +659,6 @@ class ChatTest extends AbstractChatTest {
 
   @Test
   void streamMultipleChoicesNoCaptureContent() {
-    OpenAIClient client =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
-
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
             .messages(Collections.singletonList(createUserMessage(TEST_CHAT_INPUT)))
@@ -672,11 +666,8 @@ class ChatTest extends AbstractChatTest {
             .n(2)
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        client.chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks =
+        doCompletionsStreaming(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
 
     StringBuilder content1Builder = new StringBuilder();
     StringBuilder content2Builder = new StringBuilder();
@@ -769,9 +760,6 @@ class ChatTest extends AbstractChatTest {
 
   @Test
   void streamToolCallsNoCaptureContent() {
-    OpenAIClient client =
-        OpenAITelemetry.builder(testing.getOpenTelemetry()).build().wrap(getRawClient());
-
     List<ChatCompletionMessageParam> chatMessages = new ArrayList<>();
     chatMessages.add(createSystemMessage("You are a helpful assistant providing weather updates."));
     chatMessages.add(createUserMessage("What is the weather in New York City and London?"));
@@ -783,11 +771,8 @@ class ChatTest extends AbstractChatTest {
             .addTool(buildGetWeatherToolDefinition())
             .build();
 
-    List<ChatCompletionChunk> chunks;
-    try (StreamResponse<ChatCompletionChunk> result =
-        client.chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    List<ChatCompletionChunk> chunks =
+        doCompletionsStreaming(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
 
     List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
 
@@ -949,10 +934,7 @@ class ChatTest extends AbstractChatTest {
             .addTool(buildGetWeatherToolDefinition())
             .build();
 
-    try (StreamResponse<ChatCompletionChunk> result =
-        client.chat().completions().createStreaming(params)) {
-      chunks = result.stream().collect(Collectors.toList());
-    }
+    doCompletionsStreaming(params, clientNoCaptureContent(), clientAsyncNoCaptureContent());
 
     getTesting()
         .waitAndAssertTraces(
