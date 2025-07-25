@@ -59,7 +59,9 @@ import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -158,7 +160,15 @@ public abstract class AbstractChatTest {
       case ASYNC_FROM_SYNC:
         OpenAIClientAsync cl = testType == TestType.ASYNC ? clientAsync : client.async();
         try {
-          return cl.chat().completions().create(params).join();
+          return cl.chat()
+              .completions()
+              .create(params)
+              .thenApply(
+                  res -> {
+                    assertThat(Span.fromContextOrNull(Context.current())).isNull();
+                    return res;
+                  })
+              .join();
         } catch (CompletionException e) {
           if (e.getCause() instanceof OpenAIIoException) {
             throw ((OpenAIIoException) e.getCause());

@@ -92,7 +92,7 @@ final class InstrumentedChatCompletionServiceAsync
     future =
         future.whenComplete(
             (res, t) -> instrumenter.end(context, chatCompletionCreateParams, res, t));
-    return CompletableFutureWrapper.wrap(future, context);
+    return CompletableFutureWrapper.wrap(future, parentContext);
   }
 
   private CompletableFuture<ChatCompletion> createWithLogs(
