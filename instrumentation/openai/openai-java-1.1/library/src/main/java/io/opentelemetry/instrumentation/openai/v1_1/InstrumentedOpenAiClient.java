@@ -49,6 +49,11 @@ final class InstrumentedOpenAiClient
               delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
+    if (methodName.equals("async") && parameterTypes.length == 0) {
+      return new InstrumentedOpenAiClientAsync(
+              delegate.async(), chatInstrumenter, eventLogger, captureMessageContent)
+          .createProxy();
+    }
     return super.invoke(proxy, method, args);
   }
 }
