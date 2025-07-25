@@ -67,12 +67,12 @@ Extensions are designed to override or customize the instrumentation provided by
 
 Consider an instrumented database client that creates a span per database call and extracts data from the database connection to provide span attributes. The following are sample use cases for that scenario that can be solved by using extensions.
 
-### "I want to customize instrumentation without modifying core code"
+### "I want to customize instrumentation without modifying the instrumentation"
 
-The `InstrumenterCustomizerProvider` extension point allows you to customize instrumentation behavior without modifying core code:
+The `InstrumenterCustomizerProvider` extension point allows you to customize instrumentation behavior without modifying the instrumentation:
 
 - Add custom attributes and metrics to existing instrumentations
-- Implement context customizers for request correlation
+- Customize context
 - Transform span names to match your naming conventions
 - Apply customizations conditionally based on instrumentation type and span kind
 

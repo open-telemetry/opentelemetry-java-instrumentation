@@ -126,7 +126,6 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
       String requestId = "req-" + requestIdCounter.getAndIncrement();
 
       // Add custom context data that can be accessed throughout the request lifecycle
-      // This follows the pattern used in real implementations like UndertowSingletons
       context = context.with(REQUEST_ID_KEY, requestId);
       return context;
     }
