@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -46,9 +47,11 @@ public final class JmsInstrumenterFactory {
     return this;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public Instrumenter<MessageWithDestination, Void> createProducerInstrumenter() {
     JmsMessageAttributesGetter getter = JmsMessageAttributesGetter.INSTANCE;
-    MessageOperation operation = MessageOperation.PUBLISH;
+    MessageOperation operation =
+        emitStableMessagingSemconv() ? MessageOperation.SEND : MessageOperation.PUBLISH;
 
     return Instrumenter.<MessageWithDestination, Void>builder(
             openTelemetry,
@@ -68,7 +71,7 @@ public final class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(createMessagingAttributesExtractor(operation));
-    if (messagingReceiveInstrumentationEnabled) {
+    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
@@ -88,7 +91,8 @@ public final class JmsInstrumenterFactory {
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(createMessagingAttributesExtractor(operation));
-    if (canHaveReceiveInstrumentation && messagingReceiveInstrumentationEnabled) {
+    if (canHaveReceiveInstrumentation
+        && (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv())) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),
