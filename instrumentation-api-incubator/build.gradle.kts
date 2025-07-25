@@ -1,6 +1,4 @@
 plugins {
-  id("org.xbib.gradle.plugin.jflex")
-
   id("otel.java-conventions")
   id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
@@ -10,7 +8,18 @@ plugins {
 
 group = "io.opentelemetry.instrumentation"
 
+// JFlex configuration - manual integration for configuration cache compatibility
+configurations {
+  val jflex by creating {
+    isTransitive = true
+  }
+}
+
 dependencies {
+  "jflex"("de.jflex:jflex:1.9.1")
+  "jflex"("com.github.vbmacher:java-cup-runtime:11b-20160615")
+  
+  api("io.opentelemetry.semconv:opentelemetry-semconv")
   api("io.opentelemetry.semconv:opentelemetry-semconv")
   api(project(":instrumentation-api"))
   api("io.opentelemetry:opentelemetry-api-incubator")
@@ -22,6 +31,41 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
+}
+
+// Manual JFlex task - configuration cache compatible
+val generateJflex by tasks.registering(JavaExec::class) {
+  description = "Generate Java code from JFlex files"
+  group = "build"
+  
+  classpath = configurations.getByName("jflex")
+  mainClass.set("jflex.Main")
+  
+  val jflexSourceDir = file("src/main/jflex")
+  val jflexOutputDir = file("build/generated/sources/jflex")
+  
+  inputs.dir(jflexSourceDir)
+  outputs.dir(jflexOutputDir)
+  
+  doFirst {
+    jflexOutputDir.mkdirs()
+  }
+  
+  args(
+    "-d", jflexOutputDir,
+    "--nobak",
+    "$jflexSourceDir/SqlSanitizer.jflex"
+  )
+}
+
+sourceSets {
+  main {
+    java.srcDir(generateJflex.map { it.outputs.files.singleFile })
+  }
+}
+
+tasks.compileJava {
+  dependsOn(generateJflex)
 }
 
 tasks {
@@ -38,7 +82,11 @@ tasks {
   }
 
   sourcesJar {
-    dependsOn("generateJflex")
+    dependsOn(generateJflex)
+    // Avoid configuration cache issue by not capturing task reference
+    from("src/main/jflex") {
+      include("**/*.java")
+    }
   }
 
   val testStableSemconv by registering(Test::class) {

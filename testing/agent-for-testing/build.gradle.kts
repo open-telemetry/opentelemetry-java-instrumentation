@@ -32,13 +32,11 @@ tasks {
       into("extensions")
     }
 
-    doFirst {
-      manifest.from(
-        zipTree(agent.singleFile).matching {
-          include("META-INF/MANIFEST.MF")
-        }.singleFile,
-      )
-    }
+    manifest.from(
+      zipTree(agent.singleFile).matching {
+        include("META-INF/MANIFEST.MF")
+      }.singleFile,
+    )
   }
 
   afterEvaluate {
