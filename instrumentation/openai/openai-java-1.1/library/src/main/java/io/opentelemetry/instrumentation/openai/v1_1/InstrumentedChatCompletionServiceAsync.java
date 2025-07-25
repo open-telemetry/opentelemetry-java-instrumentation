@@ -75,69 +75,71 @@ final class InstrumentedChatCompletionServiceAsync
 
   private CompletableFuture<ChatCompletion> create(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
-    Context parentCtx = Context.current();
-    if (!instrumenter.shouldStart(parentCtx, chatCompletionCreateParams)) {
-      return createWithLogs(parentCtx, chatCompletionCreateParams, requestOptions);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
+      return createWithLogs(parentContext, chatCompletionCreateParams, requestOptions);
     }
 
-    Context ctx = instrumenter.start(parentCtx, chatCompletionCreateParams);
+    Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
     CompletableFuture<ChatCompletion> future;
-    try (Scope ignored = ctx.makeCurrent()) {
-      future = createWithLogs(ctx, chatCompletionCreateParams, requestOptions);
+    try (Scope ignored = context.makeCurrent()) {
+      future = createWithLogs(context, chatCompletionCreateParams, requestOptions);
     } catch (Throwable t) {
-      instrumenter.end(ctx, chatCompletionCreateParams, null, t);
+      instrumenter.end(context, chatCompletionCreateParams, null, t);
       throw t;
     }
 
     future =
-        future.whenComplete((res, t) -> instrumenter.end(ctx, chatCompletionCreateParams, res, t));
-    return CompletableFutureWrapper.wrap(future, ctx);
+        future.whenComplete(
+            (res, t) -> instrumenter.end(context, chatCompletionCreateParams, res, t));
+    return CompletableFutureWrapper.wrap(future, context);
   }
 
   private CompletableFuture<ChatCompletion> createWithLogs(
-      Context ctx,
+      Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        ctx, eventLogger, chatCompletionCreateParams, captureMessageContent);
+        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     CompletableFuture<ChatCompletion> future =
         delegate.create(chatCompletionCreateParams, requestOptions);
     future.thenAccept(
         r ->
             ChatCompletionEventsHelper.emitCompletionLogEvents(
-                ctx, eventLogger, r, captureMessageContent));
+                context, eventLogger, r, captureMessageContent));
     return future;
   }
 
   private AsyncStreamResponse<ChatCompletionChunk> createStreaming(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
-    Context parentCtx = Context.current();
-    if (!instrumenter.shouldStart(parentCtx, chatCompletionCreateParams)) {
-      return createStreamingWithLogs(parentCtx, chatCompletionCreateParams, requestOptions, false);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
+      return createStreamingWithLogs(
+          parentContext, chatCompletionCreateParams, requestOptions, false);
     }
 
-    Context ctx = instrumenter.start(parentCtx, chatCompletionCreateParams);
-    try (Scope ignored = ctx.makeCurrent()) {
-      return createStreamingWithLogs(ctx, chatCompletionCreateParams, requestOptions, true);
+    Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
+    try (Scope ignored = context.makeCurrent()) {
+      return createStreamingWithLogs(context, chatCompletionCreateParams, requestOptions, true);
     } catch (Throwable t) {
-      instrumenter.end(ctx, chatCompletionCreateParams, null, t);
+      instrumenter.end(context, chatCompletionCreateParams, null, t);
       throw t;
     }
   }
 
   private AsyncStreamResponse<ChatCompletionChunk> createStreamingWithLogs(
-      Context ctx,
+      Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        ctx, eventLogger, chatCompletionCreateParams, captureMessageContent);
+        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     AsyncStreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
     return new TracingAsyncStreamedResponse(
         result,
         new StreamListener(
-            ctx,
+            context,
             chatCompletionCreateParams,
             instrumenter,
             eventLogger,

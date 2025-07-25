@@ -73,65 +73,66 @@ final class InstrumentedChatCompletionService
 
   private ChatCompletion create(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
-    Context parentCtx = Context.current();
-    if (!instrumenter.shouldStart(parentCtx, chatCompletionCreateParams)) {
-      return createWithLogs(parentCtx, chatCompletionCreateParams, requestOptions);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
+      return createWithLogs(parentContext, chatCompletionCreateParams, requestOptions);
     }
 
-    Context ctx = instrumenter.start(parentCtx, chatCompletionCreateParams);
+    Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
     ChatCompletion completion;
-    try (Scope ignored = ctx.makeCurrent()) {
-      completion = createWithLogs(ctx, chatCompletionCreateParams, requestOptions);
+    try (Scope ignored = context.makeCurrent()) {
+      completion = createWithLogs(context, chatCompletionCreateParams, requestOptions);
     } catch (Throwable t) {
-      instrumenter.end(ctx, chatCompletionCreateParams, null, t);
+      instrumenter.end(context, chatCompletionCreateParams, null, t);
       throw t;
     }
 
-    instrumenter.end(ctx, chatCompletionCreateParams, completion, null);
+    instrumenter.end(context, chatCompletionCreateParams, completion, null);
     return completion;
   }
 
   private ChatCompletion createWithLogs(
-      Context ctx,
+      Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        ctx, eventLogger, chatCompletionCreateParams, captureMessageContent);
+        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     ChatCompletion result = delegate.create(chatCompletionCreateParams, requestOptions);
     ChatCompletionEventsHelper.emitCompletionLogEvents(
-        ctx, eventLogger, result, captureMessageContent);
+        context, eventLogger, result, captureMessageContent);
     return result;
   }
 
   private StreamResponse<ChatCompletionChunk> createStreaming(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
-    Context parentCtx = Context.current();
-    if (!instrumenter.shouldStart(parentCtx, chatCompletionCreateParams)) {
-      return createStreamingWithLogs(parentCtx, chatCompletionCreateParams, requestOptions, false);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
+      return createStreamingWithLogs(
+          parentContext, chatCompletionCreateParams, requestOptions, false);
     }
 
-    Context ctx = instrumenter.start(parentCtx, chatCompletionCreateParams);
-    try (Scope ignored = ctx.makeCurrent()) {
-      return createStreamingWithLogs(ctx, chatCompletionCreateParams, requestOptions, true);
+    Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
+    try (Scope ignored = context.makeCurrent()) {
+      return createStreamingWithLogs(context, chatCompletionCreateParams, requestOptions, true);
     } catch (Throwable t) {
-      instrumenter.end(ctx, chatCompletionCreateParams, null, t);
+      instrumenter.end(context, chatCompletionCreateParams, null, t);
       throw t;
     }
   }
 
   private StreamResponse<ChatCompletionChunk> createStreamingWithLogs(
-      Context ctx,
+      Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        ctx, eventLogger, chatCompletionCreateParams, captureMessageContent);
+        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     StreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
     return new TracingStreamedResponse(
         result,
         new StreamListener(
-            ctx,
+            context,
             chatCompletionCreateParams,
             instrumenter,
             eventLogger,

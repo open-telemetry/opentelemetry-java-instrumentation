@@ -20,7 +20,7 @@ import javax.annotation.Nullable;
 
 final class StreamListener {
 
-  private final Context parentCtx;
+  private final Context context;
   private final ChatCompletionCreateParams request;
   private final List<StreamedMessageBuffer> choiceBuffers;
 
@@ -35,13 +35,13 @@ final class StreamListener {
   @Nullable private String responseId;
 
   StreamListener(
-      Context parentCtx,
+      Context context,
       ChatCompletionCreateParams request,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
       Logger eventLogger,
       boolean captureMessageContent,
       boolean newSpan) {
-    this.parentCtx = parentCtx;
+    this.context = context;
     this.request = request;
     this.instrumenter = instrumenter;
     this.eventLogger = eventLogger;
@@ -71,7 +71,7 @@ final class StreamListener {
 
         // message has ended, let's emit
         ChatCompletionEventsHelper.emitCompletionLogEvent(
-            parentCtx, eventLogger, choice.index(), buffer.finishReason, buffer.toEventBody());
+            context, eventLogger, choice.index(), buffer.finishReason, buffer.toEventBody());
       }
     }
   }
@@ -86,7 +86,7 @@ final class StreamListener {
     if (model == null || responseId == null) {
       // Only happens if we got no chunks, so we have no response.
       if (newSpan) {
-        instrumenter.end(parentCtx, request, null, error);
+        instrumenter.end(context, request, null, error);
       }
       return;
     }
@@ -106,7 +106,7 @@ final class StreamListener {
     }
 
     if (newSpan) {
-      instrumenter.end(parentCtx, request, result.build(), error);
+      instrumenter.end(context, request, result.build(), error);
     }
   }
 }
