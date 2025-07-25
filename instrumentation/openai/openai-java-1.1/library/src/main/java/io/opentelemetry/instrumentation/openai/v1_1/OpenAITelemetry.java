@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.embeddings.CreateEmbeddingResponse;

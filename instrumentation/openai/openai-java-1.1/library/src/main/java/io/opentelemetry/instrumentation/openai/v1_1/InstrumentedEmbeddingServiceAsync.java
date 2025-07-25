@@ -62,6 +62,6 @@ final class InstrumentedEmbeddingServiceAsync
     }
 
     future = future.whenComplete((res, t) -> instrumenter.end(context, request, res, t));
-    return CompletableFutureWrapper.wrap(future, context);
+    return CompletableFutureWrapper.wrap(future, parentContext);
   }
 }
