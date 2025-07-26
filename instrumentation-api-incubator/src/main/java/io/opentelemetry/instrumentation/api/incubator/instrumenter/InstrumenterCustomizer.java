@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.instrumenter;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
+import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.function.Function;
