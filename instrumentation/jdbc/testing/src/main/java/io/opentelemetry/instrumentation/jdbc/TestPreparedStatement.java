@@ -226,4 +226,9 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
   @Override
   @Deprecated
   public void setUnicodeStream(int parameterIndex, InputStream x, int length) throws SQLException {}
+
+  @Override
+  public long executeLargeUpdate() throws SQLException {
+    return 0;
+  }
 }
