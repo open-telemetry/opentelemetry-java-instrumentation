@@ -24,6 +24,7 @@ public class TimedExample {
 
   @Timed(name = "example.with.static.attributes.duration")
   @StaticAttribute(name = "key1", value = "value1")
+  @StaticAttribute(name = "key2", value = "value3")
   @StaticAttribute(name = "key2", value = "value2")
   public void exampleWithStaticAttributes() {}
 
