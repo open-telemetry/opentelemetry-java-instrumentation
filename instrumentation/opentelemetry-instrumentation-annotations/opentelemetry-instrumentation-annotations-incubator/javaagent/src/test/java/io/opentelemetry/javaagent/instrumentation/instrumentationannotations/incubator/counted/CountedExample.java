@@ -30,7 +30,6 @@ public class CountedExample {
   @Counted(name = "example.with.static.attributes.count")
   @StaticAttribute(name = "key1", value = "value1")
   @StaticAttribute(name = "key2", value = "value2")
-  @StaticAttribute(name = "key2", value = "value2")
   public void exampleWithStaticAttributes() {}
 
   @Counted(name = "example.with.attributes.count")
