@@ -45,9 +45,9 @@ This feature is designed for integrating client-side monitoring.
 We plan to integrate OpenTelemetry's own client-side monitoring solution by default once it's available
 (see the [browser instrumentation proposal](https://github.com/open-telemetry/community/blob/main/projects/browser-phase-1.md)).
 
-| System property                         | Environment variable                    | Purpose                                                                                                                                                                      |
-|-----------------------------------------|-----------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| otel.experimental.javascript-snippet    | OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET    | JavaScript code to inject into HTML responses before the closing `</head>` tag. The value should be a complete JavaScript snippet including `<script>` tags if needed, e.g. `-Dotel.experimental.javascript-snippet="<script>console.log('Hello world!');</script>"` |
+| System property                      | Environment variable                 | Purpose                                                                                                                                                                                                                                                              |
+|--------------------------------------|--------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| otel.experimental.javascript-snippet | OTEL_EXPERIMENTAL_JAVASCRIPT_SNIPPET | JavaScript code to inject into HTML responses before the closing `</head>` tag. The value should be a complete JavaScript snippet including `<script>` tags if needed, e.g. `-Dotel.experimental.javascript-snippet="<script>console.log('Hello world!');</script>"` |
 
 **Important notes:**
 

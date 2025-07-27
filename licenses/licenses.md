@@ -12,33 +12,33 @@
 > - **POM Project URL**: [https://github.com/raphw/weak-lock-free](https://github.com/raphw/weak-lock-free)
 > - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
-**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.19.1`
+**3** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-annotations` **Version:** `2.19.2`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-annotations-2.19.1.jar/META-INF/LICENSE](jackson-annotations-2.19.1.jar/META-INF/LICENSE)
-    - [jackson-annotations-2.19.1.jar/META-INF/NOTICE](jackson-annotations-2.19.1.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-annotations-2.19.2.jar/META-INF/LICENSE](jackson-annotations-2.19.2.jar/META-INF/LICENSE)
+    - [jackson-annotations-2.19.2.jar/META-INF/NOTICE](jackson-annotations-2.19.2.jar/META-INF/NOTICE)
 
-**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.19.1`
+**4** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-core` **Version:** `2.19.2`
 > - **Project URL**: [https://github.com/FasterXML/jackson-core](https://github.com/FasterXML/jackson-core)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-core-2.19.1.jar/META-INF/LICENSE](jackson-core-2.19.1.jar/META-INF/LICENSE)
-    - [jackson-core-2.19.1.jar/META-INF/NOTICE](jackson-core-2.19.1.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-core-2.19.2.jar/META-INF/LICENSE](jackson-core-2.19.2.jar/META-INF/LICENSE)
+    - [jackson-core-2.19.2.jar/META-INF/NOTICE](jackson-core-2.19.2.jar/META-INF/NOTICE)
 
-**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.19.1`
+**5** **Group:** `com.fasterxml.jackson.core` **Name:** `jackson-databind` **Version:** `2.19.2`
 > - **Project URL**: [https://github.com/FasterXML/jackson](https://github.com/FasterXML/jackson)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-databind-2.19.1.jar/META-INF/LICENSE](jackson-databind-2.19.1.jar/META-INF/LICENSE)
-    - [jackson-databind-2.19.1.jar/META-INF/NOTICE](jackson-databind-2.19.1.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-databind-2.19.2.jar/META-INF/LICENSE](jackson-databind-2.19.2.jar/META-INF/LICENSE)
+    - [jackson-databind-2.19.2.jar/META-INF/NOTICE](jackson-databind-2.19.2.jar/META-INF/NOTICE)
 
-**6** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.19.1`
+**6** **Group:** `com.fasterxml.jackson.dataformat` **Name:** `jackson-dataformat-yaml` **Version:** `2.19.2`
 > - **Project URL**: [https://github.com/FasterXML/jackson-dataformats-text](https://github.com/FasterXML/jackson-dataformats-text)
 > - **Manifest License**: Apache License, Version 2.0 (Not Packaged)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [jackson-dataformat-yaml-2.19.1.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.19.1.jar/META-INF/LICENSE)
-    - [jackson-dataformat-yaml-2.19.1.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.19.1.jar/META-INF/NOTICE)
+> - **Embedded license files**: [jackson-dataformat-yaml-2.19.2.jar/META-INF/LICENSE](jackson-dataformat-yaml-2.19.2.jar/META-INF/LICENSE)
+    - [jackson-dataformat-yaml-2.19.2.jar/META-INF/NOTICE](jackson-dataformat-yaml-2.19.2.jar/META-INF/NOTICE)
 
 **7** **Group:** `com.google.cloud.opentelemetry` **Name:** `detector-resources-support` **Version:** `0.36.0`
 > - **POM Project URL**: [https://github.com/GoogleCloudPlatform/opentelemetry-operations-java](https://github.com/GoogleCloudPlatform/opentelemetry-operations-java)
@@ -157,27 +157,27 @@
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**36** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.47.0-alpha`
+**36** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-resources` **Version:** `1.48.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**37** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.47.0-alpha`
+**37** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-aws-xray-propagator` **Version:** `1.48.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**38** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-azure-resources` **Version:** `1.47.0-alpha`
+**38** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-azure-resources` **Version:** `1.48.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**39** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-baggage-processor` **Version:** `1.47.0-alpha`
+**39** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-baggage-processor` **Version:** `1.48.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**40** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-cloudfoundry-resources` **Version:** `1.47.0-alpha`
+**40** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-cloudfoundry-resources` **Version:** `1.48.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**41** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-gcp-resources` **Version:** `1.47.0-alpha`
+**41** **Group:** `io.opentelemetry.contrib` **Name:** `opentelemetry-gcp-resources` **Version:** `1.48.0-alpha`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java-contrib](https://github.com/open-telemetry/opentelemetry-java-contrib)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 

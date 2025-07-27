@@ -77,6 +77,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   api(project(":instrumentation-api-incubator"))
 
   annotationProcessor("com.google.auto.service:auto-service")
