@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientPropagationBaseTest;
@@ -265,24 +264,14 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                     span.hasName(SHARED_TOPIC + " receive")
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
-                        .hasAttributesSatisfyingExactly(receiveAttributes(false))
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .doesNotContainKey(
-                                        AttributeKey.stringKey("test-message-header"))),
+                        .hasAttributesSatisfyingExactly(receiveAttributes(false)),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            processAttributes("10", greeting, false, false))
-                        .hasAttributesSatisfying(
-                            attrs ->
-                                assertThat(attrs)
-                                    .doesNotContainKey(
-                                        AttributeKey.stringKey("test-message-header"))),
+                            processAttributes("10", greeting, false, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
   }
 }
