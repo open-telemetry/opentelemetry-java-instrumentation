@@ -6,26 +6,28 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.core.RequestOptions;
-import com.openai.core.http.StreamResponse;
+import com.openai.core.http.AsyncStreamResponse;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
-import com.openai.services.blocking.chat.ChatCompletionService;
+import com.openai.services.async.chat.ChatCompletionServiceAsync;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
+import java.util.concurrent.CompletableFuture;
 
-final class InstrumentedChatCompletionService
-    extends DelegatingInvocationHandler<ChatCompletionService, InstrumentedChatCompletionService> {
+final class InstrumentedChatCompletionServiceAsync
+    extends DelegatingInvocationHandler<
+        ChatCompletionServiceAsync, InstrumentedChatCompletionServiceAsync> {
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
-  InstrumentedChatCompletionService(
-      ChatCompletionService delegate,
+  InstrumentedChatCompletionServiceAsync(
+      ChatCompletionServiceAsync delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
@@ -36,8 +38,8 @@ final class InstrumentedChatCompletionService
   }
 
   @Override
-  protected Class<ChatCompletionService> getProxyType() {
-    return ChatCompletionService.class;
+  protected Class<ChatCompletionServiceAsync> getProxyType() {
+    return ChatCompletionServiceAsync.class;
   }
 
   @Override
@@ -71,7 +73,7 @@ final class InstrumentedChatCompletionService
     return super.invoke(proxy, method, args);
   }
 
-  private ChatCompletion create(
+  private CompletableFuture<ChatCompletion> create(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
@@ -79,31 +81,36 @@ final class InstrumentedChatCompletionService
     }
 
     Context context = instrumenter.start(parentContext, chatCompletionCreateParams);
-    ChatCompletion completion;
+    CompletableFuture<ChatCompletion> future;
     try (Scope ignored = context.makeCurrent()) {
-      completion = createWithLogs(context, chatCompletionCreateParams, requestOptions);
+      future = createWithLogs(context, chatCompletionCreateParams, requestOptions);
     } catch (Throwable t) {
       instrumenter.end(context, chatCompletionCreateParams, null, t);
       throw t;
     }
 
-    instrumenter.end(context, chatCompletionCreateParams, completion, null);
-    return completion;
+    future =
+        future.whenComplete(
+            (res, t) -> instrumenter.end(context, chatCompletionCreateParams, res, t));
+    return CompletableFutureWrapper.wrap(future, parentContext);
   }
 
-  private ChatCompletion createWithLogs(
+  private CompletableFuture<ChatCompletion> createWithLogs(
       Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
-    ChatCompletion result = delegate.create(chatCompletionCreateParams, requestOptions);
-    ChatCompletionEventsHelper.emitCompletionLogEvents(
-        context, eventLogger, result, captureMessageContent);
-    return result;
+    CompletableFuture<ChatCompletion> future =
+        delegate.create(chatCompletionCreateParams, requestOptions);
+    future.thenAccept(
+        r ->
+            ChatCompletionEventsHelper.emitCompletionLogEvents(
+                context, eventLogger, r, captureMessageContent));
+    return future;
   }
 
-  private StreamResponse<ChatCompletionChunk> createStreaming(
+  private AsyncStreamResponse<ChatCompletionChunk> createStreaming(
       ChatCompletionCreateParams chatCompletionCreateParams, RequestOptions requestOptions) {
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, chatCompletionCreateParams)) {
@@ -120,16 +127,16 @@ final class InstrumentedChatCompletionService
     }
   }
 
-  private StreamResponse<ChatCompletionChunk> createStreamingWithLogs(
+  private AsyncStreamResponse<ChatCompletionChunk> createStreamingWithLogs(
       Context context,
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions,
       boolean newSpan) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
-    StreamResponse<ChatCompletionChunk> result =
+    AsyncStreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
-    return new TracingStreamedResponse(
+    return new TracingAsyncStreamedResponse(
         result,
         new StreamListener(
             context,
