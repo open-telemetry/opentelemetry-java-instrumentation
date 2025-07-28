@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -266,7 +266,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasKind(SpanKind.CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(receiveAttributes(false))
-                        .hasAttribute(AttributeKey.stringKey("test-message-header"), null),
+                        .hasAttributesSatisfying(
+                            attrs ->
+                                assertThat(attrs)
+                                    .doesNotContainKey(
+                                        AttributeKey.stringKey("test-message-header"))),
                 span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
@@ -274,7 +278,11 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, false, false))
-                        .hasAttribute(AttributeKey.stringKey("test-message-header"), null),
+                        .hasAttributesSatisfying(
+                            attrs ->
+                                assertThat(attrs)
+                                    .doesNotContainKey(
+                                        AttributeKey.stringKey("test-message-header"))),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
   }
 }
