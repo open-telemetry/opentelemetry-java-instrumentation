@@ -851,11 +851,11 @@ class SessionTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
-    public final String methodName;
-    public final BiConsumer<Session, Value> sessionMethodTest;
-    public final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
+    final String methodName;
+    final BiConsumer<Session, Value> sessionMethodTest;
+    final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
 
-    public Parameter(
+    Parameter(
         String methodName,
         BiConsumer<Session, Value> sessionMethodTest,
         BiConsumer<StatelessSession, Value> statelessSessionMethodTest) {

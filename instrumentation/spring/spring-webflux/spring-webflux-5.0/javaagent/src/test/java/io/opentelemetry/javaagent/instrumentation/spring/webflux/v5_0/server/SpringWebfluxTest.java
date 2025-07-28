@@ -752,6 +752,11 @@ public class SpringWebfluxTest {
   }
 
   private static class Parameter {
+    final String urlPath;
+    final String urlPathWithVariables;
+    final String annotatedMethod;
+    final String expectedResponseBody;
+
     Parameter(
         String urlPath,
         String urlPathWithVariables,
@@ -762,10 +767,5 @@ public class SpringWebfluxTest {
       this.annotatedMethod = annotatedMethod;
       this.expectedResponseBody = expectedResponseBody;
     }
-
-    public final String urlPath;
-    public final String urlPathWithVariables;
-    public final String annotatedMethod;
-    public final String expectedResponseBody;
   }
 }

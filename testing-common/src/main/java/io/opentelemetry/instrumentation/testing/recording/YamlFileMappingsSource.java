@@ -195,7 +195,7 @@ final class YamlFileMappingsSource implements MappingsSource {
     final String path;
     final boolean multi;
 
-    public StubMappingFileMetadata(String path, boolean multi) {
+    StubMappingFileMetadata(String path, boolean multi) {
       this.path = path;
       this.multi = multi;
     }

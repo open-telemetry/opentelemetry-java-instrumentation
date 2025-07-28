@@ -505,7 +505,7 @@ public class AgentClassLoader extends URLClassLoader {
 
     private final ClassLoader platformClassLoader = getPlatformLoader();
 
-    public PlatformDelegatingClassLoader() {
+    PlatformDelegatingClassLoader() {
       super(null);
     }
 
