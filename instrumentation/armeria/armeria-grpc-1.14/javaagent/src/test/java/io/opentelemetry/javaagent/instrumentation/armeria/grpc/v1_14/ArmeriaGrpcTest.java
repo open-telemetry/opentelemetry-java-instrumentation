@@ -89,10 +89,10 @@ class ArmeriaGrpcTest {
                             equalTo(RPC_SERVICE, "example.Greeter"),
                             equalTo(RPC_METHOD, "SayHello"),
                             equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
+                            equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, (long) server.httpPort()))
-                            equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
-                            equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -116,10 +116,10 @@ class ArmeriaGrpcTest {
                             equalTo(RPC_SERVICE, "example.Greeter"),
                             equalTo(RPC_METHOD, "SayHello"),
                             equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                            equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
-                            equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
-                            equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
