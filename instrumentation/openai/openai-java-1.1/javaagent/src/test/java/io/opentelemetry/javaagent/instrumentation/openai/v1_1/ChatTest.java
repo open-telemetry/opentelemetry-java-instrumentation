@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.openai.v1_1;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import io.opentelemetry.instrumentation.openai.v1_1.AbstractChatTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -28,6 +29,11 @@ class ChatTest extends AbstractChatTest {
 
   @Override
   protected OpenAIClient wrap(OpenAIClient client) {
+    return client;
+  }
+
+  @Override
+  protected OpenAIClientAsync wrap(OpenAIClientAsync client) {
     return client;
   }
 

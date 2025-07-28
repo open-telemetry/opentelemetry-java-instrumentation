@@ -5,43 +5,48 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
-import com.openai.services.blocking.ChatService;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
-final class InstrumentedChatService
-    extends DelegatingInvocationHandler<ChatService, InstrumentedChatService> {
+final class InstrumentedOpenAiClientAsync
+    extends DelegatingInvocationHandler<OpenAIClientAsync, InstrumentedOpenAiClientAsync> {
 
-  private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
+  private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
-  InstrumentedChatService(
-      ChatService delegate,
-      Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
+  InstrumentedOpenAiClientAsync(
+      OpenAIClientAsync delegate,
+      Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     super(delegate);
-    this.instrumenter = instrumenter;
+    this.chatInstrumenter = chatInstrumenter;
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
 
   @Override
-  protected Class<ChatService> getProxyType() {
-    return ChatService.class;
+  protected Class<OpenAIClientAsync> getProxyType() {
+    return OpenAIClientAsync.class;
   }
 
   @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
-    if (methodName.equals("completions") && parameterTypes.length == 0) {
-      return new InstrumentedChatCompletionService(
-              delegate.completions(), instrumenter, eventLogger, captureMessageContent)
+    if (methodName.equals("chat") && parameterTypes.length == 0) {
+      return new InstrumentedChatServiceAsync(
+              delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
+          .createProxy();
+    }
+    if (methodName.equals("sync") && parameterTypes.length == 0) {
+      return new InstrumentedOpenAiClient(
+              delegate.sync(), chatInstrumenter, eventLogger, captureMessageContent)
           .createProxy();
     }
     return super.invoke(proxy, method, args);

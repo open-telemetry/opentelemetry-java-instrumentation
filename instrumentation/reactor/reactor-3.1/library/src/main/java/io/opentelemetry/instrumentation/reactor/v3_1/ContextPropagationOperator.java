@@ -278,7 +278,7 @@ public final class ContextPropagationOperator {
     @SuppressWarnings({"FieldCanBeLocal", "UnusedVariable"})
     private final ReactorAsyncOperationEndStrategy asyncOperationEndStrategy;
 
-    public Lifter(ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
+    Lifter(ReactorAsyncOperationEndStrategy asyncOperationEndStrategy) {
       this.asyncOperationEndStrategy = asyncOperationEndStrategy;
     }
 
