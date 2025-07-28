@@ -151,12 +151,12 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
                                     equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
                                     equalTo(
                                         RPC_REQUEST_BODY_SIZE,
                                         responseSerializedSize - prefix.length()),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -182,15 +182,15 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(
+                                    RPC_RESPONSE_BODY_SIZE,
+                                    responseSerializedSize - prefix.length()),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
-                                equalTo(
-                                    RPC_RESPONSE_BODY_SIZE,
-                                    responseSerializedSize - prefix.length()),
-                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -316,10 +316,10 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
                                     equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
                                     equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -345,12 +345,12 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -489,10 +489,10 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
                                     equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
                                     equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -518,12 +518,12 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -634,9 +634,9 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
+                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
-                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -655,11 +655,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) status.getCode().value()),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
@@ -775,9 +775,9 @@ public abstract class AbstractGrpcTest {
                                     equalTo(
                                         RPC_GRPC_STATUS_CODE,
                                         (long) Status.UNKNOWN.getCode().value()),
+                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
-                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -796,11 +796,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.UNKNOWN.value()),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
@@ -1011,10 +1011,10 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
                                     equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
                                     equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1040,12 +1040,12 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
-                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -1085,6 +1085,7 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
     IllegalStateException thrown = new IllegalStateException("illegal");
+    AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
     Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
@@ -1097,6 +1098,7 @@ public abstract class AbstractGrpcTest {
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
+                        response.set(r);
                         throw thrown;
                       }
 
@@ -1117,6 +1119,8 @@ public abstract class AbstractGrpcTest {
 
     assertThat(error.get()).isNotNull();
     int requestSerializedSize = request.getSerializedSize();
+    Helloworld.Response res = response.get();
+    int responseSerializedSize = res.getSerializedSize();
 
     testing()
         .waitAndAssertTraces(
@@ -1135,9 +1139,10 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_METHOD, "SayMultipleHello"),
                                     equalTo(
                                         RPC_GRPC_STATUS_CODE, (long) Status.Code.CANCELLED.value()),
+                                    equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
+                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
-                                    equalTo(RPC_RESPONSE_BODY_SIZE, 0),
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(3);
@@ -1167,7 +1172,8 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_REQUEST_BODY_SIZE, 0),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -1255,10 +1261,10 @@ public abstract class AbstractGrpcTest {
                                         RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
                                     equalTo(RPC_METHOD, "ServerReflectionInfo"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                    equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
+                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
-                                    equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
-                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize)))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1285,12 +1291,12 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "grpc.reflection.v1alpha.ServerReflection"),
                                 equalTo(RPC_METHOD, "ServerReflectionInfo"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
@@ -1360,10 +1366,10 @@ public abstract class AbstractGrpcTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "SayHello"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
                                     equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
                                     equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1389,12 +1395,12 @@ public abstract class AbstractGrpcTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "SayHello"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->

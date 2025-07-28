@@ -236,10 +236,10 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "Conversation"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, (long) server.getPort())))
                                     equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                     equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())
@@ -253,12 +253,12 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "Conversation"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                                equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
+                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
                             .satisfies(
                                 spanData ->
