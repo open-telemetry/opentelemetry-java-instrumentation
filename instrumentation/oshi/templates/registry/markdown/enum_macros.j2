@@ -1,0 +1,30 @@
+{% import 'stability.j2' as stability %}
+{% macro filter(member) %}{% if (member.deprecated is none or member.deprecated == "") %}{{ "True" }}{% else %}{{ "False" }}{% endif %}{% endmacro %}
+{% macro table(enum, notes) %}
+---
+
+`{{enum.name}}` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+
+| Value  | Description | Stability |
+|---|---|---|
+{% for espec in enum.type.members | sort(attribute='value') %}
+{%- if filter(espec) == "True" -%}
+| `{{ espec.value }}` | {{ (espec.brief or espec.id) | trim }}{{ notes.add({"note": espec.note}) }} | {{ stability.badge(espec.stability, espec.deprecated) }} |
+{% endif %}{% endfor %}{{ notes.render() }}{% endmacro %}
+{% macro tables(enums, notes) -%}
+{% for enum in enums | sort(attribute="name") -%}
+{{ table(enum, notes) -}}
+{% endfor %}{% endmacro %}
+{% macro field_table(enum, notes) %}
+`{{enum.id}}` has the following list of well-known values. If one of them applies, then the respective value MUST be used; otherwise, a custom value MAY be used.
+
+| Value  | Description | Stability |
+|---|---|---|
+{% for espec in enum.members | sort(attribute='value') %}
+{%- if filter(espec) == "True" -%}
+| `{{ espec.value }}` | {{ (espec.brief or espec.id) | trim }}{{ notes.add({"note": espec.note}) }} | {{ stability.badge(espec.stability, espec.deprecated) }} |
+{% endif %}{% endfor %}{{ notes.render() }}{% endmacro %}
+{% macro field_tables(enums, notes) -%}
+{% for enum in enums | sort(attribute="id") -%}
+{{ field_table(enum, notes) -}}
+{% endfor %}{% endmacro %}

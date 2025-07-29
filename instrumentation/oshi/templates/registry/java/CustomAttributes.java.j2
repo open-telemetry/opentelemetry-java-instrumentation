@@ -1,0 +1,26 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package io.opentelemetry.instrumentation.oshi;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import io.opentelemetry.api.common.AttributeKey;
+
+// This file is generated using weaver. Do not edit manually.
+
+/** Attribute definitions generated from a Weaver model. Do not edit manually. */
+public final class CustomAttributes {
+{% for attr in ctx %}
+  /**
+  {{ attr.brief }}  */{% if attr.type == 'string' %}
+  public final static AttributeKey<String> {{ attr.name.upper().split('.')|join('_') }} = stringKey("{{attr.name}}");
+  {% elif attr.type == 'int' %}
+  public final static AttributeKey<Long> {{ attr.name.upper().split('.')|join('_') }} = longKey("{{attr.name}}");
+  {% else %}
+  // UNHANDLED TYPE PLEASE FIXME
+  public final static AttributeKey<?> {{ attr.name.upper().split('.')|join('_') }} = ??key("{{attr.name}}");
+  {% endif %}
+{% endfor %}
+  private CustomAttributes(){}
+}

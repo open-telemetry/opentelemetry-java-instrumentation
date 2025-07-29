@@ -1,0 +1,32 @@
+groups:
+  - id: shared.attributes
+    type: attribute_group
+    brief: Attributes used in OSHI metrics.
+    attributes:
+      - id: device
+        type: string
+        brief: The name of the network device.
+        stability: development
+        requirement_level: required
+        examples: ["eth0"]
+
+      - id: direction
+        type: string
+        brief: The direction of the flow of data being measured.
+        stability: development
+        requirement_level: required
+        examples: ["receive", "transmit", "read", "write"]
+
+      - id: state
+        type: string
+        brief: The type of memory being measured.
+        stability: development
+        requirement_level: required
+        examples: ["used", "free", "cached", "buffered"]
+
+      - id: type
+        type: string
+        brief: The type of measurement being taken.
+        stability: development
+        requirement_level: required
+        examples: ["rss", "vms", "user", "system"]

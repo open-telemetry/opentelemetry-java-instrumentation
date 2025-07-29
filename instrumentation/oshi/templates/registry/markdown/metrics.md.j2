@@ -1,0 +1,14 @@
+{%- import 'attribute_table.j2' as at -%}
+{%- import 'metric_table.j2' as mt -%}
+
+# Produced Metrics
+
+{% for metric in ctx %}
+## Metric `{{metric.metric_name}}`
+
+{{ mt.generate(metric) }}
+
+### `{{metric.metric_name}}` Attributes
+
+{{ at.generate(metric.attributes, "", "", metric.lineage.attributes) }}
+{% endfor %}

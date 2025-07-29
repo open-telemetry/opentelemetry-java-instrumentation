@@ -1,0 +1,60 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+package io.opentelemetry.instrumentation.oshi;
+
+import io.opentelemetry.api.metrics.ObservableLongCounter;
+import io.opentelemetry.api.metrics.ObservableLongGauge;
+import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableLongMeasurement;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import java.util.function.Consumer;
+
+// This file is generated using weaver. Do not edit manually.
+
+/** Metric definitions generated from a Weaver model. Do not edit manually. */
+public final class Metrics {
+{%- for metric in ctx %}
+  {%- set isDouble = metric.annotations and metric.annotations.value_type == "double" %}
+  {%- if metric.instrument == "gauge" %}
+
+  public static {% if isDouble %}ObservableDoubleGauge{% else %}ObservableLongGauge{% endif %} create{{ metric.metric_name.split('.')|map('split', '_')|map('map', 'capitalize')|map('join','')|join }}(
+      Meter meter,
+      Consumer<{% if isDouble %}ObservableDoubleMeasurement{% else %}ObservableLongMeasurement{% endif %}> callback) {
+    return meter
+        .gaugeBuilder("{{ metric.metric_name }}")
+        {%- if not isDouble %}.ofLongs(){% endif %}
+        .setUnit("{{ metric.unit }}")
+        .setDescription("{{ metric.brief }}")
+        .buildWithCallback(callback);
+  }
+  {%- elif metric.instrument == "counter" %}
+
+  public static ObservableLongCounter create{{ metric.metric_name.split('.')|map('split', '_')|map('map', 'capitalize')|map('join','')|join }}(
+      Meter meter,
+      Consumer<ObservableLongMeasurement> callback) {
+    return meter
+        .counterBuilder("{{ metric.metric_name }}")
+        .setUnit("{{ metric.unit }}")
+        .setDescription("{{ metric.brief }}")
+        .buildWithCallback(callback);
+  }
+  {%- elif metric.instrument == "updowncounter" %}
+
+  public static ObservableLongUpDownCounter create{{ metric.metric_name.split('.')|map('split', '_')|map('map', 'capitalize')|map('join','')|join }}(
+      Meter meter,
+      Consumer<ObservableLongMeasurement> callback) {
+    return meter
+        .upDownCounterBuilder("{{ metric.metric_name }}")
+        .setUnit("{{ metric.unit }}")
+        .setDescription("{{ metric.brief }}")
+        .buildWithCallback(callback);
+  }
+  {%- endif %}
+{%- endfor %}
+
+  private Metrics(){}
+}
