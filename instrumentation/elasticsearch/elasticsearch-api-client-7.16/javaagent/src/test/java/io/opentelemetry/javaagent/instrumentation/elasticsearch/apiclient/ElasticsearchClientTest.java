@@ -212,19 +212,19 @@ class ElasticsearchClientTest {
   }
 
   private static class AsyncRequest {
-    volatile InfoResponse response = null;
+    private volatile InfoResponse response = null;
 
-    public InfoResponse getResponse() {
+    InfoResponse getResponse() {
       return response;
     }
 
-    public void setResponse(InfoResponse response) {
+    void setResponse(InfoResponse response) {
       this.response = response;
     }
   }
 
-  private static class Person {
-    public final String name;
+  static class Person {
+    private final String name;
 
     Person(String name) {
       this.name = name;
