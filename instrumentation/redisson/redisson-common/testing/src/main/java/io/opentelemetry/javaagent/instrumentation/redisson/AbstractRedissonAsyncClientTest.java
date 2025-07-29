@@ -225,14 +225,14 @@ public abstract class AbstractRedissonAsyncClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    span.hasName("BATCH EXECUTE")
+                    span.hasName("BATCH")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(maybeStable(DB_STATEMENT), "BATCH EXECUTE"))
+                            equalTo(maybeStable(DB_STATEMENT), "MULTI;SET batch1 ?"))
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("SET")
