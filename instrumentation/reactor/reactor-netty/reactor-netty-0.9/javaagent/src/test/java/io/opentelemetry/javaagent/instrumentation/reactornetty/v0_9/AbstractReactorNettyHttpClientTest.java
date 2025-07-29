@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.reactornetty.v0_9;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -23,7 +25,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
@@ -90,6 +91,7 @@ abstract class AbstractReactorNettyHttpClientTest
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {
@@ -125,8 +127,8 @@ abstract class AbstractReactorNettyHttpClientTest
 
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-          attributes.remove(SemanticAttributes.SERVER_PORT);
+          attributes.remove(SERVER_ADDRESS);
+          attributes.remove(SERVER_PORT);
           return attributes;
         });
   }

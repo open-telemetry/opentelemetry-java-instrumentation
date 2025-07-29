@@ -12,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule {
+public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public OpenTelemetryApiInstrumentationModule() {
     super("opentelemetry-api", "opentelemetry-api-1.32");
   }
@@ -25,18 +27,20 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // skip instrumentation when opentelemetry-extension-incubator is present, instrumentation is
     // handled by OpenTelemetryApiIncubatorInstrumentationModule
-    return not(
-        hasClassesNamed(
-            "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder"));
-  }
-
-  @Override
-  public boolean isIndyModule() {
-    return false;
+    return hasClassesNamed("application.io.opentelemetry.api.logs.LoggerBuilder")
+        .and(
+            not(
+                hasClassesNamed(
+                    "application.io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder")));
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new OpenTelemetryInstrumentation());
+  }
+
+  @Override
+  public String getModuleGroup() {
+    return "opentelemetry-api-bridge";
   }
 }

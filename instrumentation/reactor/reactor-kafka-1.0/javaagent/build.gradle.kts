@@ -19,7 +19,7 @@ dependencies {
 
   bootstrap(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
 
-  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common:library"))
+  implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   // using 1.3 to be able to implement several new KafkaReceiver methods added in 1.3.3 and 1.3.21
@@ -28,12 +28,11 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.4:javaagent"))
 
   testImplementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
   testLibrary("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
-
-  latestDepTestLibrary("io.projectreactor:reactor-core:3.4.+")
 }
 
 val testLatestDeps = findProperty("testLatestDeps") as Boolean
@@ -45,7 +44,7 @@ testing {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
         if (testLatestDeps) {
-          implementation("io.projectreactor.kafka:reactor-kafka:+")
+          implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
         } else {
           implementation("io.projectreactor.kafka:reactor-kafka:1.3.3")
@@ -66,7 +65,7 @@ testing {
         implementation(project(":instrumentation:reactor:reactor-kafka-1.0:testing"))
 
         if (testLatestDeps) {
-          implementation("io.projectreactor.kafka:reactor-kafka:+")
+          implementation("io.projectreactor.kafka:reactor-kafka:latest.release")
           implementation("io.projectreactor:reactor-core:3.4.+")
         } else {
           implementation("io.projectreactor.kafka:reactor-kafka:1.3.21")

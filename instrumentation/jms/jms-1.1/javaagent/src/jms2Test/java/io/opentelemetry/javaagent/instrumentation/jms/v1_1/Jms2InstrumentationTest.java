@@ -9,6 +9,11 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -18,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.File;
 import java.nio.file.Files;
 import java.util.Collections;
@@ -53,13 +57,12 @@ import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public class Jms2InstrumentationTest {
 
   @RegisterExtension
@@ -131,7 +134,7 @@ public class Jms2InstrumentationTest {
     }
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
+  @MethodSource("destinationArguments")
   @ParameterizedTest
   void testMessageConsumer(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
@@ -167,10 +170,10 @@ public class Jms2InstrumentationTest {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                          equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                          equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                          equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                          equalTo(MESSAGING_OPERATION, "publish"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
                           messagingTempDestination(isTemporary)));
 
           producerSpan.set(trace.getSpan(1));
@@ -184,14 +187,14 @@ public class Jms2InstrumentationTest {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "receive"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))));
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
+  @MethodSource("destinationArguments")
   @ParameterizedTest
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
@@ -230,25 +233,25 @@ public class Jms2InstrumentationTest {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span ->
                     span.hasName(destinationName + " process")
                         .hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "jms"),
-                            equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
-                            equalTo(SemanticAttributes.MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                            equalTo(MESSAGING_OPERATION, "process"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @ArgumentsSource(EmptyReceiveArgumentsProvider.class)
+  @MethodSource("emptyReceiveArguments")
   @ParameterizedTest
   void shouldNotEmitTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
@@ -270,42 +273,34 @@ public class Jms2InstrumentationTest {
 
   private static AttributeAssertion messagingTempDestination(boolean isTemporary) {
     return isTemporary
-        ? equalTo(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true)
-        : satisfies(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
+        ? equalTo(MESSAGING_DESTINATION_TEMPORARY, true)
+        : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
-  static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> emptyReceiveArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    MessageReceiver receive = consumer -> consumer.receive(100);
+    MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      MessageReceiver receive = consumer -> consumer.receive(100);
-      MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
-
-      return Stream.of(
-          arguments(topic, receive),
-          arguments(queue, receive),
-          arguments(topic, receiveNoWait),
-          arguments(queue, receiveNoWait));
-    }
+    return Stream.of(
+        arguments(topic, receive),
+        arguments(queue, receive),
+        arguments(topic, receiveNoWait),
+        arguments(queue, receiveNoWait));
   }
 
-  static final class DestinationsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> destinationArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    DestinationFactory tempTopic = Session::createTemporaryTopic;
+    DestinationFactory tempQueue = Session::createTemporaryQueue;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      DestinationFactory tempTopic = Session::createTemporaryTopic;
-      DestinationFactory tempQueue = Session::createTemporaryQueue;
-
-      return Stream.of(
-          arguments(topic, "someTopic", false),
-          arguments(queue, "someQueue", false),
-          arguments(tempTopic, "(temporary)", true),
-          arguments(tempQueue, "(temporary)", true));
-    }
+    return Stream.of(
+        arguments(topic, "someTopic", false),
+        arguments(queue, "someQueue", false),
+        arguments(tempTopic, "(temporary)", true),
+        arguments(tempQueue, "(temporary)", true));
   }
 
   @FunctionalInterface

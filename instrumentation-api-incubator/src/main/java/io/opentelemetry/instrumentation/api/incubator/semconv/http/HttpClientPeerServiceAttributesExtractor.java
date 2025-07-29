@@ -5,23 +5,26 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
  * Extractor of the {@code peer.service} span attribute, described in <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/span-general.md#general-remote-service-attributes">the
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-remote-service-attributes">the
  * specification</a>.
  */
 public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
+
+  // copied from PeerIncubatingAttributes
+  private static final AttributeKey<String> PEER_SERVICE = AttributeKey.stringKey("peer.service");
 
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final PeerServiceResolver peerServiceResolver;
@@ -67,7 +70,7 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
     String peerService = mapToPeerService(serverAddress, serverPort, pathSupplier);
     if (peerService != null) {
-      attributes.put(SemanticAttributes.PEER_SERVICE, peerService);
+      attributes.put(PEER_SERVICE, peerService);
     }
   }
 

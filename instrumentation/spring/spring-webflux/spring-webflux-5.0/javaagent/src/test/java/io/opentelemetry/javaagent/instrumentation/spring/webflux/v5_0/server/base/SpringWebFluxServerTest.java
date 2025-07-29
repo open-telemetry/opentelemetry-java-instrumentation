@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 
@@ -63,7 +62,6 @@ public abstract class SpringWebFluxServerTest
   @Override
   protected void configure(HttpServerTestOptions options) {
     options.setTestPathParam(true);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasHandlerSpan(unused -> true);
   }
 }

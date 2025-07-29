@@ -28,6 +28,13 @@ muzzle {
   }
 }
 
+if (findProperty("testLatestDeps") as Boolean) {
+  // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
+  otelJava {
+    maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
+}
+
 dependencies {
   compileOnly("org.elasticsearch.client:transport:5.3.0") {
     isTransitive = false
@@ -55,14 +62,32 @@ dependencies {
 
   latestDepTestLibrary("org.elasticsearch.plugin:transport-netty3-client:5.+") // see elasticsearch-transport-6.0 module
   latestDepTestLibrary("org.elasticsearch.client:transport:5.+") // see elasticsearch-transport-6.0 module
-  latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+")
+  latestDepTestLibrary("org.springframework.data:spring-data-elasticsearch:3.0.+") // see elasticsearch-transport-6.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  val testExperimental by registering(Test::class) {
+    jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testStableSemconv, testExperimental)
+  }
 }

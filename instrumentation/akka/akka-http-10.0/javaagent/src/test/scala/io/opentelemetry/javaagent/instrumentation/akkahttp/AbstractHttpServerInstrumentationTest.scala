@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   HttpServerTestOptions,
   ServerEndpoint
 }
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 
 import java.util
 import java.util.function.{Function, Predicate}
@@ -29,7 +29,7 @@ abstract class AbstractHttpServerInstrumentationTest
           val set = new util.HashSet[AttributeKey[_]](
             HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES
           )
-          set.remove(SemanticAttributes.HTTP_ROUTE)
+          set.remove(HttpAttributes.HTTP_ROUTE)
           set
         }
       }

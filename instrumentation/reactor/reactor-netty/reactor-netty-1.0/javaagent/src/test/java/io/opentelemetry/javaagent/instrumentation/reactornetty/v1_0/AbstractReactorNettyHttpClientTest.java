@@ -10,6 +10,12 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.netty.handler.codec.http.HttpMethod;
@@ -18,7 +24,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -27,7 +32,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.InetSocketAddress;
 import java.net.URI;
 import java.time.Duration;
@@ -106,6 +110,7 @@ abstract class AbstractReactorNettyHttpClientTest
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.markAsLowLevelInstrumentation();
     optionsBuilder.setMaxRedirects(52);
+    optionsBuilder.spanEndsAfterBody();
 
     // TODO: remove this test altogether? this scenario is (was) only implemented in reactor-netty,
     // all other HTTP clients worked in a different way
@@ -132,13 +137,13 @@ abstract class AbstractReactorNettyHttpClientTest
     // unopened port or non routable address
     if ("http://localhost:61/".equals(uri.toString())
         || "https://192.0.2.1/".equals(uri.toString())) {
-      attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
 
     if (uri.toString().contains("/read-timeout")) {
-      attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
-      attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-      attributes.remove(SemanticAttributes.SERVER_PORT);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
     }
     return attributes;
   }
@@ -306,11 +311,11 @@ abstract class AbstractReactorNettyHttpClientTest
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SemanticAttributes.URL_FULL, uri.toString()),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                            equalTo(SemanticAttributes.SERVER_PORT, uri.getPort()),
-                            equalTo(HttpAttributes.ERROR_TYPE, "cancelled")),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, uri.toString()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)

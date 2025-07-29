@@ -9,10 +9,10 @@ To instrument all AWS SDK clients include the `opentelemetry-aws-sdk-2.2-autocon
 To register instrumentation only on a specific SDK client, register the interceptor when creating it.
 
 ```java
-AwsSdkTelemetry telemetrty = AwsSdkTelemetry.create(openTelemetry).build();
+AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry).build();
 DynamoDbClient client = DynamoDbClient.builder()
   .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetrty.newExecutionInterceptor()))
+    .addExecutionInterceptor(telemetry.newExecutionInterceptor()))
     .build())
   .build();
 ```
@@ -51,3 +51,12 @@ run over API limitations set by AWS.
 If this does not fulfill your use case, perhaps because you are
 using the same SDK with a different non-AWS managed service, let us know so we can provide
 configuration for this behavior.
+
+## Development
+
+### Testing
+
+Some tests use recorded API responses to run through instrumentation. By default, recordings
+are used, but if needing to add new tests/recordings or update existing ones, run the tests with
+the `RECORD_WITH_REAL_API` environment variable set. AWS credentials will need to be correctly
+configured to work.

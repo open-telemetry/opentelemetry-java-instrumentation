@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "6.24.0"
+  id("com.diffplug.spotless") version "7.2.1"
 }
 
 spotless {
@@ -54,24 +54,25 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:6.24.0")
-  implementation("com.google.guava:guava:33.0.0-jre")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:7.2.1")
+  implementation("com.google.guava:guava:33.4.8-jre")
   implementation("gradle.plugin.com.google.protobuf:protobuf-gradle-plugin:0.8.18")
-  implementation("com.github.johnrengelman:shadow:8.1.1")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.8")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
-  implementation("com.gradle.enterprise:com.gradle.enterprise.gradle.plugin:3.16.1")
-  implementation("org.owasp:dependency-check-gradle:9.0.9")
-  implementation("ru.vyarus:gradle-animalsniffer-plugin:1.7.1")
+  implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.1")
+  implementation("org.owasp:dependency-check-gradle:12.1.3")
+  implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
+  implementation("org.spdx:spdx-gradle-plugin:0.9.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.14.11")
-  implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.0")
-  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.2")
-  implementation("net.ltgt.gradle:gradle-errorprone-plugin:3.1.0")
-  implementation("net.ltgt.gradle:gradle-nullaway-plugin:1.6.0")
-  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.2")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.17.6")
+  implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
+  implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
+  implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.3.0")
+  implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.2.0")
+  implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
-  testImplementation("org.assertj:assertj-core:3.25.1")
+  testImplementation("org.assertj:assertj-core:3.27.3")
 }

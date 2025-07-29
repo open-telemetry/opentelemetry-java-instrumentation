@@ -50,6 +50,18 @@
   -->
 
   <module name="TreeWalker">
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+                value="(?&lt;!import static io.opentelemetry.sdk.testing.assertj.)OpenTelemetryAssertions\."/>
+      <property name="message"
+                value="Please statically import methods from OpenTelemetryAssertions"/>
+    </module>
+    <module name="RegexpSinglelineJava">
+      <property name="format"
+                value="(?&lt;!import static org.assertj.core.api.|OpenTelemetry)Assertions.assertThat"/>
+      <property name="message"
+                value="Please statically import methods from Assertions (OpenTelemetryAssertions extends Assertions)"/>
+    </module>
     <module name="OuterTypeFilename"/>
     <module name="IllegalTokenText">
       <property name="tokens" value="STRING_LITERAL, CHAR_LITERAL"/>
@@ -76,28 +88,6 @@
     <module name="NeedBraces">
       <property name="tokens"
         value="LITERAL_DO, LITERAL_ELSE, LITERAL_FOR, LITERAL_IF, LITERAL_WHILE"/>
-    </module>
-    <module name="LeftCurly">
-      <property name="tokens"
-        value="ANNOTATION_DEF, CLASS_DEF, CTOR_DEF, ENUM_CONSTANT_DEF, ENUM_DEF,
-                    INTERFACE_DEF, LAMBDA, LITERAL_CASE, LITERAL_CATCH, LITERAL_DEFAULT,
-                    LITERAL_DO, LITERAL_ELSE, LITERAL_FINALLY, LITERAL_FOR, LITERAL_IF,
-                    LITERAL_SWITCH, LITERAL_SYNCHRONIZED, LITERAL_TRY, LITERAL_WHILE, METHOD_DEF,
-                    OBJBLOCK, STATIC_INIT, RECORD_DEF, COMPACT_CTOR_DEF"/>
-    </module>
-    <module name="RightCurly">
-      <property name="id" value="RightCurlySame"/>
-      <property name="tokens"
-        value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE,
-                    LITERAL_DO"/>
-    </module>
-    <module name="RightCurly">
-      <property name="id" value="RightCurlyAlone"/>
-      <property name="option" value="alone"/>
-      <property name="tokens"
-        value="CLASS_DEF, METHOD_DEF, CTOR_DEF, LITERAL_FOR, LITERAL_WHILE, STATIC_INIT,
-                    INSTANCE_INIT, ANNOTATION_DEF, ENUM_DEF, INTERFACE_DEF, RECORD_DEF,
-                    COMPACT_CTOR_DEF"/>
     </module>
     <module name="SuppressionXpathSingleFilter">
       <!-- suppression is required till https://github.com/checkstyle/checkstyle/issues/7541 -->
@@ -264,6 +254,7 @@
       <property name="arrayInitIndent" value="2"/>
     </module>
     -->
+    <!-- handled by error prone
     <module name="AbbreviationAsWordInName">
       <property name="ignoreFinal" value="false"/>
       <property name="allowedAbbreviationLength" value="0"/>
@@ -272,6 +263,7 @@
                     PARAMETER_DEF, VARIABLE_DEF, METHOD_DEF, PATTERN_VARIABLE_DEF, RECORD_DEF,
                     RECORD_COMPONENT_DEF"/>
     </module>
+    -->
     <module name="OverloadMethodsDeclarationOrder"/>
     <!-- there are only a few violations of this, and they all appear to be for good reasons
     <module name="VariableDeclarationUsageDistance"/>
@@ -393,7 +385,7 @@
   <!-- skip jflex generated files -->
   <module name="SuppressionSingleFilter">
     <property name="checks" value=".*"/>
-    <!-- TODO(anuraaga): Fix path after https://github.com/jprante/gradle-plugin-jflex/issues/20 -->
+    <!-- TODO: Fix path after https://github.com/jprante/gradle-plugin-jflex/issues/20 -->
     <property name="files"
       value="instrumentation-api[/\\]build[/\\]generated[/\\]sources[/\\]main"/>
   </module>

@@ -8,6 +8,13 @@ package io.opentelemetry.javaagent.instrumentation.googlehttpclient;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 
 import com.google.api.client.http.GenericUrl;
 import com.google.api.client.http.HttpRequest;
@@ -17,14 +24,12 @@ import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.util.ClassInfo;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -80,7 +85,10 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
       throws Exception {
     HttpResponse response = sendRequest(request);
     // read request body to avoid broken pipe errors on the server side
-    response.parseAsString();
+    // skip reading body of long-request to make the test a bit faster
+    if (!uri.toString().contains("/long-request")) {
+      response.parseAsString();
+    }
     return response.getStatusCode();
   }
 
@@ -98,12 +106,12 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
     List<AttributeAssertion> attributes =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                satisfies(SemanticAttributes.SERVER_PORT, AbstractLongAssert::isPositive),
-                equalTo(SemanticAttributes.URL_FULL, uri.toString()),
-                equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500),
-                equalTo(HttpAttributes.ERROR_TYPE, "500")));
+                equalTo(SERVER_ADDRESS, "localhost"),
+                satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
+                equalTo(URL_FULL, uri.toString()),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                equalTo(ERROR_TYPE, "500")));
 
     testing.waitAndAssertTraces(
         trace ->
@@ -133,7 +141,7 @@ public abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTes
         uri -> {
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+          attributes.remove(NETWORK_PROTOCOL_VERSION);
           return attributes;
         });
   }

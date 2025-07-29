@@ -7,13 +7,15 @@ package io.opentelemetry.javaagent.instrumentation.gwt;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -147,23 +149,19 @@ class GwtTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(2)
-                .hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("POST " + getContextPath() + "/greeting/greet")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("test.gwt.shared.MessageService/sendMessage")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "gwt"),
-                                equalTo(
-                                    SemanticAttributes.RPC_SERVICE,
-                                    "test.gwt.shared.MessageService"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "sendMessage"))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + getContextPath() + "/greeting/greet")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "gwt"),
+                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                            equalTo(RPC_METHOD, "sendMessage"))));
 
     testing.clearData();
 
@@ -173,24 +171,20 @@ class GwtTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace
-                .hasSize(2)
-                .hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("POST " + getContextPath() + "/greeting/greet")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("test.gwt.shared.MessageService/sendMessage")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(0))
-                            .hasException(new IOException())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.RPC_SYSTEM, "gwt"),
-                                equalTo(
-                                    SemanticAttributes.RPC_SERVICE,
-                                    "test.gwt.shared.MessageService"),
-                                equalTo(SemanticAttributes.RPC_METHOD, "sendMessage"))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + getContextPath() + "/greeting/greet")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("test.gwt.shared.MessageService/sendMessage")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(0))
+                        .hasException(new IOException())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM, "gwt"),
+                            equalTo(RPC_SERVICE, "test.gwt.shared.MessageService"),
+                            equalTo(RPC_METHOD, "sendMessage"))));
 
     driver.close();
   }

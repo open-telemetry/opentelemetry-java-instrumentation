@@ -5,15 +5,21 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ResourceAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Locale;
 import javax.annotation.Nullable;
 
 /** Factory of a {@link Resource} which provides information about the current operating system. */
 public final class OsResource {
+
+  // copied from OsIncubatingAttributes
+  private static final AttributeKey<String> OS_DESCRIPTION =
+      AttributeKey.stringKey("os.description");
+  private static final AttributeKey<String> OS_TYPE = AttributeKey.stringKey("os.type");
 
   private static final Resource INSTANCE = buildResource();
 
@@ -44,7 +50,7 @@ public final class OsResource {
 
     String osName = getOs(os);
     if (osName != null) {
-      attributes.put(ResourceAttributes.OS_TYPE, osName);
+      attributes.put(OS_TYPE, osName);
     }
 
     String version = null;
@@ -54,39 +60,56 @@ public final class OsResource {
       // Ignore
     }
     String osDescription = version != null ? os + ' ' + version : os;
-    attributes.put(ResourceAttributes.OS_DESCRIPTION, osDescription);
+    attributes.put(OS_DESCRIPTION, osDescription);
 
-    return Resource.create(attributes.build(), ResourceAttributes.SCHEMA_URL);
+    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
   }
 
   @Nullable
   private static String getOs(String os) {
     os = os.toLowerCase(Locale.ROOT);
     if (os.startsWith("windows")) {
-      return ResourceAttributes.OsTypeValues.WINDOWS;
+      return OsTypeValues.WINDOWS;
     } else if (os.startsWith("linux")) {
-      return ResourceAttributes.OsTypeValues.LINUX;
+      return OsTypeValues.LINUX;
     } else if (os.startsWith("mac")) {
-      return ResourceAttributes.OsTypeValues.DARWIN;
+      return OsTypeValues.DARWIN;
     } else if (os.startsWith("freebsd")) {
-      return ResourceAttributes.OsTypeValues.FREEBSD;
+      return OsTypeValues.FREEBSD;
     } else if (os.startsWith("netbsd")) {
-      return ResourceAttributes.OsTypeValues.NETBSD;
+      return OsTypeValues.NETBSD;
     } else if (os.startsWith("openbsd")) {
-      return ResourceAttributes.OsTypeValues.OPENBSD;
+      return OsTypeValues.OPENBSD;
     } else if (os.startsWith("dragonflybsd")) {
-      return ResourceAttributes.OsTypeValues.DRAGONFLYBSD;
+      return OsTypeValues.DRAGONFLYBSD;
     } else if (os.startsWith("hp-ux")) {
-      return ResourceAttributes.OsTypeValues.HPUX;
+      return OsTypeValues.HPUX;
     } else if (os.startsWith("aix")) {
-      return ResourceAttributes.OsTypeValues.AIX;
+      return OsTypeValues.AIX;
     } else if (os.startsWith("solaris")) {
-      return ResourceAttributes.OsTypeValues.SOLARIS;
+      return OsTypeValues.SOLARIS;
     } else if (os.startsWith("z/os")) {
-      return ResourceAttributes.OsTypeValues.Z_OS;
+      return OsTypeValues.Z_OS;
     }
     return null;
   }
 
   private OsResource() {}
+
+  // copied from OsIncubatingAttributes
+  private static final class OsTypeValues {
+    static final String WINDOWS = "windows";
+    static final String LINUX = "linux";
+    static final String DARWIN = "darwin";
+    static final String FREEBSD = "freebsd";
+    static final String NETBSD = "netbsd";
+    static final String OPENBSD = "openbsd";
+    static final String DRAGONFLYBSD = "dragonflybsd";
+    static final String HPUX = "hpux";
+    static final String AIX = "aix";
+    static final String SOLARIS = "solaris";
+    static final String Z_OS = "z_os";
+
+    private OsTypeValues() {}
+  }
 }

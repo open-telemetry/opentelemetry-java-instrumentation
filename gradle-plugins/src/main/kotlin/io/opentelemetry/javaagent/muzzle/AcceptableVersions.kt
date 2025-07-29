@@ -33,6 +33,7 @@ class AcceptableVersions(private val skipVersions: Collection<String>) :
       || versionString.contains("public_draft")
       || versionString.contains("snapshot")
       || versionString.contains("test")
+      || versionString.startsWith("0.0.0-")
       || GIT_SHA_PATTERN.matches(versionString)
       || DATETIME_PATTERN.matches(versionString)
     return !draftVersion

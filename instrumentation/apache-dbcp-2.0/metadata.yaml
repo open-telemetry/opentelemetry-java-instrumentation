@@ -1,0 +1,7 @@
+description: >
+  This instrumentation enables database connection pools metrics for Apache DBCP.
+
+  The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it
+  only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot,
+  this happens automatically as all Spring beans that support JMX registration are automatically
+  registered by default.

@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
+import org.apache.pulsar.common.naming.TopicName;
 
 enum PulsarBatchMessagingAttributesGetter
     implements MessagingAttributesGetter<PulsarBatchRequest, Void> {
@@ -27,8 +28,19 @@ enum PulsarBatchMessagingAttributesGetter
     return request.getDestination();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(PulsarBatchRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(PulsarBatchRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(PulsarBatchRequest request) {
     return false;
   }
 
@@ -40,7 +52,7 @@ enum PulsarBatchMessagingAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(PulsarBatchRequest request) {
+  public Long getMessageBodySize(PulsarBatchRequest request) {
     return StreamSupport.stream(request.getMessages().spliterator(), false)
         .map(message -> (long) message.size())
         .reduce(Long::sum)
@@ -49,7 +61,7 @@ enum PulsarBatchMessagingAttributesGetter
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(PulsarBatchRequest request) {
+  public Long getMessageEnvelopeSize(PulsarBatchRequest request) {
     return null;
   }
 
@@ -57,6 +69,27 @@ enum PulsarBatchMessagingAttributesGetter
   @Override
   public String getMessageId(PulsarBatchRequest request, @Nullable Void response) {
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(PulsarBatchRequest request) {
+    return null;
+  }
+
+  @Override
+  public Long getBatchMessageCount(PulsarBatchRequest request, @Nullable Void unused) {
+    return (long) request.getMessages().size();
+  }
+
+  @Nullable
+  @Override
+  public String getDestinationPartitionId(PulsarBatchRequest request) {
+    int partitionIndex = TopicName.getPartitionIndex(request.getDestination());
+    if (partitionIndex == -1) {
+      return null;
+    }
+    return String.valueOf(partitionIndex);
   }
 
   @Override

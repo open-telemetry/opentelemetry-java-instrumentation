@@ -10,25 +10,31 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientContextInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.rmi.context.server.RmiServerContextInstrumentation;
+import java.rmi.Remote;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import net.bytebuddy.utility.JavaModule;
 
 @AutoService(InstrumentationModule.class)
-public class RmiContextPropagationInstrumentationModule extends InstrumentationModule {
+public class RmiContextPropagationInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public RmiContextPropagationInstrumentationModule() {
     super("rmi", "rmi-context-propagation");
   }
 
   @Override
-  public boolean isIndyModule() {
-    // java.lang.IllegalAccessError: class
-    // io.opentelemetry.javaagent.instrumentation.rmi.context.client.RmiClientContextInstrumentation$StreamRemoteCallConstructorAdvice (in unnamed module @0x740ee00f) cannot access class sun.rmi.transport.Connection (in module java.rmi) because module java.rmi does not export sun.rmi.transport to unnamed module @0x740ee00f
-    return false;
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(new RmiClientContextInstrumentation(), new RmiServerContextInstrumentation());
   }
 
   @Override
-  public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RmiClientContextInstrumentation(), new RmiServerContextInstrumentation());
+  public Map<JavaModule, List<String>> jpmsModulesToOpen() {
+    return Collections.singletonMap(
+        JavaModule.ofType(Remote.class), Arrays.asList("sun.rmi.server", "sun.rmi.transport"));
   }
 }

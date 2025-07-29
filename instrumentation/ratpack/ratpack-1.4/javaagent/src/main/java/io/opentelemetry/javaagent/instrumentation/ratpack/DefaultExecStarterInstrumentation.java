@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Scope;
@@ -30,9 +31,7 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("onComplete")
-            .or(named("onError"))
-            .or(named("onStart"))
+        namedOneOf("onComplete", "onError", "onStart")
             .and(takesArgument(0, named("ratpack.func.Action"))),
         DefaultExecStarterInstrumentation.class.getName() + "$WrapActionAdvice");
     transformer.applyAdviceToMethod(

@@ -6,7 +6,7 @@
 package io.opentelemetry.smoketest
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
-import io.opentelemetry.semconv.SemanticAttributes
+import io.opentelemetry.semconv.HttpAttributes
 import spock.lang.IgnoreIf
 
 import java.time.Duration
@@ -17,7 +17,7 @@ import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContaine
 class PlaySmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20210917.1246460868"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$jdk-20241022.11450623960"
   }
 
   @Override
@@ -37,14 +37,12 @@ class PlaySmokeTest extends SmokeTest {
     countSpansByName(traces, 'GET /welcome') == 1 // SERVER span
     countSpansByName(traces, '/welcome') == 1 // INTERNAL span
 
-    new TraceInspector(traces).countFilteredAttributes(SemanticAttributes.HTTP_ROUTE.key, "/welcome") == 1
+    new TraceInspector(traces).countFilteredAttributes(HttpAttributes.HTTP_ROUTE.key, "/welcome") == 1
 
     cleanup:
     stopTarget()
 
     where:
-    // Play doesn't support Java 16 (or 17) yet
-    // https://github.com/playframework/playframework/pull/10819
-    jdk << [8, 11, 15]
+    jdk << [8, 11, 17, 21]
   }
 }

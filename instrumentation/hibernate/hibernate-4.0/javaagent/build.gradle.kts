@@ -71,20 +71,25 @@ testing {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-}
-
 tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    // TODO run tests both with and without experimental span attributes
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
     dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

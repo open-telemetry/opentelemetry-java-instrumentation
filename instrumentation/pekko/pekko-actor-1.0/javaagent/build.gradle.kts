@@ -16,6 +16,12 @@ muzzle {
     versions.set("[1.0,)")
     assertInverse.set(true)
   }
+  pass {
+    group.set("org.apache.pekko")
+    module.set("pekko-actor_3")
+    versions.set("[1.0,)")
+    assertInverse.set(true)
+  }
 }
 
 dependencies {
@@ -23,7 +29,7 @@ dependencies {
 
   library("org.apache.pekko:pekko-actor_2.12:1.0.1")
 
-  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:+")
+  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:latest.release")
 
   testImplementation(project(":instrumentation:executors:testing"))
 }

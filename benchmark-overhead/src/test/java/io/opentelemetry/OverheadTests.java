@@ -22,6 +22,7 @@ import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -110,7 +111,7 @@ public class OverheadTests {
   }
 
   private void startRecording(Agent agent, GenericContainer<?> petclinic) throws Exception {
-    Path outFile = namingConventions.container.jfrFile(agent);
+    String outFile = namingConventions.container.jfrFile(agent);
     String[] command = {
       "jcmd",
       "1",
@@ -123,22 +124,33 @@ public class OverheadTests {
     petclinic.execInContainer(command);
   }
 
-  private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> petclinic) throws IOException, InterruptedException {
-    System.out.println("Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
+  private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> petclinic)
+      throws IOException, InterruptedException {
+    System.out.println(
+        "Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
 
     // excluding the JFR recording from the warmup causes strange inconsistencies in the results
     System.out.println("Starting disposable JFR warmup recording...");
-    String[] startCommand = {"jcmd", "1", "JFR.start", "settings=/app/overhead.jfc", "dumponexit=true", "name=warmup", "filename=warmup.jfr"};
+    String[] startCommand = {
+      "jcmd",
+      "1",
+      "JFR.start",
+      "settings=/app/overhead.jfc",
+      "dumponexit=true",
+      "name=warmup",
+      "filename=warmup.jfr"
+    };
     petclinic.execInContainer(startCommand);
 
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(testConfig.getWarmupSeconds());
-    while(System.currentTimeMillis() < deadline) {
+    long deadline =
+        System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(testConfig.getWarmupSeconds());
+    while (System.currentTimeMillis() < deadline) {
       GenericContainer<?> k6 =
-          new GenericContainer<>(DockerImageName.parse("loadimpact/k6"))
+          new GenericContainer<>(DockerImageName.parse("grafana/k6"))
               .withNetwork(NETWORK)
               .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
               .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
-              .withStartupCheckStrategy(new OneShotStartupCheckStrategy());
+              .withStartupCheckStrategy(new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)));
       k6.start();
     }
 
@@ -151,7 +163,7 @@ public class OverheadTests {
 
   private void writeStartupTimeFile(Agent agent, long start) throws IOException {
     long delta = System.currentTimeMillis() - start;
-    Path startupPath = namingConventions.local.startupDurationFile(agent);
+    Path startupPath = Path.of(namingConventions.local.startupDurationFile(agent));
     Files.writeString(startupPath, String.valueOf(delta));
   }
 }

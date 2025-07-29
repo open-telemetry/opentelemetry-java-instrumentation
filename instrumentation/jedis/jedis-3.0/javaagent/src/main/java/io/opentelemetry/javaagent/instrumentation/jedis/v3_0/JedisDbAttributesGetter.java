@@ -6,16 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
-final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest> {
+final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(JedisRequest request) {
-    return SemanticAttributes.DbSystemValues.REDIS;
+  public String getDbSystem(JedisRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(JedisRequest request) {
@@ -23,22 +25,23 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
   }
 
   @Override
-  public String getName(JedisRequest request) {
+  public String getDbNamespace(JedisRequest request) {
     return null;
   }
 
+  @Deprecated
   @Override
   public String getConnectionString(JedisRequest request) {
     return null;
   }
 
   @Override
-  public String getStatement(JedisRequest request) {
+  public String getDbQueryText(JedisRequest request) {
     return request.getStatement();
   }
 
   @Override
-  public String getOperation(JedisRequest request) {
+  public String getDbOperationName(JedisRequest request) {
     return request.getOperation();
   }
 }

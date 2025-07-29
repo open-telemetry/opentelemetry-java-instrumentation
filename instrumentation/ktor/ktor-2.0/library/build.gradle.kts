@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
 plugins {
   id("otel.library-instrumentation")
@@ -12,7 +13,7 @@ dependencies {
   library("io.ktor:ktor-client-core:$ktorVersion")
   library("io.ktor:ktor-server-core:$ktorVersion")
 
-  implementation(project(":instrumentation:ktor:ktor-common:library"))
+  api(project(":instrumentation:ktor:ktor-2-common:library"))
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
 
   compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -22,18 +23,17 @@ dependencies {
 
   testLibrary("io.ktor:ktor-server-netty:$ktorVersion")
   testLibrary("io.ktor:ktor-client-cio:$ktorVersion")
+
+  latestDepTestLibrary("io.ktor:ktor-client-core:2.+") // see ktor-3.0 module
+  latestDepTestLibrary("io.ktor:ktor-server-core:2.+") // see ktor-3.0 module
+  latestDepTestLibrary("io.ktor:ktor-server-netty:2.+") // see ktor-3.0 module
+  latestDepTestLibrary("io.ktor:ktor-client-cio:2.+") // see ktor-3.0 module
 }
 
-tasks {
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
-    }
-  }
-
-  compileKotlin {
-    kotlinOptions {
-      languageVersion = "1.6"
-    }
+kotlin {
+  compilerOptions {
+    jvmTarget.set(JvmTarget.JVM_1_8)
+    @Suppress("deprecation")
+    languageVersion.set(KotlinVersion.KOTLIN_1_8)
   }
 }

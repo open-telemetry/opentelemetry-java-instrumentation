@@ -52,5 +52,6 @@ public class JoddHttpTest extends AbstractHttpClientTest<HttpRequest> {
     optionsBuilder.disableTestCallback();
     // Circular Redirects are not explicitly handled by jodd-http
     optionsBuilder.disableTestCircularRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 }

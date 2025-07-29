@@ -9,30 +9,22 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResendCount;
 import java.io.IOException;
-import javax.annotation.Nullable;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
-import org.apache.http.ProtocolException;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpExecutionAware;
 import org.apache.http.client.methods.HttpRequestWrapper;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.impl.client.DefaultRedirectStrategy;
-import org.apache.http.impl.client.RedirectLocations;
 import org.apache.http.impl.execchain.ClientExecChain;
 
 final class TracingProtocolExec implements ClientExecChain {
 
-  private static final String REQUEST_CONTEXT_ATTRIBUTE_ID =
+  private static final String REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID =
       TracingProtocolExec.class.getName() + ".context";
-  private static final String REQUEST_WRAPPER_ATTRIBUTE_ID =
-      TracingProtocolExec.class.getName() + ".requestWrapper";
-  private static final String REDIRECT_COUNT_ATTRIBUTE_ID =
-      TracingProtocolExec.class.getName() + ".redirectCount";
 
   private final Instrumenter<ApacheHttpClientRequest, HttpResponse> instrumenter;
   private final ContextPropagators propagators;
@@ -54,14 +46,12 @@ final class TracingProtocolExec implements ClientExecChain {
       HttpClientContext httpContext,
       HttpExecutionAware httpExecutionAware)
       throws IOException, HttpException {
-    Context context = httpContext.getAttribute(REQUEST_CONTEXT_ATTRIBUTE_ID, Context.class);
-    if (context != null) {
-      ApacheHttpClientRequest instrumenterRequest =
-          httpContext.getAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, ApacheHttpClientRequest.class);
-      // Request already had a context so a redirect. Don't create a new span just inject and
-      // execute.
-      propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
-      return execute(route, request, instrumenterRequest, httpContext, httpExecutionAware, context);
+
+    Context parentContext =
+        httpContext.getAttribute(REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID, Context.class);
+    if (parentContext == null) {
+      parentContext = HttpClientRequestResendCount.initialize(Context.current());
+      httpContext.setAttribute(REQUEST_PARENT_CONTEXT_ATTRIBUTE_ID, parentContext);
     }
 
     HttpHost host = null;
@@ -81,16 +71,11 @@ final class TracingProtocolExec implements ClientExecChain {
     }
     ApacheHttpClientRequest instrumenterRequest = new ApacheHttpClientRequest(host, request);
 
-    Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, instrumenterRequest)) {
       return exec.execute(route, request, httpContext, httpExecutionAware);
     }
 
-    context = instrumenter.start(parentContext, instrumenterRequest);
-    httpContext.setAttribute(REQUEST_CONTEXT_ATTRIBUTE_ID, context);
-    httpContext.setAttribute(REQUEST_WRAPPER_ATTRIBUTE_ID, instrumenterRequest);
-    httpContext.setAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, 0);
-
+    Context context = instrumenter.start(parentContext, instrumenterRequest);
     propagators.getTextMapPropagator().inject(context, request, HttpHeaderSetter.INSTANCE);
 
     return execute(route, request, instrumenterRequest, httpContext, httpExecutionAware, context);
@@ -104,72 +89,14 @@ final class TracingProtocolExec implements ClientExecChain {
       HttpExecutionAware httpExecutionAware,
       Context context)
       throws IOException, HttpException {
-    CloseableHttpResponse response = null;
-    Throwable error = null;
+    CloseableHttpResponse response;
     try (Scope ignored = context.makeCurrent()) {
       response = exec.execute(route, request, httpContext, httpExecutionAware);
-      return response;
-    } catch (Throwable e) {
-      error = e;
-      throw e;
-    } finally {
-      if (!pendingRedirect(context, httpContext, request, instrumenterRequest, response)) {
-        instrumenter.end(context, instrumenterRequest, response, error);
-      }
+    } catch (Throwable t) {
+      instrumenter.end(context, instrumenterRequest, null, t);
+      throw t;
     }
-  }
-
-  private boolean pendingRedirect(
-      Context context,
-      HttpClientContext httpContext,
-      HttpRequestWrapper request,
-      ApacheHttpClientRequest instrumenterRequest,
-      @Nullable CloseableHttpResponse response) {
-    if (response == null) {
-      return false;
-    }
-    if (!httpContext.getRequestConfig().isRedirectsEnabled()) {
-      return false;
-    }
-
-    // TODO(anuraaga): Support redirect strategies other than the default. There is no way to get
-    // the user defined redirect strategy without some tricks, but it's very rare to override
-    // the strategy, usually it is either on or off as checked above. We can add support for this
-    // later if needed.
-    try {
-      if (!DefaultRedirectStrategy.INSTANCE.isRedirected(request, response, httpContext)) {
-        return false;
-      }
-    } catch (ProtocolException e) {
-      // DefaultRedirectStrategy.isRedirected cannot throw this so just return a default.
-      return false;
-    }
-
-    // Very hacky and a bit slow, but the only way to determine whether the client will fail with
-    // a circular redirect, which happens before exec decorators run.
-    RedirectLocations redirectLocations =
-        (RedirectLocations) httpContext.getAttribute(HttpClientContext.REDIRECT_LOCATIONS);
-    if (redirectLocations != null) {
-      RedirectLocations copy = new RedirectLocations();
-      copy.addAll(redirectLocations);
-
-      try {
-        DefaultRedirectStrategy.INSTANCE.getLocationURI(request, response, httpContext);
-      } catch (ProtocolException e) {
-        // We will not be returning to the Exec, finish the span.
-        instrumenter.end(context, instrumenterRequest, response, new ClientProtocolException(e));
-        return true;
-      } finally {
-        httpContext.setAttribute(HttpClientContext.REDIRECT_LOCATIONS, copy);
-      }
-    }
-
-    int redirectCount = httpContext.getAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, Integer.class);
-    if (++redirectCount > httpContext.getRequestConfig().getMaxRedirects()) {
-      return false;
-    }
-
-    httpContext.setAttribute(REDIRECT_COUNT_ATTRIBUTE_ID, redirectCount);
-    return true;
+    instrumenter.end(context, instrumenterRequest, response, null);
+    return response;
   }
 }

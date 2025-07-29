@@ -27,4 +27,9 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
   protected List<Class<?>> additionalSpringConfigs() {
     return emptyList();
   }
+
+  @Override
+  protected boolean isLibraryInstrumentationTest() {
+    return false;
+  }
 }

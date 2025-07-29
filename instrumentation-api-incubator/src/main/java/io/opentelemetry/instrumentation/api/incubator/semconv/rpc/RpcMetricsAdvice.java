@@ -5,12 +5,18 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
-import io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.ServerAttributes;
 import java.util.Arrays;
 
 final class RpcMetricsAdvice {
+
+  // copied from RpcIncubatingAttributes
+  private static final AttributeKey<Long> RPC_GRPC_STATUS_CODE =
+      AttributeKey.longKey("rpc.grpc.status_code");
 
   static void applyClientDurationAdvice(DoubleHistogramBuilder builder) {
     if (!(builder instanceof ExtendedDoubleHistogramBuilder)) {
@@ -21,14 +27,14 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             Arrays.asList(
-                SemanticAttributes.RPC_SYSTEM,
-                SemanticAttributes.RPC_SERVICE,
-                SemanticAttributes.RPC_METHOD,
-                SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                SemanticAttributes.NETWORK_TYPE,
-                SemanticAttributes.NETWORK_TRANSPORT,
-                SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT));
+                RpcCommonAttributesExtractor.RPC_SYSTEM,
+                RpcCommonAttributesExtractor.RPC_SERVICE,
+                RpcCommonAttributesExtractor.RPC_METHOD,
+                RPC_GRPC_STATUS_CODE,
+                NetworkAttributes.NETWORK_TYPE,
+                NetworkAttributes.NETWORK_TRANSPORT,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
   }
 
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
@@ -40,14 +46,14 @@ final class RpcMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             Arrays.asList(
-                SemanticAttributes.RPC_SYSTEM,
-                SemanticAttributes.RPC_SERVICE,
-                SemanticAttributes.RPC_METHOD,
-                SemanticAttributes.RPC_GRPC_STATUS_CODE,
-                SemanticAttributes.NETWORK_TYPE,
-                SemanticAttributes.NETWORK_TRANSPORT,
-                SemanticAttributes.SERVER_ADDRESS,
-                SemanticAttributes.SERVER_PORT));
+                RpcCommonAttributesExtractor.RPC_SYSTEM,
+                RpcCommonAttributesExtractor.RPC_SERVICE,
+                RpcCommonAttributesExtractor.RPC_METHOD,
+                RPC_GRPC_STATUS_CODE,
+                NetworkAttributes.NETWORK_TYPE,
+                NetworkAttributes.NETWORK_TRANSPORT,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
   }
 
   private RpcMetricsAdvice() {}

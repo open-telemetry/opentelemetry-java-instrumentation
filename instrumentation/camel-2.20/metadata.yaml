@@ -1,0 +1,9 @@
+description: >
+  This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for
+  each route execution. For Camel versions 3.5 and newer, users should instead use the native
+  'camel-opentelemetry' component provided directly by the Camel project.
+configurations:
+  - name: otel.instrumentation.camel.experimental-span-attributes
+    description: Enable the capture of experimental span attributes.
+    type: boolean
+    default: false

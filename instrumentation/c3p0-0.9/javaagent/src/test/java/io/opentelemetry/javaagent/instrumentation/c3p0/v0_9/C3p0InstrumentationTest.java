@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
+class C3p0InstrumentationTest extends AbstractC3p0InstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

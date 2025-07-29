@@ -10,11 +10,11 @@ plugins {
   into a single jar.
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
-  id "com.github.johnrengelman.shadow" version "8.1.1"
-  id "com.diffplug.spotless" version "6.24.0"
+  id "com.gradleup.shadow" version "8.3.8"
+  id "com.diffplug.spotless" version "7.2.1"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.1.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "2.1.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.19.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "2.19.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -23,13 +23,11 @@ version '1.0'
 ext {
   versions = [
     // this line is managed by .github/scripts/update-sdk-version.sh
-    opentelemetrySdk           : "1.34.1",
+    opentelemetrySdk           : "1.52.0",
 
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "2.1.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "2.1.0-alpha-SNAPSHOT",
-
-    junit                      : "5.10.1"
+    opentelemetryJavaagent     : "2.19.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "2.19.0-alpha-SNAPSHOT"
   ]
 
   deps = [
@@ -41,7 +39,7 @@ repositories {
   mavenCentral()
   maven {
     name = "sonatype"
-    url = uri("https://oss.sonatype.org/content/repositories/snapshots")
+    url = uri("https://central.sonatype.com/repository/maven-snapshots/")
   }
 }
 
@@ -96,19 +94,22 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation 'org.apache.commons:commons-lang3:3.14.0'
+  implementation 'org.apache.commons:commons-lang3:3.18.0'
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:1.19.3")
-  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.16.1")
-  testImplementation("com.google.protobuf:protobuf-java-util:3.25.2")
-  testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
+  testImplementation("org.testcontainers:testcontainers:1.21.3")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind:2.19.2")
+  testImplementation("com.google.protobuf:protobuf-java-util:4.31.1")
+  testImplementation("com.squareup.okhttp3:okhttp:5.1.0")
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.0.0-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.7.0-alpha")
 
-  testImplementation("org.junit.jupiter:junit-jupiter-api:${versions.junit}")
-  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${versions.junit}")
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.4.14")
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
+  testImplementation("org.junit.jupiter:junit-jupiter-api")
+  testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.18")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")

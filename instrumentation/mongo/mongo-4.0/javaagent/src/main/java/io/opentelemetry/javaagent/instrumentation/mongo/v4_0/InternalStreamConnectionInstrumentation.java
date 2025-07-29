@@ -26,21 +26,42 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
 
   @Override
   public void transform(TypeTransformer transformer) {
+    // before 5.2.0
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("openAsync"))
             .and(takesArgument(0, named("com.mongodb.internal.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg0Advice");
+    // since 5.2.0
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("openAsync"))
+            .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
+        this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+    // before 5.2.0
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("readAsync"))
             .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+    // since 5.2.0
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("readAsync"))
+            .and(takesArgument(2, named("com.mongodb.internal.async.SingleResultCallback"))),
+        this.getClass().getName() + "$SingleResultCallbackArg2Advice");
+    // removed in 5.2.0
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("writeAsync"))
             .and(takesArgument(1, named("com.mongodb.internal.async.SingleResultCallback"))),
         this.getClass().getName() + "$SingleResultCallbackArg1Advice");
+    // since 5.2.0, earlier versions instrument writeAsync instead
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("sendMessageAsync"))
+            .and(takesArgument(3, named("com.mongodb.internal.async.SingleResultCallback"))),
+        this.getClass().getName() + "$SingleResultCallbackArg3Advice");
   }
 
   @SuppressWarnings("unused")
@@ -59,6 +80,26 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapCallback(
         @Advice.Argument(value = 1, readOnly = false) SingleResultCallback<Object> callback) {
+      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SingleResultCallbackArg2Advice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapCallback(
+        @Advice.Argument(value = 2, readOnly = false) SingleResultCallback<Object> callback) {
+      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SingleResultCallbackArg3Advice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapCallback(
+        @Advice.Argument(value = 3, readOnly = false) SingleResultCallback<Object> callback) {
       callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }

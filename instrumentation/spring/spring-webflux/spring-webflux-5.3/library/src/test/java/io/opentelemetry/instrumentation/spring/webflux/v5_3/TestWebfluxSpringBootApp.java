@@ -52,12 +52,11 @@ class TestWebfluxSpringBootApp {
 
   @Bean
   WebFilter telemetryFilter() {
-    return SpringWebfluxTelemetry.builder(GlobalOpenTelemetry.get())
-        .setCapturedServerRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
-        .setCapturedServerResponseHeaders(
-            singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
+    return SpringWebfluxServerTelemetry.builder(GlobalOpenTelemetry.get())
+        .setCapturedRequestHeaders(singletonList(AbstractHttpServerTest.TEST_REQUEST_HEADER))
+        .setCapturedResponseHeaders(singletonList(AbstractHttpServerTest.TEST_RESPONSE_HEADER))
         .build()
-        .createWebFilter();
+        .createWebFilterAndRegisterReactorHook();
   }
 
   @Controller
@@ -67,6 +66,12 @@ class TestWebfluxSpringBootApp {
     @ResponseBody
     Flux<String> success() {
       return Flux.defer(() -> Flux.just(controller(SUCCESS, SUCCESS::getBody)));
+    }
+
+    @RequestMapping("/no-mono")
+    @ResponseBody
+    String noMono() {
+      return controller(SUCCESS, SUCCESS::getBody);
     }
 
     @RequestMapping("/query")
@@ -92,12 +97,12 @@ class TestWebfluxSpringBootApp {
     }
 
     @RequestMapping("/exception")
-    Flux<ResponseEntity<String>> exception() throws Exception {
+    Flux<ResponseEntity<String>> exception() {
       return Flux.just(
           controller(
               EXCEPTION,
               () -> {
-                throw new RuntimeException(EXCEPTION.getBody());
+                throw new IllegalStateException(EXCEPTION.getBody());
               }));
     }
 

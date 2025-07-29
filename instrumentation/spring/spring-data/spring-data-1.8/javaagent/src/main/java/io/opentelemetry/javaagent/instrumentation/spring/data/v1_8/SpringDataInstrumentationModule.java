@@ -89,10 +89,19 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
   }
 
   static final class RepositoryInterceptor implements MethodInterceptor {
+    private static final Class<?> MONO_CLASS = loadClass("reactor.core.publisher.Mono");
     private final Class<?> repositoryInterface;
 
     RepositoryInterceptor(Class<?> repositoryInterface) {
       this.repositoryInterface = repositoryInterface;
+    }
+
+    private static Class<?> loadClass(String name) {
+      try {
+        return Class.forName(name);
+      } catch (ClassNotFoundException exception) {
+        return null;
+      }
     }
 
     @Override
@@ -100,7 +109,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       Context parentContext = currentContext();
       Method method = methodInvocation.getMethod();
       // Since this interceptor is the outermost interceptor, non-Repository methods
-      // including Object methods will also flow through here.  Don't create spans for those.
+      // including Object methods will also flow through here. Don't create spans for those.
       boolean isRepositoryOp = !Object.class.equals(method.getDeclaringClass());
       ClassAndMethod classAndMethod = ClassAndMethod.create(repositoryInterface, method.getName());
       if (!isRepositoryOp || !instrumenter().shouldStart(parentContext, classAndMethod)) {
@@ -108,14 +117,23 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
       }
 
       Context context = instrumenter().start(parentContext, classAndMethod);
+
+      Object result;
       try (Scope ignored = context.makeCurrent()) {
-        Object result = methodInvocation.proceed();
-        return AsyncOperationEndSupport.create(instrumenter(), Void.class, method.getReturnType())
-            .asyncEnd(context, classAndMethod, result, null);
+        result = methodInvocation.proceed();
       } catch (Throwable t) {
         instrumenter().end(context, classAndMethod, null, t);
         throw t;
       }
+      Class<?> type = method.getReturnType();
+      // the return type for
+      // org.springframework.data.repository.kotlin.CoroutineCrudRepository#findById
+      // is Object but the method may actually return a Mono
+      if (Object.class == type && MONO_CLASS != null && MONO_CLASS.isInstance(result)) {
+        type = MONO_CLASS;
+      }
+      return AsyncOperationEndSupport.create(instrumenter(), Void.class, type)
+          .asyncEnd(context, classAndMethod, result, null);
     }
   }
 }

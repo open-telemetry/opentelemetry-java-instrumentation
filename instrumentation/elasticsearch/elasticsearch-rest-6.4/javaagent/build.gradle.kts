@@ -20,7 +20,7 @@ muzzle {
 dependencies {
   library("org.elasticsearch.client:elasticsearch-rest-client:6.4.0")
 
-  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common:javaagent"))
+  implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent"))
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
@@ -38,5 +38,8 @@ dependencies {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
   }
 }

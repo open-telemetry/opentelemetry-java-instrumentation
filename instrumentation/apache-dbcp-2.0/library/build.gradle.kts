@@ -8,3 +8,13 @@ dependencies {
 
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

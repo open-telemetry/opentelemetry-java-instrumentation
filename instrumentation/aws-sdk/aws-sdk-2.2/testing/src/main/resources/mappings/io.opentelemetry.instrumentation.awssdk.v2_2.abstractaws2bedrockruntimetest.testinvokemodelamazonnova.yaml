@@ -1,0 +1,42 @@
+---
+id: 79b936f7-d7d1-437c-b41b-dc668fb0889f
+name: model_amazonnova-micro-v10_invoke
+request:
+  url: /model/amazon.nova-micro-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "Say this is a test"
+          } ]
+        } ],
+        "inferenceConfig" : {
+          "max_new_tokens" : 10,
+          "temperature" : 0.8,
+          "topP" : 1,
+          "stopSequences" : [ "|" ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"output\":{\"message\":{\"content\":[{\"text\":\"It sounds like you're\
+    \ initiating a test or\"}],\"role\":\"assistant\"}},\"stopReason\":\"max_tokens\"\
+    ,\"usage\":{\"inputTokens\":5,\"outputTokens\":10,\"totalTokens\":15,\"cacheReadInputTokenCount\"\
+    :0,\"cacheWriteInputTokenCount\":0}}"
+  headers:
+    Date: "Wed, 19 Mar 2025 09:37:59 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 5ef973ac-8020-4796-82ca-99e8e960a221
+    X-Amzn-Bedrock-Invocation-Latency: "174"
+    X-Amzn-Bedrock-Cache-Write-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Cache-Read-Input-Token-Count: "0"
+    X-Amzn-Bedrock-Output-Token-Count: "10"
+    X-Amzn-Bedrock-Input-Token-Count: "5"
+uuid: 79b936f7-d7d1-437c-b41b-dc668fb0889f
+persistent: true
+insertionIndex: 24

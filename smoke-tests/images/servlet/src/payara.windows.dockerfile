@@ -1,7 +1,7 @@
 ARG jdkImage
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022 as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:3281482945016cdaefbe417edd8338de8119e077b6941f74e78b050da1b7bd97 as builder
 ARG version
 
 ADD https://nexus.payara.fish/repository/payara-community/fish/payara/distributions/payara/${version}/payara-${version}.zip /server.zip

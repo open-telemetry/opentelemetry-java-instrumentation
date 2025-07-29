@@ -1,0 +1,4 @@
+description: >
+  This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex
+  Context to extract the HTTP route and attach it to existing SERVER spans and HTTP server
+  metrics.

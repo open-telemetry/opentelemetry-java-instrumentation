@@ -5,13 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v5_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
@@ -20,12 +28,12 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 class ElasticsearchRest5Test {
 
   @RegisterExtension
@@ -81,37 +89,32 @@ class ElasticsearchRest5Test {
     Map result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
 
     // usually this test reports green status, but sometimes it is yellow
-    Assertions.assertTrue(
-        "green".equals(result.get("status")) || "yellow".equals(result.get("status")));
+    assertThat(result.get("status")).isIn("green", "yellow");
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasNoParent()
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(
-                            SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
-              },
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200))));
   }
 
   @Test
@@ -144,10 +147,7 @@ class ElasticsearchRest5Test {
         };
 
     testing.runWithSpan(
-        "parent",
-        () -> {
-          client.performRequestAsync("GET", "_cluster/health", responseListener);
-        });
+        "parent", () -> client.performRequestAsync("GET", "_cluster/health", responseListener));
     countDownLatch.await();
     if (exception[0] != null) {
       throw exception[0];
@@ -155,42 +155,36 @@ class ElasticsearchRest5Test {
     Map result = objectMapper.readValue(requestResponse[0].getEntity().getContent(), Map.class);
 
     // usually this test reports green status, but sometimes it is yellow
-    Assertions.assertTrue(
-        "green".equals(result.get("status")) || "yellow".equals(result.get("status")));
+    assertThat(result.get("status")).isIn("green", "yellow");
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> {
-                span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent();
-              },
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.DB_SYSTEM, "elasticsearch"),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(
-                            SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"));
-              },
-              span -> {
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SemanticAttributes.SERVER_ADDRESS, httpHost.getHostName()),
-                        equalTo(SemanticAttributes.SERVER_PORT, httpHost.getPort()),
-                        equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(SemanticAttributes.URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                        equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200));
-              },
-              span -> {
-                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0));
-              });
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }

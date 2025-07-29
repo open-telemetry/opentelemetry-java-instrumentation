@@ -1,0 +1,107 @@
+name: Auto update pull request
+on:
+  workflow_run:
+    workflows:
+      - "Auto spotless"
+      - "Auto license report"
+    types:
+      - completed
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Download patch
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          run-id: ${{ github.event.workflow_run.id }}
+          path: ${{ runner.temp }}
+          merge-multiple: true
+          github-token: ${{ github.token }}
+
+      - id: unzip-patch
+        name: Unzip patch
+        working-directory: ${{ runner.temp }}
+        run: |
+          if [ -f patch ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        if: steps.unzip-patch.outputs.exists == 'true'
+        id: otelbot-token
+        with:
+          app-id: 1295839
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        if: steps.unzip-patch.outputs.exists == 'true'
+        with:
+          repository: "${{ github.event.workflow_run.head_repository.full_name }}"
+          ref: "${{ github.event.workflow_run.head_branch }}"
+          token: ${{ steps.otelbot-token.outputs.token }}
+
+      - name: Use CLA approved github bot
+        if: steps.unzip-patch.outputs.exists == 'true'
+        # IMPORTANT do not call the .github/scripts/use-cla-approved-bot.sh
+        # since that script could have been compromised in the PR branch
+        run: |
+          git config user.name otelbot
+          git config user.email 197425009+otelbot@users.noreply.github.com
+
+      - id: gradle-task
+        if: steps.unzip-patch.outputs.exists == 'true'
+        run: |
+          if [[ "${{ github.event.workflow_run.name }}" == "Auto spotless" ]]; then
+            echo "name=spotlessApply" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.event.workflow_run.name }}" == "Auto license report" ]]; then
+            echo "name=generateLicenseReport" >> $GITHUB_OUTPUT
+          else
+            echo "name=unknown" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Apply patch and push
+        if: steps.unzip-patch.outputs.exists == 'true'
+        run: |
+          git apply "${{ runner.temp }}/patch"
+          git add licenses
+          git commit -a -m "./gradlew ${{ steps.gradle-task.outputs.name }}"
+          git push
+
+      - id: get-pr
+        if: steps.unzip-patch.outputs.exists == 'true'
+        name: Get PR
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ github.token }}
+          PR_BRANCH: |-
+            ${{
+              (github.event.workflow_run.head_repository.owner.login != github.event.workflow_run.repository.owner.login)
+                && format('{0}:{1}', github.event.workflow_run.head_repository.owner.login, github.event.workflow_run.head_branch)
+                || github.event.workflow_run.head_branch
+            }}
+        run: |
+          number=$(gh pr view "$PR_BRANCH" --json number --jq .number)
+          echo "number=$number" >> $GITHUB_OUTPUT
+
+      - if: steps.unzip-patch.outputs.exists == 'true' && success()
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          PR_NUMBER: ${{ steps.get-pr.outputs.number }}
+        run: |
+          gh pr comment $PR_NUMBER --body "🔧 The result from ${{ steps.gradle-task.outputs.name }} was committed to the PR branch."
+
+      - if: steps.unzip-patch.outputs.exists == 'true' && failure()
+        env:
+          GH_REPO: ${{ github.repository }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          PR_NUMBER: ${{ steps.get-pr.outputs.number }}
+        run: |
+          gh pr comment $PR_NUMBER --body "❌ The result from ${{ steps.gradle-task.outputs.name }} could not be committed to the PR branch, see logs: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID."

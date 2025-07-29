@@ -24,6 +24,14 @@ import javax.servlet.http.HttpServletResponse;
 public final class Servlet3Singletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-3.0";
 
+  public static final VirtualField<Servlet, MappingResolver.Factory>
+      SERVLET_MAPPING_RESOLVER_FACTORY =
+          VirtualField.find(Servlet.class, MappingResolver.Factory.class);
+
+  public static final VirtualField<Filter, MappingResolver.Factory>
+      FILTER_MAPPING_RESOLVER_FACTORY =
+          VirtualField.find(Filter.class, MappingResolver.Factory.class);
+
   private static final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       INSTRUMENTER =

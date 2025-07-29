@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.code;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import org.junit.jupiter.api.Test;
@@ -23,8 +23,8 @@ class CodeSpanNameExtractorTest {
     // given
     Object request = new Object();
 
-    doReturn(TestClass.class).when(getter).getCodeClass(request);
-    doReturn("doSomething").when(getter).getMethodName(request);
+    when(getter.getCodeClass(request)).thenAnswer(invocation -> TestClass.class);
+    when(getter.getMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -41,8 +41,8 @@ class CodeSpanNameExtractorTest {
     AnonymousBaseClass anon = new AnonymousBaseClass() {};
     Object request = new Object();
 
-    doReturn(anon.getClass()).when(getter).getCodeClass(request);
-    doReturn("doSomething").when(getter).getMethodName(request);
+    when(getter.getCodeClass(request)).thenAnswer(invocation -> anon.getClass());
+    when(getter.getMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 
@@ -59,8 +59,8 @@ class CodeSpanNameExtractorTest {
     Runnable lambda = () -> {};
     Object request = new Object();
 
-    doReturn(lambda.getClass()).when(getter).getCodeClass(request);
-    doReturn("doSomething").when(getter).getMethodName(request);
+    when(getter.getCodeClass(request)).thenAnswer(invocation -> lambda.getClass());
+    when(getter.getMethodName(request)).thenReturn("doSomething");
 
     SpanNameExtractor<Object> underTest = CodeSpanNameExtractor.create(getter);
 

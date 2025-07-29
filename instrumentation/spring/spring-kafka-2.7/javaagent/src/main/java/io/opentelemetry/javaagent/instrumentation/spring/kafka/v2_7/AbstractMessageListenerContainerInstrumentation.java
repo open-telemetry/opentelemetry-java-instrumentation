@@ -14,9 +14,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
 
 public class AbstractMessageListenerContainerInstrumentation implements TypeInstrumentation {
@@ -28,16 +28,11 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // getBatchInterceptor() is called internally by AbstractMessageListenerContainer
-    // implementations
-    transformer.applyAdviceToMethod(
-        named("getBatchInterceptor")
-            .and(isProtected())
-            .and(takesArguments(0))
-            .and(returns(named("org.springframework.kafka.listener.BatchInterceptor"))),
-        this.getClass().getName() + "$GetBatchInterceptorAdvice");
     // getRecordInterceptor() is called internally by AbstractMessageListenerContainer
     // implementations
+    // for batch listeners we don't instrument getBatchInterceptor() here but instead instrument
+    // KafkaMessageListenerContainer$ListenerConsumer because spring doesn't always call the success
+    // and failure methods on a batch interceptor
     transformer.applyAdviceToMethod(
         named("getRecordInterceptor")
             .and(isProtected())
@@ -47,29 +42,13 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
   }
 
   @SuppressWarnings("unused")
-  public static class GetBatchInterceptorAdvice {
-
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void onExit(
-        @Advice.Return(readOnly = false) BatchInterceptor<K, V> interceptor) {
-
-      if (interceptor == null
-          || !interceptor
-              .getClass()
-              .getName()
-              .equals(
-                  "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedBatchInterceptor")) {
-        interceptor = telemetry().createBatchInterceptor(interceptor);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
   public static class GetRecordInterceptorAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void onExit(
-        @Advice.Return(readOnly = false) RecordInterceptor<K, V> interceptor) {
+    public static <K, V> RecordInterceptor<K, V> onExit(
+        @Advice.Return RecordInterceptor<K, V> originalInterceptor) {
+      RecordInterceptor<K, V> interceptor = originalInterceptor;
 
       if (interceptor == null
           || !interceptor
@@ -79,6 +58,7 @@ public class AbstractMessageListenerContainerInstrumentation implements TypeInst
                   "io.opentelemetry.instrumentation.spring.kafka.v2_7.InstrumentedRecordInterceptor")) {
         interceptor = telemetry().createRecordInterceptor(interceptor);
       }
+      return interceptor;
     }
   }
 }

@@ -21,6 +21,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
@@ -35,7 +36,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
@@ -153,7 +153,7 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     span.hasName(getHandlerSpanName(endpoint)).hasKind(SpanKind.INTERNAL);
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasException(new Exception(EXCEPTION.getBody()));
+      span.hasException(new IllegalStateException(EXCEPTION.getBody()));
     }
     return span;
   }
@@ -161,12 +161,19 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
   @Override
   public SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    String methodName;
     if (endpoint == REDIRECT) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
+      methodName = "sendRedirect";
+    } else if (endpoint == ERROR || endpoint == NOT_FOUND) {
+      methodName = "sendError";
     } else {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
+      throw new AssertionError("Unexpected endpoint: " + endpoint.name());
     }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
+
+    span.hasKind(SpanKind.INTERNAL)
+        .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
+        .hasAttributesSatisfyingExactly(
+            SemconvCodeStabilityUtil.codeFunctionSuffixAssertions(methodName));
     return span;
   }
 
@@ -179,14 +186,14 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
             span.hasName(
                     endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index")
                 .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfying(Attributes::isEmpty));
+                .hasAttributes(Attributes.empty()));
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
           span ->
-              span.satisfies(
-                      spanData -> Assertions.assertThat(spanData.getName()).endsWith(".sendError"))
+              span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
                   .hasKind(SpanKind.INTERNAL)
-                  .hasAttributesSatisfying(Attributes::isEmpty));
+                  .hasAttributesSatisfyingExactly(
+                      SemconvCodeStabilityUtil.codeFunctionSuffixAssertions("sendError")));
     }
     return spanAssertions;
   }

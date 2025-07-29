@@ -5,12 +5,12 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "2.7.18"
+  id("org.springframework.boot") version "2.6.15"
 }
 
 dependencies {
   implementation(platform("io.opentelemetry:opentelemetry-bom:1.0.0"))
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.7.18"))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.6.15"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation(project(":instrumentation-annotations"))
@@ -20,7 +20,7 @@ dependencies {
 configurations.runtimeClasspath {
   resolutionStrategy {
     // requires old logback (and therefore also old slf4j)
-    force("ch.qos.logback:logback-classic:1.2.11")
+    force("ch.qos.logback:logback-classic:1.2.13")
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
@@ -42,9 +42,11 @@ springBoot {
   }
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "openjdk:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
   container.ports = listOf("8080")
 }
 

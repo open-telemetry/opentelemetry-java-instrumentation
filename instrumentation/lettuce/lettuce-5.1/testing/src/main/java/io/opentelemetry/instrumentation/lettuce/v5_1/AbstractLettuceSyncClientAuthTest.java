@@ -5,25 +5,36 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceClientTest {
 
   @BeforeAll
-  void setUp() {
+  void setUp() throws UnknownHostException {
     redisServer = redisServer.withCommand("redis-server", "--requirepass password");
     redisServer.start();
 
     host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -55,23 +66,80 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
 
     assertThat(result).isEqualTo("OK");
 
-    getInstrumentationExtension()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("AUTH")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "AUTH ?"))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+    if (Boolean.getBoolean("testLatestDeps")) {
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(
+                                          maybeStable(DB_STATEMENT),
+                                          "CLIENT SETINFO lib-name Lettuce")))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      satisfies(
+                                          maybeStable(DB_STATEMENT),
+                                          stringAssert ->
+                                              stringAssert.startsWith("CLIENT SETINFO lib-ver"))))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("AUTH")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
+                              .hasEventsSatisfyingExactly(
+                                  event -> event.hasName("redis.encode.start"),
+                                  event -> event.hasName("redis.encode.end"))));
+
+    } else {
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("AUTH")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
+                              .hasEventsSatisfyingExactly(
+                                  event -> event.hasName("redis.encode.start"),
+                                  event -> event.hasName("redis.encode.end"))));
+    }
   }
 }

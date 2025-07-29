@@ -1,0 +1,21 @@
+Comparing source compatibility of opentelemetry-instrumentation-api-2.12.0.jar against opentelemetry-instrumentation-api-2.11.0.jar
+***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder<REQUEST,RESPONSE> setKnownMethods(java.util.Collection<java.lang.String>)
+***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedRequestHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> setCapturedResponseHeaders(java.util.Collection<java.lang.String>)
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder<REQUEST,RESPONSE> setKnownMethods(java.util.Collection<java.lang.String>)
+***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder<REQUEST> setKnownMethods(java.util.Collection<java.lang.String>)
+***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder<REQUEST> setKnownMethods(java.util.Collection<java.lang.String>)

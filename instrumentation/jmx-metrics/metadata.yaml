@@ -1,0 +1,6 @@
+classification: custom
+description: >
+  Collects and reports metrics exposed through Java Management Extensions (JMX). It can be
+  configured to extract JVM and application-level telemetry data from JMX MBeans such as memory
+  usage, thread counts, and garbage collection statistics, and translate these measurements into
+  OpenTelemetry metrics.

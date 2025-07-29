@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
-import static io.opentelemetry.semconv.SemanticAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_CLIENT_GROUP;
 
 import apache.rocketmq.v2.ReceiveMessageRequest;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -23,6 +23,7 @@ enum RocketMqConsumerReceiveAttributeExtractor
   public void onStart(
       AttributesBuilder attributes, Context parentContext, ReceiveMessageRequest request) {}
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onEnd(
       AttributesBuilder attributes,

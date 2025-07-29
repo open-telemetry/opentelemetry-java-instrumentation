@@ -50,7 +50,7 @@ public final class JettyClientWrapUtil {
 
   private static Response.ResponseListener wrapTheListener(
       Response.ResponseListener listener, Context context) {
-    if (listener == null || listener instanceof JettyHttpClient9TracingInterceptor) {
+    if (listener == null || listener instanceof JettyClientTracingListener) {
       return listener;
     }
 

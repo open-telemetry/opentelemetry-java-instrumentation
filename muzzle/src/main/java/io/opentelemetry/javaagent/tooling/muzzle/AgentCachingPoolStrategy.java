@@ -9,7 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -53,7 +53,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // others to avoid creation of synthetic accessors
 
   private static final boolean REFLECTION_ENABLED =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.internal-reflection.enabled", true);
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
@@ -355,7 +355,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     void enterLoadAnnotations() {
-      loadingAnnotations.set(Boolean.TRUE);
+      loadingAnnotations.set(true);
     }
 
     void exitLoadAnnotations() {
@@ -381,7 +381,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         // Like jdk, byte-buddy getDeclaredAnnotations does not report annotations whose class is
         // missing. To do this it needs to locate the bytes for annotation types used in class.
         // Which means that if we have a matcher that matches methods annotated with @Foo byte-buddy
-        // will end up location bytes for all annotations used on any method in the classes that
+        // will end up locating bytes for all annotations used on any method in the classes that
         // this matcher is applied to. From our perspective this is unreasonable, we just want to
         // match based on annotation name with as little overhead as possible. As we match only
         // based on annotation name we never need to locate the bytes for the annotation type.

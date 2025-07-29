@@ -8,3 +8,13 @@ dependencies {
 
   testImplementation(project(":instrumentation:vibur-dbcp-11.0:testing"))
 }
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}

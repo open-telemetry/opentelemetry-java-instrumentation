@@ -28,8 +28,7 @@ val finatraLatest by configurations.creating {
 }
 
 dependencies {
-  // TODO(anuraaga): Something about library configuration doesn't work well with scala compilation
-  // here.
+  // TODO: Something about library configuration doesn't work well with scala compilation here.
   compileOnly("com.twitter:finatra-http_2.11:2.9.0")
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
@@ -45,7 +44,7 @@ dependencies {
   // Required for older versions of finatra on JDKs >= 11
   testImplementation("com.sun.activation:javax.activation:1.2.0")
 
-  finatraLatest("com.twitter:finatra-http_2.13:+") {
+  finatraLatest("com.twitter:finatra-http_2.13:latest.release") {
     exclude("io.netty", "netty-transport-native-epoll")
   }
 }
@@ -86,6 +85,8 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
   }
 }

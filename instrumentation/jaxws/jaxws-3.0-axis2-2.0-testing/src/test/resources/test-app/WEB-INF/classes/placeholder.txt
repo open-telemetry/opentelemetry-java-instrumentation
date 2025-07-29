@@ -1,0 +1,1 @@
+axis requires WEB-INF/classes to exist

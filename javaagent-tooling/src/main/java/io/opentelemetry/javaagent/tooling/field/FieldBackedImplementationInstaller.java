@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.tooling.field;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
+import static io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration.fieldInjectionEnabled;
+import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getFieldAccessorInterfaceName;
 import static java.util.logging.Level.FINEST;
 import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,7 +16,6 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
@@ -62,10 +63,6 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
 
   private static final TransformSafeLogger logger =
       TransformSafeLogger.getLogger(FieldBackedImplementationInstaller.class);
-
-  private static final boolean FIELD_INJECTION_ENABLED =
-      InstrumentationConfig.get()
-          .getBoolean("otel.javaagent.experimental.field-injection.enabled", true);
 
   private final Class<?> instrumenterClass;
   private final VirtualFieldMappings virtualFieldMappings;
@@ -173,14 +170,13 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
   We use this to make sure we do not install matchers repeatedly for cases when same
   context class is used by multiple instrumentations.
    */
-  private static final Set<Map.Entry<String, String>> INSTALLED_VIRTUAL_FIELD_MATCHERS =
-      new HashSet<>();
+  private final Set<Map.Entry<String, String>> installedVirtualFieldMatchers = new HashSet<>();
 
   @Override
   public AgentBuilder.Identified.Extendable injectFields(
       AgentBuilder.Identified.Extendable builder) {
 
-    if (FIELD_INJECTION_ENABLED) {
+    if (fieldInjectionEnabled) {
       for (Map.Entry<String, String> entry : virtualFieldMappings.entrySet()) {
         /*
          * For each virtual field defined in a current instrumentation we create an agent builder
@@ -189,8 +185,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
          * since this is done when agent builder is being made, it doesn't affect actual
          * class transformation.
          */
-        synchronized (INSTALLED_VIRTUAL_FIELD_MATCHERS) {
-          if (INSTALLED_VIRTUAL_FIELD_MATCHERS.contains(entry)) {
+        synchronized (installedVirtualFieldMatchers) {
+          if (installedVirtualFieldMatchers.contains(entry)) {
             if (logger.isLoggable(FINEST)) {
               logger.log(
                   FINEST,
@@ -206,7 +202,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
                 "Making builder for {0} {1}",
                 new Object[] {instrumenterClass.getName(), entry});
           }
-          INSTALLED_VIRTUAL_FIELD_MATCHERS.add(entry);
+          installedVirtualFieldMatchers.add(entry);
 
           /*
            * For each virtual field defined in a current instrumentation we create an agent builder
@@ -221,7 +217,7 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
           builder =
               builder
                   .type(typeMatcher)
-                  .and(safeToInjectFieldsMatcher())
+                  .and(safeToInjectFieldMatcher(entry.getKey(), entry.getValue()))
                   .and(InstrumentationModuleInstaller.NOT_DECORATOR_MATCHER)
                   .transform(NoOpTransformer.INSTANCE);
 
@@ -243,7 +239,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
     return builder;
   }
 
-  private static AgentBuilder.RawMatcher safeToInjectFieldsMatcher() {
+  private static AgentBuilder.RawMatcher safeToInjectFieldMatcher(
+      String typeName, String fieldTypeName) {
     return (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) -> {
       /*
        * The idea here is that we can add fields if class is just being loaded
@@ -251,7 +248,8 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
        * fields before is being transformed again.
        */
       return classBeingRedefined == null
-          || VirtualFieldDetector.hasVirtualFields(classBeingRedefined);
+          || VirtualFieldDetector.hasVirtualField(
+              classBeingRedefined, getFieldAccessorInterfaceName(typeName, fieldTypeName));
     };
   }
 

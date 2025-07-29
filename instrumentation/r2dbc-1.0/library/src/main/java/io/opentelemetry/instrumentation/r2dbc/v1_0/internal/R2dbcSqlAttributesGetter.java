@@ -5,21 +5,26 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
+import static java.util.Collections.singleton;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.r2dbc.spi.R2dbcException;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution> {
+public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExecution, Void> {
   INSTANCE;
 
   @Override
-  public String getSystem(DbExecution request) {
+  public String getDbSystem(DbExecution request) {
     return request.getSystem();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(DbExecution request) {
@@ -28,10 +33,11 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
 
   @Override
   @Nullable
-  public String getName(DbExecution request) {
+  public String getDbNamespace(DbExecution request) {
     return request.getName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(DbExecution request) {
@@ -39,8 +45,16 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
   }
 
   @Override
+  public Collection<String> getRawQueryTexts(DbExecution request) {
+    return singleton(request.getRawQueryText());
+  }
+
   @Nullable
-  public String getRawStatement(DbExecution request) {
-    return request.getRawStatement();
+  @Override
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+    if (error instanceof R2dbcException) {
+      return ((R2dbcException) error).getSqlState();
+    }
+    return null;
   }
 }

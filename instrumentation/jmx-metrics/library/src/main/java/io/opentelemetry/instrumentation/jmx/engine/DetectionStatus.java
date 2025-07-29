@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.engine;
 
 import java.util.Collection;
-import javax.management.MBeanServer;
+import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 
 /**
@@ -15,16 +15,16 @@ import javax.management.ObjectName;
  */
 class DetectionStatus {
 
-  private final MBeanServer server;
+  private final MBeanServerConnection connection;
   private final Collection<ObjectName> objectNames;
 
-  DetectionStatus(MBeanServer server, Collection<ObjectName> objectNames) {
-    this.server = server;
+  DetectionStatus(MBeanServerConnection connection, Collection<ObjectName> objectNames) {
+    this.connection = connection;
     this.objectNames = objectNames;
   }
 
-  MBeanServer getServer() {
-    return server;
+  MBeanServerConnection getConnection() {
+    return connection;
   }
 
   Collection<ObjectName> getObjectNames() {

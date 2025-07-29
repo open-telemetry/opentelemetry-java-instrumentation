@@ -1,0 +1,37 @@
+description: >
+  The JDBC instrumentation provides database client spans and metrics. Each call produces a span
+  named after the SQL verb, enriched with standard DB client attributes (system, database,
+  operation, sanitized statement, peer address) and error details if an exception occurs.
+  
+  There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
+  but is disabled by default due to the volume of telemetry produced.
+configurations:
+  - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries. Takes precedent to 
+      otel.instrumentation.common.db-statement-sanitizer.enabled.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true
+  - name: otel.instrumentation.jdbc.experimental.transaction.enabled
+    description: Enables experimental instrumentation to create spans for COMMIT and ROLLBACK operations.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""
+  - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
+    description: >
+      Sets whether the query parameters should be captured as span attributes named
+      <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement
+      sanitization.<p>WARNING: captured query parameters may contain sensitive information such as
+      passwords, personally identifiable information or protected health info.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jdbc-datasource.enabled
+    description: Enables instrumentation of JDBC datasource connections.
+    type: boolean
+    default: false

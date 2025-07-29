@@ -61,6 +61,9 @@ public class WebApplicationContextInstrumentation implements TypeInstrumentation
     public static void onEnter(@Advice.Argument(0) ConfigurableListableBeanFactory beanFactory) {
       if (beanFactory instanceof BeanDefinitionRegistry
           && !beanFactory.containsBean("otelAutoDispatcherFilter")) {
+
+        // Explicitly loading classes allows to catch any class-loading issue or deal with cases
+        // where the class is not visible.
         try {
           // Firstly check whether DispatcherServlet is present. We need to load an instrumented
           // class from spring-webmvc to trigger injection that makes

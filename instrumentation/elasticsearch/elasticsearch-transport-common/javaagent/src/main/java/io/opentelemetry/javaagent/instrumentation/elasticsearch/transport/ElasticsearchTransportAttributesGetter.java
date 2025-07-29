@@ -6,43 +6,47 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
+import org.elasticsearch.action.ActionResponse;
 
 final class ElasticsearchTransportAttributesGetter
-    implements DbClientAttributesGetter<ElasticTransportRequest> {
+    implements DbClientAttributesGetter<ElasticTransportRequest, ActionResponse> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(ElasticTransportRequest s) {
-    return SemanticAttributes.DbSystemValues.ELASTICSEARCH;
+  public String getDbSystem(ElasticTransportRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH;
   }
 
+  @Deprecated
   @Override
   @Nullable
-  public String getUser(ElasticTransportRequest s) {
+  public String getUser(ElasticTransportRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getName(ElasticTransportRequest s) {
+  public String getDbNamespace(ElasticTransportRequest request) {
+    return null;
+  }
+
+  @Deprecated
+  @Override
+  @Nullable
+  public String getConnectionString(ElasticTransportRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getConnectionString(ElasticTransportRequest s) {
+  public String getDbQueryText(ElasticTransportRequest request) {
     return null;
   }
 
   @Override
-  @Nullable
-  public String getStatement(ElasticTransportRequest s) {
-    return null;
-  }
-
-  @Override
-  public String getOperation(ElasticTransportRequest action) {
-    return action.getAction().getClass().getSimpleName();
+  public String getDbOperationName(ElasticTransportRequest request) {
+    return request.getAction().getClass().getSimpleName();
   }
 }

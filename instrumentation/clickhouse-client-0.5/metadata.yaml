@@ -1,0 +1,6 @@
+description: Instruments the V1 ClickHouseClient, providing database client spans and metrics.
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true

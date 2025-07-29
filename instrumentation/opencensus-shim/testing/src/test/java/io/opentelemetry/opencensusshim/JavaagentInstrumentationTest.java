@@ -5,6 +5,8 @@
 
 package io.opentelemetry.opencensusshim;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import io.opencensus.trace.AttributeValue;
 import io.opencensus.trace.Tracing;
 import io.opencensus.trace.samplers.Samplers;
@@ -15,7 +17,6 @@ import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import org.assertj.core.api.AbstractBooleanAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -84,9 +85,9 @@ public class JavaagentInstrumentationTest {
                         .hasNoParent()
                         .hasAttribute(AttributeKey.booleanKey("outer"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
@@ -94,9 +95,9 @@ public class JavaagentInstrumentationTest {
                         .hasParent(ta.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("middle"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
                 // inner span
                 sa ->
@@ -104,9 +105,9 @@ public class JavaagentInstrumentationTest {
                         .hasParent(ta.getSpan(1))
                         .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 
@@ -159,9 +160,9 @@ public class JavaagentInstrumentationTest {
                         .hasNoParent()
                         .hasAttribute(AttributeKey.booleanKey("outer"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
@@ -169,9 +170,9 @@ public class JavaagentInstrumentationTest {
                         .hasParent(ta.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("middle"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
                 // inner span
                 sa ->
@@ -179,9 +180,9 @@ public class JavaagentInstrumentationTest {
                         .hasParent(ta.getSpan(1))
                         .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 
@@ -299,9 +300,9 @@ public class JavaagentInstrumentationTest {
                         .hasNoParent()
                         .hasAttribute(AttributeKey.booleanKey("outer"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull)),
                 // middle span
                 sa ->
@@ -309,9 +310,9 @@ public class JavaagentInstrumentationTest {
                         .hasParent(ta.getSpan(0))
                         .hasAttribute(AttributeKey.booleanKey("middle"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("inner"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull)),
                 // inner span
                 sa ->
@@ -319,9 +320,9 @@ public class JavaagentInstrumentationTest {
                         .hasParent(ta.getSpan(1))
                         .hasAttribute(AttributeKey.booleanKey("inner"), true)
                         .hasAttributesSatisfying(
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("middle"), AbstractBooleanAssert::isNull),
-                            OpenTelemetryAssertions.satisfies(
+                            satisfies(
                                 AttributeKey.booleanKey("outer"), AbstractBooleanAssert::isNull))));
   }
 }

@@ -14,9 +14,10 @@ import static io.opentelemetry.instrumentation.api.semconv.http.CapturedHttpHead
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.ErrorAttributes;
+import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -38,8 +39,8 @@ abstract class HttpCommonAttributesExtractor<
 
   final GETTER getter;
   private final HttpStatusCodeConverter statusCodeConverter;
-  private final List<String> capturedRequestHeaders;
-  private final List<String> capturedResponseHeaders;
+  private final String[] capturedRequestHeaders;
+  private final String[] capturedResponseHeaders;
   private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
@@ -59,10 +60,10 @@ abstract class HttpCommonAttributesExtractor<
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     String method = getter.getHttpRequestMethod(request);
     if (method == null || knownMethods.contains(method)) {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, method);
     } else {
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD, _OTHER);
-      internalSet(attributes, SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD, _OTHER);
+      internalSet(attributes, HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL, method);
     }
 
     for (String name : capturedRequestHeaders) {
@@ -85,7 +86,7 @@ abstract class HttpCommonAttributesExtractor<
     if (response != null) {
       statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
-        internalSet(attributes, SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
+        internalSet(attributes, HttpAttributes.HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
       }
 
       for (String name : capturedResponseHeaders) {
@@ -111,16 +112,16 @@ abstract class HttpCommonAttributesExtractor<
         errorType = _OTHER;
       }
     }
-    internalSet(attributes, HttpAttributes.ERROR_TYPE, errorType);
+    internalSet(attributes, ErrorAttributes.ERROR_TYPE, errorType);
 
     String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));
 
     if (protocolVersion != null) {
       if (!"http".equals(protocolName)) {
-        internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_NAME, protocolName);
+        internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_NAME, protocolName);
       }
-      internalSet(attributes, SemanticAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
+      internalSet(attributes, NetworkAttributes.NETWORK_PROTOCOL_VERSION, protocolVersion);
     }
   }
 

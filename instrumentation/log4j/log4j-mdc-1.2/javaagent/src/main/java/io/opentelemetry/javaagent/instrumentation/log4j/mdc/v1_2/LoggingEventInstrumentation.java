@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,6 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -51,7 +49,9 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This LoggingEvent event,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) Object value) {
-      if (TRACE_ID.equals(key) || SPAN_ID.equals(key) || TRACE_FLAGS.equals(key)) {
+      if (AgentCommonConfig.get().getTraceIdKey().equals(key)
+          || AgentCommonConfig.get().getSpanIdKey().equals(key)
+          || AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -67,18 +67,14 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        switch (key) {
-          case TRACE_ID:
-            value = spanContext.getTraceId();
-            break;
-          case SPAN_ID:
-            value = spanContext.getSpanId();
-            break;
-          case TRACE_FLAGS:
-            value = spanContext.getTraceFlags().asHex();
-            break;
-          default:
-            // do nothing
+        if (AgentCommonConfig.get().getTraceIdKey().equals(key)) {
+          value = spanContext.getTraceId();
+        }
+        if (AgentCommonConfig.get().getSpanIdKey().equals(key)) {
+          value = spanContext.getSpanId();
+        }
+        if (AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
+          value = spanContext.getTraceFlags().asHex();
         }
       } else if (value == null) {
         value = ConfiguredResourceAttributesHolder.getAttributeValue(key);

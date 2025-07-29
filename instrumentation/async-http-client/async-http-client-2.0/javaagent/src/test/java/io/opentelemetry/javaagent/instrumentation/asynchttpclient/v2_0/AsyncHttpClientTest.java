@@ -10,11 +10,14 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import java.lang.reflect.Method;
 import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import org.asynchttpclient.AsyncCompletionHandler;
 import org.asynchttpclient.AsyncHttpClient;
+import org.asynchttpclient.DefaultAsyncHttpClientConfig;
 import org.asynchttpclient.Dsl;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.RequestBuilder;
@@ -31,11 +34,26 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   private static final int CONNECTION_TIMEOUT_MS = (int) CONNECTION_TIMEOUT.toMillis();
 
   // request timeout is needed in addition to connect timeout on async-http-client versions 2.1.0+
-  private static final AsyncHttpClient client =
-      Dsl.asyncHttpClient(
-          Dsl.config()
-              .setConnectTimeout(CONNECTION_TIMEOUT_MS)
-              .setRequestTimeout(CONNECTION_TIMEOUT_MS));
+  static final AsyncHttpClient client = Dsl.asyncHttpClient(configureTimeout(Dsl.config()));
+
+  private static DefaultAsyncHttpClientConfig.Builder configureTimeout(
+      DefaultAsyncHttpClientConfig.Builder builder) {
+    setTimeout(builder, "setConnectTimeout", CONNECTION_TIMEOUT_MS);
+    setTimeout(builder, "setRequestTimeout", CONNECTION_TIMEOUT_MS);
+    return builder;
+  }
+
+  private static void setTimeout(
+      DefaultAsyncHttpClientConfig.Builder builder, String methodName, int timeout) {
+    boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+    try {
+      Method method =
+          builder.getClass().getMethod(methodName, testLatestDeps ? Duration.class : int.class);
+      method.invoke(builder, testLatestDeps ? Duration.ofMillis(timeout) : timeout);
+    } catch (Exception exception) {
+      throw new IllegalStateException("Failed to set timeout " + methodName, exception);
+    }
+  }
 
   @Override
   public Request buildRequest(String method, URI uri, Map<String, String> headers) {
@@ -78,5 +96,6 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 }

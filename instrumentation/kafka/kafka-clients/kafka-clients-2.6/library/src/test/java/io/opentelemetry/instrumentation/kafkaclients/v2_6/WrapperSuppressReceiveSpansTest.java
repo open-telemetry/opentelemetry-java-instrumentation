@@ -7,17 +7,24 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CONSUMER_GROUP;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import org.assertj.core.api.AbstractLongAssert;
+import org.assertj.core.api.AbstractStringAssert;
 
 class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
@@ -52,22 +59,17 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(0))));
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   protected static List<AttributeAssertion> sendAttributes(boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "publish"),
-                satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("producer")),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative)));
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "publish"),
+                satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("producer")),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -77,29 +79,24 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     return assertions;
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   private static List<AttributeAssertion> processAttributes(String greeting, boolean testHeaders) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             Arrays.asList(
-                equalTo(SemanticAttributes.MESSAGING_SYSTEM, "kafka"),
-                equalTo(SemanticAttributes.MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
-                equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
+                equalTo(MESSAGING_OPERATION, "process"),
                 equalTo(
-                    SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-                    greeting.getBytes(StandardCharsets.UTF_8).length),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_DESTINATION_PARTITION,
-                    AbstractLongAssert::isNotNegative),
-                satisfies(
-                    SemanticAttributes.MESSAGING_KAFKA_MESSAGE_OFFSET,
-                    AbstractLongAssert::isNotNegative),
+                    MESSAGING_MESSAGE_BODY_SIZE, greeting.getBytes(StandardCharsets.UTF_8).length),
+                satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
+                satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
                 satisfies(
                     AttributeKey.longKey("kafka.record.queue_time_ms"),
                     AbstractLongAssert::isNotNegative),
-                equalTo(SemanticAttributes.MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
+                equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"),
                 satisfies(
-                    SemanticAttributes.MESSAGING_CLIENT_ID,
-                    stringAssert -> stringAssert.startsWith("consumer"))));
+                    MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer"))));
     if (testHeaders) {
       assertions.add(
           equalTo(

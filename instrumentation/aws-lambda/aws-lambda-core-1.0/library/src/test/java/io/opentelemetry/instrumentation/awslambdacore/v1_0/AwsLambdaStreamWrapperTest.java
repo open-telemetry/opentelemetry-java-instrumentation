@@ -17,8 +17,8 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambd
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.ResourceAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
@@ -81,10 +81,10 @@ public class AwsLambdaStreamWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   @Test
@@ -109,10 +109,10 @@ public class AwsLambdaStreamWrapperTest {
                         .hasException(thrown)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333"))));
   }
 
   public static final class TestRequestHandler implements RequestStreamHandler {

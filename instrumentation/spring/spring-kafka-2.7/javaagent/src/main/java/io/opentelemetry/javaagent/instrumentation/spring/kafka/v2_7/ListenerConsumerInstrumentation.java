@@ -5,16 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7.SpringKafkaSingletons.batchProcessInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.kafka.KafkaClientsConsumerProcessTracing;
 import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 
 public class ListenerConsumerInstrumentation implements TypeInstrumentation {
 
@@ -29,6 +39,10 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(named("run"), this.getClass().getName() + "$RunLoopAdvice");
     transformer.applyAdviceToMethod(
         isConstructor(), this.getClass().getName() + "$ConstructorAdvice");
+    transformer.applyAdviceToMethod(
+        named("invokeBatchOnMessageWithRecordsOrList")
+            .and(takesArgument(0, named("org.apache.kafka.clients.consumer.ConsumerRecords"))),
+        this.getClass().getName() + "$InvokeBatchAdvice");
   }
 
   // this advice suppresses the CONSUMER spans created by the kafka-clients instrumentation
@@ -58,6 +72,59 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.Enter boolean previousValue) {
       SpringSchedulingTaskTracing.setEnabled(previousValue);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InvokeBatchAdvice {
+
+    public static class AdviceScope {
+      private final KafkaReceiveRequest request;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(KafkaReceiveRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope enter(ConsumerRecords<?, ?> records, Consumer<?, ?> consumer) {
+        KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+        Context receiveContext = consumerContext.getContext();
+
+        // use the receive CONSUMER span as parent if it's available
+        Context parentContext = receiveContext != null ? receiveContext : Context.current();
+        KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
+
+        if (!batchProcessInstrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = batchProcessInstrumenter().start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void exit(@Nullable Throwable throwable) {
+        scope.close();
+        batchProcessInstrumenter().end(context, request, null, throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.Argument(0) ConsumerRecords<?, ?> records,
+        @Advice.FieldValue("consumer") Consumer<?, ?> consumer) {
+      return AdviceScope.enter(records, consumer);
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(throwable);
+      }
     }
   }
 }

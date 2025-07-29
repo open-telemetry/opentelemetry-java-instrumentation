@@ -87,7 +87,7 @@ public class PetClinicRestContainer {
                 "-Dotel.traces.exporter=otlp",
                 "-Dotel.imr.export.interval=5000",
                 "-Dotel.exporter.otlp.insecure=true",
-                "-Dotel.exporter.otlp.endpoint=http://collector:4317",
+                "-Dotel.exporter.otlp.endpoint=http://collector:4318",
                 "-Dotel.resource.attributes=service.name=petclinic-otel-overhead"));
     result.addAll(this.agent.getAdditionalJvmArgs());
     agentJar.ifPresent(path -> result.add("-javaagent:/app/" + path.getFileName()));

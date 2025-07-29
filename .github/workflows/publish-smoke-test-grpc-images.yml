@@ -5,18 +5,26 @@ on:
     paths:
       - "smoke-tests/images/grpc/**"
       - ".github/workflows/publish-smoke-test-grpc-images.yml"
+      - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:
       - main
-  workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   publish:
-    uses: ./.github/workflows/reusable-smoke-test-images.yml
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/reusable-publish-smoke-test-images.yml
     with:
       project: ":smoke-tests:images:grpc"
-      publish: true
 
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     needs:
       - publish
     if: always()

@@ -15,8 +15,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import akka.dispatch.forkjoin.ForkJoinPool;
 import akka.dispatch.forkjoin.ForkJoinTask;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -62,14 +60,13 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
      */
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This ForkJoinTask<?> thiz) {
-      VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
-          VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
-      Scope scope = TaskAdviceHelper.makePropagatedContextCurrent(virtualField, thiz);
+      Scope scope =
+          TaskAdviceHelper.makePropagatedContextCurrent(
+              VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, thiz);
       if (thiz instanceof Runnable) {
-        VirtualField<Runnable, PropagatedContext> runnableVirtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(runnableVirtualField, (Runnable) thiz);
+            TaskAdviceHelper.makePropagatedContextCurrent(
+                VirtualFields.RUNNABLE_PROPAGATED_CONTEXT, (Runnable) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();
@@ -79,10 +76,9 @@ public class AkkaForkJoinTaskInstrumentation implements TypeInstrumentation {
         }
       }
       if (thiz instanceof Callable) {
-        VirtualField<Callable<?>, PropagatedContext> callableVirtualField =
-            VirtualField.find(Callable.class, PropagatedContext.class);
         Scope newScope =
-            TaskAdviceHelper.makePropagatedContextCurrent(callableVirtualField, (Callable<?>) thiz);
+            TaskAdviceHelper.makePropagatedContextCurrent(
+                VirtualFields.CALLABLE_PROPAGATED_CONTEXT, (Callable<?>) thiz);
         if (null != newScope) {
           if (null != scope) {
             newScope.close();

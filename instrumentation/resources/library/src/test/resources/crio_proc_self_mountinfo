@@ -1,0 +1,26 @@
+10303 9025 0:676 / / rw,relatime master:2633 - overlay overlay rw,context="system_u:object_r:container_file_t:s0:c285,c353",lowerdir=/var/lib/containers/storage/overlay/l/MOUYF2QTVBFHJCEJ7L4FQSJBYL:/var/lib/containers/storage/overlay/l/G6UHPBRIDD4LUQGKZ3B3LQNNBF:/var/lib/containers/storage/overlay/l/NYLNBZF5BPFKTTPCUH2NV2CI76,upperdir=/var/lib/containers/storage/overlay/7af2ec0ca188ec1e39e53f5a89d81ddcc721d39b6d2b818d0b00c6accf871382/diff,workdir=/var/lib/containers/storage/overlay/7af2ec0ca188ec1e39e53f5a89d81ddcc721d39b6d2b818d0b00c6accf871382/work,volatile
+10304 10303 0:680 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw
+10305 10303 0:681 / /dev rw,nosuid - tmpfs tmpfs rw,context="system_u:object_r:container_file_t:s0:c285,c353",size=65536k,mode=755,inode64
+10306 10305 0:689 / /dev/pts rw,nosuid,noexec,relatime - devpts devpts rw,context="system_u:object_r:container_file_t:s0:c285,c353",gid=5,mode=620,ptmxmode=666
+10307 10305 0:668 / /dev/mqueue rw,nosuid,nodev,noexec,relatime - mqueue mqueue rw,seclabel
+10308 10303 0:690 / /sys ro,nosuid,nodev,noexec,relatime - sysfs sysfs ro,seclabel
+10309 10308 0:26 / /sys/fs/cgroup ro,nosuid,nodev,noexec,relatime - cgroup2 cgroup rw,seclabel
+10310 10305 0:667 / /dev/shm rw,nosuid,nodev,noexec,relatime master:2583 - tmpfs shm rw,context="system_u:object_r:container_file_t:s0:c285,c353",size=65536k,inode64
+10311 10303 0:25 /containers/storage/overlay-containers/2ac4c84cb0d3c3beb04beeef6ccf71c17b5fdd0252ce3a2b66bc2fdd0aaa1814/userdata/resolv.conf /etc/resolv.conf rw,nosuid,nodev,noexec master:15 - tmpfs tmpfs rw,seclabel,size=6416204k,nr_inodes=819200,mode=755,inode64
+10312 10303 0:25 /containers/storage/overlay-containers/2ac4c84cb0d3c3beb04beeef6ccf71c17b5fdd0252ce3a2b66bc2fdd0aaa1814/userdata/hostname /etc/hostname rw,nosuid,nodev master:15 - tmpfs tmpfs rw,seclabel,size=6416204k,nr_inodes=819200,mode=755,inode64
+10313 10303 0:25 /containers/storage/overlay-containers/2ac4c84cb0d3c3beb04beeef6ccf71c17b5fdd0252ce3a2b66bc2fdd0aaa1814/userdata/.containerenv /run/.containerenv rw,nosuid,nodev master:15 - tmpfs tmpfs rw,seclabel,size=6416204k,nr_inodes=819200,mode=755,inode64
+10314 10303 252:4 /ostree/deploy/rhcos/var/lib/kubelet/pods/0a947273-7214-4824-8411-875ebd7626e4/etc-hosts /etc/hosts rw,relatime - xfs /dev/vda4 rw,seclabel,attr2,inode64,logbufs=8,logbsize=32k,prjquota
+10315 10305 252:4 /ostree/deploy/rhcos/var/lib/kubelet/pods/0a947273-7214-4824-8411-875ebd7626e4/containers/ubuntu23/354653d0 /dev/termination-log rw,relatime - xfs /dev/vda4 rw,seclabel,attr2,inode64,logbufs=8,logbsize=32k,prjquota
+10316 10303 0:25 /containers/storage/overlay-containers/a8f62e52ed7c2cd85242dcf0eb1d727b643540ceca7f328ad7d2f31aedf07731/userdata/run/secrets /run/secrets rw,nosuid,nodev - tmpfs tmpfs rw,seclabel,size=6416204k,nr_inodes=819200,mode=755,inode64
+10317 10316 0:666 / /run/secrets/kubernetes.io/serviceaccount ro,relatime - tmpfs tmpfs rw,seclabel,size=30930028k,inode64
+9026 10304 0:680 /bus /proc/bus ro,nosuid,nodev,noexec,relatime - proc proc rw
+9027 10304 0:680 /fs /proc/fs ro,nosuid,nodev,noexec,relatime - proc proc rw
+9029 10304 0:680 /irq /proc/irq ro,nosuid,nodev,noexec,relatime - proc proc rw
+9030 10304 0:680 /sys /proc/sys ro,nosuid,nodev,noexec,relatime - proc proc rw
+9031 10304 0:680 /sysrq-trigger /proc/sysrq-trigger ro,nosuid,nodev,noexec,relatime - proc proc rw
+9032 10304 0:691 / /proc/acpi ro,relatime - tmpfs tmpfs ro,context="system_u:object_r:container_file_t:s0:c285,c353",inode64
+9033 10304 0:681 /null /proc/kcore rw,nosuid - tmpfs tmpfs rw,context="system_u:object_r:container_file_t:s0:c285,c353",size=65536k,mode=755,inode64
+9034 10304 0:681 /null /proc/keys rw,nosuid - tmpfs tmpfs rw,context="system_u:object_r:container_file_t:s0:c285,c353",size=65536k,mode=755,inode64
+9035 10304 0:681 /null /proc/timer_list rw,nosuid - tmpfs tmpfs rw,context="system_u:object_r:container_file_t:s0:c285,c353",size=65536k,mode=755,inode64
+9036 10304 0:692 / /proc/scsi ro,relatime - tmpfs tmpfs ro,context="system_u:object_r:container_file_t:s0:c285,c353",inode64
+9037 10308 0:693 / /sys/firmware ro,relatime - tmpfs tmpfs ro,context="system_u:object_r:container_file_t:s0:c285,c353",inode64

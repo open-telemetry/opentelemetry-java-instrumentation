@@ -9,7 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.vertx.core.Future;
 import io.vertx.redis.client.Command;
 import io.vertx.redis.client.impl.RedisStandaloneConnection;
@@ -36,8 +36,10 @@ public final class VertxRedisClientSingletons {
       VirtualField.find(RedisStandaloneConnection.class, RedisURI.class);
 
   static {
+    // Redis semantic conventions don't follow the regular pattern of adding the db.namespace to
+    // the span name
     SpanNameExtractor<VertxRedisClientRequest> spanNameExtractor =
-        DbClientSpanNameExtractor.create(VertxRedisClientAttributesGetter.INSTANCE);
+        VertxRedisClientRequest::getCommand;
 
     InstrumenterBuilder<VertxRedisClientRequest, Void> builder =
         Instrumenter.<VertxRedisClientRequest, Void>builder(
@@ -52,7 +54,8 @@ public final class VertxRedisClientSingletons {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxRedisClientNetAttributesGetter.INSTANCE,
-                    CommonConfig.get().getPeerServiceResolver()));
+                    AgentCommonConfig.get().getPeerServiceResolver()))
+            .addOperationMetrics(DbClientMetrics.get());
 
     INSTRUMENTER = builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }

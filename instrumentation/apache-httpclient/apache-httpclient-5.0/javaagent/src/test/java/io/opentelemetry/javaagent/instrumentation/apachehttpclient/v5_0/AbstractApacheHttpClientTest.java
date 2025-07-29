@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashSet;
@@ -40,7 +41,7 @@ abstract class AbstractApacheHttpClientTest<T extends HttpRequest>
         || "https://192.0.2.1/".equals(uri.toString())
         || uri.toString().contains("/read-timeout")
         || uri.toString().contains("/circular-redirect")) {
-      attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
     }
     return attributes;
   }

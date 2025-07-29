@@ -1,0 +1,8 @@
+description: This instrumentation enables tracing for Elasticsearch REST clients.
+configurations:
+  - name: otel.instrumentation.elasticsearch.capture-search-query
+    description: |
+      Enable the capture of search query bodies. It is important to note that Elasticsearch queries
+      may contain personal or sensitive information.
+    type: boolean
+    default: false

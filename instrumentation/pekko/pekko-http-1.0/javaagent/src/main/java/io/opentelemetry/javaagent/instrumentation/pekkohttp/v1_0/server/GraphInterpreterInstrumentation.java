@@ -35,7 +35,7 @@ public class GraphInterpreterInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(@Advice.Argument(0) GraphInterpreter.Connection connection) {
       // processPush is called when execution passes to application or server. Here we propagate the
       // context to the application code.
-      Context context = PekkoFlowWrapper.getContext(connection.outHandler());
+      Context context = PekkoFlowWrapper.getAndRemoveContext(connection.outHandler());
       if (context != null) {
         return context.makeCurrent();
       }

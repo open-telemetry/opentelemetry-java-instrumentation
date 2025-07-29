@@ -59,9 +59,7 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This ServerBuilder<?> serverBuilder,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void onExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }

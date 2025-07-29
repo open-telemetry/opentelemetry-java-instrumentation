@@ -10,15 +10,15 @@ import io.opentelemetry.sdk.common.CompletableResultCode;
 import io.opentelemetry.sdk.trace.ReadWriteSpan;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.SpanProcessor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 
 public class AddThreadDetailsSpanProcessor implements SpanProcessor {
 
   @Override
   public void onStart(Context context, ReadWriteSpan span) {
     Thread currentThread = Thread.currentThread();
-    span.setAttribute(SemanticAttributes.THREAD_ID, currentThread.getId());
-    span.setAttribute(SemanticAttributes.THREAD_NAME, currentThread.getName());
+    span.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
+    span.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
   }
 
   @Override

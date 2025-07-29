@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.instrumentation.test.base.HttpClientTest.getPort;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
@@ -19,7 +20,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.util.Collections;
 import java.util.HashSet;
@@ -112,6 +112,7 @@ public abstract class AbstractNetty41ClientTest
                 this::configureChannel));
 
     optionsBuilder.disableTestRedirects();
+    optionsBuilder.spanEndsAfterBody();
   }
 
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {
@@ -121,8 +122,8 @@ public abstract class AbstractNetty41ClientTest
       return Collections.emptySet();
     }
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-    attributes.remove(SemanticAttributes.SERVER_PORT);
+    attributes.remove(SERVER_ADDRESS);
+    attributes.remove(SERVER_PORT);
     return attributes;
   }
 
@@ -133,6 +134,18 @@ public abstract class AbstractNetty41ClientTest
         return "CONNECT";
       default:
         return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+    }
+  }
+
+  private static int getPort(URI uri) {
+    if (uri.getPort() != -1) {
+      return uri.getPort();
+    } else if ("http".equals(uri.getScheme())) {
+      return 80;
+    } else if ("https".equals(uri.getScheme())) {
+      return 443;
+    } else {
+      throw new IllegalArgumentException("Unexpected uri: " + uri);
     }
   }
 

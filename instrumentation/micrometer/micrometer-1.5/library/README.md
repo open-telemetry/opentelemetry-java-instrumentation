@@ -1,6 +1,6 @@
 # Micrometer Instrumentation for Micrometer version 1.5 and higher
 
-This module provides a [Micrometer registry](https://micrometer.io/docs/concepts#_registry) which
+This module provides a [Micrometer registry](https://docs.micrometer.io/micrometer/reference/concepts/registry.html) which
 sends Micrometer metrics to the
 [OpenTelemetry Metrics SDK](https://github.com/open-telemetry/opentelemetry-java/tree/main/sdk/metrics).
 

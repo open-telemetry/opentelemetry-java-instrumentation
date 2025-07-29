@@ -1,0 +1,13 @@
+configurations:
+  - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+    description: Enables experimental span attributes for AWS SDK instrumentation.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: Enables experimental receive telemetry for AWS SDK instrumentation.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: Allows configuring headers to capture as span attributes.
+    type: list
+    default: ''

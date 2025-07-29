@@ -7,6 +7,25 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -15,11 +34,8 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -38,28 +54,28 @@ class HttpServerMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
-            .put(SemanticAttributes.URL_SCHEME, "https")
-            .put(SemanticAttributes.URL_PATH, "/")
-            .put(SemanticAttributes.URL_QUERY, "q=a")
-            .put(SemanticAttributes.NETWORK_TRANSPORT, "tcp")
-            .put(SemanticAttributes.NETWORK_TYPE, "ipv4")
-            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
-            .put(SemanticAttributes.SERVER_PORT, 1234)
+            .put(HTTP_REQUEST_METHOD, "GET")
+            .put(URL_SCHEME, "https")
+            .put(URL_PATH, "/")
+            .put(URL_QUERY, "q=a")
+            .put(NETWORK_TRANSPORT, "tcp")
+            .put(NETWORK_TYPE, "ipv4")
+            .put(NETWORK_PROTOCOL_NAME, "http")
+            .put(NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(SERVER_ADDRESS, "localhost")
+            .put(SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-            .put(HttpAttributes.ERROR_TYPE, "500")
-            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
-            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
-            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
-            .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "4.3.2.1")
-            .put(NetworkAttributes.NETWORK_LOCAL_PORT, 9090)
+            .put(HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(ERROR_TYPE, "500")
+            .put(HTTP_REQUEST_BODY_SIZE, 100)
+            .put(HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NETWORK_PEER_PORT, 8080)
+            .put(NETWORK_LOCAL_ADDRESS, "4.3.2.1")
+            .put(NETWORK_LOCAL_PORT, 9090)
             .build();
 
     SpanContext spanContext1 =
@@ -97,15 +113,12 @@ class HttpServerMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(
-                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(HttpAttributes.ERROR_TYPE, "500"),
-                                            equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"))
+                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(ERROR_TYPE, "500"),
+                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(URL_SCHEME, "https"))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar
@@ -143,13 +156,9 @@ class HttpServerMetricsTest {
     OperationListener listener = HttpServerMetrics.get().create(meterProvider.get("test"));
 
     Attributes requestAttributes =
-        Attributes.builder()
-            .put(SemanticAttributes.SERVER_ADDRESS, "host")
-            .put(SemanticAttributes.URL_SCHEME, "https")
-            .build();
+        Attributes.builder().put(SERVER_ADDRESS, "host").put(URL_SCHEME, "https").build();
 
-    Attributes responseAttributes =
-        Attributes.builder().put(SemanticAttributes.HTTP_ROUTE, "/test/{id}").build();
+    Attributes responseAttributes = Attributes.builder().put(HTTP_ROUTE, "/test/{id}").build();
 
     Context parentContext = Context.root();
 
@@ -171,9 +180,8 @@ class HttpServerMetricsTest {
                                     point
                                         .hasSum(0.100 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.URL_SCHEME, "https"),
-                                            equalTo(
-                                                SemanticAttributes.HTTP_ROUTE, "/test/{id}")))));
+                                            equalTo(URL_SCHEME, "https"),
+                                            equalTo(HTTP_ROUTE, "/test/{id}")))));
   }
 
   private static long nanos(int millis) {

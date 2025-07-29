@@ -10,7 +10,9 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.List;
 import java.util.Locale;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -27,16 +29,17 @@ class TraceProvidersTest {
   void testShouldSupportProvider(TraceProvider provider) {
     provider.test();
 
+    List<AttributeAssertion> attributeAssertions =
+        SemconvCodeStabilityUtil.codeFunctionAssertions(
+            SayTracedHello.class, provider.testMethodName());
+    attributeAssertions.add(equalTo(stringKey("providerAttr"), provider.name()));
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("SayTracedHello." + provider.testMethodName())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                SemanticAttributes.CODE_NAMESPACE, SayTracedHello.class.getName()),
-                            equalTo(SemanticAttributes.CODE_FUNCTION, provider.testMethodName()),
-                            equalTo(stringKey("providerAttr"), provider.name()))));
+                        .hasAttributesSatisfyingExactly(attributeAssertions)));
   }
 
   @SuppressWarnings("ImmutableEnumChecker")

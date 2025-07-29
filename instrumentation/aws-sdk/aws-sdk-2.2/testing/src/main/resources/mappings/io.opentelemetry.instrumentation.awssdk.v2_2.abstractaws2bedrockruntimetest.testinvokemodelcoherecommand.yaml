@@ -1,0 +1,33 @@
+---
+id: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+name: model_coherecommand-light-text-v14_invoke
+request:
+  url: /model/cohere.command-light-text-v14/invoke
+  method: POST
+  bodyPatterns:
+    - equalToJson: |-
+        {
+          "prompt" : "Say this is a test",
+          "max_tokens" : 10,
+          "temperature" : 0.8,
+          "p" : 1,
+          "stop_sequences" : [ "|" ]
+        }
+      ignoreArrayOrder: false
+      ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"id\":\"85f3632c-7c94-4abe-b162-9cde2c3d934c\",\"generations\":
+    [{\"id\":\"57637583-570e-4f5e-96f1-ec928af797c9\",
+    \"text\":\"I would be more than happy to assist you with\",\"finish_reason\":\"MAX_TOKENS\"}],
+    \"prompt\":\"Say this is a test\"}"
+  headers:
+    Date: "Wed, 19 Mar 2025 05:44:06 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 1c4e6b83-4da3-430c-b21f-34b0cb003f06
+    X-Amzn-Bedrock-Invocation-Latency: "658"
+    X-Amzn-Bedrock-Output-Token-Count: "10"
+    X-Amzn-Bedrock-Input-Token-Count: "5"
+uuid: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+persistent: true
+insertionIndex: 20

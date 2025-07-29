@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.grizzly;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import java.util.Iterator;
 import org.glassfish.grizzly.http.HttpRequestPacket;
 
-enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestPacket> {
+enum HttpRequestHeadersGetter implements ExtendedTextMapGetter<HttpRequestPacket> {
   INSTANCE;
 
   @Override
@@ -19,5 +20,10 @@ enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestPacket> {
   @Override
   public String get(HttpRequestPacket request, String key) {
     return request.getHeader(key);
+  }
+
+  @Override
+  public Iterator<String> getAll(HttpRequestPacket request, String key) {
+    return request.getHeaders().values(key).iterator();
   }
 }

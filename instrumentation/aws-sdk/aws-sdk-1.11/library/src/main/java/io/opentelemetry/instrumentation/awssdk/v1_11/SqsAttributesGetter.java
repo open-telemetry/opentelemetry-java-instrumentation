@@ -15,9 +15,12 @@ import javax.annotation.Nullable;
 enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Response<?>> {
   INSTANCE;
 
+  // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+  private static final String AWS_SQS = "aws_sqs";
+
   @Override
   public String getSystem(Request<?> request) {
-    return "AmazonSQS";
+    return AWS_SQS;
   }
 
   @Override
@@ -28,8 +31,19 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
     return i > 0 ? queueUrl.substring(i + 1) : null;
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(Request<?> request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(Request<?> request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(Request<?> request) {
     return false;
   }
 
@@ -39,15 +53,15 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadSize(Request<?> request) {
+  @Override
+  public Long getMessageBodySize(Request<?> request) {
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(Request<?> request) {
+  @Override
+  public Long getMessageEnvelopeSize(Request<?> request) {
     return null;
   }
 
@@ -55,6 +69,18 @@ enum SqsAttributesGetter implements MessagingAttributesGetter<Request<?>, Respon
   @Nullable
   public String getMessageId(Request<?> request, @Nullable Response<?> response) {
     return SqsAccess.getMessageId(response);
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(Request<?> request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(Request<?> request, @Nullable Response<?> response) {
+    return null;
   }
 
   @Override

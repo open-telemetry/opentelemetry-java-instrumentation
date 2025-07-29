@@ -15,12 +15,12 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer
 import io.opentelemetry.instrumentation.testing.junit.http.SingleConnection
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions
 import io.opentelemetry.sdk.trace.data.SpanData
 import spock.lang.Requires
 import spock.lang.Shared
 import spock.lang.Unroll
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat
 import static org.junit.jupiter.api.Assumptions.assumeTrue
 
 @Unroll
@@ -162,18 +162,6 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     server.stop()
   }
 
-  static int getPort(URI uri) {
-    if (uri.port != -1) {
-      return uri.port
-    } else if (uri.scheme == "http") {
-      return 80
-    } else if (uri.scheme == "https") {
-      443
-    } else {
-      throw new IllegalArgumentException("Unexpected uri: $uri")
-    }
-  }
-
   def "basic GET request #path"() {
     expect:
     junitTest.successfulGetRequest(path)
@@ -256,9 +244,14 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.redirectToSecuredCopiesAuthHeader()
   }
 
-  def "error span"() {
+  def "error span for #path"() {
     expect:
-    junitTest.errorSpan()
+    junitTest.errorSpan(path, statusCode)
+
+    where:
+    path            | statusCode
+    "/client-error" | 400
+    "/error"        | 500
   }
 
   def "reuse request"() {
@@ -354,6 +347,10 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
     junitTest.highConcurrencyOnSingleConnection()
   }
 
+  def "http client span ends after headers are received"() {
+    junitTest.spanEndsAfterHeadersReceived()
+  }
+
   // ideally private, but then groovy closures in this class cannot find them
   final int doRequest(String method, URI uri, Map<String, String> headers = [:]) {
     def request = buildRequest(method, uri, headers)
@@ -445,7 +442,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   final void clientSpan(TraceAssert trace, int index, Object parentSpan, String method = "GET", URI uri = resolveAddress("/success"), Integer responseCode = 200) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertClientSpan(OpenTelemetryAssertions.assertThat(spanData), uri, method, responseCode, null)
+    def assertion = junitTest.assertClientSpan(assertThat(spanData), uri, method, responseCode, null)
     if (parentSpan == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {
@@ -456,7 +453,7 @@ abstract class HttpClientTest<REQUEST> extends InstrumentationSpecification {
   final void serverSpan(TraceAssert trace, int index, Object parentSpan = null) {
     trace.assertedIndexes.add(index)
     def spanData = trace.span(index)
-    def assertion = junitTest.assertServerSpan(OpenTelemetryAssertions.assertThat(spanData))
+    def assertion = junitTest.assertServerSpan(assertThat(spanData))
     if (parentSpan == null) {
       assertion.hasParentSpanId(SpanId.invalid)
     } else {

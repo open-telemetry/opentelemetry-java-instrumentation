@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jbosslogmanager.mdc.v1_1;
 
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.SPAN_ID;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_FLAGS;
-import static io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants.TRACE_ID;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -18,6 +15,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
@@ -57,7 +55,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Argument(0) String key,
         @Advice.Return(readOnly = false) String value) {
-      if (TRACE_ID.equals(key) || SPAN_ID.equals(key) || TRACE_FLAGS.equals(key)) {
+      if (AgentCommonConfig.get().getTraceIdKey().equals(key)
+          || AgentCommonConfig.get().getSpanIdKey().equals(key)
+          || AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
         if (value != null) {
           // Assume already instrumented event if traceId/spanId/sampled is present.
           return;
@@ -72,18 +72,14 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
           return;
         }
 
-        switch (key) {
-          case TRACE_ID:
-            value = spanContext.getTraceId();
-            break;
-          case SPAN_ID:
-            value = spanContext.getSpanId();
-            break;
-          case TRACE_FLAGS:
-            value = spanContext.getTraceFlags().asHex();
-            break;
-          default:
-            // do nothing
+        if (AgentCommonConfig.get().getTraceIdKey().equals(key)) {
+          value = spanContext.getTraceId();
+        }
+        if (AgentCommonConfig.get().getSpanIdKey().equals(key)) {
+          value = spanContext.getSpanId();
+        }
+        if (AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
+          value = spanContext.getTraceFlags().asHex();
         }
       }
     }
@@ -97,9 +93,9 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.This ExtLogRecord record,
         @Advice.Return(readOnly = false) Map<String, String> value) {
 
-      if (value.containsKey(TRACE_ID)
-          && value.containsKey(SPAN_ID)
-          && value.containsKey(TRACE_FLAGS)) {
+      if (value.containsKey(AgentCommonConfig.get().getTraceIdKey())
+          && value.containsKey(AgentCommonConfig.get().getSpanIdKey())
+          && value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
         return;
       }
 
@@ -113,16 +109,16 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      if (!value.containsKey(TRACE_ID)) {
-        value.put(TRACE_ID, spanContext.getTraceId());
+      if (!value.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
+        value.put(AgentCommonConfig.get().getTraceIdKey(), spanContext.getTraceId());
       }
 
-      if (!value.containsKey(SPAN_ID)) {
-        value.put(SPAN_ID, spanContext.getSpanId());
+      if (!value.containsKey(AgentCommonConfig.get().getSpanIdKey())) {
+        value.put(AgentCommonConfig.get().getSpanIdKey(), spanContext.getSpanId());
       }
 
-      if (!value.containsKey(TRACE_FLAGS)) {
-        value.put(TRACE_FLAGS, spanContext.getTraceFlags().asHex());
+      if (!value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
+        value.put(AgentCommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
       }
     }
   }

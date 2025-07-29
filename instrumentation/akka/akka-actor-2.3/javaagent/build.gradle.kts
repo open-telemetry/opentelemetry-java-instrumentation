@@ -30,7 +30,7 @@ dependencies {
   compileOnly("com.typesafe.akka:akka-actor_2.11:2.3.2") // first version in maven central
   testImplementation("com.typesafe.akka:akka-actor_2.11:2.3.2") // first version in maven central
 
-  latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:+")
+  latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:latest.release")
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

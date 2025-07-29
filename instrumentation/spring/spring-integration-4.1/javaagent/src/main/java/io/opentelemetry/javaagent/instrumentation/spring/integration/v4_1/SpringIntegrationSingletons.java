@@ -9,15 +9,15 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
 import java.util.List;
 import org.springframework.messaging.support.ChannelInterceptor;
 
 public final class SpringIntegrationSingletons {
 
   private static final List<String> PATTERNS =
-      InstrumentationConfig.get()
+      AgentInstrumentationConfig.get()
           .getList(
               "otel.instrumentation.spring-integration.global-channel-interceptor-patterns",
               singletonList("*"));
@@ -26,7 +26,7 @@ public final class SpringIntegrationSingletons {
       SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setProducerSpanEnabled(
-              InstrumentationConfig.get()
+              AgentInstrumentationConfig.get()
                   .getBoolean("otel.instrumentation.spring-integration.producer.enabled", false))
           .build()
           .newChannelInterceptor();

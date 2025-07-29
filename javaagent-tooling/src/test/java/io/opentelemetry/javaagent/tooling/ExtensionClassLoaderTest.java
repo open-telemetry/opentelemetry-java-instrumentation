@@ -18,7 +18,7 @@ import java.util.jar.Manifest;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-public class ExtensionClassLoaderTest {
+class ExtensionClassLoaderTest {
   private static final File AGENT_FILE = new File("/agent.jar");
 
   @Test

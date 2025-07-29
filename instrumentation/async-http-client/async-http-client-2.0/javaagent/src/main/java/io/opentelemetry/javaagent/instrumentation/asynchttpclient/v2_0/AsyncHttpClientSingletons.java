@@ -5,52 +5,30 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
+import org.asynchttpclient.AsyncHandler;
+import org.asynchttpclient.Request;
 import org.asynchttpclient.Response;
 
 public final class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-2.0";
 
   private static final Instrumenter<RequestContext, Response> INSTRUMENTER;
+  public static final VirtualField<AsyncHandler<?>, RequestContext> ASYNC_HANDLER_REQUEST_CONTEXT;
+  public static final VirtualField<Request, Context> REQUEST_CONTEXT;
 
   static {
-    AsyncHttpClientHttpAttributesGetter httpAttributesGetter =
-        new AsyncHttpClientHttpAttributesGetter();
+    INSTRUMENTER =
+        JavaagentHttpClientInstrumenters.create(
+            INSTRUMENTATION_NAME,
+            new AsyncHttpClientHttpAttributesGetter(),
+            HttpHeaderSetter.INSTANCE);
 
-    InstrumenterBuilder<RequestContext, Response> builder =
-        Instrumenter.<RequestContext, Response>builder(
-                GlobalOpenTelemetry.get(),
-                INSTRUMENTATION_NAME,
-                HttpSpanNameExtractor.builder(httpAttributesGetter)
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-                    .build())
-            .setSpanStatusExtractor(HttpSpanStatusExtractor.create(httpAttributesGetter))
-            .addAttributesExtractor(
-                HttpClientAttributesExtractor.builder(httpAttributesGetter)
-                    .setCapturedRequestHeaders(CommonConfig.get().getClientRequestHeaders())
-                    .setCapturedResponseHeaders(CommonConfig.get().getClientResponseHeaders())
-                    .setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods())
-                    .build())
-            .addAttributesExtractor(
-                HttpClientPeerServiceAttributesExtractor.create(
-                    httpAttributesGetter, CommonConfig.get().getPeerServiceResolver()))
-            .addOperationMetrics(HttpClientMetrics.get());
-    if (CommonConfig.get().shouldEmitExperimentalHttpClientTelemetry()) {
-      builder
-          .addAttributesExtractor(HttpExperimentalAttributesExtractor.create(httpAttributesGetter))
-          .addOperationMetrics(HttpClientExperimentalMetrics.get());
-    }
-    INSTRUMENTER = builder.buildClientInstrumenter(HttpHeaderSetter.INSTANCE);
+    ASYNC_HANDLER_REQUEST_CONTEXT = VirtualField.find(AsyncHandler.class, RequestContext.class);
+    REQUEST_CONTEXT = VirtualField.find(Request.class, Context.class);
   }
 
   public static Instrumenter<RequestContext, Response> instrumenter() {

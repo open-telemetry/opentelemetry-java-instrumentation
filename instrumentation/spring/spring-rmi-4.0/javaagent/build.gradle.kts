@@ -20,11 +20,17 @@ dependencies {
   library("org.springframework:spring-context:4.0.0.RELEASE")
   library("org.springframework:spring-aop:4.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot:1.1.0.RELEASE")
+  testImplementation("org.apache.tomee:openejb-core:8.0.16")
 
   // rmi remoting was removed in spring 6
   latestDepTestLibrary("org.springframework:spring-context:5.+") // documented limitation
   latestDepTestLibrary("org.springframework:spring-aop:5.+") // documented limitation
   latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
+}
+
+otelJava {
+  // due to security manager deprecation this test does not work on jdk 24 with default configuration
+  maxJavaVersionForTests.set(JavaVersion.VERSION_23)
 }
 
 tasks.withType<Test>().configureEach {

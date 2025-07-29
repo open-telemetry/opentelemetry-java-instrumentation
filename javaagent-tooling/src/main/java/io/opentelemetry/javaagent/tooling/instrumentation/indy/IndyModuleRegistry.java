@@ -5,129 +5,146 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
-import io.opentelemetry.javaagent.tooling.BytecodeWithUrl;
-import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
-import java.lang.ref.WeakReference;
-import java.util.HashSet;
+import io.opentelemetry.javaagent.tooling.ModuleOpener;
+import io.opentelemetry.javaagent.tooling.util.ClassLoaderValue;
+import java.lang.instrument.Instrumentation;
 import java.util.Map;
-import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 import net.bytebuddy.agent.builder.AgentBuilder;
-import net.bytebuddy.description.method.MethodDescription;
-import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 
 public class IndyModuleRegistry {
 
   private IndyModuleRegistry() {}
 
-  private static final ConcurrentHashMap<String, InstrumentationModule> modulesByName =
+  private static final ConcurrentHashMap<String, InstrumentationModule> modulesByClassName =
       new ConcurrentHashMap<>();
 
   /**
-   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application
-   * classloader. We only store weak references to make sure we don't prevent application
-   * classloaders from being GCed. The application classloaders will strongly reference the {@link
-   * InstrumentationModuleClassLoader} through the invokedynamic callsites.
+   * Weakly references the {@link InstrumentationModuleClassLoader}s for a given application class
+   * loader. The {@link InstrumentationModuleClassLoader} are kept alive by a strong reference from
+   * the instrumented class loader realized via {@link ClassLoaderValue}.
+   *
+   * <p>The keys of the contained map are the instrumentation module group names, see {@link
+   * ExperimentalInstrumentationModule#getModuleGroup()};
    */
-  private static final ConcurrentHashMap<
-          InstrumentationModule,
-          Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>>>
-      instrumentationClassloaders = new ConcurrentHashMap<>();
+  private static final ClassLoaderValue<Map<String, InstrumentationModuleClassLoader>>
+      instrumentationClassLoaders = new ClassLoaderValue<>();
 
-  public static InstrumentationModuleClassLoader getInstrumentationClassloader(
-      String moduleClassName, ClassLoader instrumentedClassloader) {
-    InstrumentationModule instrumentationModule = modulesByName.get(moduleClassName);
+  public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
+      String moduleClassName, ClassLoader instrumentedClassLoader) {
+    InstrumentationModule instrumentationModule = modulesByClassName.get(moduleClassName);
     if (instrumentationModule == null) {
       throw new IllegalArgumentException(
-          "No module with the class name " + modulesByName + " has been registered!");
+          "No module with the class name " + modulesByClassName + " has been registered!");
     }
-    return getInstrumentationClassloader(instrumentationModule, instrumentedClassloader);
+    return getInstrumentationClassLoader(instrumentationModule, instrumentedClassLoader);
   }
 
-  private static synchronized InstrumentationModuleClassLoader getInstrumentationClassloader(
-      InstrumentationModule module, ClassLoader instrumentedClassloader) {
+  public static InstrumentationModuleClassLoader getInstrumentationClassLoader(
+      InstrumentationModule module, ClassLoader instrumentedClassLoader) {
 
-    Cache<ClassLoader, WeakReference<InstrumentationModuleClassLoader>> cacheForModule =
-        instrumentationClassloaders.computeIfAbsent(module, (k) -> Cache.weak());
+    String groupName = getModuleGroup(module);
 
-    instrumentedClassloader = maskNullClassLoader(instrumentedClassloader);
-    WeakReference<InstrumentationModuleClassLoader> cached =
-        cacheForModule.get(instrumentedClassloader);
-    if (cached != null) {
-      InstrumentationModuleClassLoader cachedCl = cached.get();
-      if (cachedCl != null) {
-        return cachedCl;
+    Map<String, InstrumentationModuleClassLoader> loadersByGroupName =
+        instrumentationClassLoaders.get(instrumentedClassLoader);
+
+    if (loadersByGroupName == null) {
+      throw new IllegalArgumentException(
+          module
+              + " has not been initialized for class loader "
+              + instrumentedClassLoader
+              + " yet");
+    }
+
+    InstrumentationModuleClassLoader loader = loadersByGroupName.get(groupName);
+    if (loader == null || !loader.hasModuleInstalled(module)) {
+      throw new IllegalArgumentException(
+          module
+              + " has not been initialized for class loader "
+              + instrumentedClassLoader
+              + " yet");
+    }
+
+    if (module instanceof ExperimentalInstrumentationModule) {
+      ExperimentalInstrumentationModule experimentalModule =
+          (ExperimentalInstrumentationModule) module;
+
+      Instrumentation instrumentation = InstrumentationHolder.getInstrumentation();
+      if (instrumentation == null) {
+        throw new IllegalStateException("global instrumentation not available");
+      }
+
+      if (JavaModule.isSupported()) {
+        // module opener only usable for java 9+
+        experimentalModule
+            .jpmsModulesToOpen()
+            .forEach(
+                (javaModule, packages) ->
+                    ModuleOpener.open(instrumentation, javaModule, loader, packages));
       }
     }
-    // We can't directly use "compute-if-absent" here because then for a short time only the
-    // WeakReference will point to the InstrumentationModuleCL
-    InstrumentationModuleClassLoader created =
-        createInstrumentationModuleClassloader(module, instrumentedClassloader);
-    cacheForModule.put(instrumentedClassloader, new WeakReference<>(created));
-    return created;
+    return loader;
   }
 
-  private static final ClassLoader BOOT_LOADER = new ClassLoader() {};
-
-  private static ClassLoader maskNullClassLoader(ClassLoader classLoader) {
-    return classLoader == null ? BOOT_LOADER : classLoader;
-  }
-
-  static InstrumentationModuleClassLoader createInstrumentationModuleClassloader(
-      InstrumentationModule module, ClassLoader instrumentedClassloader) {
-
-    Set<String> toInject = new HashSet<>(InstrumentationModuleMuzzle.getHelperClassNames(module));
-    // TODO (Jonas): Make muzzle include advice classes as helper classes
-    // so that we don't have to include them here
-    toInject.addAll(getModuleAdviceNames(module));
-    if (module instanceof ExperimentalInstrumentationModule) {
-      toInject.removeAll(((ExperimentalInstrumentationModule) module).injectedClassNames());
-    }
-
+  /**
+   * Returns a newly created class loader containing only the provided module. Note that other
+   * modules from the same module group (see {@link #getModuleGroup(InstrumentationModule)}) will
+   * not be installed in this class loader.
+   */
+  public static InstrumentationModuleClassLoader
+      createInstrumentationClassLoaderWithoutRegistration(
+          InstrumentationModule module, ClassLoader instrumentedClassLoader) {
+    // TODO: remove this method and replace usages with a custom TypePool implementation instead
     ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
-    Map<String, BytecodeWithUrl> injectedClasses =
-        toInject.stream()
-            .collect(
-                Collectors.toMap(
-                    name -> name, name -> BytecodeWithUrl.create(name, agentOrExtensionCl)));
-
-    return new InstrumentationModuleClassLoader(
-        instrumentedClassloader, agentOrExtensionCl, injectedClasses);
+    InstrumentationModuleClassLoader cl =
+        new InstrumentationModuleClassLoader(instrumentedClassLoader, agentOrExtensionCl);
+    cl.installModule(module);
+    return cl;
   }
 
-  public static void registerIndyModule(InstrumentationModule module) {
+  public static AgentBuilder.Identified.Extendable initializeModuleLoaderOnMatch(
+      InstrumentationModule module, AgentBuilder.Identified.Extendable agentBuilder) {
     if (!module.isIndyModule()) {
       throw new IllegalArgumentException("Provided module is not an indy module!");
     }
     String moduleName = module.getClass().getName();
-    if (modulesByName.putIfAbsent(moduleName, module) != null) {
+    InstrumentationModule existingRegistration = modulesByClassName.putIfAbsent(moduleName, module);
+    if (existingRegistration != null && existingRegistration != module) {
       throw new IllegalArgumentException(
-          "A module with the class name " + moduleName + " has already been registered!");
+          "A different module with the class name " + moduleName + " has already been registered!");
     }
+    return agentBuilder.transform(
+        (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
+          initializeModuleLoaderForClassLoader(module, classLoader);
+          return builder;
+        });
   }
 
-  private static Set<String> getModuleAdviceNames(InstrumentationModule module) {
-    Set<String> adviceNames = new HashSet<>();
-    TypeTransformer nameCollector =
-        new TypeTransformer() {
-          @Override
-          public void applyAdviceToMethod(
-              ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
-            adviceNames.add(adviceClassName);
-          }
+  private static void initializeModuleLoaderForClassLoader(
+      InstrumentationModule module, ClassLoader classLoader) {
 
-          @Override
-          public void applyTransformer(AgentBuilder.Transformer transformer) {}
-        };
-    for (TypeInstrumentation instr : module.typeInstrumentations()) {
-      instr.transform(nameCollector);
+    ClassLoader agentOrExtensionCl = module.getClass().getClassLoader();
+
+    String groupName = getModuleGroup(module);
+
+    InstrumentationModuleClassLoader moduleCl =
+        instrumentationClassLoaders
+            .computeIfAbsent(classLoader, ConcurrentHashMap::new)
+            .computeIfAbsent(
+                groupName,
+                unused -> new InstrumentationModuleClassLoader(classLoader, agentOrExtensionCl));
+
+    moduleCl.installModule(module);
+  }
+
+  private static String getModuleGroup(InstrumentationModule module) {
+    if (module instanceof ExperimentalInstrumentationModule) {
+      return ((ExperimentalInstrumentationModule) module).getModuleGroup();
     }
-    return adviceNames;
+    return module.getClass().getName();
   }
 }

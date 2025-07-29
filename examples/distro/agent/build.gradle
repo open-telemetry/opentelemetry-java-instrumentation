@@ -1,7 +1,7 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 apply from: "$rootDir/gradle/shadow.gradle"
@@ -46,6 +46,8 @@ CopySpec isolateClasses(Iterable<File> jars) {
         exclude("META-INF/INDEX.LIST")
         exclude("META-INF/*.DSA")
         exclude("META-INF/*.SF")
+        exclude("META-INF/maven/**")
+        exclude("META-INF/MANIFEST.MF")
       }
     }
   }
@@ -73,10 +75,12 @@ tasks {
     // exclude known bootstrap dependencies - they can't appear in the inst/ directory
     dependencies {
       exclude("io.opentelemetry:opentelemetry-api")
-      exclude("io.opentelemetry:opentelemetry-api-events")
+      exclude("io.opentelemetry:opentelemetry-common")
       exclude("io.opentelemetry:opentelemetry-context")
-      // metrics advice API
-      exclude("io.opentelemetry:opentelemetry-extension-incubator")
+      exclude("io.opentelemetry.semconv:opentelemetry-semconv")
+      exclude("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
+      // events API and metrics advice API
+      exclude("io.opentelemetry:opentelemetry-api-incubator")
     }
   }
 

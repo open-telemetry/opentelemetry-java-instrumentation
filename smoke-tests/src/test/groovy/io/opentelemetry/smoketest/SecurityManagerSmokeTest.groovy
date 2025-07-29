@@ -16,7 +16,7 @@ class SecurityManagerSmokeTest extends SmokeTest {
 
   @Override
   protected String getTargetImage(String jdk) {
-    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk$jdk-20230323.4502979551"
+    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk$jdk-20241021.11448062560"
   }
 
   @Override
@@ -37,6 +37,6 @@ class SecurityManagerSmokeTest extends SmokeTest {
     stopTarget()
 
     where:
-    jdk << [8, 11, 17, 19]
+    jdk << [8, 11, 17, 21, 23]
   }
 }

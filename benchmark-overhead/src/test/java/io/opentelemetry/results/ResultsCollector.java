@@ -54,14 +54,14 @@ public class ResultsCollector {
 
   private AppPerfResults.Builder addStartupTime(AppPerfResults.Builder builder, Agent agent)
       throws IOException {
-    Path file = namingConvention.startupDurationFile(agent);
+    Path file = Path.of(namingConvention.startupDurationFile(agent));
     long startupDuration = Long.parseLong(new String(Files.readAllBytes(file)).trim());
     return builder.startupDurationMs(startupDuration);
   }
 
   private AppPerfResults.Builder addK6Results(AppPerfResults.Builder builder, Agent agent)
       throws IOException {
-    Path k6File = namingConvention.k6Results(agent);
+    Path k6File = Path.of(namingConvention.k6Results(agent));
     String json = new String(Files.readAllBytes(k6File));
     double iterationAvg = read(json, "$.metrics.iteration_duration.avg");
     double iterationP95 = read(json, "$.metrics.iteration_duration['p(95)']");
@@ -82,7 +82,7 @@ public class ResultsCollector {
 
   private AppPerfResults.Builder addJfrResults(AppPerfResults.Builder builder, Agent agent)
       throws IOException {
-    Path jfrFile = namingConvention.jfrFile(agent);
+    Path jfrFile = Path.of(namingConvention.jfrFile(agent));
     return builder
         .totalGCTime(readTotalGCTime(jfrFile))
         .totalAllocated(readTotalAllocated(jfrFile))

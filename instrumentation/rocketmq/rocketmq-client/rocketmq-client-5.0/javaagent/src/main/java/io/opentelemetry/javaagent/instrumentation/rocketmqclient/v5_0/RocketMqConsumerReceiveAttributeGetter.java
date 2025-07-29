@@ -27,8 +27,19 @@ enum RocketMqConsumerReceiveAttributeGetter
     return request.getMessageQueue().getTopic().getName();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(ReceiveMessageRequest request) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(ReceiveMessageRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(ReceiveMessageRequest request) {
     return false;
   }
 
@@ -40,13 +51,13 @@ enum RocketMqConsumerReceiveAttributeGetter
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(ReceiveMessageRequest request) {
+  public Long getMessageBodySize(ReceiveMessageRequest request) {
     return null;
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(ReceiveMessageRequest request) {
+  public Long getMessageEnvelopeSize(ReceiveMessageRequest request) {
     return null;
   }
 
@@ -54,5 +65,18 @@ enum RocketMqConsumerReceiveAttributeGetter
   @Override
   public String getMessageId(ReceiveMessageRequest request, @Nullable List<MessageView> unused) {
     return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(ReceiveMessageRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(
+      ReceiveMessageRequest request, @Nullable List<MessageView> messages) {
+    return messages != null ? (long) messages.size() : null;
   }
 }

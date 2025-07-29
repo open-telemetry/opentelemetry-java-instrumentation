@@ -7,6 +7,20 @@ package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_REQUEST_BODY_SIZE;
+import static io.opentelemetry.semconv.incubating.HttpIncubatingAttributes.HTTP_RESPONSE_BODY_SIZE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -15,11 +29,8 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 
@@ -38,24 +49,24 @@ class HttpClientMetricsTest {
 
     Attributes requestAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.HTTP_REQUEST_METHOD, "GET")
-            .put(SemanticAttributes.URL_FULL, "https://localhost:1234/")
-            .put(SemanticAttributes.URL_PATH, "/")
-            .put(SemanticAttributes.URL_QUERY, "q=a")
-            .put(SemanticAttributes.SERVER_ADDRESS, "localhost")
-            .put(SemanticAttributes.SERVER_PORT, 1234)
+            .put(HTTP_REQUEST_METHOD, "GET")
+            .put(URL_FULL, "https://localhost:1234/")
+            .put(URL_PATH, "/")
+            .put(URL_QUERY, "q=a")
+            .put(SERVER_ADDRESS, "localhost")
+            .put(SERVER_PORT, 1234)
             .build();
 
     Attributes responseAttributes =
         Attributes.builder()
-            .put(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200)
-            .put(HttpAttributes.ERROR_TYPE, "400")
-            .put(SemanticAttributes.HTTP_REQUEST_BODY_SIZE, 100)
-            .put(SemanticAttributes.HTTP_RESPONSE_BODY_SIZE, 200)
-            .put(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http")
-            .put(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0")
-            .put(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4")
-            .put(NetworkAttributes.NETWORK_PEER_PORT, 8080)
+            .put(HTTP_RESPONSE_STATUS_CODE, 200)
+            .put(ERROR_TYPE, "400")
+            .put(HTTP_REQUEST_BODY_SIZE, 100)
+            .put(HTTP_RESPONSE_BODY_SIZE, 200)
+            .put(NETWORK_PROTOCOL_NAME, "http")
+            .put(NETWORK_PROTOCOL_VERSION, "2.0")
+            .put(NETWORK_PEER_ADDRESS, "1.2.3.4")
+            .put(NETWORK_PEER_PORT, 8080)
             .build();
 
     Context parent =
@@ -92,16 +103,13 @@ class HttpClientMetricsTest {
                                     point
                                         .hasSum(0.15 /* seconds */)
                                         .hasAttributesSatisfying(
-                                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "GET"),
-                                            equalTo(
-                                                SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200),
-                                            equalTo(HttpAttributes.ERROR_TYPE, "400"),
-                                            equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
-                                            equalTo(
-                                                SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-                                            equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                            equalTo(SemanticAttributes.SERVER_PORT, 1234))
+                                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                            equalTo(ERROR_TYPE, "400"),
+                                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                                            equalTo(SERVER_ADDRESS, "localhost"),
+                                            equalTo(SERVER_PORT, 1234))
                                         .hasExemplarsSatisfying(
                                             exemplar ->
                                                 exemplar

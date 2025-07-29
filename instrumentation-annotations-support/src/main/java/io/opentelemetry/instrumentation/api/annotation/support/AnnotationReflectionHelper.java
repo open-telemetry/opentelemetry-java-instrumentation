@@ -14,7 +14,7 @@ import java.lang.invoke.MethodType;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 
-/** Helper class for reflecting over annotations at runtime.. */
+/** Helper class for reflecting over annotations at runtime. */
 public class AnnotationReflectionHelper {
   private AnnotationReflectionHelper() {}
 

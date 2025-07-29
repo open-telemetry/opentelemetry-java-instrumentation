@@ -8,15 +8,15 @@ plugins {
 }
 
 dependencies {
-  implementation(platform("io.grpc:grpc-bom:1.61.0"))
+  implementation(platform("io.grpc:grpc-bom:1.73.0"))
   implementation(platform("io.opentelemetry:opentelemetry-bom:1.0.0"))
   implementation(platform("io.opentelemetry:opentelemetry-bom-alpha:1.0.0-alpha"))
-  implementation(platform("org.apache.logging.log4j:log4j-bom:2.22.1"))
+  implementation(platform("org.apache.logging.log4j:log4j-bom:2.25.1"))
 
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
-  implementation("io.opentelemetry.proto:opentelemetry-proto:1.0.0-alpha")
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation(project(":instrumentation-annotations"))
   implementation("org.apache.logging.log4j:log4j-core")
 
@@ -36,7 +36,9 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "eclipse-temurin:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-grpc:jdk$targetJDK-$tag"
 }

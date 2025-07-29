@@ -9,11 +9,19 @@
     </encoder>
   </appender>
   <appender name="OpenTelemetry"
-    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender"/>
+    class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
+    <captureCodeAttributes>true</captureCodeAttributes>
+  </appender>
+  <appender name="List" class="ch.qos.logback.core.read.ListAppender" />
+  <appender name="OpenTelemetryMdc"
+            class="io.opentelemetry.instrumentation.logback.mdc.v1_0.OpenTelemetryAppender">
+    <appender-ref ref="List"/>
+  </appender>
 
   <root level="INFO">
     <appender-ref ref="console"/>
     <appender-ref ref="OpenTelemetry"/>
+    <appender-ref ref="OpenTelemetryMdc"/>
   </root>
 
 </configuration>

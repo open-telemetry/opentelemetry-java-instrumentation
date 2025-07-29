@@ -27,10 +27,13 @@ import static java.lang.invoke.MethodType.methodType;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
+import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.reactivestreams.Publisher;
 import reactor.core.CoreSubscriber;
@@ -40,9 +43,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Hooks;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.Operators;
+import reactor.core.scheduler.Schedulers;
 
 /** Based on Spring Sleuth's Reactor instrumentation. */
 public final class ContextPropagationOperator {
+  private static final Logger logger = Logger.getLogger(ContextPropagationOperator.class.getName());
 
   private static final Object VALUE = new Object();
 
@@ -51,6 +56,8 @@ public final class ContextPropagationOperator {
 
   @Nullable
   private static final MethodHandle FLUX_CONTEXT_WRITE_METHOD = getContextWriteMethod(Flux.class);
+
+  @Nullable private static final MethodHandle SCHEDULERS_HOOK_METHOD = getSchedulersHookMethod();
 
   @Nullable
   private static MethodHandle getContextWriteMethod(Class<?> type) {
@@ -62,6 +69,18 @@ public final class ContextPropagationOperator {
     }
     try {
       return lookup.findVirtual(type, "subscriberContext", methodType(type, Function.class));
+    } catch (NoSuchMethodException | IllegalAccessException e) {
+      // ignore
+    }
+    return null;
+  }
+
+  @Nullable
+  private static MethodHandle getSchedulersHookMethod() {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+    try {
+      return lookup.findStatic(
+          Schedulers.class, "onScheduleHook", methodType(void.class, String.class, Function.class));
     } catch (NoSuchMethodException | IllegalAccessException e) {
       // ignore
     }
@@ -116,6 +135,20 @@ public final class ContextPropagationOperator {
     return context.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
   }
 
+  /**
+   * Gets Trace {@link Context} from Reactor {@link reactor.util.context.ContextView}.
+   *
+   * @param contextView Reactor's context to get trace context from.
+   * @param defaultTraceContext Default value to be returned if no trace context is found on Reactor
+   *     context.
+   * @return Trace context or default value.
+   */
+  @NoMuzzle
+  public static Context getOpenTelemetryContextFromContextView(
+      reactor.util.context.ContextView contextView, Context defaultTraceContext) {
+    return contextView.getOrDefault(TRACE_CONTEXT_KEY, defaultTraceContext);
+  }
+
   ContextPropagationOperator(boolean captureExperimentalSpanAttributes) {
     this.asyncOperationEndStrategy =
         ReactorAsyncOperationEndStrategy.builder()
@@ -137,7 +170,19 @@ public final class ContextPropagationOperator {
       Hooks.onEachOperator(
           TracingSubscriber.class.getName(), tracingLift(asyncOperationEndStrategy));
       AsyncOperationEndStrategies.instance().registerStrategy(asyncOperationEndStrategy);
+      registerScheduleHook(RunnableWrapper.class.getName(), RunnableWrapper::new);
       enabled = true;
+    }
+  }
+
+  private static void registerScheduleHook(String key, Function<Runnable, Runnable> function) {
+    if (SCHEDULERS_HOOK_METHOD == null) {
+      return;
+    }
+    try {
+      SCHEDULERS_HOOK_METHOD.invoke(key, function);
+    } catch (Throwable throwable) {
+      logger.log(Level.WARNING, "Failed to install scheduler hook", throwable);
     }
   }
 
@@ -310,6 +355,23 @@ public final class ContextPropagationOperator {
         return source;
       }
       return null;
+    }
+  }
+
+  private static class RunnableWrapper implements Runnable {
+    private final Runnable delegate;
+    private final Context context;
+
+    RunnableWrapper(Runnable delegate) {
+      this.delegate = delegate;
+      context = Context.current();
+    }
+
+    @Override
+    public void run() {
+      try (Scope ignore = context.makeCurrent()) {
+        delegate.run();
+      }
     }
   }
 }

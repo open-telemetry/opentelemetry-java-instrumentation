@@ -8,6 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.rmi;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import io.opentelemetry.api.trace.SpanId;
@@ -15,7 +21,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -33,15 +38,14 @@ class RmiTest {
   public static final AgentInstrumentationExtension testing =
       AgentInstrumentationExtension.create();
 
-  private static int registryPort;
   private static Registry serverRegistry;
   private static Registry clientRegistry;
 
-  @RegisterExtension final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
   @BeforeAll
   static void setUp() throws Exception {
-    registryPort = PortUtils.findOpenPort();
+    int registryPort = PortUtils.findOpenPort();
     serverRegistry = LocateRegistry.createRegistry(registryPort);
     clientRegistry = LocateRegistry.getRegistry("localhost", registryPort);
   }
@@ -82,17 +86,17 @@ class RmiTest {
                                 .hasKind(SpanKind.CLIENT)
                                 .hasParentSpanId(trace.get(0).getSpanId())
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "hello")),
+                                    equalTo(RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RPC_SERVICE, "rmi.app.Greeter"),
+                                    equalTo(RPC_METHOD, "hello")),
                         span ->
                             assertThat(span)
                                 .hasName("rmi.app.Server/hello")
                                 .hasKind(SpanKind.SERVER)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Server"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "hello"))));
+                                    equalTo(RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RPC_SERVICE, "rmi.app.Server"),
+                                    equalTo(RPC_METHOD, "hello"))));
   }
 
   @Test
@@ -119,14 +123,14 @@ class RmiTest {
 
     Throwable thrown =
         catchThrowableOfType(
+            IllegalStateException.class,
             () ->
                 testing.runWithSpan(
                     "parent",
                     () -> {
                       Greeter client = (Greeter) clientRegistry.lookup(Server.RMI_ID);
                       client.exceptional();
-                    }),
-            IllegalStateException.class);
+                    }));
 
     assertThat(testing.waitForTraces(1))
         .satisfiesExactly(
@@ -146,21 +150,19 @@ class RmiTest {
                                 .hasEventsSatisfyingExactly(
                                     event ->
                                         event
-                                            .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                            .hasName("exception")
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
-                                                    SemanticAttributes.EXCEPTION_TYPE,
+                                                    EXCEPTION_TYPE,
                                                     thrown.getClass().getCanonicalName()),
-                                                equalTo(
-                                                    SemanticAttributes.EXCEPTION_MESSAGE,
-                                                    thrown.getMessage()),
+                                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                                 satisfies(
-                                                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                                                    EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Greeter"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "exceptional")),
+                                    equalTo(RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RPC_SERVICE, "rmi.app.Greeter"),
+                                    equalTo(RPC_METHOD, "exceptional")),
                         span ->
                             assertThat(span)
                                 .hasName("rmi.app.Server/exceptional")
@@ -168,20 +170,18 @@ class RmiTest {
                                 .hasEventsSatisfyingExactly(
                                     event ->
                                         event
-                                            .hasName(SemanticAttributes.EXCEPTION_EVENT_NAME)
+                                            .hasName("exception")
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(
-                                                    SemanticAttributes.EXCEPTION_TYPE,
+                                                    EXCEPTION_TYPE,
                                                     thrown.getClass().getCanonicalName()),
-                                                equalTo(
-                                                    SemanticAttributes.EXCEPTION_MESSAGE,
-                                                    thrown.getMessage()),
+                                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
                                                 satisfies(
-                                                    SemanticAttributes.EXCEPTION_STACKTRACE,
+                                                    EXCEPTION_STACKTRACE,
                                                     AbstractAssert::isNotNull)))
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(SemanticAttributes.RPC_SYSTEM, "java_rmi"),
-                                    equalTo(SemanticAttributes.RPC_SERVICE, "rmi.app.Server"),
-                                    equalTo(SemanticAttributes.RPC_METHOD, "exceptional"))));
+                                    equalTo(RPC_SYSTEM, "java_rmi"),
+                                    equalTo(RPC_SERVICE, "rmi.app.Server"),
+                                    equalTo(RPC_METHOD, "exceptional"))));
   }
 }

@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import akka.dispatch.forkjoin.ForkJoinTask;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
@@ -51,17 +50,19 @@ public class AkkaForkJoinPoolInstrumentation implements TypeInstrumentation {
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
-            VirtualField.find(ForkJoinTask.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+        return ExecutorAdviceHelper.attachContextToTask(
+            context, VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, task);
       }
       return null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitJobSubmit(
-        @Advice.Enter PropagatedContext propagatedContext, @Advice.Thrown Throwable throwable) {
-      ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable);
+        @Advice.Argument(0) ForkJoinTask<?> task,
+        @Advice.Enter PropagatedContext propagatedContext,
+        @Advice.Thrown Throwable throwable) {
+      ExecutorAdviceHelper.cleanUpAfterSubmit(
+          propagatedContext, throwable, VirtualFields.FORK_JOIN_TASK_PROPAGATED_CONTEXT, task);
     }
   }
 }

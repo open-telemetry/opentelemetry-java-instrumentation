@@ -10,17 +10,22 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 enum VertxRedisClientAttributesExtractor
     implements AttributesExtractor<VertxRedisClientRequest, Void> {
   INSTANCE;
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, VertxRedisClientRequest request) {
-    internalSet(attributes, SemanticAttributes.DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(
+          attributes, DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX, request.getDatabaseIndex());
+    }
   }
 
   @Override

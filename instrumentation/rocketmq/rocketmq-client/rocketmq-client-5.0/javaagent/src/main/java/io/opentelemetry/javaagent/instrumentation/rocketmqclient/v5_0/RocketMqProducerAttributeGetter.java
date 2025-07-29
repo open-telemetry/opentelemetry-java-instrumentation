@@ -28,8 +28,19 @@ enum RocketMqProducerAttributeGetter
     return message.getTopic();
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(PublishingMessageImpl message) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(PublishingMessageImpl message) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(PublishingMessageImpl message) {
     return false;
   }
 
@@ -40,13 +51,13 @@ enum RocketMqProducerAttributeGetter
   }
 
   @Override
-  public Long getMessagePayloadSize(PublishingMessageImpl message) {
+  public Long getMessageBodySize(PublishingMessageImpl message) {
     return (long) message.getBody().remaining();
   }
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(PublishingMessageImpl message) {
+  public Long getMessageEnvelopeSize(PublishingMessageImpl message) {
     return null;
   }
 
@@ -54,6 +65,19 @@ enum RocketMqProducerAttributeGetter
   @Override
   public String getMessageId(PublishingMessageImpl message, @Nullable SendReceiptImpl sendReceipt) {
     return message.getMessageId().toString();
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(PublishingMessageImpl message) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(
+      PublishingMessageImpl publishingMessage, @Nullable SendReceiptImpl sendReceipt) {
+    return null;
   }
 
   @Override

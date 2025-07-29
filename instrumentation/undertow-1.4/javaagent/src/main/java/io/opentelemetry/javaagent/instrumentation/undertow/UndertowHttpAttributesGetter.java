@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
+import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
@@ -65,22 +66,14 @@ public class UndertowHttpAttributesGetter
   @Override
   public String getNetworkProtocolName(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    String protocol = exchange.getProtocol().toString();
-    if (protocol.startsWith("HTTP/")) {
-      return "http";
-    }
-    return null;
+    return HttpProtocolUtil.getProtocol(exchange.getProtocol().toString());
   }
 
   @Nullable
   @Override
   public String getNetworkProtocolVersion(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    String protocol = exchange.getProtocol().toString();
-    if (protocol.startsWith("HTTP/")) {
-      return protocol.substring("HTTP/".length());
-    }
-    return null;
+    return HttpProtocolUtil.getVersion(exchange.getProtocol().toString());
   }
 
   @Override

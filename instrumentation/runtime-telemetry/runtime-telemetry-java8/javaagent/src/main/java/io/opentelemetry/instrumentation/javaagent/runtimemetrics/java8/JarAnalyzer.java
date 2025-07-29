@@ -13,11 +13,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.events.EventEmitter;
-import io.opentelemetry.api.events.GlobalEventEmitterProvider;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
 import io.opentelemetry.sdk.common.Clock;
 import io.opentelemetry.sdk.internal.DaemonThreadFactory;
+import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.ClassFileTransformer;
 import java.net.URI;
@@ -42,8 +42,7 @@ final class JarAnalyzer implements ClassFileTransformer {
 
   private static final Logger logger = Logger.getLogger(JarAnalyzer.class.getName());
 
-  private static final String EVENT_DOMAIN_PACKAGE = "package";
-  private static final String EVENT_NAME_INFO = "info";
+  private static final String EVENT_NAME_INFO = "package.info";
   static final AttributeKey<String> PACKAGE_NAME = AttributeKey.stringKey("package.name");
   static final AttributeKey<String> PACKAGE_VERSION = AttributeKey.stringKey("package.version");
   static final AttributeKey<String> PACKAGE_TYPE = AttributeKey.stringKey("package.type");
@@ -57,15 +56,16 @@ final class JarAnalyzer implements ClassFileTransformer {
   private final Set<URI> seenUris = new HashSet<>();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
-  private JarAnalyzer(OpenTelemetry unused, int jarsPerSecond) {
-    // TODO(jack-berg): Use OpenTelemetry to obtain EventEmitter when event API is stable
-    EventEmitter eventEmitter =
-        GlobalEventEmitterProvider.get()
-            .eventEmitterBuilder(JmxRuntimeMetricsUtil.getInstrumentationName())
-            .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
-            .setEventDomain(EVENT_DOMAIN_PACKAGE)
-            .build();
-    Worker worker = new Worker(eventEmitter, toProcess, jarsPerSecond);
+  private JarAnalyzer(OpenTelemetry openTelemetry, int jarsPerSecond) {
+    ExtendedLogRecordBuilder logRecordBuilder =
+        (ExtendedLogRecordBuilder)
+            openTelemetry
+                .getLogsBridge()
+                .loggerBuilder(JmxRuntimeMetricsUtil.getInstrumentationName())
+                .setInstrumentationVersion(JmxRuntimeMetricsUtil.getInstrumentationVersion())
+                .build()
+                .logRecordBuilder();
+    Worker worker = new Worker(logRecordBuilder, toProcess, jarsPerSecond);
     Thread workerThread =
         new DaemonThreadFactory(JarAnalyzer.class.getSimpleName() + "_WorkerThread")
             .newThread(worker);
@@ -131,18 +131,35 @@ final class JarAnalyzer implements ClassFileTransformer {
       return;
     }
 
+    // Payara 5 and 6 have url with file protocol that fail on openStream with
+    // java.io.IOException: no entry name specified
+    //   at
+    // java.base/sun.net.www.protocol.jar.JarURLConnection.getInputStream(JarURLConnection.java:160)
+    // To avoid this here we recreate the URL when it points to a file.
+    if ("file".equals(archiveUrl.getProtocol())) {
+      try {
+        File archiveFile = new File(archiveUrl.toURI().getSchemeSpecificPart());
+        if (archiveFile.exists() && archiveFile.isFile()) {
+          archiveUrl = archiveFile.toURI().toURL();
+        }
+      } catch (Exception e) {
+        logger.log(Level.WARNING, "Unable to normalize location URL: " + archiveUrl, e);
+      }
+    }
+
     // Only code locations with .jar and .war extension should make it here
     toProcess.add(archiveUrl);
   }
 
   private static final class Worker implements Runnable {
 
-    private final EventEmitter eventEmitter;
+    private final ExtendedLogRecordBuilder eventLogger;
     private final BlockingQueue<URL> toProcess;
     private final io.opentelemetry.sdk.internal.RateLimiter rateLimiter;
 
-    private Worker(EventEmitter eventEmitter, BlockingQueue<URL> toProcess, int jarsPerSecond) {
-      this.eventEmitter = eventEmitter;
+    private Worker(
+        ExtendedLogRecordBuilder eventLogger, BlockingQueue<URL> toProcess, int jarsPerSecond) {
+      this.eventLogger = eventLogger;
       this.toProcess = toProcess;
       this.rateLimiter =
           new io.opentelemetry.sdk.internal.RateLimiter(
@@ -151,7 +168,7 @@ final class JarAnalyzer implements ClassFileTransformer {
 
     /**
      * Continuously poll the {@link #toProcess} for archive {@link URL}s, and process each wit
-     * {@link #processUrl(EventEmitter, URL)}.
+     * {@link #processUrl(ExtendedLogRecordBuilder, URL)}.
      */
     @Override
     public void run() {
@@ -172,7 +189,7 @@ final class JarAnalyzer implements ClassFileTransformer {
         try {
           // TODO(jack-berg): add ability to optionally re-process urls periodically to re-emit
           // events
-          processUrl(eventEmitter, archiveUrl);
+          processUrl(eventLogger, archiveUrl);
         } catch (Throwable e) {
           logger.log(Level.WARNING, "Unexpected error processing archive URL: " + archiveUrl, e);
         }
@@ -185,7 +202,7 @@ final class JarAnalyzer implements ClassFileTransformer {
    * Process the {@code archiveUrl}, extracting metadata from it and emitting an event with the
    * content.
    */
-  static void processUrl(EventEmitter eventEmitter, URL archiveUrl) {
+  static void processUrl(ExtendedLogRecordBuilder eventLogger, URL archiveUrl) {
     JarDetails jarDetails;
     try {
       jarDetails = JarDetails.forUrl(archiveUrl);
@@ -224,6 +241,6 @@ final class JarAnalyzer implements ClassFileTransformer {
     builder.put(PACKAGE_CHECKSUM, packageChecksum);
     builder.put(PACKAGE_CHECKSUM_ALGORITHM, "SHA1");
 
-    eventEmitter.emit(EVENT_NAME_INFO, builder.build());
+    eventLogger.setEventName(EVENT_NAME_INFO).setAllAttributes(builder.build()).emit();
   }
 }

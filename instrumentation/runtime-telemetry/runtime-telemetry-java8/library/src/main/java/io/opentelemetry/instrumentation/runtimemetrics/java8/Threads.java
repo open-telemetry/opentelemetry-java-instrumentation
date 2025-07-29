@@ -5,16 +5,14 @@
 
 package io.opentelemetry.instrumentation.runtimemetrics.java8;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.instrumentation.runtimemetrics.java8.internal.JmxRuntimeMetricsUtil;
+import io.opentelemetry.semconv.JvmAttributes;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -27,6 +25,8 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /**
@@ -55,17 +55,36 @@ public final class Threads {
   // Visible for testing
   static final Threads INSTANCE = new Threads();
 
-  // TODO: use the opentelemetry-semconv classes once we have metrics attributes there
-  static final AttributeKey<Boolean> JVM_THREAD_DAEMON = booleanKey("jvm.thread.daemon");
-  static final AttributeKey<String> JVM_THREAD_STATE = stringKey("jvm.thread.state");
-
   /** Register observers for java runtime class metrics. */
   public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
-    return INSTANCE.registerObservers(openTelemetry, ManagementFactory.getThreadMXBean());
+    return INSTANCE.registerObservers(openTelemetry, useThreads());
+  }
+
+  private List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry, boolean useThread) {
+    if (useThread) {
+      return registerObservers(openTelemetry, Threads::getThreads);
+    }
+    return registerObservers(openTelemetry, ManagementFactory.getThreadMXBean());
   }
 
   // Visible for testing
   List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry, ThreadMXBean threadBean) {
+    return registerObservers(
+        openTelemetry,
+        isJava9OrNewer() ? Threads::java9AndNewerCallback : Threads::java8Callback,
+        threadBean);
+  }
+
+  // Visible for testing
+  List<AutoCloseable> registerObservers(
+      OpenTelemetry openTelemetry, Supplier<Thread[]> threadSupplier) {
+    return registerObservers(openTelemetry, Threads::java8ThreadCallback, threadSupplier);
+  }
+
+  private static <T> List<AutoCloseable> registerObservers(
+      OpenTelemetry openTelemetry,
+      Function<T, Consumer<ObservableLongMeasurement>> callbackProvider,
+      T threadInfo) {
     Meter meter = JmxRuntimeMetricsUtil.getMeter(openTelemetry);
     List<AutoCloseable> observables = new ArrayList<>();
 
@@ -74,8 +93,7 @@ public final class Threads {
             .upDownCounterBuilder("jvm.thread.count")
             .setDescription("Number of executing platform threads.")
             .setUnit("{thread}")
-            .buildWithCallback(
-                isJava9OrNewer() ? java9AndNewerCallback(threadBean) : java8Callback(threadBean)));
+            .buildWithCallback(callbackProvider.apply(threadInfo)));
 
     return observables;
   }
@@ -98,15 +116,53 @@ public final class Threads {
     return THREAD_INFO_IS_DAEMON != null;
   }
 
+  private static boolean useThreads() {
+    // GraalVM native image does not support ThreadMXBean yet
+    // see https://github.com/oracle/graal/issues/6101
+    boolean isNativeExecution = System.getProperty("org.graalvm.nativeimage.imagecode") != null;
+    return !isJava9OrNewer() || isNativeExecution;
+  }
+
   private static Consumer<ObservableLongMeasurement> java8Callback(ThreadMXBean threadBean) {
     return measurement -> {
       int daemonThreadCount = threadBean.getDaemonThreadCount();
       measurement.record(
-          daemonThreadCount, Attributes.builder().put(JVM_THREAD_DAEMON, true).build());
+          daemonThreadCount,
+          Attributes.builder().put(JvmAttributes.JVM_THREAD_DAEMON, true).build());
       measurement.record(
           threadBean.getThreadCount() - daemonThreadCount,
-          Attributes.builder().put(JVM_THREAD_DAEMON, false).build());
+          Attributes.builder().put(JvmAttributes.JVM_THREAD_DAEMON, false).build());
     };
+  }
+
+  private static Consumer<ObservableLongMeasurement> java8ThreadCallback(
+      Supplier<Thread[]> supplier) {
+    return measurement -> {
+      Map<Attributes, Long> counts = new HashMap<>();
+      for (Thread thread : supplier.get()) {
+        Attributes threadAttributes = threadAttributes(thread);
+        counts.compute(threadAttributes, (k, value) -> value == null ? 1 : value + 1);
+      }
+      counts.forEach((threadAttributes, count) -> measurement.record(count, threadAttributes));
+    };
+  }
+
+  // Visible for testing
+  static Thread[] getThreads() {
+    ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
+    while (threadGroup.getParent() != null) {
+      threadGroup = threadGroup.getParent();
+    }
+    // use a slightly larger array in case new threads are created
+    int count = threadGroup.activeCount() + 10;
+    Thread[] threads = new Thread[count];
+    int resultSize = threadGroup.enumerate(threads);
+    if (resultSize == threads.length) {
+      return threads;
+    }
+    Thread[] result = new Thread[resultSize];
+    System.arraycopy(threads, 0, result, 0, resultSize);
+    return result;
   }
 
   private static Consumer<ObservableLongMeasurement> java9AndNewerCallback(
@@ -133,7 +189,15 @@ public final class Threads {
       throw new IllegalStateException("Unexpected error happened during ThreadInfo#isDaemon()", e);
     }
     String threadState = threadInfo.getThreadState().name().toLowerCase(Locale.ROOT);
-    return Attributes.of(JVM_THREAD_DAEMON, isDaemon, JVM_THREAD_STATE, threadState);
+    return Attributes.of(
+        JvmAttributes.JVM_THREAD_DAEMON, isDaemon, JvmAttributes.JVM_THREAD_STATE, threadState);
+  }
+
+  private static Attributes threadAttributes(Thread thread) {
+    boolean isDaemon = thread.isDaemon();
+    String threadState = thread.getState().name().toLowerCase(Locale.ROOT);
+    return Attributes.of(
+        JvmAttributes.JVM_THREAD_DAEMON, isDaemon, JvmAttributes.JVM_THREAD_STATE, threadState);
   }
 
   private Threads() {}

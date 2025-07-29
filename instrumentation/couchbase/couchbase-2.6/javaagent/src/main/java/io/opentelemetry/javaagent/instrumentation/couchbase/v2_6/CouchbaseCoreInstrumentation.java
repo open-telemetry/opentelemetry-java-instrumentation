@@ -41,9 +41,8 @@ public class CouchbaseCoreInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CouchbaseCoreAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void addOperationIdToSpan(@Advice.Argument(0) CouchbaseRequest request) {
-
       VirtualField<CouchbaseRequest, CouchbaseRequestInfo> virtualField =
           VirtualField.find(CouchbaseRequest.class, CouchbaseRequestInfo.class);
       CouchbaseRequestInfo requestInfo = virtualField.get(request);

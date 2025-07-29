@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace;
 
 import application.io.opentelemetry.api.trace.Tracer;
 import application.io.opentelemetry.api.trace.TracerProvider;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -16,10 +15,13 @@ public class ApplicationTracerProvider implements TracerProvider {
 
   private static final MethodHandle TRACE_PROVIDER_14 = getApplicationTracerProvider14();
 
+  protected final ApplicationTracerFactory tracerFactory;
   protected final io.opentelemetry.api.trace.TracerProvider agentTracerProvider;
 
   protected ApplicationTracerProvider(
+      ApplicationTracerFactory tracerFactory,
       io.opentelemetry.api.trace.TracerProvider agentTracerProvider) {
+    this.tracerFactory = tracerFactory;
     this.agentTracerProvider = agentTracerProvider;
   }
 
@@ -48,17 +50,17 @@ public class ApplicationTracerProvider implements TracerProvider {
       }
     }
 
-    return new ApplicationTracerProvider(agentTracerProvider);
+    return new ApplicationTracerProvider(ApplicationTracer::new, agentTracerProvider);
   }
 
   @Override
   public Tracer get(String instrumentationName) {
-    return new ApplicationTracer(agentTracerProvider.get(instrumentationName));
+    return tracerFactory.newTracer(agentTracerProvider.get(instrumentationName));
   }
 
   @Override
   public Tracer get(String instrumentationName, String instrumentationVersion) {
-    return new ApplicationTracer(
-        GlobalOpenTelemetry.getTracerProvider().get(instrumentationName, instrumentationVersion));
+    return tracerFactory.newTracer(
+        agentTracerProvider.get(instrumentationName, instrumentationVersion));
   }
 }

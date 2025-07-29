@@ -90,31 +90,31 @@
         writer="itemWriter"/>
     </b:tasklet>
   </b:step>
-  <bean id="testPartitioner" class="springbatch.TestPartitioner"/>
-  <bean id="testPartitionedItemReader" class="springbatch.TestPartitionedItemReader"/>
+  <bean id="testPartitioner" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestPartitioner"/>
+  <bean id="testPartitionedItemReader" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestPartitionedItemReader"/>
 
   <b:job id="customSpanEventsItemsJob">
     <b:step id="customSpanEventsItemStep">
       <b:tasklet>
         <b:chunk commit-interval="5" processor="itemProcessor" writer="itemWriter">
           <b:reader>
-            <bean class="springbatch.SingleItemReader"/>
+            <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.SingleItemReader"/>
           </b:reader>
           <b:listeners>
             <b:listener>
-              <bean class="springbatch.CustomEventStepListener"/>
+              <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.CustomEventStepListener"/>
             </b:listener>
             <b:listener>
-              <bean class="springbatch.CustomEventChunkListener"/>
+              <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.CustomEventChunkListener"/>
             </b:listener>
             <b:listener>
-              <bean class="springbatch.CustomEventItemReadListener"/>
+              <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.CustomEventItemReadListener"/>
             </b:listener>
             <b:listener>
-              <bean class="springbatch.CustomEventItemProcessListener"/>
+              <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.CustomEventItemProcessListener"/>
             </b:listener>
             <b:listener>
-              <bean class="springbatch.CustomEventItemWriteListener"/>
+              <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.CustomEventItemWriteListener"/>
             </b:listener>
           </b:listeners>
         </b:chunk>
@@ -122,17 +122,17 @@
     </b:step>
     <b:listeners>
       <b:listener>
-        <bean class="springbatch.CustomEventJobListener"/>
+        <bean class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.CustomEventJobListener"/>
       </b:listener>
     </b:listeners>
   </b:job>
 
-  <bean id="itemReader" class="springbatch.TestItemReader"/>
-  <bean id="syncItemReader" class="springbatch.TestSyncItemReader">
+  <bean id="itemReader" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestItemReader"/>
+  <bean id="syncItemReader" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestSyncItemReader">
     <constructor-arg name="max" value="5"/>
   </bean>
-  <bean id="itemProcessor" class="springbatch.TestItemProcessor"/>
-  <bean id="itemWriter" class="springbatch.TestItemWriter"/>
-  <bean id="testTasklet" class="springbatch.TestTasklet"/>
-  <bean id="testDecider" class="springbatch.TestDecider"/>
+  <bean id="itemProcessor" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestItemProcessor"/>
+  <bean id="itemWriter" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestItemWriter"/>
+  <bean id="testTasklet" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestTasklet"/>
+  <bean id="testDecider" class="io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.springbatch.TestDecider"/>
 </beans>

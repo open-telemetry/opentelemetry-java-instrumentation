@@ -13,6 +13,8 @@ import io.opentelemetry.javaagent.bootstrap.spring.SpringSchedulingTaskTracing;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -24,6 +26,7 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
     return namedOneOf(
         "org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler",
         "org.springframework.scheduling.concurrent.ConcurrentTaskScheduler",
+        "org.springframework.scheduling.concurrent.SimpleAsyncTaskScheduler",
         "org.springframework.scheduling.commonj.TimerManagerTaskScheduler");
   }
 
@@ -48,11 +51,14 @@ public class TaskSchedulerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ScheduleMethodAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onSchedule(@Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
+    public static Runnable onSchedule(@Advice.Argument(0) Runnable originalRunnable) {
+      Runnable runnable = originalRunnable;
       if (SpringSchedulingTaskTracing.wrappingEnabled()) {
         runnable = SpringSchedulingRunnableWrapper.wrapIfNeeded(runnable);
       }
+      return runnable;
     }
   }
 }

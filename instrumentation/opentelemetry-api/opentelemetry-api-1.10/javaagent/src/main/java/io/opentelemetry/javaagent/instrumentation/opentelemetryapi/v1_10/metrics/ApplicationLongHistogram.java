@@ -11,11 +11,11 @@ import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 
-final class ApplicationLongHistogram implements LongHistogram {
+public class ApplicationLongHistogram implements LongHistogram {
 
   private final io.opentelemetry.api.metrics.LongHistogram agentHistogram;
 
-  ApplicationLongHistogram(io.opentelemetry.api.metrics.LongHistogram agentHistogram) {
+  protected ApplicationLongHistogram(io.opentelemetry.api.metrics.LongHistogram agentHistogram) {
     this.agentHistogram = agentHistogram;
   }
 

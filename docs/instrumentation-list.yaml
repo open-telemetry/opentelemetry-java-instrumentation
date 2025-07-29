@@ -1,0 +1,4344 @@
+# This file is generated and should not be manually edited.
+# The structure and contents are a work in progress and subject to change.
+# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468
+
+libraries:
+  activej:
+  - name: activej-http-6.0
+    description: This instrumentation enables SERVER spans and metrics for the ActiveJ
+      HTTP server.
+    source_path: instrumentation/activej-http-6.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.activej-http-6.0
+    target_versions:
+      javaagent:
+      - io.activej:activej-http:[6.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
+  akka:
+  - name: akka-actor-2.3
+    source_path: instrumentation/akka/akka-actor-2.3
+    scope:
+      name: io.opentelemetry.akka-actor-2.3
+    target_versions:
+      javaagent:
+      - com.typesafe.akka:akka-actor_2.11:[2.3,)
+      - com.typesafe.akka:akka-actor_2.12:[2.3,)
+      - com.typesafe.akka:akka-actor_2.13:[2.3,)
+  - name: akka-actor-fork-join-2.5
+    source_path: instrumentation/akka/akka-actor-fork-join-2.5
+    scope:
+      name: io.opentelemetry.akka-actor-fork-join-2.5
+    target_versions:
+      javaagent:
+      - com.typesafe.akka:akka-actor_2.12:[2.5,2.6)
+      - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
+      - com.typesafe.akka:akka-actor_2.11:[2.5,)
+  - name: akka-http-10.0
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Akka HTTP client and server.
+    source_path: instrumentation/akka/akka-http-10.0
+    scope:
+      name: io.opentelemetry.akka-http-10.0
+    target_versions:
+      javaagent:
+      - com.typesafe.akka:akka-http_2.12:[10,)
+      - com.typesafe.akka:akka-http_2.13:[10,)
+      - com.typesafe.akka:akka-http_2.11:[10,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
+  alibaba:
+  - name: alibaba-druid-1.0
+    description: |
+      The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
+    source_path: instrumentation/alibaba-druid-1.0
+    scope:
+      name: io.opentelemetry.alibaba-druid-1.0
+    target_versions:
+      javaagent:
+      - com.alibaba:druid:(,)
+      library:
+      - com.alibaba:druid:1.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  apache:
+  - name: apache-dbcp-2.0
+    description: |
+      This instrumentation enables database connection pools metrics for Apache DBCP.
+      The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
+    source_path: instrumentation/apache-dbcp-2.0
+    scope:
+      name: io.opentelemetry.apache-dbcp-2.0
+    target_versions:
+      javaagent:
+      - org.apache.commons:commons-dbcp2:[2,)
+      library:
+      - org.apache.commons:commons-dbcp2:2.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  - name: apache-dubbo-2.7
+    description: The Apache Dubbo instrumentation provides client and server spans
+      for Apache Dubbo RPC calls. Each call produces a span named after the Dubbo
+      method, enriched with standard RPC attributes (system, service, method), network
+      attributes, and error details if an exception occurs.
+    source_path: instrumentation/apache-dubbo-2.7
+    scope:
+      name: io.opentelemetry.apache-dubbo-2.7
+    target_versions:
+      javaagent:
+      - org.apache.dubbo:dubbo:[2.7,)
+    configurations:
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+  - name: apache-httpasyncclient-4.1
+    description: This instrumentation enables CLIENT spans and metrics for the Apache
+      HttpAsyncClient.
+    source_path: instrumentation/apache-httpasyncclient-4.1
+    scope:
+      name: io.opentelemetry.apache-httpasyncclient-4.1
+    target_versions:
+      javaagent:
+      - org.apache.httpcomponents:httpasyncclient:[4.1,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: apache-httpclient-2.0
+    description: This instrumentation enables CLIENT spans and metrics for versions
+      2 and 3 of the Apache HttpClient.
+    source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
+    scope:
+      name: io.opentelemetry.apache-httpclient-2.0
+    target_versions:
+      javaagent:
+      - commons-httpclient:commons-httpclient:[2.0,4.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: apache-httpclient-4.0
+    description: This instrumentation enables CLIENT spans and metrics for version
+      4 of the Apache HttpClient.
+    source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
+    scope:
+      name: io.opentelemetry.apache-httpclient-4.0
+    target_versions:
+      javaagent:
+      - io.dropwizard:dropwizard-client:(,3.0.0)
+      - org.apache.httpcomponents:httpclient:[4.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: apache-httpclient-4.3
+    description: This instrumentation provides a library integration that enables
+      CLIENT spans and metrics for the Apache HttpClient.
+    source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
+    scope:
+      name: io.opentelemetry.apache-httpclient-4.3
+    target_versions:
+      library:
+      - org.apache.httpcomponents:httpclient:[4.3,4.+)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: apache-httpclient-5.0
+    description: This instrumentation enables CLIENT spans and metrics for version
+      5 of the Apache HttpClient.
+    source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
+    scope:
+      name: io.opentelemetry.apache-httpclient-5.0
+    target_versions:
+      javaagent:
+      - org.apache.httpcomponents.client5:httpclient5:[5.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: apache-httpclient-5.2
+    description: This instrumentation provides a library integration that enables
+      CLIENT spans and metrics for the Apache HttpClient.
+    source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
+    scope:
+      name: io.opentelemetry.apache-httpclient-5.2
+    target_versions:
+      library:
+      - org.apache.httpcomponents.client5:httpclient5:5.2.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.request.resend_count
+          type: LONG
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: apache-shenyu-2.4
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
+    source_path: instrumentation/apache-shenyu-2.4
+    scope:
+      name: io.opentelemetry.apache-shenyu-2.4
+    target_versions:
+      javaagent:
+      - org.apache.shenyu:shenyu-web:[2.4.0,)
+    configurations:
+    - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
+      description: |
+        Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`, `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and `rpc-ext`.
+      type: boolean
+      default: false
+  armeria:
+  - name: armeria-1.3
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Armeria HTTP client and server.
+    source_path: instrumentation/armeria/armeria-1.3
+    scope:
+      name: io.opentelemetry.armeria-1.3
+    target_versions:
+      javaagent:
+      - com.linecorp.armeria:armeria:[1.3.0,)
+      library:
+      - com.linecorp.armeria:armeria:1.3.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
+  - name: armeria-grpc-1.14
+    description: This instrumentation enables CLIENT and SERVER spans and metrics
+      for the Armeria gRPC client and server.
+    source_path: instrumentation/armeria/armeria-grpc-1.14
+    scope:
+      name: io.opentelemetry.armeria-grpc-1.14
+    target_versions:
+      javaagent:
+      - com.linecorp.armeria:armeria-grpc:[1.14.0,)
+  async:
+  - name: async-http-client-1.9
+    description: This instrumentation enables CLIENT spans and metrics for version
+      1 of the AsyncHttpClient (AHC) HTTP client.
+    source_path: instrumentation/async-http-client/async-http-client-1.9
+    scope:
+      name: io.opentelemetry.async-http-client-1.9
+    target_versions:
+      javaagent:
+      - com.ning:async-http-client:[1.9.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: async-http-client-2.0
+    description: This instrumentation enables CLIENT spans and metrics for version
+      2 of the AsyncHttpClient (AHC) HTTP client.
+    source_path: instrumentation/async-http-client/async-http-client-2.0
+    scope:
+      name: io.opentelemetry.async-http-client-2.0
+    target_versions:
+      javaagent:
+      - org.asynchttpclient:async-http-client:[2.0.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  avaje:
+  - name: avaje-jex-3.0
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER spans and HTTP server metrics.
+    source_path: instrumentation/avaje-jex-3.0
+    minimum_java_version: 21
+    scope:
+      name: io.opentelemetry.avaje-jex-3.0
+    target_versions:
+      javaagent:
+      - io.avaje:avaje-jex:[3.0,)
+  aws:
+  - name: aws-lambda-core-1.0
+    description: |
+      Provides lightweight instrumentation of the Lambda core library, supporting all versions. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+    source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
+    scope:
+      name: io.opentelemetry.aws-lambda-core-1.0
+    target_versions:
+      javaagent:
+      - com.amazonaws:aws-lambda-java-core:[1.0.0,)
+      library:
+      - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
+  - name: aws-lambda-events-2.2
+    description: |
+      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+.
+    source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
+    scope:
+      name: io.opentelemetry.aws-lambda-events-2.2
+    target_versions:
+      javaagent:
+      - com.amazonaws:aws-lambda-java-core:[1.0.0,)
+      library:
+      - com.amazonaws:aws-lambda-java-events:2.2.1
+      - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
+  - name: aws-sdk-1.11
+    source_path: instrumentation/aws-sdk/aws-sdk-1.11
+    scope:
+      name: io.opentelemetry.aws-sdk-1.11
+    target_versions:
+      javaagent:
+      - com.amazonaws:aws-java-sdk-sqs:[1.10.33,)
+      - com.amazonaws:aws-java-sdk-core:[1.10.33,)
+      library:
+      - com.amazonaws:aws-java-sdk-sqs:[1.11.106,1.12.583)
+      - com.amazonaws:aws-java-sdk-core:1.11.0
+    configurations:
+    - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+      description: Enables experimental span attributes for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: aws-sdk-2.2
+    source_path: instrumentation/aws-sdk/aws-sdk-2.2
+    scope:
+      name: io.opentelemetry.aws-sdk-2.2
+    target_versions:
+      javaagent:
+      - software.amazon.awssdk:sns:[2.2.0,)
+      - software.amazon.awssdk:lambda:[2.17.0,)
+      - software.amazon.awssdk:bedrock-runtime:[2.25.63,)
+      - software.amazon.awssdk:aws-core:[2.2.0,)
+      - software.amazon.awssdk:sqs:[2.2.0,)
+      library:
+      - software.amazon.awssdk:aws-core:2.2.0
+      - software.amazon.awssdk:aws-json-protocol:2.2.0
+      - software.amazon.awssdk:sqs:2.2.0
+      - software.amazon.awssdk:sns:2.2.0
+      - software.amazon.awssdk:lambda:2.2.0
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.aws-sdk.experimental-span-attributes
+      description: Enables experimental span attributes for AWS SDK instrumentation.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
+      description: Determines whether the configured TextMapPropagator should be used
+        to inject into supported messaging attributes (for SQS).
+      type: boolean
+      default: false
+    - name: otel.instrumentation.genai.capture-message-content
+      description: Determines whether Generative AI events include full content of
+        user and assistant messages. Note that full content can have data privacy
+        and size concerns and care should be taken when enabling this
+      type: boolean
+      default: false
+    - name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
+      description: Determines whether errors returned by each individual HTTP request
+        should be recorded as events for the SDK span.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: gen_ai.client.operation.duration
+        description: GenAI operation duration.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+      - name: gen_ai.client.token.usage
+        description: Measures number of input and output tokens used.
+        type: HISTOGRAM
+        unit: token
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+        - name: gen_ai.token.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+  azure:
+  - name: azure-core-1.14
+    source_path: instrumentation/azure-core/azure-core-1.14
+    scope:
+      name: io.opentelemetry.azure-core-1.14
+    target_versions:
+      javaagent:
+      - com.azure:azure-core:[1.14.0,1.19.0)
+  - name: azure-core-1.19
+    source_path: instrumentation/azure-core/azure-core-1.19
+    scope:
+      name: io.opentelemetry.azure-core-1.19
+    target_versions:
+      javaagent:
+      - com.azure:azure-core:[1.19.0,1.36.0)
+  - name: azure-core-1.36
+    source_path: instrumentation/azure-core/azure-core-1.36
+    scope:
+      name: io.opentelemetry.azure-core-1.36
+    target_versions:
+      javaagent:
+      - com.azure:azure-core:[1.36.0,)
+  c3p0:
+  - name: c3p0-0.9
+    description: The c3p0 instrumentation provides connection pool metrics for c3p0
+      data sources.
+    source_path: instrumentation/c3p0-0.9
+    scope:
+      name: io.opentelemetry.c3p0-0.9
+    target_versions:
+      javaagent:
+      - com.mchange:c3p0:(,)
+      library:
+      - com.mchange:c3p0:0.9.2
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  camel:
+  - name: camel-2.20
+    description: |
+      This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    source_path: instrumentation/camel-2.20
+    scope:
+      name: io.opentelemetry.camel-2.20
+    target_versions:
+      javaagent:
+      - org.apache.camel:camel-core:[2.19,3)
+    configurations:
+    - name: otel.instrumentation.camel.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+  cassandra:
+  - name: cassandra-3.0
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+    source_path: instrumentation/cassandra/cassandra-3.0
+    scope:
+      name: io.opentelemetry.cassandra-3.0
+    target_versions:
+      javaagent:
+      - com.datastax.cassandra:cassandra-driver-core:[3.0,4.0)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+  - name: cassandra-4.0
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+    source_path: instrumentation/cassandra/cassandra-4.0
+    scope:
+      name: io.opentelemetry.cassandra-4.0
+    target_versions:
+      javaagent:
+      - com.datastax.oss:java-driver-core:[4.0,4.4)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+  - name: cassandra-4.4
+    description: |
+      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+    source_path: instrumentation/cassandra/cassandra-4.4
+    scope:
+      name: io.opentelemetry.cassandra-4.4
+    target_versions:
+      javaagent:
+      - com.datastax.oss:java-driver-core:[4.4,]
+      library:
+      - com.datastax.oss:java-driver-core:4.4.0
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+  clickhouse:
+  - name: clickhouse-client-0.5
+    description: Instruments the V1 ClickHouseClient, providing database client spans
+      and metrics.
+    source_path: instrumentation/clickhouse-client-0.5
+    scope:
+      name: io.opentelemetry.clickhouse-client-0.5
+    target_versions:
+      javaagent:
+      - com.clickhouse.client:clickhouse-client:[0.5.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.response.status_code
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  couchbase:
+  - name: couchbase-2.0
+    source_path: instrumentation/couchbase/couchbase-2.0
+    scope:
+      name: io.opentelemetry.couchbase-2.0
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[2,3)
+    configurations:
+    - name: otel.instrumentation.couchbase.experimental-span-attributes
+      description: Enables experimental span attributes couchbase.operation_id and
+        couchbase.local.address
+      type: boolean
+      default: false
+  - name: couchbase-2.6
+    source_path: instrumentation/couchbase/couchbase-2.6
+    scope:
+      name: io.opentelemetry.couchbase-2.6
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[2.6.0,3)
+    configurations:
+    - name: otel.instrumentation.couchbase.experimental-span-attributes
+      description: Enables experimental span attributes couchbase.operation_id and
+        couchbase.local.address
+      type: boolean
+      default: false
+  - name: couchbase-3.1
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    source_path: instrumentation/couchbase/couchbase-3.1
+    scope:
+      name: io.opentelemetry.couchbase-3.1
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[3.1,3.1.6)
+  - name: couchbase-3.1.6
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    source_path: instrumentation/couchbase/couchbase-3.1.6
+    scope:
+      name: io.opentelemetry.couchbase-3.1.6
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[3.1.6,3.2.0)
+  - name: couchbase-3.2
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    source_path: instrumentation/couchbase/couchbase-3.2
+    scope:
+      name: io.opentelemetry.couchbase-3.2
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[3.2.0,)
+  dropwizard:
+  - name: dropwizard-metrics-4.0
+    description: |
+      The dropwizard-metrics instrumentation for the dropwizard/codahale metrics library produces OpenTelemetry compliant versions of the metrics generated by the Dropwizard MetricRegistry.
+      The Dropwizard metrics API does not have a concept of metric labels/tags/attributes, thus the data produced by this integration might be of very low quality, depending on how the API is used in the instrumented application.
+    disabled_by_default: true
+    source_path: instrumentation/dropwizard/dropwizard-metrics-4.0
+    scope:
+      name: io.opentelemetry.dropwizard-metrics-4.0
+    target_versions:
+      javaagent:
+      - io.dropwizard.metrics:metrics-core:[4.0.0,)
+    configurations:
+    - name: otel.instrumentation.dropwizard-metrics.enabled
+      description: Enables the dropwizard metrics instrumentation.
+      type: boolean
+      default: false
+  - name: dropwizard-views-0.7
+    source_path: instrumentation/dropwizard/dropwizard-views-0.7
+    scope:
+      name: io.opentelemetry.dropwizard-views-0.7
+    target_versions:
+      javaagent:
+      - io.dropwizard:dropwizard-views:(,3.0.0)
+    configurations:
+    - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+      description: Enables experimental view telemetry.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables experimental controller telemetry.
+      type: boolean
+      default: false
+  elasticsearch:
+  - name: elasticsearch-api-client-7.16
+    description: This instrumentation enables client spans for Elasticsearch API client
+      requests for version 7 of the client. Versions 8.10 and later have native support
+      for OpenTelemetry.
+    source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
+    scope:
+      name: io.opentelemetry.elasticsearch-api-client-7.16
+    target_versions:
+      javaagent:
+      - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
+      - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
+  - name: elasticsearch-rest-5.0
+    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
+    scope:
+      name: io.opentelemetry.elasticsearch-rest-5.0
+    target_versions:
+      javaagent:
+      - org.elasticsearch.client:rest:[5.0,6.4)
+      - org.elasticsearch.client:elasticsearch-rest-client:[5.0,6.4)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.capture-search-query
+      description: |
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries
+        may contain personal or sensitive information.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: elasticsearch-rest-6.4
+    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
+    scope:
+      name: io.opentelemetry.elasticsearch-rest-6.4
+    target_versions:
+      javaagent:
+      - org.elasticsearch.client:elasticsearch-rest-client:[6.4,7.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.capture-search-query
+      description: |
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: elasticsearch-rest-7.0
+    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
+    scope:
+      name: io.opentelemetry.elasticsearch-rest-7.0
+    target_versions:
+      javaagent:
+      - org.elasticsearch.client:elasticsearch-rest-client:[7.0,)
+      library:
+      - org.elasticsearch.client:elasticsearch-rest-client:7.0.0
+    configurations:
+    - name: otel.instrumentation.elasticsearch.capture-search-query
+      description: |
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+  - name: elasticsearch-transport-5.0
+    description: |
+      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
+    scope:
+      name: io.opentelemetry.elasticsearch-transport-5.0
+    target_versions:
+      javaagent:
+      - org.elasticsearch.client:transport:[5.0.0,5.3.0)
+      - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+  - name: elasticsearch-transport-5.3
+    description: |
+      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
+    scope:
+      name: io.opentelemetry.elasticsearch-transport-5.3
+    target_versions:
+      javaagent:
+      - org.elasticsearch.client:transport:[5.3.0,6.0.0)
+      - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.search.types
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.request.write.version
+          type: LONG
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.broadcast.failed
+          type: LONG
+        - name: elasticsearch.shard.broadcast.successful
+          type: LONG
+        - name: elasticsearch.shard.broadcast.total
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+  - name: elasticsearch-transport-6.0
+    description: |
+      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
+    scope:
+      name: io.opentelemetry.elasticsearch-transport-6.0
+    target_versions:
+      javaagent:
+      - org.elasticsearch:elasticsearch:[6.0.0,8.0.0)
+      - org.elasticsearch.client:transport:[6.0.0,)
+    configurations:
+    - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+      description: Enable the capture of experimental span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: elasticsearch.action
+          type: STRING
+        - name: elasticsearch.id
+          type: STRING
+        - name: elasticsearch.request
+          type: STRING
+        - name: elasticsearch.request.indices
+          type: STRING
+        - name: elasticsearch.request.write.type
+          type: STRING
+        - name: elasticsearch.request.write.version
+          type: LONG
+        - name: elasticsearch.response.status
+          type: LONG
+        - name: elasticsearch.shard.replication.failed
+          type: LONG
+        - name: elasticsearch.shard.replication.successful
+          type: LONG
+        - name: elasticsearch.shard.replication.total
+          type: LONG
+        - name: elasticsearch.type
+          type: STRING
+        - name: elasticsearch.version
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+  executors:
+  - name: executors
+    description: |
+      The executor instrumentation ensures that context is automatically propagated when using common Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task is submitted, the current context is captured and bound to the task. Then, when the task eventually runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling consistent correlation across concurrent and asynchronous workflows.
+    source_path: instrumentation/executors
+    scope:
+      name: io.opentelemetry.executors
+    target_versions:
+      javaagent:
+      - Java 8+
+    configurations:
+    - name: otel.instrumentation.executors.include
+      description: List of Executor subclasses to be instrumented.
+      type: list
+      default: ''
+    - name: otel.instrumentation.executors.include-all
+      description: Whether to instrument all classes that implement the Executor interface.
+      type: boolean
+      default: false
+  finagle:
+  - name: finagle-http-23.11
+    description: |
+      This instrumentation for Finagle HTTP clients and servers ensures that telemetry is correctly generated by the underlying Netty instrumentation. It augments existing telemetry by bridging the gap between Finagle's abstractions and Netty's pipeline, primarily for context propagation.
+    source_path: instrumentation/finagle-http-23.11
+    scope:
+      name: io.opentelemetry.finagle-http-23.11
+    target_versions:
+      javaagent:
+      - com.twitter:finagle-http_2.13:[23.11.0,]
+      - com.twitter:finagle-http_2.12:[23.11.0,]
+  finatra:
+  - name: finatra-2.9
+    description: This instrumentation for the Finatra web framework augments the telemetry
+      generated by the underlying Netty instrumentation. It provides more specific,
+      high-level context, such as route information, to the spans generated by Netty.
+    source_path: instrumentation/finatra-2.9
+    scope:
+      name: io.opentelemetry.finatra-2.9
+    target_versions:
+      javaagent:
+      - com.twitter:finatra-http_2.11:[2.9.0,]
+      - com.twitter:finatra-http_2.12:[2.9.0,]
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+  geode:
+  - name: geode-1.4
+    source_path: instrumentation/geode-1.4
+    scope:
+      name: io.opentelemetry.geode-1.4
+    target_versions:
+      javaagent:
+      - org.apache.geode:geode-core:[1.4.0,)
+  google:
+  - name: google-http-client-1.19
+    source_path: instrumentation/google-http-client-1.19
+    scope:
+      name: io.opentelemetry.google-http-client-1.19
+    target_versions:
+      javaagent:
+      - com.google.http-client:google-http-client:[1.19.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  grails:
+  - name: grails-3.0
+    source_path: instrumentation/grails-3.0
+    scope:
+      name: io.opentelemetry.grails-3.0
+    target_versions:
+      javaagent:
+      - org.grails:grails-web-url-mappings:[3.0,)
+  graphql:
+  - name: graphql-java-12.0
+    source_path: instrumentation/graphql-java/graphql-java-12.0
+    scope:
+      name: io.opentelemetry.graphql-java-12.0
+    target_versions:
+      javaagent:
+      - com.graphql-java:graphql-java:[12,20)
+      library:
+      - com.graphql-java:graphql-java:[12.0,19.+)
+  - name: graphql-java-20.0
+    source_path: instrumentation/graphql-java/graphql-java-20.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.graphql-java-20.0
+    target_versions:
+      javaagent:
+      - com.graphql-java:graphql-java:[20,)
+      library:
+      - com.graphql-java:graphql-java:20.0
+  grizzly:
+  - name: grizzly-2.3
+    source_path: instrumentation/grizzly-2.3
+    scope:
+      name: io.opentelemetry.grizzly-2.3
+    target_versions:
+      javaagent:
+      - org.glassfish.grizzly:grizzly-http:[2.3,)
+  grpc:
+  - name: grpc-1.6
+    source_path: instrumentation/grpc-1.6
+    scope:
+      name: io.opentelemetry.grpc-1.6
+    target_versions:
+      javaagent:
+      - io.grpc:grpc-core:[1.6.0,)
+      library:
+      - io.grpc:grpc-core:1.6.0
+  guava:
+  - name: guava-10.0
+    source_path: instrumentation/guava-10.0
+    scope:
+      name: io.opentelemetry.guava-10.0
+    target_versions:
+      javaagent:
+      - com.google.guava:guava:[10.0,]
+      library:
+      - com.google.guava:guava:10.0
+  gwt:
+  - name: gwt-2.0
+    source_path: instrumentation/gwt-2.0
+    scope:
+      name: io.opentelemetry.gwt-2.0
+    target_versions:
+      javaagent:
+      - com.google.gwt:gwt-servlet:[2.0.0,)
+      - org.gwtproject:gwt-servlet:[2.10.0,)
+  hibernate:
+  - name: hibernate-3.3
+    source_path: instrumentation/hibernate/hibernate-3.3
+    scope:
+      name: io.opentelemetry.hibernate-3.3
+    target_versions:
+      javaagent:
+      - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
+  - name: hibernate-4.0
+    source_path: instrumentation/hibernate/hibernate-4.0
+    scope:
+      name: io.opentelemetry.hibernate-4.0
+    target_versions:
+      javaagent:
+      - org.hibernate:hibernate-core:[4.0.0.Final,6)
+  - name: hibernate-6.0
+    source_path: instrumentation/hibernate/hibernate-6.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.hibernate-6.0
+    target_versions:
+      javaagent:
+      - org.hibernate:hibernate-core:[6.0.0.Final,)
+  - name: hibernate-procedure-call-4.3
+    source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
+    scope:
+      name: io.opentelemetry.hibernate-procedure-call-4.3
+    target_versions:
+      javaagent:
+      - org.hibernate:hibernate-core:[4.3.0.Final,)
+  - name: hibernate-reactive-1.0
+    source_path: instrumentation/hibernate/hibernate-reactive-1.0
+    scope:
+      name: io.opentelemetry.hibernate-reactive-1.0
+    target_versions:
+      javaagent:
+      - org.hibernate.reactive:hibernate-reactive-core:(,)
+  hikaricp:
+  - name: hikaricp-3.0
+    source_path: instrumentation/hikaricp-3.0
+    scope:
+      name: io.opentelemetry.hikaricp-3.0
+    target_versions:
+      javaagent:
+      - com.zaxxer:HikariCP:[3.0.0,)
+      library:
+      - com.zaxxer:HikariCP:3.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.create_time
+        description: The time it took to create a new connection.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.timeouts
+        description: The number of connection timeouts that have occurred trying to
+          obtain a connection from the pool.
+        type: LONG_SUM
+        unit: timeouts
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+      - name: db.client.connections.use_time
+        description: The time between borrowing a connection and returning it to the
+          pool.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.wait_time
+        description: The time it took to obtain an open connection from the pool.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: pool.name
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.create_time
+        description: The time it took to create a new connection.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.timeouts
+        description: The number of connection timeouts that have occurred trying to
+          obtain a connection from the pool.
+        type: LONG_SUM
+        unit: timeout
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.use_time
+        description: The time between borrowing a connection and returning it to the
+          pool.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.wait_time
+        description: The time it took to obtain an open connection from the pool.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  http:
+  - name: http-url-connection
+    source_path: instrumentation/http-url-connection
+    scope:
+      name: io.opentelemetry.http-url-connection
+    target_versions:
+      javaagent:
+      - Java 8+
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  hystrix:
+  - name: hystrix-1.4
+    source_path: instrumentation/hystrix-1.4
+    scope:
+      name: io.opentelemetry.hystrix-1.4
+    target_versions:
+      javaagent:
+      - com.netflix.hystrix:hystrix-core:[1.4.0,)
+  influxdb:
+  - name: influxdb-2.4
+    source_path: instrumentation/influxdb-2.4
+    scope:
+      name: io.opentelemetry.influxdb-2.4
+    target_versions:
+      javaagent:
+      - org.influxdb:influxdb-java:[2.4,)
+  java:
+  - name: java-http-client
+    source_path: instrumentation/java-http-client
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.java-http-client
+    target_versions:
+      javaagent:
+      - Java 11+
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: java-http-server
+    source_path: instrumentation/java-http-server
+    scope:
+      name: io.opentelemetry.java-http-server
+    target_versions:
+      javaagent:
+      - Java 8+
+  javalin:
+  - name: javalin-5.0
+    source_path: instrumentation/javalin-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.javalin-5.0
+    target_versions:
+      javaagent:
+      - io.javalin:javalin:[5.0.0,)
+  jaxrs:
+  - name: jaxrs-1.0
+    disabled_by_default: true
+    source_path: instrumentation/jaxrs/jaxrs-1.0
+    scope:
+      name: io.opentelemetry.jaxrs-1.0
+    target_versions:
+      javaagent:
+      - javax.ws.rs:jsr311-api:[0.5,)
+  - name: jaxrs-2.0-annotations
+    source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
+    scope:
+      name: io.opentelemetry.jaxrs-2.0-annotations
+    target_versions:
+      javaagent:
+      - javax.ws.rs:javax.ws.rs-api:[,]
+  - name: jaxrs-2.0-cxf-3.2
+    source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
+    scope:
+      name: io.opentelemetry.jaxrs-2.0-cxf-3.2
+    target_versions:
+      javaagent:
+      - org.apache.tomee:openejb-cxf-rs:(8,)
+      - org.apache.cxf:cxf-rt-frontend-jaxrs:[3.2,4)
+  - name: jaxrs-2.0-jersey-2.0
+    source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
+    scope:
+      name: io.opentelemetry.jaxrs-2.0-jersey-2.0
+    target_versions:
+      javaagent:
+      - org.glassfish.jersey.core:jersey-server:[2.0,3.0.0)
+      - org.glassfish.jersey.containers:jersey-container-servlet:[2.0,3.0.0)
+  - name: jaxrs-2.0-resteasy-3.0
+    source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
+    scope:
+      name: io.opentelemetry.jaxrs-2.0-resteasy-3.0
+    target_versions:
+      javaagent:
+      - org.jboss.resteasy:resteasy-jaxrs:[3.0.0.Final,3.1.0.Final)
+      - org.jboss.resteasy:resteasy-jaxrs:[3.5.0.Final,4)
+  - name: jaxrs-2.0-resteasy-3.1
+    source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
+    scope:
+      name: io.opentelemetry.jaxrs-2.0-resteasy-3.1
+    target_versions:
+      javaagent:
+      - org.jboss.resteasy:resteasy-jaxrs:[3.1.0.Final,3.5.0.Final)
+      - org.jboss.resteasy:resteasy-core:[4.0.0.Final,6)
+  - name: jaxrs-3.0-annotations
+    source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
+    scope:
+      name: io.opentelemetry.jaxrs-3.0-annotations
+    target_versions:
+      javaagent:
+      - jakarta.ws.rs:jakarta.ws.rs-api:[3.0.0,)
+  - name: jaxrs-3.0-jersey-3.0
+    source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.jaxrs-3.0-jersey-3.0
+    target_versions:
+      javaagent:
+      - org.glassfish.jersey.core:jersey-server:[3.0.0,)
+  - name: jaxrs-3.0-resteasy-6.0
+    source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.jaxrs-3.0-resteasy-6.0
+    target_versions:
+      javaagent:
+      - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
+  jaxws:
+  - name: jaxws-2.0
+    source_path: instrumentation/jaxws/jaxws-2.0
+    scope:
+      name: io.opentelemetry.jaxws-2.0
+    target_versions:
+      javaagent:
+      - javax.xml.ws:jaxws-api:[2.0,]
+  - name: jaxws-2.0-axis2-1.6
+    source_path: instrumentation/jaxws/jaxws-2.0-axis2-1.6
+    scope:
+      name: io.opentelemetry.jaxws-2.0-axis2-1.6
+    target_versions:
+      javaagent:
+      - org.apache.axis2:axis2-jaxws:[1.6.0,)
+  - name: jaxws-cxf-3.0
+    source_path: instrumentation/jaxws/jaxws-cxf-3.0
+    scope:
+      name: io.opentelemetry.jaxws-cxf-3.0
+    target_versions:
+      javaagent:
+      - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
+  - name: jaxws-jws-api-1.1
+    disabled_by_default: true
+    source_path: instrumentation/jaxws/jaxws-jws-api-1.1
+    scope:
+      name: io.opentelemetry.jaxws-jws-api-1.1
+    target_versions:
+      javaagent:
+      - javax.jws:javax.jws-api:[1.1,]
+  - name: jaxws-metro-2.2
+    source_path: instrumentation/jaxws/jaxws-metro-2.2
+    scope:
+      name: io.opentelemetry.jaxws-metro-2.2
+    target_versions:
+      javaagent:
+      - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
+  jboss:
+  - name: jboss-logmanager-appender-1.1
+    source_path: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1
+    scope:
+      name: io.opentelemetry.jboss-logmanager-appender-1.1
+    target_versions:
+      javaagent:
+      - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
+  - name: jboss-logmanager-mdc-1.1
+    source_path: instrumentation/jboss-logmanager/jboss-logmanager-mdc-1.1
+    scope:
+      name: io.opentelemetry.jboss-logmanager-mdc-1.1
+    target_versions:
+      javaagent:
+      - org.jboss.logmanager:jboss-logmanager:[1.1.0.GA,)
+  jdbc:
+  - name: jdbc
+    description: |
+      The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
+      There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections, but is disabled by default due to the volume of telemetry produced.
+    source_path: instrumentation/jdbc
+    scope:
+      name: io.opentelemetry.jdbc
+    target_versions:
+      javaagent:
+      - Java 8+
+    configurations:
+    - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries. Takes precedent
+        to otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.jdbc.experimental.transaction.enabled
+      description: Enables experimental instrumentation to create spans for COMMIT
+        and ROLLBACK operations.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
+      description: |
+        Sets whether the query parameters should be captured as span attributes named <code>db.query.parameter.&lt;key&gt;</code>. Enabling this option disables the statement sanitization.<p>WARNING: captured query parameters may contain sensitive information such as passwords, personally identifiable information or protected health info.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jdbc-datasource.enabled
+      description: Enables instrumentation of JDBC datasource connections.
+      type: boolean
+      default: false
+  jedis:
+  - name: jedis-1.4
+    source_path: instrumentation/jedis/jedis-1.4
+    scope:
+      name: io.opentelemetry.jedis-1.4
+    target_versions:
+      javaagent:
+      - redis.clients:jedis:[1.4.0,3.0.0)
+  - name: jedis-3.0
+    source_path: instrumentation/jedis/jedis-3.0
+    scope:
+      name: io.opentelemetry.jedis-3.0
+    target_versions:
+      javaagent:
+      - redis.clients:jedis:[3.0.0,4)
+  - name: jedis-4.0
+    source_path: instrumentation/jedis/jedis-4.0
+    scope:
+      name: io.opentelemetry.jedis-4.0
+    target_versions:
+      javaagent:
+      - redis.clients:jedis:[4.0.0-beta1,)
+  jetty:
+  - name: jetty-11.0
+    source_path: instrumentation/jetty/jetty-11.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.jetty-11.0
+    target_versions:
+      javaagent:
+      - org.eclipse.jetty:jetty-server:[11, 12)
+  - name: jetty-12.0
+    source_path: instrumentation/jetty/jetty-12.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.jetty-12.0
+    target_versions:
+      javaagent:
+      - org.eclipse.jetty:jetty-server:[12,)
+  - name: jetty-8.0
+    source_path: instrumentation/jetty/jetty-8.0
+    scope:
+      name: io.opentelemetry.jetty-8.0
+    target_versions:
+      javaagent:
+      - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
+  - name: jetty-httpclient-12.0
+    source_path: instrumentation/jetty-httpclient/jetty-httpclient-12.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.jetty-httpclient-12.0
+    target_versions:
+      javaagent:
+      - org.eclipse.jetty:jetty-client:[12,)
+      library:
+      - org.eclipse.jetty:jetty-client:12.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: jetty-httpclient-9.2
+    source_path: instrumentation/jetty-httpclient/jetty-httpclient-9.2
+    scope:
+      name: io.opentelemetry.jetty-httpclient-9.2
+    target_versions:
+      javaagent:
+      - org.eclipse.jetty:jetty-client:[9.2,10)
+      library:
+      - org.eclipse.jetty:jetty-client:[9.2.0.v20140526,9.+)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  jms:
+  - name: jms-1.1
+    source_path: instrumentation/jms/jms-1.1
+    scope:
+      name: io.opentelemetry.jms-1.1
+    target_versions:
+      javaagent:
+      - javax.jms:javax.jms-api:(,)
+      - jakarta.jms:jakarta.jms-api:(,3)
+      - javax.jms:jms-api:(,)
+  - name: jms-3.0
+    source_path: instrumentation/jms/jms-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.jms-3.0
+    target_versions:
+      javaagent:
+      - jakarta.jms:jakarta.jms-api:[3.0.0,)
+  jodd:
+  - name: jodd-http-4.2
+    source_path: instrumentation/jodd-http-4.2
+    scope:
+      name: io.opentelemetry.jodd-http-4.2
+    target_versions:
+      javaagent:
+      - org.jodd:jodd-http:[4.2.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  jsf:
+  - name: jsf-mojarra-1.2
+    source_path: instrumentation/jsf/jsf-mojarra-1.2
+    scope:
+      name: io.opentelemetry.jsf-mojarra-1.2
+    target_versions:
+      javaagent:
+      - com.sun.faces:jsf-impl:[2.1,2.2)
+      - org.glassfish:jakarta.faces:[2.3.9,3)
+      - com.sun.faces:jsf-impl:[2.0,2.1)
+      - org.glassfish:javax.faces:[2.0.7,3)
+      - javax.faces:jsf-impl:[1.2,2)
+  - name: jsf-mojarra-3.0
+    source_path: instrumentation/jsf/jsf-mojarra-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.jsf-mojarra-3.0
+    target_versions:
+      javaagent:
+      - org.glassfish:jakarta.faces:[3,)
+  - name: jsf-myfaces-1.2
+    source_path: instrumentation/jsf/jsf-myfaces-1.2
+    scope:
+      name: io.opentelemetry.jsf-myfaces-1.2
+    target_versions:
+      javaagent:
+      - org.apache.myfaces.core:myfaces-impl:[1.2,3)
+  - name: jsf-myfaces-3.0
+    source_path: instrumentation/jsf/jsf-myfaces-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.jsf-myfaces-3.0
+    target_versions:
+      javaagent:
+      - org.apache.myfaces.core:myfaces-impl:[3,)
+  jsp:
+  - name: jsp-2.3
+    source_path: instrumentation/jsp-2.3
+    scope:
+      name: io.opentelemetry.jsp-2.3
+    target_versions:
+      javaagent:
+      - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
+  kafka:
+  - name: kafka-clients-0.11
+    description: |
+      This instrumentation enables messaging spans and metrics for Apache Kafka 0.11 clients. It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
+    source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
+    scope:
+      name: io.opentelemetry.kafka-clients-0.11
+    target_versions:
+      javaagent:
+      - org.apache.kafka:kafka-clients:[0.11.0.0,)
+    configurations:
+    - name: otel.instrumentation.kafka.producer-propagation.enabled
+      description: Enable context propagation for kafka message producers.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.kafka.experimental-span-attributes
+      description: Enables the capture of the experimental consumer attribute "kafka.record.queue_time_ms"
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: Enables experimental receive telemetry for Kafka instrumentation.
+      type: boolean
+      default: false
+  - name: kafka-clients-2.6
+    description: |
+      This instrumentation provides a library integeration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
+    source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
+    scope:
+      name: io.opentelemetry.kafka-clients-2.6
+    target_versions:
+      library:
+      - org.apache.kafka:kafka-clients:2.6.0
+  - name: kafka-streams-0.11
+    source_path: instrumentation/kafka/kafka-streams-0.11
+    scope:
+      name: io.opentelemetry.kafka-streams-0.11
+    target_versions:
+      javaagent:
+      - org.apache.kafka:kafka-streams:[0.11.0.0,)
+  kotlinx:
+  - name: kotlinx-coroutines
+    source_path: instrumentation/kotlinx-coroutines
+    scope:
+      name: io.opentelemetry.kotlinx-coroutines
+    target_versions:
+      javaagent:
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.3.0,1.3.8)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
+  - name: kotlinx-coroutines-1.0
+    source_path: instrumentation/kotlinx-coroutines/kotlinx-coroutines-1.0
+    scope:
+      name: io.opentelemetry.kotlinx-coroutines-1.0
+    target_versions:
+      javaagent:
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
+  - name: kotlinx-coroutines-flow-1.3
+    source_path: instrumentation/kotlinx-coroutines/kotlinx-coroutines-flow-1.3
+    scope:
+      name: io.opentelemetry.kotlinx-coroutines-flow-1.3
+    target_versions:
+      javaagent:
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.3.0,1.3.8)
+      - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
+  ktor:
+  - name: ktor-1.0
+    source_path: instrumentation/ktor/ktor-1.0
+    scope:
+      name: io.opentelemetry.ktor-1.0
+    target_versions:
+      library:
+      - io.ktor:ktor-server-core:[1.0.0,1.+)
+  - name: ktor-2.0
+    source_path: instrumentation/ktor/ktor-2.0
+    scope:
+      name: io.opentelemetry.ktor-2.0
+    target_versions:
+      javaagent:
+      - io.ktor:ktor-client-core:[2.0.0,3.0.0)
+      - io.ktor:ktor-server-core:[2.0.0,3.0.0)
+      library:
+      - io.ktor:ktor-client-core:[2.0.0,2.+)
+      - io.ktor:ktor-server-core:[2.0.0,2.+)
+  - name: ktor-3.0
+    source_path: instrumentation/ktor/ktor-3.0
+    scope:
+      name: io.opentelemetry.ktor-3.0
+    target_versions:
+      javaagent:
+      - io.ktor:ktor-server-core:[3.0.0,)
+      - io.ktor:ktor-client-core:[3.0.0,)
+      library:
+      - io.ktor:ktor-server-core:3.0.0
+      - io.ktor:ktor-client-core:3.0.0
+  kubernetes:
+  - name: kubernetes-client-7.0
+    source_path: instrumentation/kubernetes-client-7.0
+    scope:
+      name: io.opentelemetry.kubernetes-client-7.0
+    target_versions:
+      javaagent:
+      - io.kubernetes:client-java-api:[7.0.0,)
+  lettuce:
+  - name: lettuce-4.0
+    source_path: instrumentation/lettuce/lettuce-4.0
+    scope:
+      name: io.opentelemetry.lettuce-4.0
+    target_versions:
+      javaagent:
+      - biz.paluch.redis:lettuce:[4.0.Final,)
+  - name: lettuce-5.0
+    source_path: instrumentation/lettuce/lettuce-5.0
+    scope:
+      name: io.opentelemetry.lettuce-5.0
+    target_versions:
+      javaagent:
+      - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
+  - name: lettuce-5.1
+    source_path: instrumentation/lettuce/lettuce-5.1
+    scope:
+      name: io.opentelemetry.lettuce-5.1
+    target_versions:
+      javaagent:
+      - io.lettuce:lettuce-core:[5.1.0.RELEASE,)
+      library:
+      - io.lettuce:lettuce-core:5.1.0.RELEASE
+  liberty:
+  - name: liberty-20.0
+    source_path: instrumentation/liberty/liberty-20.0
+    scope:
+      name: io.opentelemetry.liberty-20.0
+  - name: liberty-dispatcher-20.0
+    source_path: instrumentation/liberty/liberty-dispatcher-20.0
+    scope:
+      name: io.opentelemetry.liberty-dispatcher-20.0
+  log4j:
+  - name: log4j-appender-1.2
+    source_path: instrumentation/log4j/log4j-appender-1.2
+    scope:
+      name: io.opentelemetry.log4j-appender-1.2
+    target_versions:
+      javaagent:
+      - log4j:log4j:[1.2,)
+  - name: log4j-appender-2.17
+    source_path: instrumentation/log4j/log4j-appender-2.17
+    scope:
+      name: io.opentelemetry.log4j-appender-2.17
+    target_versions:
+      javaagent:
+      - org.apache.logging.log4j:log4j-core:[2.0,)
+      library:
+      - org.apache.logging.log4j:log4j-core:2.17.0
+  - name: log4j-context-data-2.17
+    source_path: instrumentation/log4j/log4j-context-data/log4j-context-data-2.17
+    scope:
+      name: io.opentelemetry.log4j-context-data-2.17
+    target_versions:
+      javaagent:
+      - org.apache.logging.log4j:log4j-core:[2.17.0,)
+  - name: log4j-context-data-2.7
+    source_path: instrumentation/log4j/log4j-context-data/log4j-context-data-2.7
+    scope:
+      name: io.opentelemetry.log4j-context-data-2.7
+    target_versions:
+      javaagent:
+      - org.apache.logging.log4j:log4j-core:[2.7,2.17.0)
+  - name: log4j-mdc-1.2
+    source_path: instrumentation/log4j/log4j-mdc-1.2
+    scope:
+      name: io.opentelemetry.log4j-mdc-1.2
+    target_versions:
+      javaagent:
+      - log4j:log4j:[1.2,)
+  logback:
+  - name: logback-appender-1.0
+    source_path: instrumentation/logback/logback-appender-1.0
+    scope:
+      name: io.opentelemetry.logback-appender-1.0
+    target_versions:
+      javaagent:
+      - ch.qos.logback:logback-classic:[0.9.16,)
+      library:
+      - net.logstash.logback:logstash-logback-encoder:3.0
+      - org.slf4j:slf4j-api:2.0.0
+      - ch.qos.logback:logback-classic:1.3.0
+  - name: logback-mdc-1.0
+    source_path: instrumentation/logback/logback-mdc-1.0
+    scope:
+      name: io.opentelemetry.logback-mdc-1.0
+    target_versions:
+      javaagent:
+      - ch.qos.logback:logback-classic:[1.0.0,1.2.3]
+      library:
+      - ch.qos.logback:logback-classic:1.0.0
+      - org.slf4j:slf4j-api:1.6.4
+  micrometer:
+  - name: micrometer-1.5
+    disabled_by_default: true
+    source_path: instrumentation/micrometer/micrometer-1.5
+    scope:
+      name: io.opentelemetry.micrometer-1.5
+    target_versions:
+      javaagent:
+      - io.micrometer:micrometer-core:[1.5.0,)
+      library:
+      - io.micrometer:micrometer-core:1.5.0
+  mongo:
+  - name: mongo-3.1
+    source_path: instrumentation/mongo/mongo-3.1
+    scope:
+      name: io.opentelemetry.mongo-3.1
+    target_versions:
+      javaagent:
+      - org.mongodb:mongo-java-driver:[3.1,)
+      library:
+      - org.mongodb:mongo-java-driver:3.1.0
+  - name: mongo-3.7
+    source_path: instrumentation/mongo/mongo-3.7
+    scope:
+      name: io.opentelemetry.mongo-3.7
+    target_versions:
+      javaagent:
+      - org.mongodb:mongodb-driver-core:[3.7, 4.0)
+      - org.mongodb:mongo-java-driver:[3.7, 4.0)
+  - name: mongo-4.0
+    source_path: instrumentation/mongo/mongo-4.0
+    scope:
+      name: io.opentelemetry.mongo-4.0
+    target_versions:
+      javaagent:
+      - org.mongodb:mongodb-driver-core:[4.0,)
+  - name: mongo-async-3.3
+    source_path: instrumentation/mongo/mongo-async-3.3
+    scope:
+      name: io.opentelemetry.mongo-async-3.3
+    target_versions:
+      javaagent:
+      - org.mongodb:mongodb-driver-async:[3.3,)
+  mybatis:
+  - name: mybatis-3.2
+    disabled_by_default: true
+    source_path: instrumentation/mybatis-3.2
+    scope:
+      name: io.opentelemetry.mybatis-3.2
+    target_versions:
+      javaagent:
+      - org.mybatis:mybatis:[3.2.0,)
+  netty:
+  - name: netty-3.8
+    source_path: instrumentation/netty/netty-3.8
+    scope:
+      name: io.opentelemetry.netty-3.8
+    target_versions:
+      javaagent:
+      - io.netty:netty:[3.8.0.Final,4)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+  - name: netty-4.0
+    source_path: instrumentation/netty/netty-4.0
+    scope:
+      name: io.opentelemetry.netty-4.0
+    target_versions:
+      javaagent:
+      - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
+      - io.netty:netty-codec-http:[4.0.0.Final,4.1.0.Final)
+    configurations:
+    - name: otel.instrumentation.netty.connection-telemetry.enabled
+      description: Enable the creation of Connect and DNS spans
+      type: boolean
+      default: false
+    - name: otel.instrumentation.netty.ssl-telemetry.enabled
+      description: Enable SSL telemetry
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+  - name: netty-4.1
+    source_path: instrumentation/netty/netty-4.1
+    scope:
+      name: io.opentelemetry.netty-4.1
+    target_versions:
+      javaagent:
+      - io.netty:netty-codec-http:[4.1.0.Final,5.0.0)
+      - io.netty:netty-all:[4.1.0.Final,5.0.0)
+      library:
+      - io.netty:netty-codec-http:4.1.0.Final
+    configurations:
+    - name: otel.instrumentation.netty.connection-telemetry.enabled
+      description: Enable the creation of Connect and DNS spans
+      type: boolean
+      default: false
+    - name: otel.instrumentation.netty.ssl-telemetry.enabled
+      description: Enable SSL telemetry
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+  okhttp:
+  - name: okhttp-2.2
+    source_path: instrumentation/okhttp/okhttp-2.2
+    scope:
+      name: io.opentelemetry.okhttp-2.2
+    target_versions:
+      javaagent:
+      - com.squareup.okhttp:okhttp:[2.2,3)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: okhttp-3.0
+    source_path: instrumentation/okhttp/okhttp-3.0
+    scope:
+      name: io.opentelemetry.okhttp-3.0
+    target_versions:
+      javaagent:
+      - com.squareup.okhttp3:okhttp:[3.0,)
+      library:
+      - com.squareup.okhttp3:okhttp:3.0.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  opensearch:
+  - name: opensearch-rest-1.0
+    source_path: instrumentation/opensearch/opensearch-rest-1.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.opensearch-rest-1.0
+    target_versions:
+      javaagent:
+      - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
+  - name: opensearch-rest-3.0
+    source_path: instrumentation/opensearch/opensearch-rest-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.opensearch-rest-3.0
+    target_versions:
+      javaagent:
+      - org.opensearch.client:opensearch-rest-client:[3.0,)
+  oracle:
+  - name: oracle-ucp-11.2
+    description: The Oracle Universal Connection Pool (UCP) instrumentation generates
+      connection pool metrics.
+    source_path: instrumentation/oracle-ucp-11.2
+    scope:
+      name: io.opentelemetry.oracle-ucp-11.2
+    target_versions:
+      javaagent:
+      - com.oracle.database.jdbc:ucp:[,)
+      library:
+      - com.oracle.database.jdbc:ucp:11.2.0.4
+      - com.oracle.database.jdbc:ojdbc8:12.2.0.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  oshi:
+  - name: oshi
+    description: When the OSHI library is detected on the classpath, this instrumentation
+      will use the system class loader to load classes from the oshi-core jar that
+      are then used to generate system metrics.
+    source_path: instrumentation/oshi
+    scope:
+      name: io.opentelemetry.oshi
+    target_versions:
+      javaagent:
+      - com.github.oshi:oshi-core:[5.3.1,)
+      library:
+      - com.github.oshi:oshi-core:5.3.1
+    configurations:
+    - name: otel.instrumentation.oshi.experimental-metrics.enabled
+      description: Enable the OSHI process runtime metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: system.disk.io
+        description: System disk IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.disk.operations
+        description: System disk operations
+        type: LONG_SUM
+        unit: operations
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.memory.usage
+        description: System memory usage
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.memory.utilization
+        description: System memory utilization
+        type: DOUBLE_GAUGE
+        unit: '1'
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.network.errors
+        description: System network errors
+        type: LONG_SUM
+        unit: errors
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.io
+        description: System network IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.packets
+        description: System network packets
+        type: LONG_SUM
+        unit: packets
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+    - when: otel.instrumentation.oshi.experimental-metrics.enabled=true
+      metrics:
+      - name: runtime.java.cpu_time
+        description: Runtime Java CPU time
+        type: LONG_GAUGE
+        unit: ms
+        attributes:
+        - name: type
+          type: STRING
+      - name: runtime.java.memory
+        description: Runtime Java memory
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: type
+          type: STRING
+      - name: system.disk.io
+        description: System disk IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.disk.operations
+        description: System disk operations
+        type: LONG_SUM
+        unit: operations
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.memory.usage
+        description: System memory usage
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.memory.utilization
+        description: System memory utilization
+        type: DOUBLE_GAUGE
+        unit: '1'
+        attributes:
+        - name: state
+          type: STRING
+      - name: system.network.errors
+        description: System network errors
+        type: LONG_SUM
+        unit: errors
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.io
+        description: System network IO
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+      - name: system.network.packets
+        description: System network packets
+        type: LONG_SUM
+        unit: packets
+        attributes:
+        - name: device
+          type: STRING
+        - name: direction
+          type: STRING
+  payara:
+  - name: payara
+    source_path: instrumentation/payara
+    scope:
+      name: io.opentelemetry.payara
+  pekko:
+  - name: pekko-actor-1.0
+    source_path: instrumentation/pekko/pekko-actor-1.0
+    scope:
+      name: io.opentelemetry.pekko-actor-1.0
+    target_versions:
+      javaagent:
+      - org.apache.pekko:pekko-actor_3:[1.0,)
+      - org.apache.pekko:pekko-actor_2.12:[1.0,)
+      - org.apache.pekko:pekko-actor_2.13:[1.0,)
+  - name: pekko-http-1.0
+    source_path: instrumentation/pekko/pekko-http-1.0
+    scope:
+      name: io.opentelemetry.pekko-http-1.0
+    target_versions:
+      javaagent:
+      - com.softwaremill.sttp.tapir:tapir-pekko-http-server_3:[1.7,)
+      - com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.12:[1.7,)
+      - org.apache.pekko:pekko-http_2.12:[1.0,)
+      - org.apache.pekko:pekko-http_3:[1.0,)
+      - com.softwaremill.sttp.tapir:tapir-pekko-http-server_2.13:[1.7,)
+      - org.apache.pekko:pekko-http_2.13:[1.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+  play:
+  - name: play-mvc-2.4
+    source_path: instrumentation/play/play-mvc/play-mvc-2.4
+    scope:
+      name: io.opentelemetry.play-mvc-2.4
+    target_versions:
+      javaagent:
+      - com.typesafe.play:play_2.11:[2.4.0,2.6)
+  - name: play-mvc-2.6
+    source_path: instrumentation/play/play-mvc/play-mvc-2.6
+    scope:
+      name: io.opentelemetry.play-mvc-2.6
+    target_versions:
+      javaagent:
+      - com.typesafe.play:play_$scalaVersion:[2.6.0,)
+      - com.typesafe.play:play_2.12:[2.6.0,)
+      - com.typesafe.play:play_2.13:[2.6.0,)
+  - name: play-ws-1.0
+    source_path: instrumentation/play/play-ws/play-ws-1.0
+    scope:
+      name: io.opentelemetry.play-ws-1.0
+    target_versions:
+      javaagent:
+      - com.typesafe.play:play-ahc-ws-standalone_2.12:[1.0.0,2.0.0)
+      - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: play-ws-2.0
+    source_path: instrumentation/play/play-ws/play-ws-2.0
+    scope:
+      name: io.opentelemetry.play-ws-2.0
+    target_versions:
+      javaagent:
+      - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.0.0,2.1.0)
+      - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.0.6,2.1.0)
+      - com.typesafe.play:play-ahc-ws-standalone_2.11:[2.0.0,]
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: play-ws-2.1
+    source_path: instrumentation/play/play-ws/play-ws-2.1
+    scope:
+      name: io.opentelemetry.play-ws-2.1
+    target_versions:
+      javaagent:
+      - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.1.0,]
+      - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.1.0,]
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  powerjob:
+  - name: powerjob-4.0
+    source_path: instrumentation/powerjob-4.0
+    scope:
+      name: io.opentelemetry.powerjob-4.0
+    target_versions:
+      javaagent:
+      - tech.powerjob:powerjob-worker:[4.0.0,)
+  pulsar:
+  - name: pulsar-2.8
+    source_path: instrumentation/pulsar/pulsar-2.8
+    scope:
+      name: io.opentelemetry.pulsar-2.8
+    target_versions:
+      javaagent:
+      - org.apache.pulsar:pulsar-client:[2.8.0,)
+  quarkus:
+  - name: quarkus-resteasy-reactive
+    source_path: instrumentation/quarkus-resteasy-reactive
+    scope:
+      name: io.opentelemetry.quarkus-resteasy-reactive
+    target_versions:
+      javaagent:
+      - io.quarkus:quarkus-resteasy-reactive:(,3.9.0)
+  quartz:
+  - name: quartz-2.0
+    source_path: instrumentation/quartz-2.0
+    scope:
+      name: io.opentelemetry.quartz-2.0
+    target_versions:
+      javaagent:
+      - org.quartz-scheduler:quartz:[2.0.0,)
+      library:
+      - org.quartz-scheduler:quartz:2.0.0
+  r2dbc:
+  - name: r2dbc-1.0
+    source_path: instrumentation/r2dbc-1.0
+    scope:
+      name: io.opentelemetry.r2dbc-1.0
+    target_versions:
+      javaagent:
+      - io.r2dbc:r2dbc-spi:[1.0.0.RELEASE,)
+      library:
+      - io.r2dbc:r2dbc-spi:1.0.0.RELEASE
+  rabbitmq:
+  - name: rabbitmq-2.7
+    source_path: instrumentation/rabbitmq-2.7
+    scope:
+      name: io.opentelemetry.rabbitmq-2.7
+    target_versions:
+      javaagent:
+      - com.rabbitmq:amqp-client:[2.7.0,)
+  ratpack:
+  - name: ratpack-1.4
+    source_path: instrumentation/ratpack/ratpack-1.4
+    scope:
+      name: io.opentelemetry.ratpack-1.4
+    target_versions:
+      javaagent:
+      - io.ratpack:ratpack-core:[1.4.0,)
+  - name: ratpack-1.7
+    source_path: instrumentation/ratpack/ratpack-1.7
+    scope:
+      name: io.opentelemetry.ratpack-1.7
+    target_versions:
+      javaagent:
+      - io.ratpack:ratpack-core:[1.7.0,)
+      library:
+      - io.ratpack:ratpack-core:1.7.0
+  reactor:
+  - name: reactor-3.1
+    source_path: instrumentation/reactor/reactor-3.1
+    scope:
+      name: io.opentelemetry.reactor-3.1
+    target_versions:
+      javaagent:
+      - io.projectreactor:reactor-core:[3.1.0.RELEASE,)
+  - name: reactor-3.4
+    source_path: instrumentation/reactor/reactor-3.4
+    scope:
+      name: io.opentelemetry.reactor-3.4
+    target_versions:
+      javaagent:
+      - io.projectreactor:reactor-core:[3.4.0,)
+  - name: reactor-kafka-1.0
+    source_path: instrumentation/reactor/reactor-kafka-1.0
+    scope:
+      name: io.opentelemetry.reactor-kafka-1.0
+    target_versions:
+      javaagent:
+      - io.projectreactor.kafka:reactor-kafka:[1.0.0,)
+  - name: reactor-netty-0.9
+    source_path: instrumentation/reactor/reactor-netty/reactor-netty-0.9
+    scope:
+      name: io.opentelemetry.reactor-netty-0.9
+    target_versions:
+      javaagent:
+      - io.projectreactor.netty:reactor-netty:[0.8.2.RELEASE,1.0.0)
+  - name: reactor-netty-1.0
+    source_path: instrumentation/reactor/reactor-netty/reactor-netty-1.0
+    scope:
+      name: io.opentelemetry.reactor-netty-1.0
+    target_versions:
+      javaagent:
+      - io.projectreactor.netty:reactor-netty-http:[1.0.0,)
+      - io.projectreactor.netty:reactor-netty:[1.0.0,)
+    configurations:
+    - name: otel.instrumentation.reactor-netty.connection-telemetry.enabled
+      description: Enable the creation of Connect and DNS spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  rediscala:
+  - name: rediscala-1.8
+    source_path: instrumentation/rediscala-1.8
+    scope:
+      name: io.opentelemetry.rediscala-1.8
+    target_versions:
+      javaagent:
+      - com.github.Ma27:rediscala_2.11:[1.8.1,)
+      - com.github.etaty:rediscala_2.11:[1.5.0,)
+      - com.github.etaty:rediscala_2.12:[1.8.0,)
+      - com.github.Ma27:rediscala_2.13:[1.9.0,)
+      - io.github.rediscala:rediscala_2.13:[1.10.0,)
+      - com.github.etaty:rediscala_2.13:[1.9.0,)
+      - com.github.Ma27:rediscala_2.12:[1.8.1,)
+  redisson:
+  - name: redisson-3.0
+    source_path: instrumentation/redisson/redisson-3.0
+    scope:
+      name: io.opentelemetry.redisson-3.0
+    target_versions:
+      javaagent:
+      - org.redisson:redisson:[3.0.0,3.17.0)
+  - name: redisson-3.17
+    source_path: instrumentation/redisson/redisson-3.17
+    scope:
+      name: io.opentelemetry.redisson-3.17
+    target_versions:
+      javaagent:
+      - org.redisson:redisson:[3.17.0,)
+  resources:
+  - name: resources
+    source_path: instrumentation/resources
+    scope:
+      name: io.opentelemetry.resources
+  restlet:
+  - name: restlet-1.1
+    source_path: instrumentation/restlet/restlet-1.1
+    scope:
+      name: io.opentelemetry.restlet-1.1
+    target_versions:
+      javaagent:
+      - org.restlet:org.restlet:[1.1.0, 1.2-M1)
+      library:
+      - org.restlet:org.restlet:[1.1.5,1.+)
+      - com.noelios.restlet:com.noelios.restlet:1.1.5
+  - name: restlet-2.0
+    source_path: instrumentation/restlet/restlet-2.0
+    scope:
+      name: io.opentelemetry.restlet-2.0
+    target_versions:
+      javaagent:
+      - org.restlet.jse:org.restlet:[2.0.0,)
+      library:
+      - org.restlet.jse:org.restlet:2.0.2
+  rmi:
+  - name: rmi
+    source_path: instrumentation/rmi
+    scope:
+      name: io.opentelemetry.rmi
+    target_versions:
+      javaagent:
+      - Java 8+
+  rocketmq:
+  - name: rocketmq-client-4.8
+    source_path: instrumentation/rocketmq/rocketmq-client/rocketmq-client-4.8
+    scope:
+      name: io.opentelemetry.rocketmq-client-4.8
+    target_versions:
+      javaagent:
+      - org.apache.rocketmq:rocketmq-client:[4.0.0,)
+      library:
+      - org.apache.rocketmq:rocketmq-client:4.8.0
+  - name: rocketmq-client-5.0
+    source_path: instrumentation/rocketmq/rocketmq-client/rocketmq-client-5.0
+    scope:
+      name: io.opentelemetry.rocketmq-client-5.0
+    target_versions:
+      javaagent:
+      - org.apache.rocketmq:rocketmq-client-java:[5.0.0,)
+  runtime:
+  - name: runtime-telemetry-java17
+    source_path: instrumentation/runtime-telemetry/runtime-telemetry-java17
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.runtime-telemetry-java17
+  - name: runtime-telemetry-java8
+    source_path: instrumentation/runtime-telemetry/runtime-telemetry-java8
+    scope:
+      name: io.opentelemetry.runtime-telemetry-java8
+  rxjava:
+  - name: rxjava-1.0
+    source_path: instrumentation/rxjava/rxjava-1.0
+    scope:
+      name: io.opentelemetry.rxjava-1.0
+    target_versions:
+      library:
+      - io.reactivex:rxjava:1.0.7
+  - name: rxjava-2.0
+    source_path: instrumentation/rxjava/rxjava-2.0
+    scope:
+      name: io.opentelemetry.rxjava-2.0
+    target_versions:
+      javaagent:
+      - io.reactivex.rxjava2:rxjava:[2.0.6,)
+      library:
+      - io.reactivex.rxjava2:rxjava:2.1.3
+  - name: rxjava-3.0
+    source_path: instrumentation/rxjava/rxjava-3.0
+    scope:
+      name: io.opentelemetry.rxjava-3.0
+    target_versions:
+      javaagent:
+      - io.reactivex.rxjava3:rxjava:[3.0.0,3.1.0]
+      library:
+      - io.reactivex.rxjava3:rxjava:[3.0.12,3.1.0)
+  - name: rxjava-3.1.1
+    source_path: instrumentation/rxjava/rxjava-3.1.1
+    scope:
+      name: io.opentelemetry.rxjava-3.1.1
+    target_versions:
+      javaagent:
+      - io.reactivex.rxjava3:rxjava:[3.1.1,)
+      library:
+      - io.reactivex.rxjava3:rxjava:3.1.1
+  scala:
+  - name: scala-fork-join-2.8
+    source_path: instrumentation/scala-fork-join-2.8
+    scope:
+      name: io.opentelemetry.scala-fork-join-2.8
+    target_versions:
+      javaagent:
+      - org.scala-lang:scala-library:[2.8.0,2.12.0)
+  servlet:
+  - name: servlet-2.2
+    source_path: instrumentation/servlet/servlet-2.2
+    scope:
+      name: io.opentelemetry.servlet-2.2
+    target_versions:
+      javaagent:
+      - javax.servlet:servlet-api:[2.2, 3.0)
+  - name: servlet-3.0
+    source_path: instrumentation/servlet/servlet-3.0
+    scope:
+      name: io.opentelemetry.servlet-3.0
+    target_versions:
+      javaagent:
+      - javax.servlet:javax.servlet-api:[3.0,)
+  - name: servlet-5.0
+    source_path: instrumentation/servlet/servlet-5.0
+    scope:
+      name: io.opentelemetry.servlet-5.0
+    target_versions:
+      javaagent:
+      - jakarta.servlet:jakarta.servlet-api:[5.0.0,)
+  spark:
+  - name: spark-2.3
+    description: |
+      This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to SERVER spans and HTTP server metrics.
+    source_path: instrumentation/spark-2.3
+    scope:
+      name: io.opentelemetry.spark-2.3
+    target_versions:
+      javaagent:
+      - com.sparkjava:spark-core:[2.3,)
+  spring:
+  - name: spring-batch-3.0
+    disabled_by_default: true
+    source_path: instrumentation/spring/spring-batch-3.0
+    scope:
+      name: io.opentelemetry.spring-batch-3.0
+    target_versions:
+      javaagent:
+      - org.springframework.batch:spring-batch-core:[3.0.0.RELEASE,5)
+  - name: spring-boot-actuator-autoconfigure-2.0
+    disabled_by_default: true
+    source_path: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
+    scope:
+      name: io.opentelemetry.spring-boot-actuator-autoconfigure-2.0
+    target_versions:
+      javaagent:
+      - org.springframework.boot:spring-boot-actuator-autoconfigure:[2.0.0.RELEASE,)
+  - name: spring-boot-resources
+    source_path: instrumentation/spring/spring-boot-resources
+    scope:
+      name: io.opentelemetry.spring-boot-resources
+  - name: spring-cloud-aws-3.0
+    source_path: instrumentation/spring/spring-cloud-aws-3.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-cloud-aws-3.0
+    target_versions:
+      javaagent:
+      - io.awspring.cloud:spring-cloud-aws-sqs:[3.0.0,)
+  - name: spring-cloud-gateway-2.0
+    source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
+    scope:
+      name: io.opentelemetry.spring-cloud-gateway-2.0
+    target_versions:
+      javaagent:
+      - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
+  - name: spring-core-2.0
+    source_path: instrumentation/spring/spring-core-2.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-core-2.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-core:[2.0,]
+  - name: spring-data-1.8
+    source_path: instrumentation/spring/spring-data/spring-data-1.8
+    scope:
+      name: io.opentelemetry.spring-data-1.8
+    target_versions:
+      javaagent:
+      - org.springframework:spring-aop:[1.2,]
+      - org.springframework.data:spring-data-commons:[1.8.0.RELEASE,]
+  - name: spring-integration-4.1
+    source_path: instrumentation/spring/spring-integration-4.1
+    scope:
+      name: io.opentelemetry.spring-integration-4.1
+    target_versions:
+      javaagent:
+      - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,)
+      library:
+      - org.springframework.integration:spring-integration-core:[4.1.0.RELEASE,5.+)
+  - name: spring-jms-2.0
+    source_path: instrumentation/spring/spring-jms/spring-jms-2.0
+    scope:
+      name: io.opentelemetry.spring-jms-2.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-jms:[2.0,6)
+  - name: spring-jms-6.0
+    source_path: instrumentation/spring/spring-jms/spring-jms-6.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-jms-6.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-jms:[6.0.0,)
+  - name: spring-kafka-2.7
+    source_path: instrumentation/spring/spring-kafka-2.7
+    scope:
+      name: io.opentelemetry.spring-kafka-2.7
+    target_versions:
+      javaagent:
+      - org.springframework.kafka:spring-kafka:[2.7.0,)
+  - name: spring-pulsar-1.0
+    source_path: instrumentation/spring/spring-pulsar-1.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-pulsar-1.0
+    target_versions:
+      javaagent:
+      - org.springframework.pulsar:spring-pulsar:[1.0.0,)
+  - name: spring-rabbit-1.0
+    source_path: instrumentation/spring/spring-rabbit-1.0
+    scope:
+      name: io.opentelemetry.spring-rabbit-1.0
+    target_versions:
+      javaagent:
+      - org.springframework.amqp:spring-rabbit:(,)
+  - name: spring-rmi-4.0
+    source_path: instrumentation/spring/spring-rmi-4.0
+    scope:
+      name: io.opentelemetry.spring-rmi-4.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-context:[4.0.0.RELEASE,6)
+  - name: spring-scheduling-3.1
+    source_path: instrumentation/spring/spring-scheduling-3.1
+    scope:
+      name: io.opentelemetry.spring-scheduling-3.1
+    target_versions:
+      javaagent:
+      - org.springframework:spring-context:[3.1.0.RELEASE,]
+  - name: spring-security-config-6.0
+    source_path: instrumentation/spring/spring-security-config-6.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-security-config-6.0
+    target_versions:
+      javaagent:
+      - org.springframework.security:spring-security-config:[6.0.0,]
+      library:
+      - io.projectreactor:reactor-core:3.5.0
+      - org.springframework.security:spring-security-config:6.0.0
+      - org.springframework:spring-web:6.0.0
+      - jakarta.servlet:jakarta.servlet-api:6.0.0
+      - org.springframework.security:spring-security-web:6.0.0
+  - name: spring-web-3.1
+    source_path: instrumentation/spring/spring-web/spring-web-3.1
+    scope:
+      name: io.opentelemetry.spring-web-3.1
+    target_versions:
+      javaagent:
+      - org.springframework:spring-web:[3.1.0.RELEASE,6)
+  - name: spring-web-6.0
+    source_path: instrumentation/spring/spring-web/spring-web-6.0
+    scope:
+      name: io.opentelemetry.spring-web-6.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-web:[6.0.0,)
+  - name: spring-webflux-5.0
+    source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
+    scope:
+      name: io.opentelemetry.spring-webflux-5.0
+    target_versions:
+      javaagent:
+      - io.projectreactor.ipc:reactor-netty:[0.7.0.RELEASE,)
+      - org.springframework:spring-webflux:[5.0.0.RELEASE,)
+      - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: spring-webflux-5.3
+    source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
+    scope:
+      name: io.opentelemetry.spring-webflux-5.3
+    target_versions:
+      library:
+      - org.springframework:spring-webflux:5.3.0
+  - name: spring-webmvc-3.1
+    source_path: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
+    scope:
+      name: io.opentelemetry.spring-webmvc-3.1
+    target_versions:
+      javaagent:
+      - org.springframework:spring-webmvc:[3.1.0.RELEASE,6)
+  - name: spring-webmvc-5.3
+    source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
+    scope:
+      name: io.opentelemetry.spring-webmvc-5.3
+  - name: spring-webmvc-6.0
+    source_path: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-webmvc-6.0
+    target_versions:
+      javaagent:
+      - org.springframework:spring-webmvc:[6.0.0,)
+  - name: spring-ws-2.0
+    disabled_by_default: true
+    source_path: instrumentation/spring/spring-ws-2.0
+    scope:
+      name: io.opentelemetry.spring-ws-2.0
+    target_versions:
+      javaagent:
+      - org.springframework.ws:spring-ws-core:[2.0.0.RELEASE,]
+  spymemcached:
+  - name: spymemcached-2.12
+    source_path: instrumentation/spymemcached-2.12
+    scope:
+      name: io.opentelemetry.spymemcached-2.12
+    target_versions:
+      javaagent:
+      - net.spy:spymemcached:[2.12.0,)
+  struts:
+  - name: struts-2.3
+    source_path: instrumentation/struts/struts-2.3
+    scope:
+      name: io.opentelemetry.struts-2.3
+    target_versions:
+      javaagent:
+      - org.apache.struts:struts2-core:[2.1.0,7)
+  - name: struts-7.0
+    source_path: instrumentation/struts/struts-7.0
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.struts-7.0
+    target_versions:
+      javaagent:
+      - org.apache.struts:struts2-core:[7.0.0,)
+  tapestry:
+  - name: tapestry-5.4
+    source_path: instrumentation/tapestry-5.4
+    scope:
+      name: io.opentelemetry.tapestry-5.4
+    target_versions:
+      javaagent:
+      - org.apache.tapestry:tapestry-core:[5.4.0,)
+  tomcat:
+  - name: tomcat-10.0
+    source_path: instrumentation/tomcat/tomcat-10.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.tomcat-10.0
+    target_versions:
+      javaagent:
+      - org.apache.tomcat.embed:tomcat-embed-core:[10,)
+  - name: tomcat-7.0
+    source_path: instrumentation/tomcat/tomcat-7.0
+    scope:
+      name: io.opentelemetry.tomcat-7.0
+    target_versions:
+      javaagent:
+      - org.apache.tomcat.embed:tomcat-embed-core:[7.0.4, 10)
+  - name: tomcat-jdbc
+    source_path: instrumentation/tomcat/tomcat-jdbc
+    scope:
+      name: io.opentelemetry.tomcat-jdbc
+    target_versions:
+      javaagent:
+      - org.apache.tomcat:tomcat-jdbc:[8.5.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.pending_requests
+        description: The number of pending requests for an open connection, cumulative
+          for the entire pool.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.idle.max
+        description: The maximum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.idle.min
+        description: The minimum number of idle open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+      - name: db.client.connection.pending_requests
+        description: The number of current pending requests for an open connection.
+        type: LONG_SUM
+        unit: request
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  twilio:
+  - name: twilio-6.6
+    source_path: instrumentation/twilio-6.6
+    scope:
+      name: io.opentelemetry.twilio-6.6
+    target_versions:
+      javaagent:
+      - com.twilio.sdk:twilio:(,8.0.0)
+  undertow:
+  - name: undertow-1.4
+    source_path: instrumentation/undertow-1.4
+    scope:
+      name: io.opentelemetry.undertow-1.4
+    target_versions:
+      javaagent:
+      - io.undertow:undertow-core:[1.4.0.Final,)
+  vaadin:
+  - name: vaadin-14.2
+    source_path: instrumentation/vaadin-14.2
+    scope:
+      name: io.opentelemetry.vaadin-14.2
+    target_versions:
+      javaagent:
+      - com.vaadin:flow-server:[2.2.0,3)
+      - com.vaadin:flow-server:[3.1.0,)
+  vertx:
+  - name: vertx-http-client-3.0
+    source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-3.0
+    scope:
+      name: io.opentelemetry.vertx-http-client-3.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-core:[3.0.0,4.0.0)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: vertx-http-client-4.0
+    source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-4.0
+    scope:
+      name: io.opentelemetry.vertx-http-client-4.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-core:[4.0.0,5)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: vertx-http-client-5.0
+    source_path: instrumentation/vertx/vertx-http-client/vertx-http-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-http-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-core:[5.0.0,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: vertx-kafka-client-3.6
+    source_path: instrumentation/vertx/vertx-kafka-client-3.6
+    scope:
+      name: io.opentelemetry.vertx-kafka-client-3.6
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-kafka-client:[3.5.1,)
+  - name: vertx-redis-client-4.0
+    source_path: instrumentation/vertx/vertx-redis-client-4.0
+    scope:
+      name: io.opentelemetry.vertx-redis-client-4.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-redis-client:[4.0.0,)
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: vertx-rx-java-3.5
+    source_path: instrumentation/vertx/vertx-rx-java-3.5
+    scope:
+      name: io.opentelemetry.vertx-rx-java-3.5
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-rx-java2:[3.5.0,)
+  - name: vertx-sql-client-4.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-4.0
+    scope:
+      name: io.opentelemetry.vertx-sql-client-4.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-sql-client:[4.0.0,5)
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: vertx-sql-client-5.0
+    source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.vertx-sql-client-5.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-sql-client:[5.0.0,)
+    telemetry:
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: vertx-web-3.0
+    source_path: instrumentation/vertx/vertx-web-3.0
+    scope:
+      name: io.opentelemetry.vertx-web-3.0
+    target_versions:
+      javaagent:
+      - io.vertx:vertx-web:[3.0.0,)
+  vibur:
+  - name: vibur-dbcp-11.0
+    description: Instrumentation for the vibur-dbcp library, which provides connection
+      pool metrics.
+    source_path: instrumentation/vibur-dbcp-11.0
+    scope:
+      name: io.opentelemetry.vibur-dbcp-11.0
+    target_versions:
+      javaagent:
+      - org.vibur:vibur-dbcp:[11.0,)
+      library:
+      - org.vibur:vibur-dbcp:11.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: db.client.connections.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+      - name: db.client.connections.usage
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connections
+        attributes:
+        - name: pool.name
+          type: STRING
+        - name: state
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.connection.count
+        description: The number of connections that are currently in state described
+          by the state attribute.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+        - name: db.client.connection.state
+          type: STRING
+      - name: db.client.connection.max
+        description: The maximum number of open connections allowed.
+        type: LONG_SUM
+        unit: connection
+        attributes:
+        - name: db.client.connection.pool.name
+          type: STRING
+  wicket:
+  - name: wicket-8.0
+    source_path: instrumentation/wicket-8.0
+    scope:
+      name: io.opentelemetry.wicket-8.0
+    target_versions:
+      javaagent:
+      - org.apache.wicket:wicket:[8.0.0,]
+  xxl:
+  - name: xxl-job-1.9.2
+    source_path: instrumentation/xxl-job/xxl-job-1.9.2
+    scope:
+      name: io.opentelemetry.xxl-job-1.9.2
+    target_versions:
+      javaagent:
+      - com.xuxueli:xxl-job-core:[1.9.2, 2.1.2)
+  - name: xxl-job-2.1.2
+    source_path: instrumentation/xxl-job/xxl-job-2.1.2
+    scope:
+      name: io.opentelemetry.xxl-job-2.1.2
+    target_versions:
+      javaagent:
+      - com.xuxueli:xxl-job-core:[2.1.2,2.3.0)
+  - name: xxl-job-2.3.0
+    source_path: instrumentation/xxl-job/xxl-job-2.3.0
+    scope:
+      name: io.opentelemetry.xxl-job-2.3.0
+    target_versions:
+      javaagent:
+      - com.xuxueli:xxl-job-core:[2.3.0,)
+  zio:
+  - name: zio-2.0
+    source_path: instrumentation/zio/zio-2.0
+    scope:
+      name: io.opentelemetry.zio-2.0
+    target_versions:
+      javaagent:
+      - dev.zio:zio_2.13:[2.0.0,)
+      - dev.zio:zio_3:[2.0.0,)
+      - dev.zio:zio_2.12:[2.0.0,)
+internal:
+- name: opentelemetry-api-1.15
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.15
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.15
+- name: opentelemetry-api-1.10
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.10
+- name: opentelemetry-api-1.27
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.27
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.27
+- name: internal-application-logger
+  source_path: instrumentation/internal/internal-application-logger
+  scope:
+    name: io.opentelemetry.internal-application-logger
+  target_versions:
+    javaagent:
+    - org.springframework.boot:spring-boot:[1.2.0,)
+    - org.slf4j:slf4j-api:[1.4.0,)
+- name: internal-class-loader
+  source_path: instrumentation/internal/internal-class-loader
+  scope:
+    name: io.opentelemetry.internal-class-loader
+- name: java-util-logging
+  source_path: instrumentation/java-util-logging
+  scope:
+    name: io.opentelemetry.java-util-logging
+- name: internal-reflection
+  source_path: instrumentation/internal/internal-reflection
+  scope:
+    name: io.opentelemetry.internal-reflection
+- name: opentelemetry-api-1.52
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.52
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.52
+- name: opentelemetry-instrumentation-api
+  source_path: instrumentation/opentelemetry-instrumentation-api
+  scope:
+    name: io.opentelemetry.opentelemetry-instrumentation-api
+  target_versions:
+    javaagent:
+    - io.opentelemetry.instrumentation:opentelemetry-instrumentation-api:[1.14.0-alpha,)
+- name: opentelemetry-api-1.37
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.37
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.37
+- name: opentelemetry-api-1.38
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.38
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.38
+- name: opentelemetry-api-1.31
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.31
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.31
+- name: opentelemetry-api-1.32
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.32
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.32
+- name: opentelemetry-api-1.50
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.50
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.50
+- name: opentelemetry-api-1.42
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.42
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.42
+- name: opentelemetry-api-1.40
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.40
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.40
+- name: opentelemetry-api-1.47
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.47
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.47
+- name: internal-lambda
+  source_path: instrumentation/internal/internal-lambda
+  scope:
+    name: io.opentelemetry.internal-lambda
+- name: internal-eclipse-osgi-3.6
+  source_path: instrumentation/internal/internal-eclipse-osgi-3.6
+  scope:
+    name: io.opentelemetry.internal-eclipse-osgi-3.6
+- name: internal-url-class-loader
+  source_path: instrumentation/internal/internal-url-class-loader
+  scope:
+    name: io.opentelemetry.internal-url-class-loader
+- name: opentelemetry-extension-kotlin-1.0
+  description: |
+    Our Kotlin coroutine instrumentation relies on a shaded copy of the opentelemetry-extension-kotlin library. This can cause conflicts when the application itself also uses opentelemetry-extension-kotlin, because the shaded and unshaded versions store the OpenTelemetry context under different keys. To resolve this issue, this instrumentation modifies the application's copy of opentelemetry-extension-kotlin so that it delegates to the shaded version bundled within the agent.
+  source_path: instrumentation/opentelemetry-extension-kotlin-1.0
+  scope:
+    name: io.opentelemetry.opentelemetry-extension-kotlin-1.0
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-extension-kotlin:[0.17.0,)
+- name: opentelemetry-api-1.4
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.4
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.4
+- name: opentelemetry-api-1.0
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.0
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.0
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-api:[0.17.0,)
+custom:
+- name: external-annotations
+  description: |
+    The external-annotations instrumentation acts as a "shim" that automatically instruments methods annotated with custom or third-party tracing annotations. This is particularly useful if you have existing annotations (such as a custom @Trace or third-party annotation) that you want to leverage with OpenTelemetry. At runtime, this module recognizes those annotations and applies the appropriate OpenTelemetry instrumentation logic, including span creation and context propagation. Covers many common vendor annotations by default, and additional annotations can be targeted using the configuration property "otel.instrumentation.external-annotations.include".
+  source_path: instrumentation/external-annotations
+  scope:
+    name: io.opentelemetry.external-annotations
+  target_versions:
+    javaagent:
+    - Java 8+
+- name: opentelemetry-extension-annotations-1.0
+  description: |
+    Instruments methods annotated with OpenTelemetry extension annotations, such as @WithSpan and @SpanAttribute.
+  source_path: instrumentation/opentelemetry-extension-annotations-1.0
+  scope:
+    name: io.opentelemetry.opentelemetry-extension-annotations-1.0
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
+- name: opentelemetry-instrumentation-annotations-1.16
+  description: |
+    Instruments methods annotated with OpenTelemetry instrumentation annotations, such as @WithSpan and @SpanAttribute.
+  source_path: instrumentation/opentelemetry-instrumentation-annotations-1.16
+  scope:
+    name: io.opentelemetry.opentelemetry-instrumentation-annotations-1.16
+  target_versions:
+    javaagent:
+    - io.opentelemetry:opentelemetry-instrumentation-annotations:(,)
+- name: jmx-metrics
+  description: |
+    Collects and reports metrics exposed through Java Management Extensions (JMX). It can be configured to extract JVM and application-level telemetry data from JMX MBeans such as memory usage, thread counts, and garbage collection statistics, and translate these measurements into OpenTelemetry metrics.
+  source_path: instrumentation/jmx-metrics
+  scope:
+    name: io.opentelemetry.jmx-metrics
+- name: methods
+  description: |
+    Provides a flexible way to capture telemetry at the method level in JVM applications. By weaving instrumentation into targeted methods at runtime based on the "otel.instrumentation.methods.include" configuration property, it measures entry and exit points, execution duration and exception occurrences. The resulting data is automatically translated into OpenTelemetry traces.
+  source_path: instrumentation/methods
+  scope:
+    name: io.opentelemetry.methods
+  target_versions:
+    javaagent:
+    - Java 8+

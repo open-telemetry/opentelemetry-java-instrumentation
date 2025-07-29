@@ -37,5 +37,11 @@ dependencies {
   testInstrumentation(project(":instrumentation:akka:akka-http-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:akka:akka-actor-2.3:javaagent"))
 
-  latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.+")
+  latestDepTestLibrary("com.typesafe.play:play-ahc-ws-standalone_$scalaVersion:1.+") // see play-ws-2.0 module
+}
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 }

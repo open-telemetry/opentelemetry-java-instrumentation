@@ -10,30 +10,30 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class RatpackInstrumentationModule extends InstrumentationModule {
+public class RatpackInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public RatpackInstrumentationModule() {
     super("ratpack", "ratpack-1.4");
   }
 
   @Override
-  public boolean isIndyModule() {
-    // java.lang.ClassCastException: class
-    // io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.AutoValue_ServerContext
-    // cannot be cast to class
-    // io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.ServerContext
-    // (io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.AutoValue_ServerContext is in unnamed module of loader 'app'; io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.ServerContext is in unnamed module of loader io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader @7f088b5c)
-    return false;
+  public String getModuleGroup() {
+    // relies on netty
+    return "netty";
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ContinuationInstrumentation(),
+        new ContinuationStreamInstrumentation(),
         new DefaultExecutionInstrumentation(),
         new DefaultExecStarterInstrumentation(),
+        new ExecutionBoundPublisherInstrumentation(),
         new ServerErrorHandlerInstrumentation(),
         new ServerRegistryInstrumentation());
   }

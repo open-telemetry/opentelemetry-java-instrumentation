@@ -13,7 +13,7 @@ import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -27,19 +27,24 @@ public final class GrpcSingletons {
   private static final AtomicReference<Context.Storage> STORAGE_REFERENCE = new AtomicReference<>();
 
   static {
+    boolean emitMessageEvents =
+        AgentInstrumentationConfig.get()
+            .getBoolean("otel.instrumentation.grpc.emit-message-events", true);
+
     boolean experimentalSpanAttributes =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
 
     List<String> clientRequestMetadata =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getList("otel.instrumentation.grpc.capture-metadata.client.request", emptyList());
     List<String> serverRequestMetadata =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getList("otel.instrumentation.grpc.capture-metadata.server.request", emptyList());
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())
+            .setEmitMessageEvents(emitMessageEvents)
             .setCaptureExperimentalSpanAttributes(experimentalSpanAttributes)
             .setCapturedClientRequestMetadata(clientRequestMetadata)
             .setCapturedServerRequestMetadata(serverRequestMetadata)

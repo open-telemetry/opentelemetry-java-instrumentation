@@ -4,7 +4,7 @@
  */
 
 plugins {
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   id("otel.library-instrumentation")
 }
 
@@ -16,6 +16,15 @@ dependencies {
 }
 
 tasks {
+  // We cannot use "--release" javac option here because that will forbid using apis that were added
+  // in later versions. In JDBC wrappers we wish to implement delegation for methods that are not
+  // present in jdk8.
+  compileJava {
+    sourceCompatibility = "1.8"
+    targetCompatibility = "1.8"
+    options.release.set(null as Int?)
+  }
+
   shadowJar {
     dependencies {
       // including only current module excludes its transitive dependencies
@@ -40,5 +49,19 @@ tasks {
     from(zipTree(shadowJar.get().archiveFile))
     into("build/extracted/shadow-bootstrap")
     include("io/opentelemetry/javaagent/bootstrap/**")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }

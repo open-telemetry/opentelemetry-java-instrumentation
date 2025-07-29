@@ -7,20 +7,22 @@ package io.opentelemetry.javaagent.instrumentation.geode;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
-final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest> {
+final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(CommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(GeodeRequest request) {
-    return SemanticAttributes.DbSystemValues.GEODE;
+  public String getDbSystem(GeodeRequest request) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.GEODE;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(GeodeRequest request) {
@@ -28,10 +30,12 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   }
 
   @Override
-  public String getName(GeodeRequest request) {
+  @Nullable
+  public String getDbNamespace(GeodeRequest request) {
     return request.getRegion().getName();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(GeodeRequest request) {
@@ -40,14 +44,14 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
 
   @Override
   @Nullable
-  public String getStatement(GeodeRequest request) {
+  public String getDbQueryText(GeodeRequest request) {
     // sanitized statement is cached
     return sanitizer.sanitize(request.getQuery()).getFullStatement();
   }
 
   @Override
   @Nullable
-  public String getOperation(GeodeRequest request) {
+  public String getDbOperationName(GeodeRequest request) {
     return request.getOperation();
   }
 }

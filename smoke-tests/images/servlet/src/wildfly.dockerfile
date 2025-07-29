@@ -8,11 +8,15 @@ ARG baseDownloadUrl
 # The user ID 1000 is the default for the first "regular" user on Fedora/RHEL,
 # so there is a high chance that this ID will be equal to the current user
 # making it easier to use volumes (no permission issues)
-RUN groupadd -r jboss -g 1000 && useradd -u 1000 -r -g jboss -m -d /opt/jboss -s /sbin/nologin -c "JBoss user" jboss && \
+RUN groupadd -r jboss -g 1001 && useradd -u 1001 -r -g jboss -m -d /opt/jboss -s /sbin/nologin -c "JBoss user" jboss && \
     chmod 755 /opt/jboss
 
 # Set the working directory to jboss' user home directory
 WORKDIR /opt/jboss
+
+# latest eclipse-temurin docker images have removed curl in favor of wget (https://github.com/adoptium/containers/issues/630)
+# but ibm-semeru-runtimes docker images lack wget
+RUN apt-get update && apt-get -y install wget
 
 # Specify the user which should be used to execute all commands below
 USER jboss
@@ -27,7 +31,7 @@ RUN echo curl -O -L $DOWNLOAD_URL
 # Add the WildFly distribution to /opt, and make wildfly the owner of the extracted tar content
 # Make sure the distribution is available from a well-known place
 RUN cd $HOME \
-    && curl -O -L $DOWNLOAD_URL \
+    && wget -nv $DOWNLOAD_URL \
     && tar xf wildfly-$WILDFLY_VERSION.tar.gz \
     && mv $HOME/wildfly-$WILDFLY_VERSION $JBOSS_HOME \
     && rm wildfly-$WILDFLY_VERSION.tar.gz \

@@ -2,8 +2,11 @@ name: Release
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  required-jobs:
+  common:
     uses: ./.github/workflows/build-common.yml
 
   # test-latest-deps is intentionally not included in the release workflows
@@ -16,11 +19,14 @@ jobs:
   # and this is not a reason to hold up the release
 
   release:
+    permissions:
+      contents: write # for creating the release
     runs-on: ubuntu-latest
     needs:
-      - required-jobs
+      - common
     outputs:
       version: ${{ steps.create-github-release.outputs.version }}
+      prior-version: ${{ steps.create-github-release.outputs.prior-version }}
     steps:
       - run: |
           if [[ $GITHUB_REF_NAME != release/* ]]; then
@@ -28,7 +34,7 @@ jobs:
             exit 1
           fi
 
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Set environment variables
         run: |
@@ -57,7 +63,7 @@ jobs:
 
         # check out main branch to verify there won't be problems with merging the change log
         # at the end of this workflow
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: main
 
@@ -72,7 +78,7 @@ jobs:
           fi
 
         # back to the release branch
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
@@ -80,23 +86,24 @@ jobs:
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-      - uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Build and publish artifacts
-        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # v2.11.1
-        with:
-          arguments: assemble publishToSonatype closeAndReleaseSonatypeStagingRepository
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        # run: ./gradlew assemble spdxSbom publishToSonatype closeAndReleaseSonatypeStagingRepository
+        run: ./gradlew assemble spdxSbom publishAllPublicationToReleaseRepoRepository generateReleaseBundle uploadReleaseBundle
 
       - name: Build and publish gradle plugins
-        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # v2.11.1
         env:
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
@@ -104,10 +111,21 @@ jobs:
           GRADLE_PUBLISH_SECRET: ${{ secrets.GRADLE_PUBLISH_SECRET }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+        # Don't use publishToSonatype since we don't want to publish the marker artifact
+        run: ./gradlew build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
+        working-directory: gradle-plugins
+
+      - name: Collect SBOMs
+        run: |
+          mkdir sboms
+          cp javaagent/build/spdx/*.spdx.json sboms
+          zip opentelemetry-java-instrumentation-SBOM.zip sboms/*
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        name: Upload SBOMs
         with:
-          # Don't use publishToSonatype since we don't want to publish the marker artifact
-          arguments: build publishPlugins publishPluginMavenPublicationToSonatypeRepository closeAndReleaseSonatypeStagingRepository
-          build-root-directory: gradle-plugins
+          name: opentelemetry-java-instrumentation-SBOM
+          path: "sboms/*.json"
 
       - name: Generate release notes
         env:
@@ -158,20 +176,29 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
+          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
           gh release create --target $GITHUB_REF_NAME \
                             --title "Version $VERSION" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
-                            opentelemetry-javaagent.jar
+                            opentelemetry-javaagent.jar \
+                            opentelemetry-javaagent.jar.asc \
+                            opentelemetry-java-instrumentation-SBOM.zip
 
+          # these are used as job outputs
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
-  merge-change-log-to-main:
+  update-apidiff-baseline-to-released-version:
+    permissions:
+      contents: write # for git push to PR branch
     runs-on: ubuntu-latest
     needs:
       - release
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      # add change log sync (if any) into this PR since the apidiff update
+      # is required before any other PR can be merged anyway
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Copy change log section from release branch
         env:
@@ -180,7 +207,7 @@ jobs:
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/changelog-section.md
 
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           ref: main
 
@@ -192,31 +219,50 @@ jobs:
           release_date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
           RELEASE_DATE=$release_date .github/scripts/merge-change-log-after-release.sh
 
-      - name: Use CLA approved github bot
-        run: .github/scripts/use-cla-approved-github-bot.sh
+      - name: Wait for release to be available in maven central
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+        run: |
+          until curl --silent \
+                     --show-error \
+                     --output /dev/null \
+                     --head \
+                     --fail \
+                     https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/$VERSION/opentelemetry-javaagent-$VERSION.jar
+          do
+            sleep 60
+          done
+
+      - name: Update apidiff baseline
+        env:
+          VERSION: ${{ needs.release.outputs.version }}
+          PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
+        run: |
+          ./gradlew japicmp -PapiBaseVersion=$PRIOR_VERSION -PapiNewVersion=$VERSION
+          ./gradlew --refresh-dependencies japicmp
+
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Create pull request against main
         env:
           VERSION: ${{ needs.release.outputs.version }}
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          if git diff --quiet; then
-            if [[ $VERSION == *.0 ]]; then
-              echo there are no updates to merge, not creating pull request
-              exit 0 # success
-            else
-              echo patch release notes did not get applied for some reason
-              exit 1 # failure
-            fi
-          fi
-
-          message="Merge change log updates from $GITHUB_REF_NAME"
-          body="Merge log updates from \`$GITHUB_REF_NAME\`."
-          branch="opentelemetrybot/merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
+          message="Update apidiff baseline to released version $VERSION"
+          body="Update apidiff baseline to released version \`$VERSION\`."
+          branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch
-          git commit -a -m "$message"
+          git add docs/apidiffs
+          git commit -m "$message"
           git push --set-upstream origin $branch
           gh pr create --title "$message" \
                        --body "$body" \

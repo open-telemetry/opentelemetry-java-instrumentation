@@ -13,11 +13,12 @@ import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggester;
+import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggesterFactory;
 import com.google.errorprone.matchers.Description;
-import com.google.inject.Inject;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.util.TreePath;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -33,7 +34,8 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
 
   @Inject
   OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags) {
-    delegate = new CanIgnoreReturnValueSuggester(errorProneFlags);
+    delegate =
+        CanIgnoreReturnValueSuggesterFactory.createCanIgnoreReturnValueSuggester(errorProneFlags);
   }
 
   public OtelCanIgnoreReturnValueSuggester() {

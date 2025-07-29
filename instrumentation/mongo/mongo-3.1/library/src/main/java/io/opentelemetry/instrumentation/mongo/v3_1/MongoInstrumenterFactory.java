@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
@@ -34,6 +35,7 @@ class MongoInstrumenterFactory {
         .addAttributesExtractor(
             ServerAttributesExtractor.create(new MongoNetworkAttributesGetter()))
         .addAttributesExtractor(attributesExtractor)
+        .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

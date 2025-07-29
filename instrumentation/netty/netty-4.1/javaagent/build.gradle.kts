@@ -26,8 +26,8 @@ muzzle {
 dependencies {
   library("io.netty:netty-codec-http:4.1.0.Final")
   implementation(project(":instrumentation:netty:netty-4.1:library"))
-  implementation(project(":instrumentation:netty:netty-4-common:javaagent"))
-  implementation(project(":instrumentation:netty:netty-4-common:library"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:javaagent"))
+  implementation(project(":instrumentation:netty:netty-common-4.0:library"))
   implementation(project(":instrumentation:netty:netty-common:library"))
 
   testImplementation(project(":instrumentation:netty:netty-4.1:testing"))
@@ -56,6 +56,7 @@ tasks {
 
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
@@ -74,7 +75,8 @@ if (!(findProperty("testLatestDeps") as Boolean)) {
   configurations.configureEach {
     if (!name.contains("muzzle")) {
       resolutionStrategy.eachDependency {
-        if (requested.group == "io.netty" && requested.name != "netty-bom" &&
+        if (requested.group == "io.netty" &&
+          requested.name != "netty-bom" &&
           !requested.name.startsWith("netty-transport-native") &&
           !requested.name.startsWith("netty-transport-classes")) {
           useVersion("4.1.0.Final")

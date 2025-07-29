@@ -2,7 +2,7 @@
 <faces-config xmlns="http://java.sun.com/xml/ns/javaee" version="2.0">
   <managed-bean>
     <managed-bean-name>greetingForm</managed-bean-name>
-    <managed-bean-class>GreetingForm</managed-bean-class>
+    <managed-bean-class>io.opentelemetry.javaagent.instrumentation.jsf.javax.GreetingForm</managed-bean-class>
     <managed-bean-scope>request</managed-bean-scope>
   </managed-bean>
 </faces-config>

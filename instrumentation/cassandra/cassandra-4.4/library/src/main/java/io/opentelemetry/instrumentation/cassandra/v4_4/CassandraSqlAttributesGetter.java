@@ -5,18 +5,25 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static java.util.Collections.singleton;
+
 import com.datastax.oss.driver.api.core.CqlIdentifier;
+import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import java.util.Collection;
 import javax.annotation.Nullable;
 
-final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<CassandraRequest> {
+final class CassandraSqlAttributesGetter
+    implements SqlClientAttributesGetter<CassandraRequest, ExecutionInfo> {
+  // copied from DbIncubatingAttributes.DbSystemIncubatingValues
+  private static final String CASSANDRA = "cassandra";
 
   @Override
-  public String getSystem(CassandraRequest request) {
-    return SemanticAttributes.DbSystemValues.CASSANDRA;
+  public String getDbSystem(CassandraRequest request) {
+    return CASSANDRA;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CassandraRequest request) {
@@ -25,10 +32,11 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
 
   @Override
   @Nullable
-  public String getName(CassandraRequest request) {
+  public String getDbNamespace(CassandraRequest request) {
     return request.getSession().getKeyspace().map(CqlIdentifier::toString).orElse(null);
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CassandraRequest request) {
@@ -36,8 +44,7 @@ final class CassandraSqlAttributesGetter implements SqlClientAttributesGetter<Ca
   }
 
   @Override
-  @Nullable
-  public String getRawStatement(CassandraRequest request) {
-    return request.getStatement();
+  public Collection<String> getRawQueryTexts(CassandraRequest request) {
+    return singleton(request.getQueryText());
   }
 }

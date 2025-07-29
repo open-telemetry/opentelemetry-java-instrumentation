@@ -38,7 +38,7 @@ public class ShadowPackageRenamingTest {
           "org.objectweb.asm",
           "com.kenai",
           // Custom RxJava Utility
-          "rx.__OpenTelemetryTracingUtil");
+          "rx.OpenTelemetryTracingUtil");
 
   @Test
   void agentDependenciesRenamed() throws Exception {

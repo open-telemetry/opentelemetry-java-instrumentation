@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.elasticsearch.rest.v7_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.elasticsearch.rest.internal.ElasticsearchRestRequest;
-import io.opentelemetry.instrumentation.elasticsearch.rest.internal.RestResponseListener;
+import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchRestRequest;
+import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.RestResponseListener;
 import java.lang.reflect.Array;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
@@ -67,18 +67,18 @@ class RestClientWrapper {
                       return method.invoke(target, args);
                     }
 
-                    Response response = null;
-                    Throwable throwable = null;
                     Context context = instrumenter.start(parentContext, otelRequest);
-                    try (Scope scope = context.makeCurrent()) {
-                      response = (Response) method.invoke(target, args);
-                    } catch (Throwable exception) {
-                      throwable = exception;
-                    } finally {
-                      instrumenter.end(context, otelRequest, response, throwable);
-                    }
 
+                    Response response;
+                    try (Scope ignored = context.makeCurrent()) {
+                      response = (Response) method.invoke(target, args);
+                    } catch (Throwable t) {
+                      instrumenter.end(context, otelRequest, null, t);
+                      throw t;
+                    }
+                    instrumenter.end(context, otelRequest, response, null);
                     return response;
+
                   } else if ("performRequestAsync".equals(method.getName())
                       && args.length == 2
                       && args[0] instanceof Request
@@ -93,21 +93,17 @@ class RestClientWrapper {
                       return method.invoke(target, args);
                     }
 
-                    Throwable throwable = null;
                     Context context = instrumenter.start(parentContext, otelRequest);
                     args[1] =
                         new RestResponseListener(
                             responseListener, parentContext, instrumenter, context, otelRequest);
-                    try (Scope scope = context.makeCurrent()) {
+                    try (Scope ignored = context.makeCurrent()) {
                       return method.invoke(target, args);
-                    } catch (Throwable exception) {
-                      throwable = exception;
-                    } finally {
-                      if (throwable != null) {
-                        instrumenter.end(context, otelRequest, null, throwable);
-                      }
-                      // span ended in RestResponseListener
+                    } catch (Throwable t) {
+                      instrumenter.end(context, otelRequest, null, t);
+                      throw t;
                     }
+                    // span ended in RestResponseListener
                   }
 
                   // delegate to wrapped RestClient

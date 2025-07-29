@@ -8,9 +8,9 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.instrumentation.kafka.internal.AbstractOpenTelemetryMetricsReporterTest;
-import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetryMetricsReporter;
-import io.opentelemetry.instrumentation.kafka.internal.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.AbstractOpenTelemetryMetricsReporterTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -24,6 +24,7 @@ import java.io.ObjectStreamClass;
 import java.util.Map;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -44,6 +45,8 @@ class OpenTelemetryMetricsReporterTest extends AbstractOpenTelemetryMetricsRepor
 
   @Test
   void badConfig() {
+    Assumptions.assumeFalse(Boolean.getBoolean("testLatestDeps"));
+
     // Bad producer config
     assertThatThrownBy(
             () -> {

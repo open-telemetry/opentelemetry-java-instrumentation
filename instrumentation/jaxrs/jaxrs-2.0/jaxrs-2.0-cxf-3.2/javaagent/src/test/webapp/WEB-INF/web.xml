@@ -9,7 +9,7 @@
     <servlet-class>org.apache.cxf.jaxrs.servlet.CXFNonSpringJaxrsServlet</servlet-class>
     <init-param>
       <param-name>javax.ws.rs.Application</param-name>
-      <param-value>test.JaxRsApplicationPathTestApplication</param-value>
+      <param-value>io.opentelemetry.instrumentation.jaxrs.v2_0.test.JaxRsApplicationPathTestApplication</param-value>
     </init-param>
     <async-supported>true</async-supported>
   </servlet>

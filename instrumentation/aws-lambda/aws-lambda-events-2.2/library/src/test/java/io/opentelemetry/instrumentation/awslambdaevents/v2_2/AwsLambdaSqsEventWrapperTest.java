@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -16,8 +18,9 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.semconv.ResourceAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.CloudIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.FaasIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.lang.reflect.Constructor;
 import java.util.Collections;
 import org.junit.jupiter.api.AfterEach;
@@ -54,6 +57,7 @@ public class AwsLambdaSqsEventWrapperTest {
     assertThat(testing.forceFlushCalled()).isTrue();
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void eventTraced() {
     SQSEvent event = new SQSEvent();
@@ -75,16 +79,19 @@ public class AwsLambdaSqsEventWrapperTest {
                         .hasKind(SpanKind.SERVER)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                ResourceAttributes.CLOUD_RESOURCE_ID,
+                                CloudIncubatingAttributes.CLOUD_RESOURCE_ID,
                                 "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(ResourceAttributes.CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(SemanticAttributes.FAAS_INVOCATION_ID, "1-22-333")),
+                            equalTo(CloudIncubatingAttributes.CLOUD_ACCOUNT_ID, "123456789"),
+                            equalTo(FaasIncubatingAttributes.FAAS_INVOCATION_ID, "1-22-333")),
                 span ->
                     span.hasName("otel process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.MESSAGING_SYSTEM, "AmazonSQS"),
-                            equalTo(SemanticAttributes.MESSAGING_OPERATION, "process"))));
+                            equalTo(
+                                MESSAGING_SYSTEM,
+                                MessagingIncubatingAttributes.MessagingSystemIncubatingValues
+                                    .AWS_SQS),
+                            equalTo(MESSAGING_OPERATION, "process"))));
   }
 
   public static final class TestRequestHandler implements RequestHandler<SQSEvent, Void> {

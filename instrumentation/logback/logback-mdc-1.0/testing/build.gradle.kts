@@ -9,6 +9,5 @@ dependencies {
 
   api("ch.qos.logback:logback-classic:1.0.0")
 
-  implementation("com.google.guava:guava")
   implementation("io.opentelemetry:opentelemetry-api")
 }

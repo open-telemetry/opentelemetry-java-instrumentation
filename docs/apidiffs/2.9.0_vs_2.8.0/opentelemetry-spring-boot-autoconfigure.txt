@@ -1,0 +1,5 @@
+Comparing source compatibility of opentelemetry-spring-boot-autoconfigure-2.9.0.jar against opentelemetry-spring-boot-autoconfigure-2.8.0.jar
+===  UNCHANGED CLASS: PUBLIC io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	***  MODIFIED ANNOTATION: org.springframework.boot.context.properties.EnableConfigurationProperties
+		***  MODIFIED ELEMENT: value=io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties (<- io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.PropagationProperties)

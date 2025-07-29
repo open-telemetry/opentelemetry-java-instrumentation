@@ -10,7 +10,7 @@
 
     <properties>
       <property name="javax.persistence.jdbc.driver" value="org.postgresql.Driver" />
-      <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://localhost:${db.port}/tempdb"/>
+      <property name="jakarta.persistence.jdbc.url" value="jdbc:postgresql://${db.host}:${db.port}/tempdb"/>
       <property name="jakarta.persistence.jdbc.user" value="SA"/>
       <property name="jakarta.persistence.jdbc.password" value="password123"/>
       <property name="hibernate.connection.pool_size" value="10"/>

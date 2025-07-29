@@ -84,14 +84,16 @@ Response decoratedMethod(Request request) {
   }
 
   Context context = instrumenter.start(parentContext, request);
+  Response response;
   try (Scope scope = context.makeCurrent()) {
-    Response response = actualMethod(request);
-    instrumenter.end(context, request, response, null);
-    return response;
-  } catch (Throwable error) {
-    instrumenter.end(context, request, null, error);
-    throw error;
+    response = actualMethod(request);
+  } catch (Throwable t) {
+    instrumenter.end(context, request, null, t);
+    throw t;
   }
+  // calling end after the scope is closed is a best practice
+  instrumenter.end(context, request, response, null);
+  return response;
 }
 ```
 
@@ -418,16 +420,16 @@ method for that: passing `false` will turn the newly created `Instrumenter` into
 The `Instrumenter` creation process ends with calling one of the following `InstrumenterBuilder`
 methods:
 
-- `newInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
-- `newInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
+- `buildInstrumenter()`: the returned `Instrumenter` will always start spans with kind `INTERNAL`.
+- `buildInstrumenter(SpanKindExtractor)`: the returned `Instrumenter` will always start spans with
   kind determined by the passed `SpanKindExtractor`.
-- `newClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
+- `buildClientInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `CLIENT`
   spans and will propagate operation context into the outgoing request.
-- `newServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `buildServerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
   spans and will extract the parent span context from the incoming request.
-- `newProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
+- `buildProducerInstrumenter(TextMapSetter)`: the returned `Instrumenter` will always start `PRODUCER`
   spans and will propagate operation context into the outgoing request.
-- `newConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `SERVER`
+- `buildConsumerInstrumenter(TextMapGetter)`: the returned `Instrumenter` will always start `CONSUMER`
   spans and will extract the parent span context from the incoming request.
 
 The last four variants that create non-`INTERNAL` spans accept either `TextMapSetter`

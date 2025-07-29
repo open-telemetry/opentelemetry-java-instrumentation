@@ -27,8 +27,19 @@ enum SpringMessagingAttributesGetter
     return null;
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(MessageWithChannel messageWithChannel) {
+    return null;
+  }
+
   @Override
   public boolean isTemporaryDestination(MessageWithChannel messageWithChannel) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(MessageWithChannel messageWithChannel) {
     return false;
   }
 
@@ -38,21 +49,33 @@ enum SpringMessagingAttributesGetter
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadSize(MessageWithChannel messageWithChannel) {
+  @Override
+  public Long getMessageBodySize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
-  @Override
   @Nullable
-  public Long getMessagePayloadCompressedSize(MessageWithChannel messageWithChannel) {
+  @Override
+  public Long getMessageEnvelopeSize(MessageWithChannel messageWithChannel) {
     return null;
   }
 
   @Override
   @Nullable
   public String getMessageId(MessageWithChannel messageWithChannel, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(MessageWithChannel messageWithChannel) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(MessageWithChannel messageWithChannel, @Nullable Void unused) {
     return null;
   }
 

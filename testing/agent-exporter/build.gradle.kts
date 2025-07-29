@@ -1,5 +1,5 @@
 plugins {
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
   id("otel.java-conventions")
 }
 
@@ -17,5 +17,7 @@ dependencies {
   compileOnly(project(":javaagent-tooling"))
 
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
+  compileOnly("io.opentelemetry:opentelemetry-api-incubator")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 }

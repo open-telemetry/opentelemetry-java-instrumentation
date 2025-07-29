@@ -5,17 +5,27 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
+import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -80,39 +90,45 @@ class Slf4jToLog4jTest {
     }
 
     if (expectedSeverity != null) {
-      LogRecordData log = testing.waitForLogRecords(1).get(0);
-      assertThat(log)
-          .hasBody("xyz: 123")
-          .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
-          .hasSeverity(expectedSeverity)
-          .hasSeverityText(expectedSeverityText);
-      if (logException) {
-        assertThat(log)
-            .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-                equalTo(SemanticAttributes.EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                equalTo(SemanticAttributes.EXCEPTION_MESSAGE, "hello"),
-                satisfies(
-                    SemanticAttributes.EXCEPTION_STACKTRACE,
-                    v -> v.contains(Slf4jToLog4jTest.class.getName())));
-      } else {
-        assertThat(log)
-            .hasAttributesSatisfyingExactly(
-                equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
-      }
+      testing.waitAndAssertLogRecords(
+          logRecord -> {
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
+                .hasSeverity(expectedSeverity)
+                .hasSeverityText(expectedSeverityText)
+                .hasSpanContext(
+                    withParent
+                        ? testing.spans().get(0).getSpanContext()
+                        : SpanContext.getInvalid());
 
-      if (withParent) {
-        assertThat(log).hasSpanContext(testing.spans().get(0).getSpanContext());
-      } else {
-        assertThat(log.getSpanContext().isValid()).isFalse();
-      }
-
+            List<AttributeAssertion> attributeAsserts =
+                new ArrayList<>(threadAttributesAssertions());
+            attributeAsserts.addAll(
+                codeFunctionAssertions(Slf4jToLog4jTest.class, "performLogging"));
+            attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+            if (logException) {
+              attributeAsserts.addAll(
+                  Arrays.asList(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "hello"),
+                      satisfies(
+                          EXCEPTION_STACKTRACE,
+                          v -> v.contains(Slf4jToLog4jTest.class.getName()))));
+            }
+            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+          });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing.logRecords()).isEmpty();
     }
+  }
+
+  private static List<AttributeAssertion> threadAttributesAssertions() {
+    return Arrays.asList(
+        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+        equalTo(THREAD_ID, Thread.currentThread().getId()));
   }
 
   @Test
@@ -125,33 +141,36 @@ class Slf4jToLog4jTest {
       MDC.clear();
     }
 
-    LogRecordData log = testing.waitForLogRecords(1).get(0);
-    assertThat(log)
-        .hasBody("xyz: 123")
-        .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-        .hasSeverity(Severity.INFO)
-        .hasSeverityText("INFO")
-        .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("key1"), "val1"),
-            equalTo(AttributeKey.stringKey("key2"), "val2"),
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()));
+    List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
+    attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMdc"));
+    attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+    attributeAsserts.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
+    attributeAsserts.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("xyz: 123")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(attributeAsserts));
   }
 
   @Test
   public void testMarker() {
-
     String markerName = "aMarker";
     Marker marker = MarkerFactory.getMarker(markerName);
 
     logger.info(marker, "Message");
 
-    LogRecordData log = testing.waitForLogRecords(1).get(0);
-    assertThat(log)
-        .hasAttributesSatisfyingExactly(
-            equalTo(SemanticAttributes.THREAD_NAME, Thread.currentThread().getName()),
-            equalTo(SemanticAttributes.THREAD_ID, Thread.currentThread().getId()),
-            equalTo(AttributeKey.stringKey("log4j.marker"), markerName));
+    List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
+    attributeAsserts.addAll(codeFunctionAssertions(Slf4jToLog4jTest.class, "testMarker"));
+    attributeAsserts.addAll(codeFileAndLineAssertions("Slf4jToLog4jTest.java"));
+    attributeAsserts.add(equalTo(AttributeKey.stringKey("log4j.marker"), markerName));
+
+    testing.waitAndAssertLogRecords(
+        logRecord -> logRecord.hasAttributesSatisfyingExactly(attributeAsserts));
   }
 
   private static void performLogging(

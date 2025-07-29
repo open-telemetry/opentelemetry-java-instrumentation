@@ -6,7 +6,3 @@
 plugins {
   id("otel.java-conventions")
 }
-
-dependencies {
-  implementation("org.apache.groovy:groovy")
-}

@@ -11,6 +11,7 @@ import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.Visibility;
@@ -25,6 +26,11 @@ class ClassLoaderMap {
 
   public static void put(ClassLoader classLoader, Object key, Object value) {
     getClassLoaderData(classLoader, true).put(key, value);
+  }
+
+  public static Object computeIfAbsent(
+      ClassLoader classLoader, Object key, Supplier<? extends Object> value) {
+    return getClassLoaderData(classLoader, true).computeIfAbsent(key, unused -> value.get());
   }
 
   private static Map<Object, Object> getClassLoaderData(

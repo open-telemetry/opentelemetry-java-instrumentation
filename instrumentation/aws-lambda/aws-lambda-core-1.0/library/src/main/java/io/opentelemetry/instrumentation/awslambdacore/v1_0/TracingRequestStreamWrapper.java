@@ -23,7 +23,7 @@ import java.io.OutputStream;
  */
 public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
 
-  private final WrappedLambda wrappedLambda;
+  protected final WrappedLambda wrappedLambda;
 
   public TracingRequestStreamWrapper() {
     this(
@@ -32,7 +32,8 @@ public class TracingRequestStreamWrapper extends TracingRequestStreamHandler {
   }
 
   // Visible for testing
-  TracingRequestStreamWrapper(OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
+  protected TracingRequestStreamWrapper(
+      OpenTelemetrySdk openTelemetrySdk, WrappedLambda wrappedLambda) {
     super(openTelemetrySdk, WrapperConfiguration.flushTimeout());
     this.wrappedLambda = wrappedLambda;
   }

@@ -11,9 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.ktor.server.application.Application;
 import io.ktor.server.application.ApplicationPluginKt;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.ktor.v2_0.server.KtorServerTracing;
-import io.opentelemetry.javaagent.bootstrap.internal.CommonConfig;
+import io.opentelemetry.instrumentation.ktor.v2_0.KtorServerTelemetryBuilderKt;
+import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import kotlin.Unit;
@@ -39,21 +40,18 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit
     public static void onExit(@Advice.FieldValue("_applicationInstance") Application application) {
-      ApplicationPluginKt.install(application, KtorServerTracing.Feature, new SetupFunction());
+      ApplicationPluginKt.install(
+          application, KtorServerTelemetryBuilderKt.getKtorServerTelemetry(), new SetupFunction());
     }
   }
 
   public static class SetupFunction
-      implements Function1<KtorServerTracing.Configuration, kotlin.Unit> {
+      implements Function1<AbstractKtorServerTelemetryBuilder, kotlin.Unit> {
 
     @Override
-    public Unit invoke(KtorServerTracing.Configuration configuration) {
-      OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-      configuration.setOpenTelemetry(openTelemetry);
-      configuration.setCapturedRequestHeaders(CommonConfig.get().getServerRequestHeaders());
-      configuration.setCapturedResponseHeaders(CommonConfig.get().getServerResponseHeaders());
-      configuration.setKnownMethods(CommonConfig.get().getKnownHttpRequestMethods());
-
+    public Unit invoke(AbstractKtorServerTelemetryBuilder builder) {
+      builder.setOpenTelemetry(GlobalOpenTelemetry.get());
+      KtorBuilderUtil.serverBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
       return kotlin.Unit.INSTANCE;
     }
   }

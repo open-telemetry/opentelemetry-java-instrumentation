@@ -6,14 +6,17 @@
 package io.opentelemetry.instrumentation.api.semconv.network;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -54,11 +57,11 @@ class NetworkAttributesExtractorInetSocketAddressTest {
     extractor.onEnd(endAttributes, Context.root(), local, peer, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-            entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.NETWORK_LOCAL_PORT, 8080L),
-            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
-            entry(NetworkAttributes.NETWORK_PEER_PORT, 9090L));
+            entry(NETWORK_TYPE, "ipv4"),
+            entry(NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
+            entry(NETWORK_LOCAL_PORT, 8080L),
+            entry(NETWORK_PEER_ADDRESS, "4.3.2.1"),
+            entry(NETWORK_PEER_PORT, 9090L));
   }
 
   @Test

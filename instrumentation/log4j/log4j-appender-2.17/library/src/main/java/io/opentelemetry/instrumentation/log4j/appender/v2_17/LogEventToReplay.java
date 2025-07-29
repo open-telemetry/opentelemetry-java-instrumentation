@@ -18,6 +18,7 @@ import org.apache.logging.log4j.message.Message;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
 import org.apache.logging.log4j.util.ReadOnlyStringMap;
+import org.apache.logging.log4j.util.SortedArrayStringMap;
 
 class LogEventToReplay implements LogEvent {
 
@@ -35,8 +36,9 @@ class LogEventToReplay implements LogEvent {
   private final ReadOnlyStringMap contextData;
   private final String threadName;
   private final long threadId;
+  private final StackTraceElement source;
 
-  LogEventToReplay(LogEvent logEvent) {
+  LogEventToReplay(LogEvent logEvent, boolean captureCodeAttributes) {
     this.loggerName = logEvent.getLoggerName();
     Message messageOrigin = logEvent.getMessage();
     if (messageOrigin instanceof StructuredDataMessage) {
@@ -59,9 +61,11 @@ class LogEventToReplay implements LogEvent {
     this.instant = logEvent.getInstant();
     this.thrown = logEvent.getThrown();
     this.marker = logEvent.getMarker();
-    this.contextData = logEvent.getContextData();
+    // copy context data, context data map may be reused
+    this.contextData = new SortedArrayStringMap(logEvent.getContextData());
     this.threadName = logEvent.getThreadName();
     this.threadId = logEvent.getThreadId();
+    this.source = captureCodeAttributes ? logEvent.getSource() : null;
   }
 
   @Override
@@ -123,7 +127,7 @@ class LogEventToReplay implements LogEvent {
 
   @Override
   public StackTraceElement getSource() {
-    return null;
+    return source;
   }
 
   @Override

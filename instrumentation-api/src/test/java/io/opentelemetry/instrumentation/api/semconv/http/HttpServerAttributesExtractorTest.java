@@ -6,6 +6,22 @@
 package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD_ORIGINAL;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
@@ -18,9 +34,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpAttributes;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.ConnectException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -194,15 +207,15 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 443L),
-            entry(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-            entry(SemanticAttributes.URL_SCHEME, "https"),
-            entry(SemanticAttributes.URL_PATH, "/repositories/1"),
-            entry(SemanticAttributes.URL_QUERY, "details=true"),
-            entry(SemanticAttributes.USER_AGENT_ORIGINAL, "okhttp 3.x"),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{id}"),
-            entry(SemanticAttributes.CLIENT_ADDRESS, "1.1.1.1"),
+            entry(SERVER_ADDRESS, "github.com"),
+            entry(SERVER_PORT, 443L),
+            entry(HTTP_REQUEST_METHOD, "POST"),
+            entry(URL_SCHEME, "https"),
+            entry(URL_PATH, "/repositories/1"),
+            entry(URL_QUERY, "details=true"),
+            entry(USER_AGENT_ORIGINAL, "okhttp 3.x"),
+            entry(HTTP_ROUTE, "/repositories/{id}"),
+            entry(CLIENT_ADDRESS, "1.1.1.1"),
             entry(
                 AttributeKey.stringArrayKey("http.request.header.custom-request-header"),
                 asList("123", "456")));
@@ -211,11 +224,11 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "2.0"),
-            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
-            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L),
-            entry(SemanticAttributes.HTTP_ROUTE, "/repositories/{repoId}"),
-            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L),
+            entry(NETWORK_PROTOCOL_VERSION, "2.0"),
+            entry(NETWORK_PEER_ADDRESS, "4.3.2.1"),
+            entry(NETWORK_PEER_PORT, 456L),
+            entry(HTTP_ROUTE, "/repositories/{repoId}"),
+            entry(HTTP_RESPONSE_STATUS_CODE, 202L),
             entry(
                 AttributeKey.stringArrayKey("http.response.header.custom-response-header"),
                 asList("654", "321")));
@@ -235,8 +248,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, requestMethod)
-        .doesNotContainKey(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        .containsEntry(HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -253,8 +266,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @ParameterizedTest
@@ -271,8 +284,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @ParameterizedTest
@@ -291,8 +304,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, requestMethod)
-        .doesNotContainKey(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL);
+        .containsEntry(HTTP_REQUEST_METHOD, requestMethod)
+        .doesNotContainKey(HTTP_REQUEST_METHOD_ORIGINAL);
   }
 
   @ParameterizedTest
@@ -311,8 +324,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD, HttpConstants._OTHER)
-        .containsEntry(SemanticAttributes.HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
+        .containsEntry(HTTP_REQUEST_METHOD, HttpConstants._OTHER)
+        .containsEntry(HTTP_REQUEST_METHOD_ORIGINAL, requestMethod);
   }
 
   @Test
@@ -328,8 +341,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(attributes, Context.root(), emptyMap(), response, null);
 
     assertThat(attributes.build())
-        .containsEntry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 500)
-        .containsEntry(HttpAttributes.ERROR_TYPE, "500");
+        .containsEntry(HTTP_RESPONSE_STATUS_CODE, 500)
+        .containsEntry(ERROR_TYPE, "500");
   }
 
   @Test
@@ -345,7 +358,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), request, emptyMap(), null);
 
-    assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, "custom error type");
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "custom error type");
   }
 
   @Test
@@ -357,8 +370,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), new ConnectException());
 
-    assertThat(attributes.build())
-        .containsEntry(HttpAttributes.ERROR_TYPE, "java.net.ConnectException");
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, "java.net.ConnectException");
   }
 
   @Test
@@ -370,7 +382,7 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(attributes, Context.root(), emptyMap());
     extractor.onEnd(attributes, Context.root(), emptyMap(), emptyMap(), null);
 
-    assertThat(attributes.build()).containsEntry(HttpAttributes.ERROR_TYPE, HttpConstants._OTHER);
+    assertThat(attributes.build()).containsEntry(ERROR_TYPE, HttpConstants._OTHER);
   }
 
   @Test
@@ -387,12 +399,11 @@ class HttpServerAttributesExtractorTest {
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build()).containsOnly(entry(SemanticAttributes.URL_SCHEME, "https"));
+    assertThat(startAttributes.build()).containsOnly(entry(URL_SCHEME, "https"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 202L));
+    assertThat(endAttributes.build()).containsOnly(entry(HTTP_RESPONSE_STATUS_CODE, 202L));
   }
 
   @Test
@@ -413,14 +424,11 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
 
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "example.com"),
-            entry(SemanticAttributes.SERVER_PORT, 42L));
+        .containsOnly(entry(SERVER_ADDRESS, "example.com"), entry(SERVER_PORT, 42L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+    assertThat(endAttributes.build()).containsOnly(entry(HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -440,14 +448,11 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
 
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(SemanticAttributes.SERVER_PORT, 987L));
+        .containsOnly(entry(SERVER_ADDRESS, "opentelemetry.io"), entry(SERVER_PORT, 987L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+    assertThat(endAttributes.build()).containsOnly(entry(HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -466,14 +471,11 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
 
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(SemanticAttributes.SERVER_PORT, 42L));
+        .containsOnly(entry(SERVER_ADDRESS, "opentelemetry.io"), entry(SERVER_PORT, 42L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+    assertThat(endAttributes.build()).containsOnly(entry(HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -491,14 +493,11 @@ class HttpServerAttributesExtractorTest {
     extractor.onStart(startAttributes, Context.root(), request);
 
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "github.com"),
-            entry(SemanticAttributes.SERVER_PORT, 123L));
+        .containsOnly(entry(SERVER_ADDRESS, "github.com"), entry(SERVER_PORT, 123L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
-    assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L));
+    assertThat(endAttributes.build()).containsOnly(entry(HTTP_RESPONSE_STATUS_CODE, 200L));
   }
 
   @Test
@@ -516,16 +515,15 @@ class HttpServerAttributesExtractorTest {
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.CLIENT_ADDRESS, "1.2.3.4"));
+    assertThat(startAttributes.build()).containsOnly(entry(CLIENT_ADDRESS, "1.2.3.4"));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.NETWORK_PEER_PORT, 456L));
+            entry(HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(NETWORK_PEER_ADDRESS, "1.2.3.4"),
+            entry(NETWORK_PEER_PORT, 456L));
   }
 
   @Test
@@ -548,8 +546,8 @@ class HttpServerAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, response, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "spdy"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "3.1"));
+            entry(HTTP_RESPONSE_STATUS_CODE, 200L),
+            entry(NETWORK_PROTOCOL_NAME, "spdy"),
+            entry(NETWORK_PROTOCOL_VERSION, "3.1"));
   }
 }

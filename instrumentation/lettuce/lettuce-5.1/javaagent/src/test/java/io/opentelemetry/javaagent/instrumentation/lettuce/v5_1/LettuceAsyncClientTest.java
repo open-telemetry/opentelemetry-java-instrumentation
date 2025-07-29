@@ -16,12 +16,17 @@ class LettuceAsyncClientTest extends AbstractLettuceAsyncClientTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
-  public InstrumentationExtension getInstrumentationExtension() {
+  public InstrumentationExtension testing() {
     return testing;
   }
 
   @Override
   protected RedisClient createClient(String uri) {
     return RedisClient.create(uri);
+  }
+
+  @Override
+  protected boolean connectHasSpans() {
+    return Boolean.getBoolean("testLatestDeps");
   }
 }

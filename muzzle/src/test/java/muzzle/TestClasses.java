@@ -109,6 +109,7 @@ public class TestClasses {
   }
 
   public static class InvokeDynamicAdvice {
+    @SuppressWarnings("UnnecessaryMethodReference")
     public static Nested.SomeInterface invokeDynamicMethod(Nested.SomeImplementation a) {
       Runnable staticMethod = Nested.B::staticMethod;
       Runnable constructorMethod = Nested.A::new;

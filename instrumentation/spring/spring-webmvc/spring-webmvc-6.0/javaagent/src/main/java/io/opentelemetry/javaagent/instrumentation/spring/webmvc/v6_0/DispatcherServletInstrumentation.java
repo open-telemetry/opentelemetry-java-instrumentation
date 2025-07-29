@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.modelAndViewInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
@@ -15,9 +14,11 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.InstrumentationProxyHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -61,42 +62,60 @@ public class DispatcherServletInstrumentation implements TypeInstrumentation {
     public static void afterRefresh(
         @Advice.Argument(0) ApplicationContext springCtx,
         @Advice.FieldValue("handlerMappings") List<HandlerMapping> handlerMappings) {
-      if (springCtx.containsBean("otelAutoDispatcherFilter")) {
-        OpenTelemetryHandlerMappingFilter filter =
-            (OpenTelemetryHandlerMappingFilter) springCtx.getBean("otelAutoDispatcherFilter");
-        if (handlerMappings != null) {
-          filter.setHandlerMappings(handlerMappings);
-        }
+
+      if (handlerMappings == null || !springCtx.containsBean("otelAutoDispatcherFilter")) {
+        return;
       }
+
+      Object bean = springCtx.getBean("otelAutoDispatcherFilter");
+      OpenTelemetryHandlerMappingFilter filter =
+          InstrumentationProxyHelper.unwrapIfNeeded(bean, OpenTelemetryHandlerMappingFilter.class);
+      filter.setHandlerMappings(handlerMappings);
     }
   }
 
   @SuppressWarnings("unused")
   public static class RenderAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) ModelAndView mv,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (modelAndViewInstrumenter().shouldStart(parentContext, mv)) {
-        context = modelAndViewInstrumenter().start(parentContext, mv);
-        scope = context.makeCurrent();
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
+
+      @Nullable
+      public static AdviceScope enter(ModelAndView mv) {
+        Context parentContext = Context.current();
+        if (!modelAndViewInstrumenter().shouldStart(parentContext, mv)) {
+          return null;
+        }
+        Context context = modelAndViewInstrumenter().start(parentContext, mv);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void exit(ModelAndView mv, @Nullable Throwable throwable) {
+        scope.close();
+        modelAndViewInstrumenter().end(context, mv, null, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(0) ModelAndView mv) {
+      return AdviceScope.enter(mv);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(0) ModelAndView mv,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.exit(mv, throwable);
       }
-      scope.close();
-      modelAndViewInstrumenter().end(context, mv, null, throwable);
     }
   }
 }

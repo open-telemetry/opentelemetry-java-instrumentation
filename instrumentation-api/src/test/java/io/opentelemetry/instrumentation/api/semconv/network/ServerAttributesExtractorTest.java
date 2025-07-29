@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.api.semconv.network;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -13,7 +15,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -49,9 +50,7 @@ class ServerAttributesExtractorTest {
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build())
-        .containsOnly(
-            entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"),
-            entry(SemanticAttributes.SERVER_PORT, 80L));
+        .containsOnly(entry(SERVER_ADDRESS, "opentelemetry.io"), entry(SERVER_PORT, 80L));
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
@@ -83,8 +82,7 @@ class ServerAttributesExtractorTest {
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), request);
-    assertThat(startAttributes.build())
-        .containsOnly(entry(SemanticAttributes.SERVER_ADDRESS, "opentelemetry.io"));
+    assertThat(startAttributes.build()).containsOnly(entry(SERVER_ADDRESS, "opentelemetry.io"));
   }
 
   @Test

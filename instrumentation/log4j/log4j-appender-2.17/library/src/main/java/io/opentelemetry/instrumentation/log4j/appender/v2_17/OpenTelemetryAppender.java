@@ -10,8 +10,14 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
+import io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal.ContextDataKeys;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,10 +62,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private volatile OpenTelemetry openTelemetry;
 
   private final BlockingQueue<LogEventToReplay> eventsToReplay;
-
   private final AtomicBoolean replayLimitWarningLogged = new AtomicBoolean();
-
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
+  private final boolean captureCodeAttributes;
 
   /**
    * Installs the {@code openTelemetry} instance on any {@link OpenTelemetryAppender}s identified in
@@ -92,6 +97,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       implements org.apache.logging.log4j.core.util.Builder<OpenTelemetryAppender> {
 
     @PluginBuilderAttribute private boolean captureExperimentalAttributes;
+    @PluginBuilderAttribute private boolean captureCodeAttributes;
     @PluginBuilderAttribute private boolean captureMapMessageAttributes;
     @PluginBuilderAttribute private boolean captureMarkerAttribute;
     @PluginBuilderAttribute private String captureContextDataAttributes;
@@ -107,6 +113,20 @@ public class OpenTelemetryAppender extends AbstractAppender {
     @CanIgnoreReturnValue
     public B setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
       this.captureExperimentalAttributes = captureExperimentalAttributes;
+      return asBuilder();
+    }
+
+    /**
+     * Sets whether the code attributes (file name, class name, method name and line number) should
+     * be set to logs. Enabling these attributes can potentially impact performance (see
+     * https://logging.apache.org/log4j/2.x/manual/performance.html#layouts-location).
+     *
+     * @param captureCodeAttributes To enable or disable the code attributes (file name, class name,
+     *     method name and line number)
+     */
+    @CanIgnoreReturnValue
+    public B captureCodeAttributes(boolean captureCodeAttributes) {
+      this.captureCodeAttributes = captureCodeAttributes;
       return asBuilder();
     }
 
@@ -164,6 +184,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           isIgnoreExceptions(),
           getPropertyArray(),
           captureExperimentalAttributes,
+          captureCodeAttributes,
           captureMapMessageAttributes,
           captureMarkerAttribute,
           captureContextDataAttributes,
@@ -179,6 +200,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
       boolean ignoreExceptions,
       Property[] properties,
       boolean captureExperimentalAttributes,
+      boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
       String captureContextDataAttributes,
@@ -190,10 +212,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
         new LogEventMapper<>(
             ContextDataAccessorImpl.INSTANCE,
             captureExperimentalAttributes,
+            captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
             splitAndFilterBlanksAndNulls(captureContextDataAttributes));
     this.openTelemetry = openTelemetry;
+    this.captureCodeAttributes = captureCodeAttributes;
     if (numLogsCapturedBeforeOtelInstall != 0) {
       this.eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
     } else {
@@ -251,7 +275,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
         return;
       }
 
-      LogEventToReplay logEventToReplay = new LogEventToReplay(event);
+      LogEventToReplay logEventToReplay = new LogEventToReplay(event, captureCodeAttributes);
 
       if (!eventsToReplay.offer(logEventToReplay) && !replayLimitWarningLogged.getAndSet(true)) {
         String message =
@@ -272,6 +296,28 @@ public class OpenTelemetryAppender extends AbstractAppender {
     LogRecordBuilder builder =
         openTelemetry.getLogsBridge().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
+    Context context = Context.current();
+    // when using async logger we'll be executing on a different thread than what started logging
+    // reconstruct the context from context data
+    if (context == Context.root()) {
+      ContextDataAccessor<ReadOnlyStringMap> contextDataAccessor = ContextDataAccessorImpl.INSTANCE;
+      String traceId = contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_ID_KEY);
+      String spanId = contextDataAccessor.getValue(contextData, ContextDataKeys.SPAN_ID_KEY);
+      String traceFlags =
+          contextDataAccessor.getValue(contextData, ContextDataKeys.TRACE_FLAGS_KEY);
+      if (traceId != null && spanId != null && traceFlags != null) {
+        context =
+            Context.root()
+                .with(
+                    Span.wrap(
+                        SpanContext.create(
+                            traceId,
+                            spanId,
+                            TraceFlags.fromHex(traceFlags, 0),
+                            TraceState.getDefault())));
+      }
+    }
+
     mapper.mapLogEvent(
         builder,
         event.getMessage(),
@@ -280,7 +326,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
         event.getThrown(),
         contextData,
         event.getThreadName(),
-        event.getThreadId());
+        event.getThreadId(),
+        event::getSource,
+        context);
 
     Instant timestamp = event.getInstant();
     if (timestamp != null) {
@@ -297,12 +345,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Override
     @Nullable
-    public Object getValue(ReadOnlyStringMap contextData, String key) {
+    public String getValue(ReadOnlyStringMap contextData, String key) {
       return contextData.getValue(key);
     }
 
     @Override
-    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, Object> action) {
+    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, String> action) {
       contextData.forEach(action::accept);
     }
   }

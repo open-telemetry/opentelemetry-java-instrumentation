@@ -10,11 +10,12 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaInstrumenterFactory;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProcessRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaProducerRequest;
-import io.opentelemetry.instrumentation.kafka.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -45,14 +46,6 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
-  /** Use {@link #addConsumerProcessAttributesExtractors(AttributesExtractor)} instead. */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder addConsumerAttributesExtractors(
-      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
-    return addConsumerProcessAttributesExtractors(extractor);
-  }
-
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerProcessAttributesExtractors(
       AttributesExtractor<KafkaProcessRequest, Void> extractor) {
@@ -73,8 +66,8 @@ public final class KafkaTelemetryBuilder {
    * @param capturedHeaders A list of messaging header names.
    */
   @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder setCapturedHeaders(List<String> capturedHeaders) {
-    this.capturedHeaders = capturedHeaders;
+  public KafkaTelemetryBuilder setCapturedHeaders(Collection<String> capturedHeaders) {
+    this.capturedHeaders = new ArrayList<>(capturedHeaders);
     return this;
   }
 

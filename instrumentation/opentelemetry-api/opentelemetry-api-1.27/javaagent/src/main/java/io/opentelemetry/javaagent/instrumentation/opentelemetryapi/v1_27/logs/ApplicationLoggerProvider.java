@@ -12,14 +12,19 @@ import application.io.opentelemetry.api.logs.LoggerProvider;
 @SuppressWarnings("UnnecessarilyFullyQualified")
 public class ApplicationLoggerProvider implements LoggerProvider {
 
+  private final ApplicationLoggerFactory loggerFactory;
   private final io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider;
 
-  public ApplicationLoggerProvider(io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider) {
+  public ApplicationLoggerProvider(
+      ApplicationLoggerFactory loggerFactory,
+      io.opentelemetry.api.logs.LoggerProvider agentLoggerProvider) {
+    this.loggerFactory = loggerFactory;
     this.agentLoggerProvider = agentLoggerProvider;
   }
 
   @Override
   public LoggerBuilder loggerBuilder(String instrumentationName) {
-    return new ApplicationLoggerBuilder(agentLoggerProvider.loggerBuilder(instrumentationName));
+    return new ApplicationLoggerBuilder(
+        loggerFactory, agentLoggerProvider.loggerBuilder(instrumentationName));
   }
 }

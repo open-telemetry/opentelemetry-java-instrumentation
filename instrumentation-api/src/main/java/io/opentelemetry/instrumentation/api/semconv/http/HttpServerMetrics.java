@@ -17,6 +17,7 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
 
@@ -43,7 +44,7 @@ public final class HttpServerMetrics implements OperationListener {
    * @see InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
-    return HttpServerMetrics::new;
+    return OperationMetricsUtil.create("http server", HttpServerMetrics::new);
   }
 
   private final DoubleHistogram duration;

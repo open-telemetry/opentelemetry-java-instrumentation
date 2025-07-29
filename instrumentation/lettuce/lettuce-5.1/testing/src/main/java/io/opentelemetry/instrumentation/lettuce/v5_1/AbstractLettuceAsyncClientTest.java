@@ -5,7 +5,15 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -19,10 +27,10 @@ import io.lettuce.core.api.async.RedisAsyncCommands;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.lettuce.core.codec.StringCodec;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.SemanticAttributes;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -38,7 +46,7 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings({"InterruptedExceptionSwallowed"})
+@SuppressWarnings({"InterruptedExceptionSwallowed", "deprecation"}) // using deprecated semconv
 public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClientTest {
   private static String dbUriNonExistent;
   private static int incorrectPort;
@@ -52,9 +60,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
   private static RedisAsyncCommands<String, String> asyncCommands;
 
   @BeforeAll
-  void setUp() {
+  void setUp() throws UnknownHostException {
     redisServer.start();
     host = redisServer.getHost();
+    ip = InetAddress.getByName(host).getHostAddress();
     port = redisServer.getMappedPort(6379);
     embeddedDbUri = "redis://" + host + ":" + port + "/" + DB_INDEX;
 
@@ -71,8 +80,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     syncCommands.set("TESTKEY", "TESTVAL");
 
     // 1 set trace
-    getInstrumentationExtension().waitForTraces(1);
-    getInstrumentationExtension().clearData();
+    testing().waitForTraces(1);
+    testing().clearData();
   }
 
   @AfterAll
@@ -84,6 +93,10 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
   boolean testCallback() {
     return true;
+  }
+
+  protected boolean connectHasSpans() {
+    return false;
   }
 
   @Test
@@ -99,8 +112,13 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     cleanup.deferCleanup(testConnectionClient::shutdown);
 
     assertThat(connection1).isNotNull();
-    // Lettuce tracing does not trace connect
-    assertThat(getInstrumentationExtension().spans()).isEmpty();
+    if (connectHasSpans()) {
+      // ignore CLIENT SETINFO traces
+      testing().waitForTraces(2);
+    } else {
+      // Lettuce tracing does not trace connect
+      assertThat(testing().spans()).isEmpty();
+    }
   }
 
   @Test
@@ -124,7 +142,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     assertThat(thrown).isInstanceOf(ExecutionException.class);
 
     // Lettuce tracing does not trace connect
-    assertThat(getInstrumentationExtension().spans()).isEmpty();
+    assertThat(testing().spans()).isEmpty();
   }
 
   @Test
@@ -134,7 +152,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
     assertThat(res).isEqualTo("OK");
 
-    getInstrumentationExtension()
+    testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -142,13 +160,14 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                         span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "SET TESTSETKEY ?"))
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));
@@ -160,13 +179,12 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     Consumer<String> consumer =
         res -> {
           if (testCallback()) {
-            getInstrumentationExtension()
-                .runWithSpan("callback", () -> assertThat(res).isEqualTo("TESTVAL"));
+            testing().runWithSpan("callback", () -> assertThat(res).isEqualTo("TESTVAL"));
           }
           future.complete(res);
         };
 
-    getInstrumentationExtension()
+    testing()
         .runWithSpan(
             "parent",
             () -> {
@@ -176,7 +194,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
     assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
 
-    getInstrumentationExtension()
+    testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
@@ -188,13 +206,14 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, port),
-                                      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(SemanticAttributes.DB_STATEMENT, "GET TESTKEY"))
+                                      addExtraAttributes(
+                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                                          equalTo(NETWORK_PEER_PORT, port),
+                                          equalTo(SERVER_ADDRESS, host),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -220,7 +239,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     BiFunction<String, Throwable, String> firstStage =
         (res, error) -> {
           if (testCallback()) {
-            getInstrumentationExtension()
+            testing()
                 .runWithSpan(
                     "callback1",
                     () -> {
@@ -233,7 +252,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     Function<String, Object> secondStage =
         input -> {
           if (testCallback()) {
-            getInstrumentationExtension()
+            testing()
                 .runWithSpan(
                     "callback2",
                     () -> {
@@ -244,7 +263,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           return null;
         };
 
-    getInstrumentationExtension()
+    testing()
         .runWithSpan(
             "parent",
             () -> {
@@ -254,7 +273,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
     assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(successStr);
 
-    getInstrumentationExtension()
+    testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
@@ -266,14 +285,15 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, port),
-                                      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(
-                                          SemanticAttributes.DB_STATEMENT, "GET NON_EXISTENT_KEY"))
+                                      addExtraAttributes(
+                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                                          equalTo(NETWORK_PEER_PORT, port),
+                                          equalTo(SERVER_ADDRESS, host),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(
+                                              maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -300,7 +320,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     BiConsumer<String, Throwable> biConsumer =
         (keyRetrieved, error) -> {
           if (testCallback()) {
-            getInstrumentationExtension()
+            testing()
                 .runWithSpan(
                     "callback",
                     () -> {
@@ -310,7 +330,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
           future.complete(keyRetrieved);
         };
 
-    getInstrumentationExtension()
+    testing()
         .runWithSpan(
             "parent",
             () -> {
@@ -320,7 +340,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
     assertThat(future.get(10, TimeUnit.SECONDS)).isNotNull();
 
-    getInstrumentationExtension()
+    testing()
         .waitAndAssertTraces(
             trace -> {
               List<Consumer<SpanDataAssert>> spanAsserts =
@@ -332,13 +352,14 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                   .hasKind(SpanKind.CLIENT)
                                   .hasParent(trace.getSpan(0))
                                   .hasAttributesSatisfyingExactly(
-                                      equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                      equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                      equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                      equalTo(SemanticAttributes.SERVER_PORT, port),
-                                      equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                      equalTo(SemanticAttributes.DB_STATEMENT, "RANDOMKEY"))
+                                      addExtraAttributes(
+                                          equalTo(NETWORK_TYPE, "ipv4"),
+                                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                                          equalTo(NETWORK_PEER_PORT, port),
+                                          equalTo(SERVER_ADDRESS, host),
+                                          equalTo(SERVER_PORT, port),
+                                          equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                          equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
                                   .hasEventsSatisfyingExactly(
                                       event -> event.hasName("redis.encode.start"),
                                       event -> event.hasName("redis.encode.end"))));
@@ -362,7 +383,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
     hmsetFuture.thenApplyAsync(
         setResult -> {
           // Wait for 'hmset' trace to get written
-          getInstrumentationExtension().waitForTraces(1);
+          testing().waitForTraces(1);
 
           if (!"OK".equals(setResult)) {
             future.completeExceptionally(new AssertionError("Wrong hmset result " + setResult));
@@ -383,7 +404,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
     assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo(testHashMap);
 
-    getInstrumentationExtension()
+    testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -391,15 +412,16 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                         span.hasName("HMSET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(
-                                    SemanticAttributes.DB_STATEMENT,
-                                    "HMSET TESTHM firstname ? lastname ? age ?"))
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "HMSET TESTHM firstname ? lastname ? age ?")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))),
@@ -409,13 +431,14 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                         span.hasName("HGETALL")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfyingExactly(
-                                equalTo(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                equalTo(NetworkAttributes.NETWORK_PEER_PORT, port),
-                                equalTo(SemanticAttributes.SERVER_ADDRESS, "localhost"),
-                                equalTo(SemanticAttributes.SERVER_PORT, port),
-                                equalTo(SemanticAttributes.DB_SYSTEM, "redis"),
-                                equalTo(SemanticAttributes.DB_STATEMENT, "HGETALL TESTHM"))
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
                             .hasEventsSatisfyingExactly(
                                 event -> event.hasName("redis.encode.start"),
                                 event -> event.hasName("redis.encode.end"))));

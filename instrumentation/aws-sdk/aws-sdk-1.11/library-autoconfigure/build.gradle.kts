@@ -20,7 +20,7 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-sqs:1.11.106")
 
   // last version that does not use json protocol
-  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583")
+  latestDepTestLibrary("com.amazonaws:aws-java-sdk-sqs:1.12.583") // documented limitation
 }
 
 tasks {

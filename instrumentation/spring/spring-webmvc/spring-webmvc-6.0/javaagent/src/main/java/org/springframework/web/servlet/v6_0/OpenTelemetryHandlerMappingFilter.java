@@ -18,42 +18,44 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.springframework.core.Ordered;
-import org.springframework.http.server.RequestPath;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 import org.springframework.web.util.ServletRequestPathUtils;
 
 public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
+  private static final Logger logger =
+      Logger.getLogger(OpenTelemetryHandlerMappingFilter.class.getName());
 
   private final HttpServerRouteGetter<HttpServletRequest> serverSpanName =
       (context, request) -> {
-        RequestPath previousValue = null;
         if (this.parseRequestPath) {
-          previousValue =
-              (RequestPath) request.getAttribute(ServletRequestPathUtils.PATH_ATTRIBUTE);
           // sets new value for PATH_ATTRIBUTE of request
-          ServletRequestPathUtils.parseAndCache(request);
-        }
-        try {
-          if (findMapping(request)) {
-            // Name the parent span based on the matching pattern
-            // Let the parent span resource name be set with the attribute set in findMapping.
-            return SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME.get(context, request);
-          }
-        } finally {
-          // mimic spring DispatcherServlet and restore the previous value of PATH_ATTRIBUTE
-          if (this.parseRequestPath) {
-            ServletRequestPathUtils.setParsedRequestPath(previousValue, request);
+          try {
+            ServletRequestPathUtils.parseAndCache(request);
+          } catch (RuntimeException exception) {
+            logger.log(Level.FINE, "Failed calling parseAndCache", exception);
+            return null;
           }
         }
+        if (findMapping(request)) {
+          // Name the parent span based on the matching pattern
+          // Let the parent span resource name be set with the attribute set in findMapping.
+          return SpringWebMvcServerSpanNaming.SERVER_SPAN_NAME.get(context, request);
+        }
+
         return null;
       };
 
@@ -77,13 +79,38 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
     } finally {
       if (handlerMappings != null) {
         Context context = Context.current();
-        HttpServerRoute.update(context, CONTROLLER, serverSpanName, (HttpServletRequest) request);
+        HttpServerRoute.update(context, CONTROLLER, serverSpanName, prepareRequest(request));
       }
     }
   }
 
   @Override
   public void destroy() {}
+
+  private static HttpServletRequest prepareRequest(ServletRequest request) {
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10379
+    // Finding the request handler modifies request attributes. We are wrapping the request to avoid
+    // this.
+    return new HttpServletRequestWrapper((HttpServletRequest) request) {
+      private final Map<String, Object> attributes = new HashMap<>();
+
+      @Override
+      public void setAttribute(String name, Object o) {
+        attributes.put(name, o);
+      }
+
+      @Override
+      public Object getAttribute(String name) {
+        Object value = attributes.get(name);
+        return value != null ? value : super.getAttribute(name);
+      }
+
+      @Override
+      public void removeAttribute(String name) {
+        attributes.remove(name);
+      }
+    };
+  }
 
   /**
    * When a HandlerMapping matches a request, it sets HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE

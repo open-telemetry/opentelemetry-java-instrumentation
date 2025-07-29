@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.liberty.dispatcher;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import java.util.Iterator;
 
-enum LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
+enum LibertyDispatcherRequestGetter implements ExtendedTextMapGetter<LibertyRequest> {
   INSTANCE;
 
   @Override
@@ -18,5 +19,10 @@ enum LibertyDispatcherRequestGetter implements TextMapGetter<LibertyRequest> {
   @Override
   public String get(LibertyRequest carrier, String key) {
     return carrier.getHeaderValue(key);
+  }
+
+  @Override
+  public Iterator<String> getAll(LibertyRequest carrier, String key) {
+    return carrier.getHeaderValues(key).iterator();
   }
 }

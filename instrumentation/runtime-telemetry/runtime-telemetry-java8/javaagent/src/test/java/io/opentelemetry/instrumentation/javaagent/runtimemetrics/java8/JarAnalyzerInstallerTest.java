@@ -9,10 +9,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.logs.data.internal.ExtendedLogRecordData;
 import java.util.List;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.Test;
@@ -35,23 +35,13 @@ class JarAnalyzerInstallerTest {
     List<LogRecordData> events =
         Awaitility.await()
             .until(
-                () -> {
-                  List<LogRecordData> logRecordData = testing.logRecords();
-                  List<LogRecordData> eventList =
-                      logRecordData.stream()
-                          .filter(
-                              record -> {
-                                Attributes attributes = record.getAttributes();
-                                return "package"
-                                        .equals(
-                                            attributes.get(AttributeKey.stringKey("event.domain")))
-                                    && "info"
-                                        .equals(
-                                            attributes.get(AttributeKey.stringKey("event.name")));
-                              })
-                          .collect(toList());
-                  return eventList;
-                },
+                () ->
+                    testing.logRecords().stream()
+                        .filter(
+                            record ->
+                                "package.info"
+                                    .equals(((ExtendedLogRecordData) record).getEventName()))
+                        .collect(toList()),
                 (eventList) -> !eventList.isEmpty());
 
     assertThat(events)

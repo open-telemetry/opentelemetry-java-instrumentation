@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation.indy;
 
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.IndyBootstrapDispatcher;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import java.lang.invoke.CallSite;
@@ -13,6 +12,7 @@ import java.lang.invoke.ConstantCallSite;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.invoke.MutableCallSite;
 import java.lang.reflect.Method;
 import java.security.PrivilegedAction;
 import java.util.Arrays;
@@ -39,7 +39,7 @@ import net.bytebuddy.utility.JavaConstant;
  *       ↑ └───────── IndyBootstrapDispatcher ─ ↑ ──→ └────────────── {@link IndyBootstrap#bootstrap}
  *     Ext/Platform CL               ↑          │                        ╷
  *       ↑                           ╷          │                        ↓
- *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassloader(String, ClassLoader)}
+ *     System CL                     ╷          │        {@link IndyModuleRegistry#getInstrumentationClassLoader(String, ClassLoader)}
  *       ↑                           ╷          │                        ╷
  *     Common               linking of CallSite │                        ╷
  *     ↑    ↑             (on first invocation) │                        ╷
@@ -82,7 +82,7 @@ public class IndyBootstrap {
 
       MethodType bootstrapMethodType =
           MethodType.methodType(
-              ConstantCallSite.class,
+              CallSite.class,
               MethodHandles.Lookup.class,
               String.class,
               MethodType.class,
@@ -90,6 +90,8 @@ public class IndyBootstrap {
 
       IndyBootstrapDispatcher.init(
           MethodHandles.lookup().findStatic(IndyBootstrap.class, "bootstrap", bootstrapMethodType));
+
+      AdviceBootstrapState.initialize();
     } catch (Exception e) {
       throw new IllegalStateException(e);
     }
@@ -103,7 +105,7 @@ public class IndyBootstrap {
 
   @Nullable
   @SuppressWarnings({"unused", "removal"}) // SecurityManager and AccessController are deprecated
-  private static ConstantCallSite bootstrap(
+  private static CallSite bootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
@@ -116,11 +118,11 @@ public class IndyBootstrap {
     // callsite resolution needs privileged access to call Class#getClassLoader() and
     // MethodHandles$Lookup#findStatic
     return java.security.AccessController.doPrivileged(
-        (PrivilegedAction<ConstantCallSite>)
+        (PrivilegedAction<CallSite>)
             () -> internalBootstrap(lookup, adviceMethodName, adviceMethodType, args));
   }
 
-  private static ConstantCallSite internalBootstrap(
+  private static CallSite internalBootstrap(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
       MethodType adviceMethodType,
@@ -131,7 +133,12 @@ public class IndyBootstrap {
         case BOOTSTRAP_KIND_ADVICE:
           // See the getAdviceBootstrapArguments method for the argument definitions
           return bootstrapAdvice(
-              lookup, adviceMethodName, adviceMethodType, (String) args[1], (String) args[2]);
+              lookup,
+              adviceMethodName,
+              adviceMethodType,
+              (String) args[1],
+              (String) args[2],
+              (String) args[3]);
         case BOOTSTRAP_KIND_PROXY:
           // See getProxyFactory for the argument definitions
           return bootstrapProxyMethod(
@@ -150,40 +157,65 @@ public class IndyBootstrap {
     }
   }
 
-  private static ConstantCallSite bootstrapAdvice(
+  private static CallSite bootstrapAdvice(
       MethodHandles.Lookup lookup,
       String adviceMethodName,
-      MethodType adviceMethodType,
+      MethodType invokedynamicMethodType,
       String moduleClassName,
+      String adviceMethodDescriptor,
       String adviceClassName)
       throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
-    CallDepth callDepth = CallDepth.forClass(IndyBootstrap.class);
-    try {
-      if (callDepth.getAndIncrement() > 0) {
+    try (AdviceBootstrapState nestedState =
+        AdviceBootstrapState.enter(
+            lookup.lookupClass(),
+            moduleClassName,
+            adviceClassName,
+            adviceMethodName,
+            adviceMethodDescriptor)) {
+      if (nestedState.isNestedInvocation()) {
         // avoid re-entrancy and stack overflow errors, which may happen when bootstrapping an
         // instrumentation that also gets triggered during the bootstrap
         // for example, adding correlation ids to the thread context when executing logger.debug.
-        logger.log(
-            Level.WARNING,
-            "Nested instrumented invokedynamic instruction linkage detected",
-            new Throwable());
-        return null;
+        MutableCallSite mutableCallSite = nestedState.getMutableCallSite();
+        if (mutableCallSite == null) {
+          mutableCallSite =
+              new MutableCallSite(
+                  IndyBootstrapDispatcher.generateNoopMethodHandle(invokedynamicMethodType));
+          nestedState.initMutableCallSite(mutableCallSite);
+        }
+        return mutableCallSite;
       }
 
       InstrumentationModuleClassLoader instrumentationClassloader =
-          IndyModuleRegistry.getInstrumentationClassloader(
+          IndyModuleRegistry.getInstrumentationClassLoader(
               moduleClassName, lookup.lookupClass().getClassLoader());
 
       // Advices are not inlined. They are loaded as normal classes by the
       // InstrumentationModuleClassloader and invoked via a method call from the instrumented method
       Class<?> adviceClass = instrumentationClassloader.loadClass(adviceClassName);
+      MethodType actualAdviceMethodType =
+          MethodType.fromMethodDescriptorString(adviceMethodDescriptor, instrumentationClassloader);
+
       MethodHandle methodHandle =
           instrumentationClassloader
               .getLookup()
-              .findStatic(adviceClass, adviceMethodName, adviceMethodType);
-      return new ConstantCallSite(methodHandle);
-    } finally {
-      callDepth.decrementAndGet();
+              .findStatic(adviceClass, adviceMethodName, actualAdviceMethodType)
+              .asType(invokedynamicMethodType);
+
+      MutableCallSite nestedBootstrapCallSite = nestedState.getMutableCallSite();
+      if (nestedBootstrapCallSite != null) {
+        // There have been nested bootstrapping attempts
+        // Update the callsite of those to run the actual instrumentation
+        logger.log(
+            Level.FINE,
+            "Fixing nested instrumentation invokedynamic instruction bootstrapping for instrumented class {0} and advice {1}.{2}, the instrumentation should be active now",
+            new Object[] {lookup.lookupClass().getName(), adviceClassName, adviceMethodName});
+        nestedBootstrapCallSite.setTarget(methodHandle);
+        MutableCallSite.syncAll(new MutableCallSite[] {nestedBootstrapCallSite});
+        return nestedBootstrapCallSite;
+      } else {
+        return new ConstantCallSite(methodHandle);
+      }
     }
   }
 
@@ -195,6 +227,7 @@ public class IndyBootstrap {
             Arrays.asList(
                 JavaConstant.Simple.ofLoaded(BOOTSTRAP_KIND_ADVICE),
                 JavaConstant.Simple.ofLoaded(moduleName),
+                JavaConstant.Simple.ofLoaded(adviceMethod.getDescriptor()),
                 JavaConstant.Simple.ofLoaded(adviceMethod.getDeclaringType().getName()));
   }
 
@@ -207,7 +240,7 @@ public class IndyBootstrap {
       String methodKind)
       throws NoSuchMethodException, IllegalAccessException, ClassNotFoundException {
     InstrumentationModuleClassLoader instrumentationClassloader =
-        IndyModuleRegistry.getInstrumentationClassloader(
+        IndyModuleRegistry.getInstrumentationClassLoader(
             moduleClassName, lookup.lookupClass().getClassLoader());
 
     Class<?> proxiedClass = instrumentationClassloader.loadClass(proxyClassName);

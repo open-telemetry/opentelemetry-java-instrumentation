@@ -16,8 +16,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.{
   ServerEndpoint
 }
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint._
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 
-import java.util.function.Supplier
 import scala.concurrent.Await
 
 object AkkaHttpTestSyncWebServer {
@@ -30,7 +30,7 @@ object AkkaHttpTestSyncWebServer {
       val endpoint = ServerEndpoint.forPath(uri.path.toString())
       AbstractHttpServerTest.controller(
         endpoint,
-        new Supplier[HttpResponse] {
+        new ThrowingSupplier[HttpResponse, Exception] {
           def get(): HttpResponse = {
             val resp = HttpResponse(status = endpoint.getStatus)
             endpoint match {
@@ -40,12 +40,13 @@ object AkkaHttpTestSyncWebServer {
                   override def getParameter(name: String): String =
                     uri.query().get(name).orNull
                 })
-                resp.withEntity("")
+                resp.withEntity(endpoint.getBody)
               case QUERY_PARAM => resp.withEntity(uri.queryString().orNull)
               case REDIRECT =>
                 resp.withHeaders(headers.Location(endpoint.getBody))
-              case ERROR     => resp.withEntity(endpoint.getBody)
-              case EXCEPTION => throw new Exception(endpoint.getBody)
+              case ERROR => resp.withEntity(endpoint.getBody)
+              case EXCEPTION =>
+                throw new IllegalStateException(endpoint.getBody)
               case _ =>
                 HttpResponse(status = NOT_FOUND.getStatus)
                   .withEntity(NOT_FOUND.getBody)

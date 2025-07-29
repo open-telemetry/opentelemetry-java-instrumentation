@@ -9,6 +9,7 @@ For this instrumentation, the minimum supported version of Spring Webflux is 5.3
 For Maven, add to your `pom.xml`:
 
 ```xml
+
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
@@ -55,27 +56,29 @@ an outgoing HTTP request is cancelled.
 Here is how to set up client and server instrumentation respectively:
 
 ```java
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetry;
 
 @Configuration
 public class WebClientConfig {
-  private final SpringWebfluxTelemetry webfluxTelemetry;
+  private final SpringWebfluxClientTelemetry webfluxClientTelemetry;
+  private final SpringWebfluxServerTelemetry webfluxServerTelemetry;
 
   public WebClientConfig(OpenTelemetry openTelemetry) {
-    this.webfluxTelemetry = SpringWebfluxTelemetry.builder(openTelemetry).build();
+    this.webfluxClientTelemetry = SpringWebfluxClientTelemetry.builder(openTelemetry).build();
   }
 
   // Adds instrumentation to WebClients
   @Bean
   public WebClient.Builder webClient() {
     WebClient webClient = WebClient.create();
-    return webClient.mutate().filters(webfluxTelemetry::addClientTracingFilter);
+    return webClient.mutate().filters(webfluxClientTelemetry::addFilter);
   }
 
   // Adds instrumentation to Webflux server
   @Bean
   public WebFilter webFilter() {
-    return webfluxTelemetry.createWebFilterAndRegisterReactorHook();
+    return webfluxServerTelemetry.createWebFilterAndRegisterReactorHook();
   }
 }
 ```

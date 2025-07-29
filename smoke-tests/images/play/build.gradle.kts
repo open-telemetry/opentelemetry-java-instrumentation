@@ -6,10 +6,12 @@ plugins {
   id("otel.spotless-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.gradle.playframework") version "0.14"
+  // TODO (trask) this plugin doesn't support Play 2.9+, see https://github.com/gradle/playframework/issues/185
+  //  once play 3.1 is released, we can update to https://github.com/orgs/playframework/discussions/12338
+  id("org.gradle.playframework") version "0.16.0"
 }
 
-val playVer = "2.8.21"
+val playVer = "2.8.22"
 val scalaVer = "2.12"
 
 play {
@@ -23,6 +25,10 @@ play {
 
 dependencies {
   implementation("com.typesafe.play:play-guice_$scalaVer:$playVer")
+  // Guice 5.1 is needed for Java 17 support on Play 2.8, see https://github.com/playframework/playframework/releases/tag/2.8.15
+  // TODO (trask) remove these version overrides after updating to Play 2.9
+  implementation("com.google.inject:guice:5.1.0")
+  implementation("com.google.inject.extensions:guice-assistedinject:5.1.0")
   implementation("com.typesafe.play:play-logback_$scalaVer:$playVer")
   implementation("com.typesafe.play:filters-helpers_$scalaVer:$playVer")
 }
@@ -40,8 +46,10 @@ java {
   targetCompatibility = JavaVersion.VERSION_1_8
 }
 
+val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+
 jib {
   from.image = "eclipse-temurin:$targetJDK"
-  to.image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk$targetJDK-$tag"
+  to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

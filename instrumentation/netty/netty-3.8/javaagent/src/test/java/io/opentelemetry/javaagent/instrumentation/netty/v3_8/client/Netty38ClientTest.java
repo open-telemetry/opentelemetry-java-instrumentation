@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static java.util.Collections.emptySet;
 
 import com.ning.http.client.AsyncCompletionHandler;
@@ -21,7 +23,6 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.lang.reflect.Method;
 import java.net.ConnectException;
 import java.net.URI;
@@ -111,7 +112,7 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
 
     // TODO: context is not automatically propagated into callbacks
     Context context = Context.current();
-    // TODO(anuraaga): Do we also need to test ListenableFuture callback?
+    // TODO: Do we also need to test ListenableFuture callback?
     client.executeRequest(
         request,
         new AsyncCompletionHandler<Void>() {
@@ -170,8 +171,8 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
           }
           Set<AttributeKey<?>> attributes =
               new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SemanticAttributes.SERVER_ADDRESS);
-          attributes.remove(SemanticAttributes.SERVER_PORT);
+          attributes.remove(SERVER_ADDRESS);
+          attributes.remove(SERVER_PORT);
           return attributes;
         });
   }

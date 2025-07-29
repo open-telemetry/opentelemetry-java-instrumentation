@@ -27,7 +27,7 @@ public final class JmsSingletons {
 
     PRODUCER_INSTRUMENTER = factory.createProducerInstrumenter();
     CONSUMER_RECEIVE_INSTRUMENTER = factory.createConsumerReceiveInstrumenter();
-    CONSUMER_PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter();
+    CONSUMER_PROCESS_INSTRUMENTER = factory.createConsumerProcessInstrumenter(false);
   }
 
   public static Instrumenter<MessageWithDestination, Void> producerInstrumenter() {

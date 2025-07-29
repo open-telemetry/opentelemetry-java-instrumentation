@@ -20,6 +20,9 @@ public class FinatraInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new FinatraRouteInstrumentation(), new FinatraExceptionManagerInstrumentation());
+    return asList(
+        new FinatraRouteInstrumentation(),
+        new FinatraRouteBuilderInstrumentation(),
+        new FinatraExceptionManagerInstrumentation());
   }
 }

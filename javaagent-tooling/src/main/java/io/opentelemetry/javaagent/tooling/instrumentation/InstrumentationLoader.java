@@ -54,7 +54,7 @@ public class InstrumentationLoader implements AgentExtension {
             e);
       }
     }
-    logger.log(FINE, "Installed {0} instrumenter(s)", numberOfLoadedModules);
+    logger.log(FINE, "Installed {0} instrumentation(s)", numberOfLoadedModules);
 
     return agentBuilder;
   }

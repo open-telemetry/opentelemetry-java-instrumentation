@@ -1,0 +1,38 @@
+2002 1895 0:226 / / rw,relatime master:629 - overlay overlay rw,lowerdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/75438/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/75437/fs:/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/75394/fs,upperdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/75439/fs,workdir=/var/lib/containerd/io.containerd.snapshotter.v1.overlayfs/snapshots/75439/work,xino=off
+2003 2002 0:227 / /proc rw,nosuid,nodev,noexec,relatime - proc proc rw
+2004 2002 0:228 / /dev rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
+2005 2004 0:229 / /dev/pts rw,nosuid,noexec,relatime - devpts devpts rw,gid=5,mode=620,ptmxmode=666
+2006 2004 0:117 / /dev/mqueue rw,nosuid,nodev,noexec,relatime - mqueue mqueue rw
+2007 2002 0:124 / /sys ro,nosuid,nodev,noexec,relatime - sysfs sysfs ro
+2008 2007 0:230 / /sys/fs/cgroup rw,nosuid,nodev,noexec,relatime - tmpfs tmpfs rw,mode=755
+2009 2008 0:32 /system.slice/containerd.service/kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/systemd ro,nosuid,nodev,noexec,relatime master:11 - cgroup cgroup rw,xattr,name=systemd
+2010 2008 0:35 /system.slice/containerd.service/kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/pids ro,nosuid,nodev,noexec,relatime master:15 - cgroup cgroup rw,pids
+2011 2008 0:36 /kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/freezer ro,nosuid,nodev,noexec,relatime master:16 - cgroup cgroup rw,freezer
+2012 2008 0:37 /system.slice/containerd.service/kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/cpu,cpuacct ro,nosuid,nodev,noexec,relatime master:17 - cgroup cgroup rw,cpu,cpuacct
+2013 2008 0:38 /system.slice/containerd.service/kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/blkio ro,nosuid,nodev,noexec,relatime master:18 - cgroup cgroup rw,blkio
+2014 2008 0:39 /kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/cpuset ro,nosuid,nodev,noexec,relatime master:19 - cgroup cgroup rw,cpuset
+2015 2008 0:40 /kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/hugetlb ro,nosuid,nodev,noexec,relatime master:20 - cgroup cgroup rw,hugetlb
+2016 2008 0:41 /system.slice/containerd.service/kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/memory ro,nosuid,nodev,noexec,relatime master:21 - cgroup cgroup rw,memory
+2017 2008 0:42 /kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/net_cls,net_prio ro,nosuid,nodev,noexec,relatime master:22 - cgroup cgroup rw,net_cls,net_prio
+2018 2008 0:43 /system.slice/containerd.service/kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/devices ro,nosuid,nodev,noexec,relatime master:23 - cgroup cgroup rw,devices
+2019 2008 0:44 /kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/rdma ro,nosuid,nodev,noexec,relatime master:24 - cgroup cgroup rw,rdma
+2020 2008 0:45 /kubepods-burstable-pod321c09bf_282b_44e4_a467_39daf144ef1f.slice:cri-containerd:f2a44bc8e090f93a2b4d7f510bdaff0615ad52906e3287ee956dcf5aa5012a91 /sys/fs/cgroup/perf_event ro,nosuid,nodev,noexec,relatime master:25 - cgroup cgroup rw,perf_event
+2021 2002 253:1 /var/lib/kubelet/pods/321c09bf-282b-44e4-a467-39daf144ef1f/etc-hosts /etc/hosts rw,relatime - xfs /dev/mapper/ubuntu--vg-root rw,attr2,inode64,logbufs=8,logbsize=32k,noquota
+2022 2004 253:1 /var/lib/kubelet/pods/321c09bf-282b-44e4-a467-39daf144ef1f/containers/accountingservice/82b03b66 /dev/termination-log rw,relatime - xfs /dev/mapper/ubuntu--vg-root rw,attr2,inode64,logbufs=8,logbsize=32k,noquota
+2023 2002 253:1 /var/lib/containerd/io.containerd.grpc.v1.cri/sandboxes/b136f3d296b4c2024b3e7ad816f2a804a47cf1acc3d445075c6d78cf159ef58d/hostname /etc/hostname rw,relatime - xfs /dev/mapper/ubuntu--vg-root rw,attr2,inode64,logbufs=8,logbsize=32k,noquota
+2024 2002 253:1 /var/lib/containerd/io.containerd.grpc.v1.cri/sandboxes/b136f3d296b4c2024b3e7ad816f2a804a47cf1acc3d445075c6d78cf159ef58d/resolv.conf /etc/resolv.conf rw,relatime - xfs /dev/mapper/ubuntu--vg-root rw,attr2,inode64,logbufs=8,logbsize=32k,noquota
+2025 2004 0:115 / /dev/shm rw,nosuid,nodev,noexec,relatime - tmpfs shm rw,size=65536k
+2026 2002 0:96 / /run/secrets/kubernetes.io/serviceaccount ro,relatime - tmpfs tmpfs rw,size=32768456k
+1896 2003 0:227 /bus /proc/bus ro,nosuid,nodev,noexec,relatime - proc proc rw
+1897 2003 0:227 /fs /proc/fs ro,nosuid,nodev,noexec,relatime - proc proc rw
+1898 2003 0:227 /irq /proc/irq ro,nosuid,nodev,noexec,relatime - proc proc rw
+1899 2003 0:227 /sys /proc/sys ro,nosuid,nodev,noexec,relatime - proc proc rw
+1900 2003 0:227 /sysrq-trigger /proc/sysrq-trigger ro,nosuid,nodev,noexec,relatime - proc proc rw
+1901 2003 0:231 / /proc/asound ro,relatime - tmpfs tmpfs ro
+1902 2003 0:232 / /proc/acpi ro,relatime - tmpfs tmpfs ro
+1903 2003 0:228 /null /proc/kcore rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
+1904 2003 0:228 /null /proc/keys rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
+1905 2003 0:228 /null /proc/timer_list rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
+1906 2003 0:228 /null /proc/sched_debug rw,nosuid - tmpfs tmpfs rw,size=65536k,mode=755
+1907 2003 0:233 / /proc/scsi ro,relatime - tmpfs tmpfs ro
+1908 2007 0:234 / /sys/firmware ro,relatime - tmpfs tmpfs ro

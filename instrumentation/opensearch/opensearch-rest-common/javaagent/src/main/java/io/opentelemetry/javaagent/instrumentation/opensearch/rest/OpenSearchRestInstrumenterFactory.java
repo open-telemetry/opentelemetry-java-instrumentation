@@ -7,25 +7,27 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
-import org.opensearch.client.Response;
 
 public final class OpenSearchRestInstrumenterFactory {
 
-  public static Instrumenter<OpenSearchRestRequest, Response> create(String instrumentationName) {
+  public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> create(
+      String instrumentationName) {
     OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
     OpenSearchRestNetResponseAttributesGetter netAttributesGetter =
         new OpenSearchRestNetResponseAttributesGetter();
 
-    return Instrumenter.<OpenSearchRestRequest, Response>builder(
+    return Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbClientAttributesGetter))
         .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
+        .addOperationMetrics(DbClientMetrics.get())
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 

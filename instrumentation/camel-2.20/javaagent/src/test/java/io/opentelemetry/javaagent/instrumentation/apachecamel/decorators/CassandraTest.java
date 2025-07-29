@@ -6,7 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 
 import com.datastax.oss.driver.api.core.CqlSession;
 import com.google.common.collect.ImmutableMap;
@@ -14,7 +18,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.junit.jupiter.api.AfterAll;
@@ -23,7 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.testcontainers.containers.CassandraContainer;
+import org.testcontainers.cassandra.CassandraContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
@@ -31,14 +34,13 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private ConfigurableApplicationContext appContext;
 
   @Container
-  private static final CassandraContainer<?> cassandra =
-      new CassandraContainer<>("cassandra:3.11.2").withExposedPorts(9042);
+  private static final CassandraContainer cassandra =
+      new CassandraContainer("cassandra:3.11.2").withExposedPorts(9042);
 
   private static String host;
 
@@ -95,6 +97,7 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
     cqlSession.execute("CREATE TABLE IF NOT EXISTS test.users (id int PRIMARY KEY, name TEXT);");
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void testCassandra() {
     CamelContext camelContext = appContext.getBean(CamelContext.class);
@@ -116,10 +119,10 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 stringKey("camel.uri"),
                                 "cql://" + host + ":" + cassandraPort + "/test"),
-                            equalTo(SemanticAttributes.DB_NAME, "test"),
+                            equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
-                                SemanticAttributes.DB_STATEMENT,
+                                maybeStable(DB_STATEMENT),
                                 "select * from test.users where id=? ALLOW FILTERING"),
-                            equalTo(SemanticAttributes.DB_SYSTEM, "cassandra"))));
+                            equalTo(maybeStable(DB_SYSTEM), "cassandra"))));
   }
 }

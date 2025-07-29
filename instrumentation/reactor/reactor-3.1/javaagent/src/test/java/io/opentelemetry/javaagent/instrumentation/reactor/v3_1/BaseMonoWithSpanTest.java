@@ -5,9 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
@@ -76,19 +74,18 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "outer")),
+                                codeFunctionAssertions(traced.getClass(), "outer")),
                     span ->
                         span.hasName("TracedWithSpan.mono")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "mono")),
+                                codeFunctionAssertions(traced.getClass(), "mono")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1))
+                            // earliest tested and latest version behave differently
+                            .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
                             .hasAttributes(Attributes.empty())));
   }
 
@@ -125,12 +122,11 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "mono")),
+                                codeFunctionAssertions(traced.getClass(), "mono")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1))
+                            .hasParent(trace.getSpan(Boolean.getBoolean("testLatestDeps") ? 0 : 1))
                             .hasAttributes(Attributes.empty())));
   }
 

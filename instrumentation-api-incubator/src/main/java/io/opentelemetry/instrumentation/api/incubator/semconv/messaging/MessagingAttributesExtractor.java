@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -26,6 +26,34 @@ import javax.annotation.Nullable;
  */
 public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
+
+  // copied from MessagingIncubatingAttributes
+  private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
+      AttributeKey.longKey("messaging.batch.message_count");
+  private static final AttributeKey<String> MESSAGING_CLIENT_ID =
+      AttributeKey.stringKey("messaging.client_id");
+  private static final AttributeKey<Boolean> MESSAGING_DESTINATION_ANONYMOUS =
+      AttributeKey.booleanKey("messaging.destination.anonymous");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
+      AttributeKey.stringKey("messaging.destination.name");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_PARTITION_ID =
+      AttributeKey.stringKey("messaging.destination.partition.id");
+  private static final AttributeKey<String> MESSAGING_DESTINATION_TEMPLATE =
+      AttributeKey.stringKey("messaging.destination.template");
+  private static final AttributeKey<Boolean> MESSAGING_DESTINATION_TEMPORARY =
+      AttributeKey.booleanKey("messaging.destination.temporary");
+  private static final AttributeKey<Long> MESSAGING_MESSAGE_BODY_SIZE =
+      AttributeKey.longKey("messaging.message.body.size");
+  private static final AttributeKey<String> MESSAGING_MESSAGE_CONVERSATION_ID =
+      AttributeKey.stringKey("messaging.message.conversation_id");
+  private static final AttributeKey<Long> MESSAGING_MESSAGE_ENVELOPE_SIZE =
+      AttributeKey.longKey("messaging.message.envelope.size");
+  private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
+      AttributeKey.stringKey("messaging.message.id");
+  private static final AttributeKey<String> MESSAGING_OPERATION =
+      AttributeKey.stringKey("messaging.operation");
+  private static final AttributeKey<String> MESSAGING_SYSTEM =
+      AttributeKey.stringKey("messaging.system");
 
   static final String TEMP_DESTINATION_NAME = "(temporary)";
 
@@ -62,31 +90,29 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    internalSet(attributes, SemanticAttributes.MESSAGING_SYSTEM, getter.getSystem(request));
+    internalSet(attributes, MESSAGING_SYSTEM, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true);
-      internalSet(attributes, SemanticAttributes.MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
+      internalSet(attributes, MESSAGING_DESTINATION_TEMPORARY, true);
+      internalSet(attributes, MESSAGING_DESTINATION_NAME, TEMP_DESTINATION_NAME);
     } else {
+      internalSet(attributes, MESSAGING_DESTINATION_NAME, getter.getDestination(request));
       internalSet(
-          attributes,
-          SemanticAttributes.MESSAGING_DESTINATION_NAME,
-          getter.getDestination(request));
+          attributes, MESSAGING_DESTINATION_TEMPLATE, getter.getDestinationTemplate(request));
     }
     internalSet(
-        attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID,
-        getter.getConversationId(request));
+        attributes, MESSAGING_DESTINATION_PARTITION_ID, getter.getDestinationPartitionId(request));
+    boolean isAnonymousDestination = getter.isAnonymousDestination(request);
+    if (isAnonymousDestination) {
+      internalSet(attributes, MESSAGING_DESTINATION_ANONYMOUS, true);
+    }
+    internalSet(attributes, MESSAGING_MESSAGE_CONVERSATION_ID, getter.getConversationId(request));
+    internalSet(attributes, MESSAGING_MESSAGE_BODY_SIZE, getter.getMessageBodySize(request));
     internalSet(
-        attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES,
-        getter.getMessagePayloadSize(request));
-    internalSet(
-        attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES,
-        getter.getMessagePayloadCompressedSize(request));
+        attributes, MESSAGING_MESSAGE_ENVELOPE_SIZE, getter.getMessageEnvelopeSize(request));
+    internalSet(attributes, MESSAGING_CLIENT_ID, getter.getClientId(request));
     if (operation != null) {
-      internalSet(attributes, SemanticAttributes.MESSAGING_OPERATION, operation.operationName());
+      internalSet(attributes, MESSAGING_OPERATION, operation.operationName());
     }
   }
 
@@ -97,10 +123,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+    internalSet(attributes, MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     internalSet(
-        attributes,
-        SemanticAttributes.MESSAGING_MESSAGE_ID,
-        getter.getMessageId(request, response));
+        attributes, MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
 
     for (String name : capturedHeaders) {
       List<String> values = getter.getMessageHeader(request, name);

@@ -12,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule {
+public class ElasticsearchApiClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public ElasticsearchApiClientInstrumentationModule() {
     super("elasticsearch-api-client", "elasticsearch-api-client-7.16", "elasticsearch");
   }
@@ -31,10 +33,8 @@ public class ElasticsearchApiClientInstrumentationModule extends Instrumentation
   }
 
   @Override
-  public boolean isIndyModule() {
-    // java.lang.ClassCastException: class
-    // io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition cannot be cast to class io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition (io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition is in unnamed module of loader io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationModuleClassLoader @6baee63b; io.opentelemetry.javaagent.shaded.instrumentation.elasticsearch.rest.internal.ElasticsearchEndpointDefinition is in unnamed module of loader 'app')
-    return false;
+  public String getModuleGroup() {
+    return "elasticsearch";
   }
 
   @Override

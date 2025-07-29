@@ -6,18 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.rediscala;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import redis.RedisCommand;
 
-final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisCommand<?, ?>> {
+final class RediscalaAttributesGetter
+    implements DbClientAttributesGetter<RedisCommand<?, ?>, Void> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(RedisCommand<?, ?> redisCommand) {
-    return SemanticAttributes.DbSystemValues.REDIS;
+  public String getDbSystem(RedisCommand<?, ?> redisCommand) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(RedisCommand<?, ?> redisCommand) {
@@ -26,10 +29,11 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   @Nullable
-  public String getName(RedisCommand<?, ?> redisCommand) {
+  public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(RedisCommand<?, ?> redisCommand) {
@@ -38,12 +42,12 @@ final class RediscalaAttributesGetter implements DbClientAttributesGetter<RedisC
 
   @Override
   @Nullable
-  public String getStatement(RedisCommand<?, ?> redisCommand) {
+  public String getDbQueryText(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 
   @Override
-  public String getOperation(RedisCommand<?, ?> redisCommand) {
+  public String getDbOperationName(RedisCommand<?, ?> redisCommand) {
     return redisCommand.getClass().getSimpleName().toUpperCase(Locale.ROOT);
   }
 }

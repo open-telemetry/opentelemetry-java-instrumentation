@@ -17,6 +17,10 @@ final class GeneratedVirtualFieldNames {
 
   private GeneratedVirtualFieldNames() {}
 
+  public static boolean isVirtualFieldInterfaceName(String className) {
+    return className.startsWith(DYNAMIC_CLASSES_PACKAGE + "VirtualFieldAccessor$");
+  }
+
   static String getVirtualFieldImplementationClassName(String typeName, String fieldTypeName) {
     return DYNAMIC_CLASSES_PACKAGE
         + "VirtualFieldImpl$"

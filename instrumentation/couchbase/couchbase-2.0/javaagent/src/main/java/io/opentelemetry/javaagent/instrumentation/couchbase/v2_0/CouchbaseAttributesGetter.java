@@ -6,16 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
-final class CouchbaseAttributesGetter implements DbClientAttributesGetter<CouchbaseRequestInfo> {
+final class CouchbaseAttributesGetter
+    implements DbClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
+  @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getSystem(CouchbaseRequestInfo couchbaseRequest) {
-    return SemanticAttributes.DbSystemValues.COUCHBASE;
+  public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
+    return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getUser(CouchbaseRequestInfo couchbaseRequest) {
@@ -24,10 +27,11 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
 
   @Override
   @Nullable
-  public String getName(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbNamespace(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.bucket();
   }
 
+  @Deprecated
   @Override
   @Nullable
   public String getConnectionString(CouchbaseRequestInfo couchbaseRequest) {
@@ -36,13 +40,13 @@ final class CouchbaseAttributesGetter implements DbClientAttributesGetter<Couchb
 
   @Override
   @Nullable
-  public String getStatement(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbQueryText(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.statement();
   }
 
   @Override
   @Nullable
-  public String getOperation(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbOperationName(CouchbaseRequestInfo couchbaseRequest) {
     return couchbaseRequest.operation();
   }
 }

@@ -9,11 +9,17 @@ on:
         type: boolean
         required: true
 
+permissions:
+  contents: read
+
 jobs:
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Open issue or add comment if issue already open
         env:

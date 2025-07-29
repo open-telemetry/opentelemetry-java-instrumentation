@@ -7,13 +7,14 @@ on:
       - release/*
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   common:
     uses: ./.github/workflows/build-common.yml
     secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+      FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   test-latest-deps:
     # release branches are excluded
@@ -22,9 +23,7 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     secrets:
-      GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
-      GE_CACHE_USERNAME: ${{ secrets.GE_CACHE_USERNAME }}
-      GE_CACHE_PASSWORD: ${{ secrets.GE_CACHE_PASSWORD }}
+      FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   muzzle:
     # release branches are excluded
@@ -38,12 +37,12 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-shell-script-check.yml
 
-  markdown-link-check:
+  link-check:
     # release branches are excluded to avoid unnecessary maintenance if external links break
     # (and also because the README.md javaagent download link has to be updated on release branches
     #  before the release download has been published)
     if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-markdown-link-check.yml
+    uses: ./.github/workflows/reusable-link-check.yml
 
   markdown-lint-check:
     # release branches are excluded
@@ -59,46 +58,39 @@ jobs:
   publish-snapshots:
     needs:
       # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
-      # markdown-link-check, or misspell-check
+      # link-check, or misspell-check
       - common
     runs-on: ubuntu-latest
     # skipping release branches because the versions in those branches are not snapshots
     if: github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
       - name: Set up JDK for running Gradle
-        uses: actions/setup-java@387ac29b308b003ca37ba93a6cab5eb57c8f5f93 # v4.0.0
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
         with:
           distribution: temurin
-          java-version: 17.0.6
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Build and publish artifact snapshots
         env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # v2.11.1
-        with:
-          arguments: assemble publishToSonatype
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        run: ./gradlew assemble spdxSbom publishToSonatype
 
       - name: Build and publish gradle plugin snapshots
         env:
-          GRADLE_ENTERPRISE_ACCESS_KEY: ${{ secrets.GRADLE_ENTERPRISE_ACCESS_KEY }}
           SONATYPE_USER: ${{ secrets.SONATYPE_USER }}
           SONATYPE_KEY: ${{ secrets.SONATYPE_KEY }}
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
-        uses: gradle/gradle-build-action@982da8e78c05368c70dac0351bb82647a9e9a5d2 # v2.11.1
-        with:
-          build-root-directory: gradle-plugins
-          arguments: build publishToSonatype
-          # gradle enterprise is used for the build cache
-          gradle-home-cache-excludes: caches/build-cache-1
+        run: ./gradlew build publishToSonatype
+        working-directory: gradle-plugins

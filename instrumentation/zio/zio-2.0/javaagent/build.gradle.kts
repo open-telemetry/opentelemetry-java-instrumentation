@@ -28,12 +28,16 @@ muzzle {
   }
 }
 
+otelJava {
+  maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 dependencies {
   compileOnly("dev.zio:zio_$scalaVersion:$zioVersion")
 
   testImplementation("dev.zio:zio_$scalaVersion:$zioVersion")
 
-  latestDepTestLibrary("dev.zio:zio_$scalaVersion:+")
+  latestDepTestLibrary("dev.zio:zio_$scalaVersion:latest.release")
 }
 
 tasks {

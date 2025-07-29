@@ -15,7 +15,7 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.v4.common.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapter {
@@ -49,11 +49,11 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
 
     try (Scope ignored = context.makeCurrent()) {
       super.write(ctx, msg, prm);
-      // span is ended normally in HttpClientResponseTracingHandler
     } catch (Throwable throwable) {
       instrumenter().end(contextAttr.getAndRemove(), requestAttr.getAndRemove(), null, throwable);
       parentContextAttr.remove();
       throw throwable;
     }
+    // span is ended normally in HttpClientResponseTracingHandler
   }
 }

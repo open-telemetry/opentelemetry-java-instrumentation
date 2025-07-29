@@ -64,6 +64,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jndi.")
         .ignoreClass("org.springframework.lang.")
         .ignoreClass("org.springframework.messaging.")
+        .allowClass("org.springframework.messaging.support.GenericMessage")
         .ignoreClass("org.springframework.objenesis.")
         .ignoreClass("org.springframework.orm.")
         .ignoreClass("org.springframework.scripting.")
@@ -103,6 +104,12 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.logging.logback.")
         .allowClass("org.springframework.boot.web.filter.")
         .allowClass("org.springframework.boot.web.servlet.")
+        .allowClass("org.springframework.boot.web.embedded.netty.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.web.embedded.tomcat.GracefulShutdown$$Lambda")
+        .allowClass(
+            "org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory$$Lambda")
+        .allowClass(
+            "org.springframework.boot.actuate.metrics.web.reactive.server.MetricsWebFilter$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
         .allowClass(
             "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda")
@@ -129,7 +136,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedWebappClassLoader")
         .allowClass("org.springframework.boot.web.servlet.DelegatingFilterProxyRegistrationBean$")
         .allowClass("org.springframework.boot.StartupInfoLogger$")
-        .allowClass("org.springframework.boot.SpringApplicationShutdownHook");
+        .allowClass("org.springframework.boot.SpringApplicationShutdownHook")
+        .allowClass("org.springframework.boot.convert.ApplicationConversionService$$Lambda");
 
     builder
         .ignoreClass("org.springframework.cglib.")
@@ -174,7 +182,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("org.springframework.jms.")
         .allowClass("org.springframework.jms.listener.")
         .allowClass(
-            "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback");
+            "org.springframework.jms.config.JmsListenerEndpointRegistry$AggregatingCallback")
+        .allowClass("org.springframework.jms.support.destination.JmsDestinationAccessor");
 
     builder
         .ignoreClass("org.springframework.util.")
@@ -260,7 +269,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.h2.util.Task")
         .allowClass("org.h2.store.FileLock")
         .allowClass("org.h2.engine.DatabaseCloser")
-        .allowClass("org.h2.engine.OnExitDatabaseCloser");
+        .allowClass("org.h2.engine.OnExitDatabaseCloser")
+        .allowClass("org.h2.server.web.WebServlet");
 
     builder
         .ignoreClass("com.carrotsearch.hppc.")

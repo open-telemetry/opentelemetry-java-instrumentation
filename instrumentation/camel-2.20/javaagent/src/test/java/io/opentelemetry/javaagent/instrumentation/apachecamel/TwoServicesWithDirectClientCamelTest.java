@@ -8,15 +8,26 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
+import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
+import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
-import io.opentelemetry.semconv.SemanticAttributes;
 import org.apache.camel.CamelContext;
 import org.apache.camel.ProducerTemplate;
 import org.apache.camel.builder.RouteBuilder;
@@ -31,8 +42,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 class TwoServicesWithDirectClientCamelTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private static CamelContext clientContext;
 
@@ -107,11 +117,9 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(
-                                SemanticAttributes.URL_FULL,
-                                "http://localhost:" + portOne + "/serviceOne"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(URL_FULL, "http://localhost:" + portOne + "/serviceOne"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "http://localhost:" + portOne + "/serviceOne")),
@@ -120,11 +128,9 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(
-                                SemanticAttributes.URL_FULL,
-                                "http://localhost:" + portOne + "/serviceOne"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(URL_FULL, "http://localhost:" + portOne + "/serviceOne"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "http://0.0.0.0:" + portOne + "/serviceOne")),
@@ -133,11 +139,9 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(2))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(
-                                SemanticAttributes.URL_FULL,
-                                "http://127.0.0.1:" + portTwo + "/serviceTwo"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "http://127.0.0.1:" + portTwo + "/serviceTwo")),
@@ -146,30 +150,25 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(SemanticAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(SemanticAttributes.URL_SCHEME, "http"),
-                            equalTo(SemanticAttributes.URL_PATH, "/serviceTwo"),
-                            equalTo(
-                                SemanticAttributes.USER_AGENT_ORIGINAL,
-                                "Jakarta Commons-HttpClient/3.1"),
-                            equalTo(SemanticAttributes.HTTP_ROUTE, "/serviceTwo"),
-                            equalTo(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SemanticAttributes.SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SemanticAttributes.SERVER_PORT, portTwo),
-                            equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(
-                                NetworkAttributes.NETWORK_PEER_PORT,
-                                val -> val.isInstanceOf(Long.class))),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(URL_SCHEME, "http"),
+                            equalTo(URL_PATH, "/serviceTwo"),
+                            equalTo(USER_AGENT_ORIGINAL, "Jakarta Commons-HttpClient/3.1"),
+                            equalTo(HTTP_ROUTE, "/serviceTwo"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, portTwo),
+                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
                 span ->
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(4))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(SemanticAttributes.HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(
-                                SemanticAttributes.URL_FULL,
-                                "http://127.0.0.1:" + portTwo + "/serviceTwo"),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(
                                 stringKey("camel.uri"),
                                 "jetty:http://0.0.0.0:" + portTwo + "/serviceTwo?arg=value"))));

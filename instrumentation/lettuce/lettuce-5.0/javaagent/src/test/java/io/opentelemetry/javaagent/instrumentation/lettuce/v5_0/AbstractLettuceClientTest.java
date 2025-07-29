@@ -11,6 +11,7 @@ import io.lettuce.core.api.StatefulRedisConnection;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +47,10 @@ abstract class AbstractLettuceClientTest {
 
   protected static StatefulRedisConnection<String, String> connection;
 
+  protected static String ip;
+
   protected static String host;
+
   protected static int port;
 
   protected static String embeddedDbUri;
@@ -74,5 +78,17 @@ abstract class AbstractLettuceClientTest {
     testing.clearData();
 
     return statefulConnection;
+  }
+
+  static void shutdown(RedisClient redisClient) {
+    // using shutdownAsync instead of redisClient.shutdown() because there is a bug in the redis
+    // client that can cause the shutdown to hang
+    try {
+      redisClient.shutdownAsync(0, 15, TimeUnit.SECONDS).get(15, TimeUnit.SECONDS);
+    } catch (InterruptedException exception) {
+      Thread.currentThread().interrupt();
+    } catch (Exception exception) {
+      // ignore
+    }
   }
 }

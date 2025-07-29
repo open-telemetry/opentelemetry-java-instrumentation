@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
@@ -16,8 +17,6 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.Sets;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
@@ -25,10 +24,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.io.Writer;
-import java.util.Collections;
 import javax.servlet.DispatcherType;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -40,7 +37,7 @@ import org.eclipse.jetty.server.handler.AbstractHandler;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
+class JettyHandlerTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
@@ -62,47 +59,41 @@ public class JettyHandlerTest extends AbstractHttpServerTest<Server> {
   private static final TestHandler testHandler = new TestHandler();
 
   @Override
-  protected Server setupServer() {
+  protected Server setupServer() throws Exception {
     Server server = new Server(port);
     server.setHandler(testHandler);
     server.addBean(errorHandler);
-    try {
-      server.start();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+    server.start();
     return server;
   }
 
   @Override
-  protected void stopServer(Server server) {
-    try {
-      server.stop();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+  protected void stopServer(Server server) throws Exception {
+    server.stop();
   }
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setHttpAttributes(
-        unused ->
-            Sets.difference(
-                DEFAULT_HTTP_ATTRIBUTES, Collections.singleton(SemanticAttributes.HTTP_ROUTE)));
+    options.setHttpAttributes(unused -> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE);
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT || endpoint == ERROR);
-    options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(endpoint -> endpoint != EXCEPTION);
   }
 
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
+    String methodName;
     if (endpoint == REDIRECT) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
+      methodName = "sendRedirect";
     } else if (endpoint == ERROR) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"));
+      methodName = "sendError";
+    } else {
+      throw new AssertionError("Unexpected endpoint: " + endpoint.name());
     }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
+    span.hasKind(SpanKind.INTERNAL)
+        .satisfies(spanData -> assertThat(spanData.getName()).endsWith("." + methodName))
+        .hasAttributesSatisfyingExactly(
+            codeFunctionAssertions("org.eclipse.jetty.server.Response", methodName));
     return span;
   }
 

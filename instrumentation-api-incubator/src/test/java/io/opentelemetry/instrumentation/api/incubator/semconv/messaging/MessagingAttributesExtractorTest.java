@@ -13,13 +13,14 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,10 +29,12 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 class MessagingAttributesExtractorTest {
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   @ParameterizedTest
   @MethodSource("destinations")
   void shouldExtractAllAvailableAttributes(
       boolean temporary,
+      boolean anonymous,
       String destination,
       MessageOperation operation,
       String expectedDestination) {
@@ -40,13 +43,19 @@ class MessagingAttributesExtractorTest {
     request.put("system", "myQueue");
     request.put("destinationKind", "topic");
     request.put("destination", destination);
+    request.put("destinationTemplate", destination);
     if (temporary) {
       request.put("temporaryDestination", "y");
     }
+    if (anonymous) {
+      request.put("anonymousDestination", "y");
+    }
     request.put("url", "http://broker/topic");
     request.put("conversationId", "42");
-    request.put("payloadSize", "100");
-    request.put("payloadCompressedSize", "10");
+    request.put("bodySize", "100");
+    request.put("envelopeSize", "120");
+    request.put("clientId", "43");
+    request.put("batchMessageCount", "2");
 
     AttributesExtractor<Map<String, String>, String> underTest =
         MessagingAttributesExtractor.create(TestGetter.INSTANCE, operation);
@@ -62,16 +71,27 @@ class MessagingAttributesExtractorTest {
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_SYSTEM, "myQueue"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
-    if (temporary) {
-      expectedEntries.add(entry(SemanticAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
-    }
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES, 100L));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_SYSTEM, "myQueue"));
     expectedEntries.add(
-        entry(SemanticAttributes.MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES, 10L));
-    expectedEntries.add(entry(SemanticAttributes.MESSAGING_OPERATION, operation.operationName()));
+        entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME, expectedDestination));
+    if (temporary) {
+      expectedEntries.add(
+          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY, true));
+    } else {
+      expectedEntries.add(
+          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE, expectedDestination));
+    }
+    if (anonymous) {
+      expectedEntries.add(
+          entry(MessagingIncubatingAttributes.MESSAGING_DESTINATION_ANONYMOUS, true));
+    }
+    expectedEntries.add(
+        entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_CONVERSATION_ID, "42"));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE, 100L));
+    expectedEntries.add(entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ENVELOPE_SIZE, 120L));
+    expectedEntries.add(entry(AttributeKey.stringKey("messaging.client_id"), "43"));
+    expectedEntries.add(
+        entry(MessagingIncubatingAttributes.MESSAGING_OPERATION, operation.operationName()));
 
     @SuppressWarnings({"unchecked", "rawtypes"})
     MapEntry<? extends AttributeKey<?>, ?>[] expectedEntriesArr =
@@ -79,13 +99,15 @@ class MessagingAttributesExtractorTest {
     assertThat(startAttributes.build()).containsOnly(expectedEntriesArr);
 
     assertThat(endAttributes.build())
-        .containsOnly(entry(SemanticAttributes.MESSAGING_MESSAGE_ID, "42"));
+        .containsOnly(
+            entry(MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID, "42"),
+            entry(MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT, 2L));
   }
 
   static Stream<Arguments> destinations() {
     return Stream.of(
-        Arguments.of(false, "destination", MessageOperation.RECEIVE, "destination"),
-        Arguments.of(true, null, MessageOperation.PROCESS, "(temporary)"));
+        Arguments.of(false, false, "destination", MessageOperation.RECEIVE, "destination"),
+        Arguments.of(true, true, null, MessageOperation.PROCESS, "(temporary)"));
   }
 
   @Test
@@ -122,9 +144,20 @@ class MessagingAttributesExtractorTest {
       return request.get("destination");
     }
 
+    @Nullable
+    @Override
+    public String getDestinationTemplate(Map<String, String> request) {
+      return request.get("destinationTemplate");
+    }
+
     @Override
     public boolean isTemporaryDestination(Map<String, String> request) {
       return request.containsKey("temporaryDestination");
+    }
+
+    @Override
+    public boolean isAnonymousDestination(Map<String, String> request) {
+      return request.containsKey("anonymousDestination");
     }
 
     @Override
@@ -132,21 +165,36 @@ class MessagingAttributesExtractorTest {
       return request.get("conversationId");
     }
 
+    @Nullable
     @Override
-    public Long getMessagePayloadSize(Map<String, String> request) {
-      String payloadSize = request.get("payloadSize");
+    public Long getMessageBodySize(Map<String, String> request) {
+      String payloadSize = request.get("bodySize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
+    @Nullable
     @Override
-    public Long getMessagePayloadCompressedSize(Map<String, String> request) {
-      String payloadSize = request.get("payloadCompressedSize");
+    public Long getMessageEnvelopeSize(Map<String, String> request) {
+      String payloadSize = request.get("envelopeSize");
       return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
 
     @Override
     public String getMessageId(Map<String, String> request, String response) {
       return response;
+    }
+
+    @Nullable
+    @Override
+    public String getClientId(Map<String, String> request) {
+      return request.get("clientId");
+    }
+
+    @Nullable
+    @Override
+    public Long getBatchMessageCount(Map<String, String> request, @Nullable String response) {
+      String payloadSize = request.get("batchMessageCount");
+      return payloadSize == null ? null : Long.valueOf(payloadSize);
     }
   }
 }

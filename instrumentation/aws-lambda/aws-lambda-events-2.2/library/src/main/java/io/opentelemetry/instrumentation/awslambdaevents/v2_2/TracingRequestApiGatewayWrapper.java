@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
+import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.SerializationUtil;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.function.BiFunction;
 
@@ -35,12 +35,7 @@ public class TracingRequestApiGatewayWrapper
 
   // Visible for testing
   static <T> T map(APIGatewayProxyRequestEvent event, Class<T> clazz) {
-    try {
-      return OBJECT_MAPPER.readValue(event.getBody(), clazz);
-    } catch (JsonProcessingException e) {
-      throw new IllegalStateException(
-          "Could not map API Gateway event body to requested parameter type: " + clazz, e);
-    }
+    return SerializationUtil.fromJson(event.getBody(), clazz);
   }
 
   @Override
@@ -52,12 +47,8 @@ public class TracingRequestApiGatewayWrapper
     if (result instanceof APIGatewayProxyResponseEvent) {
       event = (APIGatewayProxyResponseEvent) result;
     } else {
-      try {
-        event = new APIGatewayProxyResponseEvent();
-        event.setBody(OBJECT_MAPPER.writeValueAsString(result));
-      } catch (JsonProcessingException e) {
-        throw new IllegalStateException("Could not serialize return value.", e);
-      }
+      event = new APIGatewayProxyResponseEvent();
+      event.setBody(SerializationUtil.toJson(result));
     }
     return event;
   }

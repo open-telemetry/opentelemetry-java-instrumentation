@@ -31,7 +31,8 @@ dependencies {
     ),
   )
 
-  library("com.couchbase.client:java-client:3.1.0")
+  // 3.1.4 (instead of 3.1.0) needed for test stability and for compatibility with server versions that run on M1 processors
+  library("com.couchbase.client:java-client:3.1.4")
 
   testImplementation("org.testcontainers:couchbase")
 
@@ -39,7 +40,15 @@ dependencies {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }

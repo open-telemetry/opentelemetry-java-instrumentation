@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.okhttp.v3_0;
 
-import static java.util.Collections.singletonList;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collections;
@@ -27,7 +26,6 @@ import okhttp3.Headers;
 import okhttp3.Interceptor;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -45,8 +43,7 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
   protected OkHttpClient.Builder getClientBuilder(boolean withReadTimeout) {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
-            .connectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS)
-            .protocols(singletonList(Protocol.HTTP_1_1));
+            .connectTimeout(CONNECTION_TIMEOUT.toMillis(), TimeUnit.MILLISECONDS);
     if (withReadTimeout) {
       builder
           // don't want retries on time outs
@@ -125,8 +122,9 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
           // response)
           if ("http://localhost:61/".equals(uri.toString())
               || "https://192.0.2.1/".equals(uri.toString())
+              || "http://192.0.2.1/".equals(uri.toString())
               || resolveAddress("/read-timeout").toString().equals(uri.toString())) {
-            attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+            attributes.remove(NETWORK_PROTOCOL_VERSION);
           }
 
           return attributes;

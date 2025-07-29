@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.jmx.engine;
 
+import java.util.List;
+
 /**
- * A class providing a complete definition on how to create an Open Telemetry metric out of the JMX
+ * A class providing a complete definition on how to create an OpenTelemetry metric out of the JMX
  * system: how to extract values from MBeans and how to model, name and decorate them with
  * attributes using OpenTelemetry Metric API. Objects of this class are immutable.
  */
@@ -40,12 +42,14 @@ package io.opentelemetry.instrumentation.jmx.engine;
 //      new MetricInfo(
 //          "my.own.jvm.memory.pool.used",
 //          "Pool memory currently used",
+//          null,
 //          "By",
 //          MetricInfo.Type.UPDOWNCOUNTER);
 //  MetricInfo poolLimitInfo =
 //      new MetricInfo(
 //          "my.own.jvm.memory.pool.limit",
 //          "Maximum obtainable memory pool size",
+//          null,
 //          "By",
 //          MetricInfo.Type.UPDOWNCOUNTER);
 //
@@ -74,7 +78,7 @@ public class MetricDef {
   private final BeanGroup beans;
 
   // Describes how to get the metric values and their attributes, and how to report them
-  private final MetricExtractor[] metricExtractors;
+  private final List<MetricExtractor> metricExtractors;
 
   /**
    * Constructor for MetricDef.
@@ -84,7 +88,7 @@ public class MetricDef {
    *     MetricExtractor is provided, they should use unique metric names or unique metric
    *     attributes
    */
-  public MetricDef(BeanGroup beans, MetricExtractor... metricExtractors) {
+  public MetricDef(BeanGroup beans, List<MetricExtractor> metricExtractors) {
     this.beans = beans;
     this.metricExtractors = metricExtractors;
   }
@@ -93,7 +97,7 @@ public class MetricDef {
     return beans;
   }
 
-  MetricExtractor[] getMetricExtractors() {
+  List<MetricExtractor> getMetricExtractors() {
     return metricExtractors;
   }
 }

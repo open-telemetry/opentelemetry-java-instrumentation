@@ -20,7 +20,7 @@ import io.netty.handler.codec.http.HttpResponseDecoder;
 import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.netty.v4.common.internal.client.NettySslInstrumentationHandler;
+import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettySslInstrumentationHandler;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4.common.AbstractNettyChannelPipelineInstrumentation;
@@ -54,16 +54,18 @@ public class NettyChannelPipelineInstrumentation
   public static class ChannelPipelineAddAdvice {
 
     @Advice.OnMethodEnter
-    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(ChannelPipeline.class);
+    public static CallDepth trackCallDepth() {
+      CallDepth callDepth = CallDepth.forClass(ChannelPipeline.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void addHandler(
         @Advice.This ChannelPipeline pipeline,
         @Advice.Argument(2) ChannelHandler handler,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
+
       if (callDepth.decrementAndGet() > 0) {
         return;
       }

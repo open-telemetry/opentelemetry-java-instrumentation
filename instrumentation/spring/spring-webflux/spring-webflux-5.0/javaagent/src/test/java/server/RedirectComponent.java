@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
-// Need to keep this in Java because groovy creates crazy proxies around lambdas
 @Component
 public class RedirectComponent {
   @Bean

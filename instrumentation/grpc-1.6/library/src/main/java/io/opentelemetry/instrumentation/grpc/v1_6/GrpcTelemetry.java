@@ -29,16 +29,19 @@ public final class GrpcTelemetry {
   private final Instrumenter<GrpcRequest, Status> clientInstrumenter;
   private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
+  private final boolean emitMessageEvents;
 
   GrpcTelemetry(
       Instrumenter<GrpcRequest, Status> serverInstrumenter,
       Instrumenter<GrpcRequest, Status> clientInstrumenter,
       ContextPropagators propagators,
-      boolean captureExperimentalSpanAttributes) {
+      boolean captureExperimentalSpanAttributes,
+      boolean emitMessageEvents) {
     this.serverInstrumenter = serverInstrumenter;
     this.clientInstrumenter = clientInstrumenter;
     this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+    this.emitMessageEvents = emitMessageEvents;
   }
 
   /**
@@ -46,7 +49,8 @@ public final class GrpcTelemetry {
    * io.grpc.ManagedChannelBuilder#intercept(ClientInterceptor...)}.
    */
   public ClientInterceptor newClientInterceptor() {
-    return new TracingClientInterceptor(clientInstrumenter, propagators);
+    return new TracingClientInterceptor(
+        clientInstrumenter, propagators, captureExperimentalSpanAttributes, emitMessageEvents);
   }
 
   /**
@@ -54,6 +58,7 @@ public final class GrpcTelemetry {
    * io.grpc.ServerBuilder#intercept(ServerInterceptor)}.
    */
   public ServerInterceptor newServerInterceptor() {
-    return new TracingServerInterceptor(serverInstrumenter, captureExperimentalSpanAttributes);
+    return new TracingServerInterceptor(
+        serverInstrumenter, captureExperimentalSpanAttributes, emitMessageEvents);
   }
 }

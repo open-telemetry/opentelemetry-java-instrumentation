@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.quartz.v2_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.quartz.JobBuilder.newJob;
 import static org.quartz.TriggerBuilder.newTrigger;
@@ -13,11 +14,12 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
+import java.util.List;
 import java.util.Properties;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -59,6 +61,9 @@ public abstract class AbstractQuartzTest {
 
     scheduler.scheduleJob(jobDetail, trigger);
 
+    List<AttributeAssertion> assertions = codeFunctionAssertions(SuccessfulJob.class, "execute");
+    assertions.add(equalTo(AttributeKey.stringKey("job.system"), "quartz"));
+
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -68,12 +73,7 @@ public abstract class AbstractQuartzTest {
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("job.system"), "quartz"),
-                                equalTo(
-                                    SemanticAttributes.CODE_NAMESPACE,
-                                    SuccessfulJob.class.getName()),
-                                equalTo(SemanticAttributes.CODE_FUNCTION, "execute")),
+                            .hasAttributesSatisfyingExactly(assertions),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -88,6 +88,9 @@ public abstract class AbstractQuartzTest {
 
     scheduler.scheduleJob(jobDetail, trigger);
 
+    List<AttributeAssertion> assertions = codeFunctionAssertions(FailingJob.class, "execute");
+    assertions.add(equalTo(AttributeKey.stringKey("job.system"), "quartz"));
+
     getTesting()
         .waitAndAssertTraces(
             trace ->
@@ -98,11 +101,7 @@ public abstract class AbstractQuartzTest {
                             .hasNoParent()
                             .hasStatus(StatusData.error())
                             .hasException(new IllegalStateException("Bad job"))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(AttributeKey.stringKey("job.system"), "quartz"),
-                                equalTo(
-                                    SemanticAttributes.CODE_NAMESPACE, FailingJob.class.getName()),
-                                equalTo(SemanticAttributes.CODE_FUNCTION, "execute"))));
+                            .hasAttributesSatisfyingExactly(assertions)));
   }
 
   private static Scheduler createScheduler(String name) throws Exception {

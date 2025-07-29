@@ -11,6 +11,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -48,11 +49,20 @@ public class AwsLambdaFunctionInstrumenter {
 
   public Context extract(AwsLambdaRequest input) {
     ContextPropagationDebug.debugContextLeakIfEnabled();
+    // Look in both the http headers and the custom client context
+    Map<String, String> headers = input.getHeaders();
+    if (input.getAwsContext() != null && input.getAwsContext().getClientContext() != null) {
+      Map<String, String> customContext = input.getAwsContext().getClientContext().getCustom();
+      if (customContext != null) {
+        headers = new HashMap<>(headers);
+        headers.putAll(customContext);
+      }
+    }
 
     return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), input.getHeaders(), MapGetter.INSTANCE);
+        .extract(Context.root(), headers, MapGetter.INSTANCE);
   }
 
   private enum MapGetter implements TextMapGetter<Map<String, String>> {

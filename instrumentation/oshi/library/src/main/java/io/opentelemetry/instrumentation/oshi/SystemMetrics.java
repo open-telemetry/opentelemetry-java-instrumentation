@@ -9,6 +9,8 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import java.util.ArrayList;
+import java.util.List;
 import oshi.SystemInfo;
 import oshi.hardware.GlobalMemory;
 import oshi.hardware.HWDiskStore;
@@ -28,111 +30,121 @@ public class SystemMetrics {
   private SystemMetrics() {}
 
   /** Register observers for system metrics. */
-  public static void registerObservers(OpenTelemetry openTelemetry) {
+  public static List<AutoCloseable> registerObservers(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeterProvider().get("io.opentelemetry.oshi");
     SystemInfo systemInfo = new SystemInfo();
     HardwareAbstractionLayer hal = systemInfo.getHardware();
+    List<AutoCloseable> observables = new ArrayList<>();
 
-    meter
-        .upDownCounterBuilder("system.memory.usage")
-        .setDescription("System memory usage")
-        .setUnit("By")
-        .buildWithCallback(
-            r -> {
-              GlobalMemory mem = hal.getMemory();
-              r.record(mem.getTotal() - mem.getAvailable(), ATTRIBUTES_USED);
-              r.record(mem.getAvailable(), ATTRIBUTES_FREE);
-            });
+    observables.add(
+        meter
+            .upDownCounterBuilder("system.memory.usage")
+            .setDescription("System memory usage")
+            .setUnit("By")
+            .buildWithCallback(
+                r -> {
+                  GlobalMemory mem = hal.getMemory();
+                  r.record(mem.getTotal() - mem.getAvailable(), ATTRIBUTES_USED);
+                  r.record(mem.getAvailable(), ATTRIBUTES_FREE);
+                }));
 
-    meter
-        .gaugeBuilder("system.memory.utilization")
-        .setDescription("System memory utilization")
-        .setUnit("1")
-        .buildWithCallback(
-            r -> {
-              GlobalMemory mem = hal.getMemory();
-              r.record(
-                  ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
-                  ATTRIBUTES_USED);
-              r.record(((double) mem.getAvailable()) / mem.getTotal(), ATTRIBUTES_FREE);
-            });
+    observables.add(
+        meter
+            .gaugeBuilder("system.memory.utilization")
+            .setDescription("System memory utilization")
+            .setUnit("1")
+            .buildWithCallback(
+                r -> {
+                  GlobalMemory mem = hal.getMemory();
+                  r.record(
+                      ((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(),
+                      ATTRIBUTES_USED);
+                  r.record(((double) mem.getAvailable()) / mem.getTotal(), ATTRIBUTES_FREE);
+                }));
 
-    meter
-        .counterBuilder("system.network.io")
-        .setDescription("System network IO")
-        .setUnit("By")
-        .buildWithCallback(
-            r -> {
-              for (NetworkIF networkIf : hal.getNetworkIFs()) {
-                networkIf.updateAttributes();
-                long recv = networkIf.getBytesRecv();
-                long sent = networkIf.getBytesSent();
-                String device = networkIf.getName();
-                r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
-              }
-            });
+    observables.add(
+        meter
+            .counterBuilder("system.network.io")
+            .setDescription("System network IO")
+            .setUnit("By")
+            .buildWithCallback(
+                r -> {
+                  for (NetworkIF networkIf : hal.getNetworkIFs()) {
+                    networkIf.updateAttributes();
+                    long recv = networkIf.getBytesRecv();
+                    long sent = networkIf.getBytesSent();
+                    String device = networkIf.getName();
+                    r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                    r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
+                  }
+                }));
 
-    meter
-        .counterBuilder("system.network.packets")
-        .setDescription("System network packets")
-        .setUnit("{packets}")
-        .buildWithCallback(
-            r -> {
-              for (NetworkIF networkIf : hal.getNetworkIFs()) {
-                networkIf.updateAttributes();
-                long recv = networkIf.getPacketsRecv();
-                long sent = networkIf.getPacketsSent();
-                String device = networkIf.getName();
-                r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
-              }
-            });
+    observables.add(
+        meter
+            .counterBuilder("system.network.packets")
+            .setDescription("System network packets")
+            .setUnit("{packets}")
+            .buildWithCallback(
+                r -> {
+                  for (NetworkIF networkIf : hal.getNetworkIFs()) {
+                    networkIf.updateAttributes();
+                    long recv = networkIf.getPacketsRecv();
+                    long sent = networkIf.getPacketsSent();
+                    String device = networkIf.getName();
+                    r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                    r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
+                  }
+                }));
 
-    meter
-        .counterBuilder("system.network.errors")
-        .setDescription("System network errors")
-        .setUnit("{errors}")
-        .buildWithCallback(
-            r -> {
-              for (NetworkIF networkIf : hal.getNetworkIFs()) {
-                networkIf.updateAttributes();
-                long recv = networkIf.getInErrors();
-                long sent = networkIf.getOutErrors();
-                String device = networkIf.getName();
-                r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
-                r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
-              }
-            });
+    observables.add(
+        meter
+            .counterBuilder("system.network.errors")
+            .setDescription("System network errors")
+            .setUnit("{errors}")
+            .buildWithCallback(
+                r -> {
+                  for (NetworkIF networkIf : hal.getNetworkIFs()) {
+                    networkIf.updateAttributes();
+                    long recv = networkIf.getInErrors();
+                    long sent = networkIf.getOutErrors();
+                    String device = networkIf.getName();
+                    r.record(recv, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "receive"));
+                    r.record(sent, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "transmit"));
+                  }
+                }));
 
-    meter
-        .counterBuilder("system.disk.io")
-        .setDescription("System disk IO")
-        .setUnit("By")
-        .buildWithCallback(
-            r -> {
-              for (HWDiskStore diskStore : hal.getDiskStores()) {
-                long read = diskStore.getReadBytes();
-                long write = diskStore.getWriteBytes();
-                String device = diskStore.getName();
-                r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
-                r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
-              }
-            });
+    observables.add(
+        meter
+            .counterBuilder("system.disk.io")
+            .setDescription("System disk IO")
+            .setUnit("By")
+            .buildWithCallback(
+                r -> {
+                  for (HWDiskStore diskStore : hal.getDiskStores()) {
+                    long read = diskStore.getReadBytes();
+                    long write = diskStore.getWriteBytes();
+                    String device = diskStore.getName();
+                    r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
+                    r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
+                  }
+                }));
 
-    meter
-        .counterBuilder("system.disk.operations")
-        .setDescription("System disk operations")
-        .setUnit("{operations}")
-        .buildWithCallback(
-            r -> {
-              for (HWDiskStore diskStore : hal.getDiskStores()) {
-                long read = diskStore.getReads();
-                long write = diskStore.getWrites();
-                String device = diskStore.getName();
-                r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
-                r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
-              }
-            });
+    observables.add(
+        meter
+            .counterBuilder("system.disk.operations")
+            .setDescription("System disk operations")
+            .setUnit("{operations}")
+            .buildWithCallback(
+                r -> {
+                  for (HWDiskStore diskStore : hal.getDiskStores()) {
+                    long read = diskStore.getReads();
+                    long write = diskStore.getWrites();
+                    String device = diskStore.getName();
+                    r.record(read, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "read"));
+                    r.record(write, Attributes.of(DEVICE_KEY, device, DIRECTION_KEY, "write"));
+                  }
+                }));
+
+    return observables;
   }
 }

@@ -14,11 +14,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClient9TracingInterceptor;
+import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyClientTracingListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.eclipse.jetty.client.HttpRequest;
@@ -43,44 +45,48 @@ public class JettyHttpClient9Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class JettyHttpClient9Advice {
 
+    public static class AdviceLocals {
+      public final Context context;
+      public final Scope scope;
+
+      public AdviceLocals(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+    }
+
+    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void addTracingEnter(
+    public static Object[] addTracingEnter(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Argument(value = 1, readOnly = false) List<Response.ResponseListener> listeners,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Argument(1) List<Response.ResponseListener> listeners) {
       Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
-        return;
+      Context context =
+          JettyClientTracingListener.handleRequest(parentContext, httpRequest, instrumenter());
+      if (context == null) {
+        return new Object[] {null, listeners};
       }
 
-      // First step is to attach the tracer to the Jetty request. Request listeners are wrapped here
-      JettyHttpClient9TracingInterceptor requestInterceptor =
-          new JettyHttpClient9TracingInterceptor(parentContext, instrumenter());
-      requestInterceptor.attachToRequest(httpRequest);
-
-      // Second step is to wrap all the important result callback
-      listeners = wrapResponseListeners(parentContext, listeners);
-
-      context = requestInterceptor.getContext();
-      scope = context.makeCurrent();
+      List<Response.ResponseListener> wrappedListeners =
+          wrapResponseListeners(parentContext, listeners);
+      return new Object[] {new AdviceLocals(context, context.makeCurrent()), wrappedListeners};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void exitTracingInterceptor(
         @Advice.Argument(value = 0) HttpRequest httpRequest,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Enter Object[] enterResult) {
+      AdviceLocals locals = (AdviceLocals) enterResult[0];
 
-      if (scope == null) {
+      if (locals == null) {
         return;
       }
 
       // not ending span here unless error, span ended in the interceptor
-      scope.close();
+      locals.scope.close();
       if (throwable != null) {
-        instrumenter().end(context, httpRequest, null, throwable);
+        instrumenter().end(locals.context, httpRequest, null, throwable);
       }
     }
   }

@@ -14,7 +14,6 @@ import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
 import okhttp3.Response;
 
 /** Entrypoint for instrumenting OkHttp clients. */
@@ -32,29 +31,13 @@ public final class OkHttpTelemetry {
     return new OkHttpTelemetryBuilder(openTelemetry);
   }
 
-  private final Instrumenter<Request, Response> instrumenter;
+  private final Instrumenter<Interceptor.Chain, Response> instrumenter;
   private final ContextPropagators propagators;
 
-  OkHttpTelemetry(Instrumenter<Request, Response> instrumenter, ContextPropagators propagators) {
+  OkHttpTelemetry(
+      Instrumenter<Interceptor.Chain, Response> instrumenter, ContextPropagators propagators) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
-  }
-
-  /**
-   * Returns a new {@link Interceptor} that can be used with methods like {@link
-   * okhttp3.OkHttpClient.Builder#addInterceptor(Interceptor)}.
-   *
-   * <p>Important: asynchronous calls using {@link okhttp3.Call.Factory#enqueue(Callback)} will
-   * *not* work correctly using just this interceptor.
-   *
-   * <p>It is strongly recommended that you use the {@link #newCallFactory(OkHttpClient)} method to
-   * decorate your {@link OkHttpClient}, rather than using this method directly.
-   *
-   * @deprecated Please use the {@link #newCallFactory(OkHttpClient)} method instead.
-   */
-  @Deprecated
-  public Interceptor newInterceptor() {
-    return new TracingInterceptor(instrumenter, propagators);
   }
 
   /**
@@ -72,7 +55,7 @@ public final class OkHttpTelemetry {
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());
     builder.interceptors().add(1, new ConnectionErrorSpanInterceptor(instrumenter));
-    builder.networkInterceptors().add(0, newInterceptor());
+    builder.networkInterceptors().add(0, new TracingInterceptor(instrumenter, propagators));
     OkHttpClient tracingClient = builder.build();
     return new TracingCallFactory(tracingClient);
   }

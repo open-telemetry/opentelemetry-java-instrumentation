@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
 /** Entrypoint for instrumenting Lettuce or clients. */
@@ -31,8 +32,13 @@ public final class LettuceTelemetry {
 
   private final Tracer tracer;
   private final RedisCommandSanitizer sanitizer;
+  private final OperationListener metrics;
 
-  LettuceTelemetry(OpenTelemetry openTelemetry, boolean statementSanitizationEnabled) {
+  LettuceTelemetry(
+      OpenTelemetry openTelemetry,
+      boolean statementSanitizationEnabled,
+      OperationListener metrics) {
+    this.metrics = metrics;
     TracerBuilder tracerBuilder = openTelemetry.tracerBuilder(INSTRUMENTATION_NAME);
     String version = EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     if (version != null) {
@@ -47,6 +53,6 @@ public final class LettuceTelemetry {
    * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
    */
   public Tracing newTracing() {
-    return new OpenTelemetryTracing(tracer, sanitizer);
+    return new OpenTelemetryTracing(tracer, sanitizer, metrics);
   }
 }

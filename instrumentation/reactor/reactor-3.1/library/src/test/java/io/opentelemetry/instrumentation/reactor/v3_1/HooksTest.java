@@ -62,7 +62,7 @@ class HooksTest {
     Disposable disposable =
         Mono.defer(
                 () ->
-                    Mono.fromCallable(callable).publishOn(Schedulers.elastic()).flatMap(Mono::just))
+                    Mono.fromCallable(callable).publishOn(Schedulers.single()).flatMap(Mono::just))
             .subscribeOn(Schedulers.single())
             .subscribe();
 

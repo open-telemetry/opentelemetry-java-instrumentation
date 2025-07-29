@@ -12,17 +12,18 @@ import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.Ja
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_PATH;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_TYPE;
 import static io.opentelemetry.instrumentation.javaagent.runtimemetrics.java8.JarAnalyzer.PACKAGE_VERSION;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.events.EventEmitter;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.sdk.testing.assertj.AttributesAssert;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -39,14 +40,16 @@ class JarAnalyzerTest {
   @ParameterizedTest
   @MethodSource("processUrlArguments")
   void processUrl_EmitsEvents(URL archiveUrl, Consumer<AttributesAssert> attributesConsumer) {
-    EventEmitter eventEmitter = mock(EventEmitter.class);
-    JarAnalyzer.processUrl(eventEmitter, archiveUrl);
+    ExtendedLogRecordBuilder builder = mock(ExtendedLogRecordBuilder.class);
+    when(builder.setEventName(eq("package.info"))).thenReturn(builder);
+    when(builder.setAllAttributes((Attributes) any())).thenReturn(builder);
+
+    JarAnalyzer.processUrl(builder, archiveUrl);
 
     ArgumentCaptor<Attributes> attributesArgumentCaptor = ArgumentCaptor.forClass(Attributes.class);
-    verify(eventEmitter).emit(eq("info"), attributesArgumentCaptor.capture());
+    verify(builder).setAllAttributes(attributesArgumentCaptor.capture());
 
-    attributesConsumer.accept(
-        OpenTelemetryAssertions.assertThat(attributesArgumentCaptor.getValue()));
+    attributesConsumer.accept(assertThat(attributesArgumentCaptor.getValue()));
   }
 
   private static Stream<Arguments> processUrlArguments() {

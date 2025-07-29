@@ -10,6 +10,7 @@ import org.gradle.api.provider.Property
 
 abstract class OtelJavaExtension {
   abstract val minJavaVersionSupported: Property<JavaVersion>
+  abstract val maxJavaVersionSupported: Property<JavaVersion>
 
   abstract val maxJavaVersionForTests: Property<JavaVersion>
 

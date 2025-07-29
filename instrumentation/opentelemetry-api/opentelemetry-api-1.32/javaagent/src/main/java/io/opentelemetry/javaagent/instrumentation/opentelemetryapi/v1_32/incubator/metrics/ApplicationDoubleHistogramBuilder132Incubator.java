@@ -37,7 +37,7 @@ class ApplicationDoubleHistogramBuilder132Incubator extends ApplicationDoubleHis
 
   @Override
   public ExtendedDoubleHistogramBuilder setAttributesAdvice(List<AttributeKey<?>> attributes) {
-    ((io.opentelemetry.extension.incubator.metrics.ExtendedDoubleHistogramBuilder) agentBuilder)
+    ((io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder) agentBuilder)
         .setAttributesAdvice(Bridging.toAgent(attributes));
     return this;
   }

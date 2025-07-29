@@ -13,11 +13,6 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class JaxrsSingletons {
 
-  public static final String ABORT_FILTER_CLASS =
-      "io.opentelemetry.javaagent.instrumentation.jaxrs2.filter.abort.class";
-  public static final String ABORT_HANDLED =
-      "io.opentelemetry.javaagent.instrumentation.jaxrs2.filter.abort.handled";
-
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-1.0";
 
   private static final Instrumenter<HandlerData, Void> INSTRUMENTER;

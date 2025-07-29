@@ -128,7 +128,7 @@ public class OpenTelemetryDriverTest {
     Connection connection = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null);
     OpenTelemetryDriver.removeDriverCandidate(driver);
 
-    assertThat(connection).isExactlyInstanceOf(OpenTelemetryConnection.class);
+    assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
   }
 
   @DisplayName("verify remove driver candidate")
@@ -220,7 +220,7 @@ public class OpenTelemetryDriverTest {
     Connection connection2 = OpenTelemetryDriver.INSTANCE.connect("jdbc:otel:test:", null);
 
     assertThat(connection2).isNotNull();
-    assertThat(connection2).isExactlyInstanceOf(OpenTelemetryConnection.class);
+    assertThat(connection2).isInstanceOf(OpenTelemetryConnection.class);
   }
 
   @DisplayName("Verify get property info with test driver url")

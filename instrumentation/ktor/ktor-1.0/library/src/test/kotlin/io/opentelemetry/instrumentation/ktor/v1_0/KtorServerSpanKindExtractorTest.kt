@@ -56,32 +56,30 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
 
   override fun getContextPath() = ""
 
-  override fun setupServer(): ApplicationEngine {
-    return embeddedServer(Netty, port = port) {
-      install(KtorServerTracing) {
-        setOpenTelemetry(testing.openTelemetry)
-        setSpanKindExtractor {
-          SpanKindExtractor { req ->
-            if (req.uri.startsWith("/from-pubsub/")) {
-              SpanKind.CONSUMER
-            } else {
-              SpanKind.SERVER
-            }
+  override fun setupServer(): ApplicationEngine = embeddedServer(Netty, port = port) {
+    install(KtorServerTelemetry) {
+      setOpenTelemetry(testing.openTelemetry)
+      setSpanKindExtractor {
+        SpanKindExtractor { req ->
+          if (req.uri.startsWith("/from-pubsub/")) {
+            SpanKind.CONSUMER
+          } else {
+            SpanKind.SERVER
           }
         }
       }
+    }
 
-      routing {
-        post(consumerKindEndpoint.path) {
-          call.respondText(consumerKindEndpoint.body, status = HttpStatusCode.fromValue(consumerKindEndpoint.status))
-        }
-
-        post(serverKindEndpoint.path) {
-          call.respondText(serverKindEndpoint.body, status = HttpStatusCode.fromValue(serverKindEndpoint.status))
-        }
+    routing {
+      post(consumerKindEndpoint.path) {
+        call.respondText(consumerKindEndpoint.body, status = HttpStatusCode.fromValue(consumerKindEndpoint.status))
       }
-    }.start()
-  }
+
+      post(serverKindEndpoint.path) {
+        call.respondText(serverKindEndpoint.body, status = HttpStatusCode.fromValue(serverKindEndpoint.status))
+      }
+    }
+  }.start()
 
   override fun stopServer(server: ApplicationEngine) {
     server.stop(0, 10, TimeUnit.SECONDS)
@@ -105,10 +103,8 @@ class KtorServerSpanKindExtractorTest : AbstractHttpServerUsingTest<ApplicationE
     )
   }
 
-  private fun provideArguments(): Stream<Arguments> {
-    return Stream.of(
-      arguments(consumerKindEndpoint, SpanKind.CONSUMER),
-      arguments(serverKindEndpoint, SpanKind.SERVER),
-    )
-  }
+  private fun provideArguments(): Stream<Arguments> = Stream.of(
+    arguments(consumerKindEndpoint, SpanKind.CONSUMER),
+    arguments(serverKindEndpoint, SpanKind.SERVER),
+  )
 }

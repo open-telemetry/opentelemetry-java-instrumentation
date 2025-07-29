@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.Arrays;
 import java.util.HashMap;
+import jdk.jfr.FlightRecorder;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -19,10 +20,11 @@ class RuntimeMetricsBuilderTest {
   @BeforeAll
   static void setup() {
     try {
-      Class.forName("jdk.jfr.consumer.RecordingStream");
+      Class.forName("jdk.jfr.FlightRecorder");
     } catch (ClassNotFoundException exception) {
       Assumptions.abort("JFR not present");
     }
+    Assumptions.assumeTrue(FlightRecorder.isAvailable(), "JFR not available");
   }
 
   @Test

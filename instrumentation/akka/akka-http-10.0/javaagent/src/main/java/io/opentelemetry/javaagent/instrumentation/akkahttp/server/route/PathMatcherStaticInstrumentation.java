@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import akka.http.scaladsl.model.Uri;
 import akka.http.scaladsl.server.PathMatcher;
 import akka.http.scaladsl.server.PathMatchers;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -46,8 +45,9 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
           AkkaRouteHolder.endMatched();
           return;
         }
-        // for remember the matched path in PathMatcherInstrumentation, otherwise we just use a *
-        String prefix = VirtualField.find(PathMatcher.class, String.class).get(pathMatcher);
+        // if present use the matched path that was remembered in PathMatcherInstrumentation,
+        // otherwise just use a *
+        String prefix = PathMatcherUtil.getMatched(pathMatcher);
         if (prefix == null) {
           if (PathMatchers.Slash$.class == pathMatcher.getClass()) {
             prefix = "/";

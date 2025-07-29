@@ -31,12 +31,23 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
     }
   }
 
+  @Nullable
+  @Override
+  public String getDestinationTemplate(DeliveryRequest request) {
+    return null;
+  }
+
   private static String normalizeExchangeName(String exchange) {
     return exchange == null || exchange.isEmpty() ? "<default>" : exchange;
   }
 
   @Override
   public boolean isTemporaryDestination(DeliveryRequest request) {
+    return false;
+  }
+
+  @Override
+  public boolean isAnonymousDestination(DeliveryRequest request) {
     return false;
   }
 
@@ -48,7 +59,7 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
 
   @Nullable
   @Override
-  public Long getMessagePayloadSize(DeliveryRequest request) {
+  public Long getMessageBodySize(DeliveryRequest request) {
     if (request.getBody() != null) {
       return (long) request.getBody().length;
     }
@@ -57,13 +68,25 @@ enum RabbitDeliveryAttributesGetter implements MessagingAttributesGetter<Deliver
 
   @Nullable
   @Override
-  public Long getMessagePayloadCompressedSize(DeliveryRequest request) {
+  public Long getMessageEnvelopeSize(DeliveryRequest request) {
     return null;
   }
 
   @Nullable
   @Override
   public String getMessageId(DeliveryRequest request, @Nullable Void unused) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public String getClientId(DeliveryRequest request) {
+    return null;
+  }
+
+  @Nullable
+  @Override
+  public Long getBatchMessageCount(DeliveryRequest request, @Nullable Void unused) {
     return null;
   }
 

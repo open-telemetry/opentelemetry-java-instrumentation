@@ -1,4 +1,3 @@
-import com.gradle.enterprise.gradleplugin.testretry.retry
 import io.opentelemetry.instrumentation.gradle.OtelJavaExtension
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import java.time.Duration
@@ -27,12 +26,15 @@ afterEvaluate {
 }
 
 // Version to use to compile code and run tests.
-val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_17
+val DEFAULT_JAVA_VERSION = JavaVersion.VERSION_21
 
 java {
   toolchain {
     languageVersion.set(
-      otelJava.minJavaVersionSupported.map { JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), DEFAULT_JAVA_VERSION.majorVersion.toInt())) }
+      otelJava.minJavaVersionSupported.map {
+        val defaultJavaVersion = otelJava.maxJavaVersionSupported.getOrElse(DEFAULT_JAVA_VERSION).majorVersion.toInt()
+        JavaLanguageVersion.of(Math.max(it.majorVersion.toInt(), defaultJavaVersion))
+      }
     )
   }
 
@@ -69,11 +71,14 @@ tasks.withType<JavaCompile>().configureEach {
           "-Xlint:-processing",
           // We suppress the "options" warning because it prevents compilation on modern JDKs
           "-Xlint:-options",
-
-          // Fail build on any warning
-          "-Werror"
+          // jdk21 generates more serial warnings than previous versions
+          "-Xlint:-serial"
         )
       )
+      if (System.getProperty("dev") != "true") {
+        // Fail build on any warning
+        compilerArgs.add("-Werror")
+      }
     }
 
     encoding = "UTF-8"
@@ -81,6 +86,11 @@ tasks.withType<JavaCompile>().configureEach {
     if (name.contains("Test")) {
       // serialVersionUID is basically guaranteed to be useless in tests
       compilerArgs.add("-Xlint:-serial")
+      // when code is compiled with jdk 21 and executed with jdk 8, the -parameters flag is needed to avoid
+      // java.lang.reflect.MalformedParametersException: Invalid parameter name ""
+      // when junit calls java.lang.reflect.Executable.getParameters() on the constructor of a
+      // non-static nested test class
+      compilerArgs.add("-parameters")
     }
   }
 }
@@ -98,6 +108,17 @@ afterEvaluate {
   tasks.withType<ScalaCompile>().configureEach {
     sourceCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
     targetCompatibility = otelJava.minJavaVersionSupported.get().majorVersion
+  }
+  tasks.withType<Javadoc>().configureEach {
+    with(options) {
+      source = otelJava.minJavaVersionSupported.get().majorVersion
+    }
+  }
+  tasks.withType<JavaCompile>().configureEach {
+    if (javaCompiler.isPresent && javaCompiler.get().metadata.languageVersion.canCompileOrRun(21)) {
+      // new warning in jdk21
+      options.compilerArgs.add("-Xlint:-this-escape")
+    }
   }
 }
 
@@ -122,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.105.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.123.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -139,8 +160,8 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.4.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.20"))
+  codenarc("org.codenarc:CodeNarc:3.6.0")
+  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.25"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -259,11 +280,6 @@ tasks {
       charSet = "UTF-8"
       breakIterator(true)
 
-      // TODO (trask) revisit to see if url is fixed
-      // currently broken because https://docs.oracle.com/javase/8/docs/api/element-list is missing
-      // and redirects
-      // links("https://docs.oracle.com/javase/8/docs/api/")
-
       addStringOption("Xdoclint:none", "-quiet")
       // non-standard option to fail on warnings, see https://bugs.openjdk.java.net/browse/JDK-8200363
       addStringOption("Xwerror", "-quiet")
@@ -273,8 +289,12 @@ tasks {
   withType<AbstractArchiveTask>().configureEach {
     isPreserveFileTimestamps = false
     isReproducibleFileOrder = true
-    dirMode = Integer.parseInt("0755", 8)
-    fileMode = Integer.parseInt("0644", 8)
+    dirPermissions {
+      unix("755")
+    }
+    filePermissions {
+      unix("644")
+    }
   }
 
   // Convenient when updating errorprone
@@ -322,7 +342,7 @@ tasks.withType<Test>().configureEach {
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.
   jvmArgs("-Dio.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
-  // TODO(anuraaga): Have agent map unshaded to shaded.
+  // TODO: Have agent map unshaded to shaded.
   if (project.findProperty("disableShadowRelocate") != "true") {
     jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=${rootProject.findProperty("enableStrictContext") ?: true}")
   } else {
@@ -335,8 +355,11 @@ tasks.withType<Test>().configureEach {
 
   val trustStore = project(":testing-common").file("src/misc/testing-keystore.p12")
   // Work around payara not working when this is set for some reason.
-  // Don't set for camel as we have tests that interact with AWS and need normal trustStore
-  if (project.name != "jaxrs-2.0-payara-testing" && project.description != "camel-2-20") {
+  // Don't set for:
+  // - aws-sdk as we have tests that interact with AWS and need normal trustStore
+  // - camel as we have tests that interact with AWS and need normal trustStore
+  // - vaadin as tests need to be able to download nodejs when not cached in ~/.vaadin/
+  if (project.name != "jaxrs-2.0-payara-testing" && !project.path.contains("vaadin") && project.description != "camel-2-20" && !project.path.contains("aws-sdk")) {
     jvmArgumentProviders.add(KeystoreArgumentsProvider(trustStore))
   }
 
@@ -344,11 +367,12 @@ tasks.withType<Test>().configureEach {
   // This value is quite big because with lower values (3 mins) we were experiencing large number of false positives
   timeout.set(Duration.ofMinutes(15))
 
-  retry {
+  val defaultMaxRetries = if (System.getenv().containsKey("CI")) 5 else 0
+  val maxTestRetries = gradle.startParameter.projectProperties["maxTestRetries"]?.toInt() ?: defaultMaxRetries
+
+  develocity.testRetry {
     // You can see tests that were retried by this mechanism in the collected test reports and build scans.
-    if (System.getenv().containsKey("CI") || rootProject.hasProperty("retryTests")) {
-      maxRetries.set(5)
-    }
+    maxRetries.set(maxTestRetries);
   }
 
   reports {
@@ -407,7 +431,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "10.12.7"
+  toolVersion = "10.26.1"
   maxWarnings = 0
 }
 
@@ -416,7 +440,6 @@ dependencyCheck {
   suppressionFile = "buildscripts/dependency-check-suppressions.xml"
   failBuildOnCVSS = 7.0f // fail on high or critical CVE
   nvd.apiKey = System.getenv("NVD_API_KEY")
-  nvd.delay = 3500 // until next dependency check release (https://github.com/jeremylong/DependencyCheck/pull/6333)
 }
 
 idea {

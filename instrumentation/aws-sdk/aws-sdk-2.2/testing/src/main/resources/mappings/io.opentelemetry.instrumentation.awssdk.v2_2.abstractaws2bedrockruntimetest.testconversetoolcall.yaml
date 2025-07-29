@@ -1,0 +1,153 @@
+---
+id: 8d28eabd-85de-42e5-9759-4122febc3b8f
+name: model_amazonnova-micro-v10_converse
+request:
+  url: /model/amazon.nova-micro-v1%3A0/converse
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"metrics\":{\"latencyMs\":436},\"output\":{\"message\":{\"content\":[{\"\
+    text\":\"<thinking> The User has asked for the current weather in two locations:\
+    \ Seattle and San Francisco. To provide the requested information, I will use\
+    \ the \\\"get_current_weather\\\" tool for each location separately. </thinking>\\\
+    n\"},{\"toolUse\":{\"input\":{\"location\":\"Seattle\"},\"name\":\"get_current_weather\"\
+    ,\"toolUseId\":\"tooluse_oJSvwNoiR6eGZt2lZ_omwA\"}},{\"toolUse\":{\"input\":{\"\
+    location\":\"San Francisco\"},\"name\":\"get_current_weather\",\"toolUseId\":\"\
+    tooluse_Kz6EtoqZSyK9_Se61LTMqQ\"}}],\"role\":\"assistant\"}},\"stopReason\":\"\
+    tool_use\",\"usage\":{\"inputTokens\":415,\"outputTokens\":162,\"totalTokens\"\
+    :577}}"
+  headers:
+    Date: "Fri, 07 Mar 2025 07:05:41 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 1f7f8390-8993-4933-a640-0d0d3205318e
+uuid: 8d28eabd-85de-42e5-9759-4122febc3b8f
+persistent: true
+insertionIndex: 12
+---
+id: 2d7c4ed1-1eca-4c36-96cb-381cbc6cc9c0
+name: model_amazonnova-micro-v10_converse
+request:
+  url: /model/amazon.nova-micro-v1%3A0/converse
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "What is the weather in Seattle and San Francisco today?"
+          } ]
+        }, {
+          "role" : "assistant",
+          "content" : [ {
+            "text" : "<thinking> The User has asked for the current weather in two locations: Seattle and San Francisco. To provide the requested information, I will use the \"get_current_weather\" tool for each location separately. </thinking>\n"
+          }, {
+            "toolUse" : {
+              "toolUseId" : "tooluse_oJSvwNoiR6eGZt2lZ_omwA",
+              "name" : "get_current_weather",
+              "input" : {
+                "location" : "Seattle"
+              }
+            }
+          }, {
+            "toolUse" : {
+              "toolUseId" : "tooluse_Kz6EtoqZSyK9_Se61LTMqQ",
+              "name" : "get_current_weather",
+              "input" : {
+                "location" : "San Francisco"
+              }
+            }
+          } ]
+        }, {
+          "role" : "user",
+          "content" : [ {
+            "toolResult" : {
+              "toolUseId" : "tooluse_oJSvwNoiR6eGZt2lZ_omwA",
+              "content" : [ {
+                "json" : {
+                  "weather" : "50 degrees and raining"
+                }
+              } ]
+            }
+          }, {
+            "toolResult" : {
+              "toolUseId" : "tooluse_Kz6EtoqZSyK9_Se61LTMqQ",
+              "content" : [ {
+                "json" : {
+                  "weather" : "70 degrees and sunny"
+                }
+              } ]
+            }
+          } ]
+        } ],
+        "toolConfig" : {
+          "tools" : [ {
+            "toolSpec" : {
+              "name" : "get_current_weather",
+              "description" : "Get the current weather in a given location.",
+              "inputSchema" : {
+                "json" : {
+                  "type" : "object",
+                  "properties" : {
+                    "location" : {
+                      "type" : "string",
+                      "description" : "The name of the city"
+                    }
+                  },
+                  "required" : [ "location" ]
+                }
+              }
+            }
+          } ]
+        }
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"metrics\":{\"latencyMs\":433},\"output\":{\"message\":{\"content\":[{\"\
+    text\":\"<thinking> The tool has provided the current weather for both locations.\
+    \ Now I will compile this information and present it to the User. </thinking>\\\
+    n\\nThe current weather in Seattle is 50 degrees and raining. In San Francisco,\
+    \ the weather is 70 degrees and sunny.\"}],\"role\":\"assistant\"}},\"stopReason\"\
+    :\"end_turn\",\"usage\":{\"inputTokens\":554,\"outputTokens\":57,\"totalTokens\"\
+    :611}}"
+  headers:
+    Date: "Fri, 07 Mar 2025 07:05:43 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 5d08615f-4860-487d-bfaf-a8e82932aea1
+uuid: 2d7c4ed1-1eca-4c36-96cb-381cbc6cc9c0
+persistent: true
+insertionIndex: 13

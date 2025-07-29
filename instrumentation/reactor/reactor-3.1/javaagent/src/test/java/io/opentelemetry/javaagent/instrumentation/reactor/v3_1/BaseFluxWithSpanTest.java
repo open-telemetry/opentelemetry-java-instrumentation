@@ -5,12 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactor.v3_1;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.SemanticAttributes.CODE_NAMESPACE;
-
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.javaagent.instrumentation.otelannotations.AbstractWithSpanTest;
 import org.junit.jupiter.api.Test;
 import reactor.core.Scannable;
@@ -76,8 +73,8 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                             .hasKind(SpanKind.INTERNAL)
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "flux")),
+                                SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                    traced.getClass(), "flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)
@@ -118,8 +115,8 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_NAMESPACE, traced.getClass().getName()),
-                                equalTo(CODE_FUNCTION, "flux")),
+                                SemconvCodeStabilityUtil.codeFunctionAssertions(
+                                    traced.getClass(), "flux")),
                     span ->
                         span.hasName("inner-manual")
                             .hasKind(SpanKind.INTERNAL)

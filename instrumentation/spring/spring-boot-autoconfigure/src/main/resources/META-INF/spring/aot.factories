@@ -1,0 +1,5 @@
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.annotations.OpenTelemetryAnnotationsRuntimeHints
+
+org.springframework.beans.factory.aot.BeanRegistrationExcludeFilter=\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics.RuntimeMetricsBeanRegistrationExcludeFilter

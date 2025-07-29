@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -21,13 +22,15 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
 
 /**
  * A helper class that models the <a
- * href="https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/database-metrics.md#connection-pools">database
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md#connection-pools">database
  * client connection pool metrics semantic conventions</a>.
  */
 public final class DbConnectionPoolMetrics {
 
-  static final AttributeKey<String> POOL_NAME = stringKey("pool.name");
-  static final AttributeKey<String> CONNECTION_STATE = stringKey("state");
+  static final AttributeKey<String> POOL_NAME =
+      stringKey(emitStableDatabaseSemconv() ? "db.client.connection.pool.name" : "pool.name");
+  static final AttributeKey<String> CONNECTION_STATE =
+      stringKey(emitStableDatabaseSemconv() ? "db.client.connection.state" : "state");
 
   static final String STATE_IDLE = "idle";
   static final String STATE_USED = "used";
@@ -56,44 +59,62 @@ public final class DbConnectionPoolMetrics {
   }
 
   public ObservableLongMeasurement connections() {
+    String metricName =
+        emitStableDatabaseSemconv() ? "db.client.connection.count" : "db.client.connections.usage";
     return meter
-        .upDownCounterBuilder("db.client.connections.usage")
-        .setUnit("{connections}")
+        .upDownCounterBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .setDescription(
             "The number of connections that are currently in state described by the state attribute.")
         .buildObserver();
   }
 
   public ObservableLongMeasurement minIdleConnections() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.idle.min"
+            : "db.client.connections.idle.min";
     return meter
-        .upDownCounterBuilder("db.client.connections.idle.min")
-        .setUnit("{connections}")
+        .upDownCounterBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .setDescription("The minimum number of idle open connections allowed.")
         .buildObserver();
   }
 
   public ObservableLongMeasurement maxIdleConnections() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.idle.max"
+            : "db.client.connections.idle.max";
     return meter
-        .upDownCounterBuilder("db.client.connections.idle.max")
-        .setUnit("{connections}")
+        .upDownCounterBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .setDescription("The maximum number of idle open connections allowed.")
         .buildObserver();
   }
 
   public ObservableLongMeasurement maxConnections() {
+    String metricName =
+        emitStableDatabaseSemconv() ? "db.client.connection.max" : "db.client.connections.max";
     return meter
-        .upDownCounterBuilder("db.client.connections.max")
-        .setUnit("{connections}")
+        .upDownCounterBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .setDescription("The maximum number of open connections allowed.")
         .buildObserver();
   }
 
   public ObservableLongMeasurement pendingRequestsForConnection() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.pending_requests"
+            : "db.client.connections.pending_requests";
     return meter
-        .upDownCounterBuilder("db.client.connections.pending_requests")
-        .setUnit("{requests}")
+        .upDownCounterBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "{request}" : "{requests}")
         .setDescription(
-            "The number of pending requests for an open connection, cumulative for the entire pool.")
+            emitStableDatabaseSemconv()
+                ? "The number of current pending requests for an open connection."
+                : "The number of pending requests for an open connection, cumulative for the entire pool.")
         .buildObserver();
   }
 
@@ -104,39 +125,51 @@ public final class DbConnectionPoolMetrics {
     return meter.batchCallback(callback, observableMeasurement, additionalMeasurements);
   }
 
-  // TODO: should be a BoundLongCounter
   public LongCounter connectionTimeouts() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.timeouts"
+            : "db.client.connections.timeouts";
     return meter
-        .counterBuilder("db.client.connections.timeouts")
-        .setUnit("{timeouts}")
+        .counterBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "{timeout}" : "{timeouts}")
         .setDescription(
             "The number of connection timeouts that have occurred trying to obtain a connection from the pool.")
         .build();
   }
 
-  // TODO: should be a BoundDoubleHistogram
   public DoubleHistogram connectionCreateTime() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.create_time"
+            : "db.client.connections.create_time";
     return meter
-        .histogramBuilder("db.client.connections.create_time")
-        .setUnit("ms")
+        .histogramBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "s" : "ms")
         .setDescription("The time it took to create a new connection.")
         .build();
   }
 
-  // TODO: should be a BoundDoubleHistogram
   public DoubleHistogram connectionWaitTime() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.wait_time"
+            : "db.client.connections.wait_time";
     return meter
-        .histogramBuilder("db.client.connections.wait_time")
-        .setUnit("ms")
+        .histogramBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "s" : "ms")
         .setDescription("The time it took to obtain an open connection from the pool.")
         .build();
   }
 
-  // TODO: should be a BoundDoubleHistogram
   public DoubleHistogram connectionUseTime() {
+    String metricName =
+        emitStableDatabaseSemconv()
+            ? "db.client.connection.use_time"
+            : "db.client.connections.use_time";
     return meter
-        .histogramBuilder("db.client.connections.use_time")
-        .setUnit("ms")
+        .histogramBuilder(metricName)
+        .setUnit(emitStableDatabaseSemconv() ? "s" : "ms")
         .setDescription("The time between borrowing a connection and returning it to the pool.")
         .build();
   }

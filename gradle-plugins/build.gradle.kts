@@ -1,4 +1,5 @@
-import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.time.Duration
 
 plugins {
@@ -24,11 +25,11 @@ configurations.named("compileOnly") {
   extendsFrom(bbGradlePlugin)
 }
 
-val byteBuddyVersion = "1.14.11"
+val byteBuddyVersion = "1.17.6"
 val aetherVersion = "1.1.0"
 
 dependencies {
-  implementation("com.google.guava:guava:33.0.0-jre")
+  implementation("com.google.guava:guava:33.4.8-jre")
   // we need to use byte buddy variant that does not shade asm
   implementation("net.bytebuddy:byte-buddy-gradle-plugin:${byteBuddyVersion}") {
     exclude(group = "net.bytebuddy", module = "byte-buddy")
@@ -39,14 +40,14 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.github.johnrengelman:shadow:8.1.1")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.8")
 
-  testImplementation("org.assertj:assertj-core:3.25.1")
+  testImplementation("org.assertj:assertj-core:3.27.3")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.10.1"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
-  testImplementation("org.junit.jupiter:junit-jupiter-params")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+  testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 }
 
 tasks {
@@ -56,13 +57,13 @@ tasks {
 
   withType<JavaCompile>().configureEach {
     with(options) {
-      release.set(8)
+      release.set(11)
     }
   }
 
-  withType(KotlinCompile::class).configureEach {
-    kotlinOptions {
-      jvmTarget = "1.8"
+  withType(KotlinJvmCompile::class).configureEach {
+    compilerOptions {
+      jvmTarget = JvmTarget.JVM_11
     }
   }
 }
@@ -96,14 +97,17 @@ nexusPublishing {
   packageGroup.set("io.opentelemetry")
 
   repositories {
+    // see https://central.sonatype.org/publish/publish-portal-ossrh-staging-api/#configuration
     sonatype {
+      nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
       username.set(System.getenv("SONATYPE_USER"))
       password.set(System.getenv("SONATYPE_KEY"))
     }
   }
 
   connectTimeout.set(Duration.ofMinutes(5))
-  clientTimeout.set(Duration.ofMinutes(5))
+  clientTimeout.set(Duration.ofMinutes(30))
 }
 
 tasks {

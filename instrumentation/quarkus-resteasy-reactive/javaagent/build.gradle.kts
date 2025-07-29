@@ -6,7 +6,8 @@ muzzle {
   pass {
     group.set("io.quarkus")
     module.set("quarkus-resteasy-reactive")
-    versions.set("(,)")
+    // renamed to quarkus-rest in 3.9.0
+    versions.set("(,3.9.0)")
   }
 }
 

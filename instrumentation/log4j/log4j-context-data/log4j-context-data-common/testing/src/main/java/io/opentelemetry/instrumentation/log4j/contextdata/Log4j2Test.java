@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -30,6 +31,14 @@ public abstract class Log4j2Test {
     return false;
   }
 
+  boolean expectLoggingKeys() {
+    return false;
+  }
+
+  private String getLoggingKey(String key) {
+    return expectLoggingKeys() ? key + "_test" : key;
+  }
+
   @Test
   void testNoIdsWhenNoSpan() {
     Logger logger = LogManager.getLogger("TestLogger");
@@ -42,14 +51,14 @@ public abstract class Log4j2Test {
     assertThat(events.size()).isEqualTo(2);
 
     assertThat(events.get(0).getMessage()).isEqualTo("log message 1");
-    assertThat(events.get(0).getContextData().get("trace_id")).isNull();
-    assertThat(events.get(0).getContextData().get("span_id")).isNull();
-    assertThat(events.get(0).getContextData().get("trace_flags")).isNull();
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id"))).isNull();
+    assertThat(events.get(0).getContextData().get(getLoggingKey("span_id"))).isNull();
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags"))).isNull();
 
     assertThat(events.get(1).getMessage()).isEqualTo("log message 2");
-    assertThat(events.get(1).getContextData().get("trace_id")).isNull();
-    assertThat(events.get(1).getContextData().get("span_id")).isNull();
-    assertThat(events.get(1).getContextData().get("trace_flags")).isNull();
+    assertThat(events.get(1).getContextData().get(getLoggingKey("trace_id"))).isNull();
+    assertThat(events.get(1).getContextData().get(getLoggingKey("span_id"))).isNull();
+    assertThat(events.get(1).getContextData().get(getLoggingKey("trace_flags"))).isNull();
   }
 
   @Test
@@ -93,35 +102,60 @@ public abstract class Log4j2Test {
     assertThat(events.size()).isEqualTo(4);
 
     assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
-    assertThat(events.get(0).getContextData().get("trace_id"))
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
         .isEqualTo(spanParent.get().getSpanContext().getTraceId());
-    assertThat(events.get(0).getContextData().get("span_id"))
+    assertThat(events.get(0).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo(spanParent.get().getSpanContext().getSpanId());
-    assertThat(events.get(0).getContextData().get("trace_flags")).isEqualTo("01");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
     assertThat(events.get(0).getContextData().get("baggage.baggage_key"))
         .isEqualTo((expectBaggage() ? "baggage_value" : null));
 
     assertThat(events.get(1).getMessage()).isEqualTo("log span child");
-    assertThat(events.get(1).getContextData().get("trace_id"))
+    assertThat(events.get(1).getContextData().get(getLoggingKey("trace_id")))
         .isEqualTo(spanChild.get().getSpanContext().getTraceId());
-    assertThat(events.get(1).getContextData().get("span_id"))
+    assertThat(events.get(1).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo(spanChild.get().getSpanContext().getSpanId());
-    assertThat(events.get(1).getContextData().get("trace_flags")).isEqualTo("01");
+    assertThat(events.get(1).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
     assertThat(events.get(1).getContextData().get("baggage.baggage_key"))
         .isEqualTo((expectBaggage() ? "baggage_value" : null));
 
     assertThat(events.get(2).getMessage()).isEqualTo("log message 2");
-    assertThat(events.get(2).getContextData().get("trace_id")).isNull();
-    assertThat(events.get(2).getContextData().get("span_id")).isNull();
-    assertThat(events.get(2).getContextData().get("trace_flags")).isNull();
+    assertThat(events.get(2).getContextData().get(getLoggingKey("trace_id"))).isNull();
+    assertThat(events.get(2).getContextData().get(getLoggingKey("span_id"))).isNull();
+    assertThat(events.get(2).getContextData().get(getLoggingKey("trace_flags"))).isNull();
     assertThat(events.get(2).getContextData().get("baggage.baggage_key")).isNull();
 
     assertThat(events.get(3).getMessage()).isEqualTo("log message 3");
-    assertThat(events.get(3).getContextData().get("trace_id"))
+    assertThat(events.get(3).getContextData().get(getLoggingKey("trace_id")))
         .isEqualTo(span2.getSpanContext().getTraceId());
-    assertThat(events.get(3).getContextData().get("span_id"))
+    assertThat(events.get(3).getContextData().get(getLoggingKey("span_id")))
         .isEqualTo(span2.getSpanContext().getSpanId());
-    assertThat(events.get(3).getContextData().get("trace_flags")).isEqualTo("01");
+    assertThat(events.get(3).getContextData().get(getLoggingKey("trace_flags"))).isEqualTo("01");
     assertThat(events.get(3).getContextData().get("baggage.baggage_key")).isNull();
+  }
+
+  @Test
+  void testNoOverrideTraceId() {
+    Logger logger = LogManager.getLogger("TestLogger");
+
+    ThreadContext.put(getLoggingKey("trace_id"), "test_traceId");
+    ThreadContext.put(getLoggingKey("span_id"), "test_spanId");
+    ThreadContext.put(getLoggingKey("trace_flags"), "test_traceFlag");
+    getInstrumentationExtension()
+        .runWithSpan(
+            "test",
+            () -> {
+              logger.info("log span parent");
+            });
+    List<ListAppender.LoggedEvent> events = ListAppender.get().getEvents();
+    ThreadContext.clearAll();
+    assertThat(events.size()).isEqualTo(1);
+    assertThat(events.get(0).getMessage()).isEqualTo("log span parent");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_id")))
+        .isEqualTo("test_traceId");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("span_id")))
+        .isEqualTo("test_spanId");
+    assertThat(events.get(0).getContextData().get(getLoggingKey("trace_flags")))
+        .isEqualTo("test_traceFlag");
   }
 }

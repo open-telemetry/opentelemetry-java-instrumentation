@@ -21,9 +21,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Default.Transformation;
+import net.bytebuddy.matcher.BooleanMatcher;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ErasureMatcher;
 import net.bytebuddy.matcher.HasSuperClassMatcher;
+import net.bytebuddy.matcher.HasSuperTypeMatcher;
 import net.bytebuddy.matcher.NameMatcher;
 import net.bytebuddy.matcher.StringMatcher;
 import net.bytebuddy.matcher.StringSetMatcher;
@@ -42,6 +44,8 @@ public class AgentBuilderUtil {
   private static final Field nameMatcherField = getField(NameMatcher.class, "matcher");
   private static final Field hasSuperClassMatcherField =
       getField(HasSuperClassMatcher.class, "matcher");
+  private static final Field hasSuperTypeMatcherField =
+      getField(HasSuperTypeMatcher.class, "matcher");
   private static final Field erasureMatcherField = getField(ErasureMatcher.class, "matcher");
   private static final Field conjunctionMatchersField =
       getField(ElementMatcher.Junction.Conjunction.class, "matchers");
@@ -141,7 +145,7 @@ public class AgentBuilderUtil {
       ElementMatcher<?> elementMatcher =
           getDelegateMatcher((AgentBuilder.RawMatcher.ForElementMatchers) matcher);
       Result result = inspect(elementMatcher);
-      if (result == null && logger.isLoggable(FINE)) {
+      if (result == null && logger.isLoggable(FINE) && shouldLog(elementMatcher)) {
         logger.log(Level.FINE, "Could not decompose matcher {0}", elementMatcher);
       }
       return result;
@@ -160,6 +164,8 @@ public class AgentBuilderUtil {
       return result;
     } else if (matcher instanceof HasSuperClassMatcher) {
       return Result.subtype(inspect(getDelegateMatcher((HasSuperClassMatcher<?>) matcher)));
+    } else if (matcher instanceof HasSuperTypeMatcher) {
+      return Result.subtype(inspect(getDelegateMatcher((HasSuperTypeMatcher<?>) matcher)));
     } else if (matcher instanceof ErasureMatcher) {
       return inspect(getDelegateMatcher((ErasureMatcher<?>) matcher));
     } else if (matcher instanceof NameMatcher) {
@@ -257,6 +263,11 @@ public class AgentBuilderUtil {
     return (ElementMatcher<?>) hasSuperClassMatcherField.get(matcher);
   }
 
+  private static ElementMatcher<?> getDelegateMatcher(HasSuperTypeMatcher<?> matcher)
+      throws Exception {
+    return (ElementMatcher<?>) hasSuperTypeMatcherField.get(matcher);
+  }
+
   private static ElementMatcher<?> getDelegateMatcher(ErasureMatcher<?> matcher) throws Exception {
     return (ElementMatcher<?>) erasureMatcherField.get(matcher);
   }
@@ -297,6 +308,10 @@ public class AgentBuilderUtil {
     } catch (NoSuchFieldException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  private static boolean shouldLog(ElementMatcher<?> elementMatcher) {
+    return !(elementMatcher instanceof BooleanMatcher);
   }
 
   private static class TransformContext extends AgentBuilder.Listener.Adapter {

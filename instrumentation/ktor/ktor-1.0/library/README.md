@@ -1,6 +1,7 @@
-# Library Instrumentation for Ktor versions 1.x
+# Library Instrumentation for Ktor version 1.x
 
-This package contains libraries to help instrument Ktor. Currently, only server instrumentation is supported.
+This package contains libraries to help instrument Ktor.
+Currently, only server instrumentation is supported.
 
 ## Quickstart
 
@@ -29,14 +30,14 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-ktor-1.0:OPENTELE
 
 ## Usage
 
-Initialize instrumentation by installing the `KtorServerTracing` feature. You must set the `OpenTelemetry` to use with
-the feature.
+Initialize instrumentation by installing the `KtorServerTelemetry` feature.
+You must set the `OpenTelemetry` to use with the feature.
 
 ```kotlin
 OpenTelemetry openTelemetry = ...
 
 embeddedServer(Netty, 8080) {
-  install(KtorServerTracing) {
+  install(KtorServerTelemetry) {
     setOpenTelemetry(openTelemetry)
   }
 }

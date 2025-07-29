@@ -87,9 +87,13 @@ public abstract class AbstractHttpServerUsingTest<SERVER> {
   }
 
   protected String resolveAddress(ServerEndpoint uri) {
+    return resolveAddress(uri, "h1c://");
+  }
+
+  protected String resolveAddress(ServerEndpoint uri, String protocolPrefix) {
     String url = uri.resolvePath(address).toString();
     // Force HTTP/1 via h1c so upgrade requests don't show up as traces
-    url = url.replace("http://", "h1c://");
+    url = url.replace("http://", protocolPrefix);
     if (uri.getQuery() != null) {
       url += "?" + uri.getQuery();
     }

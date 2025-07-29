@@ -26,10 +26,21 @@ public final class ClassNames {
   }
 
   private static String computeSimpleName(Class<?> type) {
-    if (!type.isAnonymousClass()) {
-      return type.getSimpleName();
-    }
     String className = type.getName();
+    if (!type.isAnonymousClass()) {
+      String simpleName = type.getSimpleName();
+      // on openj9 21 simple name for lambda classes is an empty string
+      if (!simpleName.isEmpty()) {
+        return simpleName;
+      } else {
+        // handle lambda names on openj9 21
+        // only lambda class names contain /
+        int index = className.indexOf('/');
+        if (index != -1) {
+          className = className.substring(0, index);
+        }
+      }
+    }
     if (type.getPackage() != null) {
       String pkgName = type.getPackage().getName();
       if (!pkgName.isEmpty()) {

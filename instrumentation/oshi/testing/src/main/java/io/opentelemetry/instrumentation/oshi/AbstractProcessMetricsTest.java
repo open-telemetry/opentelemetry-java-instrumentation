@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 
 public abstract class AbstractProcessMetricsTest {
 
@@ -17,6 +18,7 @@ public abstract class AbstractProcessMetricsTest {
   protected abstract InstrumentationExtension testing();
 
   @Test
+  @EnabledIfSystemProperty(named = "testExperimental", matches = "true")
   void test() {
     // when
     registerMetrics();
@@ -31,7 +33,7 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("By")
-                            // TODO(anuraaga): Provide fuzzy value matching
+                            // TODO: Provide fuzzy value matching
                             .hasLongSumSatisfying(
                                 sum ->
                                     assertThat(metric.getLongSumData().getPoints())
@@ -46,7 +48,7 @@ public abstract class AbstractProcessMetricsTest {
                     metric ->
                         assertThat(metric)
                             .hasUnit("ms")
-                            // TODO(anuraaga): Provide fuzzy value matching
+                            // TODO: Provide fuzzy value matching
                             .hasLongGaugeSatisfying(
                                 gauge ->
                                     assertThat(metric.getLongGaugeData().getPoints())

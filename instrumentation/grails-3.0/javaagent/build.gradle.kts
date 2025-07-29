@@ -18,6 +18,10 @@ muzzle {
   }
 }
 
+otelJava {
+  maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
 val grailsVersion = "3.0.6" // first version that the tests pass on
 val springBootVersion = "1.2.5.RELEASE"
 
@@ -34,8 +38,8 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-autoconfigure:$springBootVersion")
   testLibrary("org.springframework.boot:spring-boot-starter-tomcat:$springBootVersion")
 
-  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+")
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-autoconfigure:2.+") // related dependency
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
 // testing-common pulls in groovy 4 and spock as dependencies, exclude them
@@ -45,12 +49,16 @@ configurations.configureEach {
   exclude("org.spockframework", "spock-core")
 }
 
-configurations.configureEach {
-  if (!name.contains("muzzle")) {
-    resolutionStrategy {
-      eachDependency {
-        if (requested.group == "org.codehaus.groovy") {
-          useVersion("3.0.9")
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+if (!latestDepTest) {
+  configurations.configureEach {
+    if (!name.contains("muzzle")) {
+      resolutionStrategy {
+        eachDependency {
+          if (requested.group == "org.codehaus.groovy") {
+            useVersion("3.0.9")
+          }
         }
       }
     }
@@ -64,8 +72,6 @@ configurations.testRuntimeClasspath {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 tasks {
   withType<Test>().configureEach {

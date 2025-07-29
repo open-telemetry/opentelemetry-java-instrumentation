@@ -31,13 +31,15 @@ final class RestTemplateInterceptor implements ClientHttpRequestInterceptor {
     }
 
     Context context = instrumenter.start(parentContext, request);
+
+    ClientHttpResponse response;
     try (Scope ignored = context.makeCurrent()) {
-      ClientHttpResponse response = execution.execute(request, body);
-      instrumenter.end(context, request, response, null);
-      return response;
+      response = execution.execute(request, body);
     } catch (Throwable t) {
       instrumenter.end(context, request, null, t);
       throw t;
     }
+    instrumenter.end(context, request, response, null);
+    return response;
   }
 }

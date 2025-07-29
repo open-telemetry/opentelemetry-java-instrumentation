@@ -5,14 +5,17 @@
 
 package io.opentelemetry.instrumentation.ratpack.v1_7;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+
 import com.google.common.collect.ImmutableList;
 import io.netty.channel.ConnectTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInitializer;
+import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInterceptor;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.HashSet;
@@ -147,16 +150,18 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
           }
           return exception;
         });
+    optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
     optionsBuilder.disableTestRedirects();
+    // these tests will pass, but they don't really test anything since REQUEST is Void
     optionsBuilder.disableTestReusedRequest();
 
-    optionsBuilder.setHttpAttributes(this::getHttpAttributes);
+    optionsBuilder.spanEndsAfterBody();
   }
 
-  protected Set<AttributeKey<?>> getHttpAttributes(URI uri) {
+  protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-    attributes.remove(SemanticAttributes.NETWORK_PROTOCOL_VERSION);
+    attributes.remove(NETWORK_PROTOCOL_VERSION);
     return attributes;
   }
 }

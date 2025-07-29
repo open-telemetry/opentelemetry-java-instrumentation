@@ -8,11 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.gateway.v2_0;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.internal.StringUtils;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.bootstrap.internal.InstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.regex.Pattern;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.web.server.ServerWebExchange;
@@ -39,7 +38,7 @@ public final class ServerWebExchangeHelper {
 
   static {
     CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-        InstrumentationConfig.get()
+        AgentInstrumentationConfig.get()
             .getBoolean(
                 "otel.instrumentation.spring-cloud-gateway.experimental-span-attributes", false);
   }
@@ -86,7 +85,7 @@ public final class ServerWebExchangeHelper {
    */
   private static String convergeRouteId(Route route) {
     String routeId = route.getId();
-    if (StringUtils.isNullOrEmpty(routeId)) {
+    if (routeId == null || routeId.isEmpty()) {
       return null;
     }
     if (UUID_REGEX.matcher(routeId).matches()) {

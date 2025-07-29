@@ -26,4 +26,7 @@ public interface InstrumenterBuilderAccess {
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       TextMapSetter<REQUEST> setter,
       SpanKindExtractor<REQUEST> spanKindExtractor);
+
+  <REQUEST, RESPONSE> void propagateOperationListenersToOnEnd(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder);
 }

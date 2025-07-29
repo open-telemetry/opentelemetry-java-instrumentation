@@ -1,4 +1,4 @@
-name: GraalVM native tests
+name: Daily GraalVM native tests
 
 on:
   schedule:
@@ -6,29 +6,22 @@ on:
     - cron: "0 4 * * *"
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
-      - uses: graalvm/setup-graalvm@b8dc5fccfbc65b21dd26e8341e7b21c86547f61b # v1.1.5.1
-        with:
-          version: "latest"
-          java-version: "17"
-          components: "native-image"
-      - name: Running test
-        run: |
-          echo "GRAALVM_HOME: $GRAALVM_HOME"
-          echo "JAVA_HOME: $JAVA_HOME"
-          java --version
-          gu --version
-          native-image --version
-          ./gradlew nativeTest
+  graalvm-native-tests:
+    uses: ./.github/workflows/reusable-native-tests.yml
+    with:
+      test-latest-deps: true
 
   workflow-notification:
+    permissions:
+      contents: read
+      issues: write
     needs:
-      - build
+      - graalvm-native-tests
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
-      success: ${{ needs.build.result == 'success' }}
+      success: ${{ needs.graalvm-native-tests.result == 'success' }}

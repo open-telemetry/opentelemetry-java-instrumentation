@@ -6,6 +6,14 @@
 package io.opentelemetry.instrumentation.api.semconv.network;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.entry;
 
@@ -13,8 +21,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.NetworkAttributes;
-import io.opentelemetry.semconv.SemanticAttributes;
 import java.util.HashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -99,14 +105,14 @@ class NetworkAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(SemanticAttributes.NETWORK_TRANSPORT, "tcp"),
-            entry(SemanticAttributes.NETWORK_TYPE, "ipv4"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_NAME, "http"),
-            entry(SemanticAttributes.NETWORK_PROTOCOL_VERSION, "1.1"),
-            entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.NETWORK_LOCAL_PORT, 8080L),
-            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"),
-            entry(NetworkAttributes.NETWORK_PEER_PORT, 9090L));
+            entry(NETWORK_TRANSPORT, "tcp"),
+            entry(NETWORK_TYPE, "ipv4"),
+            entry(NETWORK_PROTOCOL_NAME, "http"),
+            entry(NETWORK_PROTOCOL_VERSION, "1.1"),
+            entry(NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
+            entry(NETWORK_LOCAL_PORT, 8080L),
+            entry(NETWORK_PEER_ADDRESS, "4.3.2.1"),
+            entry(NETWORK_PEER_PORT, 9090L));
   }
 
   @Test
@@ -142,7 +148,6 @@ class NetworkAttributesExtractorTest {
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build())
         .containsOnly(
-            entry(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
-            entry(NetworkAttributes.NETWORK_PEER_ADDRESS, "4.3.2.1"));
+            entry(NETWORK_LOCAL_ADDRESS, "1.2.3.4"), entry(NETWORK_PEER_ADDRESS, "4.3.2.1"));
   }
 }

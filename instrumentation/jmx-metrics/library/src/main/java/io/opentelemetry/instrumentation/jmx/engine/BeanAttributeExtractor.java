@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 
+import io.opentelemetry.instrumentation.jmx.yaml.StateMapping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -16,7 +17,7 @@ import javax.annotation.Nullable;
 import javax.management.InstanceNotFoundException;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
-import javax.management.MBeanServer;
+import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import javax.management.openmbean.CompositeData;
 import javax.management.openmbean.TabularData;
@@ -103,7 +104,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     segments.add(newSegment);
   }
 
-  public BeanAttributeExtractor(String baseName, String... nameChain) {
+  private BeanAttributeExtractor(String baseName, String... nameChain) {
     if (baseName == null || nameChain == null) {
       throw new IllegalArgumentException("null argument for BeanAttributeExtractor");
     }
@@ -132,18 +133,17 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
    * including the internals of CompositeData and TabularData, if applicable, and that the provided
    * values will be numerical.
    *
-   * @param server the MBeanServer that reported knowledge of the ObjectName
-   * @param objectName the ObjectName identifying the MBean
-   * @return AttributeInfo if the attribute is properly recognized, or null
+   * @param connection the {@link MBeanServerConnection} that reported knowledge of the ObjectName
+   * @param objectName the {@link ObjectName} identifying the MBean
    */
   @Nullable
-  AttributeInfo getAttributeInfo(MBeanServer server, ObjectName objectName) {
+  AttributeInfo getAttributeInfo(MBeanServerConnection connection, ObjectName objectName) {
     if (logger.isLoggable(FINE)) {
       logger.log(FINE, "Resolving {0} for {1}", new Object[] {getAttributeName(), objectName});
     }
 
     try {
-      MBeanInfo info = server.getMBeanInfo(objectName);
+      MBeanInfo info = connection.getMBeanInfo(objectName);
       MBeanAttributeInfo[] allAttributes = info.getAttributes();
 
       for (MBeanAttributeInfo attr : allAttributes) {
@@ -152,7 +152,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
 
           // Verify correctness of configuration by attempting to extract the metric value.
           // The value will be discarded, but its type will be checked.
-          Object sampleValue = extractAttributeValue(server, objectName, logger);
+          Object sampleValue = getSampleValue(connection, objectName);
 
           // Only numbers can be used to generate metric values
           if (sampleValue instanceof Number) {
@@ -195,22 +195,29 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     return null;
   }
 
+  @Nullable
+  protected Object getSampleValue(MBeanServerConnection connection, ObjectName objectName) {
+    return extractAttributeValue(connection, objectName, logger);
+  }
+
   /**
    * Extracts the specified attribute value. In case the value is a CompositeData, drills down into
    * it to find the correct singleton value (usually a Number or a String).
    *
-   * @param server the MBeanServer to use
-   * @param objectName the ObjectName specifying the MBean to use, it should not be a pattern
+   * @param connection the {@link MBeanServerConnection} to use
+   * @param objectName the {@link ObjectName} specifying the MBean to use, it should not be a
+   *     pattern
    * @param logger the logger to use, may be null. Typically we want to log any issues with the
    *     attributes during MBean discovery, but once the attribute is successfully detected and
-   *     confirmed to be eligble for metric evaluation, any further attribute extraction
+   *     confirmed to be eligible for metric evaluation, any further attribute extraction
    *     malfunctions will be silent to avoid flooding the log.
-   * @return the attribute value, if found, or null if an error occurred
+   * @return the attribute value, if found, or {@literal null} if an error occurred
    */
   @Nullable
-  private Object extractAttributeValue(MBeanServer server, ObjectName objectName, Logger logger) {
+  private Object extractAttributeValue(
+      MBeanServerConnection connection, ObjectName objectName, Logger logger) {
     try {
-      Object value = server.getAttribute(objectName, baseName);
+      Object value = connection.getAttribute(objectName, baseName);
 
       int k = 0;
       while (k < nameChain.length) {
@@ -247,13 +254,14 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
   }
 
   @Nullable
-  private Object extractAttributeValue(MBeanServer server, ObjectName objectName) {
-    return extractAttributeValue(server, objectName, null);
+  private Object extractAttributeValue(MBeanServerConnection connection, ObjectName objectName) {
+    return extractAttributeValue(connection, objectName, null);
   }
 
   @Nullable
-  Number extractNumericalAttribute(MBeanServer server, ObjectName objectName) {
-    Object value = extractAttributeValue(server, objectName);
+  protected Number extractNumericalAttribute(
+      MBeanServerConnection connection, ObjectName objectName) {
+    Object value = extractAttributeValue(connection, objectName);
     if (value instanceof Number) {
       return (Number) value;
     }
@@ -262,16 +270,67 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
 
   @Override
   @Nullable
-  public String extractValue(MBeanServer server, ObjectName objectName) {
-    return extractStringAttribute(server, objectName);
+  public String extractValue(MBeanServerConnection connection, ObjectName objectName) {
+    return extractStringAttribute(connection, objectName);
   }
 
   @Nullable
-  private String extractStringAttribute(MBeanServer server, ObjectName objectName) {
-    Object value = extractAttributeValue(server, objectName);
+  private String extractStringAttribute(MBeanServerConnection connection, ObjectName objectName) {
+    Object value = extractAttributeValue(connection, objectName);
     if (value instanceof String) {
       return (String) value;
     }
+    if (value instanceof Boolean) {
+      return value.toString();
+    }
+    if (value instanceof Enum) {
+      return ((Enum<?>) value).name();
+    }
     return null;
+  }
+
+  /**
+   * Provides a bean attribute extractor to filter-out negative values by replacing them with
+   * {@literal null}.
+   *
+   * @param extractor original extractor
+   * @return equivalent extractor filtering-out negative values
+   */
+  public static BeanAttributeExtractor filterNegativeValues(BeanAttributeExtractor extractor) {
+    return new BeanAttributeExtractor(extractor.baseName, extractor.nameChain) {
+      @Nullable
+      @Override
+      protected Number extractNumericalAttribute(
+          MBeanServerConnection connection, ObjectName objectName) {
+        Number v = super.extractNumericalAttribute(connection, objectName);
+        if (v instanceof Long || v instanceof Integer || v instanceof Short || v instanceof Byte) {
+          return v.longValue() < 0 ? null : v;
+        } else if (v instanceof Double || v instanceof Float) {
+          return v.doubleValue() < 0 ? null : v;
+        }
+        return v;
+      }
+    };
+  }
+
+  public static BeanAttributeExtractor forStateMetric(
+      BeanAttributeExtractor extractor, String key, StateMapping stateMapping) {
+    return new BeanAttributeExtractor(extractor.baseName, extractor.nameChain) {
+      @Override
+      protected Object getSampleValue(MBeanServerConnection connection, ObjectName objectName) {
+        // metric actual type is sampled in the discovery process, so we have to
+        // make this extractor as extracting integers.
+        return 0;
+      }
+
+      @Nullable
+      @Override
+      protected Number extractNumericalAttribute(
+          MBeanServerConnection connection, ObjectName objectName) {
+        String rawStateValue = extractor.extractValue(connection, objectName);
+        String mappedStateValue = stateMapping.getStateValue(rawStateValue);
+        return key.equals(mappedStateValue) ? 1 : 0;
+      }
+    };
   }
 }

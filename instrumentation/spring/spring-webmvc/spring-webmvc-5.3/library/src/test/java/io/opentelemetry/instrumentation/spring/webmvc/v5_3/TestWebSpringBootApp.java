@@ -17,8 +17,12 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.util.Properties;
+import java.util.concurrent.CompletableFuture;
 import javax.servlet.Filter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -37,6 +41,7 @@ import org.springframework.web.servlet.view.RedirectView;
 
 @SpringBootApplication
 class TestWebSpringBootApp {
+  static final ServerEndpoint ASYNC_ENDPOINT = new ServerEndpoint("ASYNC", "async", 200, "success");
 
   static ConfigurableApplicationContext start(int port, String contextPath) {
     Properties props = new Properties();
@@ -119,6 +124,26 @@ class TestWebSpringBootApp {
           () -> {
             INDEXED_CHILD.collectSpanAttributes(name -> "id".equals(name) ? id : null);
             return INDEXED_CHILD.getBody();
+          });
+    }
+
+    @RequestMapping("/async")
+    @ResponseBody
+    CompletableFuture<String> async() {
+      Context context = Context.current();
+      return CompletableFuture.supplyAsync(
+          () -> {
+            // Sleep a bit so that the future completes after the controller method. This helps to
+            // verify whether request ends after the future has completed not after when the
+            // controller method has completed.
+            try {
+              Thread.sleep(100);
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+            }
+            try (Scope ignored = context.makeCurrent()) {
+              return controller(ASYNC_ENDPOINT, ASYNC_ENDPOINT::getBody);
+            }
           });
     }
 

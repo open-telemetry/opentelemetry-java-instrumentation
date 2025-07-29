@@ -6,11 +6,14 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.SemanticAttributes;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 
 /**
  * Extractor of <a
@@ -22,15 +25,19 @@ import io.opentelemetry.semconv.SemanticAttributes;
  */
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST>> {
+        REQUEST, RESPONSE, DbClientAttributesGetter<REQUEST, RESPONSE>> {
+
+  // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      DbClientAttributesGetter<REQUEST> getter) {
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return new DbClientAttributesExtractor<>(getter);
   }
 
-  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST> getter) {
+  DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
     super(getter);
   }
 
@@ -38,7 +45,13 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     super.onStart(attributes, parentContext, request);
 
-    internalSet(attributes, SemanticAttributes.DB_STATEMENT, getter.getStatement(request));
-    internalSet(attributes, SemanticAttributes.DB_OPERATION, getter.getOperation(request));
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
+      internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
+      internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
+    }
   }
 }

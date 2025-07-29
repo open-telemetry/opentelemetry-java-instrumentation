@@ -1,6 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import org.gradle.configurationcache.extensions.capitalized
+import org.apache.commons.lang.StringUtils
 
 plugins {
   id("otel.spotless-conventions")
@@ -24,10 +24,10 @@ val extraTag = findProperty("extraTag")
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("sourceVersion" to "9.4.53.v20231009")),
-    ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "10.0.19")),
-    ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
-//    ImageTarget(listOf("12.0.5"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("sourceVersion" to "12.0.5")), //enable once Jetty 12 is supported
+    ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23"), mapOf("sourceVersion" to "9.4.53.v20231009")),
+    ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), mapOf("sourceVersion" to "10.0.19")),
+    ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
+    ImageTarget(listOf("12.0.6"), listOf("hotspot", "openj9"), listOf("17", "21", "23"), mapOf("sourceVersion" to "12.0.6"), "servlet-5.0"),
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
@@ -39,18 +39,20 @@ val targets = mapOf(
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
-    ImageTarget(listOf("6.2023.12"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
+    // Test application is not deployed when server is sarted with hotspot jdk version 21
+    ImageTarget(listOf("6.2023.12"), listOf("hotspot"), listOf("11", "17"), war = "servlet-5.0"),
+    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21", "23"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
-    ImageTarget(listOf("8.5.98"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("9.0.85"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.1.18"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("8.5.98"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23"), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("9.0.85"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23"), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("10.1.18"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), mapOf("majorVersion" to "10"), "servlet-5.0"),
   ),
   "tomee" to listOf(
     ImageTarget(listOf("7.0.9", "7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("8.0.16"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21")),
-    ImageTarget(listOf("9.1.2"), listOf("hotspot", "openj9"), listOf("11", "17", "21"), war = "servlet-5.0"),
+    ImageTarget(listOf("8.0.16"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23")),
+    ImageTarget(listOf("9.1.2"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
     ImageTarget(listOf("8.5.5.22", "9.0.5.14"), listOf("openj9"), listOf("8"), windows = false),
@@ -58,9 +60,14 @@ val targets = mapOf(
   "wildfly" to listOf(
     ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
     ImageTarget(
-      listOf("17.0.1.Final", "21.0.0.Final", "28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
+      listOf("17.0.1.Final", "21.0.0.Final"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21"),
+      listOf("8", "11", "17", "21", "23")
+    ),
+    ImageTarget(
+      listOf("28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
+      listOf("hotspot", "openj9"),
+      listOf("11", "17", "21", "23"),
       war = "servlet-5.0"
     ),
   ),
@@ -97,7 +104,7 @@ tasks {
         continue
       }
       println(server)
-      val serverName = server.capitalized()
+      val serverName = StringUtils.capitalize(server)
       for (entry in matrices) {
         for (version in entry.version) {
           val dotIndex = version.indexOf('.')
@@ -142,11 +149,12 @@ fun configureImage(
     }
   }
 
+  val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
   val vmSuffix = if (vm == "hotspot") "" else "-$vm"
-  val image = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
+  val image = "ghcr.io/$repo/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "21") {
+    if (jdk == "24") {
       // "The only tags which will continue to receive updates beyond July 2022 will be Early Access
       // builds (which are sourced from jdk.java.net), as those are not published/supported by any
       // of the above projects."

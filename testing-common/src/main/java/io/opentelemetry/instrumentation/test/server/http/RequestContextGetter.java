@@ -5,14 +5,15 @@
 
 package io.opentelemetry.instrumentation.test.server.http;
 
-import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
 import io.opentelemetry.testing.internal.armeria.server.ServiceRequestContext;
 import io.opentelemetry.testing.internal.io.netty.util.AsciiString;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-public enum RequestContextGetter implements TextMapGetter<ServiceRequestContext> {
+public enum RequestContextGetter implements ExtendedTextMapGetter<ServiceRequestContext> {
   INSTANCE;
 
   @Override
@@ -32,5 +33,13 @@ public enum RequestContextGetter implements TextMapGetter<ServiceRequestContext>
       return null;
     }
     return carrier.request().headers().get(key);
+  }
+
+  @Override
+  public Iterator<String> getAll(@Nullable ServiceRequestContext carrier, String key) {
+    if (carrier == null) {
+      return Collections.emptyIterator();
+    }
+    return carrier.request().headers().valueIterator(key);
   }
 }

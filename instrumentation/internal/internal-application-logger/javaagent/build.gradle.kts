@@ -18,6 +18,7 @@ muzzle {
   }
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
 dependencies {
   bootstrap(project(":instrumentation:internal:internal-application-logger:bootstrap"))
 
@@ -30,8 +31,8 @@ dependencies {
     }
   }
 
-  if (findProperty("testLatestDeps") as Boolean) {
-    testImplementation("ch.qos.logback:logback-classic:+")
+  if (latestDepTest) {
+    testImplementation("ch.qos.logback:logback-classic:latest.release")
   } else {
     testImplementation("ch.qos.logback:logback-classic") {
       version {
@@ -46,4 +47,11 @@ dependencies {
   }
 
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+}
+
+if (latestDepTest) {
+  // spring 6 requires java 17
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_17)
+  }
 }

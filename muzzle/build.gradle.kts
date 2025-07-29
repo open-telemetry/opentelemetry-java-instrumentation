@@ -18,6 +18,7 @@ dependencies {
 
   implementation(project(":javaagent-bootstrap"))
   implementation(project(":instrumentation-api"))
+  implementation(project(":instrumentation-api-incubator"))
   implementation(project(":javaagent-extension-api"))
 
   // Used by byte-buddy but not brought in as a transitive dependency.

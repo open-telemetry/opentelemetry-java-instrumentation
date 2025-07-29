@@ -3,7 +3,7 @@ plugins {
 }
 
 jacoco {
-  toolVersion = "0.8.11"
+  toolVersion = "0.8.13"
 }
 
 tasks {

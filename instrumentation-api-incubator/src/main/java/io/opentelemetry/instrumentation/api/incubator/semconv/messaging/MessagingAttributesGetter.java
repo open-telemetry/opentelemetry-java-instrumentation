@@ -25,19 +25,47 @@ public interface MessagingAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   String getDestination(REQUEST request);
 
+  @Nullable
+  String getDestinationTemplate(REQUEST request);
+
   boolean isTemporaryDestination(REQUEST request);
+
+  boolean isAnonymousDestination(REQUEST request);
 
   @Nullable
   String getConversationId(REQUEST request);
 
   @Nullable
-  Long getMessagePayloadSize(REQUEST request);
+  @Deprecated
+  default Long getMessagePayloadSize(REQUEST request) {
+    return null;
+  }
 
   @Nullable
-  Long getMessagePayloadCompressedSize(REQUEST request);
+  @Deprecated
+  default Long getMessagePayloadCompressedSize(REQUEST request) {
+    return null;
+  }
+
+  @Nullable
+  Long getMessageBodySize(REQUEST request);
+
+  @Nullable
+  Long getMessageEnvelopeSize(REQUEST request);
 
   @Nullable
   String getMessageId(REQUEST request, @Nullable RESPONSE response);
+
+  @Nullable
+  String getClientId(REQUEST request);
+
+  @Nullable
+  Long getBatchMessageCount(REQUEST request, @Nullable RESPONSE response);
+
+  @Nullable
+  default String getDestinationPartitionId(REQUEST request) {
+    return null;
+  }
 
   /**
    * Extracts all values of header named {@code name} from the request, or an empty list if there

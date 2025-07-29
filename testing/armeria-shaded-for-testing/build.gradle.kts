@@ -1,11 +1,11 @@
 plugins {
-  id("com.github.johnrengelman.shadow")
-
+  id("com.gradleup.shadow")
   id("otel.java-conventions")
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.26.4")
+  implementation("com.linecorp.armeria:armeria-junit5:1.32.5")
+  implementation("com.google.errorprone:error_prone_annotations")
 }
 
 tasks {
@@ -19,6 +19,10 @@ tasks {
     // Ensures tests are not affected by Armeria instrumentation
     relocate("com.linecorp.armeria", "io.opentelemetry.testing.internal.armeria")
     relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
+    relocate("net.bytebuddy", "io.opentelemetry.testing.internal.bytebuddy")
+    relocate("reactor", "io.opentelemetry.testing.internal.reactor")
+    relocate("com.aayushatharva.brotli4j", "io.opentelemetry.testing.internal.brotli4j")
+    relocate("com.google.errorprone", "io.opentelemetry.testing.internal.errorprone")
 
     // Allows tests of Netty instrumentations which would otherwise conflict.
     // The relocation must end with io.netty to allow Netty to detect shaded native libraries.

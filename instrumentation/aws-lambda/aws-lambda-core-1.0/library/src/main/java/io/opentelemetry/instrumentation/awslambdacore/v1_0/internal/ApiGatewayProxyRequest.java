@@ -25,8 +25,8 @@ public abstract class ApiGatewayProxyRequest {
 
   private static final Logger logger = Logger.getLogger(ApiGatewayProxyRequest.class.getName());
 
-  // TODO(anuraaga): We should create a RequestFactory type of class instead of evaluating this
-  // for every request.
+  // TODO: We should create a RequestFactory type of class instead of evaluating this for every
+  // request.
   private static boolean noHttpPropagationNeeded() {
     Collection<String> fields =
         GlobalOpenTelemetry.getPropagators().getTextMapPropagator().fields();
