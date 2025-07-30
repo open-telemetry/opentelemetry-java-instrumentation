@@ -44,7 +44,7 @@ The `InstrumenterCustomizerProvider` extension point allows you to customize ins
 - Add custom attributes and metrics to existing instrumentations
 - Customize context
 - Transform span names to match your naming conventions
-- Apply customizations conditionally based on instrumentation type and span kind
+- Apply customizations conditionally based on instrumentation name
 
 ### I don't want this span at all
 
