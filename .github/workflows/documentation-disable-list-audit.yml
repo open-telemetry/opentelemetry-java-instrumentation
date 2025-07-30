@@ -24,3 +24,14 @@ jobs:
 
       - name: Run Doc site audit
         run: ./gradlew :instrumentation-docs:docSiteAudit
+
+  workflow-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - crawl
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.crawl.result == 'success' }}
