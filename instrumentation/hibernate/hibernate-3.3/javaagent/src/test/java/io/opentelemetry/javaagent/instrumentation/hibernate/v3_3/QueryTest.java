@@ -140,11 +140,11 @@ class QueryTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
-    public final String expectedSpanName;
-    public final boolean requiresTransaction;
-    public final Consumer<Session> queryInteraction;
+    final String expectedSpanName;
+    final boolean requiresTransaction;
+    final Consumer<Session> queryInteraction;
 
-    public Parameter(
+    Parameter(
         String expectedSpanName, boolean requiresTransaction, Consumer<Session> queryInteraction) {
       this.expectedSpanName = expectedSpanName;
       this.requiresTransaction = requiresTransaction;

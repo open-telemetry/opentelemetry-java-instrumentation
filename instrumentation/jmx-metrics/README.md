@@ -30,7 +30,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
 - [tomcat](library/tomcat.md)
-- [wildfly](javaagent/wildfly.md)
+- [wildfly](library/wildfly.md)
 - [hadoop](javaagent/hadoop.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
