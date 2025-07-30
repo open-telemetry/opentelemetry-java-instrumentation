@@ -57,11 +57,11 @@
 > - **POM Project URL**: [https://square.github.io/okhttp/](https://square.github.io/okhttp/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**11** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.15.0`
+**11** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.16.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
-**12** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.15.0`
+**12** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.16.0`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
