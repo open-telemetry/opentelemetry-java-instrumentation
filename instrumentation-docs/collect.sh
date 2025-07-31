@@ -131,7 +131,7 @@ run_gradle_tasks() {
 
   ./gradlew "${tasks[@]}" \
     -PcollectMetadata=true \
-    --rerun-tasks --continue
+    --rerun-tasks --continue --no-parallel
 }
 
 # Cleans any stray .telemetry directories left in the repo.

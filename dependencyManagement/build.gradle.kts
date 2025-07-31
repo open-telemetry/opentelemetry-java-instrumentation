@@ -38,7 +38,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.40.0"
+val errorProneVersion = "2.41.0"
 val byteBuddyVersion = "1.17.6"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
@@ -121,7 +121,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.12"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.14"
 )
 
 javaPlatform {

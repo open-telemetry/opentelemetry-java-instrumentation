@@ -25,6 +25,9 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     // TODO run tests both with and without genai message capture
+
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectSpans", true)
   }
 }

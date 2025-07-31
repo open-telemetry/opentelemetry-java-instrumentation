@@ -1,0 +1,6 @@
+description: This instrumentation enables CONSUMER spans for Spring RabbitMQ listeners.
+configurations:
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: A comma-separated list of header names to capture as span attributes.
+    type: list
+    default: ''

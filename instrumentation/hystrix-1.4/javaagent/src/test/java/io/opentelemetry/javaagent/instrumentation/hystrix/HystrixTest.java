@@ -37,7 +37,7 @@ class HystrixTest {
   @MethodSource("provideCommandActionArguments")
   void testCommands(Function<HystrixCommand<String>, String> operation) {
     class TestCommand extends HystrixCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
@@ -78,7 +78,7 @@ class HystrixTest {
   @MethodSource("provideCommandActionArguments")
   void testCommandFallbacks(Function<HystrixCommand<String>, String> operation) {
     class TestCommand extends HystrixCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 

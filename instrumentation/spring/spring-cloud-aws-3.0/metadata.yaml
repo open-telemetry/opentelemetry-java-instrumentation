@@ -1,0 +1,4 @@
+description: >
+  This instrumentation enhances tracing for Spring Cloud AWS. It augments the existing AWS SDK
+  instrumentation by providing higher-level tracing for SQS operations, capturing details specific
+  to Spring Cloud AWS SQS usage and linking them to the underlying AWS SDK traces.

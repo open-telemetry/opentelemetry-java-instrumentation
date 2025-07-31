@@ -92,8 +92,7 @@ class MissingTypeTest {
   }
 
   // com.google.common.base.Joiner is missing from runtime class path
-  @SuppressWarnings({"UnusedMethod", "UnusedVariable", "MethodCanBeStatic"})
-  private static class SomeClass {
+  static class SomeClass {
     public Joiner joiner;
 
     public static boolean isInstrumented() {

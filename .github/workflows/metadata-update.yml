@@ -67,7 +67,7 @@ jobs:
           git commit -m "chore: update instrumentation list [automated]"
           git push origin "$BRANCH_NAME"
           gh pr create \
-            --title "chore: update metadata files [automated]" \
+            --title "chore: update instrumentation list [automated]" \
             --body "This PR was created automatically by the metadata update workflow." \
             --head "$BRANCH_NAME" \
             --base main

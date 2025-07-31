@@ -174,7 +174,7 @@ class SnsCamelTest {
     private final String queueUrl;
     private final String topicArn;
 
-    public SnsMetadata(String queueUrl, String topicArn) {
+    SnsMetadata(String queueUrl, String topicArn) {
       this.queueUrl = queueUrl;
       this.topicArn = topicArn;
     }
