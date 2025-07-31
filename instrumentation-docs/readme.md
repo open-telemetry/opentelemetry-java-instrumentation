@@ -28,7 +28,7 @@ In order to collect spans, add the `collectSpans` property (along with `collectM
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     systemProperty("collectSpans", true)
   }
 }
@@ -196,3 +196,17 @@ data will be excluded from git and just generated on demand.
 
 Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
 emitted by default or via a configuration option.
+
+## Doc Synchronization
+
+The documentation site has a section that lists all the instrumentations in the context of
+documenting how to disable them.
+
+We have a class `DocSynchronization` that runs a check against our instrumentation-list.yaml file to
+identify when we have missing entries, so we know to go update them.
+
+You can run this via:
+
+`./gradlew :instrumentation-docs:docSiteAudit`
+
+This is setup to run nightly in a github action.
