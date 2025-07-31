@@ -37,6 +37,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
+    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
   }
 }

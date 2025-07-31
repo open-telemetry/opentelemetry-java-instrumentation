@@ -17,7 +17,7 @@ will enable metric and span collection:
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
+    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
     ...
   }
 }

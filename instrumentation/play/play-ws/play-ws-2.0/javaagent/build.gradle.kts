@@ -48,6 +48,6 @@ dependencies {
 
 tasks {
   test {
-    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
+    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
   }
 }

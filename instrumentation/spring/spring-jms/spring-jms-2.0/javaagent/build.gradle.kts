@@ -61,7 +61,7 @@ configurations {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
+    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
   }
   // this does not apply to testReceiveSpansDisabled
   test {
