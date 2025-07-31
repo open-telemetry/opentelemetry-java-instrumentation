@@ -155,6 +155,82 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     throw new AssertionError();
   }
 
+  @Parameter TestType testType;
+
+  protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
+    return doCompletions(params, getClient(), getClientAsync());
+  }
+
+  protected final ChatCompletion doCompletions(
+      ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
+    switch (testType) {
+      case SYNC:
+        return client.chat().completions().create(params);
+      case SYNC_FROM_ASYNC:
+        return clientAsync.sync().chat().completions().create(params);
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        OpenAIClientAsync cl = testType == TestType.ASYNC ? clientAsync : client.async();
+        try {
+          return cl.chat()
+              .completions()
+              .create(params)
+              .thenApply(
+                  res -> {
+                    assertThat(Span.fromContextOrNull(Context.current())).isNull();
+                    return res;
+                  })
+              .join();
+        } catch (CompletionException e) {
+          if (e.getCause() instanceof OpenAIIoException) {
+            throw ((OpenAIIoException) e.getCause());
+          }
+          throw e;
+        }
+    }
+    throw new AssertionError();
+  }
+
+  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+      ChatCompletionCreateParams params) {
+    return doCompletionsStreaming(params, getClient(), getClientAsync());
+  }
+
+  protected final List<ChatCompletionChunk> doCompletionsStreaming(
+      ChatCompletionCreateParams params, OpenAIClient client, OpenAIClientAsync clientAsync) {
+    switch (testType) {
+      case SYNC:
+        try (StreamResponse<ChatCompletionChunk> result =
+            client.chat().completions().createStreaming(params)) {
+          return result.stream().collect(Collectors.toList());
+        }
+      case SYNC_FROM_ASYNC:
+        try (StreamResponse<ChatCompletionChunk> result =
+            clientAsync.sync().chat().completions().createStreaming(params)) {
+          return result.stream().collect(Collectors.toList());
+        }
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        {
+          OpenAIClientAsync cl = testType == TestType.ASYNC ? clientAsync : client.async();
+          AsyncStreamResponse<ChatCompletionChunk> stream =
+              cl.chat().completions().createStreaming(params);
+          List<ChatCompletionChunk> result = new ArrayList<>();
+          stream.subscribe(result::add);
+          try {
+            stream.onCompleteFuture().join();
+          } catch (CompletionException e) {
+            if (e.getCause() instanceof OpenAIIoException) {
+              throw ((OpenAIIoException) e.getCause());
+            }
+            throw e;
+          }
+          return result;
+        }
+    }
+    throw new AssertionError();
+  }
+
   @Test
   void basic() {
     ChatCompletionCreateParams params =

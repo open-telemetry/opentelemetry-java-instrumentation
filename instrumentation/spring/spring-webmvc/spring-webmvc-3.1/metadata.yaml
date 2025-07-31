@@ -1,0 +1,17 @@
+description: >
+  This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 3.1+.
+configurations:
+  - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
+    type: boolean
+    default: false
+    description: > 
+      Enables the capture of experimental span attributes `spring-webmvc-view-name` and
+      `spring-webmvc.view.type`.
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller (INTERNAL) spans.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+    description: Enables the creation of experimental view (INTERNAL) spans.
+    type: boolean
+    default: false

@@ -87,11 +87,11 @@ public class RxJava3ConcurrencyTestHelper {
   }
 
   private static class Iteration {
-    public final Scheduler scheduler;
-    public final CountDownLatch countDown;
-    public final int index;
+    final Scheduler scheduler;
+    final CountDownLatch countDown;
+    final int index;
 
-    private Iteration(Scheduler scheduler, CountDownLatch countDown, int index) {
+    Iteration(Scheduler scheduler, CountDownLatch countDown, int index) {
       this.scheduler = scheduler;
       this.countDown = countDown;
       this.index = index;

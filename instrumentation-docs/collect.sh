@@ -90,6 +90,31 @@ readonly INSTRUMENTATIONS=(
   "apache-dubbo-2.7:javaagent:testDubbo"
   "finagle-http-23.11:javaagent:test"
   "finatra-2.9:javaagent:test"
+  "spring:spring-batch-3.0:javaagent:test"
+  "spring:spring-data:spring-data-1.8:javaagent:test"
+  "spring:spring-integration-4.1:javaagent:test"
+  "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
+  "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
+  "spring:spring-jms:spring-jms-2.0:javaagent:test"
+  "spring:spring-kafka-2.7:javaagent:test"
+  "spring:spring-kafka-2.7:javaagent:testNoReceiveTelemetry"
+  "spring:spring-pulsar-1.0:javaagent:test"
+  "spring:spring-rabbit-1.0:javaagent:test"
+  "spring:spring-rmi-4.0:javaagent:test"
+  "spring:spring-scheduling-3.1:javaagent:test"
+  "spring:spring-scheduling-3.1:javaagent:testExperimental"
+  "spring:spring-web:spring-web-3.1:library:test"
+  "spring:spring-web:spring-web-6.0:javaagent:test"
+  "spring:spring-webflux:spring-webflux-5.0:javaagent:test"
+  "spring:spring-webflux:spring-webflux-5.3:library:test"
+  "spring:spring-webmvc:spring-webmvc-3.1:javaagent:test"
+  "spring:spring-webmvc:spring-webmvc-3.1:javaagent:testExperimental"
+  "spring:spring-webmvc:spring-webmvc-5.3:library:test"
+  "spring:spring-webmvc:spring-webmvc-6.0:javaagent:test"
+  "spring:spring-webmvc:spring-webmvc-3.1:javaagent:testExperimental"
+  "spring:spring-webmvc:spring-webmvc-6.0:javaagent:test"
+  "spring:spring-webmvc:spring-webmvc-6.0:javaagent:testExperimental"
+  "openai:openai-java-1.1:javaagent:test"
 )
 
 readonly COLIMA_INSTRUMENTATIONS=(
@@ -221,7 +246,7 @@ run_gradle_tasks() {
 
   ./gradlew "${tasks[@]}" \
     -PcollectMetadata=true \
-    --rerun-tasks --continue
+    --rerun-tasks --continue --no-parallel
 }
 
 # Cleans any stray .telemetry directories left in the repo.

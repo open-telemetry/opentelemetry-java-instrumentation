@@ -51,6 +51,8 @@ public abstract class AbstractSpringPulsarTest {
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  static final String EXPERIMENTAL_FLAG =
+      "otel.instrumentation.pulsar.experimental-span-attributes";
   static final DockerImageName DEFAULT_IMAGE_NAME =
       DockerImageName.parse("apachepulsar/pulsar:4.0.2");
   static PulsarContainer pulsarContainer;
@@ -121,7 +123,14 @@ public abstract class AbstractSpringPulsarTest {
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(MESSAGE_TYPE, "normal"));
+        equalTo(MESSAGE_TYPE, experimental("normal")));
+  }
+
+  protected static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return null;
+    }
+    return value;
   }
 
   protected List<AttributeAssertion> processAttributes() {

@@ -225,10 +225,10 @@ class QueryTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
-    public final String expectedSpanName;
-    public final Consumer<Session> queryInteraction;
+    final String expectedSpanName;
+    final Consumer<Session> queryInteraction;
 
-    public Parameter(String expectedSpanName, Consumer<Session> queryInteraction) {
+    Parameter(String expectedSpanName, Consumer<Session> queryInteraction) {
       this.expectedSpanName = expectedSpanName;
       this.queryInteraction = queryInteraction;
     }

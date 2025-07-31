@@ -4,7 +4,9 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    description: Enables experimental receive telemetry for AWS SDK instrumentation.
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.capture-headers
