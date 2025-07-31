@@ -28,6 +28,6 @@ tasks {
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
-    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString()?.toBoolean() ?: false)
   }
 }

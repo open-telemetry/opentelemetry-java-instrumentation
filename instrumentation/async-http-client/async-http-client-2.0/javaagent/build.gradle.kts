@@ -40,7 +40,7 @@ tasks.withType<Test>().configureEach {
     enabled = false
   }
 
-  systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString()?.toBoolean() ?: false)
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an

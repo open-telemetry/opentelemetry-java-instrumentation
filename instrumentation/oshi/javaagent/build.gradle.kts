@@ -24,7 +24,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString()?.toBoolean() ?: false)
   }
 
   val testExperimental by registering(Test::class) {

@@ -96,6 +96,7 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-integration-4.1:javaagent:testWithRabbitInstrumentation"
   "spring:spring-integration-4.1:javaagent:testWithProducerInstrumentation"
   "spring:spring-jms:spring-jms-2.0:javaagent:test"
+  "spring:spring-jms:spring-jms-6.0:javaagent:test"
   "spring:spring-kafka-2.7:javaagent:test"
   "spring:spring-kafka-2.7:javaagent:testNoReceiveTelemetry"
   "spring:spring-pulsar-1.0:javaagent:test"
@@ -118,10 +119,10 @@ readonly INSTRUMENTATIONS=(
 )
 
 readonly COLIMA_INSTRUMENTATIONS=(
-  "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
-  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
-  "oracle-ucp-11.2:javaagent:test"
-  "oracle-ucp-11.2:javaagent:testStableSemconv"
+#  "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
+#  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
+#  "oracle-ucp-11.2:javaagent:test"
+#  "oracle-ucp-11.2:javaagent:testStableSemconv"
 )
 
 readonly TELEMETRY_DIR_NAME=".telemetry"

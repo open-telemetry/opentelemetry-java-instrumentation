@@ -17,7 +17,7 @@ will enable metric and span collection:
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", (findProperty("collectMetadata")?.toString()?.toBoolean() ?: false))
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString()?.toBoolean() ?: false)
     ...
   }
 }
@@ -33,7 +33,7 @@ For example, to collect and write metadata for the `otel.semconv-stability.opt-i
 set for an instrumentation:
 
 ```kotlin
-val collectMetadata = findProperty("collectMetadata") as Boolean
+val collectMetadata = findProperty("collectMetadata")?.toString()?.toBoolean() ?: false
 
 tasks {
   val testStableSemconv by registering(Test::class) {
