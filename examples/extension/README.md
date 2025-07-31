@@ -36,6 +36,7 @@ For more information, see the `extendedAgent` task in [build.gradle](https://git
 
 [DemoAutoConfigurationCustomizerProvider]: src/main/java/com/example/javaagent/DemoAutoConfigurationCustomizerProvider.java
 [DemoIdGenerator]: src/main/java/com/example/javaagent/DemoIdGenerator.java
+[DemoInstrumenterCustomizerProvider]: src/main/java/com/example/javaagent/DemoInstrumenterCustomizerProvider.java
 [DemoPropagator]: src/main/java/com/example/javaagent/DemoPropagator.java
 [DemoSampler]: src/main/java/com/example/javaagent/DemoSampler.java
 [DemoSpanProcessor]: src/main/java/com/example/javaagent/DemoSpanProcessor.java
@@ -49,6 +50,7 @@ For more information, see the `extendedAgent` task in [build.gradle](https://git
 - Custom `SpanProcessor`: [DemoSpanProcessor][DemoSpanProcessor]
 - Custom `SpanExporter`: [DemoSpanExporter][DemoSpanExporter]
 - Additional instrumentation: [DemoServlet3InstrumentationModule][DemoServlet3InstrumentationModule]
+- Instrumenter Customization: [DemoInstrumenterCustomizerProvider][DemoInstrumenterCustomizerProvider] - Add custom attributes, metrics, context customizers, and span name transformations to existing instrumentations
 
 `ConfigurablePropagatorProvider` and `AutoConfigurationCustomizer` implementations and custom
 instrumentation (`InstrumentationModule`) need the correct SPI (through `@AutoService`) in
@@ -64,6 +66,15 @@ example.
 Extensions are designed to override or customize the instrumentation provided by the upstream agent without having to create a new OpenTelemetry distribution or alter the agent code in any way.
 
 Consider an instrumented database client that creates a span per database call and extracts data from the database connection to provide span attributes. The following are sample use cases for that scenario that can be solved by using extensions.
+
+### "I want to customize instrumentation without modifying the instrumentation"
+
+The `InstrumenterCustomizerProvider` extension point allows you to customize instrumentation behavior without modifying the instrumentation:
+
+- Add custom attributes and metrics to existing instrumentations
+- Customize context
+- Transform span names to match your naming conventions
+- Apply customizations conditionally based on instrumentation name
 
 ### "I don't want this span at all"
 
