@@ -73,8 +73,9 @@ jobs:
           if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
             git fetch origin "$BRANCH_NAME"
             git checkout "$BRANCH_NAME"
+            git merge origin/main --no-edit
           else
-            git checkout -b "$BRANCH_NAME"
+            git checkout -b "$BRANCH_NAME" origin/main
           fi
 
       - name: Commit and push changes
