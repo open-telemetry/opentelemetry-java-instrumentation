@@ -49,6 +49,8 @@ public abstract class RedissonRequest {
       CommandsData commandsData = (CommandsData) command;
       if (commandsData.getCommands().size() == 1) {
         return commandsData.getCommands().get(0).getCommand().getName();
+      } else {
+        return "BATCH";
       }
     }
     return null;
