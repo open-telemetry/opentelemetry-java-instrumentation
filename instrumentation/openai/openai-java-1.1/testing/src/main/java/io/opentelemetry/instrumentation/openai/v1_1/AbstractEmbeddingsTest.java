@@ -30,19 +30,11 @@ import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
 import java.util.concurrent.CompletionException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
-  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.openai-java-1.1";
-
-  private static final String API_URL = "https://api.openai.com/v1";
-
   private static final String MODEL = "text-embedding-3-small";
-
-  @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
   protected final CreateEmbeddingResponse doEmbeddings(EmbeddingCreateParams request) {
     return doEmbeddings(request, getClient(), getClientAsync());
