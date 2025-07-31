@@ -54,8 +54,7 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.nio=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
+    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -12,27 +12,17 @@ Run the analysis to update the instrumentation-list.yaml:
 
 Until this process is ready for all instrumentations, each module will be modified to include a
 system property feature flag configured for when the tests run. By enabling the following flag you
-will enable metric collection:
+will enable metric and span collection:
 
 ```kotlin
 tasks {
   test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
     ...
   }
 }
 ```
 
-In order to collect spans, add the `collectSpans` property (along with `collectMetadata`):
-
-```kotlin
-tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
-  }
-}
-```
 
 Sometimes instrumentation will behave differently based on configuration options, and we can
 differentiate between these configurations by using the `metaDataConfig` system property. When the
@@ -43,7 +33,7 @@ For example, to collect and write metadata for the `otel.semconv-stability.opt-i
 set for an instrumentation:
 
 ```kotlin
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+val collectMetadata = findProperty("collectMetadata") as Boolean
 
 tasks {
   val testStableSemconv by registering(Test::class) {

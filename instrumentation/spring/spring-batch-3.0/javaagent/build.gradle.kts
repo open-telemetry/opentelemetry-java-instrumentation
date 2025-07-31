@@ -49,8 +49,7 @@ tasks {
       excludeTestsMatching("*CustomSpanEventTest")
     }
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
+    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
     systemProperty("metaDataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 

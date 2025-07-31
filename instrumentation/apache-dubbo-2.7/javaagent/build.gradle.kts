@@ -46,8 +46,7 @@ tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
+  systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
 }
 
 tasks {

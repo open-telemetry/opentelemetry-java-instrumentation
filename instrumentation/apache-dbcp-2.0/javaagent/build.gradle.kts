@@ -27,12 +27,10 @@ tasks {
 
     systemProperty("collectMetadata", collectMetadata)
     systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
-    systemProperty("collectSpans", true)
   }
 
   test {
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("collectSpans", true)
   }
 
   check {

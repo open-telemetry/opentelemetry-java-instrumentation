@@ -52,8 +52,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
+    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
   }
 
   val testStableSemconv by registering(Test::class) {

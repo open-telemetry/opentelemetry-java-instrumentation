@@ -78,8 +78,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
+    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
   }
 
   val testStableSemconv by registering(Test::class) {

@@ -56,7 +56,7 @@ tasks {
 
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("collectMetadata", (findProperty("collectMetadata") as? Boolean ?: false))
 
     filter {
       excludeTestsMatching("Netty41ConnectionSpanTest")
