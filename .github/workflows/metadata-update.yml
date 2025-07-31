@@ -85,7 +85,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
-          git push origin "$BRANCH_NAME" --force-with-lease
+          git push origin "$BRANCH_NAME"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'
