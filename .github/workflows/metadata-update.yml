@@ -1,0 +1,121 @@
+name: Metadata Update
+
+on:
+  workflow_dispatch:  # allow this to be manually triggered
+  schedule:
+    - cron: "00 1 * * *" # daily at 1:00 UTC
+
+permissions:
+  contents: read
+
+# Should only be one job running at a time to avoid conflicts with the metadata update branch
+concurrency:
+  group: metadata-update
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # for git push to PR branch
+      pull-requests: write # for adding label and assignee to PR
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Free disk space
+        run: .github/scripts/gha-free-disk-space.sh
+
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00 # v4.7.1
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Set up gradle
+        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+
+      - name: Collect telemetry
+        run: ./instrumentation-docs/ci-collect.sh
+
+      - name: Run documentation analyzer
+        run: ./gradlew :instrumentation-docs:runAnalysis
+
+      - name: Check for diff
+        id: diffcheck
+        run: |
+          git add docs/instrumentation-list.yaml
+          if ! git diff --cached --quiet; then
+            echo "has_diff=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_diff=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Use CLA approved github bot
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@df432ceedc7162793a195dd1713ff69aefc7379e # v2.0.6
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Find or create metadata update branch
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: findbranch
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          BRANCH_NAME="metadata-update-main"
+          echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
+          if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
+            git fetch origin "$BRANCH_NAME"
+            git checkout "$BRANCH_NAME"
+            git merge origin/main --no-edit
+          else
+            git checkout -b "$BRANCH_NAME" origin/main
+          fi
+
+      - name: Commit and push changes
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
+          git push origin "$BRANCH_NAME"
+
+      - name: Create PR if needed
+        if: steps.diffcheck.outputs.has_diff == 'true'
+        id: createpr
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          PR_EXISTS=$(gh pr list --state open --head "$BRANCH_NAME" --label automation --json url -q '.[0].url')
+          if [ -z "$PR_EXISTS" ]; then
+            gh pr create \
+              --title "chore: update instrumentation list [automated]" \
+              --body "This PR was created automatically by the metadata update workflow." \
+              --head "$BRANCH_NAME" \
+              --base main
+            echo "new_pr=true" >> $GITHUB_OUTPUT
+          else
+            echo "PR already exists: $PR_EXISTS"
+            echo "new_pr=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Add label to PR
+        if: steps.createpr.outputs.new_pr == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
+          PR_URL=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
+          if [ -n "$PR_URL" ]; then
+            gh pr edit "$PR_URL" --add-label "automation" --add-assignee jaydeluca
+          else
+            echo "No open PR found for branch $BRANCH_NAME."
+          fi
