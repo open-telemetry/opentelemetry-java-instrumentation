@@ -1,0 +1,7 @@
+{% import 'attribute_macros.j2' as attrs %}
+{% macro snippet(attributes, attribute_registry_base_url, lineage_attributes) %}{% set sampling_attributes = attributes | selectattr("sampling_relevant", "true") %}{% if sampling_attributes | length > 0 %}
+The following attributes can be important for making sampling decisions
+and SHOULD be provided **at span creation time** (if provided at all):
+
+{% for attribute in sampling_attributes | sort(attribute="name") %}* {{ attrs.name_with_link(attribute, attribute_registry_base_url, lineage_attributes) }}
+{% endfor %}{% endif %}{% endmacro %}

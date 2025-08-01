@@ -1,0 +1,7 @@
+templates:
+  - template: Metrics.java.j2
+    filter: '.groups | map(select(.type == "metric"))'
+    application_mode: single
+  - template: CustomAttributes.java.j2
+    filter: '.groups | map(select(.type == "attribute_group")) | map(.attributes[])'
+    application_mode: single

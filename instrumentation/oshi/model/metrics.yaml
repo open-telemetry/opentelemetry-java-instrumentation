@@ -1,0 +1,105 @@
+groups:
+  - id: system.memory.utilization
+    type: metric
+    metric_name: system.memory.utilization
+    brief: System memory utilization
+    stability: development
+    instrument: gauge
+    unit: "1"
+    annotations:
+      value_type: double
+    attributes:
+      - ref: state
+
+  - id: system.memory.usage
+    type: metric
+    metric_name: system.memory.usage
+    brief: System memory usage
+    stability: development
+    instrument: updowncounter
+    unit: "By"
+    attributes:
+      - ref: state
+
+  - id: system.network.io
+    type: metric
+    metric_name: system.network.io
+    brief: System network IO
+    stability: development
+    instrument: counter
+    unit: "By"
+    attributes:
+      - ref: device
+      - ref: direction
+
+  - id: system.network.packets
+    type: metric
+    metric_name: system.network.packets
+    brief: System network packets
+    stability: development
+    instrument: counter
+    unit: "{packets}"
+    attributes:
+      - ref: device
+      - ref: direction
+
+  - id: system.network.errors
+    type: metric
+    metric_name: system.network.errors
+    brief: System network errors
+    stability: development
+    instrument: counter
+    unit: "{errors}"
+    attributes:
+      - ref: device
+      - ref: direction
+
+  - id: system.disk.io
+    type: metric
+    metric_name: system.disk.io
+    brief: System disk IO
+    stability: development
+    instrument: counter
+    unit: "By"
+    attributes:
+      - ref: device
+      - ref: direction
+
+  - id: system.disk.operations
+    type: metric
+    metric_name: system.disk.operations
+    brief: System disk operations
+    stability: development
+    instrument: counter
+    unit: "{operations}"
+    attributes:
+      - ref: device
+      - ref: direction
+
+  - id: runtime.java.memory
+    type: metric
+    metric_name: runtime.java.memory
+    brief: Runtime Java memory
+    stability: development
+    instrument: updowncounter
+    unit: "By"
+    attributes:
+      - id: type
+        type: string
+        brief: The type of memory measurement
+        stability: development
+        examples: ["rss", "vms"]
+
+  - id: runtime.java.cpu_time
+    type: metric
+    metric_name: runtime.java.cpu_time
+    brief: Runtime Java CPU time
+    stability: development
+    instrument: gauge
+    unit: "ms"
+    attributes:
+      - id: type
+        type: string
+        brief: The type of CPU time measurement
+        stability: development
+        examples: ["user", "system"]
