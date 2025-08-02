@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
@@ -203,5 +203,75 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             processAttributes(null, greeting, false, false))));
+  }
+
+  @DisplayName("test kafka null header")
+  @Test
+  void testKafkaHeaderNull() throws Exception {
+    String greeting = "Hello Kafka with null header!";
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          ProducerRecord<Integer, String> producerRecord =
+              new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
+          producerRecord.headers().add("test-message-header", null);
+          producer
+              .send(
+                  producerRecord,
+                  (meta, ex) -> {
+                    if (ex == null) {
+                      testing.runWithSpan("producer callback", () -> {});
+                    } else {
+                      testing.runWithSpan("producer exception: " + ex, () -> {});
+                    }
+                  })
+              .get(5, TimeUnit.SECONDS);
+        });
+
+    awaitUntilConsumerIsReady();
+    ConsumerRecords<?, ?> records = poll(Duration.ofSeconds(5));
+    assertThat(records.count()).isEqualTo(1);
+
+    for (ConsumerRecord<?, ?> record : records) {
+      testing.runWithSpan(
+          "processing",
+          () -> {
+            assertThat(record.key()).isEqualTo(10);
+            assertThat(record.value()).isEqualTo(greeting);
+            assertThat(record.headers().lastHeader("test-message-header").value()).isNull();
+          });
+    }
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName(SHARED_TOPIC + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
+              span ->
+                  span.hasName("producer callback")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0)));
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(SHARED_TOPIC + " receive")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(receiveAttributes(false)),
+                span ->
+                    span.hasName(SHARED_TOPIC + " process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasLinks(LinkData.create(producerSpan.get().getSpanContext()))
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            processAttributes("10", greeting, false, false)),
+                span -> span.hasName("processing").hasParent(trace.getSpan(1))));
   }
 }
