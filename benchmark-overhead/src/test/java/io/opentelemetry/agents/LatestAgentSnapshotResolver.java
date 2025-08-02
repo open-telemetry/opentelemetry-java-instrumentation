@@ -13,6 +13,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.util.Optional;
+import java.time.Duration;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -29,6 +30,11 @@ public class LatestAgentSnapshotResolver {
   static final String BASE_URL =
       "https://oss.sonatype.org/content/repositories/snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent";
   static final String LATEST_SNAPSHOT_META = BASE_URL + "/maven-metadata.xml";
+
+  private static final OkHttpClient client = new OkHttpClient.Builder()
+      .connectTimeout(Duration.ofMinutes(1))
+      .readTimeout(Duration.ofMinutes(1))
+      .build();
 
   Optional<Path> resolve() throws IOException {
     String version = fetchLatestSnapshotVersion();
@@ -81,11 +87,33 @@ public class LatestAgentSnapshotResolver {
     return fetchBodyFrom(url).bytes();
   }
 
+  // The sonatype repository can be very unreliable, so we retry a few times
   private ResponseBody fetchBodyFrom(String url) throws IOException {
     Request request = new Request.Builder().url(url).build();
-    OkHttpClient client = new OkHttpClient();
-    Response response = client.newCall(request).execute();
-    ResponseBody body = response.body();
-    return body;
+    IOException lastException = null;
+
+    for (int attempt = 0; attempt < 3; attempt++) {
+      try {
+        try (Response response = client.newCall(request).execute()) {
+          if (!response.isSuccessful()) {
+            throw new IOException("Unexpected HTTP code " + response.code() + " for " + url);
+          }
+          ResponseBody body = response.body();
+          if (body != null) {
+            byte[] data = body.bytes();
+            return ResponseBody.create(data, body.contentType());
+          } else {
+            throw new IOException("Response body is null");
+          }
+        }
+      } catch (IOException e) {
+        lastException = e;
+        if (attempt < 2) {
+          logger.warn("Attempt {} to fetch {} failed: {}. Retrying...", attempt + 1, url, e.getMessage());
+        }
+      }
+    }
+    throw lastException;
   }
 }
+
