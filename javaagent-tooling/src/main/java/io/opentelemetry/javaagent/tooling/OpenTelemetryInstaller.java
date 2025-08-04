@@ -14,7 +14,6 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.resources.Resource;
 import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
@@ -44,13 +43,10 @@ public final class OpenTelemetryInstaller {
       // This allows most instrumentations to be unaware of which configuration style is used.
       return SdkAutoconfigureAccess.create(
           sdk,
-          // the Resource from the original instance is also the default Resource,
-          // so this is functionally equivalent
-          Resource.getDefault(),
+          SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
           new DeclarativeConfigPropertiesBridgeBuilder()
-              .addMapping(
-                  "otel.instrumentation.common.default-enabled", "common.default.enabled")
-                .addMapping("otel.javaagent", "agent")
+              .addMapping("otel.instrumentation.common.default-enabled", "common.default.enabled")
+              .addMapping("otel.javaagent", "agent")
               // these properties are used to initialize the SDK before the configuration file
               // is loaded for consistency, we pass them to the bridge, so that they can be read
               // later with the same value from the {@link DeclarativeConfigPropertiesBridge}
