@@ -26,20 +26,36 @@ import javax.annotation.Nullable;
  */
 public class DeclarativeConfigPropertiesBridgeBuilder {
   private final LinkedHashMap<String, String> translationMap = new LinkedHashMap<>();
-  private final Map<String, Object> fixedValues = new LinkedHashMap<>();
+  private final Map<String, Object> overrideValues = new LinkedHashMap<>();
 
   public DeclarativeConfigPropertiesBridgeBuilder() {}
 
+  /**
+   * Adds a translation from a property prefix to a YAML path.
+   *
+   * <p>For example, if the property prefix is "otel.javaagent" and the YAML path is "agent", then
+   * any property starting with "otel.javaagent." will be resolved against the "agent" node in the
+   * instrumentation/java section of the YAML configuration.
+   *
+   * @param propertyPrefix the prefix of the property to translate
+   * @param yamlPath the YAML path to resolve the property against
+   */
   @CanIgnoreReturnValue
   public DeclarativeConfigPropertiesBridgeBuilder addTranslation(
-      String propertyName, String yamlPath) {
-    translationMap.put(propertyName, yamlPath);
+      String propertyPrefix, String yamlPath) {
+    translationMap.put(propertyPrefix, yamlPath);
     return this;
   }
 
+  /**
+   * Adds a fixed override value for a property.
+   *
+   * @param propertyName the name of the property to override
+   * @param value the value to return when the property is requested
+   */
   @CanIgnoreReturnValue
-  public DeclarativeConfigPropertiesBridgeBuilder addFixedValue(String propertyName, Object value) {
-    fixedValues.put(propertyName, value);
+  public DeclarativeConfigPropertiesBridgeBuilder addOverride(String propertyName, Object value) {
+    overrideValues.put(propertyName, value);
     return this;
   }
 
@@ -67,7 +83,6 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
       instrumentationConfig = DeclarativeConfigProperties.empty();
     }
     return new DeclarativeConfigPropertiesBridge(
-        instrumentationConfig.getStructured("java", empty()),
-        new ConfigPropertiesTranslator(translationMap, fixedValues));
+        instrumentationConfig.getStructured("java", empty()), translationMap, overrideValues);
   }
 }

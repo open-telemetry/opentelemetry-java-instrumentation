@@ -53,19 +53,25 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  private final ConfigPropertiesTranslator translator;
   @Nullable private final DeclarativeConfigProperties baseNode;
 
+  // lookup order matters - we choose the first match
+  private final Map<String, String> translationMap;
+  private final Map<String, Object> overrideValues;
+
   DeclarativeConfigPropertiesBridge(
-      @Nullable DeclarativeConfigProperties baseNode, ConfigPropertiesTranslator translator) {
+      @Nullable DeclarativeConfigProperties baseNode,
+      Map<String, String> translationMap,
+      Map<String, Object> overrideValues) {
     this.baseNode = baseNode;
-    this.translator = translator;
+    this.translationMap = translationMap;
+    this.overrideValues = overrideValues;
   }
 
   @Nullable
   @Override
   public String getString(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return value.toString();
     }
@@ -75,7 +81,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return (Boolean) value;
     }
@@ -85,7 +91,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Integer getInt(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return (Integer) value;
     }
@@ -95,7 +101,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Long getLong(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return (Long) value;
     }
@@ -105,7 +111,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Double getDouble(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return (Double) value;
     }
@@ -115,7 +121,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Duration getDuration(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return (Duration) value;
     }
@@ -129,7 +135,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String propertyName) {
-    Object value = translator.get(propertyName);
+    Object value = getOverride(propertyName);
     if (value != null) {
       return (List<String>) value;
     }
@@ -143,7 +149,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String propertyName) {
-    Object fixed = translator.get(propertyName);
+    Object fixed = getOverride(propertyName);
     if (fixed != null) {
       return (Map<String, String>) fixed;
     }
@@ -173,7 +179,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       return null;
     }
 
-    String[] segments = getSegments(translator.translateProperty(property));
+    String[] segments = getSegments(translateProperty(property));
     if (segments.length == 0) {
       return null;
     }
@@ -196,5 +202,19 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     }
     // Split the remainder of the property on "."
     return property.replace('-', '_').split("\\.");
+  }
+
+  private String translateProperty(String property) {
+    for (Map.Entry<String, String> entry : translationMap.entrySet()) {
+      if (property.startsWith(entry.getKey())) {
+        return entry.getValue() + property.substring(entry.getKey().length());
+      }
+    }
+    return property;
+  }
+
+  @Nullable
+  private Object getOverride(String propertyName) {
+    return overrideValues.get(propertyName);
   }
 }
