@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaInstrumentationHelper.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -70,23 +70,20 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
       }
       input = AwsLambdaRequest.create(context, arg, headers);
       io.opentelemetry.context.Context parentContext =
-          AwsLambdaInstrumentationHelper.functionInstrumenter().extract(input);
+          AwsLambdaSingletons.functionInstrumenter().extract(input);
 
-      if (!AwsLambdaInstrumentationHelper.functionInstrumenter()
-          .shouldStart(parentContext, input)) {
+      if (!AwsLambdaSingletons.functionInstrumenter().shouldStart(parentContext, input)) {
         return;
       }
 
-      functionContext =
-          AwsLambdaInstrumentationHelper.functionInstrumenter().start(parentContext, input);
+      functionContext = AwsLambdaSingletons.functionInstrumenter().start(parentContext, input);
       functionScope = functionContext.makeCurrent();
 
       if (arg instanceof SQSEvent) {
-        if (AwsLambdaInstrumentationHelper.messageInstrumenter()
+        if (AwsLambdaSingletons.messageInstrumenter()
             .shouldStart(functionContext, (SQSEvent) arg)) {
           messageContext =
-              AwsLambdaInstrumentationHelper.messageInstrumenter()
-                  .start(functionContext, (SQSEvent) arg);
+              AwsLambdaSingletons.messageInstrumenter().start(functionContext, (SQSEvent) arg);
           messageScope = messageContext.makeCurrent();
         }
       }
@@ -105,14 +102,13 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
 
       if (messageScope != null) {
         messageScope.close();
-        AwsLambdaInstrumentationHelper.messageInstrumenter()
+        AwsLambdaSingletons.messageInstrumenter()
             .end(messageContext, (SQSEvent) arg, null, throwable);
       }
 
       if (functionScope != null) {
         functionScope.close();
-        AwsLambdaInstrumentationHelper.functionInstrumenter()
-            .end(functionContext, input, result, throwable);
+        AwsLambdaSingletons.functionInstrumenter().end(functionContext, input, result, throwable);
       }
 
       OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
