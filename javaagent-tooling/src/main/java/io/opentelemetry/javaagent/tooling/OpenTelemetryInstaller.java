@@ -58,7 +58,7 @@ public final class OpenTelemetryInstaller {
                   "otel.javaagent.debug", earlyConfig.getBoolean("otel.javaagent.debug", false))
               .addOverride(
                   "otel.javaagent.logging", earlyConfig.getString("otel.javaagent.logging"))
-              .resolveInstrumentationConfig(configProvider.getInstrumentationConfig()),
+              .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig()),
           configProvider);
     }
 
