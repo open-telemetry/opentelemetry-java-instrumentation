@@ -126,7 +126,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     ConfigProperties propertiesBridge =
         create(
             new DeclarativeConfigPropertiesBridgeBuilder()
-                .addTranslation("acme", "acme.full_name"));
+                .addMapping("acme", "acme.full_name"));
     assertThat(propertiesBridge.getBoolean("acme.preserved")).isTrue();
   }
 
@@ -135,7 +135,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(
             create(
                     new DeclarativeConfigPropertiesBridgeBuilder()
-                        .addTranslation(
+                        .addMapping(
                             "otel.instrumentation.common.default-enabled",
                             "common.default.enabled"))
                 .getBoolean("otel.instrumentation.common.default-enabled"))
@@ -147,7 +147,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     ConfigProperties bridge =
         create(
             new DeclarativeConfigPropertiesBridgeBuilder()
-                .addTranslation("otel.javaagent", "agent")
+                .addMapping("otel.javaagent", "agent")
                 .addOverride("otel.javaagent.debug", true)
                 .addOverride("otel.javaagent.logging", "application"));
 

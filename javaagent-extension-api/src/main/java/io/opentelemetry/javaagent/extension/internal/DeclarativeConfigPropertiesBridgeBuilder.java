@@ -25,13 +25,13 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public class DeclarativeConfigPropertiesBridgeBuilder {
-  private final LinkedHashMap<String, String> translationMap = new LinkedHashMap<>();
+  private final LinkedHashMap<String, String> mappings = new LinkedHashMap<>();
   private final Map<String, Object> overrideValues = new LinkedHashMap<>();
 
   public DeclarativeConfigPropertiesBridgeBuilder() {}
 
   /**
-   * Adds a translation from a property prefix to a YAML path.
+   * Adds a mapping from a property prefix to a YAML path.
    *
    * <p>For example, if the property prefix is "otel.javaagent" and the YAML path is "agent", then
    * any property starting with "otel.javaagent." will be resolved against the "agent" node in the
@@ -41,9 +41,9 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
    * @param yamlPath the YAML path to resolve the property against
    */
   @CanIgnoreReturnValue
-  public DeclarativeConfigPropertiesBridgeBuilder addTranslation(
+  public DeclarativeConfigPropertiesBridgeBuilder addMapping(
       String propertyPrefix, String yamlPath) {
-    translationMap.put(propertyPrefix, yamlPath);
+    mappings.put(propertyPrefix, yamlPath);
     return this;
   }
 
@@ -95,6 +95,6 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
       instrumentationConfig = DeclarativeConfigProperties.empty();
     }
     return new DeclarativeConfigPropertiesBridge(
-        instrumentationConfig.getStructured("java", empty()), translationMap, overrideValues);
+        instrumentationConfig.getStructured("java", empty()), mappings, overrideValues);
   }
 }

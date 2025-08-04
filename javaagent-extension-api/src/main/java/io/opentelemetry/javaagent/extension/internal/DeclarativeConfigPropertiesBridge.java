@@ -56,15 +56,15 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable private final DeclarativeConfigProperties baseNode;
 
   // lookup order matters - we choose the first match
-  private final Map<String, String> translationMap;
+  private final Map<String, String> mappings;
   private final Map<String, Object> overrideValues;
 
   DeclarativeConfigPropertiesBridge(
       @Nullable DeclarativeConfigProperties baseNode,
-      Map<String, String> translationMap,
+      Map<String, String> mappings,
       Map<String, Object> overrideValues) {
     this.baseNode = baseNode;
-    this.translationMap = translationMap;
+    this.mappings = mappings;
     this.overrideValues = overrideValues;
   }
 
@@ -205,7 +205,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   }
 
   private String translateProperty(String property) {
-    for (Map.Entry<String, String> entry : translationMap.entrySet()) {
+    for (Map.Entry<String, String> entry : mappings.entrySet()) {
       if (property.startsWith(entry.getKey())) {
         return entry.getValue() + property.substring(entry.getKey().length());
       }
