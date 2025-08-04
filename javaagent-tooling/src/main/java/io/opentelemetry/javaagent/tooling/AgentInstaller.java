@@ -172,7 +172,7 @@ public class AgentInstaller {
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
-        SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
+        SdkAutoconfigureAccess.getResource(autoConfiguredSdk).getAttributes());
 
     for (BeforeAgentListener agentListener :
         loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {
