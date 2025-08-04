@@ -148,8 +148,8 @@ class DeclarativeConfigPropertiesBridgeTest {
         create(
             new DeclarativeConfigPropertiesBridgeBuilder()
                 .addTranslation("otel.javaagent", "agent")
-                .addFixedValue("otel.javaagent.debug", true)
-                .addFixedValue("otel.javaagent.logging", "application"));
+                .addOverride("otel.javaagent.debug", true)
+                .addOverride("otel.javaagent.logging", "application"));
 
     assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
     assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
