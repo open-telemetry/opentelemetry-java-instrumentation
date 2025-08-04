@@ -197,13 +197,4 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     // Split the remainder of the property on "."
     return property.replace('-', '_').split("\\.");
   }
-
-  static String yamlPath(String property) {
-    String[] segments = getSegments(property);
-    if (segments.length == 0) {
-      throw new IllegalArgumentException("Invalid property: " + property);
-    }
-
-    return "'instrumentation/development' / 'java' / '" + String.join("' / '", segments) + "'";
-  }
 }

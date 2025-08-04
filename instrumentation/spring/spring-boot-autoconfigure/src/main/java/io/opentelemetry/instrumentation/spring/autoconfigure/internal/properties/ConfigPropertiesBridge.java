@@ -121,7 +121,7 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Nullable
   @Override
   public ConfigProvider getConfigProvider() {
-    // create a spring boot bridge for DeclarativeConfigProperties
+    // create a spring boot bridge for ConfigProvider
     return null;
   }
 }
