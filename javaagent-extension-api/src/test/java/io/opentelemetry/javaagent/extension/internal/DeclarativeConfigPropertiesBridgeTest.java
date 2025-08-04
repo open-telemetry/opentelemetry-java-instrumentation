@@ -35,7 +35,7 @@ class DeclarativeConfigPropertiesBridgeTest {
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
         new DeclarativeConfigPropertiesBridgeBuilder()
-            .resolveInstrumentationConfig(
+            .buildFromInstrumentationConfig(
                 Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
@@ -45,7 +45,7 @@ class DeclarativeConfigPropertiesBridgeTest {
             DeclarativeConfigPropertiesBridgeTest.class
                 .getClassLoader()
                 .getResourceAsStream("config.yaml"));
-    return builder.resolveInstrumentationConfig(
+    return builder.buildFromInstrumentationConfig(
         SdkConfigProvider.create(model).getInstrumentationConfig());
   }
 

@@ -59,8 +59,8 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
     return this;
   }
 
-  /** Resolve {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
-  public ConfigProperties resolveConfigProperties(
+  /** Build {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
+  public ConfigProperties build(
       AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
     ConfigProperties sdkConfigProperties =
         AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
@@ -70,15 +70,27 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
     ConfigProvider configProvider =
         AutoConfigureUtil.getConfigProvider(autoConfiguredOpenTelemetrySdk);
     if (configProvider != null) {
-      return resolveInstrumentationConfig(configProvider.getInstrumentationConfig());
+      return buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
     }
     // Should never happen
     throw new IllegalStateException(
         "AutoConfiguredOpenTelemetrySdk does not have ConfigProperties or DeclarativeConfigProperties. This is likely a programming error in opentelemetry-java");
   }
 
-  public ConfigProperties resolveInstrumentationConfig(
+  /**
+   * Build {@link ConfigProperties} from the {@link DeclarativeConfigProperties} provided by the
+   * instrumentation configuration.
+   *
+   * <p>If the provided {@code instrumentationConfig} is null, an empty {@link
+   * DeclarativeConfigProperties} will be used.
+   *
+   * @param instrumentationConfig the instrumentation configuration to build from
+   * @return a new instance of {@link ConfigProperties}
+   */
+  public ConfigProperties buildFromInstrumentationConfig(
       @Nullable DeclarativeConfigProperties instrumentationConfig) {
+    // leave the name "build" for a future method that builds from a DeclarativeConfigProperties
+    // instance that doesn't come from the top-level instrumentation config
     if (instrumentationConfig == null) {
       instrumentationConfig = DeclarativeConfigProperties.empty();
     }
