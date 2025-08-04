@@ -60,8 +60,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
   }
 
   /** Build {@link ConfigProperties} from the {@code autoConfiguredOpenTelemetrySdk}. */
-  public ConfigProperties build(
-      AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
+  public ConfigProperties build(AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
     ConfigProperties sdkConfigProperties =
         AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
     if (sdkConfigProperties != null) {

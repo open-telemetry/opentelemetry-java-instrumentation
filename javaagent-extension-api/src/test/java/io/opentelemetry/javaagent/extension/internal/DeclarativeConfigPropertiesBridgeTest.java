@@ -124,9 +124,7 @@ class DeclarativeConfigPropertiesBridgeTest {
   @Test
   void vendorTranslation() {
     ConfigProperties propertiesBridge =
-        create(
-            new DeclarativeConfigPropertiesBridgeBuilder()
-                .addMapping("acme", "acme.full_name"));
+        create(new DeclarativeConfigPropertiesBridgeBuilder().addMapping("acme", "acme.full_name"));
     assertThat(propertiesBridge.getBoolean("acme.preserved")).isTrue();
   }
 
