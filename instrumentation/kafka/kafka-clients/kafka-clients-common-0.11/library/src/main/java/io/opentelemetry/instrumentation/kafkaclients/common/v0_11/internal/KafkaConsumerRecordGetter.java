@@ -40,6 +40,7 @@ enum KafkaConsumerRecordGetter implements ExtendedTextMapGetter<KafkaProcessRequ
   @Override
   public Iterator<String> getAll(@Nullable KafkaProcessRequest carrier, String key) {
     return StreamSupport.stream(carrier.getRecord().headers().headers(key).spliterator(), false)
+        .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .iterator();
   }

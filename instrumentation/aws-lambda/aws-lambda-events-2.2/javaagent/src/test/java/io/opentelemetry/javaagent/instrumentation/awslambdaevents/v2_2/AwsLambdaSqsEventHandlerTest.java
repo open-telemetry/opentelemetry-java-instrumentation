@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest {
+class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Override
   protected RequestHandler<SQSEvent, Void> handler() {

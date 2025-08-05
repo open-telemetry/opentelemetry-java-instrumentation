@@ -28,6 +28,5 @@ tasks {
 
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
   }
 }

@@ -57,7 +57,6 @@ testing {
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
 
             systemProperty("collectMetadata", collectMetadata)
-            systemProperty("collectSpans", true)
           }
         }
       }
@@ -75,7 +74,6 @@ tasks {
 
     systemProperty("metaDataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("collectSpans", true)
   }
 
   check {
