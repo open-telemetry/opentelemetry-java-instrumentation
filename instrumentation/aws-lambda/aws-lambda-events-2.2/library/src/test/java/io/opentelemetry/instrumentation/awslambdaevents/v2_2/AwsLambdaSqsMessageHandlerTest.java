@@ -37,7 +37,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class AwsLambdaSqsMessageHandlerTest {
+class AwsLambdaSqsMessageHandlerTest {
 
   private static final String AWS_TRACE_HEADER1 =
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
@@ -45,7 +45,7 @@ public class AwsLambdaSqsMessageHandlerTest {
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad9;Sampled=1";
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Mock private Context context;
 
