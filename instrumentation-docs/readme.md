@@ -23,7 +23,6 @@ tasks {
 }
 ```
 
-
 Sometimes instrumentation will behave differently based on configuration options, and we can
 differentiate between these configurations by using the `metaDataConfig` system property. When the
 telemetry is written to a file, the value of this property will be included, or it will default to
