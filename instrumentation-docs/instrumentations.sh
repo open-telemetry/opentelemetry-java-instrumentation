@@ -120,6 +120,7 @@ readonly INSTRUMENTATIONS=(
 #  container.
 # shellcheck disable=SC2034
 readonly COLIMA_INSTRUMENTATIONS=(
+  "spring:spring-jms:spring-jms-6.0:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
   "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
   "oracle-ucp-11.2:javaagent:test"
