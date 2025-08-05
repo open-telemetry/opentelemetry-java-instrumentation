@@ -36,7 +36,6 @@ otelJava {
 tasks.withType<Test>().configureEach {
   jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
 }
 
 configurations.testRuntimeClasspath {

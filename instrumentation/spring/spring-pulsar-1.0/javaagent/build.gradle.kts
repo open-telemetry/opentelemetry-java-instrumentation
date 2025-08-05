@@ -66,7 +66,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("collectSpans", true)
   }
 
   check {
