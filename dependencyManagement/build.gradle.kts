@@ -28,7 +28,6 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.19.2",
-  "com.squareup.okio:okio-bom:3.15.0", // see https://github.com/open-telemetry/opentelemetry-java/issues/5637
   "com.google.guava:guava-bom:33.4.8-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -92,7 +91,7 @@ val DEPENDENCIES = listOf(
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
   "com.uber.nullaway:nullaway:0.12.7",
   "commons-beanutils:commons-beanutils:1.11.0",
-  "commons-cli:commons-cli:1.9.0",
+  "commons-cli:commons-cli:1.10.0",
   "commons-codec:commons-codec:1.19.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
