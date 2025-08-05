@@ -4740,19 +4740,6 @@ libraries:
       description: A comma-separated list of header names to capture as span attributes.
       type: list
       default: ''
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: CONSUMER
-        attributes:
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.id
-          type: STRING
-        - name: messaging.operation
-          type: STRING
-        - name: messaging.system
-          type: STRING
   - name: spring-kafka-2.7
     description: This instrumentation enables CONSUMER spans for Spring Kafka listeners.
     source_path: instrumentation/spring/spring-kafka-2.7
