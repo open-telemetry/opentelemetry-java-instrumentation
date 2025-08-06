@@ -53,8 +53,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
-
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
