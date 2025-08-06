@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import org.yaml.snakeyaml.DumperOptions;
@@ -143,7 +144,7 @@ public class YamlHelper {
     addConfigurations(module, moduleMap);
 
     // Get telemetry grouping lists
-    Set<String> telemetryGroups = new java.util.HashSet<>(module.getMetrics().keySet());
+    Set<String> telemetryGroups = new TreeSet<>(module.getMetrics().keySet());
     telemetryGroups.addAll(module.getSpans().keySet());
 
     if (!telemetryGroups.isEmpty()) {
