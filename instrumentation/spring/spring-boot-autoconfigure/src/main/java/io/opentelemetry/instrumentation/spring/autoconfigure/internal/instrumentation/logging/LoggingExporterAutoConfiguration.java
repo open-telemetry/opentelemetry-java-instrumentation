@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @Conditional(SdkEnabled.class)
-// for backward compatibility with declarative configuration
+// for forward compatibility with declarative configuration
 @ConditionalOnProperty(name = "otel.debug", havingValue = "true")
 @ConditionalOnClass(LoggingSpanExporter.class)
 @Configuration
