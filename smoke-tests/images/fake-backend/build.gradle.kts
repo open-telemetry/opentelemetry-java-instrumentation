@@ -7,7 +7,6 @@ plugins {
   id("otel.java-conventions")
   id("com.bmuschko.docker-remote-api")
   id("com.gradleup.shadow")
-  id("com.google.cloud.tools.jib")
 }
 
 dependencies {
@@ -20,11 +19,6 @@ val extraTag = findProperty("extraTag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
-
-jib {
-  from.image = "gcr.io/distroless/java-debian10:11"
-  to.image = "ghcr.io/$repo/smoke-test-fake-backend:$extraTag"
-}
 
 // windows containers are built manually since jib does not support windows containers yet
 val backendDockerBuildDir = layout.buildDirectory.dir("docker-backend")
@@ -46,6 +40,15 @@ tasks {
     }
   }
 
+  val backendImagePrepare by registering(Copy::class) {
+    dependsOn(shadowJar)
+    into(backendDockerBuildDir)
+    from("src/docker/backend")
+    from(shadowJar.get().outputs) {
+      rename { "fake-backend.jar" }
+    }
+  }
+
   val windowsBackendImagePrepare by registering(Copy::class) {
     dependsOn(shadowJar)
     into(backendDockerBuildDir)
@@ -55,7 +58,31 @@ tasks {
     }
   }
 
-  val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
+  val buildMultiArchImage by registering(Exec::class) {
+    dependsOn(backendImagePrepare)
+    workingDir(backendDockerBuildDir)
+    commandLine(
+      "docker", "buildx", "build",
+      "--platform", "linux/amd64,linux/arm64",
+      "--tag", "ghcr.io/$repo/smoke-test-fake-backend:$extraTag",
+      "--push",
+      "-f", "Dockerfile",
+      "."
+    )
+  }
+
+  val buildMultiArchImageLocal by registering(Exec::class) {
+    dependsOn(backendImagePrepare)
+    workingDir(backendDockerBuildDir)
+    commandLine(
+      "docker", "buildx", "build",
+      "--platform", "linux/amd64,linux/arm64",
+      "--tag", "ghcr.io/$repo/smoke-test-fake-backend:$extraTag",
+      "--load",
+      "-f", "Dockerfile",
+      "."
+    )
+  }
 
   val windowsBackendImageBuild by registering(DockerBuildImage::class) {
     dependsOn(windowsBackendImagePrepare)
@@ -68,7 +95,7 @@ tasks {
   val dockerPush by registering(DockerPushImage::class) {
     group = "publishing"
     description = "Push all Docker images for the test backend"
-    dependsOn(windowsBackendImageBuild)
+    dependsOn(buildMultiArchImage, windowsBackendImageBuild)
     images.add("ghcr.io/$repo/smoke-test-fake-backend-windows:$extraTag")
   }
 }

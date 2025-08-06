@@ -24,13 +24,16 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: true
 
-      - name: Build Docker image
-        run: ./gradlew :smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
+      - name: Build multi-arch Docker image (without push)
+        run: ./gradlew :smoke-tests:images:fake-backend:buildMultiArchImageLocal
 
   buildWindows:
     runs-on: windows-latest
