@@ -114,6 +114,9 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-webmvc:spring-webmvc-6.0:javaagent:test"
   "spring:spring-webmvc:spring-webmvc-6.0:javaagent:testExperimental"
   "openai:openai-java-1.1:javaagent:test"
+  "aws-lambda:aws-lambda-core-1.0:javaagent:test"
+  "aws-lambda:aws-lambda-events-2.2:javaagent:test"
+  "azure-core:azure-core-1.19:javaagent:testAzure"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

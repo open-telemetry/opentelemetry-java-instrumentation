@@ -64,7 +64,7 @@ class InstrumentationAnalyzer {
     }
 
     module.setTargetVersions(getVersionInformation(module));
-    module.setMetrics(MetricParser.getMetrics(module, fileManager));
+    module.setMetrics(MetricParser.get(module, fileManager));
     module.setSpans(SpanParser.getSpans(module, fileManager));
   }
 

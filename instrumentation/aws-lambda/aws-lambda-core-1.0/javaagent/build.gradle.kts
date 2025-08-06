@@ -28,5 +28,4 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
 }
