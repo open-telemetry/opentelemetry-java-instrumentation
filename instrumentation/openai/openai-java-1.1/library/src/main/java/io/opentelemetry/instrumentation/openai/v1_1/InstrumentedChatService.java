@@ -19,7 +19,7 @@ final class InstrumentedChatService
   private final Logger eventLogger;
   private final boolean captureMessageContent;
 
-  public InstrumentedChatService(
+  InstrumentedChatService(
       ChatService delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
       Logger eventLogger,

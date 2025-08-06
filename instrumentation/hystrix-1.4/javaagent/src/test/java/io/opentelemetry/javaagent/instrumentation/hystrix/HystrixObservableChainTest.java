@@ -31,7 +31,7 @@ class HystrixObservableChainTest {
   void testCommand() {
 
     class TestCommand extends HystrixObservableCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
@@ -50,7 +50,7 @@ class HystrixObservableChainTest {
     class AnotherTestCommand extends HystrixObservableCommand<String> {
       private final String str;
 
-      protected AnotherTestCommand(Setter setter, String str) {
+      AnotherTestCommand(Setter setter, String str) {
         super(setter);
         this.str = str;
       }

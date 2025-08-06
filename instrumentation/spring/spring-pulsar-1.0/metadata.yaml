@@ -1,0 +1,17 @@
+description: This instrumentation enables CONSUMER spans for Spring Pulsar listeners.
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: A comma-separated list of header names to capture as span attributes.
+    type: list
+    default: ''
+  - name: otel.instrumentation.pulsar.experimental-span-attributes
+    description: >
+      Enables capturing experimental span attribute `messaging.pulsar.message.type` on PRODUCER spans.
+    type: boolean
+    default: false

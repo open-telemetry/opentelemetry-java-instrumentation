@@ -39,6 +39,8 @@ val javaagentLibs by configurations.creating {
 listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("io.opentelemetry", "opentelemetry-api")
+    exclude("io.opentelemetry", "opentelemetry-common")
+    exclude("io.opentelemetry", "opentelemetry-context")
     exclude("io.opentelemetry.semconv", "opentelemetry-semconv")
     exclude("io.opentelemetry.semconv", "opentelemetry-semconv-incubating")
     // events API and metrics advice API

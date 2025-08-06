@@ -183,22 +183,22 @@ class ElasticsearchRest7Test {
   }
 
   private static class AsyncRequest {
-    volatile Response requestResponse = null;
-    volatile Exception exception = null;
+    private volatile Response requestResponse = null;
+    private volatile Exception exception = null;
 
-    public Response getRequestResponse() {
+    Response getRequestResponse() {
       return requestResponse;
     }
 
-    public void setRequestResponse(Response requestResponse) {
+    void setRequestResponse(Response requestResponse) {
       this.requestResponse = requestResponse;
     }
 
-    public Exception getException() {
+    Exception getException() {
       return exception;
     }
 
-    public void setException(Exception exception) {
+    void setException(Exception exception) {
       this.exception = exception;
     }
   }

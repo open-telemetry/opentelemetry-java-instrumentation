@@ -37,10 +37,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
     key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
     value =
         "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsEventWrapperTest$TestRequestHandler::handleRequest")
-public class AwsLambdaSqsEventWrapperTest {
+class AwsLambdaSqsEventWrapperTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Mock private Context context;
 

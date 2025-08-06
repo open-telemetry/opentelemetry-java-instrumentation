@@ -170,7 +170,9 @@ class ProcedureCallTest {
                                             "org.hibernate.exception.AuthException"),
                                         satisfies(
                                             AttributeKey.stringKey("exception.message"),
-                                            val -> val.startsWith("could not prepare statement")),
+                                            val ->
+                                                val.startsWithIgnoringCase(
+                                                    "could not prepare statement")),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))

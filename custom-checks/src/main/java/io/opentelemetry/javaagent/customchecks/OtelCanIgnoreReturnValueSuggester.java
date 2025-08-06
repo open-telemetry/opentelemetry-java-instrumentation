@@ -12,6 +12,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.bugpatterns.WellKnownKeep;
 import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggester;
 import com.google.errorprone.bugpatterns.checkreturnvalue.CanIgnoreReturnValueSuggesterFactory;
 import com.google.errorprone.matchers.Description;
@@ -33,9 +34,10 @@ public class OtelCanIgnoreReturnValueSuggester extends BugChecker
   private final CanIgnoreReturnValueSuggester delegate;
 
   @Inject
-  OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags) {
+  OtelCanIgnoreReturnValueSuggester(ErrorProneFlags errorProneFlags, WellKnownKeep wellKnownKeep) {
     delegate =
-        CanIgnoreReturnValueSuggesterFactory.createCanIgnoreReturnValueSuggester(errorProneFlags);
+        CanIgnoreReturnValueSuggesterFactory.createCanIgnoreReturnValueSuggester(
+            errorProneFlags, wellKnownKeep);
   }
 
   public OtelCanIgnoreReturnValueSuggester() {

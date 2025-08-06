@@ -23,6 +23,5 @@ tasks {
 
   test {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
   }
 }

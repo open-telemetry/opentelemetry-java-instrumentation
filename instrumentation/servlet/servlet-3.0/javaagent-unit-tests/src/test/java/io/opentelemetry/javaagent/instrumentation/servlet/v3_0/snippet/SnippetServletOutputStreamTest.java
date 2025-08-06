@@ -160,7 +160,7 @@ class SnippetServletOutputStreamTest {
       baos.write(b);
     }
 
-    public byte[] getBytes() {
+    byte[] getBytes() {
       return baos.toByteArray();
     }
   }

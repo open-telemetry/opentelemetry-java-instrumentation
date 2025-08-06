@@ -26,4 +26,12 @@ tasks {
     mainClass.set("io.opentelemetry.instrumentation.docs.DocGeneratorApplication")
     classpath(sourceSets["main"].runtimeClasspath)
   }
+
+  val docSiteAudit by registering(JavaExec::class) {
+    dependsOn(classes)
+
+    systemProperty("basePath", project.rootDir)
+    mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
+    classpath(sourceSets["main"].runtimeClasspath)
+  }
 }

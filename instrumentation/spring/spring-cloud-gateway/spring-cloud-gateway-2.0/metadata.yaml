@@ -1,0 +1,11 @@
+description: >
+  This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate new telemetry
+  on its own, but rather enriches existing traces produced by other instrumentations like Netty and
+  Spring WebFlux with Spring Cloud Gateway-specific attributes.
+configurations:
+  - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
+    type: boolean
+    default: false
+    description: > 
+      Enables experimental `spring-cloud-gateway.route` attributes (e.g.,
+      `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.

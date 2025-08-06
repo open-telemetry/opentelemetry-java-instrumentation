@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaInstrumentationHelper.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -62,15 +62,13 @@ public class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrum
       Map<String, String> headers = Collections.emptyMap();
       otelInput = AwsLambdaRequest.create(context, input, headers);
       io.opentelemetry.context.Context parentContext =
-          AwsLambdaInstrumentationHelper.functionInstrumenter().extract(otelInput);
+          AwsLambdaSingletons.functionInstrumenter().extract(otelInput);
 
-      if (!AwsLambdaInstrumentationHelper.functionInstrumenter()
-          .shouldStart(parentContext, otelInput)) {
+      if (!AwsLambdaSingletons.functionInstrumenter().shouldStart(parentContext, otelInput)) {
         return;
       }
 
-      otelContext =
-          AwsLambdaInstrumentationHelper.functionInstrumenter().start(parentContext, otelInput);
+      otelContext = AwsLambdaSingletons.functionInstrumenter().start(parentContext, otelInput);
       otelScope = otelContext.makeCurrent();
     }
 
@@ -82,8 +80,7 @@ public class AwsLambdaRequestStreamHandlerInstrumentation implements TypeInstrum
         @Advice.Local("otelScope") Scope functionScope) {
       if (functionScope != null) {
         functionScope.close();
-        AwsLambdaInstrumentationHelper.functionInstrumenter()
-            .end(functionContext, input, null, throwable);
+        AwsLambdaSingletons.functionInstrumenter().end(functionContext, input, null, throwable);
       }
 
       OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);

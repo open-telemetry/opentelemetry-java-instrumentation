@@ -15,6 +15,8 @@ configurations:
     type: list
     default: ''
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    description: Enables experimental receive telemetry for Kafka instrumentation.
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
     type: boolean
     default: false

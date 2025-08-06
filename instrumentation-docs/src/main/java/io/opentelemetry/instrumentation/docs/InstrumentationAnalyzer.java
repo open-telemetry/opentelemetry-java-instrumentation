@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
@@ -76,7 +77,7 @@ class InstrumentationAnalyzer {
     }
     try {
       return YamlHelper.metaDataParser(metadataFile);
-    } catch (ValueInstantiationException e) {
+    } catch (ValueInstantiationException | MismatchedInputException e) {
       logger.severe("Error parsing metadata file for " + module.getInstrumentationName());
       throw e;
     }

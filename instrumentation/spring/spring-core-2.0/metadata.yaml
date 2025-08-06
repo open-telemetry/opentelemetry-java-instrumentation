@@ -1,0 +1,5 @@
+description: >
+  This instrumentation ensures proper context propagation for asynchronous operations
+  within Spring Core. It modifies how tasks are submitted and executed to ensure that
+  spans created by other instrumentations are correctly linked across thread boundaries,
+  rather than generating any new telemetry itself.

@@ -40,7 +40,7 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.8")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:8.3.9")
 
   testImplementation("org.assertj:assertj-core:3.27.3")
 

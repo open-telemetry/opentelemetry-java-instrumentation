@@ -127,7 +127,7 @@ class ApacheHttpAsyncClientTest {
   private static class ResponseCallback implements FutureCallback<SimpleHttpResponse> {
     private final HttpClientResult httpClientResult;
 
-    public ResponseCallback(HttpClientResult httpClientResult) {
+    ResponseCallback(HttpClientResult httpClientResult) {
       this.httpClientResult = httpClientResult;
     }
 

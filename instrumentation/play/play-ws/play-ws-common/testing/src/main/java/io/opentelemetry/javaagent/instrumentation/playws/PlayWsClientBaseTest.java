@@ -109,7 +109,7 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
 
   private static class CustomNameResolver extends InetNameResolver {
 
-    public CustomNameResolver(EventExecutor executor) {
+    CustomNameResolver(EventExecutor executor) {
       super(executor);
     }
 

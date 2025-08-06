@@ -46,7 +46,6 @@ tasks.withType<Test>().configureEach {
 
   systemProperty("metaDataConfig", "otel.instrumentation.apache-shenyu.experimental-span-attributes=true")
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
 
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")

@@ -30,10 +30,10 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class AwsLambdaWrapperTest {
+class AwsLambdaWrapperTest {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Mock private Context context;
 
@@ -177,8 +177,7 @@ public class AwsLambdaWrapperTest {
     }
   }
 
-  @SuppressWarnings("UnusedMethod")
-  private static class CustomType {
+  static class CustomType {
     String key;
     String value;
 
