@@ -1,6 +1,10 @@
 name: PR build fake backend images for smoke tests
 
 on:
+  push:
+    paths:
+      - "smoke-tests/images/fake-backend/**"
+      - ".github/workflows/pr-smoke-test-fake-backend-images.yml"
   pull_request:
     paths:
       - "smoke-tests/images/fake-backend/**"
@@ -25,16 +29,13 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
         with:
           cache-read-only: true
 
       - name: Build multi-arch Docker image (without push)
-        run: ./gradlew :smoke-tests:images:fake-backend:buildMultiArchImageLocal
+        run: ./gradlew :smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
 
   buildWindows:
     runs-on: windows-latest

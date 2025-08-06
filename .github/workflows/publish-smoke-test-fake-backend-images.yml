@@ -5,8 +5,6 @@ on:
     paths:
       - "smoke-tests/images/fake-backend/**"
       - ".github/workflows/publish-smoke-test-fake-backend-images.yml"
-    branches:
-      - main
   workflow_dispatch:
 
 permissions:
@@ -30,9 +28,6 @@ jobs:
           distribution: temurin
           java-version-file: .java-version
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435 # v3.11.1
-
       - name: Login to GitHub package registry
         uses: docker/login-action@184bdaa0721073962dff0199f1fb9940f07167d1 # v3.5.0
         with:
@@ -47,7 +42,7 @@ jobs:
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Build and push multi-arch Docker image
-        run: ./gradlew :smoke-tests:images:fake-backend:buildMultiArchImage -PextraTag=${{ env.TAG }}
+        run: ./gradlew :smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}
 
   publishWindows:
     permissions:
