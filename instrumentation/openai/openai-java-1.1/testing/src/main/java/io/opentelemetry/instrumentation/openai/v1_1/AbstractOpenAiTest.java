@@ -41,26 +41,35 @@ abstract class AbstractOpenAiTest {
 
   protected abstract OpenAIClientAsync wrap(OpenAIClientAsync client);
 
+  private OpenAIClient rawClient;
+  private OpenAIClientAsync rawClientAsync;
+
   protected final OpenAIClient getRawClient() {
-    OpenAIOkHttpClient.Builder builder =
-        OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
-    if (recording.isRecording()) {
-      builder.apiKey(System.getenv("OPENAI_API_KEY"));
-    } else {
-      builder.apiKey("unused");
+    if (rawClient == null) {
+      OpenAIOkHttpClient.Builder builder =
+          OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
+      if (recording.isRecording()) {
+        builder.apiKey(System.getenv("OPENAI_API_KEY"));
+      } else {
+        builder.apiKey("unused");
+      }
+      rawClient = builder.build();
     }
-    return builder.build();
+    return rawClient;
   }
 
   protected final OpenAIClientAsync getRawClientAsync() {
-    OpenAIOkHttpClientAsync.Builder builder =
-        OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
-    if (recording.isRecording()) {
-      builder.apiKey(System.getenv("OPENAI_API_KEY"));
-    } else {
-      builder.apiKey("unused");
+    if (rawClientAsync == null) {
+      OpenAIOkHttpClientAsync.Builder builder =
+          OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
+      if (recording.isRecording()) {
+        builder.apiKey(System.getenv("OPENAI_API_KEY"));
+      } else {
+        builder.apiKey("unused");
+      }
+      rawClientAsync = builder.build();
     }
-    return builder.build();
+    return rawClientAsync;
   }
 
   protected final OpenAIClient getClient() {

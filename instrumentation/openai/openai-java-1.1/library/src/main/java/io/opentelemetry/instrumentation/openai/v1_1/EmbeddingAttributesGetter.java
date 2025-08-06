@@ -19,7 +19,7 @@ enum EmbeddingAttributesGetter
 
   @Override
   public String getOperationName(EmbeddingCreateParams request) {
-    return GenAiAttributes.GenAiOperationNameIncubatingValues.EMBEDDING;
+    return GenAiAttributes.GenAiOperationNameIncubatingValues.EMBEDDINGS;
   }
 
   @Override

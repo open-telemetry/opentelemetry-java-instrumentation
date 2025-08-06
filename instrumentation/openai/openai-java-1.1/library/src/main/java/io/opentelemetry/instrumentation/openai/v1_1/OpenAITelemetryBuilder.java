@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 /** A builder of {@link OpenAITelemetry}. */
 @SuppressWarnings("IdentifierName") // Want to match library's convention
@@ -63,7 +64,7 @@ public final class OpenAITelemetryBuilder {
             .addAttributesExtractor(
                 GenAiAttributesExtractor.create(EmbeddingAttributesGetter.INSTANCE))
             .addOperationMetrics(GenAiClientMetrics.get())
-            .buildInstrumenter();
+            .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
     return new OpenAITelemetry(
