@@ -76,7 +76,7 @@ tasks {
     workingDir(backendDockerBuildDir)
     commandLine(
       "docker", "buildx", "build",
-      "--platform", "linux/amd64,linux/arm64",
+      "--platform", "linux/amd64",
       "--tag", "ghcr.io/$repo/smoke-test-fake-backend:$extraTag",
       "--load",
       "-f", "Dockerfile",

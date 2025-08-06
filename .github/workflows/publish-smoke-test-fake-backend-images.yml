@@ -5,6 +5,8 @@ on:
     paths:
       - "smoke-tests/images/fake-backend/**"
       - ".github/workflows/publish-smoke-test-fake-backend-images.yml"
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
