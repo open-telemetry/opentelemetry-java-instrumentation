@@ -30,6 +30,7 @@ import io.reactivex.internal.operators.observable.ObservablePublish;
 import io.reactivex.schedulers.Schedulers;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -342,7 +343,8 @@ public abstract class AbstractRxJava2Test {
   }
 
   @Test
-  void basicObservableFromCallable() {
+  void observableFromCallableContextPropagation() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
     AtomicReference<String> traceId = new AtomicReference<>();
     AtomicReference<String> innerObservableTraceId = new AtomicReference<>();
     AtomicReference<String> endObservableTraceId = new AtomicReference<>();
@@ -359,11 +361,14 @@ public abstract class AbstractRxJava2Test {
                   .subscribeOn(Schedulers.io())
                   .observeOn(Schedulers.single())
                   .subscribe(
-                      data ->
-                          endObservableTraceId.set(Span.current().getSpanContext().getTraceId()));
+                      data -> {
+                        endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                        latch.countDown();
+                      });
           assertThat(unused).isNotNull();
         });
 
+    latch.await();
     assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
     assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
   }
