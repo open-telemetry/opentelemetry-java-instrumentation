@@ -1,15 +1,10 @@
 name: PR build fake backend images for smoke tests
 
 on:
-  push:
-    paths:
-      - "smoke-tests/images/fake-backend/**"
-      - ".github/workflows/pr-smoke-test-fake-backend-images.yml"
   pull_request:
     paths:
       - "smoke-tests/images/fake-backend/**"
       - ".github/workflows/pr-smoke-test-fake-backend-images.yml"
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -34,7 +29,7 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Build multi-arch Docker image (without push)
+      - name: Build Docker image
         run: ./gradlew :smoke-tests:images:fake-backend:jibDockerBuild -Djib.httpTimeout=120000 -Djib.console=plain
 
   buildWindows:

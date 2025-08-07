@@ -78,7 +78,7 @@ tasks {
   val dockerPush by registering(DockerPushImage::class) {
     group = "publishing"
     description = "Push all Docker images for the test backend"
-    dependsOn(jib, windowsBackendImageBuild)
+    dependsOn(windowsBackendImageBuild)
     images.add("ghcr.io/$repo/smoke-test-fake-backend-windows:$extraTag")
   }
 }

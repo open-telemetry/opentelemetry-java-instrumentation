@@ -5,6 +5,8 @@ on:
     paths:
       - "smoke-tests/images/fake-backend/**"
       - ".github/workflows/publish-smoke-test-fake-backend-images.yml"
+    branches:
+      - main
   workflow_dispatch:
 
 permissions:
@@ -41,7 +43,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
-      - name: Build and push multi-arch Docker image
+      - name: Build Docker image
         run: ./gradlew :smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${{ env.TAG }}
 
   publishWindows:
@@ -78,7 +80,7 @@ jobs:
         uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
 
       - name: Build Docker image
-        run: ./gradlew :smoke-tests:images:fake-backend:windowsBackendImageBuild -PextraTag=${{ env.TAG }}
+        run: ./gradlew :smoke-tests:images:fake-backend:dockerPush -PextraTag=${{ env.TAG }}
 
   workflow-notification:
     permissions:
