@@ -166,7 +166,7 @@ public abstract class AbstractRedissonClientTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    span.hasName("DB Query")
+                    span.hasName("BATCH")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),
@@ -206,7 +206,7 @@ public abstract class AbstractRedissonClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
                 span ->
-                    span.hasName("DB Query")
+                    span.hasName("BATCH")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TYPE, "ipv4"),
