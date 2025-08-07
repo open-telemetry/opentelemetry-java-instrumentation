@@ -10,8 +10,8 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -30,7 +30,9 @@ import io.reactivex.internal.operators.observable.ObservablePublish;
 import io.reactivex.schedulers.Schedulers;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -340,28 +342,43 @@ public abstract class AbstractRxJava2Test {
                             .hasParent(trace.getSpan(0))));
   }
 
-
   @Test
-  @SuppressWarnings("CanIgnoreReturnValue")
-  public void basicObservableFromCallable() {
-    Observable<String> test = createParentSpan(() -> Observable.fromCallable(() -> "success"));
-    assertThat(test).isNotNull();
-
-    // Actually subscribe to trigger the Observable execution
-    String result = test.blockingFirst();
-    assertThat(result).isEqualTo("success");
-
+  public void basicObservableFromCallable() throws InterruptedException {
+    CountDownLatch countDownLatch = new CountDownLatch(1);
+    AtomicReference<Throwable> errorRef = new AtomicReference<>();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
-  }
+        .runWithSpan(
+            "parent",
+            () -> {
+              String traceId = Span.current().getSpanContext().getTraceId();
 
+              Disposable result =
+                  Observable.fromCallable(
+                          () -> {
+                            assertThat(traceId)
+                                .isEqualTo(Span.current().getSpanContext().getTraceId());
+                            return "success";
+                          })
+                      .subscribeOn(Schedulers.io())
+                      .observeOn(Schedulers.single())
+                      .doOnNext(
+                          data ->
+                              assertThat(traceId)
+                                  .isEqualTo(Span.current().getSpanContext().getTraceId()))
+                      .subscribe(
+                          data -> countDownLatch.countDown(),
+                          error -> {
+                            errorRef.set(error);
+                            countDownLatch.countDown();
+                          });
+              assertThat(result).isNotNull();
+            });
+    countDownLatch.await();
+    if (errorRef.get() != null) {
+      throw new AssertionError("Assertion failed in observable thread", errorRef.get());
+    }
+    testing().waitForTraces(1);
+  }
 
   @Test
   public void connectableFlowable() {
@@ -800,27 +817,6 @@ public abstract class AbstractRxJava2Test {
                             .hasParent(trace.getSpan(0)),
                     span ->
                         span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  public void basicObservableFromCallableTest() {
-    Disposable disposable = Observable.fromCallable(() -> "success")
-        .onErrorReturnItem("")
-        .subscribeOn(Schedulers.io())
-        .observeOn(Schedulers.single())
-        .subscribe(data -> System.out.print("done"));
-
-    assertThat(disposable).isNotNull();
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
   }

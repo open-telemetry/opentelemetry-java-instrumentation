@@ -67,7 +67,6 @@ public final class TracingAssembly {
   @Nullable
   static volatile Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
 
-
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
   @Nullable
