@@ -65,6 +65,12 @@ public final class TracingAssembly {
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
   @Nullable
+  static volatile Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
+
+
+  @SuppressWarnings("rawtypes")
+  @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<
           ? super Completable, ? super CompletableObserver, ? extends CompletableObserver>
       oldOnCompletableSubscribe;
@@ -118,6 +124,8 @@ public final class TracingAssembly {
 
       enableObservable();
 
+      enableObservableAssembly();
+
       enableCompletable();
 
       enableSingle();
@@ -141,6 +149,8 @@ public final class TracingAssembly {
       }
 
       disableObservable();
+
+      disableObservableAssembly();
 
       disableCompletable();
 
@@ -221,6 +231,18 @@ public final class TracingAssembly {
 
   @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableObservableAssembly() {
+    if (TracingObserver.canEnable()) {
+      oldOnObservableAssembly = RxJavaPlugins.getOnObservableAssembly();
+      RxJavaPlugins.setOnObservableAssembly(
+          compose(
+              oldOnObservableAssembly,
+              observable -> new TracingObservable(observable, Context.current())));
+    }
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableSingle() {
     oldOnSingleSubscribe = RxJavaPlugins.getOnSingleSubscribe();
     RxJavaPlugins.setOnSingleSubscribe(
@@ -272,6 +294,12 @@ public final class TracingAssembly {
   private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void disableObservableAssembly() {
+    RxJavaPlugins.setOnObservableAssembly(oldOnObservableAssembly);
+    oldOnObservableAssembly = null;
   }
 
   @GuardedBy("TracingAssembly.class")

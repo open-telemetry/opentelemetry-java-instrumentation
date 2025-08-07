@@ -10,6 +10,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -23,6 +24,7 @@ import io.reactivex.Maybe;
 import io.reactivex.Observable;
 import io.reactivex.Scheduler;
 import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.internal.operators.flowable.FlowablePublish;
 import io.reactivex.internal.operators.observable.ObservablePublish;
 import io.reactivex.schedulers.Schedulers;
@@ -337,6 +339,29 @@ public abstract class AbstractRxJava2Test {
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
   }
+
+
+  @Test
+  @SuppressWarnings("CanIgnoreReturnValue")
+  public void basicObservableFromCallable() {
+    Observable<String> test = createParentSpan(() -> Observable.fromCallable(() -> "success"));
+    assertThat(test).isNotNull();
+
+    // Actually subscribe to trigger the Observable execution
+    String result = test.blockingFirst();
+    assertThat(result).isEqualTo("success");
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(ADD_ONE)
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
 
   @Test
   public void connectableFlowable() {
@@ -779,8 +804,29 @@ public abstract class AbstractRxJava2Test {
                             .hasParent(trace.getSpan(0))));
   }
 
-  @ParameterizedTest
+  @Test
+  public void basicObservableFromCallableTest() {
+    Disposable disposable = Observable.fromCallable(() -> "success")
+        .onErrorReturnItem("")
+        .subscribeOn(Schedulers.io())
+        .observeOn(Schedulers.single())
+        .subscribe(data -> System.out.print("done"));
+
+    assertThat(disposable).isNotNull();
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(ADD_ONE)
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
   @MethodSource("schedulers")
+  @ParameterizedTest
   public void flowableMultiResults(Scheduler scheduler) {
     List<Integer> result =
         testing()
