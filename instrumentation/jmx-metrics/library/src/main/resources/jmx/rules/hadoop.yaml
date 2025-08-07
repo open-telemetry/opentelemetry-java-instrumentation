@@ -1,0 +1,73 @@
+---
+rules:
+  - bean: Hadoop:service=NameNode,name=FSNamesystem
+    prefix: hadoop.
+    metricAttribute:
+      hadoop.node.name: param(tag.Hostname)
+    mapping:
+      # hadoop.capacity
+      CapacityTotal:
+        metric: capacity
+        type: updowncounter
+        unit: By
+        desc: Current raw capacity of data nodes.
+      # hadoop.capacity.used
+      CapacityUsed:
+        metric: capacity.used
+        type: updowncounter
+        unit: By
+        desc: Current used capacity across all data nodes.
+      # hadoop.block.count
+      BlocksTotal:
+        metric: block.count
+        type: updowncounter
+        unit: "{block}"
+        desc: Current number of allocated blocks in the system.
+      # hadoop.block.missing
+      MissingBlocks:
+        metric: block.missing
+        type: updowncounter
+        unit: "{block}"
+        desc: Current number of missing blocks.
+      # hadoop.block.corrupt
+      CorruptBlocks:
+        metric: block.corrupt
+        type: updowncounter
+        unit: "{block}"
+        desc: Current number of blocks with corrupt replicas.
+      # hadoop.volume.failure.count
+      VolumeFailuresTotal:
+        metric: volume.failure.count
+        type: counter
+        unit: "{failure}"
+        desc: Total number of volume failures across all data nodes.
+        metricAttribute:
+          direction: const(sent)
+      # hadoop.file.count
+      FilesTotal:
+        metric: file.count
+        type: updowncounter
+        unit: "{file}"
+        desc: Current number of files and directories.
+      # hadoop.connection.count
+      TotalLoad:
+        metric: connection.count
+        type: updowncounter
+        unit: "{connection}"
+        desc: Current number of connections.
+
+      # hadoop.datanode.count
+      NumLiveDataNodes:
+        metric: &metric datanode.count
+        type: &type updowncounter
+        unit: &unit "{node}"
+        desc: &desc The number of data nodes.
+        metricAttribute:
+          hadoop.datanode.state: const(live)
+      NumDeadDataNodes:
+        metric: *metric
+        type: *type
+        unit: *unit
+        desc: *desc
+        metricAttribute:
+          hadoop.datanode.state: const(dead)

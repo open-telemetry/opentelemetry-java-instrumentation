@@ -32,7 +32,7 @@ class JmxMetricInsightInstallerTest {
   private static final String PATH_TO_ALL_EXISTING_RULES = "src/main/resources/jmx/rules";
   private static final Set<String> FILES_TO_BE_TESTED =
       new HashSet<>(
-          Arrays.asList("activemq.yaml", "camel.yaml", "hadoop.yaml", "kafka-broker.yaml"));
+          Arrays.asList("activemq.yaml", "camel.yaml", "kafka-broker.yaml"));
 
   @Test
   void testToVerifyExistingRulesAreValid() throws Exception {
