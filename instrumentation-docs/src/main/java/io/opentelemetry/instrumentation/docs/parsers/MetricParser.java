@@ -29,7 +29,7 @@ public class MetricParser extends TelemetryParser {
    * @param fileManager the file manager to use for file operations
    * @return a map where the key is the 'when' condition and the value is a list of metrics
    */
-  public static Map<String, List<EmittedMetrics.Metric>> get(
+  public static Map<String, List<EmittedMetrics.Metric>> getMetrics(
       InstrumentationModule module, FileManager fileManager) {
     Map<String, EmittedMetrics> metrics =
         EmittedMetricsParser.getMetricsFromFiles(fileManager.rootDir(), module.getSrcPath());

@@ -248,7 +248,7 @@ class SpanParserTest {
 
       EmittedSpans emittedSpans = fileContents.get("default");
 
-      // Aggregate spans - only target scope should be included
+      // use armeria scope that doesn't match the scope in the file
       Map<String, Map<String, Set<TelemetryAttribute>>> spans =
           SpanParser.SpanAggregator.aggregateSpans(
               "default", emittedSpans, "io.opentelemetry.armeria-grpc-1.14");

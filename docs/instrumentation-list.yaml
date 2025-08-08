@@ -1659,7 +1659,8 @@ libraries:
       - org.apache.camel:camel-core:[2.19,3)
     configurations:
     - name: otel.instrumentation.camel.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of experimental `camel.uri`, `camel.kafka.partitionKey`, `camel.kafka.key` and `camel.kafka.offset` span attributes.
       type: boolean
       default: false
   cassandra:
@@ -1677,6 +1678,55 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.cassandra.table
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: cassandra-4.0
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -1691,6 +1741,79 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.cassandra.consistency_level
+          type: STRING
+        - name: db.cassandra.coordinator.dc
+          type: STRING
+        - name: db.cassandra.coordinator.id
+          type: STRING
+        - name: db.cassandra.idempotence
+          type: BOOLEAN
+        - name: db.cassandra.page_size
+          type: LONG
+        - name: db.cassandra.speculative_execution_count
+          type: LONG
+        - name: db.cassandra.table
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: cassandra.consistency.level
+          type: STRING
+        - name: cassandra.coordinator.dc
+          type: STRING
+        - name: cassandra.coordinator.id
+          type: STRING
+        - name: cassandra.page.size
+          type: LONG
+        - name: cassandra.query.idempotent
+          type: BOOLEAN
+        - name: cassandra.speculative_execution.count
+          type: LONG
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: cassandra-4.4
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -1707,6 +1830,79 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.cassandra.consistency_level
+          type: STRING
+        - name: db.cassandra.coordinator.dc
+          type: STRING
+        - name: db.cassandra.coordinator.id
+          type: STRING
+        - name: db.cassandra.idempotence
+          type: BOOLEAN
+        - name: db.cassandra.page_size
+          type: LONG
+        - name: db.cassandra.speculative_execution_count
+          type: LONG
+        - name: db.cassandra.table
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: cassandra.consistency.level
+          type: STRING
+        - name: cassandra.coordinator.dc
+          type: STRING
+        - name: cassandra.coordinator.id
+          type: STRING
+        - name: cassandra.page.size
+          type: LONG
+        - name: cassandra.query.idempotent
+          type: BOOLEAN
+        - name: cassandra.speculative_execution.count
+          type: LONG
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   clickhouse:
   - name: clickhouse-client-0.5
     description: Instruments the V1 ClickHouseClient, providing database client spans
@@ -1785,8 +1981,8 @@ libraries:
       - com.couchbase.client:java-client:[2,3)
     configurations:
     - name: otel.instrumentation.couchbase.experimental-span-attributes
-      description: Enables experimental span attributes couchbase.operation_id and
-        couchbase.local.address
+      description: Enables experimental span attributes `couchbase.operation_id` and
+        `couchbase.local.address`
       type: boolean
       default: false
   - name: couchbase-2.6
