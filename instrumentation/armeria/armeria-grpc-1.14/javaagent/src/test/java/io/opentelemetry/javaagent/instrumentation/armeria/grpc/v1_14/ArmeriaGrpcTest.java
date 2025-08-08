@@ -22,6 +22,7 @@ import example.GreeterGrpc;
 import example.Helloworld;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.semconv.incubating.MessageIncubatingAttributes;
@@ -32,6 +33,11 @@ class ArmeriaGrpcTest {
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private static final AttributeKey<Long> RPC_REQUEST_BODY_SIZE =
+      AttributeKey.longKey("rpc.request.body.size");
+  private static final AttributeKey<Long> RPC_RESPONSE_BODY_SIZE =
+      AttributeKey.longKey("rpc.response.body.size");
 
   @RegisterExtension
   static final ServerExtension server =
@@ -63,12 +69,12 @@ class ArmeriaGrpcTest {
     GreeterGrpc.GreeterBlockingStub client =
         GrpcClients.builder(server.httpUri()).build(GreeterGrpc.GreeterBlockingStub.class);
 
-    Helloworld.Response response =
-        testing.runWithSpan(
-            "parent",
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    Helloworld.Response response = testing.runWithSpan("parent", () -> client.sayHello(request));
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
+    int requestSerializedSize = request.getSerializedSize();
+    int responseSerializedSize = response.getSerializedSize();
 
     testing.waitAndAssertTraces(
         trace ->
@@ -83,6 +89,8 @@ class ArmeriaGrpcTest {
                             equalTo(RPC_SERVICE, "example.Greeter"),
                             equalTo(RPC_METHOD, "SayHello"),
                             equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(RPC_RESPONSE_BODY_SIZE, responseSerializedSize),
+                            equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, (long) server.httpPort()))
                         .hasEventsSatisfyingExactly(
@@ -108,6 +116,8 @@ class ArmeriaGrpcTest {
                             equalTo(RPC_SERVICE, "example.Greeter"),
                             equalTo(RPC_METHOD, "SayHello"),
                             equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
+                            equalTo(RPC_REQUEST_BODY_SIZE, responseSerializedSize),
+                            equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server.httpPort()))
                         .hasEventsSatisfyingExactly(
