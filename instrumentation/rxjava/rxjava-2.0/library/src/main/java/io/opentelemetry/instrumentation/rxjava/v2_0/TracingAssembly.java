@@ -93,6 +93,11 @@ public final class TracingAssembly {
   private static Function<? super ParallelFlowable, ? extends ParallelFlowable>
       oldOnParallelAssembly;
 
+  @SuppressWarnings("rawtypes")
+  @GuardedBy("TracingAssembly.class")
+  @Nullable
+  private static Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
+
   @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
@@ -118,6 +123,8 @@ public final class TracingAssembly {
 
       enableObservable();
 
+      enableObservableAssembly();
+
       enableCompletable();
 
       enableSingle();
@@ -141,6 +148,8 @@ public final class TracingAssembly {
       }
 
       disableObservable();
+
+      disableObservableAssembly();
 
       disableCompletable();
 
@@ -221,6 +230,24 @@ public final class TracingAssembly {
 
   @GuardedBy("TracingAssembly.class")
   @SuppressWarnings({"rawtypes", "unchecked"})
+  private static void enableObservableAssembly() {
+    oldOnObservableAssembly = RxJavaPlugins.getOnObservableAssembly();
+    RxJavaPlugins.setOnObservableAssembly(
+        compose(
+            oldOnObservableAssembly,
+            observable -> {
+              if (observable
+                  .getClass()
+                  .getName()
+                  .equals("io.reactivex.internal.operators.observable.ObservableFromCallable")) {
+                return new TracingCallableObservable(observable, Context.current());
+              }
+              return observable;
+            }));
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableSingle() {
     oldOnSingleSubscribe = RxJavaPlugins.getOnSingleSubscribe();
     RxJavaPlugins.setOnSingleSubscribe(
@@ -272,6 +299,12 @@ public final class TracingAssembly {
   private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void disableObservableAssembly() {
+    RxJavaPlugins.setOnObservableAssembly(oldOnObservableAssembly);
+    oldOnObservableAssembly = null;
   }
 
   @GuardedBy("TracingAssembly.class")
