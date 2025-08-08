@@ -1,0 +1,4 @@
+name: oshi-metrics
+description: OSHI System Metrics Semantic Conventions
+semconv_version: v1.34.0
+schema_base_url: https://github.com/open-telemetry/opentelemetry-java-instrumentation/tree/main/instrumentation/oshi
