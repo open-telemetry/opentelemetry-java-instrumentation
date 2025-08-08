@@ -15,6 +15,7 @@ final class GenAiAttributes {
 
   static final class GenAiOperationNameIncubatingValues {
     static final String CHAT = "chat";
+    static final String EMBEDDINGS = "embeddings";
 
     private GenAiOperationNameIncubatingValues() {}
   }
