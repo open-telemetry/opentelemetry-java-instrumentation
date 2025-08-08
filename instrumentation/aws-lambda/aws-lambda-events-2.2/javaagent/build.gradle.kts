@@ -32,3 +32,9 @@ dependencies {
   testImplementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing"))
   testInstrumentation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent"))
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

@@ -1,5 +1,5 @@
 configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
-    description: Enables experimental span attributes couchbase.operation_id and couchbase.local.address
+    description: Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`
     type: boolean
     default: false

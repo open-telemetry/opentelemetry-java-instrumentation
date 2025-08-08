@@ -1,3 +1,7 @@
+description: >
+  This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans
+  and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS
+  and Bedrock.
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >
@@ -10,7 +14,9 @@ configurations:
     type: list
     default: ''
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
-    description: Enables experimental span attributes for AWS SDK instrumentation.
+    description: >
+      Enables experimental span attributes `aws.agent`, `aws.lambda.function.arn` and
+      `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false
   - name: otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -18,7 +24,9 @@ configurations:
     type: boolean
     default: false
   - name: otel.instrumentation.genai.capture-message-content
-    description: Determines whether Generative AI events include full content of user and assistant messages. Note that full content can have data privacy and size concerns and care should be taken when enabling this
+    description: >
+      Determines whether Generative AI events include full content of user and assistant messages.
+      Note that full content can have data privacy and size concerns and care should be taken when enabling this
     type: boolean
     default: false
   - name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
