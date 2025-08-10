@@ -20,7 +20,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
 
-  latestDepTestLibrary("com.openai:openai-java:2.+")
+  latestDepTestLibrary("com.openai:openai-java:2.+") // documented limitation
 }
 
 tasks {
