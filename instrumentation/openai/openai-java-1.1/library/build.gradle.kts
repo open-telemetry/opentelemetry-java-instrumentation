@@ -7,6 +7,8 @@ dependencies {
   library("com.openai:openai-java:1.1.0")
 
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
+
+  latestDepTestLibrary("com.openai:openai-java:2.+")
 }
 
 tasks {
