@@ -50,7 +50,6 @@ tasks {
     }
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
     systemProperty("metaDataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 

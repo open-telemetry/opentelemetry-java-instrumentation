@@ -89,7 +89,7 @@ val DEPENDENCIES = listOf(
   "com.github.stefanbirkner:system-lambda:1.2.1",
   "com.github.stefanbirkner:system-rules:1.19.0",
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.7",
+  "com.uber.nullaway:nullaway:0.12.8",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.10.0",
   "commons-codec:commons-codec:1.19.0",
@@ -109,7 +109,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.7.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.3",
+  "org.assertj:assertj-core:3.27.4",
   "org.awaitility:awaitility:4.3.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",

@@ -41,7 +41,6 @@ tasks.withType<Test>().configureEach {
   }
 
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an

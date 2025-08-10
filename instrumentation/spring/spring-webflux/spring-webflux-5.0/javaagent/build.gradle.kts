@@ -72,7 +72,6 @@ tasks.withType<Test>().configureEach {
   systemProperty("metaDataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
   systemProperty("testLatestDeps", latestDepTest)
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
 }
 
 if (latestDepTest) {
