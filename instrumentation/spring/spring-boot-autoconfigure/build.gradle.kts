@@ -63,6 +63,7 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-webflux:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-data-mongodb:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-data-r2dbc:$springBootVersion")
+  library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   implementation(project(":sdk-autoconfigure-support"))
