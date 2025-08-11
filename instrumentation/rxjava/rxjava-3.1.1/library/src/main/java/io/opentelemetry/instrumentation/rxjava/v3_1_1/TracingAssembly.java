@@ -98,6 +98,10 @@ public final class TracingAssembly {
       oldOnParallelAssembly;
 
   @GuardedBy("TracingAssembly.class")
+  @Nullable
+  private static Function<? super Runnable, ? extends Runnable> oldScheduleHandler;
+
+  @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
   public static TracingAssembly create() {
@@ -192,14 +196,20 @@ public final class TracingAssembly {
 
   @GuardedBy("TracingAssembly.class")
   private static void enableObservableAssembly() {
+    oldScheduleHandler = RxJavaPlugins.getScheduleHandler();
     RxJavaPlugins.setScheduleHandler(
         runnable -> {
           Context context = Context.current();
-          return () -> {
-            try (Scope ignored = context.makeCurrent()) {
-              runnable.run();
-            }
-          };
+          Runnable wrappedRunnable =
+              () -> {
+                try (Scope ignored = context.makeCurrent()) {
+                  runnable.run();
+                }
+              };
+          // If there was a previous handler, apply it to our wrapped runnable
+          return oldScheduleHandler != null
+              ? oldScheduleHandler.apply(wrappedRunnable)
+              : wrappedRunnable;
         });
   }
 
@@ -295,7 +305,8 @@ public final class TracingAssembly {
 
   @GuardedBy("TracingAssembly.class")
   private static void disableObservableAssembly() {
-    RxJavaPlugins.setScheduleHandler(null);
+    RxJavaPlugins.setScheduleHandler(oldScheduleHandler);
+    oldScheduleHandler = null;
   }
 
   @GuardedBy("TracingAssembly.class")

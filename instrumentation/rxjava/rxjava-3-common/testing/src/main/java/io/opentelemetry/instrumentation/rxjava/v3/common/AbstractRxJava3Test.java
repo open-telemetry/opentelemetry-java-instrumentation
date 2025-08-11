@@ -25,13 +25,17 @@ import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.disposables.Disposable;
+import io.reactivex.rxjava3.functions.Function;
 import io.reactivex.rxjava3.internal.operators.flowable.FlowablePublish;
 import io.reactivex.rxjava3.internal.operators.observable.ObservablePublish;
+import io.reactivex.rxjava3.plugins.RxJavaPlugins;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -886,5 +890,54 @@ public abstract class AbstractRxJava3Test {
                 span -> span.get(0).getAttributes().get(AttributeKey.longKey("iteration"))),
             assertions);
     testing().clearData();
+  }
+
+  @Test
+  void scheduleHandlerChainingPreservesExistingHandler() throws InterruptedException {
+    AtomicInteger customHandlerCallCount = new AtomicInteger(0);
+    AtomicBoolean customHandlerExecuted = new AtomicBoolean(false);
+
+    Function<? super Runnable, ? extends Runnable> originalHandler =
+        RxJavaPlugins.getScheduleHandler();
+    Function<Runnable, Runnable> customHandler =
+        runnable ->
+            () -> {
+              customHandlerCallCount.incrementAndGet();
+              customHandlerExecuted.set(true);
+              runnable.run();
+            };
+
+    try {
+      RxJavaPlugins.setScheduleHandler(customHandler);
+
+      CountDownLatch latch = new CountDownLatch(1);
+      AtomicBoolean observableExecuted = new AtomicBoolean(false);
+      AtomicReference<String> traceId = new AtomicReference<>();
+
+      createParentSpan(
+          () -> {
+            traceId.set(Span.current().getSpanContext().getTraceId());
+            Disposable unused =
+                Observable.fromCallable(
+                        () -> {
+                          observableExecuted.set(true);
+                          return "test";
+                        })
+                    .subscribeOn(Schedulers.io())
+                    .subscribe(result -> latch.countDown());
+          });
+
+      latch.await();
+      assertThat(observableExecuted.get()).isTrue();
+      assertThat(customHandlerExecuted.get()).isTrue();
+      assertThat(customHandlerCallCount.get()).isGreaterThan(0);
+
+      assertThat(traceId.get()).isNotNull();
+      assertThat(traceId.get()).isNotEqualTo("00000000000000000000000000000000");
+
+    } finally {
+      // Restore original handler to avoid affecting other tests
+      RxJavaPlugins.setScheduleHandler(originalHandler);
+    }
   }
 }
