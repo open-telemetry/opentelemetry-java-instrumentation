@@ -123,7 +123,10 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Override
   public Map<String, String> getMap(String propertyName) {
     DeclarativeConfigProperties propertyValue =
-        getPropertyValue(propertyName, DeclarativeConfigProperties.class, DeclarativeConfigProperties::getStructured);
+        getPropertyValue(
+            propertyName,
+            DeclarativeConfigProperties.class,
+            DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
       return Collections.emptyMap();
     }
@@ -143,7 +146,9 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   @Nullable
   private <T> T getPropertyValue(
-      String property, Class<T> clazz, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
+      String property,
+      Class<T> clazz,
+      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
     T override = clazz.cast(overrideValues.get(property));
     if (override != null) {
       return override;
