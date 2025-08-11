@@ -1,6 +1,13 @@
+description: >
+  This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans
+  and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets
+  manager, SNS/SQS and step functions.
 configurations:
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
-    description: Enables experimental span attributes for AWS SDK instrumentation.
+    description: >
+      Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`,
+      `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and
+      `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled

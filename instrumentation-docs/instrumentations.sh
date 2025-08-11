@@ -114,6 +114,14 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-webmvc:spring-webmvc-6.0:javaagent:test"
   "spring:spring-webmvc:spring-webmvc-6.0:javaagent:testExperimental"
   "openai:openai-java-1.1:javaagent:test"
+  "aws-lambda:aws-lambda-core-1.0:javaagent:test"
+  "aws-lambda:aws-lambda-events-2.2:javaagent:test"
+  "cassandra:cassandra-3.0:javaagent:test"
+  "cassandra:cassandra-3.0:javaagent:testStableSemconv"
+  "cassandra:cassandra-4.0:javaagent:test"
+  "cassandra:cassandra-4.0:javaagent:testStableSemconv"
+  "cassandra:cassandra-4.4:javaagent:test"
+  "cassandra:cassandra-4.4:javaagent:testStableSemconv"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

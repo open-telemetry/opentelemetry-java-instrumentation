@@ -59,6 +59,8 @@ libraries:
           type: STRING
   akka:
   - name: akka-actor-2.3
+    description: This instrumentation provides context propagation for Akka actors,
+      it does not emit any telemetry on its own.
     source_path: instrumentation/akka/akka-actor-2.3
     scope:
       name: io.opentelemetry.akka-actor-2.3
@@ -68,6 +70,8 @@ libraries:
       - com.typesafe.akka:akka-actor_2.12:[2.3,)
       - com.typesafe.akka:akka-actor_2.13:[2.3,)
   - name: akka-actor-fork-join-2.5
+    description: This instrumentation provides context propagation for the Akka Fork-Join
+      Pool, it does not emit any telemetry on its own.
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
     scope:
       name: io.opentelemetry.akka-actor-fork-join-2.5
@@ -887,7 +891,7 @@ libraries:
   aws:
   - name: aws-lambda-core-1.0
     description: |
-      Provides lightweight instrumentation of the Lambda core library, supporting all versions. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+      Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -901,6 +905,13 @@ libraries:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: faas.invocation_id
+          type: STRING
   - name: aws-lambda-events-2.2
     description: |
       Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+.
@@ -918,7 +929,32 @@ libraries:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: faas.invocation_id
+          type: STRING
+        - name: faas.trigger
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: url.full
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: aws-sdk-1.11
+    description: |
+      This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
     source_path: instrumentation/aws-sdk/aws-sdk-1.11
     scope:
       name: io.opentelemetry.aws-sdk-1.11
@@ -931,7 +967,8 @@ libraries:
       - com.amazonaws:aws-java-sdk-core:1.11.0
     configurations:
     - name: otel.instrumentation.aws-sdk.experimental-span-attributes
-      description: Enables experimental span attributes for AWS SDK instrumentation.
+      description: |
+        Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`, `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
@@ -1143,6 +1180,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: aws-sdk-2.2
+    description: |
+      This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS and Bedrock.
     source_path: instrumentation/aws-sdk/aws-sdk-2.2
     scope:
       name: io.opentelemetry.aws-sdk-2.2
@@ -1170,7 +1209,8 @@ libraries:
       type: list
       default: ''
     - name: otel.instrumentation.aws-sdk.experimental-span-attributes
-      description: Enables experimental span attributes for AWS SDK instrumentation.
+      description: |
+        Enables experimental span attributes `aws.agent`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       type: boolean
       default: false
     - name: otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging
@@ -1179,9 +1219,8 @@ libraries:
       type: boolean
       default: false
     - name: otel.instrumentation.genai.capture-message-content
-      description: Determines whether Generative AI events include full content of
-        user and assistant messages. Note that full content can have data privacy
-        and size concerns and care should be taken when enabling this
+      description: |
+        Determines whether Generative AI events include full content of user and assistant messages. Note that full content can have data privacy and size concerns and care should be taken when enabling this
       type: boolean
       default: false
     - name: otel.instrumentation.aws-sdk.experimental-record-individual-http-error
@@ -1499,6 +1538,8 @@ libraries:
           type: STRING
   azure:
   - name: azure-core-1.14
+    description: This instrumentation enables context propagation for the Azure Core
+      library, it does not emit any telemetry on its own.
     source_path: instrumentation/azure-core/azure-core-1.14
     scope:
       name: io.opentelemetry.azure-core-1.14
@@ -1506,6 +1547,8 @@ libraries:
       javaagent:
       - com.azure:azure-core:[1.14.0,1.19.0)
   - name: azure-core-1.19
+    description: This instrumentation enables context propagation for the Azure Core
+      library, it does not emit any telemetry on its own.
     source_path: instrumentation/azure-core/azure-core-1.19
     scope:
       name: io.opentelemetry.azure-core-1.19
@@ -1513,6 +1556,8 @@ libraries:
       javaagent:
       - com.azure:azure-core:[1.19.0,1.36.0)
   - name: azure-core-1.36
+    description: This instrumentation enables context propagation for the Azure Core
+      library, it does not emit any telemetry on its own.
     source_path: instrumentation/azure-core/azure-core-1.36
     scope:
       name: io.opentelemetry.azure-core-1.36
@@ -1583,7 +1628,8 @@ libraries:
       - org.apache.camel:camel-core:[2.19,3)
     configurations:
     - name: otel.instrumentation.camel.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of experimental `camel.uri`, `camel.kafka.partitionKey`, `camel.kafka.key` and `camel.kafka.offset` span attributes.
       type: boolean
       default: false
   cassandra:
@@ -1601,6 +1647,55 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.cassandra.table
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: cassandra-4.0
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -1615,6 +1710,79 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.cassandra.consistency_level
+          type: STRING
+        - name: db.cassandra.coordinator.dc
+          type: STRING
+        - name: db.cassandra.coordinator.id
+          type: STRING
+        - name: db.cassandra.idempotence
+          type: BOOLEAN
+        - name: db.cassandra.page_size
+          type: LONG
+        - name: db.cassandra.speculative_execution_count
+          type: LONG
+        - name: db.cassandra.table
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: cassandra.consistency.level
+          type: STRING
+        - name: cassandra.coordinator.dc
+          type: STRING
+        - name: cassandra.coordinator.id
+          type: STRING
+        - name: cassandra.page.size
+          type: LONG
+        - name: cassandra.query.idempotent
+          type: BOOLEAN
+        - name: cassandra.speculative_execution.count
+          type: LONG
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: cassandra-4.4
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -1631,6 +1799,79 @@ libraries:
       description: Enables statement sanitization for database queries.
       type: boolean
       default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.cassandra.consistency_level
+          type: STRING
+        - name: db.cassandra.coordinator.dc
+          type: STRING
+        - name: db.cassandra.coordinator.id
+          type: STRING
+        - name: db.cassandra.idempotence
+          type: BOOLEAN
+        - name: db.cassandra.page_size
+          type: LONG
+        - name: db.cassandra.speculative_execution_count
+          type: LONG
+        - name: db.cassandra.table
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: cassandra.consistency.level
+          type: STRING
+        - name: cassandra.coordinator.dc
+          type: STRING
+        - name: cassandra.coordinator.id
+          type: STRING
+        - name: cassandra.page.size
+          type: LONG
+        - name: cassandra.query.idempotent
+          type: BOOLEAN
+        - name: cassandra.speculative_execution.count
+          type: LONG
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   clickhouse:
   - name: clickhouse-client-0.5
     description: Instruments the V1 ClickHouseClient, providing database client spans
@@ -1709,8 +1950,8 @@ libraries:
       - com.couchbase.client:java-client:[2,3)
     configurations:
     - name: otel.instrumentation.couchbase.experimental-span-attributes
-      description: Enables experimental span attributes couchbase.operation_id and
-        couchbase.local.address
+      description: Enables experimental span attributes `couchbase.operation_id` and
+        `couchbase.local.address`
       type: boolean
       default: false
   - name: couchbase-2.6
@@ -3648,9 +3889,9 @@ libraries:
       name: io.opentelemetry.openai-java-1.1
     target_versions:
       javaagent:
-      - com.openai:openai-java:[1.1.0,)
+      - com.openai:openai-java:[1.1.0,3)
       library:
-      - com.openai:openai-java:1.1.0
+      - com.openai:openai-java:[1.1.0,2.+)
     configurations:
     - name: otel.instrumentation.genai.capture-message-content
       description: |
