@@ -340,9 +340,6 @@ public final class TracingAssembly {
     if (before == null) {
       return after;
     }
-    if (after == null) {
-      return before;
-    }
     return (T v) -> after.apply(before.apply(v));
   }
 
