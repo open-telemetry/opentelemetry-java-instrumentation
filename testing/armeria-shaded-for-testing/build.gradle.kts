@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.32.5")
+  implementation("com.linecorp.armeria:armeria-junit5:1.33.0")
   implementation("com.google.errorprone:error_prone_annotations")
 }
 
