@@ -23,10 +23,18 @@ sourceSets {
       setSrcDirs(listOf("src/main/javaSpring3"))
     }
   }
+  create("javaSpring4") {
+    java {
+      setSrcDirs(listOf("src/main/javaSpring4"))
+    }
+  }
 }
 
 configurations {
   named("javaSpring3CompileOnly") {
+    extendsFrom(configurations["compileOnly"])
+  }
+  named("javaSpring4CompileOnly") {
     extendsFrom(configurations["compileOnly"])
   }
 }
@@ -106,6 +114,14 @@ dependencies {
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+
+  // give access to common classes, e.g. InstrumentationConfigUtil
+  add("javaSpring4CompileOnly", files(sourceSets.main.get().output.classesDirs))
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-web:4.0.0-M1")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-restclient:4.0.0-M1")
+  add("javaSpring4CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -119,6 +135,7 @@ if (latestDepTest) {
 
 val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
 val testSpring3 = (testJavaVersion == null || testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
+val testSpring4 = (testJavaVersion == null || testJavaVersion.compareTo(JavaVersion.VERSION_17) >= 0)
 
 testing {
   suites {
@@ -173,6 +190,20 @@ testing {
         }
       }
     }
+
+    val testSpring4 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.boot:spring-boot-starter-web:4.0.0-M1")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
+        implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+        implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-test:4.0.0-M1") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+      }
+    }
   }
 }
 
@@ -217,6 +248,30 @@ tasks {
 
   named<Jar>("sourcesJar") {
     from(sourceSets["javaSpring3"].java)
+  }
+
+  named<JavaCompile>("compileJavaSpring4Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<JavaCompile>("compileTestSpring4Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<Test>("testSpring4") {
+    isEnabled = testSpring4
+  }
+
+  named<Jar>("jar") {
+    from(sourceSets["javaSpring4"].output)
+  }
+
+  named<Jar>("sourcesJar") {
+    from(sourceSets["javaSpring4"].java)
   }
 
   val testStableSemconv by registering(Test::class) {
