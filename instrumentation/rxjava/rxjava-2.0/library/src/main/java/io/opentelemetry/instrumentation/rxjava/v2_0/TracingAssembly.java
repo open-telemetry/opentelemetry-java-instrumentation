@@ -234,7 +234,6 @@ public final class TracingAssembly {
     oldOnObservableAssembly = RxJavaPlugins.getOnObservableAssembly();
     RxJavaPlugins.setOnObservableAssembly(
         compose(
-            oldOnObservableAssembly,
             observable -> {
               if (observable
                   .getClass()
@@ -243,7 +242,8 @@ public final class TracingAssembly {
                 return new TracingCallableObservable(observable, Context.current());
               }
               return observable;
-            }));
+            },
+            oldOnObservableAssembly));
   }
 
   @GuardedBy("TracingAssembly.class")
@@ -344,6 +344,9 @@ public final class TracingAssembly {
       Function<? super T, ? extends T> before, Function<? super T, ? extends T> after) {
     if (before == null) {
       return after;
+    }
+    if (after == null) {
+      return before;
     }
     return (T v) -> after.apply(before.apply(v));
   }
