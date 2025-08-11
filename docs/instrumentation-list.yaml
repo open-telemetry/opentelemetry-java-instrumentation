@@ -784,37 +784,6 @@ libraries:
     target_versions:
       javaagent:
       - com.linecorp.armeria:armeria-grpc:[1.14.0,)
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: rpc.grpc.status_code
-          type: LONG
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      - span_kind: SERVER
-        attributes:
-        - name: rpc.grpc.status_code
-          type: LONG
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   async:
   - name: async-http-client-1.9
     description: This instrumentation enables CLIENT spans and metrics for version
@@ -3920,9 +3889,9 @@ libraries:
       name: io.opentelemetry.openai-java-1.1
     target_versions:
       javaagent:
-      - com.openai:openai-java:[1.1.0,)
+      - com.openai:openai-java:[1.1.0,3)
       library:
-      - com.openai:openai-java:1.1.0
+      - com.openai:openai-java:[1.1.0,2.+)
     configurations:
     - name: otel.instrumentation.genai.capture-message-content
       description: |
