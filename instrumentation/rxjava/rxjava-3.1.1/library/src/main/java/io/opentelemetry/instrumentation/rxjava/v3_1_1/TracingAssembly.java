@@ -69,6 +69,11 @@ public final class TracingAssembly {
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
   @Nullable
+  private static Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
+
+  @SuppressWarnings("rawtypes")
+  @GuardedBy("TracingAssembly.class")
+  @Nullable
   private static BiFunction<
           ? super Completable, ? super CompletableObserver, ? extends CompletableObserver>
       oldOnCompletableSubscribe;
@@ -122,6 +127,8 @@ public final class TracingAssembly {
 
       enableObservable();
 
+      enableObservableAssembly();
+
       enableCompletable();
 
       enableSingle();
@@ -145,6 +152,8 @@ public final class TracingAssembly {
       }
 
       disableObservable();
+
+      disableObservableAssembly();
 
       disableCompletable();
 
@@ -184,6 +193,19 @@ public final class TracingAssembly {
                 return new TracingCompletableObserver(observer, context);
               }
             }));
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void enableObservableAssembly() {
+    RxJavaPlugins.setScheduleHandler(
+        runnable -> {
+          Context context = Context.current();
+          return () -> {
+            try (Scope ignored = context.makeCurrent()) {
+              runnable.run();
+            }
+          };
+        });
   }
 
   @GuardedBy("TracingAssembly.class")
@@ -274,6 +296,12 @@ public final class TracingAssembly {
   private static void disableObservable() {
     RxJavaPlugins.setOnObservableSubscribe(oldOnObservableSubscribe);
     oldOnObservableSubscribe = null;
+  }
+
+  @GuardedBy("TracingAssembly.class")
+  private static void disableObservableAssembly() {
+    RxJavaPlugins.setOnObservableAssembly(oldOnObservableAssembly);
+    oldOnObservableAssembly = null;
   }
 
   @GuardedBy("TracingAssembly.class")

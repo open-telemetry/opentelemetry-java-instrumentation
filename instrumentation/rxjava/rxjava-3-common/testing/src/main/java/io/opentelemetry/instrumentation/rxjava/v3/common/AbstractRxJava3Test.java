@@ -11,6 +11,7 @@ import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
@@ -23,14 +24,18 @@ import io.reactivex.rxjava3.core.Maybe;
 import io.reactivex.rxjava3.core.Observable;
 import io.reactivex.rxjava3.core.Scheduler;
 import io.reactivex.rxjava3.core.Single;
+import io.reactivex.rxjava3.disposables.Disposable;
 import io.reactivex.rxjava3.internal.operators.flowable.FlowablePublish;
 import io.reactivex.rxjava3.internal.operators.observable.ObservablePublish;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -222,6 +227,37 @@ public abstract class AbstractRxJava3Test {
                         span.hasName(ADD_ONE)
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void observableFromCallableContextPropagation() throws InterruptedException {
+    CountDownLatch latch = new CountDownLatch(1);
+    AtomicReference<String> traceId = new AtomicReference<>();
+    AtomicReference<String> innerObservableTraceId = new AtomicReference<>();
+    AtomicReference<String> endObservableTraceId = new AtomicReference<>();
+
+    createParentSpan(
+        () -> {
+          traceId.set(Span.current().getSpanContext().getTraceId());
+          Disposable unused =
+              Observable.fromCallable(
+                      () -> {
+                        innerObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                        return "success";
+                      })
+                  .subscribeOn(Schedulers.io())
+                  .observeOn(Schedulers.single())
+                  .subscribe(
+                      data -> {
+                        endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                        latch.countDown();
+                      });
+          assertThat(unused).isNotNull();
+        });
+
+    latch.await();
+    Assertions.assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
+    Assertions.assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
   }
 
   @Test

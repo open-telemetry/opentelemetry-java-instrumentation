@@ -229,21 +229,16 @@ public final class TracingAssembly {
   }
 
   @GuardedBy("TracingAssembly.class")
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static void enableObservableAssembly() {
-    oldOnObservableAssembly = RxJavaPlugins.getOnObservableAssembly();
-    RxJavaPlugins.setOnObservableAssembly(
-        compose(
-            observable -> {
-              if (observable
-                  .getClass()
-                  .getName()
-                  .equals("io.reactivex.internal.operators.observable.ObservableFromCallable")) {
-                return new TracingCallableObservable(observable, Context.current());
-              }
-              return observable;
-            },
-            oldOnObservableAssembly));
+    RxJavaPlugins.setScheduleHandler(
+        runnable -> {
+          Context context = Context.current();
+          return () -> {
+            try (Scope ignored = context.makeCurrent()) {
+              runnable.run();
+            }
+          };
+        });
   }
 
   @GuardedBy("TracingAssembly.class")
