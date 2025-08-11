@@ -13,6 +13,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -25,8 +26,13 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public class DeclarativeConfigPropertiesBridgeBuilder {
-  private final LinkedHashMap<String, String> mappings = new LinkedHashMap<>();
-  private final Map<String, Object> overrideValues = new LinkedHashMap<>();
+  /**
+   * order is important here, so we use LinkedHashMap - see {@link #addMapping(String, String)} for
+   * more details
+   */
+  private final Map<String, String> mappings = new LinkedHashMap<>();
+
+  private final Map<String, Object> overrideValues = new HashMap<>();
 
   public DeclarativeConfigPropertiesBridgeBuilder() {}
 
