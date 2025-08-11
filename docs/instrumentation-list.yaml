@@ -4776,12 +4776,10 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: otel.instrumentation.kafka.experimental-span-attributes=true
+    - when: default
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: kafka.record.queue_time_ms
-          type: LONG
         - name: messaging.batch.message_count
           type: LONG
         - name: messaging.client_id
@@ -4802,10 +4800,12 @@ libraries:
           type: STRING
         - name: messaging.system
           type: STRING
-    - when: default
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true
       spans:
       - span_kind: CONSUMER
         attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
         - name: messaging.batch.message_count
           type: LONG
         - name: messaging.client_id
