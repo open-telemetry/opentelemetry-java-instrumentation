@@ -67,7 +67,7 @@ public final class CommonConfig {
     serverResponseHeaders =
         getFromConfigProviderOrFallback(
             config,
-            InstrumentationConfigUtil::httpSeverResponseCapturedHeaders,
+            InstrumentationConfigUtil::httpServerResponseCapturedHeaders,
             () -> config.getList("otel.instrumentation.http.server.capture-response-headers"));
     knownHttpRequestMethods =
         new HashSet<>(
