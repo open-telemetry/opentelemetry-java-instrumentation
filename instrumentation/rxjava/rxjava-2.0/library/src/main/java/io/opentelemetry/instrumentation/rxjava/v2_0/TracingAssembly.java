@@ -93,11 +93,6 @@ public final class TracingAssembly {
   private static Function<? super ParallelFlowable, ? extends ParallelFlowable>
       oldOnParallelAssembly;
 
-  @SuppressWarnings("rawtypes")
-  @GuardedBy("TracingAssembly.class")
-  @Nullable
-  private static Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
-
   @GuardedBy("TracingAssembly.class")
   private static boolean enabled;
 
@@ -298,8 +293,7 @@ public final class TracingAssembly {
 
   @GuardedBy("TracingAssembly.class")
   private static void disableObservableAssembly() {
-    RxJavaPlugins.setOnObservableAssembly(oldOnObservableAssembly);
-    oldOnObservableAssembly = null;
+    RxJavaPlugins.setScheduleHandler(null);
   }
 
   @GuardedBy("TracingAssembly.class")

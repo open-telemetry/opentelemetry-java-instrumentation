@@ -69,11 +69,6 @@ public final class TracingAssembly {
   @SuppressWarnings("rawtypes")
   @GuardedBy("TracingAssembly.class")
   @Nullable
-  private static Function<? super Observable, ? extends Observable> oldOnObservableAssembly;
-
-  @SuppressWarnings("rawtypes")
-  @GuardedBy("TracingAssembly.class")
-  @Nullable
   private static BiFunction<
           ? super Completable, ? super CompletableObserver, ? extends CompletableObserver>
       oldOnCompletableSubscribe;
@@ -300,8 +295,7 @@ public final class TracingAssembly {
 
   @GuardedBy("TracingAssembly.class")
   private static void disableObservableAssembly() {
-    RxJavaPlugins.setOnObservableAssembly(oldOnObservableAssembly);
-    oldOnObservableAssembly = null;
+    RxJavaPlugins.setScheduleHandler(null);
   }
 
   @GuardedBy("TracingAssembly.class")
