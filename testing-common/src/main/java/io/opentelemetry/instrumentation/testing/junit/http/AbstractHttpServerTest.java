@@ -60,8 +60,9 @@ import io.opentelemetry.testing.internal.io.netty.channel.ChannelInitializer;
 import io.opentelemetry.testing.internal.io.netty.channel.ChannelOption;
 import io.opentelemetry.testing.internal.io.netty.channel.ChannelPipeline;
 import io.opentelemetry.testing.internal.io.netty.channel.EventLoopGroup;
+import io.opentelemetry.testing.internal.io.netty.channel.MultiThreadIoEventLoopGroup;
 import io.opentelemetry.testing.internal.io.netty.channel.SimpleChannelInboundHandler;
-import io.opentelemetry.testing.internal.io.netty.channel.nio.NioEventLoopGroup;
+import io.opentelemetry.testing.internal.io.netty.channel.nio.NioIoHandler;
 import io.opentelemetry.testing.internal.io.netty.channel.socket.SocketChannel;
 import io.opentelemetry.testing.internal.io.netty.channel.socket.nio.NioSocketChannel;
 import io.opentelemetry.testing.internal.io.netty.handler.codec.http.DefaultFullHttpRequest;
@@ -453,7 +454,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     TextMapSetter<DefaultFullHttpRequest> setter =
         (request, key, value) -> request.headers().set(key, value);
 
-    EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    EventLoopGroup eventLoopGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
     try {
       Bootstrap bootstrap = buildBootstrap(eventLoopGroup);
       Channel channel = bootstrap.connect(address.getHost(), port).sync().channel();
@@ -513,7 +514,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     // test uses http 1.1
     assumeFalse(options.useHttp2);
 
-    EventLoopGroup eventLoopGroup = new NioEventLoopGroup();
+    EventLoopGroup eventLoopGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
     try {
       Bootstrap bootstrap = buildBootstrap(eventLoopGroup);
       Channel channel = bootstrap.connect(address.getHost(), port).sync().channel();

@@ -1,0 +1,4 @@
+description: >
+  This instrumentation enhances tracing for Spring Data operations. It works in conjunction
+  with other instrumentations, such as JDBC, to provide additional context and details
+  for database interactions initiated through Spring Data.

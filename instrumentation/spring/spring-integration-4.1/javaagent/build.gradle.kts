@@ -48,6 +48,7 @@ tasks {
     include("**/SpringIntegrationAndRabbitTest.*")
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+    systemProperty("metaDataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
 
   val testWithProducerInstrumentation by registering(Test::class) {
@@ -58,6 +59,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
+    systemProperty("metaDataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
   }
 
   test {
@@ -77,6 +79,8 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
 

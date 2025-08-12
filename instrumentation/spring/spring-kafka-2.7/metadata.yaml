@@ -1,0 +1,16 @@
+description: This instrumentation enables CONSUMER spans for Spring Kafka listeners.
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: A comma-separated list of header names to capture as span attributes.
+    type: list
+    default: ''
+  - name: otel.instrumentation.kafka.experimental-span-attributes
+    description: Enables capturing experimental span attribute `kafka.record.queue_time_ms`
+    type: boolean
+    default: false

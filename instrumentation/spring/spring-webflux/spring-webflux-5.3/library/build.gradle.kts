@@ -33,3 +33,9 @@ if (!latestDepTest) {
     }
   }
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

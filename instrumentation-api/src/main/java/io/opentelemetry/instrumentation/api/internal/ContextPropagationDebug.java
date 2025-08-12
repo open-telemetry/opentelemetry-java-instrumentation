@@ -139,10 +139,10 @@ public final class ContextPropagationDebug {
   }
 
   private static class Propagation {
-    public final String carrierClassName;
-    public final StackTraceElement[] location;
+    final String carrierClassName;
+    final StackTraceElement[] location;
 
-    public Propagation(String carrierClassName, StackTraceElement[] location) {
+    Propagation(String carrierClassName, StackTraceElement[] location) {
       this.carrierClassName = carrierClassName;
       this.location = location;
     }

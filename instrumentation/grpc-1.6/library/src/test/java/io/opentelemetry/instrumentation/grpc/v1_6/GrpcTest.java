@@ -176,7 +176,7 @@ class GrpcTest extends AbstractGrpcTest {
 
     private final String valueOfKey2;
 
-    public CustomAttributesExtractorV2(String valueOfKey2) {
+    CustomAttributesExtractorV2(String valueOfKey2) {
       this.valueOfKey2 = valueOfKey2;
     }
 

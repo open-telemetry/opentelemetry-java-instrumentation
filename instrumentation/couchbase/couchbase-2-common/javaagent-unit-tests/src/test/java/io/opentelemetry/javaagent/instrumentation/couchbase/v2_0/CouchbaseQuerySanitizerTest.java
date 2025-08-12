@@ -72,10 +72,10 @@ class CouchbaseQuerySanitizerTest {
   }
 
   private static class Parameter {
-    public final Object query;
-    public final String expected;
+    final Object query;
+    final String expected;
 
-    public Parameter(Object query, String expected) {
+    Parameter(Object query, String expected) {
       this.query = query;
       this.expected = expected;
     }

@@ -43,10 +43,12 @@ configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.g
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

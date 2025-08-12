@@ -1,0 +1,4 @@
+<Context>
+  <!-- add an explicit limit for sessions, otherwise negative value is filtered out -->
+  <Manager maxActiveSessions="42"/>
+</Context>

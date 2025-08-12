@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.openai")
     module.set("openai-java")
-    versions.set("[1.1.0,)")
+    versions.set("[1.1.0,3)")
     // TODO: assertInverse after completing instrumentation
   }
 }
@@ -19,12 +19,16 @@ dependencies {
   library("com.openai:openai-java:1.1.0")
 
   testImplementation(project(":instrumentation:openai:openai-java-1.1:testing"))
+
+  latestDepTestLibrary("com.openai:openai-java:2.+") // documented limitation
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     // TODO run tests both with and without genai message capture
+
     systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
