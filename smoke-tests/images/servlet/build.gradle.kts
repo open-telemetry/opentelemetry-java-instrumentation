@@ -98,22 +98,24 @@ tasks {
   createDockerTasks(buildWindowsTestImages, true)
 
   val printSmokeTestsConfigurations by registering {
-    for ((server, matrices) in targets) {
-      val smokeTestServer = findProperty("smokeTestServer")
-      if (smokeTestServer != null && server != smokeTestServer) {
-        continue
-      }
-      println(server)
-      val serverName = StringUtils.capitalize(server)
-      for (entry in matrices) {
-        for (version in entry.version) {
-          val dotIndex = version.indexOf('.')
-          val majorVersion = if (dotIndex != -1) version.substring(0, dotIndex) else version
-          for (jdk in entry.jdk) {
-            for (vm in entry.vm) {
-              println("@AppServer(version = \"$version\", jdk = \"$jdk${if (vm == "hotspot") "" else "-openj9"}\")")
-              println("class ${serverName}${majorVersion}Jdk${jdk}${if (vm == "hotspot") "" else "Openj9"} extends ${serverName}SmokeTest {")
-              println("}")
+    doFirst {
+      for ((server, matrices) in targets) {
+        val smokeTestServer = findProperty("smokeTestServer")
+        if (smokeTestServer != null && server != smokeTestServer) {
+          continue
+        }
+        println(server)
+        val serverName = StringUtils.capitalize(server)
+        for (entry in matrices) {
+          for (version in entry.version) {
+            val dotIndex = version.indexOf('.')
+            val majorVersion = if (dotIndex != -1) version.substring(0, dotIndex) else version
+            for (jdk in entry.jdk) {
+              for (vm in entry.vm) {
+                println("@AppServer(version = \"$version\", jdk = \"$jdk${if (vm == "hotspot") "" else "-openj9"}\")")
+                println("class ${serverName}${majorVersion}Jdk${jdk}${if (vm == "hotspot") "" else "Openj9"} extends ${serverName}SmokeTest {")
+                println("}")
+              }
             }
           }
         }
