@@ -126,7 +126,7 @@ public final class TracingAssembly {
 
       enableObservable();
 
-      enableObservableAssembly();
+      enableWrappedScheduleHandler();
 
       enableCompletable();
 
@@ -195,7 +195,7 @@ public final class TracingAssembly {
   }
 
   @GuardedBy("TracingAssembly.class")
-  private static void enableObservableAssembly() {
+  private static void enableWrappedScheduleHandler() {
     oldScheduleHandler = RxJavaPlugins.getScheduleHandler();
     RxJavaPlugins.setScheduleHandler(
         runnable -> {
