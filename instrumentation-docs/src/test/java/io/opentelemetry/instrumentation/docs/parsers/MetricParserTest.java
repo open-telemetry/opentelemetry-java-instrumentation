@@ -107,6 +107,31 @@ class MetricParserTest {
     assertThat(foundMetric.getUnit()).isEqualTo("unit");
   }
 
+  @Test
+  void testScopeOverrideForGrpc() {
+    String targetScopeName = "io.opentelemetry.armeria-grpc-1.14";
+
+    EmittedMetrics.Metric metric1 =
+        createMetric("my.metric1", "description of my.metric1", "attr1");
+
+    EmittedMetrics.MetricsByScope targetMetricsByScope =
+        new EmittedMetrics.MetricsByScope("io.opentelemetry.grpc-1.6", List.of(metric1));
+
+    EmittedMetrics emittedMetrics = new EmittedMetrics("default", List.of(targetMetricsByScope));
+
+    Map<String, Map<String, MetricParser.MetricAggregator.AggregatedMetricInfo>> metrics =
+        MetricParser.MetricAggregator.aggregateMetrics("default", emittedMetrics, targetScopeName);
+
+    Map<String, List<EmittedMetrics.Metric>> result =
+        MetricParser.MetricAggregator.buildFilteredMetrics(metrics);
+
+    EmittedMetrics.Metric foundMetric = result.get("default").get(0);
+    assertThat(foundMetric.getName()).isEqualTo("my.metric1");
+    assertThat(foundMetric.getDescription()).isEqualTo("description of my.metric1");
+    assertThat(foundMetric.getType()).isEqualTo("gauge");
+    assertThat(foundMetric.getUnit()).isEqualTo("unit");
+  }
+
   private static EmittedMetrics.Metric createMetric(
       String name, String description, String attrName) {
     return new EmittedMetrics.Metric(

@@ -20,7 +20,7 @@ import java.util.Set;
  * This class is responsible for parsing metric files from the `.telemetry` directory of an
  * instrumentation module and filtering them by scope.
  */
-public class MetricParser {
+public class MetricParser extends TelemetryParser {
 
   /**
    * Retrieves metrics for a given instrumentation module, filtered by scope.
@@ -109,7 +109,10 @@ public class MetricParser {
           aggregatedMetrics.computeIfAbsent(when, k -> new HashMap<>());
 
       for (EmittedMetrics.MetricsByScope metricsByScope : metrics.getMetricsByScope()) {
-        if (metricsByScope.getScope().equals(targetScopeName)) {
+        if (metricsByScope.getScope().equals(targetScopeName)
+            || scopeAllowList
+                .getOrDefault(targetScopeName, Set.of())
+                .contains(metricsByScope.getScope())) {
           for (EmittedMetrics.Metric metric : metricsByScope.getMetrics()) {
             AggregatedMetricInfo aggInfo =
                 metricKindMap.computeIfAbsent(
