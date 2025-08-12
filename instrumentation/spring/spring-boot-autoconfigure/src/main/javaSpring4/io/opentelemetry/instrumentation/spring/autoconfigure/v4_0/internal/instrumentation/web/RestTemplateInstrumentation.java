@@ -11,10 +11,9 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.util.List;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.List;
 
 class RestTemplateInstrumentation {
 
