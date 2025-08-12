@@ -38,7 +38,9 @@ class HadoopTest extends TargetSystemTest {
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
     GenericContainer<?> target =
         new GenericContainer<>("bmedora/hadoop:2.9-base")
-            .withCopyToContainer(Transferable.of(readAndPreprocessEnvFile("hadoop2-env.sh")), "/hadoop/etc/hadoop/hadoop-env.sh")
+            .withCopyToContainer(
+                Transferable.of(readAndPreprocessEnvFile("hadoop2-env.sh")),
+                "/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .withStartupTimeout(Duration.ofMinutes(3))
             .withExposedPorts(50070)
@@ -57,9 +59,10 @@ class HadoopTest extends TargetSystemTest {
 
     String data;
     try (Stream<String> lines = Files.lines(path)) {
-      data = lines
-          .map(line -> line.replace(ENDPOINT_PLACEHOLDER, otlpEndpoint))
-          .collect(Collectors.joining("\n"));
+      data =
+          lines
+              .map(line -> line.replace(ENDPOINT_PLACEHOLDER, otlpEndpoint))
+              .collect(Collectors.joining("\n"));
     }
 
     return data;
@@ -76,7 +79,9 @@ class HadoopTest extends TargetSystemTest {
     GenericContainer<?> target =
         new GenericContainer<>("loum/hadoop-pseudo:3.3.6")
             .withExposedPorts(9870, 9000)
-            .withCopyToContainer(Transferable.of(readAndPreprocessEnvFile("hadoop3-env.sh")), "/opt/hadoop/etc/hadoop/hadoop-env.sh")
+            .withCopyToContainer(
+                Transferable.of(readAndPreprocessEnvFile("hadoop3-env.sh")),
+                "/opt/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .waitingFor(
                 Wait.forListeningPorts(9870, 9000).withStartupTimeout(Duration.ofMinutes(3)));
