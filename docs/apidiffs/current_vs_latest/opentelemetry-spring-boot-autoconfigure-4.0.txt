@@ -1,0 +1,8 @@
+Comparing source compatibility of opentelemetry-spring-boot-autoconfigure-4.0-2.19.0-SNAPSHOT.jar against 
++++  NEW CLASS: PUBLIC(+) io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 61.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW CONSTRUCTOR: PUBLIC(+) OpenTelemetryAutoConfiguration()
+	+++  NEW ANNOTATION: org.springframework.context.annotation.Configuration
+	+++  NEW ANNOTATION: org.springframework.boot.context.properties.EnableConfigurationProperties
+		+++  NEW ELEMENT: value=io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties (+)

@@ -270,6 +270,9 @@ targets:
       target: ':instrumentation:spring:spring-boot-autoconfigure'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-boot-autoconfigure-4.0'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spymemcached-2.12:javaagent'
     - type: gradle
       path: ./
@@ -937,6 +940,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:spring:starters:spring-boot-starter'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:starters:spring-boot-starter-4.0'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:starters:zipkin-spring-boot-starter'
