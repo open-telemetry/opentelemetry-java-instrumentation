@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("org.hibernate.reactive")
     module.set("hibernate-reactive-core")
-    versions.set("(,)")
+    versions.set("(,4)")
     assertInverse.set(true)
   }
 }
@@ -46,7 +46,7 @@ testing {
       dependencies {
         implementation("org.testcontainers:testcontainers")
         if (latestDepTest) {
-          implementation("org.hibernate.reactive:hibernate-reactive-core:latest.release")
+          implementation("org.hibernate.reactive:hibernate-reactive-core:3.+") // documented limitation
           implementation("io.vertx:vertx-pg-client:4.+")
         } else {
           implementation("org.hibernate.reactive:hibernate-reactive-core:2.0.0.Final")
