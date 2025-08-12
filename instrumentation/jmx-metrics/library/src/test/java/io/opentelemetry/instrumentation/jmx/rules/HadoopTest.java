@@ -24,7 +24,6 @@ class HadoopTest extends TargetSystemTest {
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
-
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
     GenericContainer<?> target =
