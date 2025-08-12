@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
@@ -53,17 +54,17 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  @Nullable private final DeclarativeConfigProperties baseNode;
+  private final DeclarativeConfigProperties baseNode;
 
   // lookup order matters - we choose the first match
   private final Map<String, String> mappings;
   private final Map<String, Object> overrideValues;
 
   DeclarativeConfigPropertiesBridge(
-      @Nullable DeclarativeConfigProperties baseNode,
+      DeclarativeConfigProperties baseNode,
       Map<String, String> mappings,
       Map<String, Object> overrideValues) {
-    this.baseNode = baseNode;
+    this.baseNode = Objects.requireNonNull(baseNode);
     this.mappings = mappings;
     this.overrideValues = overrideValues;
   }
@@ -152,10 +153,6 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     T override = clazz.cast(overrideValues.get(property));
     if (override != null) {
       return override;
-    }
-
-    if (baseNode == null) {
-      return null;
     }
 
     String[] segments = getSegments(translateProperty(property));
