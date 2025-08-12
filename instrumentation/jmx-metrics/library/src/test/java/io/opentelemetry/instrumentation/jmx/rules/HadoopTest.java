@@ -24,8 +24,9 @@ class HadoopTest extends TargetSystemTest {
 
     yamlFiles.forEach(this::validateYamlSyntax);
 
-    // bmedora docker images do not propagate env vars to spanned hadoop processes,
-    // so everything needs to be embedded inside the hadoop2-env.sh file
+
+    // Hadoop startup script does not propagate env vars to launched hadoop daemons,
+    // so all the env vars needs to be embedded inside the hadoop-env.sh file
     GenericContainer<?> target =
         new GenericContainer<>("bmedora/hadoop:2.9-base")
             .withCopyFileToContainer(
@@ -51,7 +52,7 @@ class HadoopTest extends TargetSystemTest {
     yamlFiles.forEach(this::validateYamlSyntax);
 
     // Hadoop startup script does not propagate env vars to launched hadoop daemons,
-    // so all the env vars needs to be embedded inside the hadoop2-env.sh file
+    // so all the env vars needs to be embedded inside the hadoop-env.sh file
     GenericContainer<?> target =
         new GenericContainer<>("loum/hadoop-pseudo:3.3.6")
             .withExposedPorts(9870, 9000)
