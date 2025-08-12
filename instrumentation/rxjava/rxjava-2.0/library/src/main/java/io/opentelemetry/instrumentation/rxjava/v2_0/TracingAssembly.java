@@ -148,7 +148,7 @@ public final class TracingAssembly {
 
       disableObservable();
 
-      disableObservableAssembly();
+      disableWrappedScheduleHandler();
 
       disableCompletable();
 
@@ -302,7 +302,7 @@ public final class TracingAssembly {
   }
 
   @GuardedBy("TracingAssembly.class")
-  private static void disableObservableAssembly() {
+  private static void disableWrappedScheduleHandler() {
     RxJavaPlugins.setScheduleHandler(oldScheduleHandler);
     oldScheduleHandler = null;
   }
