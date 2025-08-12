@@ -1,3 +1,4 @@
+#!/bin/bash
 #
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
@@ -340,7 +341,7 @@ export HADOOP_LOG_DIR=/var/log/hadoop
 #
 # export HDFS_PORTMAP_OPTS="-Xmx512m"
 
-# Supplemental options for priviliged gateways
+# Supplemental options for privileged gateways
 # By default, Hadoop uses jsvc which needs to know to launch a
 # server jvm.
 # export HDFS_NFS3_SECURE_EXTRA_OPTS="-jvm server"
