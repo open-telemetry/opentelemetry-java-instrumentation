@@ -111,17 +111,21 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
     }
   }
 
-  @Nullable
+  @Override
+  public boolean isDeclarative() {
+    return false;
+  }
+
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
-    // create a spring boot bridge for DeclarativeConfigProperties
-    return null;
+    throw new IllegalStateException(
+        "Declarative configuration is not supported in spring boot autoconfigure yet");
   }
 
   @Nullable
   @Override
   public ConfigProvider getConfigProvider() {
-    // create a spring boot bridge for ConfigProvider
+    // declarative config support will be added in the future
     return null;
   }
 }

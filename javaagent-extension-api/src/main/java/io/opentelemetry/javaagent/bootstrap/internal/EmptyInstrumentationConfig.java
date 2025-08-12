@@ -61,10 +61,15 @@ final class EmptyInstrumentationConfig implements InstrumentationConfig {
     return defaultValue;
   }
 
-  @Nullable
+  @Override
+  public boolean isDeclarative() {
+    return false;
+  }
+
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
-    return null;
+    throw new IllegalStateException(
+        "Declarative configuration is not supported in the empty instrumentation config");
   }
 
   @Nullable

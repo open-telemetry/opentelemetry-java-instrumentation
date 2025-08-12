@@ -111,12 +111,15 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
     }
   }
 
-  @Nullable
+  @Override
+  public boolean isDeclarative() {
+    return configProvider != null;
+  }
+
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
-    if (configProvider == null) {
-      // declarative config is not used
-      return null;
+    if (!isDeclarative()) {
+      throw new IllegalStateException("Declarative configuration is not supported");
     }
 
     DeclarativeConfigProperties config =

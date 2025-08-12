@@ -110,9 +110,14 @@ public interface InstrumentationConfig {
    */
   Map<String, String> getMap(String name, Map<String, String> defaultValue);
 
+  /** Returns {@code true} if declarative configuration is used in this configuration. */
+  boolean isDeclarative();
+
   /**
-   * Returns a {@link DeclarativeConfigProperties} for the given instrumentation name, or {@code
-   * null} if declarative configuration is <b>not used at all</b>.
+   * Returns a {@link DeclarativeConfigProperties} for the given node name, which is usually an
+   * instrumentation name
+   *
+   * <p>Call {@link #isDeclarative()} first to check if declarative configuration is used.
    *
    * <p>Declarative configuration is used to configure instrumentation properties in a declarative
    * way, such as through YAML or JSON files.
@@ -121,8 +126,8 @@ public interface InstrumentationConfig {
    *     "common" for common Java settings that don't apply to other languages.
    * @return the declarative configuration properties for the given node name, or {@code null} if
    *     declarative configuration is <b>not used at all</b>.
+   * @throws IllegalStateException if {@link #isDeclarative()} returns {@code false}
    */
-  @Nullable
   DeclarativeConfigProperties getDeclarativeConfig(String node);
 
   /**
