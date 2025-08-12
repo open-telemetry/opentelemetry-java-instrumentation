@@ -69,7 +69,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("metaDataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
   systemProperty("testLatestDeps", latestDepTest)
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
