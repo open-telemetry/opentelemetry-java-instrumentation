@@ -224,7 +224,7 @@ public class SpringConfigProperties implements ConfigProperties {
         .getDuration(name);
   }
 
-  @SuppressWarnings({ "unchecked", "StatementSwitchToExpressionSwitch" })
+  @SuppressWarnings({"unchecked", "StatementSwitchToExpressionSwitch"})
   @Override
   public Map<String, String> getMap(String name) {
     Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);

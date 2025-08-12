@@ -30,7 +30,8 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
-    if (bean instanceof ConnectionFactory connectionFactory && !ScopedProxyUtils.isScopedTarget(beanName)) {
+    if (bean instanceof ConnectionFactory connectionFactory
+        && !ScopedProxyUtils.isScopedTarget(beanName)) {
       return R2dbcTelemetry.builder(openTelemetryProvider.getObject())
           .setStatementSanitizationEnabled(
               InstrumentationConfigUtil.isStatementSanitizationEnabled(

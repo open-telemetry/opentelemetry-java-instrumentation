@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.runtimemetrics.Java17RuntimeMetricsProvider;
 import org.springframework.beans.factory.aot.BeanRegistrationExcludeFilter;
 import org.springframework.beans.factory.support.RegisteredBean;
 
