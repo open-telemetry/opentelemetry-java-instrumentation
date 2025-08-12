@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesGetter;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -86,11 +87,10 @@ enum EmbeddingAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
   public List<String> getResponseFinishReasons(
       EmbeddingCreateParams request, @Nullable CreateEmbeddingResponse response) {
-    return null;
+    return Collections.emptyList();
   }
 
   @Nullable
