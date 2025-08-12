@@ -1,73 +1,71 @@
 ---
 rules:
   - bean: Hadoop:service=NameNode,name=FSNamesystem
-    prefix: hadoop.
+    prefix: hadoop.dfs.
     metricAttribute:
-      hadoop.node.name: param(tag.Hostname)
+      hadoop.node.name: beanattr(tag\.Hostname)
     mapping:
-      # hadoop.capacity
+      # hadoop.dfs.capacity
       CapacityTotal:
         metric: capacity
         type: updowncounter
         unit: By
-        desc: Current raw capacity of data nodes.
-      # hadoop.capacity.used
+        desc: Current raw capacity of DataNodes.
+      # hadoop.dfs.capacity.used
       CapacityUsed:
         metric: capacity.used
         type: updowncounter
         unit: By
-        desc: Current used capacity across all data nodes.
-      # hadoop.block.count
+        desc: Current used capacity across all DataNodes.
+      # hadoop.dfs.block.count
       BlocksTotal:
         metric: block.count
         type: updowncounter
         unit: "{block}"
         desc: Current number of allocated blocks in the system.
-      # hadoop.block.missing
+      # hadoop.dfs.block.missing
       MissingBlocks:
         metric: block.missing
         type: updowncounter
         unit: "{block}"
         desc: Current number of missing blocks.
-      # hadoop.block.corrupt
+      # hadoop.dfs.block.corrupt
       CorruptBlocks:
         metric: block.corrupt
         type: updowncounter
         unit: "{block}"
         desc: Current number of blocks with corrupt replicas.
-      # hadoop.volume.failure.count
+      # hadoop.dfs.volume.failure.count
       VolumeFailuresTotal:
         metric: volume.failure.count
         type: counter
         unit: "{failure}"
-        desc: Total number of volume failures across all data nodes.
-        metricAttribute:
-          direction: const(sent)
-      # hadoop.file.count
+        desc: Total number of volume failures across all DataNodes.
+      # hadoop.dfs.file.count
       FilesTotal:
         metric: file.count
         type: updowncounter
         unit: "{file}"
         desc: Current number of files and directories.
-      # hadoop.connection.count
+      # hadoop.dfs.connection.count
       TotalLoad:
         metric: connection.count
         type: updowncounter
         unit: "{connection}"
         desc: Current number of connections.
 
-      # hadoop.datanode.count
+      # hadoop.dfs.data_node.count
       NumLiveDataNodes:
-        metric: &metric datanode.count
+        metric: &metric data_node.count
         type: &type updowncounter
         unit: &unit "{node}"
-        desc: &desc The number of data nodes.
+        desc: &desc The number of DataNodes.
         metricAttribute:
-          hadoop.datanode.state: const(live)
+          hadoop.node.state: const(live)
       NumDeadDataNodes:
         metric: *metric
         type: *type
         unit: *unit
         desc: *desc
         metricAttribute:
-          hadoop.datanode.state: const(dead)
+          hadoop.node.state: const(dead)

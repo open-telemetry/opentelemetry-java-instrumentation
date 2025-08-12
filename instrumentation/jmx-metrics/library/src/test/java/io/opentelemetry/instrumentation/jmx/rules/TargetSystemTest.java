@@ -63,7 +63,7 @@ public class TargetSystemTest {
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
   private static Path testAppPath;
-  private static String otlpEndpoint;
+  protected static String otlpEndpoint;
 
   private GenericContainer<?> targetSystem;
   private Collection<GenericContainer<?>> targetDependencies;
@@ -150,7 +150,7 @@ public class TargetSystemTest {
     // disable runtime telemetry metrics
     config.put("otel.instrumentation.runtime-telemetry.enabled", "false");
     // set yaml config files to test
-    config.put("otel.jmx.target", "tomcat");
+    config.put("otel.jmx.target", "hadoop");
     config.put(
         "otel.jmx.config",
         yamlFiles.stream()
@@ -307,7 +307,7 @@ public class TargetSystemTest {
                     }
                   })
               .build());
-      sb.http(0);
+      sb.http(65535);
     }
   }
 }
