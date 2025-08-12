@@ -21,7 +21,7 @@ import java.util.Set;
  * This class is responsible for parsing span files from the `.telemetry` directory of an
  * instrumentation module and filtering them by scope.
  */
-public class SpanParser extends TelemetryParser {
+public class SpanParser {
 
   // We want to ignore test related attributes
   private static final List<String> EXCLUDED_ATTRIBUTES =
@@ -87,10 +87,7 @@ public class SpanParser extends TelemetryParser {
           aggregatedAttributes.computeIfAbsent(when, k -> new HashMap<>());
 
       for (EmittedSpans.SpansByScope spansByScope : spans.getSpansByScope()) {
-        if (spansByScope.getScope().equals(targetScopeName)
-            || scopeAllowList
-                .getOrDefault(targetScopeName, Set.of())
-                .contains(spansByScope.getScope())) {
+        if (TelemetryParser.scopeIsValid(spansByScope.getScope(), targetScopeName)) {
           processSpansForScope(spansByScope, spanKindMap);
         }
       }
