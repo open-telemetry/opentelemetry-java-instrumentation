@@ -24,7 +24,6 @@ import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityU
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -41,7 +40,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class Log4j1Test {
 
   static {
@@ -146,11 +144,8 @@ class Log4j1Test {
             List<AttributeAssertion> attributeAsserts =
                 new ArrayList<>(
                     Arrays.asList(
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_NAME,
-                            Thread.currentThread().getName()),
-                        equalTo(
-                            ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId())));
             if (logException) {
               attributeAsserts.addAll(
                   Arrays.asList(
@@ -159,6 +154,11 @@ class Log4j1Test {
                       satisfies(
                           EXCEPTION_STACKTRACE, v -> v.contains(Log4j1Test.class.getName()))));
             }
+            attributeAsserts.addAll(
+                SemconvCodeStabilityUtil.codeFunctionAssertions(
+                    Log4j1Test.class, "performLogging"));
+            attributeAsserts.addAll(
+                SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java"));
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
             LogRecordData logRecordData = AssertAccess.getActual(logRecord);
@@ -183,6 +183,14 @@ class Log4j1Test {
       MDC.remove("key2");
     }
 
+    List<AttributeAssertion> assertions =
+        SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java");
+    assertions.addAll(SemconvCodeStabilityUtil.codeFunctionAssertions(Log4j1Test.class, "testMdc"));
+    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
+    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+    assertions.add(equalTo(THREAD_NAME, Thread.currentThread().getName()));
+    assertions.add(equalTo(THREAD_ID, Thread.currentThread().getId()));
+
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
@@ -190,12 +198,7 @@ class Log4j1Test {
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(AttributeKey.stringKey("key1"), "val1"),
-                    equalTo(AttributeKey.stringKey("key2"), "val2"),
-                    equalTo(
-                        ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId())));
+                .hasAttributesSatisfyingExactly(assertions));
   }
 
   private static void performLogging(
