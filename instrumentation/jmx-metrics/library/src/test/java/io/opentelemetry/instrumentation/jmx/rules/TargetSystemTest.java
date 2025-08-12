@@ -307,7 +307,7 @@ public class TargetSystemTest {
                     }
                   })
               .build());
-      sb.http(65535);
+      sb.http(0);
     }
   }
 }

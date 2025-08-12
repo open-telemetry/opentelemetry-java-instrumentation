@@ -9,17 +9,27 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.utility.MountableFile;
+import org.testcontainers.images.builder.Transferable;
 
 class HadoopTest extends TargetSystemTest {
+
+  public static final String ENDPOINT_PLACEHOLDER = "<<ENDPOINT_PLACEHOLDER>>";
+
   @Test
-  void testMetrics_Hadoop2x() {
+  void testMetrics_Hadoop2x() throws URISyntaxException, IOException {
     List<String> yamlFiles = Collections.singletonList("hadoop.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
@@ -28,9 +38,7 @@ class HadoopTest extends TargetSystemTest {
     // so all the env vars needs to be embedded inside the hadoop-env.sh file
     GenericContainer<?> target =
         new GenericContainer<>("bmedora/hadoop:2.9-base")
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource("hadoop2-env.sh", 0400),
-                "/hadoop/etc/hadoop/hadoop-env.sh")
+            .withCopyToContainer(Transferable.of(readAndPreprocessEnvFile("hadoop2-env.sh")), "/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .withStartupTimeout(Duration.ofMinutes(3))
             .withExposedPorts(50070)
@@ -44,8 +52,21 @@ class HadoopTest extends TargetSystemTest {
     verifyMetrics(createMetricsVerifier());
   }
 
+  private String readAndPreprocessEnvFile(String fileName) throws URISyntaxException, IOException {
+    Path path = Paths.get(getClass().getClassLoader().getResource(fileName).toURI());
+
+    String data;
+    try (Stream<String> lines = Files.lines(path)) {
+      data = lines
+          .map(line -> line.replace(ENDPOINT_PLACEHOLDER, otlpEndpoint))
+          .collect(Collectors.joining("\n"));
+    }
+
+    return data;
+  }
+
   @Test
-  void testMetrics_Hadoop3x() {
+  void testMetrics_Hadoop3x() throws URISyntaxException, IOException {
     List<String> yamlFiles = Collections.singletonList("hadoop.yaml");
 
     yamlFiles.forEach(this::validateYamlSyntax);
@@ -55,9 +76,7 @@ class HadoopTest extends TargetSystemTest {
     GenericContainer<?> target =
         new GenericContainer<>("loum/hadoop-pseudo:3.3.6")
             .withExposedPorts(9870, 9000)
-            .withCopyFileToContainer(
-                MountableFile.forClasspathResource("hadoop3-env.sh", 0644),
-                "/opt/hadoop/etc/hadoop/hadoop-env.sh")
+            .withCopyToContainer(Transferable.of(readAndPreprocessEnvFile("hadoop3-env.sh")), "/opt/hadoop/etc/hadoop/hadoop-env.sh")
             .withCreateContainerCmdModifier(cmd -> cmd.withHostName("test-host"))
             .waitingFor(
                 Wait.forListeningPorts(9870, 9000).withStartupTimeout(Duration.ofMinutes(3)));
