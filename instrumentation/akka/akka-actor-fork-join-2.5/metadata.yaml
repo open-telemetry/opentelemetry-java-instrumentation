@@ -1,0 +1,1 @@
+description: This instrumentation provides context propagation for the Akka Fork-Join Pool, it does not emit any telemetry on its own.
