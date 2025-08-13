@@ -92,13 +92,15 @@ tasks {
     named("hibernateReactive2Test", Test::class).configure {
       enabled = false
     }
-    named("hibernateReactive4Test", Test::class).configure {
-      enabled = false
-    }
     if (latestDepTest) {
       named("hibernateReactive1Test", Test::class).configure {
         enabled = false
       }
+    }
+  }
+  if (testJavaVersion.isJava8 || testJavaVersion.isJava11) {
+    named("hibernateReactive4Test", Test::class).configure {
+      enabled = false
     }
   }
 
