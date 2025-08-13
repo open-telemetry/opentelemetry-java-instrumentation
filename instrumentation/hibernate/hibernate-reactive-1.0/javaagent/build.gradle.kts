@@ -83,7 +83,7 @@ tasks {
     options.release.set(11)
   }
   named("compileHibernateReactive4TestJava", JavaCompile::class).configure {
-    options.release.set(11)
+    options.release.set(17)
   }
   val testJavaVersion =
     gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
