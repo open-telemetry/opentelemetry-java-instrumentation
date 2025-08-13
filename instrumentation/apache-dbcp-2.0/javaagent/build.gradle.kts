@@ -26,7 +26,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   test {

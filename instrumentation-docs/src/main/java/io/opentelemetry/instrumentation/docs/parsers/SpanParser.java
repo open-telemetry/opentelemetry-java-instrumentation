@@ -87,7 +87,7 @@ public class SpanParser {
           aggregatedAttributes.computeIfAbsent(when, k -> new HashMap<>());
 
       for (EmittedSpans.SpansByScope spansByScope : spans.getSpansByScope()) {
-        if (spansByScope.getScope().equals(targetScopeName)) {
+        if (TelemetryParser.scopeIsValid(spansByScope.getScope(), targetScopeName)) {
           processSpansForScope(spansByScope, spanKindMap);
         }
       }

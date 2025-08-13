@@ -78,12 +78,12 @@ tasks {
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   val testExperimental by registering(Test::class) {
     jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-    systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
   }
 
   check {
