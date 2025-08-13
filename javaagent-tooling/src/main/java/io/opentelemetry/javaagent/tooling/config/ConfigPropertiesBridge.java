@@ -118,10 +118,6 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
-    if (!isDeclarative()) {
-      throw new IllegalStateException("Declarative configuration is not supported");
-    }
-
     DeclarativeConfigProperties config =
         InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
     if (config == null) {

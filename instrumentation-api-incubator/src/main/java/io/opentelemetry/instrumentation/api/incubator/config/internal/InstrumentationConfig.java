@@ -124,8 +124,7 @@ public interface InstrumentationConfig {
    *
    * @param node the name of the instrumentation (e.g. "log4j"), the vendor name (e.g. "google"), or
    *     "common" for common Java settings that don't apply to other languages.
-   * @return the declarative configuration properties for the given node name, or {@code null} if
-   *     declarative configuration is <b>not used at all</b>.
+   * @return the declarative configuration properties for the given node name
    * @throws IllegalStateException if {@link #isDeclarative()} returns {@code false}
    */
   DeclarativeConfigProperties getDeclarativeConfig(String node);

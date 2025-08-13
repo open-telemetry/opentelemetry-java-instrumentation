@@ -46,9 +46,6 @@ import javax.annotation.Nullable;
  *       common:
  *         string_key: value
  * </pre>
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
  */
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
