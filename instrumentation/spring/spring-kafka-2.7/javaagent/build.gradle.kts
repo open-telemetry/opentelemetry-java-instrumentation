@@ -72,7 +72,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
-    systemProperty("metaDataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
     systemProperty("collectMetadata", collectMetadata)
   }
 

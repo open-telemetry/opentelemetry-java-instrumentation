@@ -50,7 +50,7 @@ tasks {
     }
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("metaDataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
   check {
