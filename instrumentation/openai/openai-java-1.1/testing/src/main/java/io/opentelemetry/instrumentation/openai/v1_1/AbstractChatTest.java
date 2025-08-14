@@ -62,9 +62,6 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,77 +70,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.provider.EnumSource;
 
-@ParameterizedClass
-@EnumSource(AbstractChatTest.TestType.class)
-public abstract class AbstractChatTest {
-  enum TestType {
-    SYNC,
-    SYNC_FROM_ASYNC,
-    ASYNC,
-    ASYNC_FROM_SYNC,
-  }
-
-  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.openai-java-1.1";
-
-  private static final String API_URL = "https://api.openai.com/v1";
-
+public abstract class AbstractChatTest extends AbstractOpenAiTest {
   protected static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   protected static final String TEST_CHAT_MODEL = "gpt-4o-mini";
   protected static final String TEST_CHAT_RESPONSE_MODEL = "gpt-4o-mini-2024-07-18";
   protected static final String TEST_CHAT_INPUT =
       "Answer in up to 3 words: Which ocean contains Bouvet Island?";
-
-  @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
-
-  protected abstract InstrumentationExtension getTesting();
-
-  protected abstract OpenAIClient wrap(OpenAIClient client);
-
-  protected abstract OpenAIClientAsync wrap(OpenAIClientAsync client);
-
-  protected final OpenAIClient getRawClient() {
-    OpenAIOkHttpClient.Builder builder =
-        OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
-    if (recording.isRecording()) {
-      builder.apiKey(System.getenv("OPENAI_API_KEY"));
-    } else {
-      builder.apiKey("unused");
-    }
-    return builder.build();
-  }
-
-  protected final OpenAIClientAsync getRawClientAsync() {
-    OpenAIOkHttpClientAsync.Builder builder =
-        OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
-    if (recording.isRecording()) {
-      builder.apiKey(System.getenv("OPENAI_API_KEY"));
-    } else {
-      builder.apiKey("unused");
-    }
-    return builder.build();
-  }
-
-  protected final OpenAIClient getClient() {
-    return wrap(getRawClient());
-  }
-
-  protected final OpenAIClientAsync getClientAsync() {
-    return wrap(getRawClientAsync());
-  }
-
-  protected abstract List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
-      Consumer<SpanDataAssert> span);
-
-  @Parameter TestType testType;
 
   protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
     return doCompletions(params, getClient(), getClientAsync());
