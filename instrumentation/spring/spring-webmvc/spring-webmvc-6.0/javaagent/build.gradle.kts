@@ -57,7 +57,7 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
-    systemProperty("metaDataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   }
 

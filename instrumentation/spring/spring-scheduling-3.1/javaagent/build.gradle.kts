@@ -31,7 +31,7 @@ tasks {
 
   val testExperimental by registering(Test::class) {
     jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
-    systemProperty("metaDataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
   }
 }
 

@@ -20,6 +20,6 @@ otelJava {
 }
 
 tasks.test {
-  systemProperty("metaDataConfig", "otel.instrumentation.common.enduser.id.enabled=true,otel.instrumentation.common.enduser.role.enabled=true,otel.instrumentation.common.enduser.scope.enabled=true")
+  systemProperty("metadataConfig", "otel.instrumentation.common.enduser.id.enabled=true,otel.instrumentation.common.enduser.role.enabled=true,otel.instrumentation.common.enduser.scope.enabled=true")
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
