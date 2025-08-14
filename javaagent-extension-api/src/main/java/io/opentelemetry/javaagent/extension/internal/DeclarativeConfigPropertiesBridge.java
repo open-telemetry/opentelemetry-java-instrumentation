@@ -14,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
@@ -50,66 +51,80 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
 
-  // The node at .instrumentation.java
-  private final DeclarativeConfigProperties instrumentationJavaNode;
+  private final DeclarativeConfigProperties baseNode;
 
-  DeclarativeConfigPropertiesBridge(DeclarativeConfigProperties instrumentationNode) {
-    instrumentationJavaNode = instrumentationNode.getStructured("java", empty());
+  // lookup order matters - we choose the first match
+  private final Map<String, String> mappings;
+  private final Map<String, Object> overrideValues;
+
+  DeclarativeConfigPropertiesBridge(
+      DeclarativeConfigProperties baseNode,
+      Map<String, String> mappings,
+      Map<String, Object> overrideValues) {
+    this.baseNode = Objects.requireNonNull(baseNode);
+    this.mappings = mappings;
+    this.overrideValues = overrideValues;
   }
 
   @Nullable
   @Override
   public String getString(String propertyName) {
-    return getPropertyValue(propertyName, DeclarativeConfigProperties::getString);
+    return getPropertyValue(propertyName, String.class, DeclarativeConfigProperties::getString);
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String propertyName) {
-    return getPropertyValue(propertyName, DeclarativeConfigProperties::getBoolean);
+    return getPropertyValue(propertyName, Boolean.class, DeclarativeConfigProperties::getBoolean);
   }
 
   @Nullable
   @Override
   public Integer getInt(String propertyName) {
-    return getPropertyValue(propertyName, DeclarativeConfigProperties::getInt);
+    return getPropertyValue(propertyName, Integer.class, DeclarativeConfigProperties::getInt);
   }
 
   @Nullable
   @Override
   public Long getLong(String propertyName) {
-    return getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
+    return getPropertyValue(propertyName, Long.class, DeclarativeConfigProperties::getLong);
   }
 
   @Nullable
   @Override
   public Double getDouble(String propertyName) {
-    return getPropertyValue(propertyName, DeclarativeConfigProperties::getDouble);
+    return getPropertyValue(propertyName, Double.class, DeclarativeConfigProperties::getDouble);
   }
 
   @Nullable
   @Override
   public Duration getDuration(String propertyName) {
-    Long millis = getPropertyValue(propertyName, DeclarativeConfigProperties::getLong);
+    Long millis = getPropertyValue(propertyName, Long.class, DeclarativeConfigProperties::getLong);
     if (millis == null) {
       return null;
     }
     return Duration.ofMillis(millis);
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String propertyName) {
     List<String> propertyValue =
         getPropertyValue(
             propertyName,
+            List.class,
             (properties, lastPart) -> properties.getScalarList(lastPart, String.class));
     return propertyValue == null ? Collections.emptyList() : propertyValue;
   }
 
+  @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String propertyName) {
     DeclarativeConfigProperties propertyValue =
-        getPropertyValue(propertyName, DeclarativeConfigProperties::getStructured);
+        getPropertyValue(
+            propertyName,
+            DeclarativeConfigProperties.class,
+            DeclarativeConfigProperties::getStructured);
     if (propertyValue == null) {
       return Collections.emptyMap();
     }
@@ -129,22 +144,21 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   @Nullable
   private <T> T getPropertyValue(
-      String property, BiFunction<DeclarativeConfigProperties, String, T> extractor) {
-    if (instrumentationJavaNode == null) {
-      return null;
+      String property,
+      Class<T> clazz,
+      BiFunction<DeclarativeConfigProperties, String, T> extractor) {
+    T override = clazz.cast(overrideValues.get(property));
+    if (override != null) {
+      return override;
     }
 
-    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
-      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
-    }
-    // Split the remainder of the property on "."
-    String[] segments = property.split("\\.");
+    String[] segments = getSegments(translateProperty(property));
     if (segments.length == 0) {
       return null;
     }
 
     // Extract the value by walking to the N-1 entry
-    DeclarativeConfigProperties target = instrumentationJavaNode;
+    DeclarativeConfigProperties target = baseNode;
     if (segments.length > 1) {
       for (int i = 0; i < segments.length - 1; i++) {
         target = target.getStructured(segments[i], empty());
@@ -153,5 +167,22 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     String lastPart = segments[segments.length - 1];
 
     return extractor.apply(target, lastPart);
+  }
+
+  private static String[] getSegments(String property) {
+    if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
+      property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
+    }
+    // Split the remainder of the property on "."
+    return property.replace('-', '_').split("\\.");
+  }
+
+  private String translateProperty(String property) {
+    for (Map.Entry<String, String> entry : mappings.entrySet()) {
+      if (property.startsWith(entry.getKey())) {
+        return entry.getValue() + property.substring(entry.getKey().length());
+      }
+    }
+    return property;
   }
 }

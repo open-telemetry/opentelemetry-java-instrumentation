@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.time.Duration;
 import java.util.List;
@@ -109,17 +110,30 @@ public interface InstrumentationConfig {
    */
   Map<String, String> getMap(String name, Map<String, String> defaultValue);
 
+  /** Returns {@code true} if declarative configuration is used in this configuration. */
+  boolean isDeclarative();
+
   /**
-   * Returns a {@link DeclarativeConfigProperties} for the given instrumentation name, or {@code
-   * null} if no declarative configuration is available for that instrumentation.
+   * Returns a {@link DeclarativeConfigProperties} for the given node name, which is usually an
+   * instrumentation name
+   *
+   * <p>Call {@link #isDeclarative()} first to check if declarative configuration is used.
    *
    * <p>Declarative configuration is used to configure instrumentation properties in a declarative
    * way, such as through YAML or JSON files.
    *
-   * @param instrumentationName the name of the instrumentation
-   * @return the declarative configuration properties for the given instrumentation name, or {@code
-   *     null} if not available
+   * @param node the name of the instrumentation (e.g. "log4j"), the vendor name (e.g. "google"), or
+   *     "common" for common Java settings that don't apply to other languages.
+   * @return the declarative configuration properties for the given node name
+   * @throws IllegalStateException if {@link #isDeclarative()} returns {@code false}
+   */
+  DeclarativeConfigProperties getDeclarativeConfig(String node);
+
+  /**
+   * Returns the {@link ConfigProvider} if declarative configuration is used.
+   *
+   * @return the {@link ConfigProvider} or {@code null} if no provider is available
    */
   @Nullable
-  DeclarativeConfigProperties getDeclarativeConfig(String instrumentationName);
+  ConfigProvider getConfigProvider();
 }

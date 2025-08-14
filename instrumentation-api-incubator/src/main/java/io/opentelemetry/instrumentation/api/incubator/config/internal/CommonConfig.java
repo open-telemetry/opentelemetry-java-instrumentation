@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyMap;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -14,6 +16,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -39,16 +43,32 @@ public final class CommonConfig {
   public CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
         PeerServiceResolver.create(
-            config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap()));
+            getFromConfigProviderOrFallback(
+                config,
+                InstrumentationConfigUtil::peerServiceMapping,
+                () ->
+                    config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap())));
 
     clientRequestHeaders =
-        config.getList("otel.instrumentation.http.client.capture-request-headers");
+        getFromConfigProviderOrFallback(
+            config,
+            InstrumentationConfigUtil::httpClientRequestCapturedHeaders,
+            () -> config.getList("otel.instrumentation.http.client.capture-request-headers"));
     clientResponseHeaders =
-        config.getList("otel.instrumentation.http.client.capture-response-headers");
+        getFromConfigProviderOrFallback(
+            config,
+            InstrumentationConfigUtil::httpClientResponseCapturedHeaders,
+            () -> config.getList("otel.instrumentation.http.client.capture-response-headers"));
     serverRequestHeaders =
-        config.getList("otel.instrumentation.http.server.capture-request-headers");
+        getFromConfigProviderOrFallback(
+            config,
+            InstrumentationConfigUtil::httpServerRequestCapturedHeaders,
+            () -> config.getList("otel.instrumentation.http.server.capture-request-headers"));
     serverResponseHeaders =
-        config.getList("otel.instrumentation.http.server.capture-response-headers");
+        getFromConfigProviderOrFallback(
+            config,
+            InstrumentationConfigUtil::httpServerResponseCapturedHeaders,
+            () -> config.getList("otel.instrumentation.http.server.capture-response-headers"));
     knownHttpRequestMethods =
         new HashSet<>(
             config.getList(
@@ -129,5 +149,16 @@ public final class CommonConfig {
 
   public String getTraceFlagsKey() {
     return loggingTraceFlagsKey;
+  }
+
+  private static <T> T getFromConfigProviderOrFallback(
+      InstrumentationConfig config,
+      Function<ConfigProvider, T> getFromConfigProvider,
+      Supplier<T> fallback) {
+    ConfigProvider configProvider = config.getConfigProvider();
+    if (configProvider != null) {
+      return getFromConfigProvider.apply(configProvider);
+    }
+    return fallback.get();
   }
 }
