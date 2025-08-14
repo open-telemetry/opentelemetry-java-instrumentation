@@ -45,7 +45,6 @@ public final class OpenTelemetryInstaller {
           sdk,
           SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
           new DeclarativeConfigPropertiesBridgeBuilder()
-              .addMapping("otel.instrumentation.common.default-enabled", "common.default.enabled")
               .addMapping("otel.javaagent", "agent")
               // these properties are used to initialize the SDK before the configuration file
               // is loaded for consistency, we pass them to the bridge, so that they can be read

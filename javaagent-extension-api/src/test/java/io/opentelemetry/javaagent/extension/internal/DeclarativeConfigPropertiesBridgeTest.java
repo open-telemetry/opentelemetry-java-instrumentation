@@ -129,18 +129,6 @@ class DeclarativeConfigPropertiesBridgeTest {
   }
 
   @Test
-  void agentCommonTranslation() {
-    assertThat(
-            create(
-                    new DeclarativeConfigPropertiesBridgeBuilder()
-                        .addMapping(
-                            "otel.instrumentation.common.default-enabled",
-                            "common.default.enabled"))
-                .getBoolean("otel.instrumentation.common.default-enabled"))
-        .isFalse();
-  }
-
-  @Test
   void agentTranslation() {
     ConfigProperties bridge =
         create(

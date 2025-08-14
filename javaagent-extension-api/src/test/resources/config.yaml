@@ -7,9 +7,6 @@ instrumentation/development:
     agent:
       experimental:
         indy: true
-    common:
-      default:
-        enabled: false
     runtime_telemetry:
       enabled: false
     example_instrumentation:
