@@ -52,7 +52,7 @@
   <module name="TreeWalker">
     <module name="RegexpSinglelineJava">
       <property name="format"
-                value="(?&lt;!import static io.opentelemetry.sdk.testing.assertj.)OpenTelemetryAssertions\."/>
+                value="(?&lt;!import (?:static )?io.opentelemetry.sdk.testing.assertj.)OpenTelemetryAssertions\.(?![A-Z]\w*[;\s]*)"/>
       <property name="message"
                 value="Please statically import methods from OpenTelemetryAssertions"/>
     </module>
