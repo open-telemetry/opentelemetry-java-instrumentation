@@ -69,6 +69,7 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     // TODO run tests both with and without experimental span attributes
 //    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
 
@@ -86,10 +87,12 @@ tasks {
 
   val testExperimental by registering(Test::class) {
     jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
+    systemProperty("metaDataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

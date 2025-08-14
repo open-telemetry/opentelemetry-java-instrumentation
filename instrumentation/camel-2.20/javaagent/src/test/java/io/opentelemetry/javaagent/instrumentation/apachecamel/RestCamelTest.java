@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -130,9 +131,8 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 URL_FULL,
                                 "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
-                            satisfies(
-                                stringKey("camel.uri"),
-                                experimental(val -> val.isInstanceOf(String.class)))),
+                            experimentalSatisfies(
+                                stringKey("camel.uri"), val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("moduleUnit")
                         .hasKind(SpanKind.INTERNAL)

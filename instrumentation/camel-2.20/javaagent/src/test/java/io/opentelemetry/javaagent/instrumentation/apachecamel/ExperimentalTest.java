@@ -5,25 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 
-class ExperimentalTest {
+public class ExperimentalTest {
   private static final String EXPERIMENTAL_FLAG =
       "otel.instrumentation.camel.experimental-span-attributes";
 
-  static String experimental(String value) {
+  public static String experimental(String value) {
     if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
       return null;
     }
     return value;
   }
 
-  static OpenTelemetryAssertions.StringAssertConsumer experimental(
-      OpenTelemetryAssertions.StringAssertConsumer value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
-      return null;
+  static AttributeAssertion experimentalSatisfies(
+      AttributeKey<String> key, OpenTelemetryAssertions.StringAssertConsumer assertion) {
+    if (Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
+      return OpenTelemetryAssertions.satisfies(key, assertion);
+    } else {
+      return OpenTelemetryAssertions.equalTo(key, null);
     }
-    return value;
   }
 
   private ExperimentalTest() {}
