@@ -24,7 +24,7 @@ tasks {
 ```
 
 Sometimes instrumentation will behave differently based on configuration options, and we can
-differentiate between these configurations by using the `metaDataConfig` system property. When the
+differentiate between these configurations by using the `metadataConfig` system property. When the
 telemetry is written to a file, the value of this property will be included, or it will default to
 a `default` attribution.
 
@@ -39,7 +39,7 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   test {

@@ -30,7 +30,7 @@ tasks {
   val testExperimental by registering(Test::class) {
     jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
     systemProperty("testExperimental", "true")
-    systemProperty("metaDataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
   }
 
   check {

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
@@ -23,9 +26,9 @@ public class ExperimentalTest {
   static AttributeAssertion experimentalSatisfies(
       AttributeKey<String> key, OpenTelemetryAssertions.StringAssertConsumer assertion) {
     if (Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
-      return OpenTelemetryAssertions.satisfies(key, assertion);
+      return satisfies(key, assertion);
     } else {
-      return OpenTelemetryAssertions.equalTo(key, null);
+      return equalTo(key, null);
     }
   }
 
