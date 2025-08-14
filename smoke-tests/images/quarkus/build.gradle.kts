@@ -58,8 +58,13 @@ tasks {
     }
   }
 
+  named("compileJava").configure {
+    dependsOn(named("compileQuarkusGeneratedSourcesJava"))
+  }
+
   withType<JibTask>().configureEach {
     dependsOn(quarkusBuild)
+    notCompatibleWithConfigurationCache("see https://github.com/GoogleContainerTools/jib/issues/3132")
   }
 
   sourcesJar {

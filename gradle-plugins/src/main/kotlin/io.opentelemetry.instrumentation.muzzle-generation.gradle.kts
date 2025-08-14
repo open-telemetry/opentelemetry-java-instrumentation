@@ -50,7 +50,7 @@ val languageTasks = LANGUAGES.map { language ->
     return@map null
   }
   val compileTask = tasks.named(compileTaskName)
-  createLanguageTask(compileTask, "byteBuddy${language.replaceFirstChar(Char::titlecase)}")
+  createLanguageTask(compileTask, language)
 }.filterNotNull()
 
 tasks {
@@ -60,29 +60,43 @@ tasks {
 }
 
 fun createLanguageTask(
-  compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
-  return tasks.register<ByteBuddySimpleTask>(name) {
-    setGroup("Byte Buddy")
-    outputs.cacheIf { true }
-    classFileVersion = ClassFileVersion.JAVA_V8
-    var transformationClassPath = inputClasspath
+  compileTaskProvider: TaskProvider<*>, language: String): TaskProvider<*> {
+  val taskName = "byteBuddy${language.replaceFirstChar { it.uppercase() }}"
+  val mainSourceSet = sourceSets.main.get()
+  val projectName = project.name
+  
+  // Create the input classpath from the existing logic in the main part
+  val inputClasspath = (mainSourceSet.output.resourcesDir?.let { codegen.plus(project.files(it)) }
+    ?: codegen)
+    .plus(mainSourceSet.output.dirs) // needed to support embedding shadowed modules into instrumentation
+    .plus(configurations.runtimeClasspath.get())
+  
+  val byteBuddyTask = tasks.register(taskName, ByteBuddySimpleTask::class.java) {
+    dependsOn(compileTaskProvider, mainSourceSet.processResourcesTaskName)
+    
+    transformations.add(createTransformation(inputClasspath, projectName))
+    
+    // Configure the ByteBuddy task properties directly during task creation
     val compileTask = compileTaskProvider.get()
-    // this does not work for kotlin as compile task does not extend AbstractCompile
     if (compileTask is AbstractCompile) {
       val classesDirectory = compileTask.destinationDirectory.asFile.get()
-      val rawClassesDirectory: File = File(classesDirectory.parent, "${classesDirectory.name}raw")
-        .absoluteFile
-      dependsOn(compileTask)
+      val rawClassesDirectory = File(classesDirectory.parent, "${classesDirectory.name}raw").absoluteFile
+      
+      // Configure the compile task to write to rawClassesDirectory
       compileTask.destinationDirectory.set(rawClassesDirectory)
+      
+      // Configure ByteBuddy task properties
       source = rawClassesDirectory
       target = classesDirectory
       classPath = compileTask.classpath.plus(rawClassesDirectory)
-      transformationClassPath = transformationClassPath.plus(files(rawClassesDirectory))
-      dependsOn(compileTask, sourceSet.processResourcesTaskName)
+      
+      // Clear and set transformations with correct classpath
+      transformations.clear()
+      transformations.add(createTransformation(inputClasspath.plus(files(rawClassesDirectory)), pluginName))
     }
-
-    transformations.add(createTransformation(transformationClassPath, pluginName))
   }
+
+  return byteBuddyTask
 }
 
 fun createTransformation(classPath: FileCollection, pluginClassName: String): Transformation {
