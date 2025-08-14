@@ -10,7 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.StringAssertConsumer;
 
 public class ExperimentalTest {
   private static final String EXPERIMENTAL_FLAG =
@@ -24,7 +24,7 @@ public class ExperimentalTest {
   }
 
   static AttributeAssertion experimentalSatisfies(
-      AttributeKey<String> key, OpenTelemetryAssertions.StringAssertConsumer assertion) {
+      AttributeKey<String> key, StringAssertConsumer assertion) {
     if (Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
       return satisfies(key, assertion);
     } else {
