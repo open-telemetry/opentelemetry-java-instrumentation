@@ -109,7 +109,7 @@ public class MetricParser {
           aggregatedMetrics.computeIfAbsent(when, k -> new HashMap<>());
 
       for (EmittedMetrics.MetricsByScope metricsByScope : metrics.getMetricsByScope()) {
-        if (metricsByScope.getScope().equals(targetScopeName)) {
+        if (TelemetryParser.scopeIsValid(metricsByScope.getScope(), targetScopeName)) {
           for (EmittedMetrics.Metric metric : metricsByScope.getMetrics()) {
             AggregatedMetricInfo aggInfo =
                 metricKindMap.computeIfAbsent(

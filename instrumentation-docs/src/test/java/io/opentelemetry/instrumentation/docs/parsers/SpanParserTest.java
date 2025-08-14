@@ -195,4 +195,70 @@ class SpanParserTest {
         .extracting(TelemetryAttribute::getName)
         .containsExactly("my.operation");
   }
+
+  @Test
+  void getSpansFromFilesIncludesAllowListedScopes(@TempDir Path tempDir) throws IOException {
+    Path telemetryDir = Files.createDirectories(tempDir.resolve(".telemetry"));
+
+    String file1Content =
+        """
+        when: default
+        spans_by_scope:
+          - scope: io.opentelemetry.grpc-1.6
+            spans:
+              - span_kind: CLIENT
+                attributes:
+                  - name: rpc.system
+                    type: STRING
+                  - name: rpc.grpc.status_code
+                    type: LONG
+                  - name: server.port
+                    type: LONG
+                  - name: rpc.method
+                    type: STRING
+                  - name: rpc.service
+                    type: STRING
+                  - name: server.address
+                    type: STRING
+              - span_kind: SERVER
+                attributes:
+                  - name: rpc.system
+                    type: STRING
+                  - name: rpc.grpc.status_code
+                    type: LONG
+                  - name: server.port
+                    type: LONG
+                  - name: rpc.method
+                    type: STRING
+                  - name: rpc.service
+                    type: STRING
+                  - name: server.address
+                    type: STRING
+      """;
+
+    Files.writeString(telemetryDir.resolve("spans-1.yaml"), file1Content);
+
+    try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
+      fileManagerMock
+          .when(() -> FileManager.readFileToString(telemetryDir.resolve("spans-1.yaml").toString()))
+          .thenReturn(file1Content);
+
+      Map<String, EmittedSpans> fileContents =
+          EmittedSpanParser.getSpansByScopeFromFiles(tempDir.toString(), "");
+
+      EmittedSpans emittedSpans = fileContents.get("default");
+
+      // Aggregate spans - only target scope should be included
+      Map<String, Map<String, Set<TelemetryAttribute>>> spans =
+          SpanParser.SpanAggregator.aggregateSpans(
+              "default", emittedSpans, "io.opentelemetry.armeria-grpc-1.14");
+
+      Map<String, List<EmittedSpans.Span>> result =
+          SpanParser.SpanAggregator.buildFilteredSpans(spans);
+
+      assertThat(result.size()).isEqualTo(1);
+      assertThat(result.get("default")).isNotNull();
+      assertThat(result.get("default").size()).isEqualTo(2);
+    }
+  }
 }

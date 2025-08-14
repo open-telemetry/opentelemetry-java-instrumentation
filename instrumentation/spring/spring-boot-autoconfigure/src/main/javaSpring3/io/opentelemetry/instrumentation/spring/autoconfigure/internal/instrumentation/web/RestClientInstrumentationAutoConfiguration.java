@@ -26,7 +26,7 @@ import org.springframework.web.client.RestClient;
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
-@ConditionalOnClass(RestClient.class)
+@ConditionalOnClass({RestClient.class, RestClientCustomizer.class})
 @AutoConfiguration(after = RestClientAutoConfiguration.class)
 @Configuration
 public class RestClientInstrumentationAutoConfiguration {
