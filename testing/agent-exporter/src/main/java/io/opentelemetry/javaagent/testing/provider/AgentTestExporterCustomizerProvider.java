@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.testing.provider;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.testing.exporter.AgentTestingExporterFactory;
+import io.opentelemetry.javaagent.testing.exporter.TestExportersUtil;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ConsoleExporterModel;
@@ -32,7 +32,7 @@ public class AgentTestExporterCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
-    AgentTestingExporterFactory.init();
+    TestExportersUtil.initTestExporters();
 
     customizer.addModelCustomizer(
         model -> {

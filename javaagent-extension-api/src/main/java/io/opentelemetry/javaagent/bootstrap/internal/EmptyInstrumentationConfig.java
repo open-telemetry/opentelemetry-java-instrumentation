@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import java.time.Duration;
@@ -60,9 +61,20 @@ final class EmptyInstrumentationConfig implements InstrumentationConfig {
     return defaultValue;
   }
 
+  @Override
+  public boolean isDeclarative() {
+    return false;
+  }
+
+  @Override
+  public DeclarativeConfigProperties getDeclarativeConfig(String node) {
+    throw new IllegalStateException(
+        "Declarative configuration is not supported in the empty instrumentation config");
+  }
+
   @Nullable
   @Override
-  public DeclarativeConfigProperties getDeclarativeConfig(String instrumentationName) {
+  public ConfigProvider getConfigProvider() {
     return null;
   }
 }

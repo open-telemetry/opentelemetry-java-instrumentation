@@ -33,7 +33,6 @@ import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttribute
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
-import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesUtil;
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
@@ -162,12 +161,10 @@ public class AgentInstaller {
 
     installEarlyInstrumentation(agentBuilder, inst);
 
-    // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
-    // called
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        installOpenTelemetrySdk(extensionClassLoader);
+        installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
-    ConfigProperties sdkConfig = ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredSdk);
+    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
         new ConfigPropertiesBridge(
             sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
@@ -175,7 +172,7 @@ public class AgentInstaller {
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
-        SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
+        SdkAutoconfigureAccess.getResource(autoConfiguredSdk).getAttributes());
 
     for (BeforeAgentListener agentListener :
         loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {

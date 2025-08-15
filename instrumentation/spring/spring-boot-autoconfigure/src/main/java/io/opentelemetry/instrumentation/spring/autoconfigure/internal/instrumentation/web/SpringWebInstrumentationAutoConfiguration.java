@@ -24,7 +24,7 @@ import org.springframework.web.client.RestTemplate;
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
-@ConditionalOnClass(RestTemplate.class)
+@ConditionalOnClass({RestTemplate.class, RestTemplateCustomizer.class})
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 
