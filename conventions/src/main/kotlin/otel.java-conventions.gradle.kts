@@ -344,7 +344,7 @@ tasks.withType<Test>().configureEach {
   val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
     ?: false
   if (useJ9 && testJavaVersion != null && testJavaVersion.isJava8) {
-    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.setLong*},exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf._setLong*}")
+    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*},exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*}")
   }
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
