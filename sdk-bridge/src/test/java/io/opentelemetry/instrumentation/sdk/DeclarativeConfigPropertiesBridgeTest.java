@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+<<<<<<<< HEAD:sdk-bridge/src/test/java/io/opentelemetry/instrumentation/sdk/DeclarativeConfigPropertiesBridgeTest.java
 package io.opentelemetry.instrumentation.sdk;
+========
+package io.opentelemetry.instrumentation.sdk.internal;
+>>>>>>>> 9302a53f45 (fix rebase):sdk-bridge/src/test/java/io/opentelemetry/instrumentation/sdk/internal/DeclarativeConfigPropertiesBridgeTest.java
 
 import static org.assertj.core.api.Assertions.assertThat;
 

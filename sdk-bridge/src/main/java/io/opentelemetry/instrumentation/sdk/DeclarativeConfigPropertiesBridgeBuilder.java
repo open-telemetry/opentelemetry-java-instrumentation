@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+<<<<<<<< HEAD:sdk-bridge/src/main/java/io/opentelemetry/instrumentation/sdk/DeclarativeConfigPropertiesBridgeBuilder.java
 package io.opentelemetry.instrumentation.sdk;
+========
+package io.opentelemetry.instrumentation.sdk.internal;
+>>>>>>>> 9302a53f45 (fix rebase):sdk-bridge/src/main/java/io/opentelemetry/instrumentation/sdk/internal/DeclarativeConfigPropertiesBridgeBuilder.java
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
