@@ -9,6 +9,8 @@ import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.openai.client.okhttp.OpenAIOkHttpClientAsync;
+import io.opentelemetry.instrumentation.openai.TestHelper;
+import io.opentelemetry.instrumentation.openai.v3_0.OpenAi3TestHelper;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
@@ -34,6 +36,9 @@ abstract class AbstractOpenAiTest {
   private static final String API_URL = "https://api.openai.com/v1";
 
   @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
+
+  protected static TestHelper testHelper =
+      Boolean.getBoolean("testLatestDeps") ? new OpenAi3TestHelper() : new OpenAi1TestHelper();
 
   protected abstract InstrumentationExtension getTesting();
 

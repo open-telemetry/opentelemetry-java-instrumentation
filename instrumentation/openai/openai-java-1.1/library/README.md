@@ -1,7 +1,6 @@
 # Library Instrumentation for OpenAI Java SDK version 1.1.0 and higher
 
 Provides OpenTelemetry instrumentation for [openai-java](https://github.com/openai/openai-java/).
-Versions 1.1 through 2.x are supported.
 
 ## Quickstart
 
