@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.extension.internal;
+package io.opentelemetry.instrumentation.sdk.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
