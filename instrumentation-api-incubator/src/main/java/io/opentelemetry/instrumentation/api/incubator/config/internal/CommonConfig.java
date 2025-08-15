@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
@@ -46,6 +47,7 @@ public final class CommonConfig {
             getFromConfigProviderOrFallback(
                 config,
                 InstrumentationConfigUtil::peerServiceMapping,
+                emptyMap(),
                 () ->
                     config.getMap("otel.instrumentation.common.peer-service-mapping", emptyMap())));
 
@@ -53,21 +55,25 @@ public final class CommonConfig {
         getFromConfigProviderOrFallback(
             config,
             InstrumentationConfigUtil::httpClientRequestCapturedHeaders,
+            emptyList(),
             () -> config.getList("otel.instrumentation.http.client.capture-request-headers"));
     clientResponseHeaders =
         getFromConfigProviderOrFallback(
             config,
             InstrumentationConfigUtil::httpClientResponseCapturedHeaders,
+            emptyList(),
             () -> config.getList("otel.instrumentation.http.client.capture-response-headers"));
     serverRequestHeaders =
         getFromConfigProviderOrFallback(
             config,
             InstrumentationConfigUtil::httpServerRequestCapturedHeaders,
+            emptyList(),
             () -> config.getList("otel.instrumentation.http.server.capture-request-headers"));
     serverResponseHeaders =
         getFromConfigProviderOrFallback(
             config,
             InstrumentationConfigUtil::httpServerResponseCapturedHeaders,
+            emptyList(),
             () -> config.getList("otel.instrumentation.http.server.capture-response-headers"));
     knownHttpRequestMethods =
         new HashSet<>(
@@ -154,11 +160,14 @@ public final class CommonConfig {
   private static <T> T getFromConfigProviderOrFallback(
       InstrumentationConfig config,
       Function<ConfigProvider, T> getFromConfigProvider,
+      T defaultValue,
       Supplier<T> fallback) {
     ConfigProvider configProvider = config.getConfigProvider();
     if (configProvider != null) {
-      return getFromConfigProvider.apply(configProvider);
+      T value = getFromConfigProvider.apply(configProvider);
+      return value != null ? value : defaultValue;
     }
+    // fallback doesn't return null, so we can safely call it
     return fallback.get();
   }
 }
