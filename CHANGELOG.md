@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.19.0 (2025-08-15)
 
 ### 📈 Enhancements
 
