@@ -2,6 +2,43 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Align WildFly metrics with semantic conventions
+  ([#14208](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14208))
+- Add streaming chat instrumentation for OpenAI SDK
+  ([#14271](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14271))
+- Add OpenAI async client instrumentation support
+  ([#14322](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14322))
+- Add embeddings instrumentation for OpenAI client
+  ([#14353](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14353))
+- Support OpenAI 3.0
+  ([#14423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14423))
+
+### 🛠️ Bug fixes
+
+- Fix OpenTelemetryDataSource error when refresh configuration
+  ([#14255](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14255))
+- Fix NPE when consuming Kafka messages with null headers
+  ([#14332](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14332))
+- Fix RxJava context propagation for ObservableFromCallable
+  ([#14393](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14393))
+- Avoid test failures on Spring Boot 4-m1
+  ([#14420](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14420))
+
+### 🧰 Tooling
+
+- Add support for extensions in attributesExtractors, contextCustomizers, operationListeners and spanNameExtractor
+  ([#13917](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13917))
+- Add declarative config early initialization and property mapping support
+  ([#14184](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14184))
+- Add consistent exclusion of boot libraries
+  ([#14306](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14306))
+- Build smoke-test-fake-backend Docker image for ARM64 architecture
+  ([#14387](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14387))
+- Implement all JUL Logger methods in PatchLogger
+  ([#14409](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14409))
+
 ## Version 2.18.1 (2025-07-21)
 
 ### 🛠️ Bug fixes
