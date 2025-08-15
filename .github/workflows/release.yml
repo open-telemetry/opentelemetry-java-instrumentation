@@ -261,6 +261,7 @@ jobs:
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch
+          git add CHANGELOG.md
           git add docs/apidiffs
           git commit -m "$message"
           git push --set-upstream origin $branch
