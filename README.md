@@ -33,7 +33,7 @@ If you are looking for documentation on using those.
 ## Getting Started
 
 Download
-the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/latest/download/opentelemetry-javaagent.jar).
+the [latest version](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.19.0/opentelemetry-javaagent.jar).
 
 This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
