@@ -5,10 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
-import static net.bytebuddy.matcher.ElementMatchers.nameContains;
+import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -17,30 +21,30 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.connect.sink.SinkRecord;
+import org.apache.kafka.connect.header.Header;
+import org.apache.kafka.connect.header.Headers;
+import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
-import java.lang.reflect.Method;
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 public class SinkTaskInstrumentation implements TypeInstrumentation {
 
-  // Change from private to public:
-  public static final Logger logger = Logger.getLogger(SinkTaskInstrumentation.class.getName());
+  private static final Logger logger = Logger.getLogger(SinkTaskInstrumentation.class.getName());
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     logger.info("KafkaConnect: typeMatcher called");
-    
-    // Temporarily match ANY class with "Sink" in the name to see what's available
-    return nameContains("Sink");
+    return hasSuperType(named("org.apache.kafka.connect.sink.SinkTask"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    logger.info("KafkaConnect: transform() called - about to apply put() advice");
+    logger.info("KafkaConnect: transform() called - applying put() advice");
     
-    // Switch back to instrumenting the put method
+    // Add advice to constructor to see what classes we're instrumenting
+    transformer.applyAdviceToMethod(
+        named("<init>"),
+        SinkTaskInstrumentation.class.getName() + "$ConstructorAdvice");
+        
     transformer.applyAdviceToMethod(
         named("put").and(takesArgument(0, Collection.class)).and(isPublic()),
         SinkTaskInstrumentation.class.getName() + "$SinkTaskPutAdvice");
@@ -48,36 +52,13 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ConstructorAdvice {
-    // Change from private to public:
+    
     public static final Logger logger = Logger.getLogger(ConstructorAdvice.class.getName());
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(@Advice.This Object thiz) {
       String className = thiz.getClass().getName();
-      logger.info("KafkaConnect: Created instance of: " + className);
-      
-      // Special logging for the classes we care about
-      if (className.contains("JdbcSinkTask")) {
-        logger.info("🎯 KafkaConnect: Found JdbcSinkTask! " + className);
-      }
-      if (className.contains("SinkTask")) {
-        logger.info("📋 KafkaConnect: Found SinkTask subclass: " + className);
-      }
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class AllMethodsAdvice {
-    private static final Logger logger = Logger.getLogger(AllMethodsAdvice.class.getName());
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Origin Method method, @Advice.This Object thiz) {
-      // Only log methods that look interesting
-      String methodName = method.getName();
-      if (methodName.contains("put") || methodName.contains("process") || 
-          methodName.contains("write") || methodName.contains("execute")) {
-        logger.info("KafkaConnect: Method called: " + thiz.getClass().getName() + "." + methodName + "()");
-      }
+      logger.info("KafkaConnect: Instrumented class instantiated: " + className);
     }
   }
 
@@ -93,19 +74,16 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       
-      logger.info("🚀 KafkaConnect: SinkTask.put() ENTER called with " + records.size() + " records");
+      logger.info("KafkaConnect: SinkTask.put() called with " + records.size() + " records");
       
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      
-      // TEMPORARILY COMMENT OUT this problematic line:
-      /*
+            Context parentContext = Java8BytecodeBridge.currentContext();
+
+      // Extract context from first record if available
       if (!records.isEmpty()) {
         SinkRecord firstRecord = records.iterator().next();
-        Context extractedContext = KafkaConnectSingletons.propagator()
-            .extract(parentContext, firstRecord, SinkRecordHeadersGetter.INSTANCE);
-        // ... rest of extraction logic
+        Context extractedContext = extractContextFromRecord(parentContext, firstRecord);
+        parentContext = extractedContext;
       }
-      */
 
       task = new KafkaConnectTask(records);
       if (!KafkaConnectSingletons.instrumenter().shouldStart(parentContext, task)) {
@@ -115,7 +93,7 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
       
       context = KafkaConnectSingletons.instrumenter().start(parentContext, task);
       scope = context.makeCurrent();
-      logger.info("🎯 KafkaConnect: Started span with context: " + context);
+      logger.info("KafkaConnect: Started span");
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -125,15 +103,45 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       
-      logger.info("KafkaConnect: SinkTask.put() EXIT called");
-      
       if (scope == null) {
-        logger.warning("KafkaConnect: Scope is null, exiting");
+        logger.info("KafkaConnect: Scope is null, exiting");
         return;
       }
       scope.close();
       KafkaConnectSingletons.instrumenter().end(context, task, null, throwable);
       logger.info("KafkaConnect: Span ended");
+    }
+    
+    public static Context extractContextFromRecord(Context parentContext, SinkRecord record) {
+      // Create a simple TextMapGetter for SinkRecord headers
+      return KafkaConnectSingletons.propagator().extract(parentContext, record, new TextMapGetter<SinkRecord>() {
+        @Override
+        public Iterable<String> keys(SinkRecord sinkRecord) {
+          Headers headers = sinkRecord.headers();
+          java.util.List<String> keys = new java.util.ArrayList<>();
+          for (Header header : headers) {
+            keys.add(header.key());
+          }
+          return keys;
+        }
+
+        @Override
+        public String get(SinkRecord sinkRecord, String key) {
+          if (sinkRecord == null) {
+            return null;
+          }
+          Headers headers = sinkRecord.headers();
+          Header header = headers.lastWithName(key);
+          if (header == null) {
+            return null;
+          }
+          Object value = header.value();
+          if (value instanceof byte[]) {
+            return new String((byte[]) value, StandardCharsets.UTF_8);
+          }
+          return value != null ? value.toString() : null;
+        }
+      });
     }
   }
 }
