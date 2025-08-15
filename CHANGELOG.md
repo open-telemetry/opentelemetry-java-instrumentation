@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Version 2.18.1 (2025-07-21)
+
+### 🛠️ Bug fixes
+
+- Backport: Shade new `io.opentelemetry.common` package in the bootstrap class loader
+  ([#14283](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14283))
+
 ## Version 2.18.0 (2025-07-17)
 
 ### 🌟 New javaagent instrumentation
@@ -45,6 +52,13 @@
   ([#14151](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14151))
 - Fix empty units in JMX state metrics definitions
   ([#14194](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14194))
+
+## Version 2.17.1 (2025-07-08)
+
+### 🛠️ Bug fixes
+
+- Backport: Fix invalid jmx state metrics empty unit
+  ([#14195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14195))
 
 ## Version 2.17.0 (2025-06-20)
 
