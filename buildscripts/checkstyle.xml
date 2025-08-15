@@ -50,9 +50,10 @@
   -->
 
   <module name="TreeWalker">
+    <!-- Enforce static imports for OpenTelemetryAssertions methods (lowercase), but allow inner classes (uppercase) and imports -->
     <module name="RegexpSinglelineJava">
       <property name="format"
-                value="(?&lt;!import (?:static )?io.opentelemetry.sdk.testing.assertj.)OpenTelemetryAssertions\.(?![A-Z]\w*[;\s]*)"/>
+                value="^(?!.*import).*OpenTelemetryAssertions\.[a-z]"/>
       <property name="message"
                 value="Please statically import methods from OpenTelemetryAssertions"/>
     </module>
