@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -112,13 +113,13 @@ class CassandraTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                     span.hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://input")),
+                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                 span ->
                     span.hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("camel.uri"),
-                                "cql://" + host + ":" + cassandraPort + "/test"),
+                                experimental("cql://" + host + ":" + cassandraPort + "/test")),
                             equalTo(maybeStable(DB_NAME), "test"),
                             equalTo(
                                 maybeStable(DB_STATEMENT),
