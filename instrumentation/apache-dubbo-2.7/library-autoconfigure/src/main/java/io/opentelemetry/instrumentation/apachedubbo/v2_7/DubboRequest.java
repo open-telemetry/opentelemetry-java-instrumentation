@@ -18,11 +18,16 @@ public abstract class DubboRequest {
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
     // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url and remote address
     // here to ensure we can access them from the thread that ends the span.
+
+    // There is a compatibility issue with context.getRemoteAddress() in 3.x.
+    // In some versions, context.getRemoteAddress() may return null.
+    // Use context.getUrl().toInetSocketAddress() here directly, related bugfix PR:
+    // https://github.com/apache/dubbo/issues/11790
     return new AutoValue_DubboRequest(
         invocation,
         context,
         context.getUrl(),
-        context.getRemoteAddress(),
+        context.getUrl().toInetSocketAddress(),
         context.getLocalAddress());
   }
 
