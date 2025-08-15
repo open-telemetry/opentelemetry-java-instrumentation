@@ -222,7 +222,7 @@ final class ChatCompletionEventsHelper {
     Map<String, Value<?>> result = new HashMap<>();
     FunctionAccess functionAccess = getFunctionAccess(call);
     if (functionAccess != null) {
-      result.put("id", toValue(functionAccess.id()));
+      result.put("id", Value.of(functionAccess.id()));
       result.put("type", Value.of("function")); // "function" is the only currently supported type
       result.put("function", buildFunctionEventObject(functionAccess, captureMessageContent));
     }
@@ -232,16 +232,11 @@ final class ChatCompletionEventsHelper {
   private static Value<?> buildFunctionEventObject(
       FunctionAccess functionAccess, boolean captureMessageContent) {
     Map<String, Value<?>> result = new HashMap<>();
-    result.put("name", toValue(functionAccess.name()));
+    result.put("name", Value.of(functionAccess.name()));
     if (captureMessageContent) {
-      result.put("arguments", toValue(functionAccess.arguments()));
+      result.put("arguments", Value.of(functionAccess.arguments()));
     }
     return Value.of(result);
-  }
-
-  @Nullable
-  private static Value<String> toValue(@Nullable String string) {
-    return string != null ? Value.of(string) : null;
   }
 
   @Nullable
@@ -257,26 +252,22 @@ final class ChatCompletionEventsHelper {
   }
 
   private interface FunctionAccess {
-    @Nullable
     String id();
 
-    @Nullable
     String name();
 
-    @Nullable
     String arguments();
   }
 
-  @Nullable
   private static String invokeStringHandle(@Nullable MethodHandle methodHandle, Object object) {
     if (methodHandle == null) {
-      return null;
+      return "";
     }
 
     try {
       return (String) methodHandle.invoke(object);
     } catch (Throwable ignore) {
-      return null;
+      return "";
     }
   }
 
@@ -345,19 +336,16 @@ final class ChatCompletionEventsHelper {
       return idHandle != null;
     }
 
-    @Nullable
     @Override
     public String id() {
       return invokeStringHandle(idHandle, toolCall);
     }
 
-    @Nullable
     @Override
     public String name() {
       return invokeStringHandle(nameHandle, function);
     }
 
-    @Nullable
     @Override
     public String arguments() {
       return invokeStringHandle(argumentsHandle, function);
@@ -443,19 +431,16 @@ final class ChatCompletionEventsHelper {
       return idHandle != null;
     }
 
-    @Nullable
     @Override
     public String id() {
       return invokeStringHandle(idHandle, functionToolCall);
     }
 
-    @Nullable
     @Override
     public String name() {
       return invokeStringHandle(nameHandle, function);
     }
 
-    @Nullable
     @Override
     public String arguments() {
       return invokeStringHandle(argumentsHandle, function);
