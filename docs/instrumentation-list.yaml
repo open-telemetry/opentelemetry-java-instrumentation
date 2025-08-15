@@ -3961,6 +3961,20 @@ libraries:
         - name: gen_ai.token.type
           type: STRING
       spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.request.encoding_formats
+          type: STRING_ARRAY
+        - name: gen_ai.request.model
+          type: STRING
+        - name: gen_ai.response.model
+          type: STRING
+        - name: gen_ai.system
+          type: STRING
+        - name: gen_ai.usage.input_tokens
+          type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
