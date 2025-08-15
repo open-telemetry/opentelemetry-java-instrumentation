@@ -48,6 +48,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.This Category logger,
+        @Advice.Argument(0) String fqcn,
         @Advice.Argument(1) Priority level,
         @Advice.Argument(2) Object message,
         @Advice.Argument(3) Throwable t,
@@ -56,7 +57,7 @@ class Log4jAppenderInstrumentation implements TypeInstrumentation {
       // framework delegates to another
       callDepth = CallDepth.forClass(LoggerProvider.class);
       if (callDepth.getAndIncrement() == 0) {
-        LogEventMapper.INSTANCE.capture(logger, level, message, t);
+        LogEventMapper.INSTANCE.capture(fqcn, logger, level, message, t);
       }
     }
 
