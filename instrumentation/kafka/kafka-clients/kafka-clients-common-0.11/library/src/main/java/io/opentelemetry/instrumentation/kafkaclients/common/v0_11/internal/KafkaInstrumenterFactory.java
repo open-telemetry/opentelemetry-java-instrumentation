@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableMessagingSemconv;
 import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -73,6 +74,7 @@ public final class KafkaInstrumenterFactory {
     return createProducerInstrumenter(Collections.emptyList());
   }
 
+  @SuppressWarnings("deprecation") // using deprecated semconv
   public Instrumenter<KafkaProducerRequest, RecordMetadata> createProducerInstrumenter(
       Iterable<AttributesExtractor<KafkaProducerRequest, RecordMetadata>> extractors) {
 
@@ -109,7 +111,7 @@ public final class KafkaInstrumenterFactory {
         .addAttributesExtractor(KafkaReceiveAttributesExtractor.INSTANCE)
         .addAttributesExtractors(extractors)
         .setErrorCauseExtractor(errorCauseExtractor)
-        .setEnabled(messagingReceiveInstrumentationEnabled)
+        .setEnabled(messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
@@ -136,7 +138,7 @@ public final class KafkaInstrumenterFactory {
       builder.addAttributesExtractor(new KafkaConsumerExperimentalAttributesExtractor());
     }
 
-    if (messagingReceiveInstrumentationEnabled) {
+    if (messagingReceiveInstrumentationEnabled || emitStableMessagingSemconv()) {
       builder.addSpanLinksExtractor(
           new PropagatorBasedSpanLinksExtractor<>(
               openTelemetry.getPropagators().getTextMapPropagator(),

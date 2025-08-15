@@ -20,6 +20,8 @@ public final class SemconvStability {
 
   private static final boolean emitOldDatabaseSemconv;
   private static final boolean emitStableDatabaseSemconv;
+  private static final boolean emitOldMessagingSemconv;
+  private static final boolean emitStableMessagingSemconv;
 
   private static final boolean emitOldCodeSemconv;
   private static final boolean emitStableCodeSemconv;
@@ -27,6 +29,9 @@ public final class SemconvStability {
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
+
+    boolean oldMessaging = true;
+    boolean stableMessaging = false;
 
     boolean oldCode = true;
     boolean stableCode = false;
@@ -46,7 +51,14 @@ public final class SemconvStability {
         oldDatabase = true;
         stableDatabase = true;
       }
-
+      if (values.contains("messaging")) {
+        oldMessaging = false;
+        stableMessaging = true;
+      }
+      if (values.contains("messaging/dup")) {
+        oldMessaging = true;
+        stableMessaging = true;
+      }
       if (values.contains("code")) {
         oldCode = false;
         stableCode = true;
@@ -60,6 +72,9 @@ public final class SemconvStability {
     emitOldDatabaseSemconv = oldDatabase;
     emitStableDatabaseSemconv = stableDatabase;
 
+    emitOldMessagingSemconv = oldMessaging;
+    emitStableMessagingSemconv = stableMessaging;
+
     emitOldCodeSemconv = oldCode;
     emitStableCodeSemconv = stableCode;
   }
@@ -70,6 +85,14 @@ public final class SemconvStability {
 
   public static boolean emitStableDatabaseSemconv() {
     return emitStableDatabaseSemconv;
+  }
+
+  public static boolean emitOldMessagingSemconv() {
+    return emitOldMessagingSemconv;
+  }
+
+  public static boolean emitStableMessagingSemconv() {
+    return emitStableMessagingSemconv;
   }
 
   private static final Map<String, String> dbSystemNameMap = new HashMap<>();
