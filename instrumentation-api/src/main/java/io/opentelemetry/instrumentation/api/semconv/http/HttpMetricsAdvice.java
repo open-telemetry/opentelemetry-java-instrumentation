@@ -36,7 +36,8 @@ final class HttpMetricsAdvice {
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
                 ServerAttributes.SERVER_ADDRESS,
-                ServerAttributes.SERVER_PORT));
+                ServerAttributes.SERVER_PORT,
+                UrlAttributes.URL_SCHEME));
   }
 
   static void applyServerDurationAdvice(DoubleHistogramBuilder builder) {
@@ -52,7 +53,9 @@ final class HttpMetricsAdvice {
                 ErrorAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PROTOCOL_NAME,
                 NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-                UrlAttributes.URL_SCHEME));
+                UrlAttributes.URL_SCHEME,
+                ServerAttributes.SERVER_ADDRESS,
+                ServerAttributes.SERVER_PORT));
   }
 
   private HttpMetricsAdvice() {}
