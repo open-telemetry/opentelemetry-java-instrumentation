@@ -50,7 +50,8 @@
   -->
 
   <module name="TreeWalker">
-    <!-- Enforce static imports for OpenTelemetryAssertions methods (lowercase), but allow inner classes (uppercase) and imports -->
+    <!-- Enforce static imports for OpenTelemetryAssertions methods (lowercase), but allow inner
+    classes (uppercase). The negative lookup is needed so we don't match import lines. -->
     <module name="RegexpSinglelineJava">
       <property name="format"
                 value="^(?!.*import).*OpenTelemetryAssertions\.[a-z]"/>
