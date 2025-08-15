@@ -1,0 +1,4 @@
+templates:
+  - pattern: metrics.md.j2
+    filter: '.groups | map(select(.type == "metric"))'
+    application_mode: single

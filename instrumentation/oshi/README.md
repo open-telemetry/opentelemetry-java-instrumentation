@@ -7,3 +7,18 @@
 # Using OSHI with OpenTelemetry Java agent
 
 Download oshi-core jar from https://search.maven.org/search?q=g:com.github.oshi%20AND%20a:oshi-core and place it on the class path. OpenTelemetry Java agent uses system class loader to load classes from the oshi-core jar that are used for the metrics.
+
+
+## Development with weaver
+
+To regenerate the code (run these from within this `oshi` directory):
+
+```bash
+make generate-java
+```
+
+To regenerate the documentation:
+
+```bash
+make generate-docs
+```

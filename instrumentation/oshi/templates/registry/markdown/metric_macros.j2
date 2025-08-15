@@ -1,0 +1,8 @@
+{% macro instrument(type) -%}
+{%- if type == "gauge" %}Gauge
+{% elif type == "counter" %}Counter
+{% elif type == "updowncounter" %}UpDownCounter
+{% elif type == "histogram" %}Histogram
+{% else %}{{ type }}
+{%- endif %}
+{% endmacro %}

@@ -1,0 +1,13 @@
+{% import 'requirement.j2' as requirement %}
+{% import 'stability.j2' as stability %}
+{% import 'notes.j2' as notes %}
+{% import 'attribute_macros.j2' as attrs %}
+{% import 'enum_macros.j2' as enums %}
+{% import 'sampling_macros.j2' as sampling %}
+{% import 'examples_macros.j2' as examples %}
+{#- Macro for creating attribute table -#}
+{% macro generate(attributes, tag_filter, attribute_registry_base_url, lineage_attributes) %}{% if (tag_filter | length == 0) %}{% set filtered_attributes = attributes %}{% else %}{% set filtered_attributes = attributes | selectattr("tag", "in", tag_filter) %}{% endif %}{% if filtered_attributes | length > 0 %}| Attribute  | Type | Description  | Examples  | [Requirement Level](https://opentelemetry.io/docs/specs/semconv/general/attribute-requirement-level/) | Stability |
+|---|---|---|---|---|---|
+{% for attribute in filtered_attributes | attribute_sort %}| {{ attrs.name(attribute) }} | {{ attrs.type(attribute) }} | {{ attribute.brief | trim }}{{ notes.add({"note": attribute.note, "name": attribute.name}) }} | {{ examples.format(attribute) | trim }} | {{ requirement.render({"level": attribute.requirement_level, "name": attribute.name}, notes) | trim }} | {{ stability.badge(attribute.stability, attribute.deprecated) | trim }} |
+{% endfor %}{{ notes.render() }}{{ sampling.snippet(filtered_attributes, attribute_registry_base_url, lineage_attributes) }}{{ enums.tables(filtered_attributes | selectattr("type", "mapping"), notes) }}
+{% endif %}{% endmacro %}
