@@ -12,6 +12,8 @@
   ([#14322](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14322))
 - Add embeddings instrumentation for OpenAI client
   ([#14353](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14353))
+- Support OpenAI 3.0
+  ([#14423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14423))
 
 ### 🛠️ Bug fixes
 
