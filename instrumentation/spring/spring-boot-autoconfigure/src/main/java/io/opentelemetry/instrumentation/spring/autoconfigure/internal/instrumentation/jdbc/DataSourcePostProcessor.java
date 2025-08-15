@@ -10,7 +10,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -60,17 +59,16 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
       DataSource dataSource = (DataSource) bean;
       InstrumentationConfig config = configProvider.getObject();
       DataSource otelDataSource =
-       JdbcTelemetry.builder(openTelemetryProvider.getObject())
+          JdbcTelemetry.builder(openTelemetryProvider.getObject())
               .setStatementSanitizationEnabled(
                   InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                  config, "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+                      config, "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
               .setCaptureQueryParameters(
-              config.getBoolean(
-                  "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
-          .setTransactionInstrumenterEnabled(
                   config.getBoolean(
-
-                          "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
+                      "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
+              .setTransactionInstrumenterEnabled(
+                  config.getBoolean(
+                      "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
               .build()
               .wrap(dataSource);
 
