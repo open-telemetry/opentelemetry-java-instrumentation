@@ -12,6 +12,8 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import java.io.ByteArrayInputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -22,31 +24,51 @@ import org.junit.jupiter.api.Test;
 
 class DeclarativeConfigPropertiesBridgeTest {
 
+  private static final String YAML =
+      "file_format: 0.4\n"
+          + "instrumentation/development:\n"
+          + "  java:\n"
+          + "    common:\n"
+          + "      default-enabled: true\n"
+          + "    runtime-telemetry:\n"
+          + "      enabled: false\n"
+          + "    example-instrumentation:\n"
+          + "      string_key: value\n"
+          + "      bool_key: true\n"
+          + "      int_key: 1\n"
+          + "      double_key: 1.1\n"
+          + "      list_key:\n"
+          + "        - value1\n"
+          + "        - value2\n"
+          + "        - true\n"
+          + "      map_key:\n"
+          + "        string_key1: value1\n"
+          + "        string_key2: value2\n"
+          + "        bool_key: true\n"
+          + "    acme:\n"
+          + "      full_name:\n"
+          + "        preserved: true";
+
   private ConfigProperties bridge;
   private ConfigProperties emptyBridge;
 
   @BeforeEach
   void setup() {
-    bridge = create(new DeclarativeConfigPropertiesBridgeBuilder());
+    OpenTelemetryConfigurationModel model =
+        DeclarativeConfiguration.parse(
+            new ByteArrayInputStream(YAML.getBytes(StandardCharsets.UTF_8)));
+    SdkConfigProvider configProvider = SdkConfigProvider.create(model);
+    bridge =
+        new DeclarativeConfigPropertiesBridge(
+            Objects.requireNonNull(configProvider.getInstrumentationConfig()));
 
     OpenTelemetryConfigurationModel emptyModel =
         new OpenTelemetryConfigurationModel()
             .withAdditionalProperty("instrumentation/development", new InstrumentationModel());
     SdkConfigProvider emptyConfigProvider = SdkConfigProvider.create(emptyModel);
     emptyBridge =
-        new DeclarativeConfigPropertiesBridgeBuilder()
-            .buildFromInstrumentationConfig(
-                Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
-  }
-
-  private static ConfigProperties create(DeclarativeConfigPropertiesBridgeBuilder builder) {
-    OpenTelemetryConfigurationModel model =
-        DeclarativeConfiguration.parse(
-            DeclarativeConfigPropertiesBridgeTest.class
-                .getClassLoader()
-                .getResourceAsStream("config.yaml"));
-    return builder.buildFromInstrumentationConfig(
-        SdkConfigProvider.create(model).getInstrumentationConfig());
+        new DeclarativeConfigPropertiesBridge(
+            Objects.requireNonNull(emptyConfigProvider.getInstrumentationConfig()));
   }
 
   @Test
@@ -60,6 +82,7 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isTrue();
 
     // common cases
+    assertThat(bridge.getBoolean("otel.instrumentation.common.default-enabled")).isTrue();
     assertThat(bridge.getBoolean("otel.instrumentation.runtime-telemetry.enabled")).isFalse();
 
     // check all the types
@@ -112,33 +135,9 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isEqualTo(Arrays.asList("value1", "value2"));
     assertThat(bridge.getMap("otel.instrumentation.other-instrumentation.map_key", expectedMap))
         .isEqualTo(expectedMap);
-  }
 
-  @Test
-  void vendor() {
     // verify vendor specific property names are preserved in unchanged form (prefix is not stripped
     // as for otel.instrumentation.*)
     assertThat(bridge.getBoolean("acme.full_name.preserved")).isTrue();
-  }
-
-  @Test
-  void vendorTranslation() {
-    ConfigProperties propertiesBridge =
-        create(new DeclarativeConfigPropertiesBridgeBuilder().addMapping("acme", "acme.full_name"));
-    assertThat(propertiesBridge.getBoolean("acme.preserved")).isTrue();
-  }
-
-  @Test
-  void agentTranslation() {
-    ConfigProperties bridge =
-        create(
-            new DeclarativeConfigPropertiesBridgeBuilder()
-                .addMapping("otel.javaagent", "agent")
-                .addOverride("otel.javaagent.debug", true)
-                .addOverride("otel.javaagent.logging", "application"));
-
-    assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
-    assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
-    assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
   }
 }

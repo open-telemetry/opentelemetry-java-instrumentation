@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.jmx.engine.JmxMetricInsight;
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
 import io.opentelemetry.javaagent.extension.AgentListener;
+import io.opentelemetry.javaagent.extension.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
-import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.InputStream;
 import java.nio.file.Files;
@@ -29,7 +29,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
-    ConfigProperties config = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    ConfigProperties config = ConfigPropertiesUtil.resolveConfigProperties(autoConfiguredSdk);
 
     if (config.getBoolean("otel.jmx.enabled", true)) {
       JmxMetricInsight service =

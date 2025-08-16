@@ -21,7 +21,7 @@ import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 @SuppressWarnings("DoNotMockAutoValue")
-class DeclarativeConfigPropertiesBridgeBuilderTest {
+class ConfigPropertiesUtilTest {
   @Test
   void shouldUseConfigPropertiesForAutoConfiguration() {
     ConfigProperties configPropertiesMock = mock(ConfigProperties.class);
@@ -32,8 +32,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
           .when(() -> AutoConfigureUtil.getConfig(sdkMock))
           .thenReturn(configPropertiesMock);
 
-      ConfigProperties configProperties =
-          new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
+      ConfigProperties configProperties = ConfigPropertiesUtil.resolveConfigProperties(sdkMock);
 
       assertThat(configProperties).isSameAs(configPropertiesMock);
     }
@@ -61,8 +60,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
           .when(() -> AutoConfigureUtil.getConfigProvider(sdkMock))
           .thenReturn(configProviderMock);
 
-      ConfigProperties configProperties =
-          new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
+      ConfigProperties configProperties = ConfigPropertiesUtil.resolveConfigProperties(sdkMock);
 
       assertThat(configProperties.getString(propertyName)).isEqualTo(expectedValue);
     }
@@ -81,10 +79,9 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
           .when(() -> AutoConfigureUtil.getConfigProvider(sdkMock))
           .thenReturn(configProviderMock);
 
-      ConfigProperties configProperties =
-          new DeclarativeConfigPropertiesBridgeBuilder().build(sdkMock);
+      ConfigProperties configProperties = ConfigPropertiesUtil.resolveConfigProperties(sdkMock);
 
-      assertThat(configProperties.getString("testProperty")).isNull();
+      assertThat(configProperties.getString("testProperty")).isEqualTo(null);
     }
   }
 }

@@ -1,15 +1,12 @@
-file_format: 0.4
-instrumentation/development:
+instrumentation:
   java:
-    acme:
-      full_name:
-        preserved: true
-    agent:
-      experimental:
-        indy: true
-    runtime_telemetry:
+    common:
+      default-enabled: true
+    runtime-telemetry:
       enabled: false
-    example_instrumentation:
+    external-annotations:
+      enabled: true
+    example-instrumentation:
       string_key: value
       bool_key: true
       int_key: 1
@@ -17,7 +14,6 @@ instrumentation/development:
       list_key:
         - value1
         - value2
-        - true
       map_key:
         string_key1: value1
         string_key2: value2
