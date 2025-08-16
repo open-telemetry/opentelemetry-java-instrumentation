@@ -10,8 +10,9 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.sql.Connection;
 import java.sql.Statement;
@@ -33,8 +34,10 @@ class JdbcInstrumentationAutoConfigurationTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
           .withBean(
-              ConfigProperties.class,
-              () -> DefaultConfigProperties.createFromMap(Collections.emptyMap()))
+              InstrumentationConfig.class,
+              () ->
+                  new ConfigPropertiesBridge(
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
           .withConfiguration(
               AutoConfigurations.of(
                   JdbcInstrumentationAutoConfiguration.class, DataSourceAutoConfiguration.class))
