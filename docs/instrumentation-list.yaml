@@ -4031,7 +4031,7 @@ libraries:
       javaagent:
       - com.openai:openai-java:[1.1.0,3)
       library:
-      - com.openai:openai-java:[1.1.0,2.+)
+      - com.openai:openai-java:1.1.0
     configurations:
     - name: otel.instrumentation.genai.capture-message-content
       description: |
