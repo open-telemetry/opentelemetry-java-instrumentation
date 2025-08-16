@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.resources;
 import static java.util.logging.Level.WARNING;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.ServiceAttributes;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -67,6 +69,11 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
   ManifestResourceProvider(
       MainJarPathFinder jarPathFinder, Function<Path, Optional<Manifest>> manifestReader) {
     this(() -> Optional.ofNullable(jarPathFinder.detectJarPath()), manifestReader);
+  }
+
+  @SuppressWarnings("unused")
+  public Resource createResource(DeclarativeConfigProperties config) {
+    return createUnconditional();
   }
 
   private static Optional<Manifest> readManifest(Path jarPath) {
