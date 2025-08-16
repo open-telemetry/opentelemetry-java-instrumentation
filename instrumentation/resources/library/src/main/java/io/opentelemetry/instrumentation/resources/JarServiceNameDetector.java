@@ -9,6 +9,7 @@ import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
@@ -49,7 +50,12 @@ public final class JarServiceNameDetector implements ConditionalResourceProvider
     return create();
   }
 
-  public Resource create() {
+  @SuppressWarnings("unused")
+  public Resource createResource(DeclarativeConfigProperties config) {
+    return create();
+  }
+
+  private Resource create() {
     return jarPathSupplier
         .get()
         .map(

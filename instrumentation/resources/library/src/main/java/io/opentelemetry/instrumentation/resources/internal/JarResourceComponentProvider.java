@@ -19,6 +19,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class JarResourceComponentProvider extends ResourceComponentProvider {
   public JarResourceComponentProvider() {
-    super("jar", () -> new JarServiceNameDetector().create());
+    super("jar", p -> new JarServiceNameDetector().createResource(p));
   }
 }
