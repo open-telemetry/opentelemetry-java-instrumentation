@@ -135,8 +135,9 @@ class MongoKafkaConnectSinkTaskTest {
         .withExposedPorts(BACKEND_PORT)
         .withNetwork(network)
         .withNetworkAliases(BACKEND_ALIAS)
-        .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT))
-        .withStartupTimeout(Duration.of(2, MINUTES));
+        .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT).withStartupTimeout(Duration.of(5, MINUTES)))
+        .withStartupTimeout(Duration.of(5, MINUTES))
+        .withEnv("DOCKER_DEFAULT_PLATFORM", "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
     
     logger.info("Starting backend container...");
     backend.start();
@@ -150,7 +151,7 @@ class MongoKafkaConnectSinkTaskTest {
             .withEnv("ZOOKEEPER_CLIENT_PORT", String.valueOf(ZOOKEEPER_INTERNAL_PORT))
             .withEnv("ZOOKEEPER_TICK_TIME", "2000")
             .withExposedPorts(ZOOKEEPER_INTERNAL_PORT)
-            .withStartupTimeout(Duration.of(3, MINUTES));
+            .withStartupTimeout(Duration.of(5, MINUTES));
     String zookeeperInternalUrl = ZOOKEEPER_NETWORK_ALIAS + ":" + ZOOKEEPER_INTERNAL_PORT;
 
     kafkaExposedPort = getRandomFreePort();
@@ -186,7 +187,7 @@ class MongoKafkaConnectSinkTaskTest {
             .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
             .withEnv("KAFKA_OPTS", "-Djava.net.preferIPv4Stack=True")
             .withEnv("KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS", "100")
-            .withStartupTimeout(Duration.of(3, MINUTES));
+            .withStartupTimeout(Duration.of(5, MINUTES));
 
     // Get the agent path from system properties
     String agentPath = System.getProperty("otel.javaagent.testing.javaagent-jar-path");
@@ -237,7 +238,8 @@ class MongoKafkaConnectSinkTaskTest {
             .withEnv("CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_STATUS_STORAGE_REPLICATION_FACTOR", "1")
-            .withStartupTimeout(Duration.of(3, MINUTES))
+            .waitingFor(Wait.forHttp("/").forPort(CONNECT_REST_PORT_INTERNAL).withStartupTimeout(Duration.of(5, MINUTES)))
+            .withStartupTimeout(Duration.of(5, MINUTES))
             .withCommand(
                 "bash",
                 "-c",
@@ -248,7 +250,7 @@ class MongoKafkaConnectSinkTaskTest {
         new MongoDBContainer(DockerImageName.parse("mongo:4.4"))
             .withNetwork(network)
             .withNetworkAliases(MONGO_NETWORK_ALIAS)
-            .withStartupTimeout(Duration.of(3, MINUTES));
+            .withStartupTimeout(Duration.of(5, MINUTES));
 
     // Start containers (backend already started)
     Startables.deepStart(Stream.of(zookeeper, kafka, kafkaConnect, mongoDB)).join();
@@ -314,12 +316,12 @@ class MongoKafkaConnectSinkTaskTest {
       producer.flush();
     }
 
-    // Wait for message processing
-    await().atMost(Duration.ofSeconds(30)).until(() -> getRecordCountFromMongo() >= 1);
+    // Wait for message processing (increased timeout for ARM64 Docker emulation)
+    await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 1);
 
-    // Wait for spans to arrive at backend
+    // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
     String backendUrl = getBackendUrl();
-    await().atMost(Duration.ofSeconds(15)).until(() -> {
+    await().atMost(Duration.ofSeconds(30)).until(() -> {
       try {
         String traces = given()
             .when()
@@ -444,7 +446,7 @@ class MongoKafkaConnectSinkTaskTest {
   private static void awaitForTopicCreation(String topicName) {
     try (AdminClient adminClient = createAdminClient()) {
       await()
-          .atMost(Duration.ofSeconds(30))
+          .atMost(Duration.ofSeconds(60))
           .pollInterval(Duration.ofMillis(500))
           .until(() -> adminClient.listTopics().names().get().contains(topicName));
     }
@@ -503,14 +505,78 @@ class MongoKafkaConnectSinkTaskTest {
 
   @AfterAll
   public static void cleanup() {
+    // Close AdminClient first to release Kafka connections
+    if (adminClient != null) {
+      try {
+        adminClient.close();
+        logger.info("AdminClient closed");
+      } catch (RuntimeException e) {
+        logger.error("Error closing AdminClient: " + e.getMessage());
+      }
+    }
+    
+    // Stop all containers in reverse order of startup to ensure clean shutdown
+    if (kafkaConnect != null) {
+      try {
+        kafkaConnect.stop();
+        logger.info("Kafka Connect container stopped");
+      } catch (RuntimeException e) {
+        logger.error("Error stopping Kafka Connect: " + e.getMessage());
+      }
+    }
+    
+    if (mongoDB != null) {
+      try {
+        mongoDB.stop();
+        logger.info("MongoDB container stopped");
+      } catch (RuntimeException e) {
+        logger.error("Error stopping MongoDB: " + e.getMessage());
+      }
+    }
+    
+    if (kafka != null) {
+      try {
+        kafka.stop();
+        logger.info("Kafka container stopped");
+      } catch (RuntimeException e) {
+        logger.error("Error stopping Kafka: " + e.getMessage());
+      }
+    }
+    
+    if (zookeeper != null) {
+      try {
+        zookeeper.stop();
+        logger.info("Zookeeper container stopped");
+      } catch (RuntimeException e) {
+        logger.error("Error stopping Zookeeper: " + e.getMessage());
+      }
+    }
+    
     if (backend != null) {
-      backend.stop();
-      logger.info("Backend container stopped");
+      try {
+        backend.stop();
+        logger.info("Backend container stopped");
+      } catch (RuntimeException e) {
+        logger.error("Error stopping backend: " + e.getMessage());
+      }
     }
+    
     if (network != null) {
-      network.close();
-      logger.info("Network closed");
+      try {
+        network.close();
+        logger.info("Network closed");
+      } catch (RuntimeException e) {
+        logger.error("Error closing network: " + e.getMessage());
+      }
     }
+    
+    // Small delay to ensure containers are fully stopped before next test
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+    }
+    
     logger.info("Test cleanup complete");
   }
 }

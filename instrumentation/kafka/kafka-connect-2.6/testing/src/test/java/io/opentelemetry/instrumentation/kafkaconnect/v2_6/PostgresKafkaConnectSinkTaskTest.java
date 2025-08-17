@@ -153,8 +153,9 @@ class PostgresKafkaConnectSinkTaskTest {
         .withExposedPorts(BACKEND_PORT)
         .withNetwork(network)
         .withNetworkAliases(BACKEND_ALIAS)
-        .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT))
-        .withStartupTimeout(Duration.of(2, MINUTES));
+        .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT).withStartupTimeout(Duration.of(5, MINUTES)))
+        .withStartupTimeout(Duration.of(5, MINUTES))
+        .withEnv("DOCKER_DEFAULT_PLATFORM", "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
     
     backend.start();
 
@@ -165,7 +166,7 @@ class PostgresKafkaConnectSinkTaskTest {
             .withEnv("ZOOKEEPER_CLIENT_PORT", String.valueOf(ZOOKEEPER_INTERNAL_PORT))
             .withEnv("ZOOKEEPER_TICK_TIME", "2000")
             .withExposedPorts(ZOOKEEPER_INTERNAL_PORT)
-            .withStartupTimeout(Duration.of(3, MINUTES));
+            .withStartupTimeout(Duration.of(5, MINUTES));
     String zookeeperInternalUrl = ZOOKEEPER_NETWORK_ALIAS + ":" + ZOOKEEPER_INTERNAL_PORT;
 
     kafkaExposedPort = getRandomFreePort();
@@ -201,7 +202,7 @@ class PostgresKafkaConnectSinkTaskTest {
             .withEnv("KAFKA_AUTO_CREATE_TOPICS_ENABLE", "true")
             .withEnv("KAFKA_OPTS", "-Djava.net.preferIPv4Stack=True")
             .withEnv("KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS", "100")
-            .withStartupTimeout(Duration.of(3, MINUTES));
+            .withStartupTimeout(Duration.of(5, MINUTES));
 
     // Get the agent path from system properties
     String agentPath = System.getProperty("otel.javaagent.testing.javaagent-jar-path");
@@ -247,7 +248,8 @@ class PostgresKafkaConnectSinkTaskTest {
             .withEnv("CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_STATUS_STORAGE_REPLICATION_FACTOR", "1")
-            .withStartupTimeout(Duration.of(3, MINUTES))
+            .waitingFor(Wait.forHttp("/").forPort(CONNECT_REST_PORT_INTERNAL).withStartupTimeout(Duration.of(5, MINUTES)))
+            .withStartupTimeout(Duration.of(5, MINUTES))
             .withCommand(
                 "bash",
                 "-c",
@@ -263,7 +265,7 @@ class PostgresKafkaConnectSinkTaskTest {
             .withDatabaseName(DB_NAME)
             .withUsername(DB_USERNAME)
             .withPassword(DB_PASSWORD)
-            .withStartupTimeout(Duration.of(3, MINUTES));
+            .withStartupTimeout(Duration.of(5, MINUTES));
 
     // Start containers (backend already started)
     Startables.deepStart(Stream.of(zookeeper, kafka, kafkaConnect, postgreSql)).join();
@@ -324,12 +326,12 @@ class PostgresKafkaConnectSinkTaskTest {
       producer.flush();
     }
 
-    // Wait for message processing
-    await().atMost(Duration.ofSeconds(30)).until(() -> getRecordCountFromPostgres() >= 1);
+    // Wait for message processing (increased timeout for ARM64 Docker emulation)
+    await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 1);
 
-    // Wait for spans to arrive at backend
+    // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
     String backendUrl = getBackendUrl();
-    await().atMost(Duration.ofSeconds(15)).until(() -> {
+    await().atMost(Duration.ofSeconds(30)).until(() -> {
       try {
         String traces = given()
             .when()
@@ -405,11 +407,70 @@ class PostgresKafkaConnectSinkTaskTest {
 
   @AfterAll
   public static void cleanup() {
-    if (backend != null) {
-      backend.stop();
+    // Close AdminClient first to release Kafka connections
+    if (adminClient != null) {
+      try {
+        adminClient.close();
+      } catch (RuntimeException e) {
+        System.err.println("Error closing AdminClient: " + e.getMessage());
+      }
     }
+    
+    // Stop all containers in reverse order of startup to ensure clean shutdown
+    if (kafkaConnect != null) {
+      try {
+        kafkaConnect.stop();
+      } catch (RuntimeException e) {
+        // Log but don't fail cleanup
+        System.err.println("Error stopping Kafka Connect: " + e.getMessage());
+      }
+    }
+    
+    if (postgreSql != null) {
+      try {
+        postgreSql.stop();
+      } catch (RuntimeException e) {
+        System.err.println("Error stopping PostgreSQL: " + e.getMessage());
+      }
+    }
+    
+    if (kafka != null) {
+      try {
+        kafka.stop();
+      } catch (RuntimeException e) {
+        System.err.println("Error stopping Kafka: " + e.getMessage());
+      }
+    }
+    
+    if (zookeeper != null) {
+      try {
+        zookeeper.stop();
+      } catch (RuntimeException e) {
+        System.err.println("Error stopping Zookeeper: " + e.getMessage());
+      }
+    }
+    
+    if (backend != null) {
+      try {
+        backend.stop();
+      } catch (RuntimeException e) {
+        System.err.println("Error stopping backend: " + e.getMessage());
+      }
+    }
+    
     if (network != null) {
-      network.close();
+      try {
+        network.close();
+      } catch (RuntimeException e) {
+        System.err.println("Error closing network: " + e.getMessage());
+      }
+    }
+    
+    // Small delay to ensure containers are fully stopped before next test
+    try {
+      Thread.sleep(2000);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
     }
   }
 
@@ -499,7 +560,7 @@ class PostgresKafkaConnectSinkTaskTest {
   private static void awaitForTopicCreation(String topicName) {
     try (AdminClient adminClient = createAdminClient()) {
       await()
-          .atMost(Duration.ofSeconds(30))
+          .atMost(Duration.ofSeconds(60))
           .pollInterval(Duration.ofMillis(500))
           .until(() -> adminClient.listTopics().names().get().contains(topicName));
     }

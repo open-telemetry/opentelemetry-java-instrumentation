@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -21,9 +20,6 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.connect.sink.SinkRecord;
-import org.apache.kafka.connect.header.Header;
-import org.apache.kafka.connect.header.Headers;
-import java.nio.charset.StandardCharsets;
 import java.util.logging.Logger;
 
 public class SinkTaskInstrumentation implements TypeInstrumentation {
@@ -81,7 +77,8 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
       // Extract context from first record if available
       if (!records.isEmpty()) {
         SinkRecord firstRecord = records.iterator().next();
-        Context extractedContext = extractContextFromRecord(parentContext, firstRecord);
+        Context extractedContext = KafkaConnectSingletons.propagator()
+            .extract(parentContext, firstRecord, KafkaConnectSingletons.sinkRecordHeaderGetter());
         parentContext = extractedContext;
       }
 
@@ -112,36 +109,6 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
       logger.info("KafkaConnect: Span ended");
     }
     
-    public static Context extractContextFromRecord(Context parentContext, SinkRecord record) {
-      // Create a simple TextMapGetter for SinkRecord headers
-      return KafkaConnectSingletons.propagator().extract(parentContext, record, new TextMapGetter<SinkRecord>() {
-        @Override
-        public Iterable<String> keys(SinkRecord sinkRecord) {
-          Headers headers = sinkRecord.headers();
-          java.util.List<String> keys = new java.util.ArrayList<>();
-          for (Header header : headers) {
-            keys.add(header.key());
-          }
-          return keys;
-        }
 
-        @Override
-        public String get(SinkRecord sinkRecord, String key) {
-          if (sinkRecord == null) {
-            return null;
-          }
-          Headers headers = sinkRecord.headers();
-          Header header = headers.lastWithName(key);
-          if (header == null) {
-            return null;
-          }
-          Object value = header.value();
-          if (value instanceof byte[]) {
-            return new String((byte[]) value, StandardCharsets.UTF_8);
-          }
-          return value != null ? value.toString() : null;
-        }
-      });
-    }
   }
 }
