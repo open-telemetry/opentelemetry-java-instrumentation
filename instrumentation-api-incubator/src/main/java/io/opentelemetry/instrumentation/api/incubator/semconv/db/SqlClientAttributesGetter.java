@@ -58,7 +58,6 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   // TODO: make this required to implement
-  @Nullable
   default Long getBatchSize(REQUEST request) {
     return null;
   }

@@ -36,12 +36,12 @@ class InstrumenterContextTest {
         new SqlClientAttributesGetter<Object, Void>() {
           @Override
           public String getDbSystem(Object o) {
-            return "";
+            return "testdb";
           }
 
           @Override
           public String getDbNamespace(Object o) {
-            return "";
+            return null;
           }
 
           @Override
