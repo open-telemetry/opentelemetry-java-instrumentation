@@ -66,9 +66,9 @@ jobs:
         uses: github/codeql-action/init@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
         with:
           languages: ${{ matrix.language }}
-          # using "latest" helps to keep up with the latest Kotlin support
+          # using "linked" helps to keep up with the linked Kotlin support
           # see https://github.com/github/codeql-action/issues/1555#issuecomment-1452228433
-          tools: latest
+          tools: linked
 
       - name: Assemble
         if: matrix.language == 'java'
