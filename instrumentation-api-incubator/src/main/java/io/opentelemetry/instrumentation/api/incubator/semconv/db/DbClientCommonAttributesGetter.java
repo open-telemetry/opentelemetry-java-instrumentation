@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nullable;
 
 /** An interface for getting attributes common to database clients. */
