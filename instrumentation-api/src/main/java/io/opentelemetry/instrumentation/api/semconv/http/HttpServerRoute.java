@@ -57,8 +57,7 @@ public final class HttpServerRoute {
    * strictly lower priority than the provided {@link HttpServerRouteSource}, and the passed value
    * is non-null.
    */
-  public static void update(
-      Context context, HttpServerRouteSource source, String httpRoute) {
+  public static void update(Context context, HttpServerRouteSource source, String httpRoute) {
     update(context, source, ConstantAdapter.INSTANCE, httpRoute);
   }
 
