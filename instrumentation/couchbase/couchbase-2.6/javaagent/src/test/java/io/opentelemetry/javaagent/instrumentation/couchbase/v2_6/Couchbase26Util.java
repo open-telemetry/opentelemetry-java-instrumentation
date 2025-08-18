@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig;
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.NetworkAttributes;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import org.assertj.core.api.AbstractAssert;
 
 public class Couchbase26Util {
 
@@ -50,11 +50,9 @@ public class Couchbase26Util {
     return Arrays.asList(
         equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"),
         equalTo(NetworkAttributes.NETWORK_PEER_ADDRESS, "127.0.0.1"),
-        satisfies(NetworkAttributes.NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()),
-        satisfies(
-            AttributeKey.stringKey("couchbase.local.address"), val -> assertThat(val).isNotNull()),
-        satisfies(
-            AttributeKey.stringKey("couchbase.operation_id"), val -> assertThat(val).isNotNull()));
+        satisfies(NetworkAttributes.NETWORK_PEER_PORT, AbstractAssert::isNotNull),
+        satisfies(stringKey("couchbase.local.address"), AbstractAssert::isNotNull),
+        satisfies(stringKey("couchbase.operation_id"), AbstractAssert::isNotNull));
   }
 
   private Couchbase26Util() {}
