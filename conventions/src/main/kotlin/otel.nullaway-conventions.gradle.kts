@@ -22,6 +22,7 @@ tasks {
       options.errorprone.nullaway {
         severity.set(CheckSeverity.ERROR)
         customInitializerAnnotations.add("org.openjdk.jmh.annotations.Setup")
+        excludedFieldAnnotations.add("org.mockito.Mock")
       }
     }
   }
