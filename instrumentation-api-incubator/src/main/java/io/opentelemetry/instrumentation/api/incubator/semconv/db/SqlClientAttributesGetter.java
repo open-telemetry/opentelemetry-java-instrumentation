@@ -5,9 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -58,13 +55,10 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
    * <p>If {@code request} is not a batch query, then this method should return a collection with a
    * single element.
    */
-  // TODO: make this required to implement
-  default Collection<String> getRawQueryTexts(REQUEST request) {
-    String rawQueryText = getRawQueryText(request);
-    return rawQueryText == null ? emptySet() : singleton(rawQueryText);
-  }
+  Collection<String> getRawQueryTexts(REQUEST request);
 
   // TODO: make this required to implement
+  @Nullable
   default Long getBatchSize(REQUEST request) {
     return null;
   }
