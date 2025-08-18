@@ -62,7 +62,7 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
   @AutoValue
   abstract static class ServiceMatcher {
 
-    static ServiceMatcher create(Integer port, String path) {
+    static ServiceMatcher create(@Nullable Integer port, @Nullable String path) {
       return new AutoValue_PeerServiceResolverImpl_ServiceMatcher(port, path);
     }
 
@@ -72,7 +72,7 @@ class PeerServiceResolverImpl implements PeerServiceResolver {
     @Nullable
     abstract String getPath();
 
-    public boolean matches(Integer port, Supplier<String> pathSupplier) {
+    public boolean matches(@Nullable Integer port, @Nullable Supplier<String> pathSupplier) {
       if (this.getPort() != null) {
         if (!this.getPort().equals(port)) {
           return false;

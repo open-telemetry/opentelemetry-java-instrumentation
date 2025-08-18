@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -40,6 +40,11 @@ public final class CommonConfig {
   private final String loggingTraceIdKey;
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
+
+  interface ValueProvider<T> {
+    @Nullable
+    T get(ConfigProvider configProvider);
+  }
 
   public CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
@@ -159,12 +164,12 @@ public final class CommonConfig {
 
   private static <T> T getFromConfigProviderOrFallback(
       InstrumentationConfig config,
-      Function<ConfigProvider, T> getFromConfigProvider,
+      ValueProvider<T> getFromConfigProvider,
       T defaultValue,
       Supplier<T> fallback) {
     ConfigProvider configProvider = config.getConfigProvider();
     if (configProvider != null) {
-      T value = getFromConfigProvider.apply(configProvider);
+      T value = getFromConfigProvider.get(configProvider);
       return value != null ? value : defaultValue;
     }
     // fallback doesn't return null, so we can safely call it
