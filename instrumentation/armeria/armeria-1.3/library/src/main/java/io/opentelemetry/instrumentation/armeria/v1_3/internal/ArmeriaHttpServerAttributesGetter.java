@@ -20,6 +20,7 @@ enum ArmeriaHttpServerAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(ServiceRequestContext ctx) {
     return ctx.method().name();
   }
@@ -31,6 +32,7 @@ enum ArmeriaHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlPath(ServiceRequestContext ctx) {
     String fullPath = request(ctx).path();
     int separatorPos = fullPath.indexOf('?');
@@ -74,11 +76,13 @@ enum ArmeriaHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(ServiceRequestContext ctx, @Nullable RequestLog requestLog) {
     return "http";
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolVersion(
       ServiceRequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol = ctx.sessionProtocol();

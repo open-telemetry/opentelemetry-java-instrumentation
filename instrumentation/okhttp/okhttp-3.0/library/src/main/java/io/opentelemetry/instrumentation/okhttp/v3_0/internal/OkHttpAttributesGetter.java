@@ -23,6 +23,7 @@ public enum OkHttpAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(Interceptor.Chain chain) {
     return chain.request().method();
   }

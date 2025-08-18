@@ -21,6 +21,7 @@ enum SpringWebHttpAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequest httpRequest) {
     return httpRequest.getMethod().name();
   }

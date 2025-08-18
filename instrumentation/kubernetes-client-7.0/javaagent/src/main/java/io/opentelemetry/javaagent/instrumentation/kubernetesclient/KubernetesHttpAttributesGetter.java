@@ -17,6 +17,7 @@ class KubernetesHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, ApiResponse<?>> {
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(Request request) {
     return request.method();
   }

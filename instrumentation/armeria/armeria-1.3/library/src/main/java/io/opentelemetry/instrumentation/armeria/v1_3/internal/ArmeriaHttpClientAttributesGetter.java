@@ -34,6 +34,7 @@ enum ArmeriaHttpClientAttributesGetter
       };
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(ClientRequestContext ctx) {
     return ctx.method().name();
   }
@@ -83,11 +84,13 @@ enum ArmeriaHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     return "http";
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolVersion(
       ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     SessionProtocol protocol =

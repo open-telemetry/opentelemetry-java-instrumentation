@@ -12,6 +12,7 @@ import javax.annotation.Nullable;
 final class RedissonNetAttributesGetter implements NetworkAttributesGetter<RedissonRequest, Void> {
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       RedissonRequest request, @Nullable Void unused) {
     return request.getAddress();

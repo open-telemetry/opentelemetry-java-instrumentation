@@ -44,6 +44,7 @@ final class NettyHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().name();
   }
@@ -72,12 +73,14 @@ final class NettyHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.request().getProtocolVersion().protocolName();
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();

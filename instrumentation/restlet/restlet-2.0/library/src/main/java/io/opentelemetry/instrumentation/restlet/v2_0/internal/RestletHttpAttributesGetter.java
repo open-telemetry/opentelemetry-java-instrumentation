@@ -20,6 +20,7 @@ enum RestletHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(Request request) {
     return request.getMethod().toString();
   }

@@ -28,11 +28,13 @@ final class Vertx4HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpClientRequest request) {
     return request.getMethod().name();
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
     return "http";

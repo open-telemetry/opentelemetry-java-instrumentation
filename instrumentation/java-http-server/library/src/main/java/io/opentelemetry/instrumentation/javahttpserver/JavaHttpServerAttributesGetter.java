@@ -19,16 +19,19 @@ enum JavaHttpServerAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpExchange exchange) {
     return exchange.getRequestMethod();
   }
 
   @Override
+  @Nullable
   public String getUrlScheme(HttpExchange exchange) {
     return exchange instanceof HttpsExchange ? "https" : "http";
   }
 
   @Override
+  @Nullable
   public String getUrlPath(HttpExchange exchange) {
     return exchange.getRequestURI().getPath();
   }
@@ -59,27 +62,32 @@ enum JavaHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getHttpRoute(HttpExchange exchange) {
     return exchange.getHttpContext().getPath();
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(HttpExchange exchange, @Nullable HttpExchange res) {
     return HttpProtocolUtil.getProtocol(exchange.getProtocol());
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolVersion(HttpExchange exchange, @Nullable HttpExchange res) {
     return HttpProtocolUtil.getVersion(exchange.getProtocol());
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       HttpExchange exchange, @Nullable HttpExchange res) {
     return exchange.getRemoteAddress();
   }
 
   @Override
+  @Nullable
   public InetSocketAddress getNetworkLocalInetSocketAddress(
       HttpExchange exchange, @Nullable HttpExchange res) {
     return exchange.getLocalAddress();

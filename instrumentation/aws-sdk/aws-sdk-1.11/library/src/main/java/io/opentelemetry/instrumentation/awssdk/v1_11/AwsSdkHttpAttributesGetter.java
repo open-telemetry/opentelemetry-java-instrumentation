@@ -25,6 +25,7 @@ class AwsSdkHttpAttributesGetter implements HttpClientAttributesGetter<Request<?
   }
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(Request<?> request) {
     return request.getHttpMethod().name();
   }

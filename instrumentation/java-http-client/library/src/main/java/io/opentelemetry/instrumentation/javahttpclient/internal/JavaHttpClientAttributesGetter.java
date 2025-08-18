@@ -17,6 +17,7 @@ enum JavaHttpClientAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequest httpRequest) {
     return httpRequest.method();
   }

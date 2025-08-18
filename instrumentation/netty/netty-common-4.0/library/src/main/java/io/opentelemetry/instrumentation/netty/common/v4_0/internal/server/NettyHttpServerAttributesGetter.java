@@ -24,6 +24,7 @@ public final class NettyHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestAndChannel, HttpResponse> {
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequestAndChannel requestAndChannel) {
     return requestAndChannel.request().getMethod().name();
   }
@@ -46,11 +47,13 @@ public final class NettyHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlScheme(HttpRequestAndChannel requestAndChannel) {
     return HttpSchemeUtil.getScheme(requestAndChannel);
   }
 
   @Override
+  @Nullable
   public String getUrlPath(HttpRequestAndChannel requestAndChannel) {
     String fullPath = requestAndChannel.request().getUri();
     int separatorPos = fullPath.indexOf('?');
@@ -71,12 +74,14 @@ public final class NettyHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.request().getProtocolVersion().protocolName();
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolVersion(
       HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
