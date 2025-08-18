@@ -58,7 +58,7 @@ public final class HttpServerRoute {
    * is non-null.
    */
   public static void update(
-      Context context, HttpServerRouteSource source, @Nullable String httpRoute) {
+      Context context, HttpServerRouteSource source, String httpRoute) {
     update(context, source, ConstantAdapter.INSTANCE, httpRoute);
   }
 
@@ -76,7 +76,7 @@ public final class HttpServerRoute {
       Context context,
       HttpServerRouteSource source,
       HttpServerRouteGetter<T> httpRouteGetter,
-      @Nullable T arg1) {
+      T arg1) {
     update(context, source, OneArgAdapter.getInstance(), arg1, httpRouteGetter);
   }
 
