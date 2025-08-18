@@ -19,6 +19,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
+@SuppressWarnings("NullAway") // setters called in static initializer
 public final class InstrumenterUtil {
 
   private static InstrumenterAccess instrumenterAccess;

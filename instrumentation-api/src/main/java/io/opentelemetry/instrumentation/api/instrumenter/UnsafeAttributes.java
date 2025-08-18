@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import javax.annotation.Nullable;
 
 /**
  * The {@link AttributesBuilder} and {@link Attributes} used by the instrumentation API. We are able
@@ -29,6 +30,7 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
 
   @SuppressWarnings("unchecked")
   @Override
+  @Nullable
   public <T> T get(AttributeKey<T> key) {
     return (T) super.get(key);
   }
@@ -62,7 +64,7 @@ final class UnsafeAttributes extends HashMap<AttributeKey<?>, Object>
 
   @Override
   @CanIgnoreReturnValue
-  public <T> AttributesBuilder put(AttributeKey<T> key, T value) {
+  public <T> AttributesBuilder put(AttributeKey<T> key, @Nullable T value) {
     super.put(key, value);
     return this;
   }
