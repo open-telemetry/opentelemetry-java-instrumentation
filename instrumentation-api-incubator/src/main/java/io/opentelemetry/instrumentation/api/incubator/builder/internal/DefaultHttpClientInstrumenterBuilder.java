@@ -71,7 +71,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      TextMapSetter<REQUEST> headerSetter) {
+      @Nullable TextMapSetter<REQUEST> headerSetter) {
     this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
     this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
     this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
