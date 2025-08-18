@@ -65,6 +65,7 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   // TODO: make this required to implement
+  @Nullable
   default Long getBatchSize(REQUEST request) {
     return null;
   }
