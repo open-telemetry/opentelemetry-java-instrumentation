@@ -2082,19 +2082,54 @@ libraries:
           type: LONG
   couchbase:
   - name: couchbase-2.0
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Couchbase 2.0 operations. It automatically traces key-value operations (get,
+      upsert, replace, remove), view queries,  N1QL queries, and cluster management
+      operations. Supports Spring Data integration for  repositories and templates.
     source_path: instrumentation/couchbase/couchbase-2.0
     scope:
       name: io.opentelemetry.couchbase-2.0
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[2,3)
-    configurations:
-    - name: otel.instrumentation.couchbase.experimental-span-attributes
-      description: Enables experimental span attributes `couchbase.operation_id` and
-        `couchbase.local.address`
-      type: boolean
-      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   - name: couchbase-2.6
+    description: |
+      This instrumentation enables database CLIENT spans and metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries,  N1QL queries, and cluster management operations. Supports Spring Data integration for  repositories and templates.
     source_path: instrumentation/couchbase/couchbase-2.6
     scope:
       name: io.opentelemetry.couchbase-2.6
@@ -2103,13 +2138,13 @@ libraries:
       - com.couchbase.client:java-client:[2.6.0,3)
     configurations:
     - name: otel.instrumentation.couchbase.experimental-span-attributes
-      description: Enables experimental span attributes couchbase.operation_id and
-        couchbase.local.address
+      description: |
+        Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes: key-value operations  get both attributes, view queries get only local.address, N1QL queries get only operation_id,  and cluster management operations get none.
       type: boolean
       default: false
   - name: couchbase-3.1
     description: |
-      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
@@ -2118,7 +2153,7 @@ libraries:
       - com.couchbase.client:java-client:[3.1,3.1.6)
   - name: couchbase-3.1.6
     description: |
-      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
@@ -2127,7 +2162,7 @@ libraries:
       - com.couchbase.client:java-client:[3.1.6,3.2.0)
   - name: couchbase-3.2
     description: |
-      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
@@ -4031,7 +4066,7 @@ libraries:
       javaagent:
       - com.openai:openai-java:[1.1.0,3)
       library:
-      - com.openai:openai-java:[1.1.0,2.+)
+      - com.openai:openai-java:1.1.0
     configurations:
     - name: otel.instrumentation.genai.capture-message-content
       description: |

@@ -9,9 +9,38 @@ import com.couchbase.client.core.metrics.DefaultLatencyMetricsCollectorConfig;
 import com.couchbase.client.core.metrics.DefaultMetricsCollectorConfig;
 import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 public class CouchbaseUtil {
+
+  // Couchbase 2.0 instrumentation does not support experimental attributes
+
+  public static List<AttributeAssertion> couchbaseAttributes() {
+    return couchbaseKvAttributes();
+  }
+
+  public static List<AttributeAssertion> couchbaseKvAttributes() {
+    // Couchbase 2.0 instrumentation does not support experimental attributes or network attributes
+    return new ArrayList<>();
+  }
+
+  public static List<AttributeAssertion> couchbaseQueryAttributes() {
+    // Couchbase 2.0 instrumentation does not support experimental attributes or network attributes
+    return new ArrayList<>();
+  }
+
+  public static List<AttributeAssertion> couchbaseClusterManagerAttributes() {
+    // Couchbase 2.0 instrumentation does not support experimental attributes or network attributes
+    return new ArrayList<>();
+  }
+
+  public static List<AttributeAssertion> couchbaseN1qlAttributes() {
+    // Couchbase 2.0 instrumentation does not support experimental attributes or network attributes
+    return new ArrayList<>();
+  }
 
   public static DefaultCouchbaseEnvironment.Builder envBuilder(
       BucketSettings bucketSettings, int carrierDirectPort, int httpDirectPort) {
