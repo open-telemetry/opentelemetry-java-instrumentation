@@ -21,6 +21,7 @@ tasks {
     if (!name.contains("test", ignoreCase = true)) {
       options.errorprone.nullaway {
         severity.set(CheckSeverity.ERROR)
+        customInitializerAnnotations.add("org.openjdk.jmh.annotations.Setup")
       }
     }
   }
