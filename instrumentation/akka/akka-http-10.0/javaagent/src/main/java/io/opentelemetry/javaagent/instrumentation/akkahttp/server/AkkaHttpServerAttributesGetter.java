@@ -17,6 +17,7 @@ class AkkaHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequest request) {
     return request.method().value();
   }
@@ -39,11 +40,13 @@ class AkkaHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getUrlScheme(HttpRequest request) {
     return request.uri().scheme();
   }
 
   @Override
+  @Nullable
   public String getUrlPath(HttpRequest request) {
     return request.uri().path().toString();
   }

@@ -21,6 +21,7 @@ class AkkaHttpClientAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpRequest httpRequest) {
     return httpRequest.method().value();
   }

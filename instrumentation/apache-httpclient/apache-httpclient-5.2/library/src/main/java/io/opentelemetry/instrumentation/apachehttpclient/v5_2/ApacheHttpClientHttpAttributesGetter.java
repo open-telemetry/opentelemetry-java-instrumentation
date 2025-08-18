@@ -20,6 +20,7 @@ enum ApacheHttpClientHttpAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }

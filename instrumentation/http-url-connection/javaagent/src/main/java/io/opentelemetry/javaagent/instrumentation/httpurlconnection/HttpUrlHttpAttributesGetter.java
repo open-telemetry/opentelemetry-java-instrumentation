@@ -17,6 +17,7 @@ class HttpUrlHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpURLConnection, Integer> {
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(HttpURLConnection connection) {
     return connection.getRequestMethod();
   }

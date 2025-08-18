@@ -19,6 +19,7 @@ enum WebfluxServerHttpAttributesGetter
   INSTANCE;
 
   @Override
+  @Nullable
   public String getHttpRequestMethod(ServerWebExchange request) {
     return request.getRequest().getMethod().name();
   }
