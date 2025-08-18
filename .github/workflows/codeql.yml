@@ -34,7 +34,7 @@ jobs:
           - language: java
     runs-on: oracle-8cpu-32gb-x86-64
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       # don't need to free disk space (which takes time) since running on larger machine
 
@@ -63,7 +63,7 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@76621b61decf072c1cee8dd1ce2d2a82d33c17ed # v3.29.8
+        uses: github/codeql-action/init@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
         with:
           languages: ${{ matrix.language }}
           # using "latest" helps to keep up with the latest Kotlin support
@@ -79,6 +79,6 @@ jobs:
         run: ./gradlew assemble -x javadoc -x :instrumentation:quarkus-resteasy-reactive:quarkus3-testing:quarkusGenerateCodeDev -x :instrumentation:quarkus-resteasy-reactive:quarkus2-testing:quarkusGenerateCodeDev --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@76621b61decf072c1cee8dd1ce2d2a82d33c17ed # v3.29.8
+        uses: github/codeql-action/analyze@96f518a34f7a870018057716cc4d7a5c014bd61c # v3.29.10
         with:
           category: "/language:${{matrix.language}}"

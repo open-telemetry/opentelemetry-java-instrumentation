@@ -24,11 +24,16 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 
 final class ChatCompletionEventsHelper {
 
@@ -215,20 +220,231 @@ final class ChatCompletionEventsHelper {
   private static Value<?> buildToolCallEventObject(
       ChatCompletionMessageToolCall call, boolean captureMessageContent) {
     Map<String, Value<?>> result = new HashMap<>();
-    result.put("id", Value.of(call.id()));
-    result.put("type", Value.of("function")); // "function" is the only currently supported type
-    result.put("function", buildFunctionEventObject(call.function(), captureMessageContent));
+    FunctionAccess functionAccess = getFunctionAccess(call);
+    if (functionAccess != null) {
+      result.put("id", Value.of(functionAccess.id()));
+      result.put("type", Value.of("function")); // "function" is the only currently supported type
+      result.put("function", buildFunctionEventObject(functionAccess, captureMessageContent));
+    }
     return Value.of(result);
   }
 
   private static Value<?> buildFunctionEventObject(
-      ChatCompletionMessageToolCall.Function function, boolean captureMessageContent) {
+      FunctionAccess functionAccess, boolean captureMessageContent) {
     Map<String, Value<?>> result = new HashMap<>();
-    result.put("name", Value.of(function.name()));
+    result.put("name", Value.of(functionAccess.name()));
     if (captureMessageContent) {
-      result.put("arguments", Value.of(function.arguments()));
+      result.put("arguments", Value.of(functionAccess.arguments()));
     }
     return Value.of(result);
+  }
+
+  @Nullable
+  private static FunctionAccess getFunctionAccess(ChatCompletionMessageToolCall call) {
+    if (V1FunctionAccess.isAvailable()) {
+      return V1FunctionAccess.create(call);
+    }
+    if (V3FunctionAccess.isAvailable()) {
+      return V3FunctionAccess.create(call);
+    }
+
+    return null;
+  }
+
+  private interface FunctionAccess {
+    String id();
+
+    String name();
+
+    String arguments();
+  }
+
+  private static String invokeStringHandle(@Nullable MethodHandle methodHandle, Object object) {
+    if (methodHandle == null) {
+      return "";
+    }
+
+    try {
+      return (String) methodHandle.invoke(object);
+    } catch (Throwable ignore) {
+      return "";
+    }
+  }
+
+  private static class V1FunctionAccess implements FunctionAccess {
+    @Nullable private static final MethodHandle idHandle;
+    @Nullable private static final MethodHandle functionHandle;
+    @Nullable private static final MethodHandle nameHandle;
+    @Nullable private static final MethodHandle argumentsHandle;
+
+    static {
+      MethodHandle id;
+      MethodHandle function;
+      MethodHandle name;
+      MethodHandle arguments;
+
+      try {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        id =
+            lookup.findVirtual(
+                ChatCompletionMessageToolCall.class, "id", MethodType.methodType(String.class));
+        Class<?> functionClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageToolCall$Function");
+        function =
+            lookup.findVirtual(
+                ChatCompletionMessageToolCall.class,
+                "function",
+                MethodType.methodType(functionClass));
+        name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
+        arguments =
+            lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
+      } catch (Exception exception) {
+        id = null;
+        function = null;
+        name = null;
+        arguments = null;
+      }
+      idHandle = id;
+      functionHandle = function;
+      nameHandle = name;
+      argumentsHandle = arguments;
+    }
+
+    private final ChatCompletionMessageToolCall toolCall;
+    private final Object function;
+
+    V1FunctionAccess(ChatCompletionMessageToolCall toolCall, Object function) {
+      this.toolCall = toolCall;
+      this.function = function;
+    }
+
+    @Nullable
+    static FunctionAccess create(ChatCompletionMessageToolCall toolCall) {
+      if (functionHandle == null) {
+        return null;
+      }
+
+      try {
+        return new V1FunctionAccess(toolCall, functionHandle.invoke(toolCall));
+      } catch (Throwable ignore) {
+        return null;
+      }
+    }
+
+    static boolean isAvailable() {
+      return idHandle != null;
+    }
+
+    @Override
+    public String id() {
+      return invokeStringHandle(idHandle, toolCall);
+    }
+
+    @Override
+    public String name() {
+      return invokeStringHandle(nameHandle, function);
+    }
+
+    @Override
+    public String arguments() {
+      return invokeStringHandle(argumentsHandle, function);
+    }
+  }
+
+  static class V3FunctionAccess implements FunctionAccess {
+    @Nullable private static final MethodHandle functionToolCallHandle;
+    @Nullable private static final MethodHandle idHandle;
+    @Nullable private static final MethodHandle functionHandle;
+    @Nullable private static final MethodHandle nameHandle;
+    @Nullable private static final MethodHandle argumentsHandle;
+
+    static {
+      MethodHandle functionToolCall;
+      MethodHandle id;
+      MethodHandle function;
+      MethodHandle name;
+      MethodHandle arguments;
+
+      try {
+        MethodHandles.Lookup lookup = MethodHandles.lookup();
+        functionToolCall =
+            lookup.findVirtual(
+                ChatCompletionMessageToolCall.class,
+                "function",
+                MethodType.methodType(Optional.class));
+        Class<?> functionToolCallClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall");
+        id = lookup.findVirtual(functionToolCallClass, "id", MethodType.methodType(String.class));
+        Class<?> functionClass =
+            Class.forName(
+                "com.openai.models.chat.completions.ChatCompletionMessageFunctionToolCall$Function");
+        function =
+            lookup.findVirtual(
+                functionToolCallClass, "function", MethodType.methodType(functionClass));
+        name = lookup.findVirtual(functionClass, "name", MethodType.methodType(String.class));
+        arguments =
+            lookup.findVirtual(functionClass, "arguments", MethodType.methodType(String.class));
+      } catch (Exception exception) {
+        functionToolCall = null;
+        id = null;
+        function = null;
+        name = null;
+        arguments = null;
+      }
+      functionToolCallHandle = functionToolCall;
+      idHandle = id;
+      functionHandle = function;
+      nameHandle = name;
+      argumentsHandle = arguments;
+    }
+
+    private final Object functionToolCall;
+    private final Object function;
+
+    V3FunctionAccess(Object functionToolCall, Object function) {
+      this.functionToolCall = functionToolCall;
+      this.function = function;
+    }
+
+    @Nullable
+    @SuppressWarnings("unchecked")
+    static FunctionAccess create(ChatCompletionMessageToolCall toolCall) {
+      if (functionToolCallHandle == null || functionHandle == null) {
+        return null;
+      }
+
+      try {
+        Optional<Object> optional = (Optional<Object>) functionToolCallHandle.invoke(toolCall);
+        if (!optional.isPresent()) {
+          return null;
+        }
+        Object functionToolCall = optional.get();
+        return new V3FunctionAccess(functionToolCall, functionHandle.invoke(functionToolCall));
+      } catch (Throwable ignore) {
+        return null;
+      }
+    }
+
+    static boolean isAvailable() {
+      return idHandle != null;
+    }
+
+    @Override
+    public String id() {
+      return invokeStringHandle(idHandle, functionToolCall);
+    }
+
+    @Override
+    public String name() {
+      return invokeStringHandle(nameHandle, function);
+    }
+
+    @Override
+    public String arguments() {
+      return invokeStringHandle(argumentsHandle, function);
+    }
   }
 
   private ChatCompletionEventsHelper() {}

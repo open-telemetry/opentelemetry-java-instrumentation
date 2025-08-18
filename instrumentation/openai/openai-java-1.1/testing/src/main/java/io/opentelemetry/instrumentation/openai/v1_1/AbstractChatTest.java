@@ -62,9 +62,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.recording.RecordingExtension;
-import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.instrumentation.openai.TestHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,77 +71,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.Parameter;
-import org.junit.jupiter.params.ParameterizedClass;
-import org.junit.jupiter.params.provider.EnumSource;
 
-@ParameterizedClass
-@EnumSource(AbstractChatTest.TestType.class)
-public abstract class AbstractChatTest {
-  enum TestType {
-    SYNC,
-    SYNC_FROM_ASYNC,
-    ASYNC,
-    ASYNC_FROM_SYNC,
-  }
-
-  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.openai-java-1.1";
-
-  private static final String API_URL = "https://api.openai.com/v1";
-
+public abstract class AbstractChatTest extends AbstractOpenAiTest {
   protected static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   protected static final String TEST_CHAT_MODEL = "gpt-4o-mini";
   protected static final String TEST_CHAT_RESPONSE_MODEL = "gpt-4o-mini-2024-07-18";
   protected static final String TEST_CHAT_INPUT =
       "Answer in up to 3 words: Which ocean contains Bouvet Island?";
-
-  @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
-
-  protected abstract InstrumentationExtension getTesting();
-
-  protected abstract OpenAIClient wrap(OpenAIClient client);
-
-  protected abstract OpenAIClientAsync wrap(OpenAIClientAsync client);
-
-  protected final OpenAIClient getRawClient() {
-    OpenAIOkHttpClient.Builder builder =
-        OpenAIOkHttpClient.builder().baseUrl("http://localhost:" + recording.getPort());
-    if (recording.isRecording()) {
-      builder.apiKey(System.getenv("OPENAI_API_KEY"));
-    } else {
-      builder.apiKey("unused");
-    }
-    return builder.build();
-  }
-
-  protected final OpenAIClientAsync getRawClientAsync() {
-    OpenAIOkHttpClientAsync.Builder builder =
-        OpenAIOkHttpClientAsync.builder().baseUrl("http://localhost:" + recording.getPort());
-    if (recording.isRecording()) {
-      builder.apiKey(System.getenv("OPENAI_API_KEY"));
-    } else {
-      builder.apiKey("unused");
-    }
-    return builder.build();
-  }
-
-  protected final OpenAIClient getClient() {
-    return wrap(getRawClient());
-  }
-
-  protected final OpenAIClientAsync getClientAsync() {
-    return wrap(getRawClientAsync());
-  }
-
-  protected abstract List<Consumer<SpanDataAssert>> maybeWithTransportSpan(
-      Consumer<SpanDataAssert> span);
-
-  @Parameter TestType testType;
 
   protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
     return doCompletions(params, getClient(), getClientAsync());
@@ -609,14 +546,14 @@ public abstract class AbstractChatTest {
     assertThat(toolCalls).hasSize(2);
     String newYorkCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("New York"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("New York"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
     String londonCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("London"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("London"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
 
@@ -1281,6 +1218,57 @@ public abstract class AbstractChatTest {
                                 "message", Value.of(KeyValue.of("content", Value.of(content2)))))));
   }
 
+  protected List<ChatCompletionMessageToolCall> getToolCalls(List<ChatCompletionChunk> chunks) {
+    List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
+
+    TestHelper.MessageToolCallBuilder currentToolCall = null;
+    TestHelper.MessageToolCallBuilder.FunctionBuilder currentFunction = null;
+    StringBuilder currentArgs = null;
+
+    for (ChatCompletionChunk chunk : chunks) {
+      List<ChatCompletionChunk.Choice.Delta.ToolCall> calls =
+          chunk.choices().get(0).delta().toolCalls().orElse(emptyList());
+      if (calls.isEmpty()) {
+        continue;
+      }
+      for (ChatCompletionChunk.Choice.Delta.ToolCall call : calls) {
+        if (call.id().isPresent()) {
+          if (currentToolCall != null) {
+            if (currentFunction != null && currentArgs != null) {
+              currentFunction.arguments(currentArgs.toString());
+              currentToolCall.function(currentFunction);
+            }
+            toolCalls.add(currentToolCall.build());
+          }
+          currentToolCall = testHelper.messageToolCallBuilder().id(call.id().get());
+          currentFunction = testHelper.messageToolCallFunctionBuilder();
+          currentArgs = new StringBuilder();
+        }
+        if (call.function().isPresent()) {
+          if (call.function().get().name().isPresent()) {
+            if (currentFunction != null) {
+              currentFunction.name(call.function().get().name().get());
+            }
+          }
+          if (call.function().get().arguments().isPresent()) {
+            if (currentArgs != null) {
+              currentArgs.append(call.function().get().arguments().get());
+            }
+          }
+        }
+      }
+    }
+    if (currentToolCall != null) {
+      if (currentFunction != null && currentArgs != null) {
+        currentFunction.arguments(currentArgs.toString());
+        currentToolCall.function(currentFunction);
+      }
+      toolCalls.add(currentToolCall.build());
+    }
+
+    return toolCalls;
+  }
+
   @Test
   void streamToolCalls() {
     List<ChatCompletionMessageParam> chatMessages = new ArrayList<>();
@@ -1296,55 +1284,18 @@ public abstract class AbstractChatTest {
 
     List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
 
-    List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
-
-    ChatCompletionMessageToolCall.Builder currentToolCall = null;
-    ChatCompletionMessageToolCall.Function.Builder currentFunction = null;
-    StringBuilder currentArgs = null;
-
-    for (ChatCompletionChunk chunk : chunks) {
-      List<ChatCompletionChunk.Choice.Delta.ToolCall> calls =
-          chunk.choices().get(0).delta().toolCalls().orElse(emptyList());
-      if (calls.isEmpty()) {
-        continue;
-      }
-      for (ChatCompletionChunk.Choice.Delta.ToolCall call : calls) {
-        if (call.id().isPresent()) {
-          if (currentToolCall != null) {
-            currentFunction.arguments(currentArgs.toString());
-            currentToolCall.function(currentFunction.build());
-            toolCalls.add(currentToolCall.build());
-          }
-          currentToolCall = ChatCompletionMessageToolCall.builder().id(call.id().get());
-          currentFunction = ChatCompletionMessageToolCall.Function.builder();
-          currentArgs = new StringBuilder();
-        }
-        if (call.function().isPresent()) {
-          if (call.function().get().name().isPresent()) {
-            currentFunction.name(call.function().get().name().get());
-          }
-          if (call.function().get().arguments().isPresent()) {
-            currentArgs.append(call.function().get().arguments().get());
-          }
-        }
-      }
-    }
-    if (currentToolCall != null) {
-      currentFunction.arguments(currentArgs.toString());
-      currentToolCall.function(currentFunction.build());
-      toolCalls.add(currentToolCall.build());
-    }
+    List<ChatCompletionMessageToolCall> toolCalls = getToolCalls(chunks);
 
     String newYorkCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("New York"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("New York"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
     String londonCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("London"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("London"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
 
@@ -1701,20 +1652,18 @@ public abstract class AbstractChatTest {
     Map<String, JsonValue> properties = new HashMap<>();
     properties.put("location", JsonObject.of(location));
 
-    return ChatCompletionTool.builder()
-        .function(
-            FunctionDefinition.builder()
-                .name("get_weather")
-                .parameters(
-                    FunctionParameters.builder()
-                        .putAdditionalProperty("type", JsonValue.from("object"))
-                        .putAdditionalProperty(
-                            "required", JsonValue.from(Collections.singletonList("location")))
-                        .putAdditionalProperty("additionalProperties", JsonValue.from(false))
-                        .putAdditionalProperty("properties", JsonObject.of(properties))
-                        .build())
-                .build())
-        .build();
+    return testHelper.chatCompletionTool(
+        FunctionDefinition.builder()
+            .name("get_weather")
+            .parameters(
+                FunctionParameters.builder()
+                    .putAdditionalProperty("type", JsonValue.from("object"))
+                    .putAdditionalProperty(
+                        "required", JsonValue.from(Collections.singletonList("location")))
+                    .putAdditionalProperty("additionalProperties", JsonValue.from(false))
+                    .putAdditionalProperty("properties", JsonObject.of(properties))
+                    .build())
+            .build());
   }
 
   protected static ChatCompletionMessageParam createToolMessage(String response, String id) {

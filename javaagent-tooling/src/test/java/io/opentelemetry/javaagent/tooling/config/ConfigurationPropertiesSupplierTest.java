@@ -18,8 +18,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvide
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junitpioneer.jupiter.ClearSystemProperty;
@@ -28,9 +28,9 @@ import org.junitpioneer.jupiter.SetSystemProperty;
 @ClearSystemProperty(key = ConfigurationFile.CONFIGURATION_FILE_PROPERTY)
 class ConfigurationPropertiesSupplierTest {
 
-  @BeforeAll
-  @AfterAll
-  static void cleanUp() {
+  @BeforeEach
+  @AfterEach
+  void setUp() {
     GlobalOpenTelemetry.resetForTest();
     ConfigurationFile.resetForTest();
   }
@@ -46,7 +46,8 @@ class ConfigurationPropertiesSupplierTest {
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        OpenTelemetryInstaller.installOpenTelemetrySdk(this.getClass().getClassLoader());
+        OpenTelemetryInstaller.installOpenTelemetrySdk(
+            this.getClass().getClassLoader(), EarlyInitAgentConfig.create());
 
     // then
     assertThat(AutoConfigureUtil.getConfig(autoConfiguredSdk).getString("custom.key"))
