@@ -11,6 +11,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.semconv.url.UrlAttributesGetter;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.util.function.Function;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -37,6 +38,7 @@ public final class InternalUrlAttributesExtractor<REQUEST> {
     internalSet(attributes, UrlAttributes.URL_QUERY, urlQuery);
   }
 
+  @Nullable
   private String getUrlScheme(REQUEST request) {
     String urlScheme = alternateSchemeProvider.apply(request);
     if (urlScheme == null) {

@@ -25,6 +25,8 @@
 
 package io.opentelemetry.instrumentation.api.internal.cache.weaklockfree;
 
+import static java.util.Objects.requireNonNull;
+
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -142,7 +144,7 @@ public class WeakConcurrentMap<K, V>
   // can't use AutoClosable/try-with-resources as this project still supports Java 6
   static final class LookupKey<K> {
 
-    private K key;
+    @Nullable private K key;
     private int hashCode;
 
     @SuppressWarnings("OtelCanIgnoreReturnValueSuggester")
@@ -163,7 +165,7 @@ public class WeakConcurrentMap<K, V>
       if (other instanceof WeakConcurrentMap.LookupKey<?>) {
         return ((LookupKey<?>) other).key == key;
       } else {
-        return ((AbstractWeakConcurrentMap.WeakKey<?>) other).get() == key;
+        return ((AbstractWeakConcurrentMap.WeakKey<?>) requireNonNull(other)).get() == key;
       }
     }
 
@@ -183,12 +185,14 @@ public class WeakConcurrentMap<K, V>
   public static class WithInlinedExpunction<K, V> extends WeakConcurrentMap<K, V> {
 
     @Override
+    @Nullable
     public V get(K key) {
       expungeStaleEntries();
       return super.get(key);
     }
 
     @Override
+    @Nullable
     public V getIfPresent(K key) {
       expungeStaleEntries();
       return super.getIfPresent(key);
