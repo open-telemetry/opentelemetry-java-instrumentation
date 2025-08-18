@@ -16,7 +16,11 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
     return null;
   }
 
-  String getDbSystem(REQUEST request);
+  // TODO: make this required to implement
+  @Nullable
+  default String getDbSystem(REQUEST request) {
+    return getSystem(request);
+  }
 
   @Deprecated
   @Nullable
@@ -33,8 +37,11 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
     return null;
   }
 
+  // TODO: make this required to implement
   @Nullable
-  String getDbNamespace(REQUEST request);
+  default String getDbNamespace(REQUEST request) {
+    return getName(request);
+  }
 
   @Deprecated
   @Nullable
