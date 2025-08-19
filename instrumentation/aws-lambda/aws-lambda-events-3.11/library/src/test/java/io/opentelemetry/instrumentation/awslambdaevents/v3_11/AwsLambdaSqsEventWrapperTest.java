@@ -37,7 +37,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @SetEnvironmentVariable(
     key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
     value =
-        "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsEventWrapperTest$TestRequestHandler::handleRequest")
+        "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaSqsEventWrapperTest$TestRequestHandler::handleRequest")
 class AwsLambdaSqsEventWrapperTest {
 
   @RegisterExtension
