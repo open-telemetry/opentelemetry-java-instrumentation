@@ -1,2 +1,4 @@
-description: This instrumentation enables client spans for Elasticsearch API client requests for
-  version 7 of the client. Versions 8.10 and later have native support for OpenTelemetry.
+description: This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding
+  additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to
+  Elasticsearch CLIENT spans. Versions 8.10 and later of the client have native support for
+  OpenTelemetry.

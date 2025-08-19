@@ -2258,6 +2258,8 @@ libraries:
       type: boolean
       default: false
   - name: dropwizard-views-0.7
+    description: This instrumentation enables the creation of spans for Dropwizard
+      views.
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2269,15 +2271,17 @@ libraries:
       description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
-      type: boolean
-      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   elasticsearch:
   - name: elasticsearch-api-client-7.16
-    description: This instrumentation enables client spans for Elasticsearch API client
-      requests for version 7 of the client. Versions 8.10 and later have native support
-      for OpenTelemetry.
+    description: This instrumentation extends the elasticsearch-rest-7.0 instrumentation
+      by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index`
+      attributes to Elasticsearch CLIENT spans. Versions 8.10 and later of the client
+      have native support for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -2285,6 +2289,61 @@ libraries:
       javaagent:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.elasticsearch.path_parts.id
+          type: STRING
+        - name: db.elasticsearch.path_parts.index
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.elasticsearch.path_parts.id
+          type: STRING
+        - name: db.elasticsearch.path_parts.index
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-5.0
     description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
@@ -2301,21 +2360,6 @@ libraries:
         may contain personal or sensitive information.
       type: boolean
       default: false
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: elasticsearch-rest-6.4
     description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
@@ -2330,21 +2374,6 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: elasticsearch-rest-7.0
     description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
@@ -2439,6 +2468,16 @@ libraries:
         - name: network.peer.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2525,6 +2564,16 @@ libraries:
         - name: network.peer.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2607,6 +2656,16 @@ libraries:
         - name: network.type
           type: STRING
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
