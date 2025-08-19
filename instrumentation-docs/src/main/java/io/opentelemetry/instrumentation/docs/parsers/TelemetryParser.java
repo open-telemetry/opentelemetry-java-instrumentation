@@ -12,7 +12,11 @@ class TelemetryParser {
 
   // Key is the scope of the module being analyzed, value is a set of additional allowed scopes.
   private static final Map<String, Set<String>> scopeAllowList =
-      Map.of("io.opentelemetry.armeria-grpc-1.14", Set.of("io.opentelemetry.grpc-1.6"));
+      Map.of(
+          // armeria-grpc uses grpc-1.6 instrumenter.
+          "io.opentelemetry.armeria-grpc-1.14", Set.of("io.opentelemetry.grpc-1.6"),
+          // couchbase-2.6 extends couchbase-2.0 instrumentation with more attributes.
+          "io.opentelemetry.couchbase-2.6", Set.of("io.opentelemetry.couchbase-2.0"));
 
   /**
    * Checks if the given telemetry scope is valid for the specified module scope.
