@@ -15,7 +15,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -157,7 +158,7 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -179,9 +180,10 @@ abstract class AbstractPulsarClientTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -190,32 +192,28 @@ abstract class AbstractPulsarClientTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
+                                        .hasBucketBoundaries(DURATION_BUCKETS),
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.messages")
+                    .hasName("messaging.client.consumed.messages")
                     .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
+                    .hasDescription("Number of messages that were delivered to the application.")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(
@@ -224,6 +222,8 @@ abstract class AbstractPulsarClientTest {
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
@@ -269,7 +269,7 @@ abstract class AbstractPulsarClientTest {
           trace.hasSpansSatisfyingExactly(
               span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
               span ->
-                  span.hasName(topic + " publish")
+                  span.hasName(topic + " send")
                       .hasKind(SpanKind.PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
@@ -295,9 +295,10 @@ abstract class AbstractPulsarClientTest {
         .satisfiesExactlyInAnyOrder(
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.duration")
+                    .hasName("messaging.client.operation.duration")
                     .hasUnit("s")
-                    .hasDescription("Measures the duration of receive operation.")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -306,32 +307,28 @@ abstract class AbstractPulsarClientTest {
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))),
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.publish.duration")
-                    .hasUnit("s")
-                    .hasDescription("Measures the duration of publish operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
+                                        .hasBucketBoundaries(DURATION_BUCKETS),
                                 point ->
                                     point
                                         .hasSumGreaterThan(0.0)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost))
                                         .hasBucketBoundaries(DURATION_BUCKETS))),
             metric ->
                 assertThat(metric)
-                    .hasName("messaging.receive.messages")
+                    .hasName("messaging.client.consumed.messages")
                     .hasUnit("{message}")
-                    .hasDescription("Measures the number of received messages.")
+                    .hasDescription("Number of messages that were delivered to the application.")
                     .hasLongSumSatisfying(
                         sum ->
                             sum.hasPointsSatisfying(
@@ -340,6 +337,8 @@ abstract class AbstractPulsarClientTest {
                                         .hasValue(1)
                                         .hasAttributesSatisfying(
                                             equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                                             equalTo(MESSAGING_DESTINATION_NAME, topic),
                                             equalTo(SERVER_PORT, brokerPort),
                                             equalTo(SERVER_ADDRESS, brokerHost)))));
@@ -352,10 +351,11 @@ abstract class AbstractPulsarClientTest {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "publish"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative),
                 equalTo(MESSAGE_TYPE, "normal")));
@@ -390,10 +390,11 @@ abstract class AbstractPulsarClientTest {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MESSAGING_OPERATION_NAME, "receive"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "receive"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
@@ -419,8 +420,9 @@ abstract class AbstractPulsarClientTest {
         new ArrayList<>(
             Arrays.asList(
                 equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_DESTINATION_NAME, destination),
-                equalTo(MESSAGING_OPERATION, "process"),
+                equalTo(MESSAGING_OPERATION_TYPE, "process"),
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
