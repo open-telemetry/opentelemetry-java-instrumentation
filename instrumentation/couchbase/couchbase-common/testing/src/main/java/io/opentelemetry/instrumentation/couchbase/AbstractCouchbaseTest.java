@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.Collections.emptyList;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -29,7 +30,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -158,18 +158,18 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected List<AttributeAssertion> couchbaseAttributes() {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   protected List<AttributeAssertion> couchbaseQueryAttributes() {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   protected List<AttributeAssertion> couchbaseClusterManagerAttributes() {
-    return Collections.emptyList();
+    return emptyList();
   }
 
   protected List<AttributeAssertion> couchbaseN1qlAttributes() {
-    return Collections.emptyList();
+    return emptyList();
   }
 }
