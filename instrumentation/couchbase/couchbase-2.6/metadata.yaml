@@ -1,14 +1,11 @@
 description: >
   This instrumentation enables database CLIENT spans and metrics for Couchbase 2.6 operations.
-  It automatically traces key-value operations (get, upsert, replace, remove), view queries, 
-  N1QL queries, and cluster management operations. Supports Spring Data integration for 
-  repositories and templates.
+  It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL
+  queries, and cluster management operations.
 configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
     description: >
       Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
-      Different operation types receive different experimental attributes: key-value operations 
-      get both attributes, view queries get only local.address, N1QL queries get only operation_id, 
-      and cluster management operations get none.
+      Different operation types receive different experimental attributes.
     type: boolean
     default: false

@@ -1,5 +1,4 @@
 description: >
   This instrumentation enables database CLIENT spans and metrics for Couchbase 2.0 operations.
-  It automatically traces key-value operations (get, upsert, replace, remove), view queries, 
-  N1QL queries, and cluster management operations. Supports Spring Data integration for 
-  repositories and templates.
+  It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL
+  queries, and cluster management operations.

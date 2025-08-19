@@ -135,9 +135,8 @@ public abstract class AbstractCouchbaseTest {
     if (statement != null) {
       assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
     }
-    // Use different attributes based on the type of operation
+
     if (statement != null) {
-      // Query operations - N1QL vs ViewQuery have different experimental attributes
       if (statement.startsWith("SELECT")) {
         // N1QL queries get operation_id but NOT local.address experimental attribute
         assertions.addAll(couchbaseN1qlAttributes());
@@ -146,7 +145,7 @@ public abstract class AbstractCouchbaseTest {
         assertions.addAll(couchbaseQueryAttributes());
       }
     } else if (operation != null && operation.startsWith("ClusterManager.")) {
-      // ClusterManager operations get different attributes (no experimental ones)
+      // ClusterManager operations have no experimental attributes
       assertions.addAll(couchbaseClusterManagerAttributes());
     } else {
       // KV operations (get, upsert, etc.) get both experimental attributes
