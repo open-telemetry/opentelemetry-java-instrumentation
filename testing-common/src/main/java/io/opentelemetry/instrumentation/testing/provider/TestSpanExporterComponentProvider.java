@@ -29,6 +29,10 @@ public class TestSpanExporterComponentProvider implements ComponentProvider<Span
     return Objects.requireNonNull(spanExporter, "spanExporter must not be null");
   }
 
+  public static SpanExporter getSpanExporter() {
+    return spanExporter;
+  }
+
   public static void setSpanExporter(SpanExporter spanExporter) {
     TestSpanExporterComponentProvider.spanExporter = spanExporter;
   }

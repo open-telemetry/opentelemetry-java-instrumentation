@@ -28,6 +28,10 @@ import java.util.List;
 public class TestExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
+    if (TestSpanExporterComponentProvider.getSpanExporter() == null) {
+      // library test runner is not used, so we should not add the test exporters
+      return;
+    }
     customizer.addModelCustomizer(
         model -> {
           if (model.getTracerProvider() == null) {
