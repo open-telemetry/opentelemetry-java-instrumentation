@@ -348,6 +348,9 @@ targets:
       target: ':instrumentation:aws-lambda:aws-lambda-events-2.2:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:aws-lambda:aws-lambda-events-3.11:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:aws-sdk:aws-sdk-1.11:javaagent'
     - type: gradle
       path: ./
