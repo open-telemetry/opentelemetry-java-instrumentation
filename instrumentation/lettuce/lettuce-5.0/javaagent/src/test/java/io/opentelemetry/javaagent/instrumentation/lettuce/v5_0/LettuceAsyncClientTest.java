@@ -52,7 +52,6 @@ import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -177,7 +176,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                                 + incorrectPort),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),
-                                            AbstractAssert::isNotNull)))));
+                                            val -> val.isNotNull())))));
   }
 
   @Test
