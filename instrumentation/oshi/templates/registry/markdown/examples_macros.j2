@@ -1,0 +1,17 @@
+{% macro print_examples(examples) %}{%- for e in examples %}{%if loop.first == false %}; {% endif %}`{{ e | trim }}`{%- endfor %}{% endmacro %}
+
+{% macro format(item) %}{%- if item.examples %}
+{%- if "[]" in item.type and "template" not in item.type %}
+{%- if item.examples is sequence %}
+{%- if item.examples | select("sequence") | length == 0 %}`{{ item.examples | trim }}`
+{%- else %}{{ print_examples(item.examples) }}
+{%- endif %}
+{%- else %}`[{{ item.examples | trim }}]`
+{%- endif %}
+{%- elif item.examples is sequence %}{{ print_examples(item.examples) }}
+{%- else %}`{{ item.examples | trim }}`
+{%- endif %}{%- elif item.type is mapping %}
+{%- for e in item.type.members %}{% if loop.index0 < 3 %}{% if loop.first == false %}; {% endif %}`{{ e.value | trim }}`{% endif %}{%- endfor %}
+{%- elif item.type == "enum" -%}
+{%- for e in item.members %}{% if loop.index0 < 3 %}{% if loop.first == false %}; {% endif %}`{{ e.value | trim }}`{% endif %}{%- endfor %}
+{%- endif %}{% endmacro %}
