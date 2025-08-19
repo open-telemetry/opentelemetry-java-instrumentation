@@ -20,7 +20,6 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.assertj.core.api.AbstractAssert;
 
 public class Couchbase26Util {
 
@@ -75,7 +74,7 @@ public class Couchbase26Util {
     return new AttributeAssertionBuilder()
         .add(equalTo(NETWORK_TYPE, "ipv4"))
         .add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"))
-        .add(satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull));
+        .add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
   }
 
   private static class AttributeAssertionBuilder {
@@ -88,14 +87,14 @@ public class Couchbase26Util {
 
     AttributeAssertionBuilder withLocalAddress() {
       if (Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
-        assertions.add(satisfies(stringKey("couchbase.local.address"), AbstractAssert::isNotNull));
+        assertions.add(satisfies(stringKey("couchbase.local.address"), val -> val.isNotNull()));
       }
       return this;
     }
 
     AttributeAssertionBuilder withOperationId() {
       if (Boolean.getBoolean(EXPERIMENTAL_FLAG)) {
-        assertions.add(satisfies(stringKey("couchbase.operation_id"), AbstractAssert::isNotNull));
+        assertions.add(satisfies(stringKey("couchbase.operation_id"), val -> val.isNotNull()));
       }
       return this;
     }
