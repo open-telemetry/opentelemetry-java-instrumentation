@@ -85,7 +85,7 @@ class InstrumenterTest {
         AttributesBuilder attributes,
         Context context,
         Map<String, String> request,
-        Map<String, String> response,
+        @Nullable Map<String, String> response,
         @Nullable Throwable error) {
       attributes.put("resp1", response.get("resp1"));
       attributes.put("resp2", response.get("resp2"));
@@ -107,7 +107,7 @@ class InstrumenterTest {
         AttributesBuilder attributes,
         Context context,
         Map<String, String> request,
-        Map<String, String> response,
+        @Nullable Map<String, String> response,
         @Nullable Throwable error) {
       attributes.put("resp3", response.get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
