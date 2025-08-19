@@ -3,16 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.function.BiFunction;
 
-final class LambdaParameters {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class LambdaParameters {
 
-  static <T> Object[] toArray(
+  public static <T> Object[] toArray(
       Method targetMethod, T input, Context context, BiFunction<T, Class<?>, Object> mapper) {
     Class<?>[] parameterTypes = targetMethod.getParameterTypes();
     Object[] parameters = new Object[parameterTypes.length];
@@ -28,7 +32,7 @@ final class LambdaParameters {
     return parameters;
   }
 
-  static <T> Object[] toParameters(Method targetMethod, T input, Context context) {
+  public static <T> Object[] toParameters(Method targetMethod, T input, Context context) {
     Class<?>[] parameterTypes = targetMethod.getParameterTypes();
     Object[] parameters = new Object[parameterTypes.length];
     for (int i = 0; i < parameterTypes.length; i++) {
@@ -43,7 +47,7 @@ final class LambdaParameters {
     return parameters;
   }
 
-  static Object toInput(
+  public static Object toInput(
       Method targetMethod,
       InputStream inputStream,
       BiFunction<InputStream, Class<?>, Object> mapper) {

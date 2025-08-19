@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 import com.amazonaws.services.lambda.runtime.Context;
-import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.SerializationUtil;
 import java.io.ByteArrayInputStream;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
