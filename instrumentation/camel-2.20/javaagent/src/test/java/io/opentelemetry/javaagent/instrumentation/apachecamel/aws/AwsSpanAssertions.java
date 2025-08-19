@@ -33,6 +33,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
 import java.util.List;
+import org.assertj.core.api.AbstractAssert;
 
 class AwsSpanAssertions {
 
@@ -106,12 +107,10 @@ class AwsSpanAssertions {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "receive"));
       } else if (spanName.endsWith("process")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "process"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, AbstractAssert::isNotNull));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "publish"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, AbstractAssert::isNotNull));
       }
     }
 

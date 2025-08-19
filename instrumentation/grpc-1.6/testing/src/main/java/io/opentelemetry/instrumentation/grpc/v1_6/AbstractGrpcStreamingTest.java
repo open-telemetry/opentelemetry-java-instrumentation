@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
@@ -246,7 +247,7 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, AbstractAssert::isNotNull))
                             .satisfies(
                                 spanData ->
                                     assertThat(spanData.getEvents())

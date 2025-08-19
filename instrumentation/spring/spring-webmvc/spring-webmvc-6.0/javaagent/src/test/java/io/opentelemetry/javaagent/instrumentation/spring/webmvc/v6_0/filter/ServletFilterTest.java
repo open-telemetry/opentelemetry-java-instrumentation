@@ -24,6 +24,7 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.Map;
+import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -70,7 +71,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
                           equalTo(
                               EXCEPTION_TYPE,
                               "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          satisfies(EXCEPTION_MESSAGE, val -> assertThat(val).isNotNull()),
+                          satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {
