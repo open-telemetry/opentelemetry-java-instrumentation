@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.instrumenter;
 
 import static java.util.Collections.singletonMap;
+import static java.util.Objects.requireNonNull;
 import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.trace.SpanContext;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import javax.annotation.Nullable;
 
 @ExtendWith(MockitoExtension.class)
 class PropagatorBasedSpanLinksExtractorTest {
@@ -60,8 +62,9 @@ class PropagatorBasedSpanLinksExtractorTest {
     }
 
     @Override
-    public String get(Map<String, String> carrier, String key) {
-      return carrier.get(key);
+    @Nullable
+    public String get(@Nullable Map<String, String> carrier, String key) {
+      return requireNonNull(carrier).get(key);
     }
   }
 }
