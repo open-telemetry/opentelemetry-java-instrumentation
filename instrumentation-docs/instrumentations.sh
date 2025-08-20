@@ -130,6 +130,7 @@ readonly INSTRUMENTATIONS=(
   "couchbase:couchbase-2.6:javaagent:test"
   "couchbase:couchbase-2.6:javaagent:testStableSemconv"
   "couchbase:couchbase-2.6:javaagent:testExperimental"
+  "dropwizard:dropwizard-views-0.7:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
