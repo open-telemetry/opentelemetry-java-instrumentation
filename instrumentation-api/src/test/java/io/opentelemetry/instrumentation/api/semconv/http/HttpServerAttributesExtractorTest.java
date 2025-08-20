@@ -128,7 +128,7 @@ class HttpServerAttributesExtractorTest {
     @Override
     public String getNetworkProtocolVersion(
         Map<String, String> request, @Nullable Map<String, String> response) {
-      return requireNonNull(response).get("networkProtocolVersion");
+      return requireNonNull(request).get("networkProtocolVersion");
     }
 
     @Nullable

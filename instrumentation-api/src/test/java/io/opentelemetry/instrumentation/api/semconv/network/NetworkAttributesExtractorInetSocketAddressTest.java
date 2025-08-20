@@ -65,7 +65,7 @@ class NetworkAttributesExtractorInetSocketAddressTest {
   }
 
   @Test
-  void noAttributes() {
+  void minimalAttributes() {
     AttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
         NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
 
@@ -76,6 +76,10 @@ class NetworkAttributesExtractorInetSocketAddressTest {
 
     AttributesBuilder endAttributes = Attributes.builder();
     extractor.onEnd(endAttributes, Context.root(), request, null, null);
-    assertThat(endAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(
+            entry(NETWORK_TYPE, "ipv4"),
+            entry(NETWORK_LOCAL_ADDRESS, "1.2.3.4"),
+            entry(NETWORK_LOCAL_PORT, 8080L));
   }
 }
