@@ -1,8 +1,14 @@
-description: This instrumentation enables tracing for Elasticsearch REST clients.
+description: This instrumentation enables database CLIENT spans and metrics for Elasticsearch REST clients.
 configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query
-    description: |
+    description: >
       Enable the capture of search query bodies. It is important to note that Elasticsearch queries
       may contain personal or sensitive information.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.known-methods
+    description: >
+      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
+      other methods will be treated as `_OTHER`.
+    type: list
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"

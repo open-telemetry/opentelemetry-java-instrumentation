@@ -67,6 +67,7 @@ readonly INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:test"
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-rest-7.0:javaagent:test"
+  "elasticsearch:elasticsearch-rest-7.0:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:test"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:testExperimental"
@@ -139,7 +140,9 @@ readonly INSTRUMENTATIONS=(
 readonly COLIMA_INSTRUMENTATIONS=(
   "spring:spring-jms:spring-jms-6.0:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
+  "elasticsearch:elasticsearch-rest-6.4:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
+  "elasticsearch:elasticsearch-rest-5.0:javaagent:testStableSemconv"
   "oracle-ucp-11.2:javaagent:test"
   "oracle-ucp-11.2:javaagent:testStableSemconv"
 )
