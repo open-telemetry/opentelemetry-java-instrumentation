@@ -27,8 +27,8 @@ import java.util.Map;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
- * SqlClientAttributesGetter#getRawQueryText(Object)} method are sanitized before use, all statement
- * parameters are removed.
+ * SqlClientAttributesGetter#getRawQueryTexts(Object)} method are sanitized before use, all
+ * statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
