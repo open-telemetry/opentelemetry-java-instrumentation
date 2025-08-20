@@ -146,8 +146,8 @@ class InstrumenterTest {
         SpanLinksBuilder spanLinks, Context parentContext, Map<String, String> request) {
       spanLinks.addLink(
           SpanContext.create(
-              request.get("linkTraceId"),
-              request.get("linkSpanId"),
+              requireNonNull(request.get("linkTraceId")),
+              requireNonNull(request.get("linkSpanId")),
               TraceFlags.getSampled(),
               TraceState.getDefault()));
     }
@@ -161,8 +161,9 @@ class InstrumenterTest {
     }
 
     @Override
-    public String get(Map<String, String> carrier, String key) {
-      return carrier.get(key);
+    @Nullable
+    public String get(@Nullable Map<String, String> carrier, String key) {
+      return requireNonNull(carrier).get(key);
     }
   }
 
@@ -259,7 +260,7 @@ class InstrumenterTest {
                             TraceFlags.getSampled(),
                             TraceState.getDefault()))),
             request,
-            Map::put);
+            (map, key, value) -> requireNonNull(map).put(key, value));
 
     Context context = instrumenter.start(Context.root(), request);
     assertThat(Span.fromContext(context).getSpanContext().isValid()).isTrue();
@@ -287,7 +288,7 @@ class InstrumenterTest {
             .addAttributesExtractor(new AttributesExtractor1())
             .addAttributesExtractor(new AttributesExtractor2())
             .addSpanLinksExtractor(new LinksExtractor())
-            .buildClientInstrumenter(Map::put);
+            .buildClientInstrumenter((map, key, value) -> requireNonNull(map).put(key, value));
 
     Map<String, String> request = new HashMap<>(REQUEST);
     Context context = instrumenter.start(Context.root(), request);
@@ -328,7 +329,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
             .addAttributesExtractor(new AttributesExtractor2())
-            .buildClientInstrumenter(Map::put);
+            .buildClientInstrumenter((map, key, value) -> requireNonNull(map).put(key, value));
 
     Map<String, String> request = new HashMap<>(REQUEST);
     Context context = instrumenter.start(Context.root(), request);
@@ -354,7 +355,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
             .addAttributesExtractor(new AttributesExtractor2())
-            .buildClientInstrumenter(Map::put);
+            .buildClientInstrumenter((map, key, value) -> requireNonNull(map).put(key, value));
 
     Context parent =
         Context.root()
@@ -421,7 +422,9 @@ class InstrumenterTest {
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .buildDownstreamInstrumenter(Map::put, SpanKindExtractor.alwaysInternal());
+            .buildDownstreamInstrumenter(
+                (map, key, value) -> requireNonNull(map).put(key, value),
+                SpanKindExtractor.alwaysInternal());
 
     Map<String, String> request = new HashMap<>();
     Context context = instrumenter.start(Context.root(), request);
@@ -500,8 +503,10 @@ class InstrumenterTest {
     Context context = instrumenter.start(Context.root(), REQUEST);
     instrumenter.end(context, REQUEST, RESPONSE, null);
 
-    assertThat(Span.fromContext(startContext.get()).getSpanContext().isValid()).isTrue();
-    assertThat(Span.fromContext(endContext.get()).getSpanContext().isValid()).isTrue();
+    assertThat(Span.fromContext(requireNonNull(startContext.get())).getSpanContext().isValid())
+        .isTrue();
+    assertThat(Span.fromContext(requireNonNull(endContext.get())).getSpanContext().isValid())
+        .isTrue();
   }
 
   @Test
