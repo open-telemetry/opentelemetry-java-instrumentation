@@ -2269,10 +2269,6 @@ libraries:
       description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
-      type: boolean
-      default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
     description: This instrumentation enables client spans for Elasticsearch API client
