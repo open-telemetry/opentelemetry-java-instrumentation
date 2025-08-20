@@ -16,9 +16,9 @@ muzzle {
 dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
 
-  library("org.apache.kafka:connect-api:3.6.1")
+  library("org.apache.kafka:connect-api:2.6.0")
 
-  testImplementation("org.apache.kafka:connect-runtime:3.6.1")
+  testImplementation("org.apache.kafka:connect-runtime:2.6.0")
 
 }
 
