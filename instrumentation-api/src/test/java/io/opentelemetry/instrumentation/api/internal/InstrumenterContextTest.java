@@ -34,6 +34,15 @@ class InstrumenterContextTest {
     String testQuery = "SELECT name FROM test WHERE id = 1";
     SqlClientAttributesGetter<Object, Void> getter =
         new SqlClientAttributesGetter<Object, Void>() {
+          @Override
+          public String getDbSystem(Object o) {
+            return "testdb";
+          }
+
+          @Override
+          public String getDbNamespace(Object o) {
+            return null;
+          }
 
           @Override
           public Collection<String> getRawQueryTexts(Object request) {

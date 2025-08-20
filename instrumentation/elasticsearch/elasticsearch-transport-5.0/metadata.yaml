@@ -1,8 +1,18 @@
 description: >
-  This instrumentation enables client spans for Elasticsearch transport client requests. Each call
-  produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+  This instrumentation enables client spans and metrics for Elasticsearch transport client requests.
+  Each call produces a span named after the Elasticsearch action, enriched with transport-specific
+  attributes.
 configurations:
   - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-    description: Enable the capture of experimental span attributes.
+    description: >
+      Enable the capture of experimental span attributes including `elasticsearch.action`,
+      `elasticsearch.request`, `elasticsearch.request.indices`,
+      `elasticsearch.request.search.types`, `elasticsearch.type`, `elasticsearch.id`,
+      `elasticsearch.version`, `elasticsearch.shard.broadcast.total`,
+      `elasticsearch.shard.broadcast.successful`, `elasticsearch.shard.broadcast.failed`,
+      `elasticsearch.shard.replication.total`, `elasticsearch.shard.replication.successful`,
+      `elasticsearch.shard.replication.failed`, `elasticsearch.response.status`,
+      `elasticsearch.shard.bulk.id`, `elasticsearch.shard.bulk.index`,
+      `elasticsearch.node.failures`, and `elasticsearch.node.cluster.name`.
     type: boolean
     default: false

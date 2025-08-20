@@ -17,7 +17,7 @@ public final class DropwizardSingletons {
   private static final Instrumenter<View, Void> INSTRUMENTER =
       Instrumenter.<View, Void>builder(
               GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DropwizardSingletons::spanName)
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+          .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
           .buildInstrumenter();
 
   private static String spanName(View view) {
