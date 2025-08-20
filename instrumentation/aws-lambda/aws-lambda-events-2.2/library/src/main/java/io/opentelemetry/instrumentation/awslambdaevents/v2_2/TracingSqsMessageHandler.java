@@ -14,6 +14,11 @@ import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.AwsLambdaS
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 
+/**
+ * @deprecated use {@link
+ *     io.opentelemetry.instrumentation.awslambdaevents.v3_11.TracingSqsMessageHandler} instead.
+ */
+@Deprecated
 public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
 
   private final Instrumenter<SQSMessage, Void> messageInstrumenter;
@@ -33,7 +38,9 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
    */
   protected TracingSqsMessageHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(
-        openTelemetrySdk, flushTimeout, AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk));
+        openTelemetrySdk,
+        flushTimeout,
+        AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk, INSTRUMENTATION_NAME));
   }
 
   /**
@@ -50,7 +57,7 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
         openTelemetrySdk,
         flushTimeout,
         eventInstrumenter,
-        AwsLambdaSqsInstrumenterFactory.forMessage(openTelemetrySdk));
+        AwsLambdaSqsInstrumenterFactory.forMessage(openTelemetrySdk, INSTRUMENTATION_NAME));
   }
 
   /**

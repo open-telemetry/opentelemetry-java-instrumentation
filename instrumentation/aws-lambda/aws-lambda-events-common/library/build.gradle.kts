@@ -4,8 +4,6 @@ plugins {
 
 dependencies {
   api(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
-  implementation(project(":instrumentation:aws-lambda:aws-lambda-events-common:library"))
-  compileOnly(project(":instrumentation:aws-lambda:aws-lambda-events-3.11:library"))
 
   compileOnly("io.opentelemetry:opentelemetry-sdk")
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")

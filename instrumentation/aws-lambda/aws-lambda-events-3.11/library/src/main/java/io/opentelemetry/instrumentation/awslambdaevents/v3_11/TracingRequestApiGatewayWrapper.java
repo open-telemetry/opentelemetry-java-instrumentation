@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -17,12 +17,7 @@ import java.util.function.BiFunction;
  * Wrapper for {@link io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler}.
  * Allows for wrapping a lambda proxied through API Gateway, enabling single span tracing and HTTP
  * context propagation.
- *
- * @deprecated use {@link
- *     io.opentelemetry.instrumentation.awslambdaevents.v3_11.TracingRequestApiGatewayWrapper}
- *     instead.
  */
-@Deprecated
 public class TracingRequestApiGatewayWrapper
     extends TracingRequestWrapperBase<APIGatewayProxyRequestEvent, Object> {
 

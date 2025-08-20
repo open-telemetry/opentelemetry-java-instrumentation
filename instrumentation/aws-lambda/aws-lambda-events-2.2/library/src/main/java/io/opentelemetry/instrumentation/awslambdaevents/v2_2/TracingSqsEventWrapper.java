@@ -15,6 +15,11 @@ import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * @deprecated use {@link
+ *     io.opentelemetry.instrumentation.awslambdaevents.v3_11.TracingSqsEventWrapper} instead.
+ */
+@Deprecated
 public class TracingSqsEventWrapper extends TracingSqsEventHandler {
 
   private final WrappedLambda wrappedLambda;

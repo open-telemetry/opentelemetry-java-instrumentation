@@ -17,7 +17,7 @@ dependencies {
 
   implementation(project(":instrumentation:aws-lambda:aws-lambda-core-1.0:library"))
 
-  implementation(project(":instrumentation:aws-lambda:aws-lambda-events-2.2:library")) {
+  implementation(project(":instrumentation:aws-lambda:aws-lambda-events-common:library")) {
     // Only needed by wrappers, not the javaagent. Muzzle will catch if we accidentally change this.
     exclude("com.fasterxml.jackson.core", "jackson-databind")
   }

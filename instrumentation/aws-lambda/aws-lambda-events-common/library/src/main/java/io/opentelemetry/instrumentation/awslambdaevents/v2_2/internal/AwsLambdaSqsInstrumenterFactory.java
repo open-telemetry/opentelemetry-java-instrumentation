@@ -18,21 +18,19 @@ import java.util.List;
  */
 public final class AwsLambdaSqsInstrumenterFactory {
 
-  public static Instrumenter<SQSEvent, Void> forEvent(OpenTelemetry openTelemetry) {
+  public static Instrumenter<SQSEvent, Void> forEvent(
+      OpenTelemetry openTelemetry, String instrumentationName) {
     return Instrumenter.<SQSEvent, Void>builder(
-            openTelemetry,
-            "io.opentelemetry.aws-lambda-events-2.2",
-            AwsLambdaSqsInstrumenterFactory::spanName)
+            openTelemetry, instrumentationName, AwsLambdaSqsInstrumenterFactory::spanName)
         .addAttributesExtractor(new SqsEventAttributesExtractor())
         .addSpanLinksExtractor(new SqsEventSpanLinksExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 
-  public static Instrumenter<SQSMessage, Void> forMessage(OpenTelemetry openTelemetry) {
+  public static Instrumenter<SQSMessage, Void> forMessage(
+      OpenTelemetry openTelemetry, String instrumentationName) {
     return Instrumenter.<SQSMessage, Void>builder(
-            openTelemetry,
-            "io.opentelemetry.aws-lambda-events-2.2",
-            message -> message.getEventSource() + " process")
+            openTelemetry, instrumentationName, message -> message.getEventSource() + " process")
         .addAttributesExtractor(new SqsMessageAttributesExtractor())
         .addSpanLinksExtractor(new SqsMessageSpanLinksExtractor())
         .buildInstrumenter(SpanKindExtractor.alwaysConsumer());

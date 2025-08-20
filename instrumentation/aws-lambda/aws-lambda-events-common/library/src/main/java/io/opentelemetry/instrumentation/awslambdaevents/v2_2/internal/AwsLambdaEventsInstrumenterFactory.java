@@ -21,13 +21,11 @@ import java.util.Set;
 public final class AwsLambdaEventsInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(
-      OpenTelemetry openTelemetry, Set<String> knownMethods) {
+      OpenTelemetry openTelemetry, String instrumentationName, Set<String> knownMethods) {
     return new AwsLambdaFunctionInstrumenter(
         openTelemetry,
         Instrumenter.builder(
-                openTelemetry,
-                "io.opentelemetry.aws-lambda-events-2.2",
-                AwsLambdaEventsInstrumenterFactory::spanName)
+                openTelemetry, instrumentationName, AwsLambdaEventsInstrumenterFactory::spanName)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
             .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor(knownMethods))
             .buildInstrumenter(SpanKindExtractor.alwaysServer()));

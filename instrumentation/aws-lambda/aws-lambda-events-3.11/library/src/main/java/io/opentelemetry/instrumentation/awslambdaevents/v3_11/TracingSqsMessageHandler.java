@@ -36,7 +36,9 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
    */
   protected TracingSqsMessageHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(
-        openTelemetrySdk, flushTimeout, AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk));
+        openTelemetrySdk,
+        flushTimeout,
+        AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk, INSTRUMENTATION_NAME));
   }
 
   /**
@@ -53,7 +55,7 @@ public abstract class TracingSqsMessageHandler extends TracingSqsEventHandler {
         openTelemetrySdk,
         flushTimeout,
         eventInstrumenter,
-        AwsLambdaSqsInstrumenterFactory.forMessage(openTelemetrySdk));
+        AwsLambdaSqsInstrumenterFactory.forMessage(openTelemetrySdk, INSTRUMENTATION_NAME));
   }
 
   /**

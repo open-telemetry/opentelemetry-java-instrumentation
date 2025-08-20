@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -24,7 +24,6 @@ import java.util.Map;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-@SuppressWarnings("deprecation") // testing deprecated class
 class TracingRequestWrapperStandardEventsTest {
   private static final Map<Class<?>, EventInfo> EVENTS_JSON = buildEventExamples();
 

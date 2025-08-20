@@ -34,7 +34,6 @@ class CustomJodaModule extends SimpleModule {
   private static final long serialVersionUID = 1L;
 
   public CustomJodaModule() {
-    super();
     addDeserializer(DateTime.class, new DateTimeDeserialiser());
   }
 

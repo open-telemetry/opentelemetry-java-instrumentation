@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -36,7 +36,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
-@SuppressWarnings("deprecation") // testing deprecated class
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 class AwsLambdaApiGatewayWrapperTest {
@@ -63,7 +62,7 @@ class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
   void tracedWithHttpPropagation() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -117,7 +116,7 @@ class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerApiGateway::handleRequest")
   void handlerTraced_empty() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -148,7 +147,7 @@ class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerString::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerString::handleRequest")
   void handlerTraced_string() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -179,7 +178,7 @@ class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerInteger::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerInteger::handleRequest")
   void handlerTraced_integer() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(
@@ -210,7 +209,7 @@ class AwsLambdaApiGatewayWrapperTest {
   @SetEnvironmentVariable(
       key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
       value =
-          "io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerCustomType::handleRequest")
+          "io.opentelemetry.instrumentation.awslambdaevents.v3_11.AwsLambdaApiGatewayWrapperTest$TestRequestHandlerCustomType::handleRequest")
   void handlerTraced_customType() {
     TracingRequestApiGatewayWrapper wrapper =
         new TracingRequestApiGatewayWrapper(

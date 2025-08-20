@@ -18,6 +18,7 @@ import javax.annotation.Nullable;
 
 public abstract class TracingSqsEventHandler
     extends TracingRequestHandler<SQSEvent, SQSBatchResponse> {
+  static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-3.11";
 
   private final Instrumenter<SQSEvent, Void> instrumenter;
 
@@ -36,7 +37,9 @@ public abstract class TracingSqsEventHandler
    */
   protected TracingSqsEventHandler(OpenTelemetrySdk openTelemetrySdk, Duration flushTimeout) {
     this(
-        openTelemetrySdk, flushTimeout, AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk));
+        openTelemetrySdk,
+        flushTimeout,
+        AwsLambdaSqsInstrumenterFactory.forEvent(openTelemetrySdk, INSTRUMENTATION_NAME));
   }
 
   /**

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
+package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
@@ -27,7 +27,7 @@ import java.util.function.BiFunction;
  * env property OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER in package.ClassName::methodName format
  */
 abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, O> {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-2.2";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-3.11";
 
   private final WrappedLambda wrappedLambda;
   private final Method targetMethod;
