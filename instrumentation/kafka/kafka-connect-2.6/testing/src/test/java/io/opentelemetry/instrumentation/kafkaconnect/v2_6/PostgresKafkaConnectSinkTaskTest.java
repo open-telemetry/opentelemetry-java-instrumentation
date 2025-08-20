@@ -417,7 +417,7 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         adminClient.close();
       } catch (RuntimeException e) {
-        System.err.println("Error closing AdminClient: " + e.getMessage());
+        logger.error("Error closing AdminClient: " + e.getMessage());
       }
     }
 
@@ -427,7 +427,7 @@ class PostgresKafkaConnectSinkTaskTest {
         kafkaConnect.stop();
       } catch (RuntimeException e) {
         // Log but don't fail cleanup
-        System.err.println("Error stopping Kafka Connect: " + e.getMessage());
+        logger.error("Error stopping Kafka Connect: " + e.getMessage());
       }
     }
 
@@ -435,7 +435,7 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         postgreSql.stop();
       } catch (RuntimeException e) {
-        System.err.println("Error stopping PostgreSQL: " + e.getMessage());
+        logger.error("Error stopping PostgreSQL: " + e.getMessage());
       }
     }
 
@@ -443,7 +443,7 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         kafka.stop();
       } catch (RuntimeException e) {
-        System.err.println("Error stopping Kafka: " + e.getMessage());
+        logger.error("Error stopping Kafka: " + e.getMessage());
       }
     }
 
@@ -451,7 +451,7 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         zookeeper.stop();
       } catch (RuntimeException e) {
-        System.err.println("Error stopping Zookeeper: " + e.getMessage());
+        logger.error("Error stopping Zookeeper: " + e.getMessage());
       }
     }
 
@@ -459,7 +459,7 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         backend.stop();
       } catch (RuntimeException e) {
-        System.err.println("Error stopping backend: " + e.getMessage());
+        logger.error("Error stopping backend: " + e.getMessage());
       }
     }
 
@@ -467,7 +467,7 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         network.close();
       } catch (RuntimeException e) {
-        System.err.println("Error closing network: " + e.getMessage());
+        logger.error("Error closing network: " + e.getMessage());
       }
     }
 
@@ -522,9 +522,9 @@ class PostgresKafkaConnectSinkTaskTest {
     // Remove this problematic cleanup code:
     // try (AdminClient adminClient = createAdminClient()) {
     //     adminClient.deleteTopics(Collections.singletonList(TOPIC_NAME)).all().get();
-    //     System.out.println("Deleted existing topic: " + TOPIC_NAME);
+    //     logger.info("Deleted existing topic: " + TOPIC_NAME);
     // } catch (e instanceof InterruptedException) {
-    //     System.out.println("Topic cleanup: " + e.getMessage());
+    //     logger.info("Topic cleanup: " + e.getMessage());
     // }
   }
 

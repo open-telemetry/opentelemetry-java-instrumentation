@@ -489,7 +489,7 @@ class MongoKafkaConnectSinkTaskTest {
     try (ServerSocket serverSocket = new ServerSocket(0)) {
       return serverSocket.getLocalPort();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("Failed to get random free port", e);
       return 0;
     }
   }
