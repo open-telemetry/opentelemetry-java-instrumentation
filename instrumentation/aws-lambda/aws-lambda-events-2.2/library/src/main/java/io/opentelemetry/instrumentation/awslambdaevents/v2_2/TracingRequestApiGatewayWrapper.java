@@ -9,7 +9,7 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
-import io.opentelemetry.instrumentation.awslambdaevents.v2_2.internal.SerializationUtil;
+import io.opentelemetry.instrumentation.awslambdaevents.internal.SerializationUtil;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.util.function.BiFunction;
 
