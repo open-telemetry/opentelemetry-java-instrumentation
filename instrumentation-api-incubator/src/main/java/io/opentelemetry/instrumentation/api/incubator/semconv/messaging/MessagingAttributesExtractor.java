@@ -140,6 +140,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
    * any time.
    */
   @Override
+  @Nullable
   public SpanKey internalGetSpanKey() {
     if (operation == null) {
       return null;

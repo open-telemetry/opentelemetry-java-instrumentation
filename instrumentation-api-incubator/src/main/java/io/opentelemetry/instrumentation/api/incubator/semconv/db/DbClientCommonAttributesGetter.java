@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import static java.util.Objects.requireNonNull;
+
 import javax.annotation.Nullable;
 
 /** An interface for getting attributes common to database clients. */
@@ -17,9 +19,10 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   // TODO: make this required to implement
-  @Nullable
   default String getDbSystem(REQUEST request) {
-    return getSystem(request);
+    // this method will become abstract in
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14460
+    return requireNonNull(getSystem(request));
   }
 
   @Deprecated
