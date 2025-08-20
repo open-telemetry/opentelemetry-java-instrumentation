@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
@@ -99,7 +100,10 @@ class ManifestResourceProviderTest {
 
                       if (t.existing.getAttributes().isEmpty()) {
                         // component provider does not consider existing resource
-                        assertThat(provider.createUnconditional().getAttributes())
+                        assertThat(
+                                provider
+                                    .createResource(DeclarativeConfigProperties.empty())
+                                    .getAttributes())
                             .isEqualTo(resource.getAttributes());
                       }
                     }))
