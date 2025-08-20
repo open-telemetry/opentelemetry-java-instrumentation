@@ -10,26 +10,11 @@ import javax.annotation.Nullable;
 /** An interface for getting attributes common to database clients. */
 public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
 
-  @Deprecated
-  @Nullable
-  default String getSystem(REQUEST request) {
-    return null;
-  }
-
   String getDbSystem(REQUEST request);
 
   @Deprecated
   @Nullable
   default String getUser(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * @deprecated Use {@link #getDbNamespace(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getName(REQUEST request) {
     return null;
   }
 
