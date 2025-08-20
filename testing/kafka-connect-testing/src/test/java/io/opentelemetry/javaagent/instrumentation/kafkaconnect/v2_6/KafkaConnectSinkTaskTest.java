@@ -52,6 +52,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -65,6 +67,8 @@ import org.testcontainers.utility.DockerImageName;
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
 @SuppressWarnings({"rawtypes", "unchecked", "deprecation", "unused"})
 class KafkaConnectSinkTaskTest {
+
+  private static final Logger logger = LoggerFactory.getLogger(KafkaConnectSinkTaskTest.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -230,7 +234,7 @@ class KafkaConnectSinkTaskTest {
   @BeforeEach
   public void reset() throws InterruptedException {
     // Remove connector after each test
-    System.out.println("Deleting connector [ " + CONNECTOR_NAME + " ] if exists");
+    logger.info("Deleting connector [ {} ] if exists", CONNECTOR_NAME);
     given()
         .log()
         .headers()
@@ -245,15 +249,15 @@ class KafkaConnectSinkTaskTest {
     // Add topic cleanup
     // try (AdminClient adminClient = createAdminClient()) {
     //     adminClient.deleteTopics(Collections.singletonList(TOPIC_NAME)).all().get();
-    //     System.out.println("Deleted existing topic: " + TOPIC_NAME);
+    //     logger.info("Deleted existing topic: " + TOPIC_NAME);
     // } catch (Exception e) {
     //     if (e instanceof InterruptedException) {
     //         Thread.currentThread().interrupt();
     //         throw new RuntimeException("Failed to create topic: " + TOPIC_NAME, e);
     //     } else if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
-    //         System.out.println("Topic already exists: " + TOPIC_NAME);
+    //         logger.info("Topic already exists: " + TOPIC_NAME);
     //     } else {
-    //         System.out.println("Error creating topic: " + e.getMessage());
+    //         logger.info("Error creating topic: " + e.getMessage());
     //         throw new RuntimeException("Failed to create topic: " + TOPIC_NAME, e);
     //     }
     // }
@@ -261,7 +265,7 @@ class KafkaConnectSinkTaskTest {
 
   @Test
   public void testKafkaConnectSinkTaskInstrumentation() throws Exception {
-    System.out.println("=== Starting Kafka Connect SinkTask instrumentation test ===");
+    logger.info("=== Starting Kafka Connect SinkTask instrumentation test ===");
 
     // Create unique topic name first
     String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
@@ -270,23 +274,23 @@ class KafkaConnectSinkTaskTest {
     setupSinkConnector(uniqueTopicName);
 
     // Create topic first
-    System.out.println("Creating topic...");
+    logger.info("Creating topic...");
     createTopic(uniqueTopicName);
-    System.out.println("Topic created");
+    logger.info("Topic created");
 
     // Wait for topic to be available
-    System.out.println("Awaiting topic creation...");
+    logger.info("Awaiting topic creation...");
     awaitForTopicCreation(uniqueTopicName);
-    System.out.println("Topic creation complete");
+    logger.info("Topic creation complete");
 
     // Produce messages to Kafka WITHOUT manual tracing
     // This ensures we only see SinkTask spans, not producer spans
-    System.out.println("Producing messages without manual spans...");
+    logger.info("Producing messages without manual spans...");
     produceMessagesWithoutTracing(uniqueTopicName);
-    System.out.println("Messages produced");
+    logger.info("Messages produced");
 
     // Wait for Kafka Connect to process the messages
-    System.out.println("Waiting for Kafka Connect to process messages...");
+    logger.info("Waiting for Kafka Connect to process messages...");
     await()
         .atMost(Duration.ofSeconds(60))
         .pollInterval(Duration.ofSeconds(1))
@@ -294,10 +298,10 @@ class KafkaConnectSinkTaskTest {
             () -> {
               try {
                 int count = getRecordCountFromPostgres();
-                System.out.println("Current record count in PostgreSQL: " + count);
+                logger.info("Current record count in PostgreSQL: " + count);
                 return count >= 2; // Expecting 2 messages
               } catch (Exception e) {
-                System.out.println("Error checking PostgreSQL: " + e.getMessage());
+                logger.info("Error checking PostgreSQL: " + e.getMessage());
                 return false;
               }
             });
@@ -314,29 +318,28 @@ class KafkaConnectSinkTaskTest {
     Thread.sleep(3000);
 
     // Debug: Print all traces to see what spans are created
-    System.out.println("=== All Traces ===");
+    logger.info("=== All Traces ===");
     // Add this debugging
-    System.out.println("=== Checking SinkTask instrumentation ===");
+    logger.info("=== Checking SinkTask instrumentation ===");
     try {
       Class.forName(
           "io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6.SinkTaskInstrumentation");
-      System.out.println("✅ SinkTask instrumentation class found");
+      logger.info("✅ SinkTask instrumentation class found");
     } catch (ClassNotFoundException e) {
-      System.out.println("❌ SinkTask instrumentation class NOT found: " + e.getMessage());
+      logger.info("❌ SinkTask instrumentation class NOT found: " + e.getMessage());
     }
     // Use the actual number of traces found
     List<List<SpanData>> allTraces =
         testing.waitForTraces(2); // Wait for the 2 producer traces we know exist
-    System.out.println("Found " + allTraces.size() + " traces");
+    logger.info("Found " + allTraces.size() + " traces");
 
     allTraces.forEach(
         trace -> {
-          System.out.println("Trace: " + trace.size() + " spans");
+          logger.info("Trace: " + trace.size() + " spans");
           trace.forEach(
               span -> {
-                System.out.println("  - " + span.getName() + " (" + span.getKind() + ")");
-                System.out.println(
-                    "    Instrumentation: " + span.getInstrumentationScopeInfo().getName());
+                logger.info("  - " + span.getName() + " (" + span.getKind() + ")");
+                logger.info("    Instrumentation: " + span.getInstrumentationScopeInfo().getName());
               });
         });
 
@@ -351,7 +354,7 @@ class KafkaConnectSinkTaskTest {
                         || span.getName().contains("KafkaConnect"));
 
     if (foundSinkTaskSpan) {
-      System.out.println("✅ Found SinkTask instrumentation spans!");
+      logger.info("✅ Found SinkTask instrumentation spans!");
 
       // Verify SinkTask spans
       testing.waitAndAssertTraces(
@@ -365,11 +368,11 @@ class KafkaConnectSinkTaskTest {
                               equalTo(MESSAGING_DESTINATION_NAME, uniqueTopicName),
                               equalTo(MESSAGING_OPERATION, "process"))));
     } else {
-      System.out.println("❌ No SinkTask instrumentation spans found");
-      System.out.println("This might indicate:");
-      System.out.println("1. SinkTask instrumentation is not working");
-      System.out.println("2. SinkTask spans are named differently");
-      System.out.println("3. SinkTask spans are in different traces");
+      logger.info("❌ No SinkTask instrumentation spans found");
+      logger.info("This might indicate:");
+      logger.info("1. SinkTask instrumentation is not working");
+      logger.info("2. SinkTask spans are named differently");
+      logger.info("3. SinkTask spans are in different traces");
 
       // For now, just verify that the data processing worked
       // (even if we can't see the spans)
@@ -398,14 +401,14 @@ class KafkaConnectSinkTaskTest {
               "2",
               "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":2,\"name\":\"Bob\"}}"));
       producer.flush();
-      System.out.println("Produced 2 messages to Kafka topic: " + topicName);
+      logger.info("Produced 2 messages to Kafka topic: " + topicName);
     }
   }
 
   // Alternative test that focuses specifically on SinkTask behavior
   @Test
   public void testSinkTaskSpanCreation() throws Exception {
-    System.out.println("=== Testing SinkTask span creation ===");
+    logger.info("=== Testing SinkTask span creation ===");
 
     String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
     setupSinkConnector(uniqueTopicName);
@@ -436,17 +439,16 @@ class KafkaConnectSinkTaskTest {
     // Collect all spans and look for SinkTask-related ones
     List<List<SpanData>> allTraces = testing.waitForTraces(3);
 
-    System.out.println("=== Analyzing spans for SinkTask instrumentation ===");
+    logger.info("=== Analyzing spans for SinkTask instrumentation ===");
     allTraces.forEach(
         trace -> {
           trace.forEach(
               span -> {
-                System.out.println("Span: " + span.getName());
-                System.out.println("  Kind: " + span.getKind());
-                System.out.println(
-                    "  Instrumentation: " + span.getInstrumentationScopeInfo().getName());
-                System.out.println("  Attributes: " + span.getAttributes());
-                System.out.println("---");
+                logger.info("Span: " + span.getName());
+                logger.info("  Kind: " + span.getKind());
+                logger.info("  Instrumentation: " + span.getInstrumentationScopeInfo().getName());
+                logger.info("  Attributes: " + span.getAttributes());
+                logger.info("---");
               });
         });
 
@@ -465,11 +467,11 @@ class KafkaConnectSinkTaskTest {
             .collect(Collectors.toList());
 
     if (!connectSpans.isEmpty()) {
-      System.out.println("✅ Found " + connectSpans.size() + " Kafka Connect related spans:");
-      connectSpans.forEach(span -> System.out.println("  - " + span.getName()));
+      logger.info("✅ Found " + connectSpans.size() + " Kafka Connect related spans:");
+      connectSpans.forEach(span -> logger.info("  - " + span.getName()));
     } else {
-      System.out.println("❌ No Kafka Connect spans found");
-      System.out.println(
+      logger.info("❌ No Kafka Connect spans found");
+      logger.info(
           "Available span names: "
               + allSpans.stream().map(SpanData::getName).collect(Collectors.toList()));
     }
@@ -480,45 +482,45 @@ class KafkaConnectSinkTaskTest {
 
   @Test
   public void testBasicProducerOnly() throws Exception {
-    System.out.println("=== Starting basic producer test ===");
+    logger.info("=== Starting basic producer test ===");
 
     // Create topic first
-    System.out.println("Creating topic...");
+    logger.info("Creating topic...");
     String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
     createTopic(uniqueTopicName);
-    System.out.println("Topic created");
+    logger.info("Topic created");
 
     // Wait for topic to be available
-    System.out.println("Awaiting topic creation...");
+    logger.info("Awaiting topic creation...");
     awaitForTopicCreation(uniqueTopicName);
-    System.out.println("Topic creation complete");
+    logger.info("Topic creation complete");
 
     // Just test the producer instrumentation
-    System.out.println("Starting producer span...");
+    logger.info("Starting producer span...");
     testing.runWithSpan(
         "test-producer",
         () -> {
-          System.out.println("Inside producer span, calling produceMessagesToKafka...");
+          logger.info("Inside producer span, calling produceMessagesToKafka...");
           produceMessagesToKafka();
-          System.out.println("produceMessagesToKafka complete");
+          logger.info("produceMessagesToKafka complete");
         });
-    System.out.println("Producer span complete");
+    logger.info("Producer span complete");
 
     // Wait a bit for traces to be processed
     Thread.sleep(2000);
 
     // Debug: Print all traces
-    // System.out.println("=== All Traces ===");
+    // logger.info("=== All Traces ===");
     // List<List<SpanData>> allTraces = testing.waitForTraces(5);
-    // System.out.println("Found " + allTraces.size() + " traces");
+    // logger.info("Found " + allTraces.size() + " traces");
     // allTraces.forEach(trace -> {
-    //     System.out.println("Trace: " + trace.size() + " spans");
+    //     logger.info("Trace: " + trace.size() + " spans");
     //     trace.forEach(span -> {
-    //         System.out.println("  - " + span.getName() + " (" + span.getKind() + ")");
+    //         logger.info("  - " + span.getName() + " (" + span.getKind() + ")");
     //     });
     // });
 
-    System.out.println("=== All Traces ===");
+    logger.info("=== All Traces ===");
     // Verify only the producer trace
     testing.waitAndAssertTraces(
         trace ->
@@ -569,9 +571,9 @@ class KafkaConnectSinkTaskTest {
     // Remove this problematic cleanup code:
     // try (AdminClient adminClient = createAdminClient()) {
     //     adminClient.deleteTopics(Collections.singletonList(TOPIC_NAME)).all().get();
-    //     System.out.println("Deleted existing topic: " + TOPIC_NAME);
+    //     logger.info("Deleted existing topic: " + TOPIC_NAME);
     // } catch (e instanceof InterruptedException) {
-    //     System.out.println("Topic cleanup: " + e.getMessage());
+    //     logger.info("Topic cleanup: " + e.getMessage());
     // }
   }
 
@@ -591,7 +593,7 @@ class KafkaConnectSinkTaskTest {
               "1",
               "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":1,\"name\":\"Alice\"}}"));
       producer.flush();
-      System.out.println("Produced 1 message to Kafka topic: " + TOPIC_NAME);
+      logger.info("Produced 1 message to Kafka topic: " + TOPIC_NAME);
     }
   }
 
@@ -599,15 +601,15 @@ class KafkaConnectSinkTaskTest {
     try (AdminClient adminClient = createAdminClient()) {
       NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
       adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
-      System.out.println("Created topic: " + topicName);
+      logger.info("Created topic: " + topicName);
     } catch (Exception e) {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
         throw new RuntimeException("Failed to create topic: " + topicName, e);
       } else if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
-        System.out.println("Topic already exists: " + topicName);
+        logger.info("Topic already exists: " + topicName);
       } else {
-        System.out.println("Error creating topic: " + e.getMessage());
+        logger.info("Error creating topic: " + e.getMessage());
         throw new RuntimeException("Failed to create topic: " + topicName, e);
       }
     }
@@ -660,7 +662,7 @@ class KafkaConnectSinkTaskTest {
     try (ServerSocket serverSocket = new ServerSocket(0)) {
       return serverSocket.getLocalPort();
     } catch (IOException e) {
-      e.printStackTrace();
+      logger.error("Failed to get random free port", e);
       return 0;
     }
   }
