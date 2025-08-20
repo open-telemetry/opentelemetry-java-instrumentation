@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.instrumenter;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.emptyMap;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.when;
 
@@ -87,7 +88,7 @@ class InstrumenterTest {
         Map<String, String> request,
         @Nullable Map<String, String> response,
         @Nullable Throwable error) {
-      attributes.put("resp1", response.get("resp1"));
+      attributes.put("resp1", requireNonNull(response).get("resp1"));
       attributes.put("resp2", response.get("resp2"));
     }
   }
@@ -109,7 +110,7 @@ class InstrumenterTest {
         Map<String, String> request,
         @Nullable Map<String, String> response,
         @Nullable Throwable error) {
-      attributes.put("resp3", response.get("resp3"));
+      attributes.put("resp3", requireNonNull(response).get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
     }
   }
