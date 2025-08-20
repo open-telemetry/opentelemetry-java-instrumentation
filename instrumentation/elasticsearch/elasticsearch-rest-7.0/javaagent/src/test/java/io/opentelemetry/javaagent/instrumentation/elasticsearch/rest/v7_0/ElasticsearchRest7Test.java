@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -113,7 +112,6 @@ class ElasticsearchRest7Test {
     assertDurationMetric(
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
-        DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);

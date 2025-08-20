@@ -2275,10 +2275,8 @@ libraries:
       default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
-    description: This instrumentation extends the elasticsearch-rest-7.0 instrumentation
-      by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index`
-      attributes to Elasticsearch CLIENT spans. Versions 8.10 and later of the client
-      have native support for OpenTelemetry.
+    description: |
+      This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to Elasticsearch CLIENT spans. Versions 8.10 and later of the client have native support for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -2342,7 +2340,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-5.0
-    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -2353,10 +2352,14 @@ libraries:
     configurations:
     - name: otel.instrumentation.elasticsearch.capture-search-query
       description: |
-        Enable the capture of search query bodies. It is important to note that Elasticsearch queries
-        may contain personal or sensitive information.
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2372,8 +2375,35 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-6.4
-    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    description: TThis instrumentation enables database CLIENT spans and metrics for
+      Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -2386,6 +2416,11 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2401,8 +2436,35 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-7.0
-    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -2417,6 +2479,11 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2432,9 +2499,35 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-transport-5.0
     description: |
-      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -2444,9 +2537,15 @@ libraries:
       - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of `elasticsearch.request.write.type` and `elasticsearch.request.write.routing` experimental span attributes.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:

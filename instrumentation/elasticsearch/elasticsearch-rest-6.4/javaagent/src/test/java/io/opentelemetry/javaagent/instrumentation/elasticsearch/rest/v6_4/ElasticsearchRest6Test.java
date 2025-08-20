@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -85,35 +84,33 @@ class ElasticsearchRest6Test {
     assertThat(result.get("status")).isEqualTo("green");
 
     testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                          equalTo(SERVER_PORT, httpHost.getPort()),
-                          equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
-              span ->
-                  span.hasName("GET")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                          equalTo(SERVER_PORT, httpHost.getPort()),
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                          equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)));
-        });
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(maybeStable(DB_SYSTEM), "elasticsearch"),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
 
     assertDurationMetric(
         testing,
         "io.opentelemetry.elasticsearch-rest-6.4",
-        DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
@@ -149,10 +146,7 @@ class ElasticsearchRest6Test {
           }
         };
     testing.runWithSpan(
-        "parent",
-        () -> {
-          client.performRequestAsync("GET", "_cluster/health", responseListener);
-        });
+        "parent", () -> client.performRequestAsync("GET", "_cluster/health", responseListener));
     countDownLatch.await();
 
     if (exception[0] != null) {
