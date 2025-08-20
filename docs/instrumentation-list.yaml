@@ -2267,12 +2267,12 @@ libraries:
       javaagent:
       - io.dropwizard:dropwizard-views:(,3.0.0)
     configurations:
-    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+    - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+      description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
     telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
         attributes: []
