@@ -2258,8 +2258,6 @@ libraries:
       type: boolean
       default: false
   - name: dropwizard-views-0.7
-    description: This instrumentation enables the creation of spans for Dropwizard
-      views.
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2271,11 +2269,10 @@ libraries:
       description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
-    telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes: []
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
   elasticsearch:
   - name: elasticsearch-api-client-7.16
     description: This instrumentation extends the elasticsearch-rest-7.0 instrumentation
@@ -2360,6 +2357,21 @@ libraries:
         may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-6.4
     description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
@@ -2374,6 +2386,21 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-7.0
     description: This instrumentation enables tracing for Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0

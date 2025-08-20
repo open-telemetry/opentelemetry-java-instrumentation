@@ -130,16 +130,15 @@ readonly INSTRUMENTATIONS=(
 #  "couchbase:couchbase-2.6:javaagent:test"
 #  "couchbase:couchbase-2.6:javaagent:testStableSemconv"
 #  "couchbase:couchbase-2.6:javaagent:testExperimental"
-#  "dropwizard:dropwizard-views-0.7:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
 #  container.
 # shellcheck disable=SC2034
 readonly COLIMA_INSTRUMENTATIONS=(
-#  "spring:spring-jms:spring-jms-6.0:javaagent:test"
+  "spring:spring-jms:spring-jms-6.0:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
-#  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
-#  "oracle-ucp-11.2:javaagent:test"
-#  "oracle-ucp-11.2:javaagent:testStableSemconv"
+  "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
+  "oracle-ucp-11.2:javaagent:test"
+  "oracle-ucp-11.2:javaagent:testStableSemconv"
 )

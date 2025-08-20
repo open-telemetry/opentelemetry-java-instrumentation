@@ -143,26 +143,26 @@ find_and_remove_all_telemetry() {
 
 # Main execution
 main() {
-#  colima stop
+  colima stop
 
   # Process regular instrumentations
-#  echo "Processing standard instrumentations..."
-#  gradle_tasks=()
-#  while IFS= read -r line; do
-#    gradle_tasks+=("$line")
-#  done < <(process_descriptors "${INSTRUMENTATIONS[@]}")
-#  run_gradle_tasks "${gradle_tasks[@]}"
-
-  # Setup colima if needed
-  setup_colima
-
-  # Process colima-specific instrumentations
-  echo "Processing colima instrumentations..."
+  echo "Processing standard instrumentations..."
   gradle_tasks=()
   while IFS= read -r line; do
     gradle_tasks+=("$line")
-  done < <(process_descriptors "${COLIMA_INSTRUMENTATIONS[@]}")
+  done < <(process_descriptors "${INSTRUMENTATIONS[@]}")
   run_gradle_tasks "${gradle_tasks[@]}"
+
+  # Setup colima if needed
+#  setup_colima
+
+  # Process colima-specific instrumentations
+#  echo "Processing colima instrumentations..."
+#  gradle_tasks=()
+#  while IFS= read -r line; do
+#    gradle_tasks+=("$line")
+#  done < <(process_descriptors "${COLIMA_INSTRUMENTATIONS[@]}")
+#  run_gradle_tasks "${gradle_tasks[@]}"
 
 #  colima stop
 
