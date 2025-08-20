@@ -9,6 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ConditionalResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
@@ -69,8 +70,8 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
     return create(filteredKeys);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  protected final Resource createUnconditional() {
+  @SuppressWarnings({"unchecked", "rawtypes", "unused"})
+  public final Resource createResource(DeclarativeConfigProperties config) {
     return create((Set) attributeGetters.keySet());
   }
 
