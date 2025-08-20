@@ -14,7 +14,6 @@ import static org.awaitility.Awaitility.await;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import java.util.Locale;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.restassured.http.ContentType;
@@ -30,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -67,7 +67,8 @@ import org.testcontainers.utility.MountableFile;
 @SuppressWarnings({"rawtypes", "unchecked", "deprecation", "unused"})
 class PostgresKafkaConnectSinkTaskTest {
 
-  private static final Logger logger = LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
+  private static final Logger logger =
+      LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -113,17 +114,18 @@ class PostgresKafkaConnectSinkTaskTest {
 
   private static AdminClient adminClient;
 
-
   // Static methods
   private static String getKafkaConnectUrl() {
     return format(
         Locale.ROOT,
         "http://%s:%s",
-        kafkaConnect.getHost(), kafkaConnect.getMappedPort(CONNECT_REST_PORT_INTERNAL));
+        kafkaConnect.getHost(),
+        kafkaConnect.getMappedPort(CONNECT_REST_PORT_INTERNAL));
   }
 
   private static String getBackendUrl() {
-    return format(Locale.ROOT, "http://%s:%d", backend.getHost(), backend.getMappedPort(BACKEND_PORT));
+    return format(
+        Locale.ROOT, "http://%s:%d", backend.getHost(), backend.getMappedPort(BACKEND_PORT));
   }
 
   private static String getInternalKafkaBoostrapServers() {
@@ -144,19 +146,26 @@ class PostgresKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
-    
+
     network = Network.newNetwork();
 
     // Start backend container first (like smoke tests)
-    backend = new GenericContainer<>(DockerImageName.parse(
-            "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891"))
-        .withExposedPorts(BACKEND_PORT)
-        .withNetwork(network)
-        .withNetworkAliases(BACKEND_ALIAS)
-        .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT).withStartupTimeout(Duration.of(5, MINUTES)))
-        .withStartupTimeout(Duration.of(5, MINUTES))
-        .withEnv("DOCKER_DEFAULT_PLATFORM", "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
-    
+    backend =
+        new GenericContainer<>(
+                DockerImageName.parse(
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891"))
+            .withExposedPorts(BACKEND_PORT)
+            .withNetwork(network)
+            .withNetworkAliases(BACKEND_ALIAS)
+            .waitingFor(
+                Wait.forHttp("/health")
+                    .forPort(BACKEND_PORT)
+                    .withStartupTimeout(Duration.of(5, MINUTES)))
+            .withStartupTimeout(Duration.of(5, MINUTES))
+            .withEnv(
+                "DOCKER_DEFAULT_PLATFORM",
+                "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
+
     backend.start();
 
     zookeeper =
@@ -207,7 +216,8 @@ class PostgresKafkaConnectSinkTaskTest {
     // Get the agent path from system properties
     String agentPath = System.getProperty("otel.javaagent.testing.javaagent-jar-path");
     if (agentPath == null) {
-        throw new IllegalStateException("Agent path not found. Make sure the test is run with the agent.");
+      throw new IllegalStateException(
+          "Agent path not found. Make sure the test is run with the agent.");
     }
 
     kafkaConnect =
@@ -215,19 +225,19 @@ class PostgresKafkaConnectSinkTaskTest {
             .withNetwork(network)
             .withNetworkAliases(KAFKA_CONNECT_NETWORK_ALIAS)
             .withExposedPorts(CONNECT_REST_PORT_INTERNAL)
-            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
+            .withLogConsumer(
+                new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
             // Copy the agent jar to the container
             .withCopyFileToContainer(
-                MountableFile.forHostPath(agentPath), 
-                "/opentelemetry-javaagent.jar")
+                MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
             // Configure the agent to export spans to backend (like smoke tests)
-            .withEnv("JAVA_TOOL_OPTIONS", 
-                "-javaagent:/opentelemetry-javaagent.jar " +
-                "-Dotel.javaagent.debug=true")
+            .withEnv(
+                "JAVA_TOOL_OPTIONS",
+                "-javaagent:/opentelemetry-javaagent.jar " + "-Dotel.javaagent.debug=true")
             // Disable test exporter and force OTLP exporter
             .withEnv("OTEL_TESTING_EXPORTER_ENABLED", "false")
             .withEnv("OTEL_TRACES_EXPORTER", "otlp")
-            .withEnv("OTEL_METRICS_EXPORTER", "none") 
+            .withEnv("OTEL_METRICS_EXPORTER", "none")
             .withEnv("OTEL_LOGS_EXPORTER", "none")
             .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + BACKEND_ALIAS + ":" + BACKEND_PORT)
             .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
@@ -237,7 +247,8 @@ class PostgresKafkaConnectSinkTaskTest {
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBoostrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)
-            .withEnv("CONNECT_LOG4J_LOGGERS", "org.reflections=ERROR,org.apache.kafka.connect=DEBUG")
+            .withEnv(
+                "CONNECT_LOG4J_LOGGERS", "org.reflections=ERROR,org.apache.kafka.connect=DEBUG")
             .withEnv("CONNECT_REST_PORT", String.valueOf(CONNECT_REST_PORT_INTERNAL))
             .withEnv("CONNECT_GROUP_ID", "kafka-connect-group")
             .withEnv("CONNECT_CONFIG_STORAGE_TOPIC", "kafka-connect-configs")
@@ -248,7 +259,10 @@ class PostgresKafkaConnectSinkTaskTest {
             .withEnv("CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_STATUS_STORAGE_REPLICATION_FACTOR", "1")
-            .waitingFor(Wait.forHttp("/").forPort(CONNECT_REST_PORT_INTERNAL).withStartupTimeout(Duration.of(5, MINUTES)))
+            .waitingFor(
+                Wait.forHttp("/")
+                    .forPort(CONNECT_REST_PORT_INTERNAL)
+                    .withStartupTimeout(Duration.of(5, MINUTES)))
             .withStartupTimeout(Duration.of(5, MINUTES))
             .withCommand(
                 "bash",
@@ -289,11 +303,7 @@ class PostgresKafkaConnectSinkTaskTest {
   private static void clearBackendTraces() {
     try {
       String backendUrl = getBackendUrl();
-      given()
-          .when()
-          .get(backendUrl + "/clear")
-          .then()
-          .statusCode(200);
+      given().when().get(backendUrl + "/clear").then().statusCode(200);
     } catch (RuntimeException e) {
       // Ignore failures to clear traces
     }
@@ -331,38 +341,37 @@ class PostgresKafkaConnectSinkTaskTest {
 
     // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
     String backendUrl = getBackendUrl();
-    await().atMost(Duration.ofSeconds(30)).until(() -> {
-      try {
-        String traces = given()
-            .when()
-            .get(backendUrl + "/get-traces")
-            .then()
-            .statusCode(200)
-            .extract()
-            .asString();
-        
-        return !traces.equals("[]");
-      } catch (RuntimeException e) {
-        return false;
-      }
-    });
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .until(
+            () -> {
+              try {
+                String traces =
+                    given()
+                        .when()
+                        .get(backendUrl + "/get-traces")
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .asString();
+
+                return !traces.equals("[]");
+              } catch (RuntimeException e) {
+                return false;
+              }
+            });
 
     // Retrieve and verify spans
-    String tracesJson = given()
-        .when()
-        .get(backendUrl + "/get-traces")
-        .then()
-        .statusCode(200)
-        .extract()
-        .asString();
+    String tracesJson =
+        given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
 
     // Parse and analyze spans
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode tracesNode = objectMapper.readTree(tracesJson);
-    
+
     boolean foundKafkaConnectSpan = false;
     int spanCount = 0;
-    
+
     for (JsonNode trace : tracesNode) {
       JsonNode resourceSpans = trace.get("resourceSpans");
       if (resourceSpans != null && resourceSpans.isArray()) {
@@ -374,16 +383,16 @@ class PostgresKafkaConnectSinkTaskTest {
               if (spans != null && spans.isArray()) {
                 for (JsonNode span : spans) {
                   spanCount++;
-                  
+
                   JsonNode nameNode = span.get("name");
                   if (nameNode != null) {
                     String spanName = nameNode.asText();
-                    
+
                     // Check for Kafka Connect spans
-                    if (spanName.toLowerCase(Locale.ROOT).contains("kafka") ||
-                        spanName.toLowerCase(Locale.ROOT).contains("connect") || 
-                        spanName.toLowerCase(Locale.ROOT).contains("put") ||
-                        spanName.toLowerCase(Locale.ROOT).contains("sink")) {
+                    if (spanName.toLowerCase(Locale.ROOT).contains("kafka")
+                        || spanName.toLowerCase(Locale.ROOT).contains("connect")
+                        || spanName.toLowerCase(Locale.ROOT).contains("put")
+                        || spanName.toLowerCase(Locale.ROOT).contains("sink")) {
                       foundKafkaConnectSpan = true;
                     }
                   }
@@ -394,15 +403,11 @@ class PostgresKafkaConnectSinkTaskTest {
         }
       }
     }
-    
+
     // Verify spans were found
-    assertThat(spanCount)
-        .as("Should find at least one span")
-        .isGreaterThan(0);
-        
-    assertThat(foundKafkaConnectSpan)
-        .as("Should find at least one Kafka Connect span")
-        .isTrue();
+    assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
+
+    assertThat(foundKafkaConnectSpan).as("Should find at least one Kafka Connect span").isTrue();
   }
 
   @AfterAll
@@ -415,7 +420,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error closing AdminClient: " + e.getMessage());
       }
     }
-    
+
     // Stop all containers in reverse order of startup to ensure clean shutdown
     if (kafkaConnect != null) {
       try {
@@ -425,7 +430,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error stopping Kafka Connect: " + e.getMessage());
       }
     }
-    
+
     if (postgreSql != null) {
       try {
         postgreSql.stop();
@@ -433,7 +438,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error stopping PostgreSQL: " + e.getMessage());
       }
     }
-    
+
     if (kafka != null) {
       try {
         kafka.stop();
@@ -441,7 +446,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error stopping Kafka: " + e.getMessage());
       }
     }
-    
+
     if (zookeeper != null) {
       try {
         zookeeper.stop();
@@ -449,7 +454,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error stopping Zookeeper: " + e.getMessage());
       }
     }
-    
+
     if (backend != null) {
       try {
         backend.stop();
@@ -457,7 +462,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error stopping backend: " + e.getMessage());
       }
     }
-    
+
     if (network != null) {
       try {
         network.close();
@@ -465,7 +470,7 @@ class PostgresKafkaConnectSinkTaskTest {
         System.err.println("Error closing network: " + e.getMessage());
       }
     }
-    
+
     // Small delay to ensure containers are fully stopped before next test
     try {
       Thread.sleep(2000);
@@ -481,7 +486,11 @@ class PostgresKafkaConnectSinkTaskTest {
     configMap.put("tasks.max", "1");
     configMap.put(
         "connection.url",
-        format(Locale.ROOT, "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF", POSTGRES_NETWORK_ALIAS, DB_NAME));
+        format(
+            Locale.ROOT,
+            "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF",
+            POSTGRES_NETWORK_ALIAS,
+            DB_NAME));
     configMap.put("connection.user", DB_USERNAME);
     configMap.put("connection.password", DB_PASSWORD);
     configMap.put("topics", topicName);
@@ -613,5 +622,4 @@ class PostgresKafkaConnectSinkTaskTest {
         .log()
         .all();
   }
-
 }

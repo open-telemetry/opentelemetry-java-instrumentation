@@ -16,7 +16,8 @@ import java.util.logging.Logger;
 @AutoService(InstrumentationModule.class)
 public class KafkaConnectInstrumentationModule extends InstrumentationModule {
 
-  private static final Logger logger = Logger.getLogger(KafkaConnectInstrumentationModule.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(KafkaConnectInstrumentationModule.class.getName());
 
   public KafkaConnectInstrumentationModule() {
     super("kafka-connect", "kafka-connect-2.6");

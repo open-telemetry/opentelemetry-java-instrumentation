@@ -19,22 +19,21 @@ dependencies {
   library("org.apache.kafka:connect-api:2.6.0")
 
   testImplementation("org.apache.kafka:connect-runtime:2.6.0")
-
 }
 
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    
+
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    
+
     // Enable experimental span attributes and receive telemetry for comprehensive testing
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     // Set timeout for integration tests with containers
     systemProperty("junit.jupiter.execution.timeout.default", "5m")
   }
-  
+
   withType<JavaCompile>().configureEach {
     options.compilerArgs.add("-Xlint:-deprecation")
   }

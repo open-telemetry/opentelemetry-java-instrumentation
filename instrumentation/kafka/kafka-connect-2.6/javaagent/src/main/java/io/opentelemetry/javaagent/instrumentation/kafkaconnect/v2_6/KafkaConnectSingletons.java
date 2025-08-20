@@ -14,11 +14,12 @@ import org.apache.kafka.connect.sink.SinkRecord;
 public final class KafkaConnectSingletons {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-connect-2.6";
-  private static final TextMapPropagator PROPAGATOR = 
+  private static final TextMapPropagator PROPAGATOR =
       GlobalOpenTelemetry.get().getPropagators().getTextMapPropagator();
-  
-  private static final TextMapGetter<SinkRecord> SINK_RECORD_HEADER_GETTER = SinkRecordHeadersGetter.INSTANCE;
-  
+
+  private static final TextMapGetter<SinkRecord> SINK_RECORD_HEADER_GETTER =
+      SinkRecordHeadersGetter.INSTANCE;
+
   private static final Instrumenter<KafkaConnectTask, Void> INSTRUMENTER =
       Instrumenter.<KafkaConnectTask, Void>builder(
               GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, KafkaConnectTask::getSpanName)

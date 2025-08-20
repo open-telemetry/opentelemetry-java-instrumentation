@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
-
-import java.util.Locale;
-
 import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -29,6 +26,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -113,7 +111,8 @@ class MongoKafkaConnectSinkTaskTest {
     return format(
         Locale.ROOT,
         "http://%s:%s",
-        kafkaConnect.getHost(), kafkaConnect.getMappedPort(CONNECT_REST_PORT_INTERNAL));
+        kafkaConnect.getHost(),
+        kafkaConnect.getMappedPort(CONNECT_REST_PORT_INTERNAL));
   }
 
   private static String getInternalKafkaBoostrapServers() {
@@ -126,23 +125,32 @@ class MongoKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
-    
+
     network = Network.newNetwork();
 
     // Start backend container first (like smoke tests)
-    backend = new GenericContainer<>(DockerImageName.parse(
-            "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891"))
-        .withExposedPorts(BACKEND_PORT)
-        .withNetwork(network)
-        .withNetworkAliases(BACKEND_ALIAS)
-        .waitingFor(Wait.forHttp("/health").forPort(BACKEND_PORT).withStartupTimeout(Duration.of(5, MINUTES)))
-        .withStartupTimeout(Duration.of(5, MINUTES))
-        .withEnv("DOCKER_DEFAULT_PLATFORM", "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
-    
+    backend =
+        new GenericContainer<>(
+                DockerImageName.parse(
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891"))
+            .withExposedPorts(BACKEND_PORT)
+            .withNetwork(network)
+            .withNetworkAliases(BACKEND_ALIAS)
+            .waitingFor(
+                Wait.forHttp("/health")
+                    .forPort(BACKEND_PORT)
+                    .withStartupTimeout(Duration.of(5, MINUTES)))
+            .withStartupTimeout(Duration.of(5, MINUTES))
+            .withEnv(
+                "DOCKER_DEFAULT_PLATFORM",
+                "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
+
     logger.info("Starting backend container...");
     backend.start();
-    logger.info("Backend container started at: http://{}:{}", 
-        backend.getHost(), backend.getMappedPort(BACKEND_PORT));
+    logger.info(
+        "Backend container started at: http://{}:{}",
+        backend.getHost(),
+        backend.getMappedPort(BACKEND_PORT));
 
     zookeeper =
         new GenericContainer<>("confluentinc/cp-zookeeper:" + CONFLUENT_VERSION)
@@ -192,7 +200,8 @@ class MongoKafkaConnectSinkTaskTest {
     // Get the agent path from system properties
     String agentPath = System.getProperty("otel.javaagent.testing.javaagent-jar-path");
     if (agentPath == null) {
-        throw new IllegalStateException("Agent path not found. Make sure the test is run with the agent.");
+      throw new IllegalStateException(
+          "Agent path not found. Make sure the test is run with the agent.");
     }
     logger.info("=== AGENT JAR PATH: {} ===", agentPath);
     File agentFile = new File(agentPath);
@@ -205,19 +214,19 @@ class MongoKafkaConnectSinkTaskTest {
             .withNetwork(network)
             .withNetworkAliases(KAFKA_CONNECT_NETWORK_ALIAS)
             .withExposedPorts(CONNECT_REST_PORT_INTERNAL)
-            .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
+            .withLogConsumer(
+                new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
             // Copy the agent jar to the container
             .withCopyFileToContainer(
-                MountableFile.forHostPath(agentPath), 
-                "/opentelemetry-javaagent.jar")
+                MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
             // Configure the agent to export spans to backend (like smoke tests)
-            .withEnv("JAVA_TOOL_OPTIONS", 
-                "-javaagent:/opentelemetry-javaagent.jar " +
-                "-Dotel.javaagent.debug=true")
+            .withEnv(
+                "JAVA_TOOL_OPTIONS",
+                "-javaagent:/opentelemetry-javaagent.jar " + "-Dotel.javaagent.debug=true")
             // Disable test exporter and force OTLP exporter
             .withEnv("OTEL_TESTING_EXPORTER_ENABLED", "false")
             .withEnv("OTEL_TRACES_EXPORTER", "otlp")
-            .withEnv("OTEL_METRICS_EXPORTER", "none") 
+            .withEnv("OTEL_METRICS_EXPORTER", "none")
             .withEnv("OTEL_LOGS_EXPORTER", "none")
             .withEnv("OTEL_EXPORTER_OTLP_ENDPOINT", "http://" + BACKEND_ALIAS + ":" + BACKEND_PORT)
             .withEnv("OTEL_EXPORTER_OTLP_PROTOCOL", "grpc")
@@ -227,7 +236,8 @@ class MongoKafkaConnectSinkTaskTest {
             .withEnv("CONNECT_BOOTSTRAP_SERVERS", getInternalKafkaBoostrapServers())
             .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", KAFKA_CONNECT_NETWORK_ALIAS)
             .withEnv("CONNECT_PLUGIN_PATH", PLUGIN_PATH_CONTAINER)
-            .withEnv("CONNECT_LOG4J_LOGGERS", "org.reflections=ERROR,org.apache.kafka.connect=DEBUG")
+            .withEnv(
+                "CONNECT_LOG4J_LOGGERS", "org.reflections=ERROR,org.apache.kafka.connect=DEBUG")
             .withEnv("CONNECT_REST_PORT", String.valueOf(CONNECT_REST_PORT_INTERNAL))
             .withEnv("CONNECT_GROUP_ID", "kafka-connect-group")
             .withEnv("CONNECT_CONFIG_STORAGE_TOPIC", "kafka-connect-configs")
@@ -238,7 +248,10 @@ class MongoKafkaConnectSinkTaskTest {
             .withEnv("CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR", "1")
             .withEnv("CONNECT_STATUS_STORAGE_REPLICATION_FACTOR", "1")
-            .waitingFor(Wait.forHttp("/").forPort(CONNECT_REST_PORT_INTERNAL).withStartupTimeout(Duration.of(5, MINUTES)))
+            .waitingFor(
+                Wait.forHttp("/")
+                    .forPort(CONNECT_REST_PORT_INTERNAL)
+                    .withStartupTimeout(Duration.of(5, MINUTES)))
             .withStartupTimeout(Duration.of(5, MINUTES))
             .withCommand(
                 "bash",
@@ -275,22 +288,20 @@ class MongoKafkaConnectSinkTaskTest {
   private static void clearBackendTraces() {
     try {
       String backendUrl = getBackendUrl();
-      given()
-          .when()
-          .get(backendUrl + "/clear")
-          .then()
-          .statusCode(200);
+      given().when().get(backendUrl + "/clear").then().statusCode(200);
     } catch (RuntimeException e) {
       // Ignore failures to clear traces
     }
   }
 
   private static String getBackendUrl() {
-    return format(Locale.ROOT, "http://%s:%d", backend.getHost(), backend.getMappedPort(BACKEND_PORT));
+    return format(
+        Locale.ROOT, "http://%s:%d", backend.getHost(), backend.getMappedPort(BACKEND_PORT));
   }
 
   @Test
-  public void testKafkaConnectMongoSinkTaskInstrumentation() throws IOException, InterruptedException {
+  public void testKafkaConnectMongoSinkTaskInstrumentation()
+      throws IOException, InterruptedException {
     // Create unique topic name
     String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
 
@@ -309,10 +320,7 @@ class MongoKafkaConnectSinkTaskTest {
 
     try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
       producer.send(
-          new ProducerRecord<>(
-              uniqueTopicName,
-              "test-key",
-              "{\"id\":1,\"name\":\"TestUser\"}"));
+          new ProducerRecord<>(uniqueTopicName, "test-key", "{\"id\":1,\"name\":\"TestUser\"}"));
       producer.flush();
     }
 
@@ -321,38 +329,37 @@ class MongoKafkaConnectSinkTaskTest {
 
     // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
     String backendUrl = getBackendUrl();
-    await().atMost(Duration.ofSeconds(30)).until(() -> {
-      try {
-        String traces = given()
-            .when()
-            .get(backendUrl + "/get-traces")
-            .then()
-            .statusCode(200)
-            .extract()
-            .asString();
-        
-        return !traces.equals("[]");
-      } catch (RuntimeException e) {
-        return false;
-      }
-    });
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .until(
+            () -> {
+              try {
+                String traces =
+                    given()
+                        .when()
+                        .get(backendUrl + "/get-traces")
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .asString();
+
+                return !traces.equals("[]");
+              } catch (RuntimeException e) {
+                return false;
+              }
+            });
 
     // Retrieve and verify spans
-    String tracesJson = given()
-        .when()
-        .get(backendUrl + "/get-traces")
-        .then()
-        .statusCode(200)
-        .extract()
-        .asString();
+    String tracesJson =
+        given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
 
     // Parse and analyze spans
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode tracesNode = objectMapper.readTree(tracesJson);
-    
+
     boolean foundKafkaConnectSpan = false;
     int spanCount = 0;
-    
+
     for (JsonNode trace : tracesNode) {
       JsonNode resourceSpans = trace.get("resourceSpans");
       if (resourceSpans != null && resourceSpans.isArray()) {
@@ -364,16 +371,16 @@ class MongoKafkaConnectSinkTaskTest {
               if (spans != null && spans.isArray()) {
                 for (JsonNode span : spans) {
                   spanCount++;
-                  
+
                   JsonNode nameNode = span.get("name");
                   if (nameNode != null) {
                     String spanName = nameNode.asText();
-                    
+
                     // Check for Kafka Connect spans
-                    if (spanName.toLowerCase(Locale.ROOT).contains("kafka") ||
-                        spanName.toLowerCase(Locale.ROOT).contains("connect") || 
-                        spanName.toLowerCase(Locale.ROOT).contains("put") ||
-                        spanName.toLowerCase(Locale.ROOT).contains("sink")) {
+                    if (spanName.toLowerCase(Locale.ROOT).contains("kafka")
+                        || spanName.toLowerCase(Locale.ROOT).contains("connect")
+                        || spanName.toLowerCase(Locale.ROOT).contains("put")
+                        || spanName.toLowerCase(Locale.ROOT).contains("sink")) {
                       foundKafkaConnectSpan = true;
                     }
                   }
@@ -384,15 +391,11 @@ class MongoKafkaConnectSinkTaskTest {
         }
       }
     }
-    
+
     // Verify spans were found
-    assertThat(spanCount)
-        .as("Should find at least one span")
-        .isGreaterThan(0);
-        
-    assertThat(foundKafkaConnectSpan)
-        .as("Should find at least one Kafka Connect span")
-        .isTrue();
+    assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
+
+    assertThat(foundKafkaConnectSpan).as("Should find at least one Kafka Connect span").isTrue();
   }
 
   // Private methods
@@ -407,7 +410,9 @@ class MongoKafkaConnectSinkTaskTest {
     configMap.put("key.converter", "org.apache.kafka.connect.storage.StringConverter");
     configMap.put("value.converter", "org.apache.kafka.connect.json.JsonConverter");
     configMap.put("value.converter.schemas.enable", "false");
-    configMap.put("document.id.strategy", "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
+    configMap.put(
+        "document.id.strategy",
+        "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
         MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
@@ -514,7 +519,7 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error closing AdminClient: " + e.getMessage());
       }
     }
-    
+
     // Stop all containers in reverse order of startup to ensure clean shutdown
     if (kafkaConnect != null) {
       try {
@@ -524,7 +529,7 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error stopping Kafka Connect: " + e.getMessage());
       }
     }
-    
+
     if (mongoDB != null) {
       try {
         mongoDB.stop();
@@ -533,7 +538,7 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error stopping MongoDB: " + e.getMessage());
       }
     }
-    
+
     if (kafka != null) {
       try {
         kafka.stop();
@@ -542,7 +547,7 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error stopping Kafka: " + e.getMessage());
       }
     }
-    
+
     if (zookeeper != null) {
       try {
         zookeeper.stop();
@@ -551,7 +556,7 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error stopping Zookeeper: " + e.getMessage());
       }
     }
-    
+
     if (backend != null) {
       try {
         backend.stop();
@@ -560,7 +565,7 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error stopping backend: " + e.getMessage());
       }
     }
-    
+
     if (network != null) {
       try {
         network.close();
@@ -569,14 +574,14 @@ class MongoKafkaConnectSinkTaskTest {
         logger.error("Error closing network: " + e.getMessage());
       }
     }
-    
+
     // Small delay to ensure containers are fully stopped before next test
     try {
       Thread.sleep(2000);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
     }
-    
+
     logger.info("Test cleanup complete");
   }
 }
