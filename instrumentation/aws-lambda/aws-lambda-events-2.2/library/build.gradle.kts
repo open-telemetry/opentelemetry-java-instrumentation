@@ -24,13 +24,6 @@ dependencies {
   // So that is the reason that why we add it as compile only dependency.
   compileOnly("com.amazonaws:aws-lambda-java-serialization:1.1.5")
 
-  // We need Jackson for wrappers to reproduce the serialization does when Lambda invokes a RequestHandler with event
-  // since Lambda will only be able to invoke the wrapper itself with a generic Object.
-  // Note that Lambda itself uses Jackson, but does not expose it to the function so we need to include it here.
-  // TODO: Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
-  implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
-
   // allows to get the function ARN
   testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
   // allows to get the default events
