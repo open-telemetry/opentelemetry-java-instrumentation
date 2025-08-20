@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -31,6 +32,7 @@ class InstrumenterContextTest {
   @SuppressWarnings({"unchecked", "deprecation"}) // using deprecated DB_SQL_TABLE
   @Test
   void testSqlSanitizer() {
+    Object request = new Object(); // dummy request object
     String testQuery = "SELECT name FROM test WHERE id = 1";
     SqlClientAttributesGetter<Object, Void> getter =
         new SqlClientAttributesGetter<Object, Void>() {
@@ -57,11 +59,12 @@ class InstrumenterContextTest {
     cleanup.deferCleanup(InstrumenterContext::reset);
 
     assertThat(InstrumenterContext.get()).isEmpty();
-    assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
+    assertThat(spanNameExtractor.extract(request)).isEqualTo("SELECT test");
     // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
     Map<String, SqlStatementInfo> sanitizedMap =
-        (Map<String, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
+        (Map<String, SqlStatementInfo>)
+            requireNonNull(InstrumenterContext.get().get("sanitized-sql-map"));
     assertThat(sanitizedMap).containsKey(testQuery);
 
     // replace cached sanitization result to verify it is used
@@ -70,7 +73,7 @@ class InstrumenterContextTest {
         SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
     {
       AttributesBuilder builder = Attributes.builder();
-      attributesExtractor.onStart(builder, Context.root(), null);
+      attributesExtractor.onStart(builder, Context.root(), request);
       assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
           .isEqualTo("test2");
     }
@@ -79,7 +82,7 @@ class InstrumenterContextTest {
     sanitizedMap.clear();
     {
       AttributesBuilder builder = Attributes.builder();
-      attributesExtractor.onStart(builder, Context.root(), null);
+      attributesExtractor.onStart(builder, Context.root(), request);
       assertThat(builder.build().get(maybeStable(DbIncubatingAttributes.DB_SQL_TABLE)))
           .isEqualTo("test");
     }

@@ -26,6 +26,7 @@ tasks {
     options.errorprone.nullaway {
       customInitializerAnnotations.add("org.openjdk.jmh.annotations.Setup")
       excludedFieldAnnotations.add("org.mockito.Mock")
+      excludedFieldAnnotations.add("org.mockito.InjectMocks")
     }
   }
 }
