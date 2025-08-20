@@ -189,7 +189,7 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
-  update-apidiff-baseline-to-released-version:
+  post-release-updates:
     permissions:
       contents: write # for git push to PR branch
     runs-on: ubuntu-latest
@@ -256,8 +256,8 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          message="Update apidiff baseline to released version $VERSION"
-          body="Update apidiff baseline to released version \`$VERSION\`."
+          message="Post-release updates for $VERSION"
+          body="Post-release updates for `$VERSION`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch

@@ -2258,6 +2258,8 @@ libraries:
       type: boolean
       default: false
   - name: dropwizard-views-0.7
+    description: This instrumentation enables the creation of spans for Dropwizard
+      views.
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2269,10 +2271,11 @@ libraries:
       description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
-      type: boolean
-      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   elasticsearch:
   - name: elasticsearch-api-client-7.16
     description: |
