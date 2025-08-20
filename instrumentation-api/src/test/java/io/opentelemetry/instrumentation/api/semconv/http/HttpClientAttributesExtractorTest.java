@@ -76,7 +76,6 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public List<String> getHttpResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
       String value = response.get("header." + name);
