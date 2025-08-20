@@ -70,11 +70,12 @@ class NetworkAttributesExtractorInetSocketAddressTest {
         NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
-    extractor.onStart(startAttributes, Context.root(), null);
+    InetSocketAddress request = new InetSocketAddress("1.2.3.4", 8080);
+    extractor.onStart(startAttributes, Context.root(), request);
     assertThat(startAttributes.build()).isEmpty();
 
     AttributesBuilder endAttributes = Attributes.builder();
-    extractor.onEnd(endAttributes, Context.root(), null, null, null);
+    extractor.onEnd(endAttributes, Context.root(), request, null, null);
     assertThat(endAttributes.build()).isEmpty();
   }
 }
