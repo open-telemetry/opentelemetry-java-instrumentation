@@ -5,8 +5,12 @@ description: >
 configurations:
   - name: otel.instrumentation.elasticsearch.experimental-span-attributes
     description: >
-      Enable the capture of `elasticsearch.request.write.type` and
-      `elasticsearch.request.write.routing` experimental span attributes.
+      Enable the capture of the experimental span attributes `elasticsearch.action`,
+      `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`,
+      `elasticsearch.request.write.type`, `elasticsearch.request.write.routing`,
+      `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`,
+      `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`,
+      `elasticsearch.type`, and `elasticsearch.version`.
     type: boolean
     default: false
   - name: otel.instrumentation.http.known-methods
