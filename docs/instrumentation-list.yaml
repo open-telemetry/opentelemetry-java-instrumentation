@@ -2405,7 +2405,7 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-6.4
-    description: TThis instrumentation enables database CLIENT spans and metrics for
+    description: This instrumentation enables database CLIENT spans and metrics for
       Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:

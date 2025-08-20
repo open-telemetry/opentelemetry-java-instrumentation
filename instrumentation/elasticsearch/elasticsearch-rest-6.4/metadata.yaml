@@ -1,4 +1,4 @@
-description: TThis instrumentation enables database CLIENT spans and metrics for Elasticsearch REST clients.
+description: This instrumentation enables database CLIENT spans and metrics for Elasticsearch REST clients.
 configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query
     description: >
