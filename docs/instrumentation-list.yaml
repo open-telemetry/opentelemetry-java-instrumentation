@@ -2541,7 +2541,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
       description: |
-        Enable the capture of `elasticsearch.request.write.type` and `elasticsearch.request.write.routing` experimental span attributes.
+        Enable the capture of the experimental span attributes `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`.
       type: boolean
       default: false
     - name: otel.instrumentation.http.known-methods
@@ -2622,7 +2622,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-5.3
     description: |
-      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -2632,7 +2632,8 @@ libraries:
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.search.types`, `elasticsearch.request.write.type`, `elasticsearch.request.write.version`, `elasticsearch.response.status`, `elasticsearch.shard.broadcast.failed`, `elasticsearch.shard.broadcast.successful`, `elasticsearch.shard.broadcast.total`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
       type: boolean
       default: false
     telemetry:
@@ -2718,7 +2719,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-6.0
     description: |
-      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -2728,7 +2729,8 @@ libraries:
       - org.elasticsearch.client:transport:[6.0.0,)
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.type`, `elasticsearch.request.write.version`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
       type: boolean
       default: false
     telemetry:

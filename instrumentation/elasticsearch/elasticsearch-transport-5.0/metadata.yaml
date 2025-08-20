@@ -7,7 +7,7 @@ configurations:
     description: >
       Enable the capture of the experimental span attributes `elasticsearch.action`,
       `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`,
-      `elasticsearch.request.write.type`, `elasticsearch.request.write.routing`,
+      `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`,
       `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`,
       `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`,
       `elasticsearch.type`, and `elasticsearch.version`.
