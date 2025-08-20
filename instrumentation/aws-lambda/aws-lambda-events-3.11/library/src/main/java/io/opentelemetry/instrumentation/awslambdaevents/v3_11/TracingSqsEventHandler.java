@@ -11,7 +11,7 @@ import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler;
-import io.opentelemetry.instrumentation.awslambdaevents.internal.AwsLambdaSqsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaSqsInstrumenterFactory;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import java.time.Duration;
 import javax.annotation.Nullable;

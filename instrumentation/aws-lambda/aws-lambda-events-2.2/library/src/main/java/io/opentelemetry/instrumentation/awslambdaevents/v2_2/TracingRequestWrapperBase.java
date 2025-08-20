@@ -12,8 +12,8 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
-import io.opentelemetry.instrumentation.awslambdaevents.internal.AwsLambdaEventsInstrumenterFactory;
-import io.opentelemetry.instrumentation.awslambdaevents.internal.LambdaParameters;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaEventsInstrumenterFactory;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.LambdaParameters;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
