@@ -597,6 +597,9 @@ targets:
       target: ':instrumentation:jsf:jsf-myfaces-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:kafka:kafka-connect-2.6:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:kafka:kafka-streams-0.11:javaagent'
     - type: gradle
       path: ./
