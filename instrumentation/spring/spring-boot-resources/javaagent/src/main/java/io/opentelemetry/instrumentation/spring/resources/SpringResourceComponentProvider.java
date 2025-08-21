@@ -33,7 +33,7 @@ public class SpringResourceComponentProvider implements ComponentProvider<Resour
   @Override
   public Resource create(DeclarativeConfigProperties config) {
     return new SpringBootServiceVersionDetector()
-        .create()
-        .merge(new SpringBootServiceNameDetector().create());
+        .createResource(config)
+        .merge(new SpringBootServiceNameDetector().createResource(config));
   }
 }
