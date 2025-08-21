@@ -58,7 +58,7 @@ public class ResourceProviderPropertiesCustomizerTest {
   @TestFactory
   Stream<DynamicTest> enabledTestCases() {
     String className =
-        "io.opentelemetry.instrumentation.internal.resources.ResourceProviderPropertiesCustomizerTest$Provider";
+        "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider";
     return Stream.of(
             new EnabledTestCase(
                 "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
