@@ -67,6 +67,7 @@ readonly INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:test"
   "elasticsearch:elasticsearch-api-client-7.16:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-rest-7.0:javaagent:test"
+  "elasticsearch:elasticsearch-rest-7.0:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:test"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-transport-5.0:javaagent:testExperimental"
@@ -125,6 +126,12 @@ readonly INSTRUMENTATIONS=(
   "camel-2.20:javaagent:test"
   "camel-2.20:javaagent:testStableSemconv"
   "camel-2.20:javaagent:testExperimental"
+  "couchbase:couchbase-2.0:javaagent:test"
+  "couchbase:couchbase-2.0:javaagent:testStableSemconv"
+  "couchbase:couchbase-2.6:javaagent:test"
+  "couchbase:couchbase-2.6:javaagent:testStableSemconv"
+  "couchbase:couchbase-2.6:javaagent:testExperimental"
+  "dropwizard:dropwizard-views-0.7:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
@@ -133,7 +140,9 @@ readonly INSTRUMENTATIONS=(
 readonly COLIMA_INSTRUMENTATIONS=(
   "spring:spring-jms:spring-jms-6.0:javaagent:test"
   "elasticsearch:elasticsearch-rest-6.4:javaagent:test"
+  "elasticsearch:elasticsearch-rest-6.4:javaagent:testStableSemconv"
   "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
+  "elasticsearch:elasticsearch-rest-5.0:javaagent:testStableSemconv"
   "oracle-ucp-11.2:javaagent:test"
   "oracle-ucp-11.2:javaagent:testStableSemconv"
 )

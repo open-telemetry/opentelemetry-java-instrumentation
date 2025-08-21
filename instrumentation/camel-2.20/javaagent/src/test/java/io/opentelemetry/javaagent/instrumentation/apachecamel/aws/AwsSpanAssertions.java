@@ -106,12 +106,10 @@ class AwsSpanAssertions {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "receive"));
       } else if (spanName.endsWith("process")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "process"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "publish"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       }
     }
 

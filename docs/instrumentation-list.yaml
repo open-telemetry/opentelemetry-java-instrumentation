@@ -2082,19 +2082,52 @@ libraries:
           type: LONG
   couchbase:
   - name: couchbase-2.0
+    description: |
+      This instrumentation enables database CLIENT spans and metrics for Couchbase 2.0 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
     source_path: instrumentation/couchbase/couchbase-2.0
     scope:
       name: io.opentelemetry.couchbase-2.0
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[2,3)
-    configurations:
-    - name: otel.instrumentation.couchbase.experimental-span-attributes
-      description: Enables experimental span attributes `couchbase.operation_id` and
-        `couchbase.local.address`
-      type: boolean
-      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   - name: couchbase-2.6
+    description: |
+      This instrumentation enables database CLIENT spans and metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
     source_path: instrumentation/couchbase/couchbase-2.6
     scope:
       name: io.opentelemetry.couchbase-2.6
@@ -2103,13 +2136,86 @@ libraries:
       - com.couchbase.client:java-client:[2.6.0,3)
     configurations:
     - name: otel.instrumentation.couchbase.experimental-span-attributes
-      description: Enables experimental span attributes couchbase.operation_id and
-        couchbase.local.address
+      description: |
+        Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.instrumentation.couchbase.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: couchbase.local.address
+          type: STRING
+        - name: couchbase.operation_id
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
   - name: couchbase-3.1
     description: |
-      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
@@ -2118,7 +2224,7 @@ libraries:
       - com.couchbase.client:java-client:[3.1,3.1.6)
   - name: couchbase-3.1.6
     description: |
-      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
@@ -2127,7 +2233,7 @@ libraries:
       - com.couchbase.client:java-client:[3.1.6,3.2.0)
   - name: couchbase-3.2
     description: |
-      Couchbase instrumentation is owned by the Couchbase project. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
@@ -2152,6 +2258,8 @@ libraries:
       type: boolean
       default: false
   - name: dropwizard-views-0.7
+    description: This instrumentation enables the creation of spans for Dropwizard
+      views.
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2163,15 +2271,15 @@ libraries:
       description: Enables the creation of experimental view (INTERNAL) spans.
       type: boolean
       default: false
-    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
-      type: boolean
-      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   elasticsearch:
   - name: elasticsearch-api-client-7.16
-    description: This instrumentation enables client spans for Elasticsearch API client
-      requests for version 7 of the client. Versions 8.10 and later have native support
-      for OpenTelemetry.
+    description: |
+      This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to Elasticsearch CLIENT spans. Versions 8.10 and later of the client have native support for OpenTelemetry.
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -2179,8 +2287,64 @@ libraries:
       javaagent:
       - co.elastic.clients:elasticsearch-java:[7.16,7.17.20)
       - co.elastic.clients:elasticsearch-java:[8.0.0,8.10)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.elasticsearch.path_parts.id
+          type: STRING
+        - name: db.elasticsearch.path_parts.index
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.elasticsearch.path_parts.id
+          type: STRING
+        - name: db.elasticsearch.path_parts.index
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-5.0
-    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -2191,10 +2355,14 @@ libraries:
     configurations:
     - name: otel.instrumentation.elasticsearch.capture-search-query
       description: |
-        Enable the capture of search query bodies. It is important to note that Elasticsearch queries
-        may contain personal or sensitive information.
+        Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2210,8 +2378,35 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-6.4
-    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -2224,6 +2419,11 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2239,8 +2439,35 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-rest-7.0
-    description: This instrumentation enables tracing for Elasticsearch REST clients.
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Elasticsearch REST clients.
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -2255,6 +2482,11 @@ libraries:
         Enable the capture of search query bodies. It is important to note that Elasticsearch queries may contain personal or sensitive information.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2270,9 +2502,35 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   - name: elasticsearch-transport-5.0
     description: |
-      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -2282,9 +2540,15 @@ libraries:
       - org.elasticsearch:elasticsearch:[5.0.0,5.3.0)
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of the experimental span attributes `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version`.
       type: boolean
       default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -2333,6 +2597,16 @@ libraries:
         - name: network.peer.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2348,7 +2622,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-5.3
     description: |
-      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -2358,7 +2632,8 @@ libraries:
       - org.elasticsearch:elasticsearch:[5.3.0,6.0.0)
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.search.types`, `elasticsearch.request.write.type`, `elasticsearch.request.write.version`, `elasticsearch.response.status`, `elasticsearch.shard.broadcast.failed`, `elasticsearch.shard.broadcast.successful`, `elasticsearch.shard.broadcast.total`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
       type: boolean
       default: false
     telemetry:
@@ -2419,6 +2694,16 @@ libraries:
         - name: network.peer.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2434,7 +2719,7 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-6.0
     description: |
-      This instrumentation enables client spans for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -2444,7 +2729,8 @@ libraries:
       - org.elasticsearch.client:transport:[6.0.0,)
     configurations:
     - name: otel.instrumentation.elasticsearch.experimental-span-attributes
-      description: Enable the capture of experimental span attributes.
+      description: |
+        Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`, `elasticsearch.request.write.type`, `elasticsearch.request.write.version`, `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`, `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
       type: boolean
       default: false
     telemetry:
@@ -2501,6 +2787,16 @@ libraries:
         - name: network.type
           type: STRING
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:

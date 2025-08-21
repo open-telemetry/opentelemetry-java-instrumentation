@@ -7,8 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -275,5 +278,15 @@ public abstract class AbstractElasticsearchNodeClientTest extends AbstractElasti
 
   protected boolean hasWriteVersion() {
     return true;
+  }
+
+  protected void metricAssertion(String instrumentationName) throws Exception {
+    ClusterHealthStatus clusterHealthStatus =
+        testing.runWithSpan("parent", this::clusterHealthSync);
+
+    assertThat(clusterHealthStatus.name()).isEqualTo("GREEN");
+    testing.waitForTraces(1);
+
+    assertDurationMetric(testing, instrumentationName, DB_SYSTEM_NAME, DB_OPERATION_NAME);
   }
 }

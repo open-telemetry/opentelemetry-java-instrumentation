@@ -175,7 +175,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -328,7 +328,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -493,7 +493,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -626,7 +626,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).isNotEmpty();
@@ -765,7 +765,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(2);
@@ -1002,7 +1002,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1120,7 +1120,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1235,7 +1235,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1336,7 +1336,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1595,7 +1595,7 @@ public abstract class AbstractGrpcTest {
     if (Boolean.getBoolean("testLatestDeps")) {
       result.add(equalTo(NETWORK_TYPE, "ipv4"));
       result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-      result.add(satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()));
+      result.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
     }
     return result;
   }
