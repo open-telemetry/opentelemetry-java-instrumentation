@@ -1,1 +1,1 @@
-io.opentelemetry.instrumentation.internal.resources.ResourceProviderPropertiesCustomizer
+io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer

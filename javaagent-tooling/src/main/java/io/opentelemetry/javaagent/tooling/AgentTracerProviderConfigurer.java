@@ -11,7 +11,7 @@ import static java.util.Collections.emptyList;
 import com.google.auto.service.AutoService;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.exporter.logging.LoggingSpanExporter;
-import io.opentelemetry.instrumentation.internal.thread.AddThreadDetailsSpanProcessor;
+import io.opentelemetry.instrumentation.thread.internal.AddThreadDetailsSpanProcessor;
 import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;

@@ -1,1 +1,1 @@
-io.opentelemetry.instrumentation.internal.resources.ResourceProviderPropertiesCustomizerTest$Provider
+io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider
