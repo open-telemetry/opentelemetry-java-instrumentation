@@ -209,7 +209,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             satisfies(ThreadIncubatingAttributes.THREAD_ID, val -> val.isNotZero()),
                             satisfies(
                                 ThreadIncubatingAttributes.THREAD_NAME, val -> val.isNotBlank())),
-                val -> AbstractSpringStarterSmokeTest.withSpanAssert(val)));
+                val -> withSpanAssert(val)));
 
     // Metric
     testing.waitAndAssertMetrics(
