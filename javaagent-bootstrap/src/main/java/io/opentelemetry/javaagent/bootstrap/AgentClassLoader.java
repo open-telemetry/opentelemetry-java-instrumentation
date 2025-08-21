@@ -84,7 +84,24 @@ public class AgentClassLoader extends URLClassLoader {
    */
   public AgentClassLoader(
       File javaagentFile, String internalJarFileName, boolean isSecurityManagerSupportEnabled) {
-    super(new URL[] {}, getParentClassLoader());
+    this(javaagentFile, internalJarFileName, isSecurityManagerSupportEnabled, null);
+  }
+
+  /**
+   * Construct a new AgentClassLoader with a custom parent ClassLoader.
+   *
+   * @param javaagentFile Used for resource lookups.
+   * @param internalJarFileName File name of the internal jar
+   * @param isSecurityManagerSupportEnabled Whether this class loader should define classes with all
+   *     permissions
+   * @param parentClassLoader Custom parent ClassLoader to use. If null, the default parent will be used.
+   */
+  public AgentClassLoader(
+      File javaagentFile, 
+      String internalJarFileName, 
+      boolean isSecurityManagerSupportEnabled,
+      @Nullable ClassLoader parentClassLoader) {
+    super(new URL[] {}, parentClassLoader != null ? parentClassLoader : getParentClassLoader());
     if (javaagentFile == null) {
       throw new IllegalArgumentException("Agent jar location should be set");
     }
