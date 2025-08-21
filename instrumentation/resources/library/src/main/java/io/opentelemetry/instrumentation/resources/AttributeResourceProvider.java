@@ -70,7 +70,7 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
     return create(filteredKeys);
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes", "unused"})
+  @SuppressWarnings({"unchecked", "rawtypes"})
   public final Resource createResource(DeclarativeConfigProperties config) {
     return create((Set) attributeGetters.keySet());
   }
