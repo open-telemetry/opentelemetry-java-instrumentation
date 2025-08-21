@@ -94,11 +94,12 @@ public class AgentClassLoader extends URLClassLoader {
    * @param internalJarFileName File name of the internal jar
    * @param isSecurityManagerSupportEnabled Whether this class loader should define classes with all
    *     permissions
-   * @param parentClassLoader Custom parent ClassLoader to use. If null, the default parent will be used.
+   * @param parentClassLoader Custom parent ClassLoader to use. If null, the default parent will be
+   *     used.
    */
   public AgentClassLoader(
-      File javaagentFile, 
-      String internalJarFileName, 
+      File javaagentFile,
+      String internalJarFileName,
       boolean isSecurityManagerSupportEnabled,
       @Nullable ClassLoader parentClassLoader) {
     super(new URL[] {}, parentClassLoader != null ? parentClassLoader : getParentClassLoader());
