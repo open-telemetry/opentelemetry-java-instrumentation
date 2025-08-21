@@ -26,13 +26,11 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
-    systemProperty("collectSpans", true)
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   test {
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("collectSpans", true)
   }
 
   check {

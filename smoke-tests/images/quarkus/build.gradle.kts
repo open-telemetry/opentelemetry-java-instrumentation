@@ -16,7 +16,7 @@ plugins {
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.25.0"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.26.0"))
   implementation("io.quarkus:quarkus-rest")
 }
 
@@ -60,6 +60,10 @@ tasks {
 
   withType<JibTask>().configureEach {
     dependsOn(quarkusBuild)
+  }
+
+  compileJava {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
   }
 
   sourcesJar {

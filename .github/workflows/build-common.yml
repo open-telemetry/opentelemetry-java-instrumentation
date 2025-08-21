@@ -29,7 +29,7 @@ jobs:
   spotless:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -41,7 +41,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -51,7 +51,7 @@ jobs:
   license-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -63,7 +63,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -90,7 +90,7 @@ jobs:
   fossa-configuration-check:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -102,7 +102,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -129,7 +129,7 @@ jobs:
   extra-dependency-management-enforcement:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Dependency check
         run: |
@@ -152,28 +152,28 @@ jobs:
   check-javaagent-suppression-keys:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - run: .github/scripts/check-javaagent-suppression-keys.sh
 
   check-latest-dep-test-overrides:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - run: .github/scripts/check-latest-dep-test-overrides.sh
 
   check-package-names:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - run: .github/scripts/check-package-names.sh
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -189,7 +189,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -264,7 +264,7 @@ jobs:
             vm: openj9
       fail-fast: false
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -291,7 +291,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@5a3ec84eff668545956fd18022155c47e93e2684 # v4.2.3
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-cache-pnpm-modules
@@ -300,7 +300,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
@@ -419,7 +419,7 @@ jobs:
         run: git config --system core.longpaths true
         if: matrix.os == 'windows-latest'
 
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -431,7 +431,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
@@ -471,7 +471,7 @@ jobs:
   gradle-plugins:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -483,7 +483,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -494,7 +494,7 @@ jobs:
   examples:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -506,7 +506,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@ac638b010cf58a27ee6c972d7336334ccaf61c96 # v4.4.1
+        uses: gradle/actions/setup-gradle@017a9effdb900e5b5b2fddfb590a105619dca3c3 # v4.4.2
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 

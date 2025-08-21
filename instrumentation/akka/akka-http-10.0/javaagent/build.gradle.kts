@@ -66,7 +66,6 @@ tasks {
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
   }
 
   check {

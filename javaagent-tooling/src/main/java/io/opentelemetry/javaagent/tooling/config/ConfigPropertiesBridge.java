@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.config;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
@@ -109,11 +111,27 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
     }
   }
 
+  @Override
+  public boolean isDeclarative() {
+    return configProvider != null;
+  }
+
+  @Override
+  public DeclarativeConfigProperties getDeclarativeConfig(String node) {
+    DeclarativeConfigProperties config =
+        InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
+    if (config == null) {
+      // there is no declarative config for this node
+      // this needs to be a different value than null to avoid confusion with
+      // the case when declarative config is not supported at all
+      return empty();
+    }
+    return config;
+  }
+
   @Nullable
   @Override
-  public DeclarativeConfigProperties getDeclarativeConfig(String instrumentationName) {
-    return configProvider != null
-        ? InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, instrumentationName)
-        : null;
+  public ConfigProvider getConfigProvider() {
+    return configProvider;
   }
 }

@@ -83,7 +83,7 @@ public final class MetaDataCollector {
         Paths.get(instrumentationPath, TMP_DIR, "spans-" + UUID.randomUUID() + ".yaml");
 
     try (BufferedWriter writer = Files.newBufferedWriter(spansPath.toFile().toPath(), UTF_8)) {
-      String config = System.getProperty("metaDataConfig");
+      String config = System.getProperty("metadataConfig");
       String when = "default";
       if (config != null && !config.isEmpty()) {
         when = config;
@@ -138,7 +138,7 @@ public final class MetaDataCollector {
         Paths.get(instrumentationPath, TMP_DIR, "metrics-" + UUID.randomUUID() + ".yaml");
 
     try (BufferedWriter writer = Files.newBufferedWriter(metricsPath.toFile().toPath(), UTF_8)) {
-      String config = System.getProperty("metaDataConfig");
+      String config = System.getProperty("metadataConfig");
       String when = "default";
       if (config != null && !config.isEmpty()) {
         when = config;

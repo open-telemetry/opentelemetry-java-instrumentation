@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +23,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -419,5 +421,68 @@ class YamlHelperTest {
         """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testTelemetryGroupsAreSorted() throws Exception {
+    EmittedMetrics.Metric metric =
+        new EmittedMetrics.Metric("a.metric", "description", "COUNTER", "1", emptyList());
+    EmittedSpans.Span span = new EmittedSpans.Span("SERVER", emptyList());
+
+    // First ordering
+    Map<String, List<EmittedMetrics.Metric>> metrics1 = new LinkedHashMap<>();
+    metrics1.put("z-group", List.of(metric));
+    metrics1.put("a-group", List.of(metric));
+
+    Map<String, List<EmittedSpans.Span>> spans1 = new LinkedHashMap<>();
+    spans1.put("c-group", List.of(span));
+    spans1.put("f-group", List.of(span));
+    spans1.put("b-group", List.of(span));
+
+    List<InstrumentationModule> modules1 = new ArrayList<>();
+    modules1.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test/test-1.0")
+            .instrumentationName("test-1.0")
+            .namespace("test")
+            .group("test")
+            .metrics(metrics1)
+            .spans(spans1)
+            .build());
+
+    StringWriter stringWriter1 = new StringWriter();
+    BufferedWriter writer1 = new BufferedWriter(stringWriter1);
+    YamlHelper.generateInstrumentationYaml(modules1, writer1);
+    writer1.flush();
+    String yaml1 = stringWriter1.toString();
+
+    // Different ordering
+    Map<String, List<EmittedMetrics.Metric>> metrics2 = new LinkedHashMap<>();
+    metrics2.put("a-group", List.of(metric));
+    metrics2.put("z-group", List.of(metric));
+
+    Map<String, List<EmittedSpans.Span>> spans2 = new LinkedHashMap<>();
+    spans2.put("f-group", List.of(span));
+    spans2.put("b-group", List.of(span));
+    spans2.put("c-group", List.of(span));
+
+    List<InstrumentationModule> modules2 = new ArrayList<>();
+    modules2.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test/test-1.0")
+            .instrumentationName("test-1.0")
+            .namespace("test")
+            .group("test")
+            .metrics(metrics2)
+            .spans(spans2)
+            .build());
+
+    StringWriter stringWriter2 = new StringWriter();
+    BufferedWriter writer2 = new BufferedWriter(stringWriter2);
+    YamlHelper.generateInstrumentationYaml(modules2, writer2);
+    writer2.flush();
+    String yaml2 = stringWriter2.toString();
+
+    assertThat(yaml1).isEqualTo(yaml2);
   }
 }

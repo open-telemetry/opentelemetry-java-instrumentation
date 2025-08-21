@@ -61,17 +61,18 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 tasks.withType<Test>().configureEach {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled")
+  systemProperty("testLatestDeps", latestDepTest)
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 if (latestDepTest) {
   // spring 6 requires java 17

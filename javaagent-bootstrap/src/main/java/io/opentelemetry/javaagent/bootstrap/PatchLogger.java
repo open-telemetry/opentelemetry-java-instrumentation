@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap;
 import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
+import java.util.logging.Filter;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
@@ -329,6 +330,8 @@ public class PatchLogger {
 
   public void addHandler(Handler handler) {}
 
+  public void removeHandler(Handler handler) {}
+
   public static PatchLogger getAnonymousLogger() {
     return getLogger("");
   }
@@ -339,6 +342,18 @@ public class PatchLogger {
 
   public static PatchLogger getGlobal() {
     return global;
+  }
+
+  public static void setFilter(Filter filter) {}
+
+  public static Filter getFilter() {
+    return null;
+  }
+
+  public static void setUseParentHandlers(boolean useParentHandlers) {}
+
+  public static boolean getUseParentHandlers() {
+    return true;
   }
 
   private static String getMessage(LogRecord record) {

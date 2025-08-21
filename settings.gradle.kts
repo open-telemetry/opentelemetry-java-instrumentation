@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.kotlin.jvm") version "2.2.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.11.0"
@@ -20,7 +20,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.1"
+  id("com.gradle.develocity") version "4.1.1"
 }
 
 dependencyResolutionManagement {
@@ -250,6 +250,7 @@ include(":instrumentation:hibernate:hibernate-6.0:spring-testing")
 include(":instrumentation:hibernate:hibernate-common:javaagent")
 include(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent")
 include(":instrumentation:hibernate:hibernate-reactive-1.0:javaagent")
+include(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing")
 include(":instrumentation:hikaricp-3.0:javaagent")
 include(":instrumentation:hikaricp-3.0:library")
 include(":instrumentation:hikaricp-3.0:testing")
@@ -424,6 +425,7 @@ include(":instrumentation:okhttp:okhttp-3.0:testing")
 include(":instrumentation:openai:openai-java-1.1:javaagent")
 include(":instrumentation:openai:openai-java-1.1:library")
 include(":instrumentation:openai:openai-java-1.1:testing")
+include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")

@@ -99,7 +99,6 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-    systemProperty("collectSpans", true)
   }
 
   val testSuites = testing.suites.withType(JvmTestSuite::class)
@@ -110,7 +109,7 @@ tasks {
       classpath = suite.sources.runtimeClasspath
 
       jvmArgs("-Dotel.semconv-stability.opt-in=database")
-      systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+      systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
     }
   }
 
@@ -120,7 +119,7 @@ tasks {
       classpath = suite.sources.runtimeClasspath
 
       jvmArgs("-Dotel.instrumentation.elasticsearch.experimental-span-attributes=true")
-      systemProperty("metaDataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
+      systemProperty("metadataConfig", "otel.instrumentation.elasticsearch.experimental-span-attributes=true")
     }
   }
 

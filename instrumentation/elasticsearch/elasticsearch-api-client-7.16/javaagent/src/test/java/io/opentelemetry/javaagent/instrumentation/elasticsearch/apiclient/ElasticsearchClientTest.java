@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -16,7 +17,9 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
@@ -154,6 +157,14 @@ class ElasticsearchClientTest {
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.elasticsearch-rest-7.0",
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
