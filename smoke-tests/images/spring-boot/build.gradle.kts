@@ -5,16 +5,20 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "2.6.15"
+  id("org.springframework.boot") version "3.5.4"
 }
 
 dependencies {
-  implementation(platform("io.opentelemetry:opentelemetry-bom:1.0.0"))
+  implementation(platform("io.opentelemetry:opentelemetry-bom"))
   implementation(platform("org.springframework.boot:spring-boot-dependencies:2.6.15"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation(project(":instrumentation-annotations"))
   implementation("org.springframework.boot:spring-boot-starter-web")
+}
+
+otelJava {
+  minJavaVersionSupported = JavaVersion.VERSION_17
 }
 
 configurations.runtimeClasspath {
@@ -25,17 +29,10 @@ configurations.runtimeClasspath {
   }
 }
 
-val targetJDK = project.findProperty("targetJDK") ?: "11"
+val targetJDK = project.findProperty("targetJDK") ?: "17"
 
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
-
-java {
-  // needed by jib to detect java version used in project
-  // for jdk9+ jib uses an entrypoint that doesn't work with jdk8
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
-}
 
 springBoot {
   buildInfo {
