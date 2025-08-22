@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.resources;
+package io.opentelemetry.instrumentation.resources.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -58,7 +58,7 @@ public class ResourceProviderPropertiesCustomizerTest {
   @TestFactory
   Stream<DynamicTest> enabledTestCases() {
     String className =
-        "io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizerTest$Provider";
+        "io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizerTest$Provider";
     return Stream.of(
             new EnabledTestCase(
                 "explicitEnabled", true, Collections.emptySet(), Collections.emptySet(), true),
