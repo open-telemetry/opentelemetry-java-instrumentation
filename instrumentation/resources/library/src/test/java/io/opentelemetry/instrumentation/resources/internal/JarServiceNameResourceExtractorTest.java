@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.resources;
+package io.opentelemetry.instrumentation.resources.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,74 +20,71 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 // todo split JarFileDetectorTest and JarServiceNameDetectorTest
-class JarServiceNameDetectorTest {
-
-  @Mock ConfigProperties config;
+class JarServiceNameResourceExtractorTest {
 
   @Test
-  void createResource_empty() {
+  void extractResource_empty() {
     String[] processArgs = new String[0];
     Function<String, String> getProperty = prop -> null;
-    Predicate<Path> fileExists = JarServiceNameDetectorTest::failPath;
-    JarServiceNameDetector serviceNameProvider = getDetector(processArgs, getProperty, fileExists);
+    Predicate<Path> fileExists = JarServiceNameResourceExtractorTest::failPath;
+    JarServiceNameResourceExtractor serviceNameProvider = getFinder(processArgs, getProperty, fileExists);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).isEmpty();
   }
 
-  private static JarServiceNameDetector getDetector(
+  private static JarServiceNameResourceExtractor getFinder(
       String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
-    return new JarServiceNameDetector(
+    return new JarServiceNameResourceExtractor(
         new MainJarPathFinder(() -> processArgs, getProperty, fileExists));
   }
 
   @Test
-  void createResource_noJarFileInArgs() {
+  void extractResource_noJarFileInArgs() {
     String[] args = new String[] {"-Dtest=42", "-Xmx666m", "-jar"};
-    JarServiceNameDetector serviceNameProvider =
-        getDetector(args, prop -> null, JarServiceNameDetectorTest::failPath);
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(args, prop -> null, JarServiceNameResourceExtractorTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).isEmpty();
   }
 
   @Test
-  void createResource_processHandleJar() {
-    JarServiceNameDetector serviceNameProvider =
-        getDetector(getArgs("my-service.jar"), prop -> null, JarServiceNameDetectorTest::failPath);
+  void extractResource_processHandleJar() {
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(getArgs("my-service.jar"), prop -> null, JarServiceNameResourceExtractorTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
 
   @Test
-  void createResource_processHandleJarExtraFlag() {
+  void extractResource_processHandleJarExtraFlag() {
     String path = Paths.get("path", "to", "app", "my-service.jar").toString();
-    JarServiceNameDetector serviceNameProvider =
-        getDetector(
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(
             new String[] {"-Dtest=42", "-jar", "-Xmx512m", path, "abc", "def"},
             prop -> null,
-            JarServiceNameDetectorTest::failPath);
+            JarServiceNameResourceExtractorTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
 
   @Test
-  void createResource_processHandleJarWithoutExtension() {
-    JarServiceNameDetector serviceNameProvider =
-        getDetector(getArgs("my-service"), prop -> null, JarServiceNameDetectorTest::failPath);
+  void extractResource_processHandleJarWithoutExtension() {
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(getArgs("my-service"), prop -> null, JarServiceNameResourceExtractorTest::failPath);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
@@ -100,15 +96,15 @@ class JarServiceNameDetectorTest {
 
   @ParameterizedTest
   @MethodSource("sunCommandLineArguments")
-  void createResource_sunCommandLine(String commandLine, Path jarPath) {
+  void extractResource_sunCommandLine(String commandLine, Path jarPath) {
     Function<String, String> getProperty =
         key -> "sun.java.command".equals(key) ? commandLine : null;
     Predicate<Path> fileExists = jarPath::equals;
 
-    JarServiceNameDetector serviceNameProvider =
-        getDetector(new String[0], getProperty, fileExists);
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(new String[0], getProperty, fileExists);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).hasSize(1).containsEntry(SERVICE_NAME, "my-service");
   }
@@ -116,15 +112,15 @@ class JarServiceNameDetectorTest {
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7567
   @Test
-  void createResource_sunCommandLineProblematicArgs() {
+  void extractResource_sunCommandLineProblematicArgs() {
     Function<String, String> getProperty =
         key -> key.equals("sun.java.command") ? "one C:/two" : null;
     Predicate<Path> fileExists = path -> false;
 
-    JarServiceNameDetector serviceNameProvider =
-        getDetector(new String[0], getProperty, fileExists);
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(new String[0], getProperty, fileExists);
 
-    Resource resource = serviceNameProvider.createResource(config);
+    Resource resource = serviceNameProvider.extract();
 
     assertThat(resource.getAttributes()).isEmpty();
   }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.resources;
+package io.opentelemetry.instrumentation.resources.internal;
 
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
+
 
 class MainJarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
