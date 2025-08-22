@@ -21,9 +21,6 @@ import javax.annotation.Nullable;
 /**
  * A builder for {@link DeclarativeConfigPropertiesBridge} that allows adding translations and fixed
  * values for properties.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
  */
 public class DeclarativeConfigPropertiesBridgeBuilder {
   /**
@@ -83,6 +80,17 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
   }
 
   /**
+   * Build {@link ConfigProperties} from the provided {@link DeclarativeConfigProperties} node.
+   *
+   * @param node the declarative config properties to build from
+   * @return a new instance of {@link ConfigProperties}
+   */
+  public ConfigProperties build(@Nullable DeclarativeConfigProperties node) {
+    return new DeclarativeConfigPropertiesBridge(
+        node == null ? empty() : node, mappings, overrideValues);
+  }
+
+  /**
    * Build {@link ConfigProperties} from the {@link DeclarativeConfigProperties} provided by the
    * instrumentation configuration.
    *
@@ -94,12 +102,7 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
    */
   public ConfigProperties buildFromInstrumentationConfig(
       @Nullable DeclarativeConfigProperties instrumentationConfig) {
-    // leave the name "build" for a future method that builds from a DeclarativeConfigProperties
-    // instance that doesn't come from the top-level instrumentation config
-    if (instrumentationConfig == null) {
-      instrumentationConfig = DeclarativeConfigProperties.empty();
-    }
-    return new DeclarativeConfigPropertiesBridge(
-        instrumentationConfig.getStructured("java", empty()), mappings, overrideValues);
+    return build(
+        instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
   }
 }

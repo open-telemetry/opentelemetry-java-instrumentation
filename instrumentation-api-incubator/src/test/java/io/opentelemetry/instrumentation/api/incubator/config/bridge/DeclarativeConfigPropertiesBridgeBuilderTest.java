@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.config.bridge;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -47,7 +46,7 @@ class DeclarativeConfigPropertiesBridgeBuilderTest {
     when(javaNodeMock.getString(propertyName)).thenReturn(expectedValue);
 
     DeclarativeConfigProperties instrumentationConfigMock = mock(DeclarativeConfigProperties.class);
-    when(instrumentationConfigMock.getStructured(eq("java"), any())).thenReturn(javaNodeMock);
+    when(instrumentationConfigMock.getStructured(eq("java"))).thenReturn(javaNodeMock);
 
     ConfigProvider configProviderMock = mock(ConfigProvider.class);
     when(configProviderMock.getInstrumentationConfig()).thenReturn(instrumentationConfigMock);
