@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.clickhouse.v0_6;
+package io.opentelemetry.javaagent.instrumentation.clickhouse.v0_8;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.testing.ClickHouseAttributeAssertions.attributeAssertions;
@@ -19,7 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
 import com.clickhouse.client.api.Client;
-import com.clickhouse.client.api.ClientException;
+import com.clickhouse.client.api.ServerException;
 import com.clickhouse.client.api.command.CommandResponse;
 import com.clickhouse.client.api.enums.Protocol;
 import com.clickhouse.client.api.query.QueryResponse;
@@ -31,8 +31,11 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -71,11 +74,13 @@ class ClickHouseClientV2Test {
             .setDefaultDatabase(dbName)
             .setUsername(username)
             .setPassword(password)
-            .setOption("compress", "0")
+            .setOption("compress", "false")
             .build();
 
     QueryResponse response =
-        client.query("create table if not exists " + tableName + "(s String) engine=Memory").get();
+        client
+            .query("create table if not exists " + tableName + "(value String) engine=Memory")
+            .get();
     response.close();
 
     // wait for CREATE operation and clear
@@ -96,7 +101,9 @@ class ClickHouseClientV2Test {
     Client client =
         new Client.Builder()
             .addEndpoint(Protocol.HTTP, host, port, false)
-            .setOption("compress", "0")
+            .setOption("compress", "false")
+            .setUsername(username)
+            .setPassword(password)
             .build();
 
     QueryResponse response = client.query("select * from " + tableName).get();
@@ -115,7 +122,7 @@ class ClickHouseClientV2Test {
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.clickhouse-client-0.6",
+        "io.opentelemetry.clickhouse-client-0.8",
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         DB_NAMESPACE,
@@ -194,7 +201,7 @@ class ClickHouseClientV2Test {
               response.close();
             });
 
-    assertThat(thrown).isInstanceOf(ClientException.class);
+    assertThat(thrown).isInstanceOf(ServerException.class);
 
     List<AttributeAssertion> assertions =
         new ArrayList<>(
@@ -222,7 +229,7 @@ class ClickHouseClientV2Test {
           CompletableFuture<CommandResponse> future =
               client.execute("select * from " + tableName + " limit 1");
           CommandResponse results = future.get();
-          assertThat(results.getReadRows()).isEqualTo(0);
+          assertThat(results.getReadRows()).isEqualTo(2);
         });
 
     testing.waitAndAssertTraces(
@@ -239,6 +246,41 @@ class ClickHouseClientV2Test {
                                 host,
                                 port,
                                 "select * from " + tableName + " limit ?",
+                                "SELECT"))));
+  }
+
+  @Test
+  void testPlaceholderQuery() throws Exception {
+    Map<String, Object> queryParams = new HashMap<>();
+    queryParams.put("param_s", Instant.now().getEpochSecond());
+
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          QueryResponse response =
+              client
+                  .query(
+                      "select * from " + tableName + " where value={param_s: String}",
+                      queryParams,
+                      null)
+                  .get();
+          response.close();
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasAttributes(Attributes.empty()),
+                span ->
+                    span.hasName("SELECT " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            attributeAssertions(
+                                dbName,
+                                host,
+                                port,
+                                "select * from " + tableName + " where value={param_s: String}",
                                 "SELECT"))));
   }
 }

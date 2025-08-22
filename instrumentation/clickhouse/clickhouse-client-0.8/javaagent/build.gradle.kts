@@ -6,18 +6,18 @@ muzzle {
   pass {
     group.set("com.clickhouse")
     module.set("client-v2")
-    versions.set("[0.6.4,)")
+    versions.set("[0.8.0,)")
     assertInverse.set(true)
   }
 }
 
 dependencies {
   implementation(project(":instrumentation:clickhouse:clickhouse-client-common:javaagent"))
-  compileOnly("com.clickhouse:client-v2:0.6.4")
+  compileOnly("com.clickhouse:client-v2:0.8.0")
 
   testImplementation("com.google.guava:guava")
   testImplementation(project(":instrumentation:clickhouse:testing"))
-  testLibrary("com.clickhouse:client-v2:0.6.4")
+  testLibrary("com.clickhouse:client-v2:0.8.0")
 }
 
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"

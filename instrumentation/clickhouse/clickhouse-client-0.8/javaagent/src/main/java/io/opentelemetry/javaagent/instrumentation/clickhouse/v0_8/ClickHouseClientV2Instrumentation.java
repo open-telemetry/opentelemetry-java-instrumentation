@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.clickhouse.v0_6;
+package io.opentelemetry.javaagent.instrumentation.clickhouse.v0_8;
 
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isSubTypeOf;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -26,10 +27,11 @@ public class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         isMethod()
+            .and(isPublic())
             .and(named("query"))
             .and(takesArgument(0, String.class))
             .and(takesArgument(1, isSubTypeOf(Map.class)))
             .and(takesArgument(2, named("com.clickhouse.client.api.query.QuerySettings"))),
-        "io.opentelemetry.javaagent.instrumentation.clickhouse.v0_6.ClickHouseClientV2QueryAdvice");
+        "io.opentelemetry.javaagent.instrumentation.clickhouse.v0_8.ClickHouseClientV2QueryAdvice");
   }
 }
