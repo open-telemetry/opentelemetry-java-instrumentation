@@ -6,7 +6,7 @@ pluginManagement {
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("org.unbroken-dome.xjc") version "2.0.0"
+    id("com.github.bjornvester.xjc") version "1.8.2"
     id("org.graalvm.buildtools.native") version "0.11.0"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
@@ -594,6 +594,7 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
+include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
