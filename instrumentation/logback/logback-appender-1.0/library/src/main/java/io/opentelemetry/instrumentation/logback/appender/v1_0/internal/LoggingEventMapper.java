@@ -17,6 +17,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
@@ -147,7 +148,7 @@ public final class LoggingEventMapper {
       throwable = ((ThrowableProxy) throwableProxy).getThrowable();
     }
     if (throwable != null) {
-      setThrowable(attributes, throwable);
+      setThrowable(builder, attributes, throwable);
     }
 
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
@@ -269,14 +270,16 @@ public final class LoggingEventMapper {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
-  private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
-    // TODO (trask) extract method for recording exception into
-    // io.opentelemetry:opentelemetry-api
-    attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-    attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-    StringWriter writer = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(writer));
-    attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+  private static void setThrowable(LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
+    if (builder instanceof ExtendedLogRecordBuilder) {
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
+    } else {
+      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      StringWriter writer = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(writer));
+      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+    }
   }
 
   private static Severity levelToSeverity(Level level) {

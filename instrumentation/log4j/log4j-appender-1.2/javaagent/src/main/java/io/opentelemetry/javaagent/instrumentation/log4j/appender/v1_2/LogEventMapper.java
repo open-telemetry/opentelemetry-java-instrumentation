@@ -14,6 +14,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
@@ -101,13 +102,15 @@ public final class LogEventMapper {
 
     // throwable
     if (throwable != null) {
-      // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api
-      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      if (builder instanceof ExtendedLogRecordBuilder) {
+        ((ExtendedLogRecordBuilder) builder).setException(throwable);
+      } else {
+        attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+        attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+        StringWriter writer = new StringWriter();
+        throwable.printStackTrace(new PrintWriter(writer));
+        attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      }
     }
 
     captureMdcAttributes(attributes);
