@@ -16,15 +16,16 @@ import java.util.function.Supplier;
 import java.util.logging.Logger;
 
 /**
- * A resource extractor that will attempt to detect the <code>service.name</code> from the
- * main jar file name.
+ * A resource extractor that will attempt to detect the <code>service.name</code> from the main jar
+ * file name.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 public final class JarServiceNameResourceExtractor {
 
-  private static final Logger logger = Logger.getLogger(JarServiceNameResourceExtractor.class.getName());
+  private static final Logger logger =
+      Logger.getLogger(JarServiceNameResourceExtractor.class.getName());
 
   private final Supplier<Optional<Path>> jarPathSupplier;
 

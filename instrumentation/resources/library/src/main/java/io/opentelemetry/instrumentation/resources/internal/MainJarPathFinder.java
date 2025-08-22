@@ -14,7 +14,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
-
 class MainJarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
   private final Function<String, String> getSystemProperty;
