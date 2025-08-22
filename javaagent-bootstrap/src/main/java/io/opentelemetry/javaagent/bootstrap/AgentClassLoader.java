@@ -89,6 +89,7 @@ public class AgentClassLoader extends URLClassLoader {
 
   /**
    * Construct a new AgentClassLoader with a custom parent ClassLoader.
+   * This is used by some 3rd party command-line utilities in order to reuse classes that are bundled as classdata files under `inst/`.
    *
    * @param javaagentFile Used for resource lookups.
    * @param internalJarFileName File name of the internal jar
