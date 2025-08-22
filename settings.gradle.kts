@@ -8,6 +8,8 @@ pluginManagement {
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("org.unbroken-dome.xjc") version "2.0.0"
     id("org.graalvm.buildtools.native") version "0.11.0"
+    id("com.google.osdetector") version "1.7.3"
+    id("com.google.protobuf") version "0.9.5"
   }
 }
 
