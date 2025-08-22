@@ -18,7 +18,6 @@ enum ApacheHttpClientHttpAttributesGetter
   INSTANCE;
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }
@@ -47,14 +46,12 @@ enum ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getNetworkProtocolName(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getProtocolName();
   }
 
   @Override
-  @Nullable
   public String getNetworkProtocolVersion(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getProtocolVersion();

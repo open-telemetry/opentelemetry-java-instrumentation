@@ -21,7 +21,6 @@ final class GrizzlyHttpAttributesGetter
     implements HttpServerAttributesGetter<HttpRequestPacket, HttpResponsePacket> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpRequestPacket request) {
     return request.getMethod().getMethodString();
   }
@@ -53,7 +52,6 @@ final class GrizzlyHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(HttpRequestPacket request) {
     return request.isSecure() ? "https" : "http";
   }

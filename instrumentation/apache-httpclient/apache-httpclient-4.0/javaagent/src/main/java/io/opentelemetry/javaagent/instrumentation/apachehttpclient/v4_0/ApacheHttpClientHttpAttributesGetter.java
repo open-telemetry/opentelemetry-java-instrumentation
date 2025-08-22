@@ -16,7 +16,6 @@ final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ApacheHttpClientRequest, HttpResponse> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(ApacheHttpClientRequest request) {
     return request.getMethod();
   }
@@ -44,14 +43,12 @@ final class ApacheHttpClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getNetworkProtocolName(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getProtocolName();
   }
 
   @Override
-  @Nullable
   public String getNetworkProtocolVersion(
       ApacheHttpClientRequest request, @Nullable HttpResponse response) {
     return request.getProtocolVersion();

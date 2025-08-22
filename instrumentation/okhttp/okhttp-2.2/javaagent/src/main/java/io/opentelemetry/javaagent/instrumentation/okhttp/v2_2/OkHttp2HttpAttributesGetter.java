@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 final class OkHttp2HttpAttributesGetter implements HttpClientAttributesGetter<Request, Response> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(Request request) {
     return request.method();
   }

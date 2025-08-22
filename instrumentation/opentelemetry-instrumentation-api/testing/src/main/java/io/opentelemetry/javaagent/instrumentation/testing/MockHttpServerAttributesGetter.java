@@ -17,7 +17,6 @@ enum MockHttpServerAttributesGetter implements HttpServerAttributesGetter<String
   INSTANCE;
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(String s) {
     return "GET";
   }

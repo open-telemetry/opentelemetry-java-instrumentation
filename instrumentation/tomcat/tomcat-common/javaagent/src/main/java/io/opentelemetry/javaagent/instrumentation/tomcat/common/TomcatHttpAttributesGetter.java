@@ -21,7 +21,6 @@ import org.apache.tomcat.util.http.MimeHeaders;
 public class TomcatHttpAttributesGetter implements HttpServerAttributesGetter<Request, Response> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(Request request) {
     return messageBytesToString(request.method());
   }

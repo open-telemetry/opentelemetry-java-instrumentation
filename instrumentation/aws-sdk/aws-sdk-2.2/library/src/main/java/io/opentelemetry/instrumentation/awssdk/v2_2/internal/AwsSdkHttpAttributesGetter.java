@@ -24,7 +24,6 @@ class AwsSdkHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(ExecutionAttributes request) {
     SdkHttpRequest httpRequest =
         request.getAttribute(TracingExecutionInterceptor.SDK_HTTP_REQUEST_ATTRIBUTE);

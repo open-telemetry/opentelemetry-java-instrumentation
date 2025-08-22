@@ -15,7 +15,6 @@ final class JoddHttpHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpRequest request) {
     return request.method();
   }
@@ -43,7 +42,6 @@ final class JoddHttpHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getNetworkProtocolName(HttpRequest request, @Nullable HttpResponse response) {
     return "http";
   }

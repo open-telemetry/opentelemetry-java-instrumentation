@@ -67,7 +67,6 @@ final class Vertx3HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpClientRequest request) {
     return request.method().name();
   }
