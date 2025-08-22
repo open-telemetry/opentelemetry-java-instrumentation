@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
-import com.clickhouse.client.ClickHouseException;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
-public final class ClickHouseAttributesGetter
+public class ClickHouseAttributesGetter
     implements DbClientAttributesGetter<ClickHouseDbRequest, Void> {
 
   @Nullable
@@ -64,9 +63,6 @@ public final class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
-    if (error instanceof ClickHouseException) {
-      return Integer.toString(((ClickHouseException) error).getErrorCode());
-    }
     return null;
   }
 }

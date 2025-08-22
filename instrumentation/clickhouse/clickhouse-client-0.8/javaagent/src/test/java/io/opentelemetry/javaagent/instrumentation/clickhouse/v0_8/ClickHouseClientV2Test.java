@@ -193,7 +193,7 @@ class ClickHouseClientV2Test {
   }
 
   @Test
-  void testQueryThrowsException() {
+  void testQueryThrowsServerException() {
     Throwable thrown =
         catchThrowable(
             () -> {
@@ -208,7 +208,7 @@ class ClickHouseClientV2Test {
             attributeAssertions(dbName, host, port, "select * from non_existent_table", "SELECT"));
     if (SemconvStability.emitStableDatabaseSemconv()) {
       assertions.add(equalTo(DB_RESPONSE_STATUS_CODE, "60"));
-      assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.ClickHouseException"));
+      assertions.add(equalTo(ERROR_TYPE, "com.clickhouse.client.api.ServerException"));
     }
     testing.waitAndAssertTraces(
         trace ->
@@ -229,7 +229,7 @@ class ClickHouseClientV2Test {
           CompletableFuture<CommandResponse> future =
               client.execute("select * from " + tableName + " limit 1");
           CommandResponse results = future.get();
-          assertThat(results.getReadRows()).isEqualTo(2);
+          assertThat(results.getReadRows()).isEqualTo(0);
         });
 
     testing.waitAndAssertTraces(

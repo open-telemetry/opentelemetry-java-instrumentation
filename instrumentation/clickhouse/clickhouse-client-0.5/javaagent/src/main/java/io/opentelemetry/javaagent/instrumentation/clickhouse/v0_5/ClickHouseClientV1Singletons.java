@@ -15,7 +15,9 @@ public final class ClickHouseClientV1Singletons {
   private static final Instrumenter<ClickHouseDbRequest, Void> INSTRUMENTER;
 
   static {
-    INSTRUMENTER = ClickHouseInstrumenterFactory.createInstrumenter(INSTRUMENTER_NAME);
+    INSTRUMENTER =
+        ClickHouseInstrumenterFactory.createInstrumenter(
+            INSTRUMENTER_NAME, ClickHouseClientV1AttributesGetter.create());
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {

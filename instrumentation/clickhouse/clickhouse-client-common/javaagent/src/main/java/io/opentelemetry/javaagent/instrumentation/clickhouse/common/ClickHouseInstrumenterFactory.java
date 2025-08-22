@@ -16,9 +16,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 public final class ClickHouseInstrumenterFactory {
 
   public static Instrumenter<ClickHouseDbRequest, Void> createInstrumenter(
-      String instrumenterName) {
-    ClickHouseAttributesGetter dbAttributesGetter = new ClickHouseAttributesGetter();
-
+      String instrumenterName, ClickHouseAttributesGetter dbAttributesGetter) {
     return Instrumenter.<ClickHouseDbRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumenterName,
