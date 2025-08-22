@@ -64,7 +64,8 @@ class RpcClientMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = RpcMetricsHolder.init(listener.onStart(parent, requestAttributes, nanos(100)));
+    Context context1 =
+        RpcMetricsHolder.init(listener.onStart(parent, requestAttributes, nanos(100)));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
