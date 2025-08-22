@@ -17,7 +17,6 @@ import org.springframework.context.annotation.Configuration;
  */
 @ConditionalOnEnabledInstrumentation(module = "common.thread-details", enabledByDefault = false)
 @Configuration
-@SuppressWarnings("OtelPrivateConstructorForUtilityClass")
 public class ThreadDetailsAutoConfiguration {
 
   @Bean
