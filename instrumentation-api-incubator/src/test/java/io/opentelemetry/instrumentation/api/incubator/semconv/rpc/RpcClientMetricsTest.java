@@ -46,8 +46,6 @@ class RpcClientMetricsTest {
             .put(ServerAttributes.SERVER_PORT, 8080)
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
-            .put(RpcCommonAttributesExtractor.RPC_REQUEST_BODY_SIZE, 10)
-            .put(RpcCommonAttributesExtractor.RPC_RESPONSE_BODY_SIZE, 20)
             .build();
 
     Attributes responseAttributes2 =
@@ -66,7 +64,7 @@ class RpcClientMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
+    Context context1 = RpcMetricsHolder.init(listener.onStart(parent, requestAttributes, nanos(100)));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
@@ -74,6 +72,8 @@ class RpcClientMetricsTest {
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
+    RpcMetricsHolder.setRequestBodySize(context1, 10);
+    RpcMetricsHolder.setResponseBodySize(context1, 20);
     listener.onEnd(context1, responseAttributes1, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
