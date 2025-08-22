@@ -169,7 +169,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     return extractor.apply(target, lastPart);
   }
 
-  private static String[] getSegments(String property) {
+  static String[] getSegments(String property) {
     if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
     }
