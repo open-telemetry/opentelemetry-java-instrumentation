@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -42,6 +43,7 @@ class InstrumenterContextTest {
           }
 
           @Override
+          @Nullable
           public String getDbNamespace(Object o) {
             return null;
           }
