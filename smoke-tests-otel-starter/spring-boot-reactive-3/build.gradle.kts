@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot31.plugins.versions)
+  id("org.springframework.boot") version "3.5.4"
   id("org.graalvm.buildtools.native")
 }
 
@@ -12,7 +12,8 @@ otelJava {
 
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
-  implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
+  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "3.+" else "3.1.0"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")

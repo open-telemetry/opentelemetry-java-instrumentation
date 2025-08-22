@@ -28,23 +28,6 @@ dependencyResolutionManagement {
     mavenCentral()
     mavenLocal()
   }
-
-  versionCatalogs {
-    fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
-      val latestDepTest = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-      create(name) {
-        val version =
-          gradle.startParameter.projectProperties["${name}Version"]
-            ?: (if (latestDepTest) maxVersion else minVersion)
-        plugin("versions", "org.springframework.boot").version(version)
-      }
-    }
-    // r2dbc is not compatible with earlier versions
-    addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
-    // spring boot 3.0 is not compatible with graalvm native image
-    addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
-    addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
-  }
 }
 
 develocity {
