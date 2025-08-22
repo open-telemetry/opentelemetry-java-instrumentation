@@ -56,7 +56,7 @@ class ManifestResourceProviderTest {
                     Attributes.of(SERVICE_NAME, "demo", SERVICE_VERSION, "0.0.1-SNAPSHOT")),
                 Resource.getDefault()),
             new TestCase(
-                "name - empty resource", null, null, Resource.getDefault(), Resource.getDefault()),
+                "name - empty resource", null, null, Resource.empty(), Resource.getDefault()),
             new TestCase(
                 "name already detected",
                 null,
