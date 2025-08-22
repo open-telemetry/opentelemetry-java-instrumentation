@@ -7,12 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.kafkaclients.v0_11;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.List;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaSingletons {
@@ -25,6 +29,11 @@ public final class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> PRODUCER_INSTRUMENTER;
   private static final Instrumenter<KafkaReceiveRequest, Void> CONSUMER_RECEIVE_INSTRUMENTER;
   private static final Instrumenter<KafkaProcessRequest, Void> CONSUMER_PROCESS_INSTRUMENTER;
+
+  public static final VirtualField<Consumer<?, ?>, List<String>>
+      CONSUMER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD = VirtualField.find(Consumer.class, List.class);
+  public static final VirtualField<Producer<?, ?>, List<String>>
+      PRODUCER_BOOTSTRAP_SERVERS_VIRTUAL_FIELD = VirtualField.find(Producer.class, List.class);
 
   static {
     KafkaInstrumenterFactory instrumenterFactory =
