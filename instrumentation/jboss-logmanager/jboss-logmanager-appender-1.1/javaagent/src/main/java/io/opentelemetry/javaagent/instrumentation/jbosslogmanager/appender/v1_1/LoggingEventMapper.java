@@ -82,15 +82,8 @@ public final class LoggingEventMapper {
 
     Throwable throwable = record.getThrown();
     if (throwable != null) {
-      if (builder instanceof ExtendedLogRecordBuilder) {
-        ((ExtendedLogRecordBuilder) builder).setException(throwable);
-      } else {
-        attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-        attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-        StringWriter writer = new StringWriter();
-        throwable.printStackTrace(new PrintWriter(writer));
-        attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
-      }
+      // this cast is safe within java agent instrumentation
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
     }
     captureMdcAttributes(attributes);
 
