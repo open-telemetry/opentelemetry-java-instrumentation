@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.resources.internal;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.resources.JarServiceNameDetector;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 
 /**
@@ -19,6 +18,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class JarResourceComponentProvider extends ResourceComponentProvider {
   public JarResourceComponentProvider() {
-    super("jar", p -> new JarServiceNameDetector().createResource(p));
+    super("jar", p -> new JarServiceNameResourceExtractor().extract());
   }
 }

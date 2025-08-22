@@ -10,15 +10,11 @@ import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_VERSION;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.resources.Resource;
-import java.io.InputStream;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Optional;
-import java.util.jar.Manifest;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DynamicTest;
@@ -30,14 +26,14 @@ class ManifestResourceProviderTest {
     private final String name;
     private final String expectedName;
     private final String expectedVersion;
-    private final InputStream input;
+    private final Resource input;
     private final Resource existing;
 
     TestCase(
         String name,
         String expectedName,
         String expectedVersion,
-        InputStream input,
+        Resource input,
         Resource existing) {
       this.name = name;
       this.expectedName = expectedName;
@@ -56,20 +52,17 @@ class ManifestResourceProviderTest {
                 "name ok",
                 "demo",
                 "0.0.1-SNAPSHOT",
-                openClasspathResource("MANIFEST.MF"),
+                Resource.create(
+                    Attributes.of(SERVICE_NAME, "demo", SERVICE_VERSION, "0.0.1-SNAPSHOT")),
                 Resource.getDefault()),
-            new TestCase("name - no resource", null, null, null, Resource.getDefault()),
             new TestCase(
-                "name - empty resource",
-                null,
-                null,
-                openClasspathResource("empty-MANIFEST.MF"),
-                Resource.getDefault()),
+                "name - empty resource", null, null, Resource.getDefault(), Resource.getDefault()),
             new TestCase(
                 "name already detected",
                 null,
                 "0.0.1-SNAPSHOT",
-                openClasspathResource("MANIFEST.MF"),
+                Resource.create(
+                    Attributes.of(SERVICE_NAME, "demo", SERVICE_VERSION, "0.0.1-SNAPSHOT")),
                 Resource.create(Attributes.of(SERVICE_NAME, "old"))))
         .map(
             t ->
@@ -77,40 +70,14 @@ class ManifestResourceProviderTest {
                     t.name,
                     () -> {
                       ManifestResourceProvider provider =
-                          new ManifestResourceProvider(
-                              new MainJarPathFinder(
-                                  () -> JarServiceNameDetectorTest.getArgs("app.jar"),
-                                  prop -> null,
-                                  JarServiceNameDetectorTest::failPath),
-                              p -> {
-                                try {
-                                  Manifest manifest = new Manifest();
-                                  manifest.read(t.input);
-                                  return Optional.of(manifest);
-                                } catch (Exception e) {
-                                  return Optional.empty();
-                                }
-                              });
+                          new ManifestResourceProvider(() -> t.input);
                       provider.shouldApply(config, t.existing);
 
                       Resource resource = provider.createResource(config);
                       assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);
                       assertThat(resource.getAttribute(SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
-
-                      if (t.existing.getAttributes().isEmpty()) {
-                        // component provider does not consider existing resource
-                        assertThat(
-                                provider
-                                    .createResource(DeclarativeConfigProperties.empty())
-                                    .getAttributes())
-                            .isEqualTo(resource.getAttributes());
-                      }
                     }))
         .collect(Collectors.toList());
-  }
-
-  private static InputStream openClasspathResource(String resource) {
-    return ManifestResourceProviderTest.class.getClassLoader().getResourceAsStream(resource);
   }
 }
