@@ -57,7 +57,9 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-incubator")
-  bootstrapLibs(project(":instrumentation-api-incubator"))
+  bootstrapLibs(project(":instrumentation-api-incubator")) {
+    exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
+  }
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -72,7 +74,9 @@ dependencies {
   }
   baseJavaagentLibs(project(":javaagent-extension-api"))
 
-  baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":javaagent-tooling")) {
+    exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
+  }
   baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
@@ -286,7 +290,8 @@ tasks {
     doLast {
       val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
       if (Files.exists(filePath)) {
-        val datePattern = Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
+        val datePattern =
+          Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
         val lines = Files.readAllLines(filePath)
         // 4th line contains the timestamp of when the license report was generated, replace it with
         // an empty line
@@ -412,7 +417,8 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
     eachFile {
       if (path.startsWith("net/bytebuddy/") &&
         // this is our class that we have placed in the byte buddy package, need to preserve it
-        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
+        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")
+      ) {
         exclude()
       } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
         path = path.removePrefix("META-INF/versions/9/")
