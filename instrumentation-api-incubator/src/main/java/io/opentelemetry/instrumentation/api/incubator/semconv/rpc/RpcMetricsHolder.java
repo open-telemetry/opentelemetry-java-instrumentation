@@ -7,20 +7,17 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.rpc;
 
 import static io.opentelemetry.context.ContextKey.named;
 
-import javax.annotation.Nullable;
-
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.ImplicitContextKeyed;
+import javax.annotation.Nullable;
 
 public class RpcMetricsHolder implements ImplicitContextKeyed {
 
   private static final ContextKey<RpcMetricsHolder> KEY = named("opentelemetry-rpc-metrics");
 
-  @Nullable
-  private Long requestBodySize = null;
-  @Nullable
-  private Long responseBodySize = null;
+  @Nullable private Long requestBodySize = null;
+  @Nullable private Long responseBodySize = null;
 
   private RpcMetricsHolder() {}
 

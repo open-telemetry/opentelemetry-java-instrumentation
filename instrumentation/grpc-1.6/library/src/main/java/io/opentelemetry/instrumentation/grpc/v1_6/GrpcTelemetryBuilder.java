@@ -176,9 +176,7 @@ public final class GrpcTelemetryBuilder {
     GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
 
     clientInstrumenterBuilder
-        .addContextCustomizer(
-          (context, request, attributes) ->
-            RpcMetricsHolder.init(context))
+        .addContextCustomizer((context, request, attributes) -> RpcMetricsHolder.init(context))
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
