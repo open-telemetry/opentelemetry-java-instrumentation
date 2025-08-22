@@ -21,7 +21,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   INSTANCE;
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(Request request) {
     return request.getMethod().getName();
   }
@@ -41,7 +40,6 @@ enum RatpackHttpAttributesGetter implements HttpServerAttributesGetter<Request, 
   }
 
   @Override
-  @Nullable
   public String getUrlPath(Request request) {
     String path = request.getPath();
     return path.startsWith("/") ? path : "/" + path;

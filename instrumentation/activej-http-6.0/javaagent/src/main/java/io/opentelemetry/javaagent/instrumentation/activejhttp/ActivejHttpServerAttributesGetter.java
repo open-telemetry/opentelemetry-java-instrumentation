@@ -21,7 +21,6 @@ final class ActivejHttpServerAttributesGetter
     implements HttpServerAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpRequest request) {
     return request.getMethod().name();
   }
@@ -60,13 +59,11 @@ final class ActivejHttpServerAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getUrlScheme(HttpRequest request) {
     return request.getProtocol().lowercase();
   }
 
   @Override
-  @Nullable
   public String getUrlPath(HttpRequest request) {
     return request.getPath();
   }

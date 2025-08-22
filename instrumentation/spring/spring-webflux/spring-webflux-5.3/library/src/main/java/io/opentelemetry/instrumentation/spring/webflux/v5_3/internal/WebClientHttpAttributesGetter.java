@@ -27,7 +27,6 @@ public enum WebClientHttpAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(ClientRequest request) {
     return request.method().name();
   }

@@ -21,7 +21,6 @@ final class ApacheHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, HttpResponse> {
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpRequest request) {
     return request.getMethod();
   }

@@ -24,7 +24,6 @@ final class ReactorNettyHttpClientAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getHttpRequestMethod(HttpClientRequest request) {
     return request.method().name();
   }
