@@ -104,8 +104,8 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                 "spring-jms-listener",
                 message,
                 jmsMessage -> {
-                  jmsMessage.setStringProperty("test_message_header", "test");
-                  jmsMessage.setIntProperty("test_message_int_header", 1234);
+                  jmsMessage.setStringProperty("Test_Message_Header", "test");
+                  jmsMessage.setIntProperty("Test_Message_Int_Header", 1234);
                   return jmsMessage;
                 }));
 
@@ -129,10 +129,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_OPERATION, "publish"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -146,10 +146,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_OPERATION, "receive"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span ->
                     span.hasName("spring-jms-listener process")
@@ -161,10 +161,10 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
                             equalTo(MESSAGING_OPERATION, "process"),
                             satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
   }
