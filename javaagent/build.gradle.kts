@@ -149,8 +149,7 @@ tasks {
   val buildBootstrapLibs by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
-    exclude("io/opentelemetry/javaagent/extension/**")
+    excludeNonBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -424,6 +423,13 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
     }
     includeEmptyDirs = false
   }
+}
+
+// exclude bootstrap projects from javaagent libs - they won't be added to inst/
+fun ShadowJar.excludeNonBootstrapClasses() {
+  // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
+  exclude("io/opentelemetry/javaagent/extension/**")
+  exclude("**/instrumentation/api/incubator/sdk/**")
 }
 
 // exclude bootstrap projects from javaagent libs - they won't be added to inst/
