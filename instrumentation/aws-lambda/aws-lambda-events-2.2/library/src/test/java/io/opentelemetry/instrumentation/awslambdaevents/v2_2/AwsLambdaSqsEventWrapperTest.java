@@ -32,6 +32,7 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 @ExtendWith(MockitoExtension.class)
 @SetEnvironmentVariable(
     key = WrappedLambda.OTEL_LAMBDA_HANDLER_ENV_KEY,
