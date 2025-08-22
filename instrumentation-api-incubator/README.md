@@ -89,4 +89,3 @@ public class InferredSpansComponentProvider implements ComponentProvider<SpanPro
   }
 }
 ```
-
