@@ -27,11 +27,7 @@ class ManifestResourceExtractorTest {
     private final String expectedVersion;
     private final InputStream input;
 
-    TestCase(
-        String name,
-        String expectedName,
-        String expectedVersion,
-        InputStream input) {
+    TestCase(String name, String expectedName, String expectedVersion, InputStream input) {
       this.name = name;
       this.expectedName = expectedName;
       this.expectedVersion = expectedVersion;
@@ -42,17 +38,10 @@ class ManifestResourceExtractorTest {
   @TestFactory
   Collection<DynamicTest> extractResource() {
     return Stream.of(
-            new TestCase(
-                "name ok",
-                "demo",
-                "0.0.1-SNAPSHOT",
-                openClasspathResource("MANIFEST.MF")),
+            new TestCase("name ok", "demo", "0.0.1-SNAPSHOT", openClasspathResource("MANIFEST.MF")),
             new TestCase("name - no resource", null, null, null),
             new TestCase(
-                "name - empty resource",
-                null,
-                null,
-                openClasspathResource("empty-MANIFEST.MF")))
+                "name - empty resource", null, null, openClasspathResource("empty-MANIFEST.MF")))
         .map(
             t ->
                 DynamicTest.dynamicTest(

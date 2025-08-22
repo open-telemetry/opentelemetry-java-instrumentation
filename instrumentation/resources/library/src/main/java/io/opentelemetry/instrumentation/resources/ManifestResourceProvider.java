@@ -28,8 +28,7 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Re
   }
 
   // Visible for testing
-  ManifestResourceProvider(
-      Supplier<Resource> resourceSupplier) {
+  ManifestResourceProvider(Supplier<Resource> resourceSupplier) {
     super(
         new AttributeProvider<Resource>() {
           @Override
