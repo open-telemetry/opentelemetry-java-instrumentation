@@ -55,8 +55,7 @@ public final class ManifestResourceExtractor {
     return jarPathSupplier
         .get()
         .flatMap(manifestReader)
-        .map(
-            manifest -> extract(manifest))
+        .map(manifest -> extract(manifest))
         .orElseGet(Resource::empty);
   }
 

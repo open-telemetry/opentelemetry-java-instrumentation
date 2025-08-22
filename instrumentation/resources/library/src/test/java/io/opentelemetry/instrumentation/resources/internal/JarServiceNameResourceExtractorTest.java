@@ -31,7 +31,8 @@ class JarServiceNameResourceExtractorTest {
     String[] processArgs = new String[0];
     Function<String, String> getProperty = prop -> null;
     Predicate<Path> fileExists = JarServiceNameResourceExtractorTest::failPath;
-    JarServiceNameResourceExtractor serviceNameProvider = getFinder(processArgs, getProperty, fileExists);
+    JarServiceNameResourceExtractor serviceNameProvider =
+        getFinder(processArgs, getProperty, fileExists);
 
     Resource resource = serviceNameProvider.extract();
 
@@ -58,7 +59,8 @@ class JarServiceNameResourceExtractorTest {
   @Test
   void extractResource_processHandleJar() {
     JarServiceNameResourceExtractor serviceNameProvider =
-        getFinder(getArgs("my-service.jar"), prop -> null, JarServiceNameResourceExtractorTest::failPath);
+        getFinder(
+            getArgs("my-service.jar"), prop -> null, JarServiceNameResourceExtractorTest::failPath);
 
     Resource resource = serviceNameProvider.extract();
 
@@ -82,7 +84,8 @@ class JarServiceNameResourceExtractorTest {
   @Test
   void extractResource_processHandleJarWithoutExtension() {
     JarServiceNameResourceExtractor serviceNameProvider =
-        getFinder(getArgs("my-service"), prop -> null, JarServiceNameResourceExtractorTest::failPath);
+        getFinder(
+            getArgs("my-service"), prop -> null, JarServiceNameResourceExtractorTest::failPath);
 
     Resource resource = serviceNameProvider.extract();
 
