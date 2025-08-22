@@ -28,7 +28,6 @@ import io.grpc.Server;
 import io.grpc.ServerBuilder;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
@@ -52,11 +51,6 @@ import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
 public abstract class AbstractGrpcStreamingTest {
-
-  private static final AttributeKey<Long> RPC_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.request.body.size");
-  private static final AttributeKey<Long> RPC_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.response.body.size");
 
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
@@ -165,9 +159,6 @@ public abstract class AbstractGrpcStreamingTest {
                 .sorted()
                 .collect(Collectors.toList()));
 
-    Helloworld.Response message = Helloworld.Response.newBuilder().setMessage("call " + 1).build();
-    int requestSerializedSize = message.getSerializedSize();
-
     List<Consumer<EventData>> clientEvents = new ArrayList<>();
     List<Consumer<EventData>> serverEvents = new ArrayList<>();
     for (long i = 0; i < clientMessageCount; i++) {
@@ -236,8 +227,6 @@ public abstract class AbstractGrpcStreamingTest {
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "Conversation"),
                                     equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                    equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
-                                    equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
                                     equalTo(SERVER_ADDRESS, "localhost"),
                                     equalTo(SERVER_PORT, (long) server.getPort())))
                             .satisfies(
@@ -253,8 +242,6 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "Conversation"),
                                 equalTo(RPC_GRPC_STATUS_CODE, (long) Status.Code.OK.value()),
-                                equalTo(RPC_REQUEST_BODY_SIZE, requestSerializedSize),
-                                equalTo(RPC_RESPONSE_BODY_SIZE, requestSerializedSize),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),

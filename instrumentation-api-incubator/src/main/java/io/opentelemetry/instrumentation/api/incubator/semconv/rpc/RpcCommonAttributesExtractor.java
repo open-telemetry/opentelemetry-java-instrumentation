@@ -20,10 +20,6 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<String> RPC_METHOD = AttributeKey.stringKey("rpc.method");
   static final AttributeKey<String> RPC_SERVICE = AttributeKey.stringKey("rpc.service");
   static final AttributeKey<String> RPC_SYSTEM = AttributeKey.stringKey("rpc.system");
-  static final AttributeKey<Long> RPC_REQUEST_BODY_SIZE =
-      AttributeKey.longKey("rpc.request.body.size");
-  static final AttributeKey<Long> RPC_RESPONSE_BODY_SIZE =
-      AttributeKey.longKey("rpc.response.body.size");
 
   private final RpcAttributesGetter<REQUEST> getter;
 
@@ -49,19 +45,19 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
     Long responseSize = getter.getResponseSize(request);
     if (this instanceof RpcClientAttributesExtractor) {
       if (requestSize != null) {
-        internalSet(attributes, RPC_REQUEST_BODY_SIZE, requestSize);
+        RpcMetricsHolder.setRequestBodySize(context, requestSize);
       }
       if (responseSize != null) {
-        internalSet(attributes, RPC_RESPONSE_BODY_SIZE, responseSize);
+        RpcMetricsHolder.setResponseBodySize(context, responseSize);
       }
     }
 
     if (this instanceof RpcServerAttributesExtractor) {
       if (requestSize != null) {
-        internalSet(attributes, RPC_REQUEST_BODY_SIZE, requestSize);
+        RpcMetricsHolder.setRequestBodySize(context, requestSize);
       }
       if (responseSize != null) {
-        internalSet(attributes, RPC_RESPONSE_BODY_SIZE, responseSize);
+        RpcMetricsHolder.setResponseBodySize(context, responseSize);
       }
     }
   }
