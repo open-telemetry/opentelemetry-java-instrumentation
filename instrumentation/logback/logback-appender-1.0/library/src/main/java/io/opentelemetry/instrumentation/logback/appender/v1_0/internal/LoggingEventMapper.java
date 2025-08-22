@@ -270,7 +270,8 @@ public final class LoggingEventMapper {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
-  private static void setThrowable(LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
+  private static void setThrowable(
+      LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
     if (builder instanceof ExtendedLogRecordBuilder) {
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     } else {

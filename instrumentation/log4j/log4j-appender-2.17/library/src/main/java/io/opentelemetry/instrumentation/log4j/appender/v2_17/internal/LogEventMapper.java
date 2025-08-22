@@ -234,7 +234,8 @@ public final class LogEventMapper<T> {
         key, k -> AttributeKey.stringKey("log4j.map_message." + k));
   }
 
-  private static void setThrowable(LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
+  private static void setThrowable(
+      LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
     if (builder instanceof ExtendedLogRecordBuilder) {
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     } else {
