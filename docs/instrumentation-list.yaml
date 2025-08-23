@@ -983,6 +983,14 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+  - name: aws-lambda-events-3.11
+    source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
+    scope:
+      name: io.opentelemetry.aws-lambda-events-3.11
+    target_versions:
+      library:
+      - com.amazonaws:aws-lambda-java-events:3.11.0
+      - com.amazonaws:aws-lambda-java-core:1.0.0
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
