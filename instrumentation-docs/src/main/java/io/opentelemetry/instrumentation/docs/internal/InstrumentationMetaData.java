@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /**
@@ -23,23 +24,25 @@ public class InstrumentationMetaData {
   @Nullable
   private Boolean disabledByDefault;
 
-  private String classification;
+  private List<String> classifications;
 
-  private List<ConfigurationOption> configurations = Collections.emptyList();
+  private List<ConfigurationOption> configurations = emptyList();
 
   public InstrumentationMetaData() {
-    this.classification = InstrumentationClassification.LIBRARY.toString();
+    this.classifications = singletonList(InstrumentationClassification.LIBRARY.name());
   }
 
   public InstrumentationMetaData(
       @Nullable String description,
-      String classification,
+      @Nullable List<String> classifications,
       @Nullable Boolean disabledByDefault,
       @Nullable List<ConfigurationOption> configurations) {
-    this.classification = classification;
+    this.classifications =
+        Objects.requireNonNullElse(
+            classifications, singletonList(InstrumentationClassification.LIBRARY.name()));
     this.disabledByDefault = disabledByDefault;
     this.description = description;
-    this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+    this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 
   @Nullable
@@ -47,11 +50,11 @@ public class InstrumentationMetaData {
     return description;
   }
 
-  @Nonnull
-  public InstrumentationClassification getClassification() {
-    return Objects.requireNonNullElse(
-        InstrumentationClassification.fromString(classification),
-        InstrumentationClassification.LIBRARY);
+  public List<InstrumentationClassification> getClassifications() {
+    if (classifications == null || classifications.isEmpty()) {
+      return singletonList(InstrumentationClassification.LIBRARY);
+    }
+    return classifications.stream().map(InstrumentationClassification::fromString).toList();
   }
 
   public Boolean getDisabledByDefault() {
@@ -62,8 +65,11 @@ public class InstrumentationMetaData {
     this.description = description;
   }
 
-  public void setClassification(String classification) {
-    this.classification = classification;
+  public void setClassifications(@Nullable List<String> classifications) {
+    this.classifications =
+        (classifications == null || classifications.isEmpty())
+            ? singletonList(InstrumentationClassification.LIBRARY.name())
+            : classifications;
   }
 
   public void setDisabledByDefault(@Nullable Boolean disabledByDefault) {
@@ -75,6 +81,6 @@ public class InstrumentationMetaData {
   }
 
   public void setConfigurations(@Nullable List<ConfigurationOption> configurations) {
-    this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+    this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 }

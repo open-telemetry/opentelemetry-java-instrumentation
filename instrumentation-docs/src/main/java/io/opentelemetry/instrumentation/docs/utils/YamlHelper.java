@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
@@ -14,6 +15,7 @@ import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaDataDeserializer;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
@@ -39,7 +41,15 @@ public class YamlHelper {
 
   private static final Logger logger = Logger.getLogger(YamlHelper.class.getName());
 
-  private static final ObjectMapper mapper = new ObjectMapper(new YAMLFactory());
+  private static final ObjectMapper mapper;
+
+  static {
+    mapper = new ObjectMapper(new YAMLFactory());
+    SimpleModule module = new SimpleModule();
+    module.addDeserializer(
+        InstrumentationMetaData.class, new InstrumentationMetaDataDeserializer());
+    mapper.registerModule(module);
+  }
 
   public static void generateInstrumentationYaml(
       List<InstrumentationModule> list, BufferedWriter writer) {
@@ -74,8 +84,8 @@ public class YamlHelper {
                 module ->
                     module
                         .getMetadata()
-                        .getClassification()
-                        .equals(InstrumentationClassification.LIBRARY))
+                        .getClassifications()
+                        .contains(InstrumentationClassification.LIBRARY))
             .collect(
                 Collectors.groupingBy(
                     InstrumentationModule::getGroup,
@@ -111,7 +121,7 @@ public class YamlHelper {
       List<InstrumentationModule> list, InstrumentationClassification classification) {
     List<InstrumentationModule> filtered =
         list.stream()
-            .filter(module -> module.getMetadata().getClassification().equals(classification))
+            .filter(module -> module.getMetadata().getClassifications().contains(classification))
             .toList();
 
     List<Map<String, Object>> instrumentations = new ArrayList<>();
@@ -134,6 +144,20 @@ public class YamlHelper {
 
     addMetadataProperties(module, moduleMap);
     moduleMap.put("source_path", module.getSrcPath());
+
+    // Filter out standard classifications and add remaining ones if present
+    List<String> extraClassifications =
+        module.getMetadata().getClassifications().stream()
+            .filter(
+                c ->
+                    !c.equals(InstrumentationClassification.LIBRARY)
+                        && !c.equals(InstrumentationClassification.INTERNAL)
+                        && !c.equals(InstrumentationClassification.CUSTOM))
+            .map(InstrumentationClassification::toString)
+            .toList();
+    if (!extraClassifications.isEmpty()) {
+      moduleMap.put("classification", extraClassifications);
+    }
 
     if (module.getMinJavaVersion() != null) {
       moduleMap.put("minimum_java_version", module.getMinJavaVersion());

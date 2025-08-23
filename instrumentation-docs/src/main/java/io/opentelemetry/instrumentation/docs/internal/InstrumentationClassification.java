@@ -15,7 +15,10 @@ import javax.annotation.Nullable;
 public enum InstrumentationClassification {
   LIBRARY,
   CUSTOM,
-  INTERNAL;
+  INTERNAL,
+  ENRICHER,
+  CONFIGURATION,
+  PROPAGATOR;
 
   @Nullable
   public static InstrumentationClassification fromString(@Nullable String type) {
@@ -26,6 +29,9 @@ public enum InstrumentationClassification {
       case "library" -> LIBRARY;
       case "internal" -> INTERNAL;
       case "custom" -> CUSTOM;
+      case "enricher" -> ENRICHER;
+      case "configuration" -> CONFIGURATION;
+      case "propagator" -> PROPAGATOR;
       default -> null;
     };
   }

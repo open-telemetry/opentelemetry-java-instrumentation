@@ -49,6 +49,7 @@ public class DocGeneratorApplication {
     printStats(modules);
   }
 
+  @SuppressWarnings("unused") // temporary helper method used for project tracking
   private static void printStats(List<InstrumentationModule> modules) {
     List<InstrumentationModule> metadata =
         modules.stream().filter(m -> m.getMetadata() != null).toList();
@@ -86,16 +87,14 @@ public class DocGeneratorApplication {
   }
 
   private static String getClassificationStats(List<InstrumentationModule> modules) {
+    // Flatten all classifications and count each individually
     return modules.stream()
-        .collect(
-            Collectors.groupingBy(
-                m -> m.getMetadata().getClassification(), TreeMap::new, Collectors.toList()))
+        .flatMap(m -> m.getMetadata().getClassifications().stream())
+        .map(c -> c.name().toLowerCase(Locale.ROOT))
+        .collect(Collectors.groupingBy(c -> c, TreeMap::new, Collectors.counting()))
         .entrySet()
         .stream()
-        .map(
-            entry ->
-                String.format(
-                    Locale.getDefault(FORMAT), "\t%s: %d", entry.getKey(), entry.getValue().size()))
+        .map(entry -> String.format(Locale.ROOT, "\t%s: %d", entry.getKey(), entry.getValue()))
         .collect(Collectors.joining("\n"));
   }
 
