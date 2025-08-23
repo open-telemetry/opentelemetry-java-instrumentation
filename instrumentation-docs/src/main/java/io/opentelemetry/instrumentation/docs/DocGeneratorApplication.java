@@ -49,7 +49,6 @@ public class DocGeneratorApplication {
     printStats(modules);
   }
 
-  @SuppressWarnings("unused") // temporary helper method used for project tracking
   private static void printStats(List<InstrumentationModule> modules) {
     List<InstrumentationModule> metadata =
         modules.stream().filter(m -> m.getMetadata() != null).toList();

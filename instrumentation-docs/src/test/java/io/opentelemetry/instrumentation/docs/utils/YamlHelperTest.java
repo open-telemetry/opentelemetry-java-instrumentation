@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
@@ -39,8 +39,8 @@ class YamlHelperTest {
         InstrumentationType.JAVAAGENT,
         new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
 
-    InstrumentationMetaData springMetadata =
-        new InstrumentationMetaData(
+    InstrumentationMetadata springMetadata =
+        new InstrumentationMetadata(
             "Spring Web 6.0 instrumentation",
             List.of(
                 InstrumentationClassification.LIBRARY.name(),
@@ -114,8 +114,8 @@ class YamlHelperTest {
     Map<InstrumentationType, Set<String>> springTargetVersions =
         Map.of(InstrumentationType.JAVAAGENT, Set.of("org.springframework:spring-web:[6.0.0,)"));
 
-    InstrumentationMetaData springMetadata =
-        new InstrumentationMetaData(
+    InstrumentationMetadata springMetadata =
+        new InstrumentationMetadata(
             "Spring Web 6.0 instrumentation",
             singletonList(InstrumentationClassification.LIBRARY.toString()),
             false,
@@ -137,8 +137,8 @@ class YamlHelperTest {
             .minJavaVersion(11)
             .build());
 
-    InstrumentationMetaData internalMetadata =
-        new InstrumentationMetaData(
+    InstrumentationMetadata internalMetadata =
+        new InstrumentationMetadata(
             null, singletonList(InstrumentationClassification.INTERNAL.toString()), null, null);
 
     modules.add(
@@ -151,8 +151,8 @@ class YamlHelperTest {
             .targetVersions(new HashMap<>())
             .build());
 
-    InstrumentationMetaData customMetadata =
-        new InstrumentationMetaData(
+    InstrumentationMetadata customMetadata =
+        new InstrumentationMetadata(
             null, singletonList(InstrumentationClassification.CUSTOM.toString()), null, null);
 
     Map<InstrumentationType, Set<String>> externalAnnotationsVersions =
@@ -228,7 +228,7 @@ class YamlHelperTest {
                 default: true
             """;
 
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
 
     ConfigurationOption config = metadata.getConfigurations().get(0);
     assertThat(config.name())
@@ -246,8 +246,12 @@ class YamlHelperTest {
 
   @Test
   void testMetadataParserWithOnlyLibraryEntry() throws JsonProcessingException {
-    String input = "classification: internal";
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    String input =
+        """
+        classification:
+          - internal
+        """;
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassifications())
         .containsExactly(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isNull();
@@ -258,7 +262,7 @@ class YamlHelperTest {
   @Test
   void testMetadataParserWithOnlyDescription() throws JsonProcessingException {
     String input = "description: false";
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassifications())
         .containsExactly(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDisabledByDefault()).isFalse();
@@ -268,7 +272,7 @@ class YamlHelperTest {
   @Test
   void testMetadataParserWithOnlyDisabledByDefault() throws JsonProcessingException {
     String input = "disabled_by_default: true";
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassifications())
         .containsExactly(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDescription()).isNull();
@@ -286,7 +290,7 @@ class YamlHelperTest {
                 type: boolean
                 default: true
         """;
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     ConfigurationOption config = metadata.getConfigurations().get(0);
 
     assertThat(metadata.getClassifications())

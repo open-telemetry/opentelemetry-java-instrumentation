@@ -1,4 +1,5 @@
-classification: internal
+classification:
+  - internal
 description: >
   Our Kotlin coroutine instrumentation relies on a shaded copy of the opentelemetry-extension-kotlin
   library. This can cause conflicts when the application itself also uses

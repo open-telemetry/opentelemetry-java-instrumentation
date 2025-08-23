@@ -1,4 +1,5 @@
-classification: custom
+classification:
+  - custom
 description: >
   Provides a flexible way to capture telemetry at the method level in JVM applications. By weaving
   instrumentation into targeted methods at runtime based on the

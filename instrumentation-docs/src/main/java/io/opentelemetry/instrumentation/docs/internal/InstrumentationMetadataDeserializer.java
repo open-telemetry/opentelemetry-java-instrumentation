@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableList;
 
 import com.fasterxml.jackson.core.JsonParser;
@@ -15,7 +16,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -23,11 +23,11 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class InstrumentationMetaDataDeserializer
-    extends JsonDeserializer<InstrumentationMetaData> {
+public final class InstrumentationMetadataDeserializer
+    extends JsonDeserializer<InstrumentationMetadata> {
 
   @Override
-  public InstrumentationMetaData deserialize(JsonParser p, DeserializationContext ctx)
+  public InstrumentationMetadata deserialize(JsonParser p, DeserializationContext ctx)
       throws IOException {
     JsonNode node = p.getCodec().readTree(p);
 
@@ -37,7 +37,7 @@ public final class InstrumentationMetaDataDeserializer
     List<String> classifications = readClassifications(node.path("classification"));
     List<ConfigurationOption> configurations = readConfigurations(node.path("configurations"));
 
-    return new InstrumentationMetaData(
+    return new InstrumentationMetadata(
         description, classifications, disabledByDefault, configurations);
   }
 
@@ -55,46 +55,60 @@ public final class InstrumentationMetaDataDeserializer
 
   private static List<String> readClassifications(JsonNode node) {
     if (node.isMissingNode() || node.isNull()) {
-      return List.of(InstrumentationClassification.LIBRARY.name());
+      return singletonList(InstrumentationClassification.LIBRARY.name());
     }
-    List<String> out = new ArrayList<>();
-    if (node.isArray()) {
-      for (JsonNode c : node) {
-        if (c.isTextual()) {
-          out.add(c.asText());
-        }
+    if (!node.isArray()) {
+      throw new IllegalArgumentException("Classification must be an array");
+    }
+    List<String> result = new ArrayList<>();
+    for (JsonNode c : node) {
+      if (c.isTextual()) {
+        result.add(c.asText());
       }
-    } else if (node.isTextual()) {
-      out.add(node.asText());
     }
-    if (out.isEmpty()) {
-      out.add(InstrumentationClassification.LIBRARY.name());
+    if (result.isEmpty()) {
+      result.add(InstrumentationClassification.LIBRARY.name());
     }
-    return unmodifiableList(out);
+    return unmodifiableList(result);
   }
 
   private static List<ConfigurationOption> readConfigurations(JsonNode configs) {
-    if (!configs.isArray()) {
+    if (!configs.isArray() || configs.size() == 0) {
       return emptyList();
     }
-    List<ConfigurationOption> out = new ArrayList<>(configs.size());
-    int i = 0;
+    List<ConfigurationOption> configurationOptions = new ArrayList<>(configs.size());
     for (JsonNode cfg : configs) {
-      String name = Objects.requireNonNull(textOrNull(cfg, "name"));
-      String desc = Objects.requireNonNull(textOrNull(cfg, "description"));
-      String def = Objects.requireNonNull(textOrNull(cfg, "default"));
-      String typeStr = Objects.requireNonNull(textOrNull(cfg, "type"));
+      if (cfg.isNull() || !cfg.isObject()) {
+        throw new IllegalArgumentException("Configuration entry must be an object");
+      }
+
+      String name = textOrNull(cfg, "name");
+      if (name == null) {
+        throw new IllegalArgumentException("Configuration entry is missing required 'name' field");
+      }
+
+      String desc =
+          Objects.requireNonNull(
+              textOrNull(cfg, "description"),
+              "Configuration '" + name + "' is missing required 'description' field");
+      String def =
+          Objects.requireNonNull(
+              textOrNull(cfg, "default"),
+              "Configuration '" + name + "' is missing required 'default' field");
+      String typeStr =
+          Objects.requireNonNull(
+              textOrNull(cfg, "type"),
+              "Configuration '" + name + "' is missing required 'type' field");
 
       ConfigurationType type;
       try {
-        type = ConfigurationType.valueOf(typeStr.toUpperCase(Locale.ROOT));
+        type = ConfigurationType.from(typeStr);
       } catch (IllegalArgumentException ex) {
         throw new IllegalArgumentException(
-            "configurations[" + i + "].type invalid: '" + typeStr + "'", ex);
+            "Configuration '" + name + "' has invalid type: '" + typeStr + "'", ex);
       }
-      out.add(new ConfigurationOption(name, desc, def, type));
-      i++;
+      configurationOptions.add(new ConfigurationOption(name, desc, def, type));
     }
-    return unmodifiableList(out);
+    return unmodifiableList(configurationOptions);
   }
 }

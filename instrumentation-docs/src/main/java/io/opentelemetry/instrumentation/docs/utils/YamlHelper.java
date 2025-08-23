@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaDataDeserializer;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadataDeserializer;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
@@ -47,7 +47,7 @@ public class YamlHelper {
     mapper = new ObjectMapper(new YAMLFactory());
     SimpleModule module = new SimpleModule();
     module.addDeserializer(
-        InstrumentationMetaData.class, new InstrumentationMetaDataDeserializer());
+        InstrumentationMetadata.class, new InstrumentationMetadataDeserializer());
     mapper.registerModule(module);
   }
 
@@ -311,9 +311,9 @@ public class YamlHelper {
     return innerMetricMap;
   }
 
-  public static InstrumentationMetaData metaDataParser(String input)
+  public static InstrumentationMetadata metaDataParser(String input)
       throws JsonProcessingException {
-    return mapper.readValue(input, InstrumentationMetaData.class);
+    return mapper.readValue(input, InstrumentationMetadata.class);
   }
 
   public static EmittedMetrics emittedMetricsParser(String input) throws JsonProcessingException {

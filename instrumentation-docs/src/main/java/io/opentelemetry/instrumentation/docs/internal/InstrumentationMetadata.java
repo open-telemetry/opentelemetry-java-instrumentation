@@ -17,7 +17,7 @@ import javax.annotation.Nullable;
  * Represents the data in a metadata.yaml file. This class is internal and is hence not for public
  * use. Its APIs are unstable and can change at any time.
  */
-public class InstrumentationMetaData {
+public class InstrumentationMetadata {
   @Nullable private String description;
 
   @JsonProperty("disabled_by_default")
@@ -28,11 +28,11 @@ public class InstrumentationMetaData {
 
   private List<ConfigurationOption> configurations = emptyList();
 
-  public InstrumentationMetaData() {
+  public InstrumentationMetadata() {
     this.classifications = singletonList(InstrumentationClassification.LIBRARY.name());
   }
 
-  public InstrumentationMetaData(
+  public InstrumentationMetadata(
       @Nullable String description,
       @Nullable List<String> classifications,
       @Nullable Boolean disabledByDefault,
@@ -54,7 +54,17 @@ public class InstrumentationMetaData {
     if (classifications == null || classifications.isEmpty()) {
       return singletonList(InstrumentationClassification.LIBRARY);
     }
-    return classifications.stream().map(InstrumentationClassification::fromString).toList();
+    return classifications.stream()
+        .map(
+            classification -> {
+              InstrumentationClassification result =
+                  InstrumentationClassification.fromString(classification);
+              if (result == null) {
+                throw new IllegalArgumentException("Invalid classification: " + classification);
+              }
+              return result;
+            })
+        .toList();
   }
 
   public Boolean getDisabledByDefault() {
