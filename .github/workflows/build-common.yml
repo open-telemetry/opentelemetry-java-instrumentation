@@ -9,9 +9,6 @@ on:
       no-build-cache:
         type: boolean
         required: false
-      max-test-retries:
-        type: string
-        required: false
       skip-openj9-tests:
         type: boolean
         required: false
