@@ -68,7 +68,7 @@ jobs:
         env:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
-          BRANCH_NAME="metadata-update-main"
+          BRANCH_NAME="otelbot/metadata-update-main"
           echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
           if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
             git fetch origin "$BRANCH_NAME"
