@@ -93,7 +93,7 @@ targets:
       target: ':instrumentation:clickhouse:clickhouse-client-0.5:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse:clickhouse-client-0.8:javaagent'
+      target: ':instrumentation:clickhouse:clickhouse-clientv2-0.8:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:executors:bootstrap'

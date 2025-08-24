@@ -3,10 +3,6 @@ plugins {
   id("otel.javaagent-instrumentation")
 }
 
-repositories {
-  mavenCentral()
-}
-
 dependencies {
   api(project(":instrumentation-api"))
   api(project(":instrumentation-api-incubator"))
