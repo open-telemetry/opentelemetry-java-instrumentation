@@ -228,7 +228,7 @@ class YamlHelperTest {
                 default: true
             """;
 
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metadataParser(input);
 
     ConfigurationOption config = metadata.getConfigurations().get(0);
     assertThat(config.name())
@@ -251,7 +251,7 @@ class YamlHelperTest {
         classification:
           - internal
         """;
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metadataParser(input);
     assertThat(metadata.getClassifications())
         .containsExactly(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isNull();
@@ -262,7 +262,7 @@ class YamlHelperTest {
   @Test
   void testMetadataParserWithOnlyDescription() throws JsonProcessingException {
     String input = "description: false";
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metadataParser(input);
     assertThat(metadata.getClassifications())
         .containsExactly(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDisabledByDefault()).isFalse();
@@ -272,7 +272,7 @@ class YamlHelperTest {
   @Test
   void testMetadataParserWithOnlyDisabledByDefault() throws JsonProcessingException {
     String input = "disabled_by_default: true";
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metadataParser(input);
     assertThat(metadata.getClassifications())
         .containsExactly(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDescription()).isNull();
@@ -290,7 +290,7 @@ class YamlHelperTest {
                 type: boolean
                 default: true
         """;
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metadataParser(input);
     ConfigurationOption config = metadata.getConfigurations().get(0);
 
     assertThat(metadata.getClassifications())

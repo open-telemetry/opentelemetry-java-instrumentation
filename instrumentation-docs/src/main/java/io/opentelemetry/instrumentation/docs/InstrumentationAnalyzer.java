@@ -58,9 +58,9 @@ class InstrumentationAnalyzer {
   }
 
   private void enrichModule(InstrumentationModule module) throws IOException {
-    InstrumentationMetadata metaData = getMetadata(module);
-    if (metaData != null) {
-      module.setMetadata(metaData);
+    InstrumentationMetadata metadata = getMetadata(module);
+    if (metadata != null) {
+      module.setMetadata(metadata);
     }
 
     module.setTargetVersions(getVersionInformation(module));
@@ -71,12 +71,12 @@ class InstrumentationAnalyzer {
   @Nullable
   private InstrumentationMetadata getMetadata(InstrumentationModule module)
       throws JsonProcessingException {
-    String metadataFile = fileManager.getMetaDataFile(module.getSrcPath());
+    String metadataFile = fileManager.getMetadataFile(module.getSrcPath());
     if (metadataFile == null) {
       return null;
     }
     try {
-      return YamlHelper.metaDataParser(metadataFile);
+      return YamlHelper.metadataParser(metadataFile);
     } catch (ValueInstantiationException | MismatchedInputException e) {
       logger.severe("Error parsing metadata file for " + module.getInstrumentationName());
       throw e;

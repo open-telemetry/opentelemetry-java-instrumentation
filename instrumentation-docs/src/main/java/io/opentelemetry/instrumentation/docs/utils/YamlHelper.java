@@ -311,7 +311,7 @@ public class YamlHelper {
     return innerMetricMap;
   }
 
-  public static InstrumentationMetadata metaDataParser(String input)
+  public static InstrumentationMetadata metadataParser(String input)
       throws JsonProcessingException {
     return mapper.readValue(input, InstrumentationMetadata.class);
   }

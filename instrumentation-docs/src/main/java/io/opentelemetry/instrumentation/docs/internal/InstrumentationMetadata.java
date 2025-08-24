@@ -34,7 +34,7 @@ public class InstrumentationMetadata {
 
   public InstrumentationMetadata(
       @Nullable String description,
-      @Nullable List<String> classifications,
+      List<String> classifications,
       @Nullable Boolean disabledByDefault,
       @Nullable List<ConfigurationOption> configurations) {
     this.classifications =

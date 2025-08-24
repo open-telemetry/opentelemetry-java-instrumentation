@@ -94,7 +94,7 @@ public record FileManager(String rootDir) {
   }
 
   @Nullable
-  public String getMetaDataFile(String instrumentationDirectory) {
+  public String getMetadataFile(String instrumentationDirectory) {
     String metadataFile = rootDir + instrumentationDirectory + "/metadata.yaml";
     if (Files.exists(Paths.get(metadataFile))) {
       return readFileToString(metadataFile);
