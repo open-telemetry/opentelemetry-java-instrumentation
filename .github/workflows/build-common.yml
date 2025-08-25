@@ -133,6 +133,7 @@ jobs:
           set +e
           grep '^  implementation(".*:.*:[0-9].*")\|^  api(".*:.*:[0-9].*")' \
                --include=\*.kts \
+               --exclude-dir=quarkus\*-plugin \
                -r instrumentation \
             | grep -v testing/build.gradle.kts \
             | grep -v com.azure:azure-core-tracing-opentelemetry \
