@@ -12,16 +12,17 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.annotation.Nullable;
 
 /** A builder of {@link MessagingAttributesExtractor}. */
 public final class MessagingAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  final MessageOperation operation;
+  @Nullable final MessageOperation operation;
   List<String> capturedHeaders = emptyList();
 
   MessagingAttributesExtractorBuilder(
-      MessagingAttributesGetter<REQUEST, RESPONSE> getter, MessageOperation operation) {
+      MessagingAttributesGetter<REQUEST, RESPONSE> getter, @Nullable MessageOperation operation) {
     this.getter = getter;
     this.operation = operation;
   }

@@ -50,11 +50,13 @@ class HttpClientAttributesExtractorTest {
       implements HttpClientAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
+    @Nullable
     public String getUrlFull(Map<String, String> request) {
       return request.get("urlFull");
     }
 
     @Override
+    @Nullable
     public String getHttpRequestMethod(Map<String, String> request) {
       return request.get("method");
     }
@@ -66,6 +68,7 @@ class HttpClientAttributesExtractorTest {
     }
 
     @Override
+    @Nullable
     public Integer getHttpResponseStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       String value = response.get("statusCode");

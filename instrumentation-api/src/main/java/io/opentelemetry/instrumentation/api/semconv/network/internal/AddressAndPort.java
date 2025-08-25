@@ -17,12 +17,12 @@ public final class AddressAndPort implements AddressAndPortExtractor.AddressPort
   @Nullable Integer port;
 
   @Override
-  public void setAddress(String address) {
+  public void setAddress(@Nullable String address) {
     this.address = address;
   }
 
   @Override
-  public void setPort(Integer port) {
+  public void setPort(@Nullable Integer port) {
     this.port = port;
   }
 
