@@ -1,4 +1,4 @@
-file_format: 0.4
+file_format: 1.0-rc.1
 instrumentation/development:
   java:
     acme:
