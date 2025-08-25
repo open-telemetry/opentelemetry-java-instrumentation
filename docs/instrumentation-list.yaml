@@ -945,7 +945,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-2.2
     description: |
-      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+.
+      This version of the library instrumentation is deprecated, please use the aws-lambda-events-3.11 library instrumentation instead. Provides instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+. Does not support SQSBatchResponse.
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -960,6 +960,11 @@ libraries:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -984,6 +989,8 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: aws-lambda-events-3.11
+    description: |
+      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 3.11+.
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
       name: io.opentelemetry.aws-lambda-events-3.11
@@ -991,6 +998,42 @@ libraries:
       library:
       - com.amazonaws:aws-lambda-java-events:3.11.0
       - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: cloud.account.id
+          type: STRING
+        - name: cloud.resource_id
+          type: STRING
+        - name: faas.invocation_id
+          type: STRING
+        - name: faas.trigger
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: url.full
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
