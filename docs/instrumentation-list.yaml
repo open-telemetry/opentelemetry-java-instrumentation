@@ -945,7 +945,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-2.2
     description: |
-      This version of the library instrumentation is deprecated, please use the aws-lambda-events-3.11 library instrumentation instead. Provides instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+. Does not support SQSBatchResponse.
+      This version of the library instrumentation is deprecated, please use the aws-lambda-events-3.11 library instrumentation instead. This instrumentation builds on top of the lightweight `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -990,7 +990,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-3.11
     description: |
-      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 3.11+.
+      This instrumentation builds on top of the lightweight `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
       name: io.opentelemetry.aws-lambda-events-3.11
