@@ -17,7 +17,7 @@ import org.junit.jupiter.api.Test;
 class HeadersFactoryTest {
 
   @Test
-  public void shouldReadHeadersFromStream() {
+  void shouldReadHeadersFromStream() {
     // given
     String json =
         "{"
@@ -40,7 +40,7 @@ class HeadersFactoryTest {
   }
 
   @Test
-  public void shouldReturnNullIfNoHeadersInStream() {
+  void shouldReturnNullIfNoHeadersInStream() {
     // given
     String json = "{\"something\" : \"else\"}";
     InputStream inputStream = new ByteArrayInputStream(json.getBytes(Charset.defaultCharset()));

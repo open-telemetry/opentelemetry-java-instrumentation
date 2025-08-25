@@ -12,11 +12,11 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.24.1"
+  id("io.quarkus") version "3.25.0"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.24.1"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.26.0"))
   implementation("io.quarkus:quarkus-rest")
 }
 
@@ -62,7 +62,19 @@ tasks {
     dependsOn(quarkusBuild)
   }
 
+  compileJava {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
+  }
+
   sourcesJar {
-    dependsOn(quarkusGenerateCode)
+    dependsOn(quarkusGenerateCode, compileQuarkusGeneratedSourcesJava)
+  }
+
+  javadoc {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
+  }
+
+  checkstyleMain {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
   }
 }

@@ -7,3 +7,9 @@ plugins {
 dependencies {
   library("org.apache.httpcomponents.client5:httpclient5:5.2.1")
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

@@ -1,5 +1,5 @@
 plugins {
-  id("org.unbroken-dome.xjc")
+  id("com.github.bjornvester.xjc")
   id("otel.java-conventions")
 }
 
@@ -10,6 +10,11 @@ tasks {
   }
 }
 
+xjc {
+  xsdDir.set(layout.projectDirectory.dir("src/main/schema"))
+  useJakarta.set(true)
+}
+
 dependencies {
   api("jakarta.xml.ws:jakarta.xml.ws-api:3.0.0")
   api("jakarta.jws:jakarta.jws-api:3.0.0")
@@ -18,7 +23,4 @@ dependencies {
   api("org.springframework.ws:spring-ws-core:4.0.0")
 
   implementation(project(":testing-common"))
-
-  xjcTool("com.sun.xml.bind:jaxb-xjc:3.0.2")
-  xjcTool("com.sun.xml.bind:jaxb-impl:3.0.2")
 }

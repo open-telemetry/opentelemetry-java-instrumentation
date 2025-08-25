@@ -13,8 +13,10 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_LAMBDA_RESOURCE_MAPPING_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SECRETSMANAGER_SECRET_ARN;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SNS_TOPIC_ARN;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -71,6 +73,13 @@ import software.amazon.awssdk.services.ec2.Ec2ClientBuilder;
 import software.amazon.awssdk.services.kinesis.KinesisClient;
 import software.amazon.awssdk.services.kinesis.KinesisClientBuilder;
 import software.amazon.awssdk.services.kinesis.model.DeleteStreamRequest;
+import software.amazon.awssdk.services.lambda.LambdaAsyncClient;
+import software.amazon.awssdk.services.lambda.LambdaAsyncClientBuilder;
+import software.amazon.awssdk.services.lambda.LambdaClient;
+import software.amazon.awssdk.services.lambda.LambdaClientBuilder;
+import software.amazon.awssdk.services.lambda.model.CreateEventSourceMappingRequest;
+import software.amazon.awssdk.services.lambda.model.GetEventSourceMappingRequest;
+import software.amazon.awssdk.services.lambda.model.GetFunctionRequest;
 import software.amazon.awssdk.services.rds.RdsAsyncClient;
 import software.amazon.awssdk.services.rds.RdsAsyncClientBuilder;
 import software.amazon.awssdk.services.rds.RdsClient;
@@ -98,7 +107,12 @@ import software.amazon.awssdk.services.sns.SnsAsyncClient;
 import software.amazon.awssdk.services.sns.SnsAsyncClientBuilder;
 import software.amazon.awssdk.services.sns.SnsClient;
 import software.amazon.awssdk.services.sns.SnsClientBuilder;
+import software.amazon.awssdk.services.sns.model.CreateTopicRequest;
+import software.amazon.awssdk.services.sns.model.CreateTopicResponse;
 import software.amazon.awssdk.services.sns.model.PublishRequest;
+import software.amazon.awssdk.services.sns.model.PublishResponse;
+import software.amazon.awssdk.services.sns.model.SubscribeRequest;
+import software.amazon.awssdk.services.sns.model.SubscribeResponse;
 import software.amazon.awssdk.services.sqs.SqsAsyncClient;
 import software.amazon.awssdk.services.sqs.SqsAsyncClientBuilder;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -122,6 +136,91 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
           + " <domain>standard</domain>"
           + "</AllocateAddressResponse>";
 
+  private static final String lambdaCreateEventSourceMappingResponseBody =
+      "{"
+          + "\"UUID\": \"e31def54-5e5d-4c1b-8e0f-bf1b11c137b7\","
+          + "\"BatchSize\": 10,"
+          + "\"MaximumBatchingWindowInSeconds\": 0,"
+          + "\"EventSourceArn\": \"arn:aws:sqs:us-west-2:123456789012:MyTestQueue.fifo\","
+          + "\"FunctionArn\": \"arn:aws:lambda:us-west-2:123456789012:function:myFn01-Temp\","
+          + "\"LastModified\": \"1.754882043E9\","
+          + "\"State\": \"Creating\","
+          + "\"StateTransitionReason\": \"USER_INITIATED\","
+          + "\"FunctionResponseTypes\": [],"
+          + "\"EventSourceMappingArn\": \"arn:aws:lambda:us-west-2:123456789012:event-source-mapping:e31def54-5e5d-4c1b-8e0f-bf1b11c137b7\""
+          + "}";
+
+  private static final String lambdaGetEventSourceMappingResponseBody =
+      "{"
+          + "\"UUID\": \"e31def54-5e5d-4c1b-8e0f-bf1b11c138c8\","
+          + "\"BatchSize\": 10,"
+          + "\"MaximumBatchingWindowInSeconds\": 0,"
+          + "\"EventSourceArn\": \"arn:aws:sqs:us-west-2:123456789012:MyTestQueue.fifo\","
+          + "\"FunctionArn\": \"arn:aws:lambda:us-west-2:123456789012:function:myFn01-Temp\","
+          + "\"LastModified\": \"1.755054843E9\","
+          + "\"State\": \"Enabled\","
+          + "\"StateTransitionReason\": \"USER_INITIATED\","
+          + "\"FunctionResponseTypes\": [],"
+          + "\"EventSourceMappingArn\": \"arn:aws:lambda:us-west-2:123456789012:event-source-mapping:e31def54-5e5d-4c1b-8e0f-bf1b11c138c8\""
+          + "}";
+
+  private static final String lambdaGetFunctionResponseBody =
+      "{"
+          + "\"Configuration\": {"
+          + "   \"FunctionName\": \"lambda-function-name-foo\","
+          + "   \"FunctionArn\": \"arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo\","
+          + "   \"Runtime\": \"nodejs22.x\","
+          + "   \"Role\": \"arn:aws:iam::123456789012:role/service-role/Fn-role-pr7kt0bf\","
+          + "   \"Handler\": \"index.handler\","
+          + "   \"CodeSize\": 295,"
+          + "   \"Description\": \"\","
+          + "   \"Timeout\": 3,"
+          + "   \"MemorySize\": 128,"
+          + "   \"LastModified\": \"1.743573094E9\","
+          + "   \"CodeSha256\": \"q8E7Nexf5xxhKT9/d4bGpAYOXJYFAUjJ0UDj8OivK8E=\","
+          + "   \"Version\": \"$LATEST\","
+          + "   \"Environment\": {"
+          + "     \"Variables\": {"
+          + "         \"AWS_LAMBDA_EXEC_WRAPPER\": \"/opt/otel-instrument\""
+          + "}"
+          + "   },"
+          + "   \"TracingConfig\": {"
+          + "       \"Mode\": \"PassThrough\""
+          + "   },"
+          + "   \"RevisionId\": \"955247dc-c724-4653-8f8b-f702c6f9c389\","
+          + "   \"Layers\": ["
+          + "     {"
+          + "       \"Arn\": \"arn:aws:lambda:us-west-2:615299751070:layer:AWSOpenTelemetryDistroJs:6\","
+          + "       \"CodeSize\": 14455992"
+          + "     }"
+          + "   ],"
+          + "   \"State\": \"Active\","
+          + "   \"LastUpdateStatus\": \"Successful\","
+          + "   \"PackageType\": \"Zip\","
+          + "   \"Architectures\": ["
+          + "     \"x86_64\""
+          + "   ],"
+          + "   \"EphemeralStorage\": {"
+          + "     \"Size\": 512"
+          + "   },"
+          + "  \"SnapStart\": {"
+          + "     \"ApplyOn\": \"None\","
+          + "     \"OptimizationStatus\": \"Off\""
+          + "   },"
+          + "   \"RuntimeVersionConfig\": {"
+          + "       \"RuntimeVersionArn\": \"arn:aws:lambda:us-west-2::runtime:fd2e05b324f99edd3c6e17800b2535deb79bcce74b7506d595a94870b3d9bd2e\""
+          + "   },"
+          + "   \"LoggingConfig\": {"
+          + "       \"LogFormat\": \"Text\","
+          + "       \"LogGroup\": \"/aws/lambda/mlambda-function-name-foo\""
+          + "   }"
+          + " },"
+          + " \"Code\": {"
+          + "     \"RepositoryType\": \"S3\","
+          + "     \"Location\": \"https://awslambda-us-west-2-tasks.s3.us-west-2.amazonaws.com/snapshots/123456789012/lambda-function-name-foo-47425b12\""
+          + " }"
+          + "}";
+
   private static final String rdsBodyContent =
       "<DeleteOptionGroupResponse xmlns=\"http://rds.amazonaws.com/doc/2014-09-01/\">"
           + " <ResponseMetadata><RequestId>0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99</RequestId></ResponseMetadata>"
@@ -138,6 +237,36 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
           + "    ],"
           + "    \"CreatedDate\": \"1.523477145713E9\""
           + "}";
+
+  private static final String snsPublishResponseBody =
+      "<PublishResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
+          + "    <PublishResult>"
+          + "        <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>"
+          + "    </PublishResult>"
+          + "    <ResponseMetadata>"
+          + "        <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>"
+          + "    </ResponseMetadata>"
+          + "</PublishResponse>";
+
+  private static final String snsSubscribeResponseBody =
+      "<SubscribeResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
+          + "   <SubscribeResult>"
+          + "       <SubscriptionArn>arn:aws:sns:us-west-2:123456789012:MyTopic:abc123</SubscriptionArn>"
+          + "   </SubscribeResult>"
+          + "   <ResponseMetadata>"
+          + "       <RequestId>0ac9cda2-abcd-11d3-f92b-31fa5e8dbc67</RequestId>"
+          + "   </ResponseMetadata>"
+          + " </SubscribeResponse>";
+
+  private static final String snsCreateTopicResponseBody =
+      "<CreateTopicResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
+          + "    <CreateTopicResult>"
+          + "        <TopicArn>arn:aws:sns:us-east-1:123456789012:sns-topic-name-foo</TopicArn>"
+          + "    </CreateTopicResult>"
+          + "    <ResponseMetadata>"
+          + "        <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>"
+          + "    </ResponseMetadata>"
+          + "</CreateTopicResponse>";
 
   private static void assumeSupportedConfig(String operation) {
     Assumptions.assumeFalse(
@@ -223,7 +352,22 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     if (service.equals("Sns")) {
-      attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "somearn"));
+      switch (operation) {
+        case "CreateTopic":
+          attributes.add(
+              equalTo(AWS_SNS_TOPIC_ARN, "arn:aws:sns:us-east-1:123456789012:sns-topic-name-foo"));
+          break;
+        case "Publish":
+          attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "sns-target-arn"));
+          break;
+        case "Subscribe":
+          attributes.add(equalTo(MESSAGING_DESTINATION_NAME, "sns-topic-arn"));
+          attributes.add(equalTo(AWS_SNS_TOPIC_ARN, "sns-topic-arn"));
+          break;
+        default:
+          attributes.add(equalTo(AWS_SNS_TOPIC_ARN, "Bug-Unknown-Operation-ARN"));
+          break;
+      }
     }
 
     if (service.equals("Sqs") && operation.equals("CreateQueue")) {
@@ -254,6 +398,31 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
           equalTo(
               AWS_SECRETSMANAGER_SECRET_ARN,
               "arn:aws:secretsmanager:us-east-1:123456789012:secret:MySecretFromCLI-sNkBwD"));
+    }
+
+    if (service.equals("Lambda")) {
+      switch (operation) {
+        case "GetFunction":
+          attributes.add(
+              equalTo(stringKey("aws.lambda.function.name"), "lambda-function-name-foo"));
+          attributes.add(
+              equalTo(
+                  stringKey("aws.lambda.function.arn"),
+                  "arn:aws:lambda:us-west-2:123456789012:function:lambda-function-name-foo"));
+          break;
+        case "CreateEventSourceMapping":
+          attributes.add(equalTo(stringKey("aws.lambda.function.name"), "myFn01-Temp"));
+          attributes.add(
+              equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c137b7"));
+          break;
+        case "GetEventSourceMapping":
+          attributes.add(
+              equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "e31def54-5e5d-4c1b-8e0f-bf1b11c138c8"));
+          break;
+        default:
+          attributes.add(equalTo(AWS_LAMBDA_RESOURCE_MAPPING_ID, "Bug-Unknown-Lambda-Operation"));
+          break;
+      }
     }
 
     String evaluatedOperation;
@@ -516,22 +685,43 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                 c ->
                     c.publish(
                         PublishRequest.builder()
-                            .message("somemessage")
-                            .topicArn("somearn")
-                            .build())),
+                            .message("sns-msg-foo")
+                            .targetArn("sns-target-arn")
+                            .build()),
+            "Publish",
+            "POST",
+            snsPublishResponseBody,
+            "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0"),
         Arguments.of(
             (Function<SnsClient, Object>)
                 c ->
-                    c.publish(
-                        PublishRequest.builder()
-                            .message("somemessage")
-                            .targetArn("somearn")
-                            .build())));
+                    c.subscribe(
+                        SubscribeRequest.builder()
+                            .topicArn("sns-topic-arn")
+                            .protocol("email")
+                            .endpoint("test@example.com")
+                            .build()),
+            "Subscribe",
+            "POST",
+            snsSubscribeResponseBody,
+            "0ac9cda2-abcd-11d3-f92b-31fa5e8dbc67"),
+        Arguments.of(
+            (Function<SnsClient, Object>)
+                c -> c.createTopic(CreateTopicRequest.builder().name("sns-topic-name-foo").build()),
+            "CreateTopic",
+            "POST",
+            snsCreateTopicResponseBody,
+            "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0"));
   }
 
   @ParameterizedTest
   @MethodSource("provideSnsArguments")
-  void testSnsSendOperationRequestWithBuilder(Function<SnsClient, Object> call) {
+  void testSnsSendOperationRequestWithBuilder(
+      Function<SnsClient, Object> call,
+      String operation,
+      String method,
+      String responseBody,
+      String requestId) {
     SnsClientBuilder builder = SnsClient.builder();
     configureSdkClient(builder);
     SnsClient client =
@@ -541,28 +731,25 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    String body =
-        "<PublishResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
-            + "    <PublishResult>"
-            + "        <MessageId>567910cd-659e-55d4-8ccb-5aaf14679dc0</MessageId>"
-            + "    </PublishResult>"
-            + "    <ResponseMetadata>"
-            + "        <RequestId>d74b8436-ae13-5ab4-a9ff-ce54dfea72a0</RequestId>"
-            + "    </ResponseMetadata>"
-            + "</PublishResponse>";
-
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
     Object response = call.apply(client);
 
     assertThat(response.getClass().getSimpleName())
         .satisfiesAnyOf(
-            v -> assertThat(v).startsWith("Publish"),
-            v -> assertThat(response).isInstanceOf(ResponseInputStream.class));
-    clientAssertions("Sns", "Publish", "POST", response, "d74b8436-ae13-5ab4-a9ff-ce54dfea72a0");
+            v -> assertThat(response).isInstanceOf(CreateTopicResponse.class),
+            v -> assertThat(response).isInstanceOf(PublishResponse.class),
+            v -> assertThat(response).isInstanceOf(SubscribeResponse.class));
+    clientAssertions("Sns", operation, method, response, requestId);
   }
 
-  @Test
-  void testSnsAsyncSendOperationRequestWithBuilder() {
+  @ParameterizedTest
+  @MethodSource("provideSnsArguments")
+  void testSnsAsyncSendOperationRequestWithBuilder(
+      Function<SnsClient, Object> call,
+      String operation,
+      String method,
+      String responseBody,
+      String requestId) {
     SnsAsyncClientBuilder builder = SnsAsyncClient.builder();
     configureSdkClient(builder);
     SnsAsyncClient client =
@@ -572,20 +759,15 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    String body =
-        "<PublishResponse xmlns=\"https://sns.amazonaws.com/doc/2010-03-31/\">"
-            + "    <PublishResult>"
-            + "        <MessageId>94f20ce6-13c5-43a0-9a9e-ca52d816e90b</MessageId>"
-            + "    </PublishResult>"
-            + "    <ResponseMetadata>"
-            + "        <RequestId>f187a3c1-376f-11df-8963-01868b7c937a</RequestId>"
-            + "    </ResponseMetadata>"
-            + "</PublishResponse>";
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
+    Object response = call.apply(wrapClient(SnsClient.class, SnsAsyncClient.class, client));
 
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, body));
-    Object response = client.publish(r -> r.message("hello").topicArn("somearn"));
-
-    clientAssertions("Sns", "Publish", "POST", response, "f187a3c1-376f-11df-8963-01868b7c937a");
+    assertThat(response.getClass().getSimpleName())
+        .satisfiesAnyOf(
+            v -> assertThat(response).isInstanceOf(CreateTopicResponse.class),
+            v -> assertThat(response).isInstanceOf(PublishResponse.class),
+            v -> assertThat(response).isInstanceOf(SubscribeResponse.class));
+    clientAssertions("Sns", operation, method, response, requestId);
   }
 
   @Test
@@ -883,5 +1065,121 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     Object response =
         client.getSecretValue(GetSecretValueRequest.builder().secretId("MySecretFromCLI").build());
     clientAssertions("SecretsManager", "GetSecretValue", "POST", response, "UNKNOWN");
+  }
+
+  private static Stream<Arguments> provideLambdaArguments() {
+    return Stream.of(
+        Arguments.of(
+            (Function<LambdaClient, Object>)
+                c ->
+                    c.getFunction(
+                        GetFunctionRequest.builder()
+                            .functionName("lambda-function-name-foo")
+                            .build()),
+            "GetFunction",
+            "GET",
+            lambdaGetFunctionResponseBody,
+            "UNKNOWN"),
+        Arguments.of(
+            (Function<LambdaClient, Object>)
+                c ->
+                    c.createEventSourceMapping(
+                        CreateEventSourceMappingRequest.builder()
+                            .functionName("myFn01-Temp")
+                            .eventSourceArn("arn:aws:sqs:us-west-2:123456789012:MyTestQueue.fifo")
+                            .enabled(true)
+                            .batchSize(10)
+                            .build()),
+            "CreateEventSourceMapping",
+            "POST",
+            lambdaCreateEventSourceMappingResponseBody,
+            "UNKNOWN"),
+        Arguments.of(
+            (Function<LambdaClient, Object>)
+                c ->
+                    c.getEventSourceMapping(
+                        GetEventSourceMappingRequest.builder()
+                            .uuid("e31def54-5e5d-4c1b-8e0f-bf1b11c138c8")
+                            .build()),
+            "GetEventSourceMapping",
+            "GET",
+            lambdaGetEventSourceMappingResponseBody,
+            "UNKNOWN"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideLambdaArguments")
+  void testLambdaSendOperationRequestWithBuilder(
+      Function<LambdaClient, Object> call,
+      String operation,
+      String method,
+      String responseBody,
+      String requestId) {
+    LambdaClientBuilder builder = LambdaClient.builder();
+    configureSdkClient(builder);
+    LambdaClient client =
+        builder
+            .endpointOverride(clientUri)
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
+    Object response = call.apply(client);
+    assertThat(response.getClass().getSimpleName())
+        .satisfiesAnyOf(
+            v ->
+                assertThat(response)
+                    .isInstanceOf(
+                        software.amazon.awssdk.services.lambda.model.GetFunctionResponse.class),
+            v ->
+                assertThat(response)
+                    .isInstanceOf(
+                        software.amazon.awssdk.services.lambda.model
+                            .CreateEventSourceMappingResponse.class),
+            v ->
+                assertThat(response)
+                    .isInstanceOf(
+                        software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse
+                            .class));
+    clientAssertions("Lambda", operation, method, response, requestId);
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideLambdaArguments")
+  void testLambdaAsyncSendOperationRequestWithBuilder(
+      Function<LambdaClient, Object> call,
+      String operation,
+      String method,
+      String responseBody,
+      String requestId) {
+    LambdaAsyncClientBuilder builder = LambdaAsyncClient.builder();
+    configureSdkClient(builder);
+    LambdaAsyncClient client =
+        builder
+            .endpointOverride(clientUri)
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build();
+
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
+    Object response = call.apply(wrapClient(LambdaClient.class, LambdaAsyncClient.class, client));
+    assertThat(response.getClass().getSimpleName())
+        .satisfiesAnyOf(
+            v ->
+                assertThat(response)
+                    .isInstanceOf(
+                        software.amazon.awssdk.services.lambda.model.GetFunctionResponse.class),
+            v ->
+                assertThat(response)
+                    .isInstanceOf(
+                        software.amazon.awssdk.services.lambda.model
+                            .CreateEventSourceMappingResponse.class),
+            v ->
+                assertThat(response)
+                    .isInstanceOf(
+                        software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse
+                            .class));
+    clientAssertions("Lambda", operation, method, response, requestId);
   }
 }

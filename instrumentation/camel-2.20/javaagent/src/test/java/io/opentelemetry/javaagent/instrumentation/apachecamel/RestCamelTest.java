@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -92,7 +94,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                     span.hasName("start")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://start")),
+                            equalTo(stringKey("camel.uri"), experimental("direct://start"))),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -100,7 +102,7 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("camel.uri"),
-                                "rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D"),
+                                experimental("rest://get:api/%7Bmodule%7D/unit/%7BunitId%7D")),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->
@@ -129,13 +131,13 @@ class RestCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationC
                             equalTo(
                                 URL_FULL,
                                 "http://localhost:" + port + "/api/firstModule/unit/unitOne"),
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("camel.uri"), val -> val.isInstanceOf(String.class))),
                 span ->
                     span.hasName("moduleUnit")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://moduleUnit"))));
+                            equalTo(stringKey("camel.uri"), experimental("direct://moduleUnit")))));
   }
 }

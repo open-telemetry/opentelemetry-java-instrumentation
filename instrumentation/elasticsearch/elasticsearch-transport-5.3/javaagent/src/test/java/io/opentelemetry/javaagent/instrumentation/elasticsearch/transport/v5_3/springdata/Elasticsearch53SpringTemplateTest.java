@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
@@ -28,7 +29,6 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.io.File;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -69,7 +69,7 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import spock.util.environment.Jvm;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class Elasticsearch53SpringTemplateTest {
+class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
   private static final Logger logger =
       LoggerFactory.getLogger(Elasticsearch53SpringTemplateTest.class);
 
@@ -140,7 +140,7 @@ class Elasticsearch53SpringTemplateTest {
                   new ClusterUpdateSettingsRequest()
                       .transientSettings(
                           Collections.singletonMap(
-                              "cluster.routing.allocation.disk.threshold_enabled", Boolean.FALSE)));
+                              "cluster.routing.allocation.disk.threshold_enabled", false)));
         });
     testing.waitForTraces(1);
     testing.clearData();
@@ -157,7 +157,9 @@ class Elasticsearch53SpringTemplateTest {
   void prepareTest() {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
-        Boolean.getBoolean("testLatestDeps") || !Jvm.getCurrent().isJava21Compatible());
+        Boolean.getBoolean("testLatestDeps")
+            || !Jvm.getCurrent().isJava21Compatible()
+            || Boolean.getBoolean("collectMetadata"));
   }
 
   @Test
@@ -166,17 +168,7 @@ class Elasticsearch53SpringTemplateTest {
     assertThatThrownBy(() -> template.refresh(indexName))
         .isInstanceOf(IndexNotFoundException.class);
 
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            Arrays.asList(
-                equalTo(
-                    maybeStable(DB_SYSTEM),
-                    DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
-                equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
-                equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
-                equalTo(stringKey("elasticsearch.request.indices"), indexName)));
-
+    List<AttributeAssertion> assertions = refreshActionAttributes(indexName);
     if (SemconvStability.emitStableDatabaseSemconv()) {
       assertions.add(equalTo(ERROR_TYPE, "org.elasticsearch.index.IndexNotFoundException"));
     }
@@ -244,9 +236,15 @@ class Elasticsearch53SpringTemplateTest {
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "CreateIndexAction"),
-                            equalTo(stringKey("elasticsearch.action"), "CreateIndexAction"),
-                            equalTo(stringKey("elasticsearch.request"), "CreateIndexRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName))),
+                            equalTo(
+                                stringKey("elasticsearch.action"),
+                                experimental("CreateIndexAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"),
+                                experimental("CreateIndexRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -258,8 +256,12 @@ class Elasticsearch53SpringTemplateTest {
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "ClusterHealthAction"),
-                            equalTo(stringKey("elasticsearch.action"), "ClusterHealthAction"),
-                            equalTo(stringKey("elasticsearch.request"), "ClusterHealthRequest"))),
+                            equalTo(
+                                stringKey("elasticsearch.action"),
+                                experimental("ClusterHealthAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"),
+                                experimental("ClusterHealthRequest")))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -271,10 +273,16 @@ class Elasticsearch53SpringTemplateTest {
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName),
-                            equalTo(stringKey("elasticsearch.request.search.types"), indexType))),
+                            equalTo(
+                                stringKey("elasticsearch.action"), experimental("SearchAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"), experimental("SearchRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)),
+                            equalTo(
+                                stringKey("elasticsearch.request.search.types"),
+                                experimental(indexType)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -286,15 +294,26 @@ class Elasticsearch53SpringTemplateTest {
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "IndexAction"),
-                            equalTo(stringKey("elasticsearch.action"), "IndexAction"),
-                            equalTo(stringKey("elasticsearch.request"), "IndexRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName),
-                            equalTo(stringKey("elasticsearch.request.write.type"), indexType),
-                            equalTo(longKey("elasticsearch.request.write.version"), -3),
-                            equalTo(longKey("elasticsearch.response.status"), 201),
-                            equalTo(longKey("elasticsearch.shard.replication.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.replication.successful"), 1),
-                            equalTo(longKey("elasticsearch.shard.replication.total"), 2))),
+                            equalTo(stringKey("elasticsearch.action"), experimental("IndexAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"), experimental("IndexRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)),
+                            equalTo(
+                                stringKey("elasticsearch.request.write.type"),
+                                experimental(indexType)),
+                            equalTo(
+                                longKey("elasticsearch.request.write.version"), experimental(-3)),
+                            equalTo(longKey("elasticsearch.response.status"), experimental(201)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.failed"), experimental(0)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.successful"),
+                                experimental(1)),
+                            equalTo(
+                                longKey("elasticsearch.shard.replication.total"),
+                                experimental(2)))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -302,16 +321,7 @@ class Elasticsearch53SpringTemplateTest {
                         .hasKind(SpanKind.CLIENT)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                maybeStable(DB_SYSTEM),
-                                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
-                            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.action"), "RefreshAction"),
-                            equalTo(stringKey("elasticsearch.request"), "RefreshRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName),
-                            equalTo(longKey("elasticsearch.shard.broadcast.failed"), 0),
-                            equalTo(longKey("elasticsearch.shard.broadcast.successful"), 5),
-                            equalTo(longKey("elasticsearch.shard.broadcast.total"), 10))),
+                            refreshBroadcastActionAttributes(indexName))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -323,10 +333,38 @@ class Elasticsearch53SpringTemplateTest {
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName),
-                            equalTo(stringKey("elasticsearch.request.search.types"), indexType))));
+                            equalTo(
+                                stringKey("elasticsearch.action"), experimental("SearchAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"), experimental("SearchRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)),
+                            equalTo(
+                                stringKey("elasticsearch.request.search.types"),
+                                experimental(indexType)))));
+  }
+
+  private static List<AttributeAssertion> refreshActionAttributes(String indexName) {
+    return new ArrayList<>(
+        asList(
+            equalTo(
+                maybeStable(DB_SYSTEM),
+                DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
+            equalTo(maybeStable(DB_OPERATION), "RefreshAction"),
+            equalTo(stringKey("elasticsearch.action"), experimental("RefreshAction")),
+            equalTo(stringKey("elasticsearch.request"), experimental("RefreshRequest")),
+            equalTo(stringKey("elasticsearch.request.indices"), experimental(indexName))));
+  }
+
+  private static List<AttributeAssertion> refreshBroadcastActionAttributes(String indexName) {
+    List<AttributeAssertion> assertions = refreshActionAttributes(indexName);
+    assertions.addAll(
+        asList(
+            equalTo(longKey("elasticsearch.shard.broadcast.failed"), experimental(0)),
+            equalTo(longKey("elasticsearch.shard.broadcast.successful"), experimental(5)),
+            equalTo(longKey("elasticsearch.shard.broadcast.total"), experimental(10))));
+    return assertions;
   }
 
   @Test
@@ -407,8 +445,12 @@ class Elasticsearch53SpringTemplateTest {
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.ELASTICSEARCH),
                             equalTo(maybeStable(DB_OPERATION), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.action"), "SearchAction"),
-                            equalTo(stringKey("elasticsearch.request"), "SearchRequest"),
-                            equalTo(stringKey("elasticsearch.request.indices"), indexName))));
+                            equalTo(
+                                stringKey("elasticsearch.action"), experimental("SearchAction")),
+                            equalTo(
+                                stringKey("elasticsearch.request"), experimental("SearchRequest")),
+                            equalTo(
+                                stringKey("elasticsearch.request.indices"),
+                                experimental(indexName)))));
   }
 }

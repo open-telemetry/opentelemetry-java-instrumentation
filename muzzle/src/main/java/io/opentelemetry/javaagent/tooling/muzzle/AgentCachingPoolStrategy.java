@@ -318,7 +318,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     private final ThreadLocal<Boolean> loadingAnnotations = new ThreadLocal<>();
     private final WeakReference<ClassLoader> classLoaderRef;
 
-    public AgentTypePool(
+    AgentTypePool(
         TypePool.CacheProvider cacheProvider,
         ClassFileLocator classFileLocator,
         ClassLoader classLoader,
@@ -344,7 +344,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
      * @param name The name of the type to resolve.
      * @return The resolution for the type of this name.
      */
-    protected TypePool.Resolution doResolve(String name) {
+    private TypePool.Resolution doResolve(String name) {
       TypePool.Resolution resolution = cacheProvider.find(name);
       if (resolution == null) {
         // calling super.doDescribe that will locate the class bytes and parse them unlike
@@ -355,7 +355,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     void enterLoadAnnotations() {
-      loadingAnnotations.set(Boolean.TRUE);
+      loadingAnnotations.set(true);
     }
 
     void exitLoadAnnotations() {
@@ -691,7 +691,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   private static class DelegatingMethodDescription
       extends MethodDescription.InDefinedShape.AbstractBase {
-    protected final MethodDescription.InDefinedShape method;
+    final MethodDescription.InDefinedShape method;
 
     DelegatingMethodDescription(MethodDescription.InDefinedShape method) {
       this.method = method;

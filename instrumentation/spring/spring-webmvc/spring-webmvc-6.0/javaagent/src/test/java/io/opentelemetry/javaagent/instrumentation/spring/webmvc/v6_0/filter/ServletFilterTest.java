@@ -70,7 +70,7 @@ class ServletFilterTest extends AbstractServletFilterTest {
                           equalTo(
                               EXCEPTION_TYPE,
                               "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          satisfies(EXCEPTION_MESSAGE, val -> assertThat(val).isNotNull()),
+                          satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {

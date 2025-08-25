@@ -28,15 +28,13 @@ tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("collectSpans", true)
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
     systemProperty("collectMetadata", collectMetadata)
-    systemProperty("collectSpans", true)
   }
 
   check {

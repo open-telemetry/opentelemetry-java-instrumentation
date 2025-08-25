@@ -48,6 +48,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.SdkAutoconfigureAccess;
+import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
@@ -160,18 +161,18 @@ public class AgentInstaller {
 
     installEarlyInstrumentation(agentBuilder, inst);
 
-    // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
-    // called
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        installOpenTelemetrySdk(extensionClassLoader);
+        installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
-    ConfigProperties sdkConfig = AgentListener.resolveConfigProperties(autoConfiguredSdk);
-    AgentInstrumentationConfig.internalInitializeConfig(new ConfigPropertiesBridge(sdkConfig));
+    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
+    AgentInstrumentationConfig.internalInitializeConfig(
+        new ConfigPropertiesBridge(
+            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
-        SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
+        SdkAutoconfigureAccess.getResource(autoConfiguredSdk).getAttributes());
 
     for (BeforeAgentListener agentListener :
         loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {
@@ -488,6 +489,7 @@ public class AgentInstaller {
       Thread thread = new Thread(this::runAgentListeners);
       thread.setName("delayed-agent-listeners");
       thread.setDaemon(true);
+      thread.setContextClassLoader(null);
       thread.start();
     }
 

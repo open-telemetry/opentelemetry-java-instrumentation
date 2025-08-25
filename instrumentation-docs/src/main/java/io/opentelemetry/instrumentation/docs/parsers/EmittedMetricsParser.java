@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
@@ -35,9 +36,24 @@ public class EmittedMetricsParser {
    */
   public static Map<String, EmittedMetrics> getMetricsFromFiles(
       String rootDir, String instrumentationDirectory) {
-    Map<String, StringBuilder> metricsByWhen = new HashMap<>();
     Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
 
+    Map<String, List<EmittedMetrics.MetricsByScope>> metricsByWhen =
+        parseAllMetricFiles(telemetryDir);
+
+    return aggregateMetricsByScope(metricsByWhen);
+  }
+
+  /**
+   * Parses all metric files in the given .telemetry directory and returns a map where the key is
+   * the 'when' condition and the value is a list of metrics grouped by scope.
+   *
+   * @param telemetryDir the path to the .telemetry directory
+   * @return a map of 'when' to list of metrics by scope
+   */
+  private static Map<String, List<EmittedMetrics.MetricsByScope>> parseAllMetricFiles(
+      Path telemetryDir) {
+    Map<String, List<EmittedMetrics.MetricsByScope>> metricsByWhen = new HashMap<>();
     if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
       try (Stream<Path> files = Files.list(telemetryDir)) {
         files
@@ -49,14 +65,21 @@ public class EmittedMetricsParser {
                     String when = content.substring(0, content.indexOf('\n'));
                     String whenKey = when.replace("when: ", "");
 
-                    metricsByWhen.putIfAbsent(whenKey, new StringBuilder("metrics:\n"));
-
-                    // Skip the metric label ("metrics:") so we can aggregate into one list
-                    int metricsIndex = content.indexOf("metrics:\n");
+                    int metricsIndex = content.indexOf("metrics_by_scope:");
                     if (metricsIndex != -1) {
-                      String contentAfterMetrics =
-                          content.substring(metricsIndex + "metrics:\n".length());
-                      metricsByWhen.get(whenKey).append(contentAfterMetrics);
+                      String yaml = "when: " + whenKey + "\n" + content.substring(metricsIndex);
+                      EmittedMetrics parsed;
+                      try {
+                        parsed = YamlHelper.emittedMetricsParser(yaml);
+                      } catch (Exception e) {
+                        logger.severe(
+                            "Error parsing metrics file (" + path + "): " + e.getMessage());
+                        return;
+                      }
+                      if (parsed.getMetricsByScope() != null) {
+                        metricsByWhen.putIfAbsent(whenKey, new ArrayList<>());
+                        metricsByWhen.get(whenKey).addAll(parsed.getMetricsByScope());
+                      }
                     }
                   }
                 });
@@ -64,37 +87,80 @@ public class EmittedMetricsParser {
         logger.severe("Error reading metrics files: " + e.getMessage());
       }
     }
+    return metricsByWhen;
+  }
 
-    return parseMetrics(metricsByWhen);
+  /**
+   * Aggregates metrics under the same scope for each 'when' condition, deduplicating metrics by
+   * name.
+   *
+   * @param metricsByWhen map of 'when' to list of metrics by scope
+   * @return a map of 'when' to aggregated EmittedMetrics
+   */
+  private static Map<String, EmittedMetrics> aggregateMetricsByScope(
+      Map<String, List<EmittedMetrics.MetricsByScope>> metricsByWhen) {
+    Map<String, EmittedMetrics> result = new HashMap<>();
+    for (Map.Entry<String, List<EmittedMetrics.MetricsByScope>> entry : metricsByWhen.entrySet()) {
+      String when = entry.getKey();
+      List<EmittedMetrics.MetricsByScope> allScopes = entry.getValue();
+      Map<String, Map<String, EmittedMetrics.Metric>> metricsByScopeName = new HashMap<>();
+
+      for (EmittedMetrics.MetricsByScope scopeEntry : allScopes) {
+        String scope = scopeEntry.getScope();
+        metricsByScopeName.putIfAbsent(scope, new HashMap<>());
+        Map<String, EmittedMetrics.Metric> metricMap = metricsByScopeName.get(scope);
+
+        for (EmittedMetrics.Metric metric : scopeEntry.getMetrics()) {
+          metricMap.put(metric.getName(), metric); // deduplicate by name
+        }
+      }
+
+      List<EmittedMetrics.MetricsByScope> mergedScopes = new ArrayList<>();
+      for (Map.Entry<String, Map<String, EmittedMetrics.Metric>> scopeEntry :
+          metricsByScopeName.entrySet()) {
+        mergedScopes.add(
+            new EmittedMetrics.MetricsByScope(
+                scopeEntry.getKey(), new ArrayList<>(scopeEntry.getValue().values())));
+      }
+      result.put(when, new EmittedMetrics(when, mergedScopes));
+    }
+    return result;
   }
 
   /**
    * Takes in a raw string representation of the aggregated EmittedMetrics yaml map, separated by
-   * the `when`, indicating the conditions under which the metrics are emitted. deduplicates the
-   * metrics by name and then returns a new map of EmittedMetrics objects.
+   * the {@code when}, indicating the conditions under which the metrics are emitted. Deduplicates
+   * the metrics by name and then returns a new map of EmittedMetrics objects.
    *
    * @param input raw string representation of EmittedMetrics yaml
-   * @return {@code Map<String, EmittedMetrics>} where the key is the `when` condition
+   * @return map where the key is the {@code when} condition and the value is the corresponding
+   *     EmittedMetrics
+   * @throws JsonProcessingException if parsing fails
    */
   // visible for testing
-  public static Map<String, EmittedMetrics> parseMetrics(Map<String, StringBuilder> input) {
+  public static Map<String, EmittedMetrics> parseMetrics(Map<String, StringBuilder> input)
+      throws JsonProcessingException {
     Map<String, EmittedMetrics> metricsMap = new HashMap<>();
     for (Map.Entry<String, StringBuilder> entry : input.entrySet()) {
       String when = entry.getKey();
       StringBuilder content = entry.getValue();
 
       EmittedMetrics metrics = YamlHelper.emittedMetricsParser(content.toString());
-      if (metrics.getMetrics() == null) {
+      if (metrics.getMetricsByScope() == null) {
         continue;
       }
 
-      Map<String, EmittedMetrics.Metric> deduplicatedMetrics = new HashMap<>();
-      for (EmittedMetrics.Metric metric : metrics.getMetrics()) {
-        deduplicatedMetrics.put(metric.getName(), metric);
+      List<EmittedMetrics.MetricsByScope> deduplicatedScopes = new ArrayList<>();
+      for (EmittedMetrics.MetricsByScope scopeEntry : metrics.getMetricsByScope()) {
+        String scope = scopeEntry.getScope();
+        Map<String, EmittedMetrics.Metric> dedupedMetrics = new HashMap<>();
+        for (EmittedMetrics.Metric metric : scopeEntry.getMetrics()) {
+          dedupedMetrics.put(metric.getName(), metric);
+        }
+        deduplicatedScopes.add(
+            new EmittedMetrics.MetricsByScope(scope, new ArrayList<>(dedupedMetrics.values())));
       }
-
-      List<EmittedMetrics.Metric> uniqueMetrics = new ArrayList<>(deduplicatedMetrics.values());
-      metricsMap.put(when, new EmittedMetrics(when, uniqueMetrics));
+      metricsMap.put(when, new EmittedMetrics(when, deduplicatedScopes));
     }
     return metricsMap;
   }

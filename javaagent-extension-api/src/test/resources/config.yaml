@@ -1,0 +1,24 @@
+file_format: 0.4
+instrumentation/development:
+  java:
+    acme:
+      full_name:
+        preserved: true
+    agent:
+      experimental:
+        indy: true
+    runtime_telemetry:
+      enabled: false
+    example_instrumentation:
+      string_key: value
+      bool_key: true
+      int_key: 1
+      double_key: 1.1
+      list_key:
+        - value1
+        - value2
+        - true
+      map_key:
+        string_key1: value1
+        string_key2: value2
+        bool_key: true

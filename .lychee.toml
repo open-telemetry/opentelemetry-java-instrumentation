@@ -1,0 +1,16 @@
+timeout = 30
+retry_wait_time = 5
+max_retries = 6
+max_concurrency = 4
+
+# Check link anchors
+include_fragments = true
+
+# excluding links to pull requests and issues is done for performance
+# stackexchange link fails with 403 when accessed by lychee
+exclude = [
+  '^https://github.com/open-telemetry/opentelemetry-java-instrumentation/(issues|pull)/\d+$',
+  '^http://code.google.com/p/concurrentlinkedhashmap$',
+  '^https://softwareengineering.stackexchange.com/questions/29727.*',
+  '^https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/$',
+]

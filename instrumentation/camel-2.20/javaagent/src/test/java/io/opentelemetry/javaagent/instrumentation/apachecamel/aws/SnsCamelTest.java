@@ -55,10 +55,12 @@ class SnsCamelTest {
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null).hasNoParent()),
+                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null, null).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.Publish", metaData.topicArn).hasNoParent(),
+                span ->
+                    AwsSpanAssertions.sns(span, "SNS.Publish", metaData.topicArn, metaData.topicArn)
+                        .hasNoParent(),
                 span ->
                     AwsSpanAssertions.sqs(
                             span,
@@ -107,13 +109,13 @@ class SnsCamelTest {
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null).hasNoParent()),
+                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null, null).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> CamelSpanAssertions.direct(span, "input"),
                 span -> CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0)),
                 span ->
-                    AwsSpanAssertions.sns(span, "SNS.Publish", metaData.topicArn)
+                    AwsSpanAssertions.sns(span, "SNS.Publish", metaData.topicArn, metaData.topicArn)
                         .hasParent(trace.getSpan(1)),
                 span ->
                     AwsSpanAssertions.sqs(
@@ -150,10 +152,13 @@ class SnsCamelTest {
                     AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.CreateTopic", null).hasNoParent()),
+                span ->
+                    AwsSpanAssertions.sns(span, "SNS.CreateTopic", topicArn, null).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.Subscribe", topicArn).hasNoParent()));
+                span ->
+                    AwsSpanAssertions.sns(span, "SNS.Subscribe", topicArn, topicArn)
+                        .hasNoParent()));
     testing.clearData();
   }
 
@@ -174,7 +179,7 @@ class SnsCamelTest {
     private final String queueUrl;
     private final String topicArn;
 
-    public SnsMetadata(String queueUrl, String topicArn) {
+    SnsMetadata(String queueUrl, String topicArn) {
       this.queueUrl = queueUrl;
       this.topicArn = topicArn;
     }
