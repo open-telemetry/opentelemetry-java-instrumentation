@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot32.plugins.versions)
+  id("org.springframework.boot") version "3.5.4"
   id("org.graalvm.buildtools.native")
 }
 
@@ -10,6 +10,8 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
@@ -18,12 +20,11 @@ dependencies {
   implementation("org.springframework.kafka:spring-kafka")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   implementation("org.springframework.boot:spring-boot-starter-aop")
-  implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "3.+" else "3.2.0"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 
-  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
   if (testLatestDeps) {
     // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
     // are not in sync
