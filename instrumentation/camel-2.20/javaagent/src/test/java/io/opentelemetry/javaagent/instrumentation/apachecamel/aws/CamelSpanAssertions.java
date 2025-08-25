@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel.aws;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -22,7 +23,8 @@ class CamelSpanAssertions {
     span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasNoParent()
-        .hasAttributesSatisfyingExactly(equalTo(stringKey("camel.uri"), "direct://" + spanName));
+        .hasAttributesSatisfyingExactly(
+            equalTo(stringKey("camel.uri"), experimental("direct://" + spanName)));
   }
 
   static SpanDataAssert sqsProduce(SpanDataAssert span, String queueName) {
@@ -31,7 +33,8 @@ class CamelSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
-                "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000"),
+                experimental(
+                    "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
             equalTo(MESSAGING_DESTINATION_NAME, queueName));
   }
 
@@ -45,7 +48,8 @@ class CamelSpanAssertions {
         .hasAttributesSatisfyingExactly(
             equalTo(
                 stringKey("camel.uri"),
-                "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay),
+                experimental(
+                    "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay)),
             equalTo(MESSAGING_DESTINATION_NAME, queueName),
             satisfies(
                 MESSAGING_MESSAGE_ID, stringAssert -> stringAssert.isInstanceOf(String.class)));
@@ -56,7 +60,8 @@ class CamelSpanAssertions {
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
-                stringKey("camel.uri"), "aws-sns://" + topicName + "?amazonSNSClient=%23snsClient"),
+                stringKey("camel.uri"),
+                experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
             equalTo(MESSAGING_DESTINATION_NAME, topicName));
   }
 
@@ -65,6 +70,7 @@ class CamelSpanAssertions {
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfyingExactly(
             equalTo(
-                stringKey("camel.uri"), "aws-s3://" + bucketName + "?amazonS3Client=%23s3Client"));
+                stringKey("camel.uri"),
+                experimental("aws-s3://" + bucketName + "?amazonS3Client=%23s3Client")));
   }
 }

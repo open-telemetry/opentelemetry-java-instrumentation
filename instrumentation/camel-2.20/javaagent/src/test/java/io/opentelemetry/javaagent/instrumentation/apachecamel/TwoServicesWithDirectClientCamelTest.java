@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -111,7 +112,7 @@ class TwoServicesWithDirectClientCamelTest
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://input")),
+                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                 span ->
                     span.hasName("POST")
                         .hasKind(SpanKind.CLIENT)
@@ -122,7 +123,7 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
-                                "http://localhost:" + portOne + "/serviceOne")),
+                                experimental("http://localhost:" + portOne + "/serviceOne"))),
                 span ->
                     span.hasName("POST /serviceOne")
                         .hasKind(SpanKind.SERVER)
@@ -133,7 +134,7 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
-                                "http://0.0.0.0:" + portOne + "/serviceOne")),
+                                experimental("http://0.0.0.0:" + portOne + "/serviceOne"))),
                 span ->
                     span.hasName("POST")
                         .hasKind(SpanKind.CLIENT)
@@ -144,7 +145,7 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
                             equalTo(
                                 stringKey("camel.uri"),
-                                "http://127.0.0.1:" + portTwo + "/serviceTwo")),
+                                experimental("http://127.0.0.1:" + portTwo + "/serviceTwo"))),
                 span ->
                     span.hasName("POST /serviceTwo")
                         .hasKind(SpanKind.SERVER)
@@ -171,6 +172,9 @@ class TwoServicesWithDirectClientCamelTest
                             equalTo(URL_FULL, "http://127.0.0.1:" + portTwo + "/serviceTwo"),
                             equalTo(
                                 stringKey("camel.uri"),
-                                "jetty:http://0.0.0.0:" + portTwo + "/serviceTwo?arg=value"))));
+                                experimental(
+                                    "jetty:http://0.0.0.0:"
+                                        + portTwo
+                                        + "/serviceTwo?arg=value")))));
   }
 }

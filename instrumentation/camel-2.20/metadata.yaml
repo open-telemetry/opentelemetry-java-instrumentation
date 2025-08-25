@@ -4,6 +4,8 @@ description: >
   'camel-opentelemetry' component provided directly by the Camel project.
 configurations:
   - name: otel.instrumentation.camel.experimental-span-attributes
-    description: Enable the capture of experimental span attributes.
+    description: >
+      Enable the capture of experimental `camel.uri`, `camel.kafka.partitionKey`, `camel.kafka.key`
+      and `camel.kafka.offset` span attributes.
     type: boolean
     default: false

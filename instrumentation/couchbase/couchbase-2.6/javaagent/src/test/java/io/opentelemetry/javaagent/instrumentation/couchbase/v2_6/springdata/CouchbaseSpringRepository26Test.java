@@ -28,6 +28,21 @@ class CouchbaseSpringRepository26Test extends AbstractCouchbaseSpringRepositoryT
   }
 
   @Override
+  protected List<AttributeAssertion> couchbaseQueryAttributes() {
+    return Couchbase26Util.couchbaseQueryAttributes();
+  }
+
+  @Override
+  protected List<AttributeAssertion> couchbaseClusterManagerAttributes() {
+    return Couchbase26Util.couchbaseClusterManagerAttributes();
+  }
+
+  @Override
+  protected List<AttributeAssertion> couchbaseN1qlAttributes() {
+    return Couchbase26Util.couchbaseN1qlAttributes();
+  }
+
+  @Override
   protected TestDocument findById(TestRepository repository, String id) {
     return repository.findById(id).get();
   }

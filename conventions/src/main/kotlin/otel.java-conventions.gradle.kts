@@ -143,7 +143,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.123.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.124.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -338,6 +338,14 @@ val resourceClassesCsv = resourceNames.joinToString(",") { "io.opentelemetry.sdk
 
 tasks.withType<Test>().configureEach {
   useJUnitPlatform()
+
+  // work around jvm crash on openJ9 8 after updating armeria to 1.33.1
+  val testJavaVersion = gradle.startParameter.projectProperties["testJavaVersion"]?.let(JavaVersion::toVersion)
+  val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
+    ?: false
+  if (useJ9 && testJavaVersion != null && testJavaVersion.isJava8) {
+    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*},exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*},exclude={io/opentelemetry/testing/internal/io/netty/buffer/AbstractByteBuf.*}")
+  }
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
   // propagation.

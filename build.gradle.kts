@@ -166,15 +166,14 @@ tasks {
 
   val uploadReleaseBundle by registering {
     dependsOn(generateReleaseBundle)
-
-    val username = System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
-    val password = System.getenv("SONATYPE_KEY") ?: throw GradleException("Sonatype key not set")
-    val token = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
-
-    var query = "?name=opentelemetry-java-instrumentation-$stableVersion"
-    query += "&publishingType=AUTOMATIC"
-
     doFirst {
+      val username = System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
+      val password = System.getenv("SONATYPE_KEY") ?: throw GradleException("Sonatype key not set")
+      val token = Base64.getEncoder().encodeToString("$username:$password".toByteArray())
+
+      var query = "?name=opentelemetry-java-instrumentation-$stableVersion"
+      query += "&publishingType=AUTOMATIC"
+
       val bundle = generateReleaseBundle.get().outputs.files.singleFile
       val httpClient = OkHttpClient()
 

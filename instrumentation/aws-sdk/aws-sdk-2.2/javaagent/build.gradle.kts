@@ -222,7 +222,7 @@ tasks {
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-    systemProperty("metaDataConfig", "otel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {

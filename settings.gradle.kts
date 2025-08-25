@@ -4,10 +4,12 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.0"
+    id("org.jetbrains.kotlin.jvm") version "2.2.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("org.unbroken-dome.xjc") version "2.0.0"
+    id("com.github.bjornvester.xjc") version "1.8.2"
     id("org.graalvm.buildtools.native") version "0.11.0"
+    id("com.google.osdetector") version "1.7.3"
+    id("com.google.protobuf") version "0.9.5"
   }
 }
 
@@ -20,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.1"
+  id("com.gradle.develocity") version "4.1.1"
 }
 
 dependencyResolutionManagement {
@@ -164,6 +166,8 @@ include(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing")
 include(":instrumentation:aws-lambda:aws-lambda-events-2.2:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-events-2.2:library")
 include(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing")
+include(":instrumentation:aws-lambda:aws-lambda-events-3.11:library")
+include(":instrumentation:aws-lambda:aws-lambda-events-common-2.2:library")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:library")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:library-autoconfigure")
@@ -253,6 +257,7 @@ include(":instrumentation:hibernate:hibernate-6.0:spring-testing")
 include(":instrumentation:hibernate:hibernate-common:javaagent")
 include(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent")
 include(":instrumentation:hibernate:hibernate-reactive-1.0:javaagent")
+include(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing")
 include(":instrumentation:hikaricp-3.0:javaagent")
 include(":instrumentation:hikaricp-3.0:library")
 include(":instrumentation:hikaricp-3.0:testing")
@@ -427,6 +432,7 @@ include(":instrumentation:okhttp:okhttp-3.0:testing")
 include(":instrumentation:openai:openai-java-1.1:javaagent")
 include(":instrumentation:openai:openai-java-1.1:library")
 include(":instrumentation:openai:openai-java-1.1:testing")
+include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
@@ -591,6 +597,7 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
+include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")

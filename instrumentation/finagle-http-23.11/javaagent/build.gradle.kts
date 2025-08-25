@@ -46,6 +46,6 @@ tasks {
     jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
-    systemProperty("metaDataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true,otel.instrumentation.http.server.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true,otel.instrumentation.http.server.emit-experimental-telemetry=true")
   }
 }

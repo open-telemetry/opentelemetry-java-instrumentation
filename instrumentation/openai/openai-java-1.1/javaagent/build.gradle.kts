@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.openai")
     module.set("openai-java")
-    versions.set("[1.1.0,)")
+    versions.set("[1.1.0,3)")
     // TODO: assertInverse after completing instrumentation
   }
 }

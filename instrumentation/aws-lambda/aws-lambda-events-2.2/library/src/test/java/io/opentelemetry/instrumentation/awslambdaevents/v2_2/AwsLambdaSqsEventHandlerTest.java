@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest {
 
   @RegisterExtension
