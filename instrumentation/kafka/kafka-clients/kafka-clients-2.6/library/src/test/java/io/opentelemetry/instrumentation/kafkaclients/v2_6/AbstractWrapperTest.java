@@ -34,7 +34,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
   void testWrappers(boolean testHeaders) throws InterruptedException {
     KafkaTelemetryBuilder telemetryBuilder =
         KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setCapturedHeaders(singletonList("test-message-header"))
+            .setCapturedHeaders(singletonList("Test-Message-Header"))
             // TODO run tests both with and without experimental span attributes
             .setCaptureExperimentalSpanAttributes(true);
     configure(telemetryBuilder);
@@ -50,7 +50,7 @@ abstract class AbstractWrapperTest extends KafkaClientBaseTest {
           if (testHeaders) {
             producerRecord
                 .headers()
-                .add("test-message-header", "test".getBytes(StandardCharsets.UTF_8));
+                .add("Test-Message-Header", "test".getBytes(StandardCharsets.UTF_8));
           }
           wrappedProducer.send(
               producerRecord,

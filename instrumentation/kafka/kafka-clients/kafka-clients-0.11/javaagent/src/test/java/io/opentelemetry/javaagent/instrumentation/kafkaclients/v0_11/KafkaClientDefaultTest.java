@@ -49,7 +49,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           if (testHeaders) {
             producerRecord
                 .headers()
-                .add("test-message-header", "test".getBytes(StandardCharsets.UTF_8));
+                .add("Test-Message-Header", "test".getBytes(StandardCharsets.UTF_8));
           }
           producer
               .send(
@@ -214,7 +214,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         () -> {
           ProducerRecord<Integer, String> producerRecord =
               new ProducerRecord<>(SHARED_TOPIC, 10, greeting);
-          producerRecord.headers().add("test-message-header", null);
+          producerRecord.headers().add("Test-Message-Header", null);
           producer
               .send(
                   producerRecord,
@@ -238,7 +238,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
           () -> {
             assertThat(record.key()).isEqualTo(10);
             assertThat(record.value()).isEqualTo(greeting);
-            assertThat(record.headers().lastHeader("test-message-header").value()).isNull();
+            assertThat(record.headers().lastHeader("Test-Message-Header").value()).isNull();
           });
     }
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();

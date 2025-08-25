@@ -363,7 +363,7 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
@@ -399,7 +399,7 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     if (isBatch) {
@@ -426,7 +426,7 @@ abstract class AbstractPulsarClientTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);

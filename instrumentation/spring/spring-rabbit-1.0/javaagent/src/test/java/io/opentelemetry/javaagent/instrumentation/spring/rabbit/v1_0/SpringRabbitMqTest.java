@@ -130,7 +130,7 @@ public class SpringRabbitMqTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -151,7 +151,7 @@ public class SpringRabbitMqTest {
                         ConsumerConfig.TEST_QUEUE,
                         "test",
                         message -> {
-                          message.getMessageProperties().setHeader("test-message-header", "test");
+                          message.getMessageProperties().setHeader("Test-Message-Header", "test");
                           return message;
                         });
               } else {
