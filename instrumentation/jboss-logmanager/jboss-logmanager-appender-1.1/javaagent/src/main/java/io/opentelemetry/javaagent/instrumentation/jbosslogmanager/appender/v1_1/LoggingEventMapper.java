@@ -12,15 +12,13 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import org.jboss.logmanager.ExtLogRecord;
@@ -81,13 +79,8 @@ public final class LoggingEventMapper {
 
     Throwable throwable = record.getThrown();
     if (throwable != null) {
-      // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api
-      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      // this cast is safe within java agent instrumentation
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
     }
     captureMdcAttributes(attributes);
 
