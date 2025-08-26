@@ -90,12 +90,6 @@ targets:
       target: ':instrumentation:camel-2.20:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse:clickhouse-client-0.5:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:clickhouse:clickhouse-clientv2-0.8:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:executors:bootstrap'
     - type: gradle
       path: ./
@@ -394,6 +388,15 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:cassandra:cassandra-4.4:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:clickhouse:clickhouse-client-0.5:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:clickhouse:clickhouse-client-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:clickhouse:clickhouse-clientv2-0.8:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-2-common:javaagent'

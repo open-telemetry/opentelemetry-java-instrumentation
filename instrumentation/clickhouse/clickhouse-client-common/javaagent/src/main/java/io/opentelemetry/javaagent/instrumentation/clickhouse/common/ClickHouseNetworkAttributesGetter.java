@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 
-public final class ClickHouseNetworkAttributesGetter
+final class ClickHouseNetworkAttributesGetter
     implements ServerAttributesGetter<ClickHouseDbRequest> {
 
   @Override
