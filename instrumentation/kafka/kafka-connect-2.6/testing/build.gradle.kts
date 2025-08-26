@@ -32,7 +32,6 @@ dependencies {
   testImplementation("org.testcontainers:kafka:1.19.7")
   implementation("io.rest-assured:rest-assured:5.5.5")
   testImplementation("org.junit.jupiter:junit-jupiter:5.10.2")
-  // Remove this duplicate line: testImplementation("org.apache.httpcomponents:httpclient:4.3")
   testImplementation("org.testcontainers:junit-jupiter")
   implementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("com.squareup.okhttp3:okhttp:4.12.0")
