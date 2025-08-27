@@ -7,17 +7,18 @@ package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
 enum SpringWebHttpAttributesGetter
-    implements HttpClientAttributesGetter<HttpRequest, ClientHttpResponse> {
+    implements HttpClientExperimentalAttributesGetter<HttpRequest, ClientHttpResponse> {
   INSTANCE;
 
   @Override
@@ -106,5 +107,57 @@ enum SpringWebHttpAttributesGetter
   @Override
   public Integer getServerPort(HttpRequest httpRequest) {
     return httpRequest.getURI().getPort();
+  }
+
+  private static final String URI_TEMPLATE_ATTRIBUTE = "org.springframework.web.client.RestClient.uriTemplate";
+  @Nullable private static final MethodHandle GET_ATTRIBUTES;
+
+  static {
+    MethodHandle getAttributes = null;
+    Class<?> httpRequestClass = null;
+
+    try {
+      httpRequestClass = Class.forName("org.springframework.http.HttpRequest");
+    } catch (ClassNotFoundException e) {
+      // ignored
+    }
+
+    if (httpRequestClass != null) {
+      MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+      try {
+        getAttributes =
+            lookup.findVirtual(
+                httpRequestClass,
+                "getAttributes",
+                MethodType.methodType(java.util.Map.class));
+      } catch (NoSuchMethodException | IllegalAccessException ignored) {
+        // ignored
+      }
+    }
+
+    GET_ATTRIBUTES = getAttributes;
+  }
+
+  @Nullable
+  @Override
+  public String getUrlTemplate(HttpRequest httpRequest) {
+    if (GET_ATTRIBUTES == null) {
+      return null;
+    }
+
+    try {
+      Object attributes = GET_ATTRIBUTES.invoke(httpRequest);
+      if (attributes instanceof java.util.Map) {
+        Map<?, ?> map = (Map<?, ?>) attributes;
+        Object value = map.get(URI_TEMPLATE_ATTRIBUTE);
+        if (value instanceof String) {
+          return (String) value;
+        }
+      }
+    } catch (Throwable e) {
+      // ignore
+    }
+
+    return null;
   }
 }
