@@ -377,7 +377,7 @@ abstract class AbstractRocketMqClientTest {
               Message msg =
                   new Message(
                       sharedTopic, "TagA", "Hello RocketMQ".getBytes(Charset.defaultCharset()));
-              msg.putUserProperty("test-message-header", "test");
+              msg.putUserProperty("Test-Message-Header", "test");
               SendResult sendResult = producer.send(msg);
               assertEquals(
                   SendStatus.SEND_OK, sendResult.getSendStatus(), "Send status should be SEND_OK");
@@ -409,7 +409,7 @@ abstract class AbstractRocketMqClientTest {
                                     "SEND_OK"),
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.test_message_header"),
+                                        "messaging.header.Test_Message_Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -436,7 +436,7 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.test_message_header"),
+                                        "messaging.header.Test_Message_Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
