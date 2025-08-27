@@ -12,6 +12,7 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -31,6 +32,7 @@ class PatchLoggerTest {
     for (Method method : PatchLogger.class.getMethods()) {
       MethodSignature methodSignature = new MethodSignature();
       methodSignature.name = method.getName();
+      methodSignature.modifiers = method.getModifiers();
       for (Class<?> clazz : method.getParameterTypes()) {
         String parameterType = clazz.getName();
         methodSignature.parameterTypes.add(
@@ -50,6 +52,7 @@ class PatchLoggerTest {
       String methodName = method.getName();
       MethodSignature builder = new MethodSignature();
       builder.name = methodName;
+      builder.modifiers = method.getModifiers();
       List<String> parameterTypes = new ArrayList<>();
       for (Class<?> clazz : method.getParameterTypes()) {
         parameterTypes.add(clazz.getName());
@@ -792,6 +795,7 @@ class PatchLoggerTest {
     String name;
     List<String> parameterTypes = new ArrayList<>();
     String returnType;
+    int modifiers;
 
     @Override
     public boolean equals(@Nullable Object obj) {
@@ -804,18 +808,19 @@ class PatchLoggerTest {
       MethodSignature other = (MethodSignature) obj;
       return Objects.equals(name, other.name)
           && Objects.equals(parameterTypes, other.parameterTypes)
-          && Objects.equals(returnType, other.returnType);
+          && Objects.equals(returnType, other.returnType)
+          && modifiers == other.modifiers;
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(name, parameterTypes, returnType);
+      return Objects.hash(name, parameterTypes, returnType, modifiers);
     }
 
     @Override
     public String toString() {
       String params = parameterTypes.stream().reduce((a, b) -> a + ", " + b).orElse("");
-      return name + "(" + params + ")" + returnType;
+      return Modifier.toString(modifiers) + " " + name + "(" + params + ")" + returnType;
     }
   }
 }
