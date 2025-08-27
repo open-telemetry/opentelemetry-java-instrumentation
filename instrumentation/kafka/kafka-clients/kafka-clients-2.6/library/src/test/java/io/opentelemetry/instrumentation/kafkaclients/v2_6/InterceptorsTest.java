@@ -45,7 +45,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(
-                              stringArrayKey("messaging.header.test_message_header"),
+                              stringArrayKey("messaging.header.Test_Message_Header"),
                               singletonList("test")),
                           equalTo(MESSAGING_SYSTEM, "kafka"),
                           equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
@@ -70,7 +70,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
@@ -87,7 +87,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasLinks(LinkData.create(producerSpanContext.get()))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
