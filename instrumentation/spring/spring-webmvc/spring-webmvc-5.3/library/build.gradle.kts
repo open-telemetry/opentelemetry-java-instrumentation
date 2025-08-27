@@ -22,3 +22,9 @@ configurations.testRuntimeClasspath {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

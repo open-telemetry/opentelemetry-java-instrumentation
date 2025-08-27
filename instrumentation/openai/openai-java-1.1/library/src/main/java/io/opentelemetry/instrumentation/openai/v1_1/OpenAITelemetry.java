@@ -6,8 +6,11 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import com.openai.client.OpenAIClient;
+import com.openai.client.OpenAIClientAsync;
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
+import com.openai.models.embeddings.CreateEmbeddingResponse;
+import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -28,6 +31,7 @@ public final class OpenAITelemetry {
   }
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
+  private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter;
 
   private final Logger eventLogger;
 
@@ -35,9 +39,11 @@ public final class OpenAITelemetry {
 
   OpenAITelemetry(
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
+      Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingsInstrumenter,
       Logger eventLogger,
       boolean captureMessageContent) {
     this.chatInstrumenter = chatInstrumenter;
+    this.embeddingsInstrumenter = embeddingsInstrumenter;
     this.eventLogger = eventLogger;
     this.captureMessageContent = captureMessageContent;
   }
@@ -45,7 +51,14 @@ public final class OpenAITelemetry {
   /** Wraps the provided OpenAIClient, enabling telemetry for it. */
   public OpenAIClient wrap(OpenAIClient client) {
     return new InstrumentedOpenAiClient(
-            client, chatInstrumenter, eventLogger, captureMessageContent)
+            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  /** Wraps the provided OpenAIClientAsync, enabling telemetry for it. */
+  public OpenAIClientAsync wrap(OpenAIClientAsync client) {
+    return new InstrumentedOpenAiClientAsync(
+            client, chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent)
         .createProxy();
   }
 }

@@ -1,8 +1,9 @@
 description: >
-  Provides lightweight instrumentation of the Lambda core library, supporting all versions. Use this
-  package if you only use `RequestStreamHandler` or know you don't use any event classes from
-  `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to
-  run e.g., a Spring Boot application on Lambda.
+  Provides lightweight instrumentation of the Lambda core library, supporting all versions. It
+  generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only
+  use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`.
+  This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot
+  application on Lambda.
 configurations:
   - name: otel.instrumentation.aws-lambda.flush-timeout
     type: int

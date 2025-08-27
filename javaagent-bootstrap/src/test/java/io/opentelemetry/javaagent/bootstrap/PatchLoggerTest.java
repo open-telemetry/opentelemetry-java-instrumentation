@@ -48,9 +48,6 @@ class PatchLoggerTest {
     Set<MethodSignature> julLoggerMethods = new HashSet<>();
     for (Method method : java.util.logging.Logger.class.getMethods()) {
       String methodName = method.getName();
-      if (methodName.contains("Handler") || methodName.contains("Filter")) {
-        continue;
-      }
       MethodSignature builder = new MethodSignature();
       builder.name = methodName;
       List<String> parameterTypes = new ArrayList<>();

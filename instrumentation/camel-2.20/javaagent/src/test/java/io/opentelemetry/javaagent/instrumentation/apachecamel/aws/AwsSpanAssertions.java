@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SNS_TOPIC_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -105,12 +106,10 @@ class AwsSpanAssertions {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "receive"));
       } else if (spanName.endsWith("process")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "process"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "publish"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       }
     }
 
@@ -139,16 +138,18 @@ class AwsSpanAssertions {
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
   }
 
-  static SpanDataAssert sns(SpanDataAssert span, String spanName, String topicArn) {
+  static SpanDataAssert sns(
+      SpanDataAssert span, String spanName, String topicArn, String destinationName) {
     return span.hasName(spanName)
         .hasKind(CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+            equalTo(AWS_SNS_TOPIC_ARN, topicArn),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_METHOD, spanName.substring(4)),
             equalTo(RPC_SERVICE, "AmazonSNS"),
-            equalTo(MESSAGING_DESTINATION_NAME, topicArn),
+            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),

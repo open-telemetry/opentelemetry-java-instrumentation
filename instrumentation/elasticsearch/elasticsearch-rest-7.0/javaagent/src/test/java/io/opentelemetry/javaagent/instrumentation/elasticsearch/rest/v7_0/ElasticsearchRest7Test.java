@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v7_0;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -15,6 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -106,6 +108,13 @@ class ElasticsearchRest7Test {
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.elasticsearch-rest-7.0",
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -183,22 +192,22 @@ class ElasticsearchRest7Test {
   }
 
   private static class AsyncRequest {
-    volatile Response requestResponse = null;
-    volatile Exception exception = null;
+    private volatile Response requestResponse = null;
+    private volatile Exception exception = null;
 
-    public Response getRequestResponse() {
+    Response getRequestResponse() {
       return requestResponse;
     }
 
-    public void setRequestResponse(Response requestResponse) {
+    void setRequestResponse(Response requestResponse) {
       this.requestResponse = requestResponse;
     }
 
-    public Exception getException() {
+    Exception getException() {
       return exception;
     }
 
-    public void setException(Exception exception) {
+    void setException(Exception exception) {
       this.exception = exception;
     }
   }
