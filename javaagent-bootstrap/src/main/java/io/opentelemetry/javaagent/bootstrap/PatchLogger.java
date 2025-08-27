@@ -340,7 +340,7 @@ public class PatchLogger {
     return getLogger("");
   }
 
-  public static final PatchLogger getGlobal() {
+  public static PatchLogger getGlobal() {
     return global;
   }
 

@@ -809,12 +809,12 @@ class PatchLoggerTest {
       return Objects.equals(name, other.name)
           && Objects.equals(parameterTypes, other.parameterTypes)
           && Objects.equals(returnType, other.returnType)
-          && modifiers == other.modifiers;
+          && Modifier.isStatic(modifiers) == Modifier.isStatic(other.modifiers);
     }
 
     @Override
     public int hashCode() {
-      return Objects.hash(name, parameterTypes, returnType, modifiers);
+      return Objects.hash(name, parameterTypes, returnType, Modifier.isStatic(modifiers));
     }
 
     @Override
