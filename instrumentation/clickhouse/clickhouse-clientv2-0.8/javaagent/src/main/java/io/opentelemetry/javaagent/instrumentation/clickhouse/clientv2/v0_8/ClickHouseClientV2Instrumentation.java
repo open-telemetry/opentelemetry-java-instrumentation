@@ -58,6 +58,8 @@ public class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
+      // https://clickhouse.com/docs/integrations/language-clients/java/client#client-configuration
+      // Currently, clientv2 supports only one endpoint.
       String endPoint = client.getEndpoints().stream().findFirst().orElse(null);
       String host = null;
       Integer port = 0;
