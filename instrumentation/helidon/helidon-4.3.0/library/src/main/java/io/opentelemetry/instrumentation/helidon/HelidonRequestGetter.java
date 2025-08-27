@@ -8,14 +8,12 @@ package io.opentelemetry.instrumentation.helidon;
 import static java.util.Collections.emptyIterator;
 import static java.util.Collections.emptyList;
 
-import java.util.Iterator;
-
-import javax.annotation.Nullable;
-
 import io.helidon.http.Header;
 import io.helidon.http.HeaderNames;
 import io.helidon.webserver.http.ServerRequest;
 import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import java.util.Iterator;
+import javax.annotation.Nullable;
 
 enum HelidonRequestGetter implements ExtendedTextMapGetter<ServerRequest> {
   INSTANCE;
