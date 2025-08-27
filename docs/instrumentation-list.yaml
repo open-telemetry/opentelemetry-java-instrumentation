@@ -923,6 +923,7 @@ libraries:
   - name: aws-lambda-core-1.0
     description: |
       Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+      For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName` and use one of wrappers as your lambda `Handler`.
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -2922,6 +2923,43 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.geode:geode-core:[1.4.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   google:
   - name: google-http-client-1.19
     source_path: instrumentation/google-http-client-1.19
@@ -2969,6 +3007,11 @@ libraries:
     target_versions:
       javaagent:
       - org.grails:grails-web-url-mappings:[3.0,)
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   graphql:
   - name: graphql-java-12.0
     source_path: instrumentation/graphql-java/graphql-java-12.0
@@ -2979,6 +3022,17 @@ libraries:
       - com.graphql-java:graphql-java:[12,20)
       library:
       - com.graphql-java:graphql-java:[12.0,19.+)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
   - name: graphql-java-20.0
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
@@ -2989,6 +3043,31 @@ libraries:
       - com.graphql-java:graphql-java:[20,)
       library:
       - com.graphql-java:graphql-java:20.0
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
+    - when: otel.instrumentation.graphql.data-fetcher.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.field.name
+          type: STRING
+        - name: graphql.field.path
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
   grizzly:
   - name: grizzly-2.3
     source_path: instrumentation/grizzly-2.3
@@ -2997,6 +3076,53 @@ libraries:
     target_versions:
       javaagent:
       - org.glassfish.grizzly:grizzly-http:[2.3,)
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   grpc:
   - name: grpc-1.6
     source_path: instrumentation/grpc-1.6
@@ -3026,6 +3152,17 @@ libraries:
       javaagent:
       - com.google.gwt:gwt-servlet:[2.0.0,)
       - org.gwtproject:gwt-servlet:[2.10.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
   hibernate:
   - name: hibernate-3.3
     source_path: instrumentation/hibernate/hibernate-3.3
