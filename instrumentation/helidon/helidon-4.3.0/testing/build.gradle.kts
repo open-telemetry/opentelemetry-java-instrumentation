@@ -8,5 +8,5 @@ otelJava {
 
 dependencies {
   api(project(":testing-common"))
-  implementation("io.helidon.webserver:helidon-webserver:4.3.0")
+  implementation("io.helidon.webserver:helidon-webserver:4.3.0-M1")
 }
