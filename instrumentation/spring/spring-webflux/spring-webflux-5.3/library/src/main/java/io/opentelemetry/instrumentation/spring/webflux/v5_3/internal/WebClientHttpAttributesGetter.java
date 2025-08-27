@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
