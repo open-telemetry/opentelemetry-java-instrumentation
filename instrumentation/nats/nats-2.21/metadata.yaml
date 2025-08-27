@@ -2,6 +2,12 @@ disabled_by_default: true
 description: This instrumentation provides messaging spans for NATS
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    description: Enables experimental receive telemetry for NATS instrumentation.
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
     type: boolean
     default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: Allows configuring headers to capture as span attributes.
+    type: list
+    default: ''

@@ -18,6 +18,8 @@ dependencies {
   testImplementation(project(":instrumentation:nats:nats-2.21:testing"))
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   val testExperimental by registering(Test::class) {
     filter {
@@ -25,6 +27,8 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=captured-header")
+
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   test {
@@ -32,6 +36,8 @@ tasks {
     filter {
       excludeTestsMatching("NatsInstrumentationExperimentalTest")
     }
+
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
