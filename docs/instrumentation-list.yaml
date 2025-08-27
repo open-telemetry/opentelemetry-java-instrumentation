@@ -3014,6 +3014,7 @@ libraries:
         attributes: []
   graphql:
   - name: graphql-java-12.0
+    description: This instrumentation enables spans for GraphQL Java operations.
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
       name: io.opentelemetry.graphql-java-12.0
@@ -3022,7 +3023,30 @@ libraries:
       - com.graphql-java:graphql-java:[12,20)
       library:
       - com.graphql-java:graphql-java:[12.0,19.+)
+    configurations:
+    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+      description: Enables sanitization of sensitive information from queries so they
+        aren't added as span attributes.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+      description: |
+        Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
   - name: graphql-java-20.0
+    description: This instrumentation enables spans for GraphQL Java operations.
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
     scope:
@@ -3032,6 +3056,51 @@ libraries:
       - com.graphql-java:graphql-java:[20,)
       library:
       - com.graphql-java:graphql-java:20.0
+    configurations:
+    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+      description: Enables sanitization of sensitive information from queries so they
+        aren't added as span attributes.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+      description: |
+        Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.graphql.data-fetcher.enabled
+      description: Enables span generation for data fetchers.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.graphql.trivial-data-fetcher.enabled
+      description: Whether to create spans for trivial data fetchers. A trivial data
+        fetcher is one that simply maps data from an object to a field.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
+    - when: otel.instrumentation.graphql.data-fetcher.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.field.name
+          type: STRING
+        - name: graphql.field.path
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
   grizzly:
   - name: grizzly-2.3
     description: This instrumentation enables HTTP SERVER spans and metrics for Grizzly
