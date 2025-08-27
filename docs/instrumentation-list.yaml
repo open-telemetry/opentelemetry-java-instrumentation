@@ -2917,12 +2917,19 @@ libraries:
           type: STRING
   geode:
   - name: geode-1.4
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Apache Geode cache operations.
     source_path: instrumentation/geode-1.4
     scope:
       name: io.opentelemetry.geode-1.4
     target_versions:
       javaagent:
       - org.apache.geode:geode-core:[1.4.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -2962,12 +2969,42 @@ libraries:
           type: STRING
   google:
   - name: google-http-client-1.19
+    description: This instrumentation enables HTTP CLIENT spans and metrics for Google
+      HTTP Client requests.
     source_path: instrumentation/google-http-client-1.19
     scope:
       name: io.opentelemetry.google-http-client-1.19
     target_versions:
       javaagent:
       - com.google.http-client:google-http-client:[1.19.0,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -3001,12 +3038,19 @@ libraries:
           type: STRING
   grails:
   - name: grails-3.0
+    description: |
+      This instrumentation enriches existing SERVER spans with route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
     source_path: instrumentation/grails-3.0
     scope:
       name: io.opentelemetry.grails-3.0
     target_versions:
       javaagent:
       - org.grails:grails-web-url-mappings:[3.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
     telemetry:
     - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
@@ -3014,6 +3058,7 @@ libraries:
         attributes: []
   graphql:
   - name: graphql-java-12.0
+    description: This instrumentation enables spans for GraphQL Java operations.
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
       name: io.opentelemetry.graphql-java-12.0
@@ -3022,6 +3067,17 @@ libraries:
       - com.graphql-java:graphql-java:[12,20)
       library:
       - com.graphql-java:graphql-java:[12.0,19.+)
+    configurations:
+    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+      description: Enables sanitization of sensitive information from queries so they
+        aren't added as span attributes.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+      description: |
+        Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       spans:
@@ -3034,6 +3090,7 @@ libraries:
         - name: graphql.operation.type
           type: STRING
   - name: graphql-java-20.0
+    description: This instrumentation enables spans for GraphQL Java operations.
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
     scope:
@@ -3043,6 +3100,26 @@ libraries:
       - com.graphql-java:graphql-java:[20,)
       library:
       - com.graphql-java:graphql-java:20.0
+    configurations:
+    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+      description: Enables sanitization of sensitive information from queries so they
+        aren't added as span attributes.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+      description: |
+        Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.graphql.data-fetcher.enabled
+      description: Enables span generation for data fetchers.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.graphql.trivial-data-fetcher.enabled
+      description: Whether to create spans for trivial data fetchers. A trivial data
+        fetcher is one that simply maps data from an object to a field.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       spans:
@@ -3070,12 +3147,38 @@ libraries:
           type: STRING
   grizzly:
   - name: grizzly-2.3
+    description: This instrumentation enables HTTP SERVER spans and metrics for Grizzly
+      applications.
     source_path: instrumentation/grizzly-2.3
     scope:
       name: io.opentelemetry.grizzly-2.3
     target_versions:
       javaagent:
       - org.glassfish.grizzly:grizzly-http:[2.3,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       metrics:
@@ -3145,6 +3248,7 @@ libraries:
       - com.google.guava:guava:10.0
   gwt:
   - name: gwt-2.0
+    description: This instrumentation enables SERVER spans for GWT RPC requests.
     source_path: instrumentation/gwt-2.0
     scope:
       name: io.opentelemetry.gwt-2.0
@@ -3904,6 +4008,16 @@ libraries:
     target_versions:
       library:
       - org.apache.kafka:kafka-clients:2.6.0
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
   - name: kafka-streams-0.11
     source_path: instrumentation/kafka/kafka-streams-0.11
     scope:

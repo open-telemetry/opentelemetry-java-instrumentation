@@ -348,7 +348,7 @@ public abstract class AbstractRocketMqClientTest {
             .setTag(tag)
             .setKeys(keys)
             .setBody(body)
-            .addProperty("test-message-header", "test")
+            .addProperty("Test-Message-Header", "test")
             .build();
 
     SendReceipt sendReceipt =
@@ -372,7 +372,7 @@ public abstract class AbstractRocketMqClientTest {
                               sendReceipt,
                               equalTo(
                                   AttributeKey.stringArrayKey(
-                                      "messaging.header.test_message_header"),
+                                      "messaging.header.Test_Message_Header"),
                                   Collections.singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
@@ -392,7 +392,7 @@ public abstract class AbstractRocketMqClientTest {
                                 sendReceipt,
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.test_message_header"),
+                                        "messaging.header.Test_Message_Header"),
                                     Collections.singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),
