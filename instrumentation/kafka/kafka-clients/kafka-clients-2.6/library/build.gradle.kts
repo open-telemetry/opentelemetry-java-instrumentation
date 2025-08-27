@@ -36,7 +36,7 @@ tasks {
       excludeTestsMatching("WrapperSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=baggage")
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "test-message-header")
   }
 
   check {
