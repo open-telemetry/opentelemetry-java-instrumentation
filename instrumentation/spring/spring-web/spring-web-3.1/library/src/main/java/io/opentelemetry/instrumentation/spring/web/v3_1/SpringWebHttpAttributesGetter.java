@@ -109,7 +109,8 @@ enum SpringWebHttpAttributesGetter
     return httpRequest.getURI().getPort();
   }
 
-  private static final String URI_TEMPLATE_ATTRIBUTE = "org.springframework.web.client.RestClient.uriTemplate";
+  private static final String URI_TEMPLATE_ATTRIBUTE =
+      "org.springframework.web.client.RestClient.uriTemplate";
   @Nullable private static final MethodHandle GET_ATTRIBUTES;
 
   static {
@@ -127,9 +128,7 @@ enum SpringWebHttpAttributesGetter
       try {
         getAttributes =
             lookup.findVirtual(
-                httpRequestClass,
-                "getAttributes",
-                MethodType.methodType(java.util.Map.class));
+                httpRequestClass, "getAttributes", MethodType.methodType(java.util.Map.class));
       } catch (NoSuchMethodException | IllegalAccessException ignored) {
         // ignored
       }

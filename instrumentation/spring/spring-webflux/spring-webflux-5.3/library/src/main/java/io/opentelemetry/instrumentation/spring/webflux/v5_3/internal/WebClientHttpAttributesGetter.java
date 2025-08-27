@@ -24,7 +24,6 @@ public enum WebClientHttpAttributesGetter
     implements HttpClientExperimentalAttributesGetter<ClientRequest, ClientResponse> {
   INSTANCE;
 
-
   private static final String URI_TEMPLATE_ATTRIBUTE = WebClient.class.getName() + ".uriTemplate";
   private static final Pattern PATTERN_BEFORE_PATH = Pattern.compile("^https?://[^/]+/");
 
@@ -91,6 +90,4 @@ public enum WebClientHttpAttributesGetter
     }
     return null;
   }
-
-
 }
