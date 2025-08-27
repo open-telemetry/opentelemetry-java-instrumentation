@@ -137,6 +137,9 @@ readonly INSTRUMENTATIONS=(
   "grails-3.0:javaagent:test"
   "grizzly-2.3:javaagent:test"
   "gwt-2.0:javaagent:test"
+  "graphql-java:graphql-java-12.0:javaagent:test"
+  "graphql-java:graphql-java-20.0:javaagent:test"
+  "graphql-java:graphql-java-20.0:javaagent:testDataFetcher"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
