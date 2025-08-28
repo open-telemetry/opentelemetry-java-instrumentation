@@ -249,6 +249,4 @@ tasks {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
     }
   }
-
-
 }
