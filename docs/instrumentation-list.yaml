@@ -4172,17 +4172,17 @@ libraries:
       javaagent:
       - org.mybatis:mybatis:[3.2.0,)
   nats:
-  - name: nats-2.21
+  - name: nats-2.17
     description: This instrumentation provides messaging spans for NATS
-    disabled_by_default: true
-    source_path: instrumentation/nats/nats-2.21
+    disabled_by_default: false
+    source_path: instrumentation/nats/nats-2.17
     scope:
-      name: io.opentelemetry.nats-2.21
+      name: io.opentelemetry.nats-2.17
     target_versions:
       javaagent:
       - io.nats:jnats:[2.17.2,)
       library:
-      - io.nats:jnats:2.21.0
+      - io.nats:jnats:2.21.5
     configurations:
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
       description: |

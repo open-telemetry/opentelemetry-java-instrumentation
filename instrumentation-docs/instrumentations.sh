@@ -140,8 +140,8 @@ readonly INSTRUMENTATIONS=(
   "graphql-java:graphql-java-12.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:testDataFetcher"
-  "nats:nats-2.21:javaagent:test"
-  "nats:nats-2.21:javaagent:testExperimental"
+  "nats:nats-2.17:javaagent:test"
+  "nats:nats-2.17:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

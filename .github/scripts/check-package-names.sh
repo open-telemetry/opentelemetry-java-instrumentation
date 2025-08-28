@@ -29,7 +29,7 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$dir" == "instrumentation/lettuce/lettuce-5.1/library/src/main/java/io/lettuce/core/protocol" ]]; then
     continue
   fi
-  if [[ "$dir" == "instrumentation/nats/nats-2.21/library/src/main/java/io/nats/client/impl" ]]; then
+  if [[ "$dir" == "instrumentation/nats/nats-2.17/library/src/main/java/io/nats/client/impl" ]]; then
     continue
   fi
 
