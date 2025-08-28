@@ -23,6 +23,5 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("junit.jupiter.execution.timeout.default", "5m")
   }
 }
