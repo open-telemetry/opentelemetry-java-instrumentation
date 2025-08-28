@@ -68,6 +68,16 @@ testing {
         }
       }
     }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -84,12 +94,8 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
     dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites.named("testStableSemconv"))
   }
 }
