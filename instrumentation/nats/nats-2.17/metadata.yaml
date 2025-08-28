@@ -1,4 +1,4 @@
-disabled_by_default: true
+disabled_by_default: false
 description: This instrumentation provides messaging spans for NATS
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
