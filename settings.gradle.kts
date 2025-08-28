@@ -102,7 +102,6 @@ include(":test-report")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")
-
 include(":testing:proto-shaded-for-testing")
 include(":testing:wiremock-shaded-for-testing")
 include(":testing-common")
