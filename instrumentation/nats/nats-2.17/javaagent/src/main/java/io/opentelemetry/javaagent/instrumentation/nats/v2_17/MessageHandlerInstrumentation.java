@@ -51,12 +51,11 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      Timer timer = Timer.start();
-
       Context parentContext = Context.current();
       natsRequest = NatsRequest.create(message.getConnection(), message);
 
       if (CONSUMER_RECEIVE_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
+        Timer timer = Timer.start();
         parentContext =
             InstrumenterUtil.startAndEnd(
                 CONSUMER_RECEIVE_INSTRUMENTER,
