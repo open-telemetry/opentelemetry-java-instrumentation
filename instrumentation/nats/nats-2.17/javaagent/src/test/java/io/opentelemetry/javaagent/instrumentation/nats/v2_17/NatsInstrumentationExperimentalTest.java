@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
@@ -23,23 +24,20 @@ class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExp
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  static final DockerImageName natsImage;
-  static final GenericContainer<?> natsContainer;
-  static final Connection natsConnection;
+  static DockerImageName natsImage;
+  static GenericContainer<?> natsContainer;
+  static Connection natsConnection;
 
-  static {
+  @BeforeAll
+  static void beforeAll() throws IOException, InterruptedException {
     natsImage = DockerImageName.parse("nats:2.11.2-alpine3.21");
 
     natsContainer = new GenericContainer<>(natsImage).withExposedPorts(4222);
     natsContainer.start();
 
-    try {
-      String host = natsContainer.getHost();
-      Integer port = natsContainer.getMappedPort(4222);
-      natsConnection = Nats.connect("nats://" + host + ":" + port);
-    } catch (IOException | InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+    String host = natsContainer.getHost();
+    Integer port = natsContainer.getMappedPort(4222);
+    natsConnection = Nats.connect("nats://" + host + ":" + port);
   }
 
   @AfterAll

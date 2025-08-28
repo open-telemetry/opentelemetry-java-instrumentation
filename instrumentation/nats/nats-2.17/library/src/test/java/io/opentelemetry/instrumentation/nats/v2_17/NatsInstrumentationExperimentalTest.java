@@ -10,6 +10,7 @@ import static java.util.Collections.singletonList;
 import io.nats.client.Connection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExperimentalTest {
@@ -17,10 +18,11 @@ class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExp
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static final NatsTelemetry telemetry;
-  static final Connection natsConnection;
+  static NatsTelemetry telemetry;
+  static Connection natsConnection;
 
-  static {
+  @BeforeAll
+  static void beforeAll() {
     telemetry =
         NatsTelemetry.builder(testing.getOpenTelemetry())
             .setMessagingReceiveInstrumentationEnabled(true)

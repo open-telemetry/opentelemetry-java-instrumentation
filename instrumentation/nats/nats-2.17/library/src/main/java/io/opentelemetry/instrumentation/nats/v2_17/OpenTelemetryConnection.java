@@ -79,14 +79,10 @@ final class OpenTelemetryConnection implements InvocationHandler {
       return closeDispatcher(method, args);
     }
 
-    try {
-      return method.invoke(delegate, args);
-    } catch (InvocationTargetException e) {
-      throw e.getCause();
-    }
+    return invokeMethod(method, delegate, args);
   }
 
-  private static Object invokeProxyMethod(Method method, Object target, Object[] args)
+  private static Object invokeMethod(Method method, Object target, Object[] args)
       throws Throwable {
     try {
       return method.invoke(target, args);
@@ -134,12 +130,12 @@ final class OpenTelemetryConnection implements InvocationHandler {
     Context parentContext = Context.current();
 
     if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
-      return invokeProxyMethod(method, delegate, args);
+      return invokeMethod(method, delegate, args);
     }
 
     Context context = producerInstrumenter.start(parentContext, natsRequest);
     try (Scope ignored = context.makeCurrent()) {
-      return invokeProxyMethod(method, delegate, args);
+      return invokeMethod(method, delegate, args);
     } finally {
       producerInstrumenter.end(context, natsRequest, null, null);
     }
@@ -169,7 +165,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
     Context parentContext = Context.current();
 
     if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
-      return (Message) invokeProxyMethod(method, delegate, args);
+      return (Message) invokeMethod(method, delegate, args);
     }
 
     Context context = producerInstrumenter.start(parentContext, natsRequest);
@@ -177,7 +173,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
     NatsRequest response = null;
 
     try (Scope ignored = context.makeCurrent()) {
-      Message message = (Message) invokeProxyMethod(method, delegate, args);
+      Message message = (Message) invokeMethod(method, delegate, args);
 
       if (message == null) {
         timeout = new TimeoutException("Timed out waiting for message");
@@ -220,13 +216,13 @@ final class OpenTelemetryConnection implements InvocationHandler {
     Context parentContext = Context.current();
 
     if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
-      return (CompletableFuture<Message>) invokeProxyMethod(method, delegate, args);
+      return (CompletableFuture<Message>) invokeMethod(method, delegate, args);
     }
 
     NatsRequest notNullNatsRequest = natsRequest;
     Context context = producerInstrumenter.start(parentContext, notNullNatsRequest);
 
-    return ((CompletableFuture<Message>) invokeProxyMethod(method, delegate, args))
+    return ((CompletableFuture<Message>) invokeMethod(method, delegate, args))
         .whenComplete(
             (message, exception) -> {
               if (message != null) {
@@ -247,7 +243,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
               (MessageHandler) args[0], consumerReceiveInstrumenter, consumerProcessInstrumenter);
     }
 
-    Dispatcher wrapped = (Dispatcher) invokeProxyMethod(method, delegate, args);
+    Dispatcher wrapped = (Dispatcher) invokeMethod(method, delegate, args);
     return OpenTelemetryDispatcher.wrap(
         wrapped, consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }
@@ -260,6 +256,6 @@ final class OpenTelemetryConnection implements InvocationHandler {
       args[0] = ((OpenTelemetryDispatcher) Proxy.getInvocationHandler(args[0])).getDelegate();
     }
 
-    return invokeProxyMethod(method, delegate, args);
+    return invokeMethod(method, delegate, args);
   }
 }

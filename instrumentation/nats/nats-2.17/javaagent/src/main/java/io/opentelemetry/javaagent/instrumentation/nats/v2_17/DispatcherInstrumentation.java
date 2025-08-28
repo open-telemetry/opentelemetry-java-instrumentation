@@ -40,8 +40,6 @@ public class DispatcherInstrumentation implements TypeInstrumentation {
       // Dispatchers are usually background long-lived threads, we can force root,
       // as we're not expecting to be anything else than entry points for network messages.
       if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
-        // Prevent context from leaking by running this method under root context.
-        // Root context is not propagated by executor instrumentation.
         return Java8BytecodeBridge.rootContext().makeCurrent();
       }
       return null;
