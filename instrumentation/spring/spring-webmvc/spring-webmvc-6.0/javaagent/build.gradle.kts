@@ -44,6 +44,21 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+            jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     // required on jdk17
@@ -56,12 +71,7 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
-  val testExperimental by registering(Test::class) {
-    systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-    jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-  }
-
   check {
-    dependsOn(testExperimental)
+    dependsOn(testing.suites.named("testExperimental"))
   }
 }
