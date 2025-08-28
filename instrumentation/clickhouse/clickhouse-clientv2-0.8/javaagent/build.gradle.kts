@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.clickhouse")
     module.set("client-v2")
-    versions.set("[0.8.0,)")
+    versions.set("[0.6.4,)")
     assertInverse.set(true)
   }
 }
