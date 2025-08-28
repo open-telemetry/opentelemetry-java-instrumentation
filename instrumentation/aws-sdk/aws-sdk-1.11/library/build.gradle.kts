@@ -48,16 +48,21 @@ testing {
         implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
       }
     }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
 }
 
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
     dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
   }
 }

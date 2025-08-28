@@ -67,6 +67,32 @@ dependencies {
   latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+") // documented limitation
 }
 
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
+            systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
+          }
+        }
+      }
+    }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
@@ -83,18 +109,9 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
-  val testExperimental by registering(Test::class) {
-    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testStableSemconv, testExperimental)
+    dependsOn(testing.suites.named("testStableSemconv"))
+    dependsOn(testing.suites.named("testExperimental"))
   }
 }
 

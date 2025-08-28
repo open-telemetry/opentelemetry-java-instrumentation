@@ -23,19 +23,29 @@ dependencies {
   testImplementation(project(":instrumentation:graphql-java:graphql-java-common:testing"))
 }
 
+testing {
+  suites {
+    val testDataFetcher by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
+            systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.graphql.add-operation-name-to-span-name.enabled=true")
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
-  val testDataFetcher by registering(Test::class) {
-    jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.graphql.data-fetcher.enabled=true")
-  }
-
   check {
-    dependsOn(testDataFetcher)
+    dependsOn(testing.suites.named("testDataFetcher"))
   }
 }
 

@@ -32,18 +32,33 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
 
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=code")
+          }
+        }
+      }
+    }
+
+    val testBothSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=code")
-  }
-
-  val testBothSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-  }
-
   check {
-    dependsOn(testStableSemconv)
-    dependsOn(testBothSemconv)
+    dependsOn(testing.suites.named("testStableSemconv"))
+    dependsOn(testing.suites.named("testBothSemconv"))
   }
 }

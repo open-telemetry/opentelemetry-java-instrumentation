@@ -171,21 +171,53 @@ testing {
   }
 }
 
-tasks {
-  val testExperimentalSqs by registering(Test::class) {
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+testing {
+  suites {
+    val testExperimentalSqs by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+            }
+            systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
+            systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+          }
+        }
+      }
     }
-    systemProperty("otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", "true")
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-  }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
-    filter {
-      includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+            }
+            include("**/Aws2SqsSuppressReceiveSpansTest.*")
+          }
+        }
+      }
     }
-    include("**/Aws2SqsSuppressReceiveSpansTest.*")
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+            }
+            systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
+}
+
+tasks {
 
   test {
     filter {
@@ -196,9 +228,12 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimentalSqs)
-    dependsOn(testReceiveSpansDisabled)
-    dependsOn(testing.suites)
+    dependsOn(testing.suites.named("testExperimentalSqs"))
+    dependsOn(testing.suites.named("testReceiveSpansDisabled"))
+    dependsOn(testing.suites.named("testStableSemconv"))
+    dependsOn(testing.suites.named("s3PresignerTest"))
+    dependsOn(testing.suites.named("s3CrtTest"))
+    dependsOn(testing.suites.named("testBedrockRuntime"))
   }
 
   withType<Test>().configureEach {
@@ -215,17 +250,5 @@ tasks {
     }
   }
 
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
 
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
-  }
 }
