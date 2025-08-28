@@ -18,6 +18,7 @@ final class ForwardedUrlSchemeProvider<REQUEST> implements Function<REQUEST, Str
   }
 
   @Override
+  @Nullable
   public String apply(REQUEST request) {
     // try Forwarded
     for (String forwarded : getter.getHttpRequestHeader(request, "forwarded")) {

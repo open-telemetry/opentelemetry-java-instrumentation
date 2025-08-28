@@ -161,7 +161,7 @@ class KtorServerTelemetry private constructor(
       pipeline.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
         val context = call.attributes.getOrNull(contextKey)
         if (context != null) {
-          HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
+          HttpServerRoute.update(context, HttpServerRouteSource.SERVER, { _, arg -> arg!!.route.parent.toString() }, call)
         }
       }
 

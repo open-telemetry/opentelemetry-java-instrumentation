@@ -64,11 +64,13 @@ enum JavaHttpServerAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolName(HttpExchange exchange, @Nullable HttpExchange res) {
     return HttpProtocolUtil.getProtocol(exchange.getProtocol());
   }
 
   @Override
+  @Nullable
   public String getNetworkProtocolVersion(HttpExchange exchange, @Nullable HttpExchange res) {
     return HttpProtocolUtil.getVersion(exchange.getProtocol());
   }
