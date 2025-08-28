@@ -1475,7 +1475,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("text_OUTPUT amazon.titan-text-lite-v1")
+                        span.hasName("text_completion amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
@@ -1640,7 +1640,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("text_OUTPUT amazon.titan-text-lite-v1")
+                        span.hasName("text_completion amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
                                 equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
