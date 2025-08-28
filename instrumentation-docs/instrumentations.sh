@@ -117,6 +117,7 @@ readonly INSTRUMENTATIONS=(
   "openai:openai-java-1.1:javaagent:test"
   "aws-lambda:aws-lambda-core-1.0:javaagent:test"
   "aws-lambda:aws-lambda-events-2.2:javaagent:test"
+  "aws-lambda:aws-lambda-events-3.11:library:test"
   "cassandra:cassandra-3.0:javaagent:test"
   "cassandra:cassandra-3.0:javaagent:testStableSemconv"
   "cassandra:cassandra-4.0:javaagent:test"
