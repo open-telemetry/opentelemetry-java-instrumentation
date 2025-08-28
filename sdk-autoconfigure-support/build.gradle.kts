@@ -10,4 +10,5 @@ dependencies {
 
   compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
+  testImplementation(project(":testing-common"))
 }

@@ -35,7 +35,7 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
   private static final String AWS_TRACE_HEADER =
       "Root=1-5759e988-bd862e3fe1be46a994272793;Parent=53995c3f42cd8ad8;Sampled=1";
 
-  protected abstract RequestHandler<SQSEvent, Void> handler();
+  protected abstract RequestHandler<SQSEvent, ?> handler();
 
   protected abstract InstrumentationExtension testing();
 

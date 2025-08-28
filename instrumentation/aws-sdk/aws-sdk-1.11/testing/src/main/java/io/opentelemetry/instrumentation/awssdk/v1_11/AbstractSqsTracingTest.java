@@ -106,7 +106,7 @@ public abstract class AbstractSqsTracingTest {
 
     if (testCaptureHeaders) {
       sendMessageRequest.addMessageAttributesEntry(
-          "test-message-header",
+          "Test-Message-Header",
           new MessageAttributeValue().withDataType("String").withStringValue("test"));
     }
     sqsClient.sendMessage(sendMessageRequest);
@@ -114,7 +114,7 @@ public abstract class AbstractSqsTracingTest {
     ReceiveMessageRequest receiveMessageRequest =
         new ReceiveMessageRequest("http://localhost:" + sqsPort + "/000000000000/testSdkSqs");
     if (testCaptureHeaders) {
-      receiveMessageRequest.withMessageAttributeNames("test-message-header");
+      receiveMessageRequest.withMessageAttributeNames("Test-Message-Header");
     }
     ReceiveMessageResult receiveMessageResult = sqsClient.receiveMessage(receiveMessageRequest);
 
@@ -182,7 +182,7 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
 
@@ -222,7 +222,7 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
 
@@ -261,7 +261,7 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
                       span.hasName("testSdkSqs process")

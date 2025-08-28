@@ -62,6 +62,10 @@ tasks {
     dependsOn(quarkusBuild)
   }
 
+  compileJava {
+    dependsOn(compileQuarkusGeneratedSourcesJava)
+  }
+
   sourcesJar {
     dependsOn(quarkusGenerateCode, compileQuarkusGeneratedSourcesJava)
   }

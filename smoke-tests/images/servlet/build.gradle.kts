@@ -1,6 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import org.apache.commons.lang.StringUtils
 
 plugins {
   id("otel.spotless-conventions")
@@ -105,7 +104,7 @@ tasks {
           continue
         }
         println(server)
-        val serverName = StringUtils.capitalize(server)
+        val serverName = server.replaceFirstChar(Char::uppercase)
         for (entry in matrices) {
           for (version in entry.version) {
             val dotIndex = version.indexOf('.')
