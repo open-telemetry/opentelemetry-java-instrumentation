@@ -923,7 +923,7 @@ libraries:
   - name: aws-lambda-core-1.0
     description: |
       Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
-      For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName` and use one of wrappers as your lambda `Handler`.
+      For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` environment variable to contain your lambda handler method (in the format `package.ClassName::methodName`) and use one of wrappers as your lambda `Handler`.
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -946,7 +946,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-2.2
     description: |
-      This version of the library instrumentation is deprecated, please use the aws-lambda-events-3.11 library instrumentation instead. This instrumentation builds on top of the lightweight `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
+      This version of the library instrumentation is deprecated, please use the `aws-lambda-events-3.11` library instrumentation instead. This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -991,7 +991,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-3.11
     description: |
-      This instrumentation builds on top of the lightweight `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
+      This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
       name: io.opentelemetry.aws-lambda-events-3.11
