@@ -96,6 +96,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-    dependsOn(testing.suites.named("testStableSemconv"))
   }
 }

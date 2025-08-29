@@ -45,7 +45,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testDataFetcher"))
+    dependsOn(testing.suites)
   }
 }
 

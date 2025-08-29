@@ -75,7 +75,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testFieldInjectionDisabled"))
-    dependsOn(testing.suites.named("testFieldBackedImplementation"))
+    dependsOn(testing.suites)
   }
 }

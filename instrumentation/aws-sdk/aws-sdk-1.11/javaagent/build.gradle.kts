@@ -156,10 +156,6 @@ tasks {
     }
   }
 
-  check {
-    dependsOn(testing.suites.named("testStableSemconv"))
-  }
-
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("collectMetadata", collectMetadata)

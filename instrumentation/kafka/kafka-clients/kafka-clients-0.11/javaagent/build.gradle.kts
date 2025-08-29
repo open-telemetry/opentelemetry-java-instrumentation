@@ -75,7 +75,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testPropagationDisabled"))
-    dependsOn(testing.suites.named("testReceiveSpansDisabled"))
+    dependsOn(testing.suites)
   }
 }

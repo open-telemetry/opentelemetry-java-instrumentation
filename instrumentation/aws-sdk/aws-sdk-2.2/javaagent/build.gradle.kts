@@ -228,12 +228,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testExperimentalSqs"))
-    dependsOn(testing.suites.named("testReceiveSpansDisabled"))
-    dependsOn(testing.suites.named("testStableSemconv"))
-    dependsOn(testing.suites.named("s3PresignerTest"))
-    dependsOn(testing.suites.named("s3CrtTest"))
-    dependsOn(testing.suites.named("testBedrockRuntime"))
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {

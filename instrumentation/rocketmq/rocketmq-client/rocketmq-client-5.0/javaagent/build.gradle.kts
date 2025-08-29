@@ -44,6 +44,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testReceiveSpanDisabled"))
+    dependsOn(testing.suites)
   }
 }

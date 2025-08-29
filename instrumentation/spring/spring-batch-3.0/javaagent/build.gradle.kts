@@ -70,8 +70,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testChunkRootSpan"))
-    dependsOn(testing.suites.named("testItemLevelSpan"))
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {

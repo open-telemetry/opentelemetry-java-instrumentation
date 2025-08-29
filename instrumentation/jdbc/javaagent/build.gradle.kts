@@ -123,10 +123,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testSlick"))
-    dependsOn(testing.suites.named("testStableSemconv"))
-    dependsOn(testing.suites.named("testSlickStableSemconv"))
-    dependsOn(testing.suites.named("testCaptureParameters"))
+    dependsOn(testing.suites)
   }
 }
 

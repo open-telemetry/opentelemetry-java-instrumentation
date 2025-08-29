@@ -61,7 +61,7 @@ testing {
 
 tasks {
   check {
-    dependsOn(testing.suites.named("testAsync"))
+    dependsOn(testing.suites)
   }
 }
 

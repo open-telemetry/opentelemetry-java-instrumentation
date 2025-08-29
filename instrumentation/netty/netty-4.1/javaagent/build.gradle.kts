@@ -74,7 +74,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testConnectionSpan"))
+    dependsOn(testing.suites)
   }
 }
 

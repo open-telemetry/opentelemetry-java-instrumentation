@@ -63,7 +63,6 @@ tasks {
   }
 
   named("check") {
-    dependsOn(testing.suites.named("testAddBaggage"))
-    dependsOn(testing.suites.named("testLoggingKeys"))
+    dependsOn(testing.suites)
   }
 }

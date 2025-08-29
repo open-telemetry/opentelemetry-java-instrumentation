@@ -88,8 +88,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testWithRabbitInstrumentation"))
-    dependsOn(testing.suites.named("testWithProducerInstrumentation"))
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {

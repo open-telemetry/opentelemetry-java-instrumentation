@@ -75,9 +75,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testG1"))
-    dependsOn(testing.suites.named("testPS"))
-    dependsOn(testing.suites.named("testSerial"))
+    dependsOn(testing.suites)
   }
 
   compileJava {

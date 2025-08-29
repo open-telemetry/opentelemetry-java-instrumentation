@@ -75,9 +75,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testBaseTimeUnit"))
-    dependsOn(testing.suites.named("testPrometheusMode"))
-    dependsOn(testing.suites.named("testHistogramGauges"))
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {

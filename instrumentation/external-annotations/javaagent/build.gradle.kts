@@ -77,7 +77,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("testIncludeProperty"))
-    dependsOn(testing.suites.named("testExcludeMethodsProperty"))
+    dependsOn(testing.suites)
   }
 }
