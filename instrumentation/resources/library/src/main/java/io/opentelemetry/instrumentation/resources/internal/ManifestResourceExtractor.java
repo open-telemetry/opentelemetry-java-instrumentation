@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
-import static java.util.logging.Level.WARNING;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -77,7 +77,7 @@ public final class ManifestResourceExtractor {
     try (JarFile jarFile = new JarFile(jarPath.toFile(), false)) {
       return Optional.of(jarFile.getManifest());
     } catch (IOException exception) {
-      logger.log(WARNING, "Error reading manifest", exception);
+      logger.log(FINE, "Error reading manifest", exception);
       return Optional.empty();
     }
   }
