@@ -250,6 +250,5 @@ tasks {
 
   check {
     dependsOn(testing.suites, testStableSemconv)
-    dependsOn(testStableSemconv)
   }
 }
