@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.sdk.config.bridge;
+package io.opentelemetry.instrumentation.config.bridge;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
