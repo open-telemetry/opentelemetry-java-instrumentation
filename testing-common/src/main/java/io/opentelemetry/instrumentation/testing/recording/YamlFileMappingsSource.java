@@ -53,7 +53,7 @@ final class YamlFileMappingsSource implements MappingsSource {
           .enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS)
           // For non-YAML, follow
           // https://github.com/wiremock/wiremock/blob/master/src/main/java/com/github/tomakehurst/wiremock/common/Json.java#L41
-          .setSerializationInclusion(Include.NON_NULL)
+          .setDefaultPropertyInclusion(Include.NON_NULL)
           .configure(JsonNodeFeature.STRIP_TRAILING_BIGDECIMAL_ZEROES, false)
           .configure(JsonParser.Feature.ALLOW_COMMENTS, true)
           .configure(JsonParser.Feature.ALLOW_SINGLE_QUOTES, true)
