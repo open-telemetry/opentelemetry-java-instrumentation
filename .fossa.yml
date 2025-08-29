@@ -42,7 +42,7 @@ targets:
       target: ':sdk-autoconfigure-support'
     - type: gradle
       path: ./
-      target: ':sdk-bridge'
+      target: ':declarative-config-bridge'
     - type: gradle
       path: ./
       target: ':testing-common'
