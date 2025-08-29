@@ -16,8 +16,6 @@ import io.nats.client.impl.NatsMessage;
 public final class NatsMessageWritableHeaders {
 
   public static Message create(String subject, byte[] body) {
-    System.out.println(new Headers());
-    System.out.println(new Headers().isReadOnly());
     return NatsMessage.builder().subject(subject).headers(new Headers()).data(body).build();
   }
 

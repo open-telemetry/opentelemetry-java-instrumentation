@@ -30,12 +30,11 @@ public abstract class AbstractNatsInstrumentationDispatcherTest
   @Test
   void testSubscribe() {
     // global message handler
-    Dispatcher d1 =
-        connection.createDispatcher(msg -> System.out.println("1 " + msg)).subscribe("sub");
+    Dispatcher d1 = connection.createDispatcher(msg -> {}).subscribe("sub");
     // per-subscription message handler
     Dispatcher d2 = connection.createDispatcher();
-    Subscription s1 = d2.subscribe("sub", msg -> System.out.println("2 " + msg));
-    Subscription s2 = d2.subscribe("sub", "queue", msg -> System.out.println("3 " + msg));
+    Subscription s1 = d2.subscribe("sub", msg -> {});
+    Subscription s2 = d2.subscribe("sub", "queue", msg -> {});
 
     // when
     testing()
@@ -43,9 +42,8 @@ public abstract class AbstractNatsInstrumentationDispatcherTest
             "parent",
             () -> {
               NatsMessage.Builder builder = NatsMessage.builder().subject("sub").data("x");
-              connection.publish(builder.replyTo("a").build()); // no propagation
-              connection.publish(
-                  builder.replyTo("b").headers(new Headers()).build()); // propagation
+              connection.publish(builder.build()); // no propagation
+              connection.publish(builder.headers(new Headers()).build()); // propagation
             });
 
     // then 1 trace
