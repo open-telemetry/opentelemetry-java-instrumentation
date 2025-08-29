@@ -3,7 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+<<<<<<<< HEAD:instrumentation-api-incubator/src/test/java/io/opentelemetry/instrumentation/api/incubator/sdk/config/bridge/DeclarativeConfigPropertiesBridgeBuilderTest.java
 package io.opentelemetry.instrumentation.api.incubator.sdk.config.bridge;
+========
+package io.opentelemetry.instrumentation.sdk;
+>>>>>>>> 46c50a0541 (move to sdk-bridge):sdk-bridge/src/test/java/io/opentelemetry/instrumentation/sdk/DeclarativeConfigPropertiesBridgeBuilderTest.java
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.eq;

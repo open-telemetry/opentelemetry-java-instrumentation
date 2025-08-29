@@ -86,6 +86,7 @@ include(":javaagent-internal-logging-application")
 include(":javaagent-internal-logging-simple")
 include(":javaagent")
 include(":sdk-autoconfigure-support")
+include(":sdk-bridge")
 
 include(":bom")
 include(":bom-alpha")
