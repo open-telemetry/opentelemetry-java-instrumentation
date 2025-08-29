@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  library("io.nats:jnats:2.21.5")
+  library("io.nats:jnats:2.17.7")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

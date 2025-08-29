@@ -5,7 +5,7 @@ plugins {
 dependencies {
   api(project(":testing-common"))
 
-  compileOnly("io.nats:jnats:2.21.5")
+  compileOnly("io.nats:jnats:2.17.7")
 
   implementation("org.testcontainers:testcontainers")
 }
