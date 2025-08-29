@@ -24,5 +24,4 @@ class NatsInstrumentationRequestTest extends AbstractNatsInstrumentationRequestT
   protected boolean isInboxMonitored() {
     return true;
   }
-
 }

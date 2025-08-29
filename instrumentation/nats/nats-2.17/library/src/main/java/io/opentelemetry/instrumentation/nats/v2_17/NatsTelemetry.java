@@ -24,15 +24,12 @@ public final class NatsTelemetry {
   }
 
   private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
-  private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   public NatsTelemetry(
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.producerInstrumenter = producerInstrumenter;
-    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
@@ -43,7 +40,7 @@ public final class NatsTelemetry {
    */
   public Connection wrap(Connection connection) {
     return OpenTelemetryConnection.wrap(
-        connection, producerInstrumenter, consumerReceiveInstrumenter, consumerProcessInstrumenter);
+        connection, producerInstrumenter, consumerProcessInstrumenter);
   }
 
   /** Returns a {@link Options.Builder} with instrumented {@link DispatcherFactory}. */
@@ -55,7 +52,6 @@ public final class NatsTelemetry {
     }
 
     return options.dispatcherFactory(
-        new OpenTelemetryDispatcherFactory(
-            factory, consumerReceiveInstrumenter, consumerProcessInstrumenter));
+        new OpenTelemetryDispatcherFactory(factory, consumerProcessInstrumenter));
   }
 }

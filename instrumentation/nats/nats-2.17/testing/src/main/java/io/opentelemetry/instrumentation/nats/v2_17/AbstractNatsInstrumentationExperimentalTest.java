@@ -23,7 +23,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationExperimentalTest  extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsInstrumentationExperimentalTest
+    extends AbstractNatsInstrumentationTest {
 
   private int clientId;
 
@@ -73,15 +74,9 @@ public abstract class AbstractNatsInstrumentationExperimentalTest  extends Abstr
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
-                        span.hasName("sub receive")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                messagingAttributes("receive", "sub", clientId, headerAssert)),
-                    span ->
                         span.hasName("sub process")
                             .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(0))
+                            .hasNoParent()
                             .hasLinksSatisfying(
                                 links ->
                                     assertThat(links)

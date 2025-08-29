@@ -19,5 +19,4 @@ class NatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationDispa
   protected InstrumentationExtension testing() {
     return testing;
   }
-
 }

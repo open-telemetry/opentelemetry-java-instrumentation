@@ -10,8 +10,6 @@ import io.nats.client.MessageHandler;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 
 /**
@@ -21,15 +19,11 @@ import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 public final class OpenTelemetryMessageHandler implements MessageHandler {
 
   private final MessageHandler delegate;
-  private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   public OpenTelemetryMessageHandler(
-      MessageHandler delegate,
-      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      MessageHandler delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
-    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
@@ -37,19 +31,6 @@ public final class OpenTelemetryMessageHandler implements MessageHandler {
   public void onMessage(Message message) throws InterruptedException {
     Context parentContext = Context.current();
     NatsRequest natsRequest = NatsRequest.create(message.getConnection(), message);
-
-    if (consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
-      Timer timer = Timer.start();
-      parentContext =
-          InstrumenterUtil.startAndEnd(
-              consumerReceiveInstrumenter,
-              parentContext,
-              natsRequest,
-              null,
-              null,
-              timer.startTime(),
-              timer.now());
-    }
 
     if (!consumerProcessInstrumenter.shouldStart(parentContext, natsRequest)) {
       delegate.onMessage(message);

@@ -127,9 +127,9 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
         @Advice.Argument(2) Duration timeout,
-        @Advice.Local("message") Message message
-    ) throws InterruptedException {
-      message = connection.request(NatsMessageWritableHeaders.create(subject,body), timeout);
+        @Advice.Local("message") Message message)
+        throws InterruptedException {
+      message = connection.request(NatsMessageWritableHeaders.create(subject, body), timeout);
       return message;
     }
 
@@ -152,8 +152,10 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 1, readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body,
         @Advice.Argument(3) Duration timeout,
-        @Advice.Local("message") Message message) throws InterruptedException {
-      message = connection.request(NatsMessageWritableHeaders.create(subject, headers, body), timeout);
+        @Advice.Local("message") Message message)
+        throws InterruptedException {
+      message =
+          connection.request(NatsMessageWritableHeaders.create(subject, headers, body), timeout);
       return message;
     }
 
@@ -176,8 +178,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-        message = NatsMessageWritableHeaders.create(message);
-
+      message = NatsMessageWritableHeaders.create(message);
 
       natsRequest = NatsRequest.create(connection, message);
       Context parentContext = Context.current();
@@ -241,7 +242,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(value = 1,readOnly = false) Headers headers,
+        @Advice.Argument(value = 1, readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body,
         @Advice.Local("future") CompletableFuture<Message> future) {
       future = connection.request(NatsMessageWritableHeaders.create(subject, headers, body));
@@ -268,8 +269,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-       message = NatsMessageWritableHeaders.create(message);
-
+      message = NatsMessageWritableHeaders.create(message);
 
       natsRequest = NatsRequest.create(connection, message);
       otelParentContext = Context.current();
@@ -358,12 +358,12 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(value = 0,readOnly = false) Message message,
+        @Advice.Argument(value = 0, readOnly = false) Message message,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-        message = NatsMessageWritableHeaders.create(message);
+      message = NatsMessageWritableHeaders.create(message);
 
       natsRequest = NatsRequest.create(connection, message);
       otelParentContext = Context.current();

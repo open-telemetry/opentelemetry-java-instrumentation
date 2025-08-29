@@ -26,34 +26,27 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
   private final Connection delegate;
   private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
-  private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   public OpenTelemetryConnection(
       Connection connection,
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = connection;
     this.producerInstrumenter = producerInstrumenter;
-    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
   public static Connection wrap(
       Connection connection,
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     return (Connection)
         Proxy.newProxyInstance(
             OpenTelemetryConnection.class.getClassLoader(),
             new Class<?>[] {Connection.class},
             new OpenTelemetryConnection(
-                connection,
-                producerInstrumenter,
-                consumerReceiveInstrumenter,
-                consumerProcessInstrumenter));
+                connection, producerInstrumenter, consumerProcessInstrumenter));
   }
 
   @Override
@@ -84,8 +77,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
     return invokeMethod(method, delegate, args);
   }
 
-  private static Object invokeMethod(Method method, Object target, Object[] args)
-      throws Throwable {
+  private static Object invokeMethod(Method method, Object target, Object[] args) throws Throwable {
     try {
       return method.invoke(target, args);
     } catch (InvocationTargetException exception) {
@@ -110,21 +102,22 @@ final class OpenTelemetryConnection implements InvocationHandler {
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == Headers.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1],
-          (byte[]) args[2]);
+      message =
+          NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1], (byte[]) args[2]);
     } else if (method.getParameterCount() == 3
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == String.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (String) args[1],
-          (byte[]) args[2]);
+      message =
+          NatsMessageWritableHeaders.create((String) args[0], (String) args[1], (byte[]) args[2]);
     } else if (method.getParameterCount() == 4
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == String.class
         && method.getParameterTypes()[2] == Headers.class
         && method.getParameterTypes()[3] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (String) args[1],
-          (Headers) args[2], (byte[]) args[3]);
+      message =
+          NatsMessageWritableHeaders.create(
+              (String) args[0], (String) args[1], (Headers) args[2], (byte[]) args[3]);
     } else if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == Message.class) {
       message = NatsMessageWritableHeaders.create((Message) args[0]);
     }
@@ -166,8 +159,8 @@ final class OpenTelemetryConnection implements InvocationHandler {
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == Headers.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1],
-          (byte[]) args[2]);
+      message =
+          NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1], (byte[]) args[2]);
       timeout = (Duration) args[3];
     } else if (method.getParameterCount() == 2 && method.getParameterTypes()[0] == Message.class) {
       message = NatsMessageWritableHeaders.create((Message) args[0]);
@@ -180,8 +173,9 @@ final class OpenTelemetryConnection implements InvocationHandler {
       natsRequest = NatsRequest.create(delegate, message);
     }
 
-    if (timeout == null || natsRequest == null || !producerInstrumenter.shouldStart(parentContext,
-        natsRequest)) {
+    if (timeout == null
+        || natsRequest == null
+        || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
       return (Message) invokeMethod(method, delegate, args);
     }
 
@@ -265,16 +259,15 @@ final class OpenTelemetryConnection implements InvocationHandler {
       future = delegate.request(message);
     }
 
-    return future
-        .whenComplete(
-            (result, exception) -> {
-              if (result != null) {
-                NatsRequest response = NatsRequest.create(delegate, result);
-                producerInstrumenter.end(context, notNullNatsRequest, response, exception);
-              } else {
-                producerInstrumenter.end(context, notNullNatsRequest, null, exception);
-              }
-            });
+    return future.whenComplete(
+        (result, exception) -> {
+          if (result != null) {
+            NatsRequest response = NatsRequest.create(delegate, result);
+            producerInstrumenter.end(context, notNullNatsRequest, response, exception);
+          } else {
+            producerInstrumenter.end(context, notNullNatsRequest, null, exception);
+          }
+        });
   }
 
   // public Dispatcher createDispatcher()
@@ -282,13 +275,11 @@ final class OpenTelemetryConnection implements InvocationHandler {
   private Dispatcher createDispatcher(Method method, Object[] args) throws Throwable {
     if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == MessageHandler.class) {
       args[0] =
-          new OpenTelemetryMessageHandler(
-              (MessageHandler) args[0], consumerReceiveInstrumenter, consumerProcessInstrumenter);
+          new OpenTelemetryMessageHandler((MessageHandler) args[0], consumerProcessInstrumenter);
     }
 
     Dispatcher wrapped = (Dispatcher) invokeMethod(method, delegate, args);
-    return OpenTelemetryDispatcher.wrap(
-        wrapped, consumerReceiveInstrumenter, consumerProcessInstrumenter);
+    return OpenTelemetryDispatcher.wrap(wrapped, consumerProcessInstrumenter);
   }
 
   // public void closeDispatcher(Dispatcher dispatcher)

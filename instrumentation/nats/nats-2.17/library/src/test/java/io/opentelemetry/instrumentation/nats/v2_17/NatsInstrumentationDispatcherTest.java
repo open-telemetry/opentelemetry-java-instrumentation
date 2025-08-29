@@ -24,5 +24,4 @@ class NatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationDispa
   static void beforeAll() {
     connection = NatsTelemetry.create(testing.getOpenTelemetry()).wrap(connection);
   }
-
 }

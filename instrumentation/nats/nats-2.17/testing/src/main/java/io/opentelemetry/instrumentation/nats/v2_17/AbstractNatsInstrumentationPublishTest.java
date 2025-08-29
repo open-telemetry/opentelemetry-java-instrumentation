@@ -18,7 +18,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationPublishTest extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsInstrumentationPublishTest
+    extends AbstractNatsInstrumentationTest {
 
   private int clientId;
   private Subscription subscription;
@@ -47,8 +48,7 @@ public abstract class AbstractNatsInstrumentationPublishTest extends AbstractNat
   @Test
   void testPublishHeadersBody() throws InterruptedException {
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.publish("sub", new Headers(), new byte[] {0}));
+    testing().runWithSpan("parent", () -> connection.publish("sub", new Headers(), new byte[] {0}));
 
     // then
     assertPublishSpan();

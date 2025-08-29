@@ -21,7 +21,8 @@ public abstract class NatsRequest {
   public static NatsRequest create(Connection connection, Message message) {
     return new AutoValue_NatsRequest(
         message.getReplyTo(),
-        (message.getConnection() == null ? connection : message.getConnection()).getServerInfo()
+        (message.getConnection() == null ? connection : message.getConnection())
+            .getServerInfo()
             .getClientId(),
         message.getSubject(),
         message.getHeaders(),

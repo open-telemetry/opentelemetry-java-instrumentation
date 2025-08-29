@@ -17,7 +17,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsInstrumentationDispatcherTest
+    extends AbstractNatsInstrumentationTest {
 
   private int clientId;
 
@@ -29,7 +30,8 @@ public abstract class AbstractNatsInstrumentationDispatcherTest extends Abstract
   @Test
   void testSubscribe() {
     // global message handler
-    Dispatcher d1 = connection.createDispatcher(msg -> System.out.println("1 " + msg)).subscribe("sub");
+    Dispatcher d1 =
+        connection.createDispatcher(msg -> System.out.println("1 " + msg)).subscribe("sub");
     // per-subscription message handler
     Dispatcher d2 = connection.createDispatcher();
     Subscription s1 = d2.subscribe("sub", msg -> System.out.println("2 " + msg));
@@ -42,7 +44,8 @@ public abstract class AbstractNatsInstrumentationDispatcherTest extends Abstract
             () -> {
               NatsMessage.Builder builder = NatsMessage.builder().subject("sub").data("x");
               connection.publish(builder.replyTo("a").build()); // no propagation
-              connection.publish(builder.replyTo("b").headers(new Headers()).build()); // propagation
+              connection.publish(
+                  builder.replyTo("b").headers(new Headers()).build()); // propagation
             });
 
     // then 1 trace
@@ -93,8 +96,7 @@ public abstract class AbstractNatsInstrumentationDispatcherTest extends Abstract
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(5))
                             .hasAttributesSatisfyingExactly(
-                                messagingAttributes("process", "sub", clientId)))
-        );
+                                messagingAttributes("process", "sub", clientId))));
 
     // finally, to make sure we're unwrapping properly the
     // OpenTelemetryDispatcher in the library

@@ -19,5 +19,4 @@ class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExp
   protected InstrumentationExtension testing() {
     return testing;
   }
-
 }

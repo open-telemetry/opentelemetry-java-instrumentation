@@ -28,30 +28,13 @@ public final class NatsInstrumenterFactory {
             openTelemetry,
             INSTRUMENTATION_NAME,
             MessagingSpanNameExtractor.create(
-                NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PUBLISH))
+                NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH))
         .addAttributesExtractor(
             MessagingAttributesExtractor.builder(
-                    NatsRequestMessagingAttributesGetter.NATS_REQUEST_INSTANCE,
-                    MessageOperation.PUBLISH)
+                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PUBLISH)
                 .setCapturedHeaders(capturedHeaders)
                 .build())
         .buildProducerInstrumenter(NatsRequestTextMapSetter.INSTANCE);
-  }
-
-  public static Instrumenter<NatsRequest, Void> createConsumerReceiveInstrumenter(
-      OpenTelemetry openTelemetry, boolean enabled, List<String> capturedHeaders) {
-    return Instrumenter.<NatsRequest, Void>builder(
-            openTelemetry,
-            INSTRUMENTATION_NAME,
-            MessagingSpanNameExtractor.create(
-                NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE))
-        .addAttributesExtractor(
-            MessagingAttributesExtractor.builder(
-                    NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.RECEIVE)
-                .setCapturedHeaders(capturedHeaders)
-                .build())
-        .setEnabled(enabled)
-        .buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
@@ -63,11 +46,10 @@ public final class NatsInstrumenterFactory {
                 openTelemetry,
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
-                    NatsRequestMessagingAttributesGetter.VOID_INSTANCE, MessageOperation.PROCESS))
+                    NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(
-                        NatsRequestMessagingAttributesGetter.VOID_INSTANCE,
-                        MessageOperation.PROCESS)
+                        NatsRequestMessagingAttributesGetter.INSTANCE, MessageOperation.PROCESS)
                     .setCapturedHeaders(capturedHeaders)
                     .build());
 

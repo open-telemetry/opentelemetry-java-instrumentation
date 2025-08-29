@@ -26,7 +26,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationRequestTest extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsInstrumentationRequestTest
+    extends AbstractNatsInstrumentationTest {
 
   protected abstract boolean isInboxMonitored();
 
@@ -87,8 +88,7 @@ public abstract class AbstractNatsInstrumentationRequestTest extends AbstractNat
     testing()
         .runWithSpan(
             "parent",
-            () ->
-                connection.request("sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+            () -> connection.request("sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
     // then
@@ -228,9 +228,8 @@ public abstract class AbstractNatsInstrumentationRequestTest extends AbstractNat
         .runWithSpan(
             "parent",
             () ->
-                connection
-                    .requestWithTimeout(
-                        "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+                connection.requestWithTimeout(
+                    "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
@@ -244,8 +243,7 @@ public abstract class AbstractNatsInstrumentationRequestTest extends AbstractNat
 
     // when
     testing()
-        .runWithSpan(
-            "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+        .runWithSpan("parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
@@ -260,8 +258,7 @@ public abstract class AbstractNatsInstrumentationRequestTest extends AbstractNat
 
     // when
     testing()
-        .runWithSpan(
-            "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+        .runWithSpan("parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();

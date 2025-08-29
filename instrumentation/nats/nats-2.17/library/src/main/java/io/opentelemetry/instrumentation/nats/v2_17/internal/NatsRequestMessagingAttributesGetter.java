@@ -9,10 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 
 class NatsRequestMessagingAttributesGetter {
 
-  static final MessagingAttributesGetter<NatsRequest, Void> VOID_INSTANCE =
-      NatsRequestMessagingAttributesGetterFactory.create();
-
-  static final MessagingAttributesGetter<NatsRequest, NatsRequest> NATS_REQUEST_INSTANCE =
+  static final MessagingAttributesGetter<NatsRequest, Object> INSTANCE =
       NatsRequestMessagingAttributesGetterFactory.create();
 
   private NatsRequestMessagingAttributesGetter() {}

@@ -24,9 +24,11 @@ class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExp
 
   @BeforeAll
   static void beforeAll() {
-    connection = NatsTelemetry.builder(testing.getOpenTelemetry())
-        .setMessagingReceiveInstrumentationEnabled(true)
-        .setCapturedHeaders(singletonList("captured-header"))
-        .build().wrap(connection);
+    connection =
+        NatsTelemetry.builder(testing.getOpenTelemetry())
+            .setMessagingReceiveInstrumentationEnabled(true)
+            .setCapturedHeaders(singletonList("captured-header"))
+            .build()
+            .wrap(connection);
   }
 }

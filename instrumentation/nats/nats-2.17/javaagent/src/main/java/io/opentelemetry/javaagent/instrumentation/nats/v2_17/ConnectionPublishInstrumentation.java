@@ -81,8 +81,8 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body) {
-     connection.publish(         NatsMessageWritableHeaders.create(subject, body));
-     return true;
+      connection.publish(NatsMessageWritableHeaders.create(subject, body));
+      return true;
     }
   }
 
@@ -94,7 +94,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(value = 1, readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body) {
-      connection.publish(          NatsMessageWritableHeaders.create(subject, headers, body));
+      connection.publish(NatsMessageWritableHeaders.create(subject, headers, body));
       return true;
     }
   }

@@ -18,28 +18,21 @@ import java.lang.reflect.Proxy;
 final class OpenTelemetryDispatcher implements InvocationHandler {
 
   private final Dispatcher delegate;
-  private final Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
   public OpenTelemetryDispatcher(
-      Dispatcher delegate,
-      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.delegate = delegate;
-    this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
   public static Dispatcher wrap(
-      Dispatcher delegate,
-      Instrumenter<NatsRequest, Void> consumerReceiveInstrumenter,
-      Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
+      Dispatcher delegate, Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     return (Dispatcher)
         Proxy.newProxyInstance(
             OpenTelemetryDispatcher.class.getClassLoader(),
             new Class<?>[] {Dispatcher.class},
-            new OpenTelemetryDispatcher(
-                delegate, consumerReceiveInstrumenter, consumerProcessInstrumenter));
+            new OpenTelemetryDispatcher(delegate, consumerProcessInstrumenter));
   }
 
   @Override
@@ -69,13 +62,11 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
   private Subscription subscribe(Method method, Object[] args) throws Throwable {
     if (method.getParameterCount() == 2 && method.getParameterTypes()[1] == MessageHandler.class) {
       args[1] =
-          new OpenTelemetryMessageHandler(
-              (MessageHandler) args[1], consumerReceiveInstrumenter, consumerProcessInstrumenter);
+          new OpenTelemetryMessageHandler((MessageHandler) args[1], consumerProcessInstrumenter);
     } else if (method.getParameterCount() == 3
         && method.getParameterTypes()[2] == MessageHandler.class) {
       args[2] =
-          new OpenTelemetryMessageHandler(
-              (MessageHandler) args[2], consumerReceiveInstrumenter, consumerProcessInstrumenter);
+          new OpenTelemetryMessageHandler((MessageHandler) args[2], consumerProcessInstrumenter);
     }
 
     return (Subscription) invokeProxyMethod(method, delegate, args);
