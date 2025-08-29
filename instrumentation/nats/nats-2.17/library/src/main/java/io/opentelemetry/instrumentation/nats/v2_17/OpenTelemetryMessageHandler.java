@@ -35,12 +35,11 @@ public final class OpenTelemetryMessageHandler implements MessageHandler {
 
   @Override
   public void onMessage(Message message) throws InterruptedException {
-    Timer timer = Timer.start();
-
     Context parentContext = Context.current();
     NatsRequest natsRequest = NatsRequest.create(message.getConnection(), message);
 
     if (consumerReceiveInstrumenter.shouldStart(parentContext, natsRequest)) {
+      Timer timer = Timer.start();
       parentContext =
           InstrumenterUtil.startAndEnd(
               consumerReceiveInstrumenter,

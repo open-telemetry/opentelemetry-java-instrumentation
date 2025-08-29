@@ -10,7 +10,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.nats.client.Connection;
 import io.nats.client.Dispatcher;
 import io.nats.client.Message;
 import io.nats.client.impl.Headers;
@@ -19,29 +18,24 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationExperimentalTest {
-
-  protected abstract InstrumentationExtension testing();
-
-  protected abstract Connection connection();
+public abstract class AbstractNatsInstrumentationExperimentalTest  extends AbstractNatsInstrumentationTest {
 
   private int clientId;
 
   @BeforeEach
   void beforeEach() {
-    clientId = connection().getServerInfo().getClientId();
+    clientId = connection.getServerInfo().getClientId();
   }
 
   @Test
   void testMessagingReceiveAndCapturedHeaders() {
     // given
-    Dispatcher dispatcher = connection().createDispatcher(msg -> {}).subscribe("sub");
+    Dispatcher dispatcher = connection.createDispatcher(msg -> {}).subscribe("sub");
 
     // when
     Headers headers = new Headers();
@@ -53,10 +47,10 @@ public abstract class AbstractNatsInstrumentationExperimentalTest {
                 () -> {
                   Message message =
                       NatsMessage.builder().subject("sub").headers(headers).data("x").build();
-                  connection().publish(message);
+                  connection.publish(message);
                   return Span.fromContext(Context.current()).getSpanContext().getTraceId();
                 });
-    connection().closeDispatcher(dispatcher);
+    connection.closeDispatcher(dispatcher);
 
     // then
     AttributeAssertion[] headerAssert =

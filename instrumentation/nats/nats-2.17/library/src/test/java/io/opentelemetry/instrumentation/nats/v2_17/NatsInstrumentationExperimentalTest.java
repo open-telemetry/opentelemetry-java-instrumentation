@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static java.util.Collections.singletonList;
 
-import io.nats.client.Connection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,26 +17,16 @@ class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExp
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static NatsTelemetry telemetry;
-  static Connection natsConnection;
-
-  @BeforeAll
-  static void beforeAll() {
-    telemetry =
-        NatsTelemetry.builder(testing.getOpenTelemetry())
-            .setMessagingReceiveInstrumentationEnabled(true)
-            .setCapturedHeaders(singletonList("captured-header"))
-            .build();
-    natsConnection = telemetry.wrap(new TestConnection());
-  }
-
   @Override
   protected InstrumentationExtension testing() {
     return testing;
   }
 
-  @Override
-  protected Connection connection() {
-    return natsConnection;
+  @BeforeAll
+  static void beforeAll() {
+    connection = NatsTelemetry.builder(testing.getOpenTelemetry())
+        .setMessagingReceiveInstrumentationEnabled(true)
+        .setCapturedHeaders(singletonList("captured-header"))
+        .build().wrap(connection);
   }
 }

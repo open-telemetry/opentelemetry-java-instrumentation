@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import io.nats.client.Connection;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,22 +15,14 @@ class NatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationDispa
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
-  static NatsTelemetry telemetry;
-  static Connection natsConnection;
-
-  @BeforeAll
-  static void beforeAll() {
-    telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
-    natsConnection = telemetry.wrap(new TestConnection());
-  }
-
   @Override
   protected InstrumentationExtension testing() {
     return testing;
   }
 
-  @Override
-  protected Connection connection() {
-    return natsConnection;
+  @BeforeAll
+  static void beforeAll() {
+    connection = NatsTelemetry.create(testing.getOpenTelemetry()).wrap(connection);
   }
+
 }

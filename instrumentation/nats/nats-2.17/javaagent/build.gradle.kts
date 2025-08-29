@@ -25,6 +25,10 @@ dependencies {
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
   val testExperimental by registering(Test::class) {
     filter {
       includeTestsMatching("NatsInstrumentationExperimentalTest")
@@ -36,7 +40,6 @@ tasks {
   }
 
   test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     filter {
       excludeTestsMatching("NatsInstrumentationExperimentalTest")
     }

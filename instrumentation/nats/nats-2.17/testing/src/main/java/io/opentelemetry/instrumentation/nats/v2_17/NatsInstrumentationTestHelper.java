@@ -47,11 +47,6 @@ public class NatsInstrumentationTestHelper {
     };
   }
 
-  public static void assertNoHeaders(Subscription subscription) throws InterruptedException {
-    Message published = subscription.nextMessage(Duration.ofSeconds(1));
-    assertThat(published.getHeaders()).isNull();
-  }
-
   public static void assertTraceparentHeader(Subscription subscription)
       throws InterruptedException {
     Message published = subscription.nextMessage(Duration.ofSeconds(1));

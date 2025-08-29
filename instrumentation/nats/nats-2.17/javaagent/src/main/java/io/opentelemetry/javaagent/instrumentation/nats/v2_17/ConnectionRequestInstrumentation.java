@@ -18,12 +18,12 @@ import io.nats.client.Message;
 import io.nats.client.impl.Headers;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsMessageWritableHeaders;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeoutException;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -121,95 +121,48 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestBodyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static Message onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, null, subject, null, body);
-      Context parentContext = Context.current();
-
-      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+        @Advice.Argument(2) Duration timeout,
+        @Advice.Local("message") Message message
+    ) throws InterruptedException {
+      message = connection.request(NatsMessageWritableHeaders.create(subject,body), timeout);
+      return message;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return Message message,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
-      }
-
-      Throwable error = throwable;
-      NatsRequest natsResponse = null;
-      if (error == null && message == null) {
-        error = new TimeoutException("Timed out waiting for message");
-      } else {
-        natsResponse = NatsRequest.create(connection, message);
-      }
-
-      otelScope.close();
-      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
+    public static Message onExit(
+        @Advice.Return(readOnly = false) Message returned,
+        @Advice.Local("message") Message message) {
+      returned = message;
+      return returned;
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestHeadersBodyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static Message onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(1) Headers headers,
+        @Advice.Argument(value = 1, readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
-      Context parentContext = Context.current();
-
-      if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = PRODUCER_INSTRUMENTER.start(parentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+        @Advice.Argument(3) Duration timeout,
+        @Advice.Local("message") Message message) throws InterruptedException {
+      message = connection.request(NatsMessageWritableHeaders.create(subject, headers, body), timeout);
+      return message;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return Message message,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
-      }
-
-      Throwable error = throwable;
-      NatsRequest natsResponse = null;
-      if (error == null && message == null) {
-        error = new TimeoutException("Timed out waiting for message");
-      } else {
-        natsResponse = NatsRequest.create(connection, message);
-      }
-
-      otelScope.close();
-      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
+    public static Message onExit(
+        @Advice.Return(readOnly = false) Message returned,
+        @Advice.Local("message") Message message) {
+      returned = message;
+      return returned;
     }
   }
 
@@ -219,10 +172,13 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Message message,
+        @Advice.Argument(value = 0, readOnly = false) Message message,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
+        message = NatsMessageWritableHeaders.create(message);
+
+
       natsRequest = NatsRequest.create(connection, message);
       Context parentContext = Context.current();
 
@@ -246,113 +202,58 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Throwable error = throwable;
       NatsRequest natsResponse = null;
-      if (error == null && message == null) {
-        error = new TimeoutException("Timed out waiting for message");
-      } else {
+      if (message != null) {
         natsResponse = NatsRequest.create(connection, message);
       }
 
       otelScope.close();
-      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, error);
+      PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, natsResponse, throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestFutureBodyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, null, subject, null, body);
-      otelParentContext = Context.current();
-
-      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      future = connection.request(NatsMessageWritableHeaders.create(subject, body));
+      return future;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
+    public static CompletableFuture<Message> onExit(
         @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
-      }
-
-      otelScope.close();
-      if (throwable != null) {
-        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
-      } else {
-        messageFuture =
-            messageFuture.whenComplete(
-                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
-        messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
-      }
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      messageFuture = future;
+      return messageFuture;
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestFutureHeadersBodyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(1) Headers headers,
+        @Advice.Argument(value = 1,readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
-      otelParentContext = Context.current();
-
-      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      future = connection.request(NatsMessageWritableHeaders.create(subject, headers, body));
+      return future;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
+    public static CompletableFuture<Message> onExit(
         @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
-      }
-
-      otelScope.close();
-      if (throwable != null) {
-        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
-      } else {
-        messageFuture =
-            messageFuture.whenComplete(
-                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
-        messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
-      }
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      messageFuture = future;
+      return messageFuture;
     }
   }
 
@@ -362,11 +263,14 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Message message,
+        @Advice.Argument(value = 0, readOnly = false) Message message,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
+       message = NatsMessageWritableHeaders.create(message);
+
+
       natsRequest = NatsRequest.create(connection, message);
       otelParentContext = Context.current();
 
@@ -406,97 +310,45 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RequestTimeoutFutureBodyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, null, subject, null, body);
-      otelParentContext = Context.current();
-
-      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      future = connection.request(NatsMessageWritableHeaders.create(subject, body));
+      return future;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
+    public static CompletableFuture<Message> onExit(
         @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
-      }
-
-      otelScope.close();
-      if (throwable != null) {
-        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
-      } else {
-        messageFuture =
-            messageFuture.whenComplete(
-                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
-        messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
-      }
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      messageFuture = future;
+      return messageFuture;
     }
   }
 
   @SuppressWarnings("unused")
   public static class RequestTimeoutFutureHeadersBodyAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(1) Headers headers,
+        @Advice.Argument(value = 1, readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      natsRequest = NatsRequest.create(connection, null, subject, headers, body);
-      otelParentContext = Context.current();
-
-      if (!PRODUCER_INSTRUMENTER.shouldStart(otelParentContext, natsRequest)) {
-        return;
-      }
-
-      otelContext = PRODUCER_INSTRUMENTER.start(otelParentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      future = connection.request(NatsMessageWritableHeaders.create(subject, headers, body));
+      return future;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Connection connection,
-        @Advice.Thrown Throwable throwable,
+    public static CompletableFuture<Message> onExit(
         @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelParentContext") Context otelParentContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
-      }
-
-      otelScope.close();
-      if (throwable != null) {
-        PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
-      } else {
-        messageFuture =
-            messageFuture.whenComplete(
-                new SpanFinisher(PRODUCER_INSTRUMENTER, otelContext, connection, natsRequest));
-        messageFuture = CompletableFutureWrapper.wrap(messageFuture, otelParentContext);
-      }
+        @Advice.Local("future") CompletableFuture<Message> future) {
+      messageFuture = future;
+      return messageFuture;
     }
   }
 
@@ -506,11 +358,13 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(0) Message message,
+        @Advice.Argument(value = 0,readOnly = false) Message message,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelParentContext") Context otelParentContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
+        message = NatsMessageWritableHeaders.create(message);
+
       natsRequest = NatsRequest.create(connection, message);
       otelParentContext = Context.current();
 

@@ -10,3 +10,10 @@ dependencies {
 
   testImplementation(project(":instrumentation:nats:nats-2.17:testing"))
 }
+
+
+tasks {
+  withType<Test>().configureEach {
+    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+}

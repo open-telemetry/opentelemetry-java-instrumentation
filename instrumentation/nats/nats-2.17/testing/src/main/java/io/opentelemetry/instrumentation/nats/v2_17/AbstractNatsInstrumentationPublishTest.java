@@ -5,35 +5,28 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.assertNoHeaders;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.messagingAttributes;
 
-import io.nats.client.Connection;
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationPublishTest {
-
-  protected abstract InstrumentationExtension testing();
-
-  protected abstract Connection connection();
+public abstract class AbstractNatsInstrumentationPublishTest extends AbstractNatsInstrumentationTest {
 
   private int clientId;
   private Subscription subscription;
 
   @BeforeEach
   void beforeEach() {
-    clientId = connection().getServerInfo().getClientId();
-    subscription = connection().subscribe("sub");
+    clientId = connection.getServerInfo().getClientId();
+    subscription = connection.subscribe("sub");
   }
 
   @AfterEach
@@ -44,18 +37,18 @@ public abstract class AbstractNatsInstrumentationPublishTest {
   @Test
   void testPublishBody() throws InterruptedException {
     // when
-    testing().runWithSpan("parent", () -> connection().publish("sub", new byte[] {0}));
+    testing().runWithSpan("parent", () -> connection.publish("sub", new byte[] {0}));
 
     // then
     assertPublishSpan();
-    assertNoHeaders(subscription);
+    assertTraceparentHeader(subscription);
   }
 
   @Test
   void testPublishHeadersBody() throws InterruptedException {
     // when
     testing()
-        .runWithSpan("parent", () -> connection().publish("sub", new Headers(), new byte[] {0}));
+        .runWithSpan("parent", () -> connection.publish("sub", new Headers(), new byte[] {0}));
 
     // then
     assertPublishSpan();
@@ -65,11 +58,11 @@ public abstract class AbstractNatsInstrumentationPublishTest {
   @Test
   void testPublishReplyToBody() throws InterruptedException {
     // when
-    testing().runWithSpan("parent", () -> connection().publish("sub", "rt", new byte[] {0}));
+    testing().runWithSpan("parent", () -> connection.publish("sub", "rt", new byte[] {0}));
 
     // then
     assertPublishSpan();
-    assertNoHeaders(subscription);
+    assertTraceparentHeader(subscription);
   }
 
   @Test
@@ -77,7 +70,7 @@ public abstract class AbstractNatsInstrumentationPublishTest {
     // when
     testing()
         .runWithSpan(
-            "parent", () -> connection().publish("sub", "rt", new Headers(), new byte[] {0}));
+            "parent", () -> connection.publish("sub", "rt", new Headers(), new byte[] {0}));
 
     // then
     assertPublishSpan();
@@ -89,11 +82,11 @@ public abstract class AbstractNatsInstrumentationPublishTest {
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing().runWithSpan("parent", () -> connection().publish(message));
+    testing().runWithSpan("parent", () -> connection.publish(message));
 
     // then
     assertPublishSpan();
-    assertNoHeaders(subscription);
+    assertTraceparentHeader(subscription);
   }
 
   @Test
@@ -102,7 +95,7 @@ public abstract class AbstractNatsInstrumentationPublishTest {
         NatsMessage.builder().subject("sub").data("x").headers(new Headers()).build();
 
     // when
-    testing().runWithSpan("parent", () -> connection().publish(message));
+    testing().runWithSpan("parent", () -> connection.publish(message));
 
     // then
     assertPublishSpan();
