@@ -13,7 +13,7 @@ muzzle {
 
     // Headers are readOnly, so context can not be propagated
     // https://github.com/nats-io/nats.java/pull/1123
-    skip("2.17.2","2.17.3","2.17.4","2.17.5","2.17.6")
+    skip("2.17.2", "2.17.3", "2.17.4", "2.17.5", "2.17.6")
 
     assertInverse.set(true)
   }
