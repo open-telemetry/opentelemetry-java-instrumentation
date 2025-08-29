@@ -25,6 +25,37 @@ dependencies {
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
 }
 
+testing {
+  suites {
+    val testPropagationDisabled by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("KafkaClientPropagationDisabledTest")
+            }
+            include("**/KafkaClientPropagationDisabledTest.*")
+            jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
+          }
+        }
+      }
+    }
+
+    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+            }
+            include("**/KafkaClientSuppressReceiveSpansTest.*")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -33,21 +64,6 @@ tasks {
 
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
-  }
-
-  val testPropagationDisabled by registering(Test::class) {
-    filter {
-      includeTestsMatching("KafkaClientPropagationDisabledTest")
-    }
-    include("**/KafkaClientPropagationDisabledTest.*")
-    jvmArgs("-Dotel.instrumentation.kafka.producer-propagation.enabled=false")
-  }
-
-  val testReceiveSpansDisabled by registering(Test::class) {
-    filter {
-      includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
-    }
-    include("**/KafkaClientSuppressReceiveSpansTest.*")
   }
 
   test {
@@ -59,7 +75,6 @@ tasks {
   }
 
   check {
-    dependsOn(testPropagationDisabled)
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testing.suites)
   }
 }

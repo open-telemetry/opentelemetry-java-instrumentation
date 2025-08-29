@@ -88,7 +88,8 @@ public final class BedrockRuntimeImpl {
   }
 
   private static final AttributeKey<String> EVENT_NAME = stringKey("event.name");
-  private static final AttributeKey<String> GEN_AI_SYSTEM = stringKey("gen_ai.system");
+  private static final AttributeKey<String> GEN_AI_PROVIDER_NAME =
+      stringKey("gen_ai.provider.name");
 
   private static final ExecutionAttribute<Document> INVOKE_MODEL_REQUEST_BODY =
       new ExecutionAttribute<>(BedrockRuntimeImpl.class.getName() + ".InvokeModelRequestBody");
@@ -1618,7 +1619,8 @@ public final class BedrockRuntimeImpl {
         .logRecordBuilder()
         .setContext(otelContext)
         .setAttribute(
-            GEN_AI_SYSTEM, BedrockRuntimeAttributesGetter.GenAiSystemIncubatingValues.AWS_BEDROCK);
+            GEN_AI_PROVIDER_NAME,
+            BedrockRuntimeAttributesGetter.GenAiProviderNameIncubatingValues.AWS_BEDROCK);
   }
 
   private static void emitToolResultEvents(

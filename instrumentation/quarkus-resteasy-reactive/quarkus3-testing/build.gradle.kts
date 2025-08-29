@@ -48,6 +48,8 @@ val quarkusTestCompileOnlyConfiguration by configurations.creating {
 val testModelPath = layout.buildDirectory.file("quarkus-app-test-model.dat").get().asFile.toPath()
 
 val buildModel = tasks.register("buildModel") {
+  dependsOn(configurations.named("testRuntimeClasspath"))
+
   if (testModelPath.notExists()) {
     doLast {
       val modelParameter = ModelParameterImpl()

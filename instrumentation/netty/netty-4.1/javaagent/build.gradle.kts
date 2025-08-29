@@ -42,18 +42,27 @@ dependencies {
   testCompileOnly("io.netty:netty-transport-native-kqueue:4.1.11.Final:osx-x86_64")
 }
 
-tasks {
-  val testConnectionSpan by registering(Test::class) {
-    filter {
-      includeTestsMatching("Netty41ConnectionSpanTest")
-      includeTestsMatching("Netty41ClientSslTest")
+testing {
+  suites {
+    val testConnectionSpan by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("Netty41ConnectionSpanTest")
+              includeTestsMatching("Netty41ClientSslTest")
+            }
+            include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
+            jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
+          }
+        }
+      }
     }
-    include("**/Netty41ConnectionSpanTest.*", "**/Netty41ClientSslTest.*")
-
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
   }
+}
 
+tasks {
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
@@ -65,7 +74,7 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testing.suites)
   }
 }
 

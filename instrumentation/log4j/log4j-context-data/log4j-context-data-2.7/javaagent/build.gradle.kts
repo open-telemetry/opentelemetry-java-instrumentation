@@ -21,6 +21,38 @@ dependencies {
   latestDepTestLibrary("org.apache.logging.log4j:log4j-core:2.16.+") // see log4j-context-data-2.17 module
 }
 
+testing {
+  suites {
+    val testAddBaggage by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("Log4j27BaggageTest")
+            }
+            jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
+          }
+        }
+      }
+    }
+
+    val testLoggingKeys by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("Log4j27LoggingKeysTest")
+            }
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
+            jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   test {
     filter {
@@ -30,24 +62,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
   }
 
-  val testAddBaggage by registering(Test::class) {
-    filter {
-      includeTestsMatching("Log4j27BaggageTest")
-    }
-    jvmArgs("-Dotel.instrumentation.log4j-context-data.add-baggage=true")
-  }
-
-  val testLoggingKeys by registering(Test::class) {
-    filter {
-      includeTestsMatching("Log4j27LoggingKeysTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.logging.trace-id=trace_id_test")
-    jvmArgs("-Dotel.instrumentation.common.logging.span-id=span_id_test")
-    jvmArgs("-Dotel.instrumentation.common.logging.trace-flags=trace_flags_test")
-  }
-
   named("check") {
-    dependsOn(testAddBaggage)
-    dependsOn(testLoggingKeys)
+    dependsOn(testing.suites)
   }
 }
