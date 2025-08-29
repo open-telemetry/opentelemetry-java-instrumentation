@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.sdk;
+package io.opentelemetry.instrumentation.config.bridge;
 
 public final class ConfigPropertiesUtil {
   private ConfigPropertiesUtil() {}
