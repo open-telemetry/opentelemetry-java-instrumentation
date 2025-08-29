@@ -149,7 +149,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static Message onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(value = 1, readOnly = false) Headers headers,
+        @Advice.Argument(1) Headers headers,
         @Advice.Argument(2) byte[] body,
         @Advice.Argument(3) Duration timeout,
         @Advice.Local("message") Message message)
@@ -242,7 +242,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(value = 1, readOnly = false) Headers headers,
+        @Advice.Argument(1) Headers headers,
         @Advice.Argument(2) byte[] body,
         @Advice.Local("future") CompletableFuture<Message> future) {
       future = connection.request(NatsMessageWritableHeaders.create(subject, headers, body));
@@ -336,7 +336,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(value = 1, readOnly = false) Headers headers,
+        @Advice.Argument(1) Headers headers,
         @Advice.Argument(2) byte[] body,
         @Advice.Local("future") CompletableFuture<Message> future) {
       future = connection.request(NatsMessageWritableHeaders.create(subject, headers, body));

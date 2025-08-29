@@ -92,7 +92,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     public static boolean onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(value = 1, readOnly = false) Headers headers,
+        @Advice.Argument(1) Headers headers,
         @Advice.Argument(2) byte[] body) {
       connection.publish(NatsMessageWritableHeaders.create(subject, headers, body));
       return true;
@@ -119,7 +119,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) String replyTo,
-        @Advice.Argument(value = 2, readOnly = false) Headers headers,
+        @Advice.Argument(2) Headers headers,
         @Advice.Argument(3) byte[] body) {
       connection.publish(NatsMessageWritableHeaders.create(subject, replyTo, headers, body));
       return true;
