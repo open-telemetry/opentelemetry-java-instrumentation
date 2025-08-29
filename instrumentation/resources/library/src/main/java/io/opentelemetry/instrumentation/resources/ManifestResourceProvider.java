@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static java.util.logging.Level.FINE;
-
 import com.google.auto.service.AutoService;
 import io.opentelemetry.instrumentation.resources.internal.ManifestResourceExtractor;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
