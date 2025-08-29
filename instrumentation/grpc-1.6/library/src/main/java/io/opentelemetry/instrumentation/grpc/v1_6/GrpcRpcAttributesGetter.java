@@ -44,11 +44,13 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
   }
 
   @Override
+  @Nullable
   public Long getRequestSize(GrpcRequest request) {
     return request.getRequestSize();
   }
 
   @Override
+  @Nullable
   public Long getResponseSize(GrpcRequest request) {
     return request.getResponseSize();
   }

@@ -90,7 +90,7 @@ class RpcClientMetricsTest {
                                 point ->
                                     point
                                         .hasSum(20 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
@@ -118,7 +118,7 @@ class RpcClientMetricsTest {
                                 point ->
                                     point
                                         .hasSum(10 /* bytes */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
@@ -145,7 +145,7 @@ class RpcClientMetricsTest {
                                 point ->
                                     point
                                         .hasSum(150 /* millis */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
@@ -177,7 +177,7 @@ class RpcClientMetricsTest {
                                 point ->
                                     point
                                         .hasSum(150 /* millis */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
