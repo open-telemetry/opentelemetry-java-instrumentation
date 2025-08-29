@@ -54,82 +54,49 @@ sourceSets {
   }
 }
 
-testing {
-  suites {
-    val testSlick by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("SlickTest")
-            }
-            include("**/SlickTest.*")
-          }
-        }
-      }
-    }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              excludeTestsMatching("SlickTest")
-              excludeTestsMatching("PreparedStatementParametersTest")
-            }
-            jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-
-    val testSlickStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("SlickTest")
-            }
-            include("**/SlickTest.*")
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-
-    val testCaptureParameters by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("PreparedStatementParametersTest")
-            }
-            jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
+  val testSlick by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("SlickTest")
+    }
+    include("**/SlickTest.*")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("SlickTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
+  val testSlickStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("SlickTest")
+    }
+    include("**/SlickTest.*")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   test {
     filter {
       excludeTestsMatching("SlickTest")
-      excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
 
   check {
-    dependsOn(testing.suites)
-  }
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
+    dependsOn(testSlick)
+    dependsOn(testStableSemconv)
+    dependsOn(testSlickStableSemconv)
   }
 }
