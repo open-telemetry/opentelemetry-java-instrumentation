@@ -1,3 +1,6 @@
 description: > 
   This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and
   attaches it to SERVER spans and HTTP server metrics.
+classification:
+  - library
+  - enricher
