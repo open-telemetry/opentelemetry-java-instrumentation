@@ -128,6 +128,18 @@ testing {
         }
       }
     }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+            systemProperty("collectMetadata", collectMetadata)
+            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -142,17 +154,6 @@ tasks {
     check {
       dependsOn(testing.suites.named("testSqs"), testing.suites.named("testSqsNoReceiveTelemetry"))
     }
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 
   test {

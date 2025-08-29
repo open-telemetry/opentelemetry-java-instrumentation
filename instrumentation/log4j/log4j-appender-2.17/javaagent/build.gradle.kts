@@ -45,13 +45,23 @@ tasks.withType<Test>().configureEach {
   systemProperty("testLatestDeps", testLatestDeps)
 }
 
-tasks {
-  val testAsync by registering(Test::class) {
-    jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
+testing {
+  suites {
+    val testAsync by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
+          }
+        }
+      }
+    }
   }
+}
 
+tasks {
   check {
-    dependsOn(testAsync)
+    dependsOn(testing.suites)
   }
 }
 

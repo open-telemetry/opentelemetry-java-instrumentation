@@ -20,6 +20,21 @@ dependencies {
   testLibrary("org.springframework:spring-context:3.2.3.RELEASE")
 }
 
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+            systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     // required on jdk17
@@ -27,11 +42,6 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  }
-
-  val testExperimental by registering(Test::class) {
-    jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
   }
 }
 

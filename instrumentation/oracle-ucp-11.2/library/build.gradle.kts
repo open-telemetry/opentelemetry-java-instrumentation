@@ -10,16 +10,26 @@ dependencies {
   testImplementation(project(":instrumentation:oracle-ucp-11.2:testing"))
 }
 
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

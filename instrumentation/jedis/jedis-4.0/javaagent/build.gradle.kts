@@ -24,6 +24,20 @@ dependencies {
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
 }
 
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
@@ -31,11 +45,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

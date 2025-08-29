@@ -9,12 +9,22 @@ dependencies {
   testImplementation(project(":instrumentation:hikaricp-3.0:testing"))
 }
 
-tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
+}
 
+tasks {
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

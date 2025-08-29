@@ -31,16 +31,26 @@ dependencies {
   latestDepTestLibrary("io.projectreactor.netty:reactor-netty:0.+") // see reactor-netty-1.0 modules
 }
 
-tasks {
-  val testConnectionSpan by registering(Test::class) {
-    filter {
-      includeTestsMatching("ReactorNettyConnectionSpanTest")
+testing {
+  suites {
+    val testConnectionSpan by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("ReactorNettyConnectionSpanTest")
+            }
+            include("**/ReactorNettyConnectionSpanTest.*")
+            jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
+            jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+          }
+        }
+      }
     }
-    include("**/ReactorNettyConnectionSpanTest.*")
-    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
+}
 
+tasks {
   test {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
@@ -50,6 +60,6 @@ tasks {
   }
 
   check {
-    dependsOn(testConnectionSpan)
+    dependsOn(testing.suites)
   }
 }
