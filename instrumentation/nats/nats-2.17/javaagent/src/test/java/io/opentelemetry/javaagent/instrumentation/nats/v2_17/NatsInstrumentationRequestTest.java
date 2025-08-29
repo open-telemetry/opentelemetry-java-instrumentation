@@ -19,9 +19,4 @@ class NatsInstrumentationRequestTest extends AbstractNatsInstrumentationRequestT
   protected InstrumentationExtension testing() {
     return testing;
   }
-
-  @Override
-  protected boolean isInboxMonitored() {
-    return true;
-  }
 }

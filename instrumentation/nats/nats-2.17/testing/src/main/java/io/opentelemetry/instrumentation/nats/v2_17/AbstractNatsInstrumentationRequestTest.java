@@ -29,8 +29,6 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractNatsInstrumentationRequestTest
     extends AbstractNatsInstrumentationTest {
 
-  protected abstract boolean isInboxMonitored();
-
   private int clientId;
   private Subscription subscription;
 
@@ -306,10 +304,6 @@ public abstract class AbstractNatsInstrumentationRequestTest
                                   .hasParent(trace.getSpan(3))
                                   .hasAttributesSatisfyingExactly(
                                       messagingAttributes("process", "_INBOX.", clientId))));
-
-              if (!isInboxMonitored()) {
-                asserts.remove(asserts.size() - 1);
-              }
 
               trace.hasSpansSatisfyingExactly(asserts);
             });
