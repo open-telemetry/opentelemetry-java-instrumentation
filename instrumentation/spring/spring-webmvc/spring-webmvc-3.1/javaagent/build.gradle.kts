@@ -43,21 +43,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
-testing {
-  suites {
-    val testExperimental by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-            jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
@@ -71,8 +56,15 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
   }
 
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testExperimental)
   }
 }
 

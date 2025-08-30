@@ -67,32 +67,6 @@ dependencies {
   latestDepTestLibrary("org.apache.camel:camel-cassandraql:2.+") // documented limitation
 }
 
-testing {
-  suites {
-    val testExperimental by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
-            systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
-          }
-        }
-      }
-    }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
@@ -109,8 +83,24 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }
 

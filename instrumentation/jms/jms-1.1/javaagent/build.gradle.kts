@@ -45,25 +45,22 @@ testing {
         }
       }
     }
-
-    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("Jms1SuppressReceiveSpansTest")
-            }
-            include("**/Jms1SuppressReceiveSpansTest.*")
-          }
-        }
-      }
-    }
   }
 }
 
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("Jms1SuppressReceiveSpansTest")
+    }
+    include("**/Jms1SuppressReceiveSpansTest.*")
   }
 
   test {
@@ -74,7 +71,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testReceiveSpansDisabled)
   }
 }
 

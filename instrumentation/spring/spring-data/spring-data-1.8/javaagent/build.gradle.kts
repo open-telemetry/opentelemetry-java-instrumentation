@@ -45,21 +45,6 @@ dependencies {
   latestDepTestLibrary("org.springframework:spring-test:5.+") // see spring-data-3.0:testing module
 }
 
-testing {
-  suites {
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
@@ -70,7 +55,14 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

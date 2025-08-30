@@ -39,26 +39,18 @@ dependencies {
   latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+") // see opensearch-rest-3.0 module
 }
 
-testing {
-  suites {
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testStableSemconv)
   }
 }

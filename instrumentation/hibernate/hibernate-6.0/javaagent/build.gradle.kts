@@ -62,16 +62,6 @@ testing {
         }
       }
     }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
   }
 }
 
@@ -93,7 +83,14 @@ tasks {
     }
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testStableSemconv)
   }
 }

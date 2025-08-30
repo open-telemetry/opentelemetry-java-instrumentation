@@ -35,27 +35,19 @@ dependencies {
   latestDepTestLibrary("io.netty:netty-codec-http:4.0.+") // see netty-4.1 module
 }
 
-testing {
-  suites {
-    val testConnectionSpan by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("Netty40ConnectionSpanTest")
-              includeTestsMatching("Netty40ClientSslTest")
-            }
-            include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
-            jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
-            jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
+  val testConnectionSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("Netty40ConnectionSpanTest")
+      includeTestsMatching("Netty40ClientSslTest")
+    }
+    include("**/Netty40ConnectionSpanTest.*", "**/Netty40ClientSslTest.*")
+    jvmArgs("-Dotel.instrumentation.netty.connection-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.netty.ssl-telemetry.enabled=true")
+  }
+
   test {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
@@ -66,7 +58,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testConnectionSpan)
   }
 }
 

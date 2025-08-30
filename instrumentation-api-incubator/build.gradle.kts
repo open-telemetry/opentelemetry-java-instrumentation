@@ -28,30 +28,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 }
 
-testing {
-  suites {
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
-          }
-        }
-      }
-    }
-
-    val testBothSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   // exclude auto-generated code
   named<Checkstyle>("checkstyleMain") {
@@ -69,7 +45,19 @@ tasks {
     dependsOn("generateJflex")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }
