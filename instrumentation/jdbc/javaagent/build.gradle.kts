@@ -95,8 +95,6 @@ tasks {
   }
 
   check {
-    dependsOn(testSlick)
-    dependsOn(testStableSemconv)
-    dependsOn(testSlickStableSemconv)
+    dependsOn(testSlick, testStableSemconv, testSlickStableSemconv)
   }
 }

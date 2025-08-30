@@ -58,7 +58,6 @@ tasks {
   }
 
   check {
-    dependsOn(testStableSemconv)
-    dependsOn(testBothSemconv)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }
