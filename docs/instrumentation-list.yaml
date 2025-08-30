@@ -221,46 +221,6 @@ libraries:
           type: STRING
         - name: state
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.idle.max
-        description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.idle.min
-        description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.max
-        description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.pending_requests
-        description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
   apache:
   - name: apache-dbcp-2.0
     description: |
@@ -307,39 +267,6 @@ libraries:
         - name: pool.name
           type: STRING
         - name: state
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.idle.max
-        description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.idle.min
-        description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.max
-        description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
           type: STRING
   - name: apache-dubbo-2.7
     description: The Apache Dubbo instrumentation provides client and server spans
@@ -1156,112 +1083,6 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: aws.agent
-          type: STRING
-        - name: aws.bucket.name
-          type: STRING
-        - name: aws.dynamodb.table_names
-          type: STRING_ARRAY
-        - name: aws.lambda.function.arn
-          type: STRING
-        - name: aws.lambda.function.name
-          type: STRING
-        - name: aws.lambda.resource_mapping.id
-          type: STRING
-        - name: aws.queue.name
-          type: STRING
-        - name: aws.queue.url
-          type: STRING
-        - name: aws.request_id
-          type: STRING
-        - name: aws.sns.topic.arn
-          type: STRING
-        - name: aws.step_functions.activity.arn
-          type: STRING
-        - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: error.type
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: messaging.destination.name
-          type: STRING
-        - name: network.protocol.version
-          type: STRING
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
-      - span_kind: CONSUMER
-        attributes:
-        - name: aws.agent
-          type: STRING
-        - name: aws.queue.url
-          type: STRING
-        - name: aws.request_id
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.id
-          type: STRING
-        - name: messaging.operation
-          type: STRING
-        - name: messaging.system
-          type: STRING
-        - name: network.protocol.version
-          type: STRING
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: aws-sdk-2.2
     description: |
       This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS and Bedrock.
@@ -1321,9 +1142,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -1332,9 +1153,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -1385,6 +1206,8 @@ libraries:
           type: STRING
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.max_tokens
           type: LONG
         - name: gen_ai.request.model
@@ -1397,8 +1220,6 @@ libraries:
           type: DOUBLE
         - name: gen_ai.response.finish_reasons
           type: STRING_ARRAY
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
         - name: gen_ai.usage.output_tokens
@@ -1433,6 +1254,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1465,142 +1288,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.message.id
-          type: STRING
-        - name: messaging.operation
-          type: STRING
-        - name: messaging.system
-          type: STRING
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: aws.agent
-          type: STRING
-        - name: aws.bucket.name
-          type: STRING
-        - name: aws.dynamodb.global_secondary_indexes
-          type: STRING
-        - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
-        - name: aws.dynamodb.select
-          type: STRING
-        - name: aws.lambda.function.arn
-          type: STRING
-        - name: aws.lambda.function.name
-          type: STRING
-        - name: aws.lambda.resource_mapping.id
-          type: STRING
-        - name: aws.queue.name
-          type: STRING
-        - name: aws.queue.url
-          type: STRING
-        - name: aws.request_id
-          type: STRING
-        - name: aws.secretsmanager.secret.arn
-          type: STRING
-        - name: aws.sns.topic.arn
-          type: STRING
-        - name: aws.step_functions.activity.arn
-          type: STRING
-        - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: messaging.destination.name
-          type: STRING
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
-      - span_kind: CONSUMER
-        attributes:
-        - name: aws.agent
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: messaging.batch.message_count
-          type: LONG
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.id
-          type: STRING
-        - name: messaging.operation
-          type: STRING
-        - name: messaging.system
-          type: STRING
-        - name: rpc.method
-          type: STRING
-        - name: rpc.service
-          type: STRING
-        - name: rpc.system
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
-      - span_kind: PRODUCER
-        attributes:
-        - name: aws.agent
-          type: STRING
-        - name: aws.queue.url
-          type: STRING
-        - name: aws.request_id
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: messaging.destination.name
-          type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1680,25 +1369,6 @@ libraries:
           type: STRING
         - name: state
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.pending_requests
-        description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
   camel:
   - name: camel-2.20
     description: |
@@ -1725,80 +1395,6 @@ libraries:
         - name: db.statement
           type: STRING
         - name: db.system
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: url.full
-          type: STRING
-      - span_kind: INTERNAL
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.id
-          type: STRING
-        - name: url.full
-          type: STRING
-      - span_kind: SERVER
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: url.full
-          type: STRING
-    - when: otel.instrumentation.camel.experimental-span-attributes=true
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: camel.uri
-          type: STRING
-        - name: db.name
-          type: STRING
-        - name: db.statement
-          type: STRING
-        - name: db.system
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: url.full
-          type: STRING
-      - span_kind: INTERNAL
-        attributes:
-        - name: camel.uri
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: messaging.destination.name
-          type: STRING
-        - name: messaging.message.id
-          type: STRING
-        - name: url.full
-          type: STRING
-      - span_kind: SERVER
-        attributes:
-        - name: camel.uri
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: url.full
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1864,30 +1460,6 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: network.type
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   - name: cassandra-4.0
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
@@ -1928,42 +1500,6 @@ libraries:
         - name: db.statement
           type: STRING
         - name: db.system
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: network.type
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: cassandra.consistency.level
-          type: STRING
-        - name: cassandra.coordinator.dc
-          type: STRING
-        - name: cassandra.coordinator.id
-          type: STRING
-        - name: cassandra.page.size
-          type: LONG
-        - name: cassandra.query.idempotent
-          type: BOOLEAN
-        - name: cassandra.speculative_execution.count
-          type: LONG
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
           type: STRING
         - name: network.peer.address
           type: STRING
@@ -2028,42 +1564,6 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: cassandra.consistency.level
-          type: STRING
-        - name: cassandra.coordinator.dc
-          type: STRING
-        - name: cassandra.coordinator.id
-          type: STRING
-        - name: cassandra.page.size
-          type: LONG
-        - name: cassandra.query.idempotent
-          type: BOOLEAN
-        - name: cassandra.speculative_execution.count
-          type: LONG
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: network.type
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   clickhouse:
   - name: clickhouse-client-0.5
     description: Instruments the V1 ClickHouseClient, providing database client spans
@@ -2096,42 +1596,6 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: error.type
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   couchbase:
   - name: couchbase-2.0
     description: |
@@ -2154,28 +1618,6 @@ libraries:
         - name: db.statement
           type: STRING
         - name: db.system
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
           type: STRING
   - name: couchbase-2.6
     description: |
@@ -2204,60 +1646,6 @@ libraries:
         - name: db.statement
           type: STRING
         - name: db.system
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: network.type
-          type: STRING
-    - when: otel.instrumentation.couchbase.experimental-span-attributes=true
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: couchbase.local.address
-          type: STRING
-        - name: couchbase.operation_id
-          type: STRING
-        - name: db.name
-          type: STRING
-        - name: db.operation
-          type: STRING
-        - name: db.statement
-          type: STRING
-        - name: db.system
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: network.type
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
           type: STRING
         - name: network.peer.address
           type: STRING
@@ -2360,40 +1748,6 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.elasticsearch.path_parts.id
-          type: STRING
-        - name: db.elasticsearch.path_parts.index
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: elasticsearch-rest-5.0
     description: This instrumentation enables database CLIENT spans and metrics for
       Elasticsearch REST clients.
@@ -2430,32 +1784,6 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: elasticsearch-rest-6.4
     description: This instrumentation enables database CLIENT spans and metrics for
       Elasticsearch REST clients.
@@ -2482,32 +1810,6 @@ libraries:
       - span_kind: CLIENT
         attributes:
         - name: db.system
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system.name
           type: STRING
         - name: http.request.method
           type: STRING
@@ -2554,32 +1856,6 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: elasticsearch-transport-5.0
     description: |
       This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
@@ -2614,64 +1890,6 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
-    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.operation
-          type: STRING
-        - name: db.system
-          type: STRING
-        - name: elasticsearch.action
-          type: STRING
-        - name: elasticsearch.id
-          type: STRING
-        - name: elasticsearch.request
-          type: STRING
-        - name: elasticsearch.request.indices
-          type: STRING
-        - name: elasticsearch.request.write.type
-          type: STRING
-        - name: elasticsearch.response.status
-          type: LONG
-        - name: elasticsearch.shard.replication.failed
-          type: LONG
-        - name: elasticsearch.shard.replication.successful
-          type: LONG
-        - name: elasticsearch.shard.replication.total
-          type: LONG
-        - name: elasticsearch.type
-          type: STRING
-        - name: elasticsearch.version
-          type: LONG
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: error.type
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
   - name: elasticsearch-transport-5.3
     description: |
       This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
@@ -2696,74 +1914,6 @@ libraries:
         - name: db.operation
           type: STRING
         - name: db.system
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-    - when: otel.instrumentation.elasticsearch.experimental-span-attributes=true
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.operation
-          type: STRING
-        - name: db.system
-          type: STRING
-        - name: elasticsearch.action
-          type: STRING
-        - name: elasticsearch.id
-          type: STRING
-        - name: elasticsearch.request
-          type: STRING
-        - name: elasticsearch.request.indices
-          type: STRING
-        - name: elasticsearch.request.search.types
-          type: STRING
-        - name: elasticsearch.request.write.type
-          type: STRING
-        - name: elasticsearch.request.write.version
-          type: LONG
-        - name: elasticsearch.response.status
-          type: LONG
-        - name: elasticsearch.shard.broadcast.failed
-          type: LONG
-        - name: elasticsearch.shard.broadcast.successful
-          type: LONG
-        - name: elasticsearch.shard.broadcast.total
-          type: LONG
-        - name: elasticsearch.shard.replication.failed
-          type: LONG
-        - name: elasticsearch.shard.replication.successful
-          type: LONG
-        - name: elasticsearch.shard.replication.total
-          type: LONG
-        - name: elasticsearch.type
-          type: STRING
-        - name: elasticsearch.version
-          type: LONG
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: error.type
           type: STRING
         - name: network.peer.address
           type: STRING
@@ -2943,30 +2093,6 @@ libraries:
           type: STRING
         - name: db.system
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
   google:
   - name: google-http-client-1.19
     description: This instrumentation enables HTTP CLIENT spans and metrics for Google
@@ -3126,20 +2252,6 @@ libraries:
       - span_kind: INTERNAL
         attributes:
         - name: graphql.document
-          type: STRING
-        - name: graphql.operation.name
-          type: STRING
-        - name: graphql.operation.type
-          type: STRING
-    - when: otel.instrumentation.graphql.data-fetcher.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: graphql.document
-          type: STRING
-        - name: graphql.field.name
-          type: STRING
-        - name: graphql.field.path
           type: STRING
         - name: graphql.operation.name
           type: STRING
@@ -3378,69 +2490,6 @@ libraries:
         unit: ms
         attributes:
         - name: pool.name
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.create_time
-        description: The time it took to create a new connection.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.idle.min
-        description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.max
-        description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.pending_requests
-        description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.timeouts
-        description: The number of connection timeouts that have occurred trying to
-          obtain a connection from the pool.
-        type: LONG_SUM
-        unit: timeout
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.use_time
-        description: The time between borrowing a connection and returning it to the
-          pool.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.wait_time
-        description: The time it took to obtain an open connection from the pool.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.client.connection.pool.name
           type: STRING
   http:
   - name: http-url-connection
@@ -4646,11 +3695,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -4659,11 +3708,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -4672,19 +3721,21 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.encoding_formats
           type: STRING_ARRAY
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
           type: STRING
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.request.frequency_penalty
           type: DOUBLE
@@ -4707,8 +3758,6 @@ libraries:
         - name: gen_ai.response.id
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
@@ -4772,32 +3821,6 @@ libraries:
           type: STRING
         - name: state
           type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.max
-        description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.pending_requests
-        description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
   oshi:
   - name: oshi
     description: When the OSHI library is detected on the classpath, this instrumentation
@@ -4819,81 +3842,6 @@ libraries:
     telemetry:
     - when: default
       metrics:
-      - name: system.disk.io
-        description: System disk IO
-        type: LONG_SUM
-        unit: By
-        attributes:
-        - name: device
-          type: STRING
-        - name: direction
-          type: STRING
-      - name: system.disk.operations
-        description: System disk operations
-        type: LONG_SUM
-        unit: operations
-        attributes:
-        - name: device
-          type: STRING
-        - name: direction
-          type: STRING
-      - name: system.memory.usage
-        description: System memory usage
-        type: LONG_SUM
-        unit: By
-        attributes:
-        - name: state
-          type: STRING
-      - name: system.memory.utilization
-        description: System memory utilization
-        type: DOUBLE_GAUGE
-        unit: '1'
-        attributes:
-        - name: state
-          type: STRING
-      - name: system.network.errors
-        description: System network errors
-        type: LONG_SUM
-        unit: errors
-        attributes:
-        - name: device
-          type: STRING
-        - name: direction
-          type: STRING
-      - name: system.network.io
-        description: System network IO
-        type: LONG_SUM
-        unit: By
-        attributes:
-        - name: device
-          type: STRING
-        - name: direction
-          type: STRING
-      - name: system.network.packets
-        description: System network packets
-        type: LONG_SUM
-        unit: packets
-        attributes:
-        - name: device
-          type: STRING
-        - name: direction
-          type: STRING
-    - when: otel.instrumentation.oshi.experimental-metrics.enabled=true
-      metrics:
-      - name: runtime.java.cpu_time
-        description: Runtime Java CPU time
-        type: LONG_GAUGE
-        unit: ms
-        attributes:
-        - name: type
-          type: STRING
-      - name: runtime.java.memory
-        description: Runtime Java memory
-        type: LONG_SUM
-        unit: By
-        attributes:
-        - name: type
-          type: STRING
       - name: system.disk.io
         description: System disk IO
         type: LONG_SUM
@@ -5669,16 +4617,8 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: messaging.operation
-          type: STRING
-    - when: otel.instrumentation.spring-integration.producer.enabled=true
-      spans:
-      - span_kind: CONSUMER
-        attributes:
-        - name: messaging.operation
-          type: STRING
-      - span_kind: PRODUCER
-        attributes:
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.operation
           type: STRING
   - name: spring-jms-2.0
@@ -5740,6 +4680,10 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
+        - name: messaging.header.Test_Message_Int_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -5878,6 +4822,8 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation
@@ -5934,16 +4880,6 @@ libraries:
         - name: code.function
           type: STRING
         - name: code.namespace
-          type: STRING
-    - when: otel.instrumentation.spring-scheduling.experimental-span-attributes=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
-        - name: job.system
           type: STRING
   - name: spring-security-config-6.0
     description: |
@@ -6200,16 +5136,6 @@ libraries:
           type: STRING
         - name: code.namespace
           type: STRING
-    - when: otel.instrumentation.spring-webmvc.experimental-span-attributes=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
-        - name: spring-webmvc.view.type
-          type: STRING
   - name: spring-webmvc-5.3
     description: |
       This instrumentation provides a library integration for Spring WebMVC controllers, that enables the creation of HTTP server spans and metrics for requests processed by the Spring servlet container.
@@ -6299,16 +5225,6 @@ libraries:
         - name: code.function
           type: STRING
         - name: code.namespace
-          type: STRING
-    - when: otel.instrumentation.spring-webmvc.experimental-span-attributes=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
-        - name: spring-webmvc.view.type
           type: STRING
   - name: spring-ws-2.0
     disabled_by_default: true
@@ -6414,46 +5330,6 @@ libraries:
         - name: pool.name
           type: STRING
         - name: state
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.idle.max
-        description: The maximum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.idle.min
-        description: The minimum number of idle open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.max
-        description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-      - name: db.client.connection.pending_requests
-        description: The number of current pending requests for an open connection.
-        type: LONG_SUM
-        unit: request
-        attributes:
-        - name: db.client.connection.pool.name
           type: STRING
   twilio:
   - name: twilio-6.6
@@ -6651,46 +5527,6 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.system.name
-          type: STRING
-        - name: network.peer.address
-          type: STRING
-        - name: network.peer.port
-          type: LONG
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   - name: vertx-rx-java-3.5
     source_path: instrumentation/vertx/vertx-rx-java-3.5
     scope:
@@ -6724,42 +5560,6 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
-          type: STRING
-        - name: error.type
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
   - name: vertx-sql-client-5.0
     source_path: instrumentation/vertx/vertx-sql-client/vertx-sql-client-5.0
     minimum_java_version: 11
@@ -6782,42 +5582,6 @@ libraries:
         - name: db.statement
           type: STRING
         - name: db.user
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.collection.name
-          type: STRING
-        - name: db.namespace
-          type: STRING
-        - name: db.operation.name
-          type: STRING
-        - name: db.query.text
-          type: STRING
-        - name: db.response.status_code
-          type: STRING
-        - name: error.type
           type: STRING
         - name: server.address
           type: STRING
@@ -6861,25 +5625,6 @@ libraries:
         - name: pool.name
           type: STRING
         - name: state
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.connection.count
-        description: The number of connections that are currently in state described
-          by the state attribute.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
-          type: STRING
-        - name: db.client.connection.state
-          type: STRING
-      - name: db.client.connection.max
-        description: The maximum number of open connections allowed.
-        type: LONG_SUM
-        unit: connection
-        attributes:
-        - name: db.client.connection.pool.name
           type: STRING
   wicket:
   - name: wicket-8.0
