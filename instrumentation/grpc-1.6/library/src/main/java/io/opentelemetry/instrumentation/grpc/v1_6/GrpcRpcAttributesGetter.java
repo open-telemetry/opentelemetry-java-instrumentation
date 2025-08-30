@@ -43,6 +43,18 @@ enum GrpcRpcAttributesGetter implements RpcAttributesGetter<GrpcRequest> {
     return fullMethodName.substring(slashIndex + 1);
   }
 
+  @Override
+  @Nullable
+  public Long getRequestSize(GrpcRequest request) {
+    return request.getRequestSize();
+  }
+
+  @Override
+  @Nullable
+  public Long getResponseSize(GrpcRequest request) {
+    return request.getResponseSize();
+  }
+
   List<String> metadataValue(GrpcRequest request, String key) {
     if (request.getMetadata() == null) {
       return Collections.emptyList();
