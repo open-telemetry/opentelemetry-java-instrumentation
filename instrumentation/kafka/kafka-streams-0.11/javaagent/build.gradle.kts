@@ -23,23 +23,6 @@ dependencies {
   testImplementation("org.testcontainers:kafka")
 }
 
-testing {
-  suites {
-    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
-            }
-            include("**/KafkaStreamsSuppressReceiveSpansTest.*")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
@@ -50,6 +33,15 @@ tasks {
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
+  val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+    }
+    include("**/KafkaStreamsSuppressReceiveSpansTest.*")
+  }
+
   test {
     filter {
       excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
@@ -58,6 +50,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testReceiveSpansDisabled)
   }
 }
