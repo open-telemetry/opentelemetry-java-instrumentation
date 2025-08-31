@@ -20,7 +20,7 @@ final class CapturedMessageHeadersUtil {
   }
 
   private static AttributeKey<List<String>> createKey(String headerName) {
-    String key = "messaging.header." + headerName.replace('-', '_');
+    String key = "messaging.header." + headerName;
     return AttributeKey.stringArrayKey(key);
   }
 

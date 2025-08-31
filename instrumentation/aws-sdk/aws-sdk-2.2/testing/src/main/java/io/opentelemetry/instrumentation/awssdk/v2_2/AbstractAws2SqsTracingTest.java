@@ -93,7 +93,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       if (captureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                stringArrayKey("messaging.header.Test-Message-Header"),
                                 v -> v.isEqualTo(ImmutableList.of("test"))));
                       }
                       span.hasName("testSdkSqs publish")
@@ -163,7 +163,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  stringArrayKey("messaging.header.Test-Message-Header"),
                                   v -> v.isEqualTo(ImmutableList.of("test"))));
                         }
 
@@ -201,7 +201,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  stringArrayKey("messaging.header.Test-Message-Header"),
                                   v -> v.isEqualTo(singletonList("test"))));
                         }
 

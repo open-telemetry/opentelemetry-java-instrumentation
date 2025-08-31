@@ -182,7 +182,7 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                stringArrayKey("messaging.header.Test-Message-Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
 
@@ -222,7 +222,7 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                stringArrayKey("messaging.header.Test-Message-Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
 
@@ -261,7 +261,7 @@ public abstract class AbstractSqsTracingTest {
                       if (testCaptureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                stringArrayKey("messaging.header.Test-Message-Header"),
                                 val -> val.isEqualTo(singletonList("test"))));
                       }
                       span.hasName("testSdkSqs process")

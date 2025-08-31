@@ -96,7 +96,7 @@ class WrapperTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -123,7 +123,7 @@ class WrapperTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -143,7 +143,7 @@ class WrapperTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;

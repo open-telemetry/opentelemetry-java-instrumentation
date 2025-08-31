@@ -372,7 +372,7 @@ public abstract class AbstractRocketMqClientTest {
                               sendReceipt,
                               equalTo(
                                   AttributeKey.stringArrayKey(
-                                      "messaging.header.Test_Message_Header"),
+                                      "messaging.header.Test-Message-Header"),
                                   Collections.singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
@@ -392,7 +392,7 @@ public abstract class AbstractRocketMqClientTest {
                                 sendReceipt,
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                        "messaging.header.Test-Message-Header"),
                                     Collections.singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),

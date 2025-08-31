@@ -409,7 +409,7 @@ abstract class AbstractRocketMqClientTest {
                                     "SEND_OK"),
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                        "messaging.header.Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
@@ -436,7 +436,7 @@ abstract class AbstractRocketMqClientTest {
                                     val -> val.isInstanceOf(Long.class)),
                                 equalTo(
                                     AttributeKey.stringArrayKey(
-                                        "messaging.header.Test_Message_Header"),
+                                        "messaging.header.Test-Message-Header"),
                                     singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
