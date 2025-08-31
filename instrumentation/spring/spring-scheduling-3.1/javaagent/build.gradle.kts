@@ -20,13 +20,29 @@ dependencies {
   testLibrary("org.springframework:spring-context:3.2.3.RELEASE")
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+            systemProperty("metadataConfig", "otel.instrumentation.spring-scheduling.experimental-span-attributes=true")
+          }
+        }
+      }
+    }
+  }
+}
 
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

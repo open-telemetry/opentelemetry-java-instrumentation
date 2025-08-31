@@ -1,7 +1,7 @@
 ARG jdkImage
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:478a07c20826b51e632b0d9a17003b329d873f8f20aec7052e21281fd4e9fbd8 as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:d9e1a220c13cf25c7b213fbd96df2b63671e2dba0de3909003d4bb23a8bc8a1c as builder
 ARG majorVersion
 ARG version
 

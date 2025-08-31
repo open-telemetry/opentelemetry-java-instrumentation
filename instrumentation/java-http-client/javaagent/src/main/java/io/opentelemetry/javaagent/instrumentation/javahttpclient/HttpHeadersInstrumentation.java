@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.http.HttpHeaders;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -38,9 +39,10 @@ public class HttpHeadersInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HeadersAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) HttpHeaders headers) {
-      headers = setter().inject(headers, Context.current());
+    public static HttpHeaders methodExit(@Advice.Return HttpHeaders headers) {
+      return setter().inject(headers, Context.current());
     }
   }
 }

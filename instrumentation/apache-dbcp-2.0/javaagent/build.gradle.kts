@@ -19,12 +19,30 @@ dependencies {
   testImplementation(project(":instrumentation:apache-dbcp-2.0:testing"))
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+            systemProperty("collectMetadata", collectMetadata)
+            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+  test {
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

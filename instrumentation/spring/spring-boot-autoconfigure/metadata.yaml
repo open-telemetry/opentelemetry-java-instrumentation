@@ -1,0 +1,4 @@
+description: >
+  This instrumentation auto-configures OpenTelemetry instrumentation for spring-web, spring-webmvc,
+  and spring-webflux to instrument Spring Boot applications. It does not produce telemetry on its
+  own. This instrumentation is mostly used as part of the Spring Boot starter.

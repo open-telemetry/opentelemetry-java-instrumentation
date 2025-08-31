@@ -18,13 +18,13 @@ import org.springframework.web.client.RestTemplate;
 /**
  * Configures {@link RestTemplate} for tracing.
  *
- * <p>Adds Open Telemetry instrumentation to RestTemplate beans after initialization.
+ * <p>Adds OpenTelemetry instrumentation to RestTemplate beans after initialization.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
-@ConditionalOnClass(RestTemplate.class)
+@ConditionalOnClass({RestTemplate.class, RestTemplateCustomizer.class})
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 

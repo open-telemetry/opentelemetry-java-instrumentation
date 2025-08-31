@@ -33,6 +33,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
+import java.sql.Types;
 import java.util.Calendar;
 import java.util.Locale;
 import java.util.Map;
@@ -303,6 +304,59 @@ class PreparedStatementParametersTest {
         url,
         table,
         statement -> statement.setString(1, "S"),
+        "S");
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementStream")
+  void testObjectPreparedStatementParameter(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String sanitizedQuery,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    test(
+        system,
+        connection,
+        username,
+        query,
+        sanitizedQuery,
+        spanName,
+        url,
+        table,
+        statement -> statement.setObject(1, "S"),
+        "S");
+  }
+
+  @ParameterizedTest
+  @MethodSource("preparedStatementStream")
+  void testObjectWithTypePreparedStatementParameter(
+      String system,
+      Connection connection,
+      String username,
+      String query,
+      String sanitizedQuery,
+      String spanName,
+      String url,
+      String table)
+      throws SQLException {
+    // we are using old database drivers that don't support the tested setObject method
+    Assumptions.assumeTrue(Boolean.getBoolean("testLatestDeps"));
+
+    test(
+        system,
+        connection,
+        username,
+        query,
+        sanitizedQuery,
+        spanName,
+        url,
+        table,
+        statement -> statement.setObject(1, "S", Types.CHAR),
         "S");
   }
 

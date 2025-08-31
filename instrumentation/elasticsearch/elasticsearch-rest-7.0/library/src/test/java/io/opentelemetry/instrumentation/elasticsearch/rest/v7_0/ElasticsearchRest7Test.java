@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -26,7 +27,6 @@ import org.elasticsearch.client.Response;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -75,10 +75,10 @@ class ElasticsearchRest7Test {
   }
 
   @Test
-  public void elasticsearchStatus() throws Exception {
+  void elasticsearchStatus() throws Exception {
     Response response = client.performRequest(new Request("GET", "_cluster/health"));
     Map<?, ?> result = objectMapper.readValue(response.getEntity().getContent(), Map.class);
-    Assertions.assertEquals(result.get("status"), "green");
+    assertThat(result.get("status")).isEqualTo("green");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -136,7 +136,7 @@ class ElasticsearchRest7Test {
     Map<?, ?> result =
         objectMapper.readValue(
             asyncRequest.getRequestResponse().getEntity().getContent(), Map.class);
-    Assertions.assertEquals(result.get("status"), "green");
+    assertThat(result.get("status")).isEqualTo("green");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -159,22 +159,22 @@ class ElasticsearchRest7Test {
   }
 
   private static class AsyncRequest {
-    volatile Response requestResponse = null;
-    volatile Exception exception = null;
+    private volatile Response requestResponse = null;
+    private volatile Exception exception = null;
 
-    public Response getRequestResponse() {
+    Response getRequestResponse() {
       return requestResponse;
     }
 
-    public void setRequestResponse(Response requestResponse) {
+    void setRequestResponse(Response requestResponse) {
       this.requestResponse = requestResponse;
     }
 
-    public Exception getException() {
+    Exception getException() {
       return exception;
     }
 
-    public void setException(Exception exception) {
+    void setException(Exception exception) {
       this.exception = exception;
     }
   }

@@ -44,14 +44,34 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+            jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+          }
+        }
+      }
+    }
+  }
+}
 
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }

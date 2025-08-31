@@ -18,9 +18,11 @@ dependencies {
   compileOnly("software.amazon.awssdk:lambda:2.2.0")
   compileOnly("software.amazon.awssdk:rds:2.2.0")
   compileOnly("software.amazon.awssdk:s3:2.2.0")
-  compileOnly("software.amazon.awssdk:sqs:2.2.0")
-  compileOnly("software.amazon.awssdk:sns:2.2.0")
+  compileOnly("software.amazon.awssdk:secretsmanager:2.2.0")
   compileOnly("software.amazon.awssdk:ses:2.2.0")
+  compileOnly("software.amazon.awssdk:sfn:2.2.0")
+  compileOnly("software.amazon.awssdk:sns:2.2.0")
+  compileOnly("software.amazon.awssdk:sqs:2.2.0")
 
   // needed for SQS - using emq directly as localstack references emq v0.15.7 ie WITHOUT AWS trace header propagation
   implementation("org.elasticmq:elasticmq-rest-sqs_2.13")

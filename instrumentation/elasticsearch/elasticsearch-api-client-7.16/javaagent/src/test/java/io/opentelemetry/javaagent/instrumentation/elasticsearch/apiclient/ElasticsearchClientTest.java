@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -16,7 +17,10 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_ELASTICSEARCH_PATH_PARTS;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
 import co.elastic.clients.elasticsearch.ElasticsearchClient;
@@ -33,7 +37,6 @@ import java.util.concurrent.TimeUnit;
 import org.apache.http.HttpHost;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -82,9 +85,9 @@ class ElasticsearchClientTest {
   }
 
   @Test
-  public void elasticsearchStatus() throws IOException {
+  void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
-    Assertions.assertEquals(response.version().number(), "7.17.2");
+    assertThat(response.version().number()).isEqualTo("7.17.2");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -114,7 +117,7 @@ class ElasticsearchClientTest {
   }
 
   @Test
-  public void elasticsearchIndex() throws IOException {
+  void elasticsearchIndex() throws IOException {
     client.index(
         r ->
             r.id("test-id")
@@ -154,10 +157,18 @@ class ElasticsearchClientTest {
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.elasticsearch-rest-7.0",
+        DB_OPERATION_NAME,
+        DB_SYSTEM_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
-  public void elasticsearchStatusAsync() throws Exception {
+  void elasticsearchStatusAsync() throws Exception {
     CountDownLatch countDownLatch = new CountDownLatch(1);
     AsyncRequest request = new AsyncRequest();
 
@@ -177,7 +188,7 @@ class ElasticsearchClientTest {
     //noinspection ResultOfMethodCallIgnored
     countDownLatch.await(10, TimeUnit.SECONDS);
 
-    Assertions.assertEquals(request.getResponse().version().number(), "7.17.2");
+    assertThat(request.getResponse().version().number()).isEqualTo("7.17.2");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -212,19 +223,19 @@ class ElasticsearchClientTest {
   }
 
   private static class AsyncRequest {
-    volatile InfoResponse response = null;
+    private volatile InfoResponse response = null;
 
-    public InfoResponse getResponse() {
+    InfoResponse getResponse() {
       return response;
     }
 
-    public void setResponse(InfoResponse response) {
+    void setResponse(InfoResponse response) {
       this.response = response;
     }
   }
 
-  private static class Person {
-    public final String name;
+  static class Person {
+    private final String name;
 
     Person(String name) {
       this.name = name;

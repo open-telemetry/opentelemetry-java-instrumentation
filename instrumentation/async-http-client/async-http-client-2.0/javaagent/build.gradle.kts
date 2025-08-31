@@ -39,6 +39,8 @@ tasks.withType<Test>().configureEach {
   if (latestDepTest && testJavaVersion.isJava8) {
     enabled = false
   }
+
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
 
 // async-http-client 2.0.0 does not work with Netty versions newer than this due to referencing an

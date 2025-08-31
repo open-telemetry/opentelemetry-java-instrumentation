@@ -31,11 +31,8 @@ testing {
         implementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
         implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        if (latestDepTest) {
-          implementation("org.apache.myfaces.core:myfaces-impl:1.2.+")
-        } else {
-          implementation("org.apache.myfaces.core:myfaces-impl:1.2.2")
-        }
+        val version = if (latestDepTest) "1.2.+" else "1.2.2"
+        implementation("org.apache.myfaces.core:myfaces-impl:$version")
       }
     }
 
@@ -45,11 +42,8 @@ testing {
         implementation("javax.xml.bind:jaxb-api:2.2.11")
         implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
 
-        if (latestDepTest) {
-          implementation("org.apache.myfaces.core:myfaces-impl:2.+")
-        } else {
-          implementation("org.apache.myfaces.core:myfaces-impl:2.2.0")
-        }
+        val version = if (latestDepTest) "2.+" else "2.2.0"
+        implementation("org.apache.myfaces.core:myfaces-impl:$version")
       }
     }
   }
@@ -63,5 +57,4 @@ tasks {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
 }

@@ -10,7 +10,6 @@ import java.time.Duration;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 
-@SuppressWarnings("OtelInternalJavadoc")
 public class KafkaTestUtil {
   private static final Method consumerPollDurationMethod = getConsumerPollDurationMethod();
 

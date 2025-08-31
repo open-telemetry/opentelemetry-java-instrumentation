@@ -78,7 +78,7 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .getId();
 
     String backendImageName =
-        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20221127.3559314891";
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20250811.16876216352";
     if (!imageExists(backendImageName)) {
       pullImage(backendImageName);
     }
@@ -317,9 +317,9 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
   }
 
   private static class Container {
-    public final String imageName;
-    public final String containerId;
-    public final InspectContainerResponse inspectResponse;
+    final String imageName;
+    final String containerId;
+    final InspectContainerResponse inspectResponse;
 
     private Container(
         String imageName, String containerId, InspectContainerResponse inspectResponse) {

@@ -15,13 +15,27 @@ dependencies {
   testInstrumentation(project(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent"))
 
   testImplementation("org.hsqldb:hsqldb:2.0.0")
-  testImplementation("org.springframework.data:spring-data-jpa:3.0.0")
+  testLibrary("org.springframework.data:spring-data-jpa:3.0.0")
 
   springAgent("org.springframework:spring-instrument:6.0.7")
 }
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
+}
+
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
+  }
 }
 
 tasks {
@@ -34,11 +48,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testing.suites)
   }
 }

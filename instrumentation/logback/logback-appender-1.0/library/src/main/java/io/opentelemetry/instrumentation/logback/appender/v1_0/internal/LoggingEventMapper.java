@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
 import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.Level;
@@ -14,10 +17,12 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.ExceptionAttributes;
@@ -48,11 +53,11 @@ import org.slf4j.event.KeyValuePair;
 public final class LoggingEventMapper {
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
-  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
-  // copied from
+  private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
+  // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
 
@@ -143,7 +148,7 @@ public final class LoggingEventMapper {
       throwable = ((ThrowableProxy) throwableProxy).getThrowable();
     }
     if (throwable != null) {
-      setThrowable(attributes, throwable);
+      setThrowable(builder, attributes, throwable);
     }
 
     captureMdcAttributes(attributes, loggingEvent.getMDCPropertyMap());
@@ -160,14 +165,28 @@ public final class LoggingEventMapper {
       if (callerData != null && callerData.length > 0) {
         StackTraceElement firstStackElement = callerData[0];
         String fileName = firstStackElement.getFileName();
-        if (fileName != null) {
-          attributes.put(CODE_FILEPATH, fileName);
-        }
-        attributes.put(CODE_NAMESPACE, firstStackElement.getClassName());
-        attributes.put(CODE_FUNCTION, firstStackElement.getMethodName());
         int lineNumber = firstStackElement.getLineNumber();
-        if (lineNumber > 0) {
-          attributes.put(CODE_LINENO, lineNumber);
+
+        if (SemconvStability.isEmitOldCodeSemconv()) {
+          if (fileName != null) {
+            attributes.put(CODE_FILEPATH, fileName);
+          }
+          attributes.put(CODE_NAMESPACE, firstStackElement.getClassName());
+          attributes.put(CODE_FUNCTION, firstStackElement.getMethodName());
+          if (lineNumber > 0) {
+            attributes.put(CODE_LINENO, lineNumber);
+          }
+        }
+        if (SemconvStability.isEmitStableCodeSemconv()) {
+          if (fileName != null) {
+            attributes.put(CODE_FILE_PATH, fileName);
+          }
+          attributes.put(
+              CODE_FUNCTION_NAME,
+              firstStackElement.getClassName() + "." + firstStackElement.getMethodName());
+          if (lineNumber > 0) {
+            attributes.put(CODE_LINE_NUMBER, lineNumber);
+          }
         }
       }
     }
@@ -251,14 +270,17 @@ public final class LoggingEventMapper {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
-  private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
-    // TODO (trask) extract method for recording exception into
-    // io.opentelemetry:opentelemetry-api
-    attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-    attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-    StringWriter writer = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(writer));
-    attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+  private static void setThrowable(
+      LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
+    if (builder instanceof ExtendedLogRecordBuilder) {
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
+    } else {
+      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      StringWriter writer = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(writer));
+      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+    }
   }
 
   private static Severity levelToSeverity(Level level) {

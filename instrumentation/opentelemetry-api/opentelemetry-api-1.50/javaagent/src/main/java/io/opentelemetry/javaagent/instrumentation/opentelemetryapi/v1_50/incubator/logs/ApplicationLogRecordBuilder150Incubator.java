@@ -18,6 +18,7 @@ import application.io.opentelemetry.api.logs.Severity;
 import application.io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.logs.LogBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.logs.ApplicationLogRecordBuilder150;
 import java.time.Instant;
 import java.util.concurrent.TimeUnit;
@@ -76,7 +77,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
 
   @Override
   public ExtendedLogRecordBuilder setSeverity(Severity severity) {
-    agentLogRecordBuilder.setSeverity(convertSeverity(severity));
+    agentLogRecordBuilder.setSeverity(LogBridging.toAgent(severity));
     return this;
   }
 
@@ -133,66 +134,6 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   public ExtendedLogRecordBuilder setException(Throwable throwable) {
     agentLogRecordBuilder.setException(throwable);
     return this;
-  }
-
-  private static io.opentelemetry.api.logs.Severity convertSeverity(Severity applicationSeverity) {
-    if (applicationSeverity == null) {
-      return null;
-    }
-    switch (applicationSeverity) {
-      case UNDEFINED_SEVERITY_NUMBER:
-        return io.opentelemetry.api.logs.Severity.UNDEFINED_SEVERITY_NUMBER;
-      case TRACE:
-        return io.opentelemetry.api.logs.Severity.TRACE;
-      case TRACE2:
-        return io.opentelemetry.api.logs.Severity.TRACE2;
-      case TRACE3:
-        return io.opentelemetry.api.logs.Severity.TRACE3;
-      case TRACE4:
-        return io.opentelemetry.api.logs.Severity.TRACE4;
-      case DEBUG:
-        return io.opentelemetry.api.logs.Severity.DEBUG;
-      case DEBUG2:
-        return io.opentelemetry.api.logs.Severity.DEBUG2;
-      case DEBUG3:
-        return io.opentelemetry.api.logs.Severity.DEBUG3;
-      case DEBUG4:
-        return io.opentelemetry.api.logs.Severity.DEBUG4;
-      case INFO:
-        return io.opentelemetry.api.logs.Severity.INFO;
-      case INFO2:
-        return io.opentelemetry.api.logs.Severity.INFO2;
-      case INFO3:
-        return io.opentelemetry.api.logs.Severity.INFO3;
-      case INFO4:
-        return io.opentelemetry.api.logs.Severity.INFO4;
-      case WARN:
-        return io.opentelemetry.api.logs.Severity.WARN;
-      case WARN2:
-        return io.opentelemetry.api.logs.Severity.WARN2;
-      case WARN3:
-        return io.opentelemetry.api.logs.Severity.WARN3;
-      case WARN4:
-        return io.opentelemetry.api.logs.Severity.WARN4;
-      case ERROR:
-        return io.opentelemetry.api.logs.Severity.ERROR;
-      case ERROR2:
-        return io.opentelemetry.api.logs.Severity.ERROR2;
-      case ERROR3:
-        return io.opentelemetry.api.logs.Severity.ERROR3;
-      case ERROR4:
-        return io.opentelemetry.api.logs.Severity.ERROR4;
-      case FATAL:
-        return io.opentelemetry.api.logs.Severity.FATAL;
-      case FATAL2:
-        return io.opentelemetry.api.logs.Severity.FATAL2;
-      case FATAL3:
-        return io.opentelemetry.api.logs.Severity.FATAL3;
-      case FATAL4:
-        return io.opentelemetry.api.logs.Severity.FATAL4;
-    }
-
-    throw new IllegalStateException("Unhandled severity: " + applicationSeverity.name());
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})

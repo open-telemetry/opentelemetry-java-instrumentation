@@ -1,0 +1,1 @@
+description: This instrumentation enables CLIENT spans and metrics for version 1 of the AsyncHttpClient (AHC) HTTP client.

@@ -8,6 +8,64 @@ Run the analysis to update the instrumentation-list.yaml:
 
 `./gradlew :instrumentation-docs:runAnalysis`
 
+### Telemetry collection
+
+Until this process is ready for all instrumentations, each module will be modified to include a
+system property feature flag configured for when the tests run. By enabling the following flag you
+will enable metric and span collection:
+
+```kotlin
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    ...
+  }
+}
+```
+
+Sometimes instrumentation will behave differently based on configuration options, and we can
+differentiate between these configurations by using the `metadataConfig` system property. When the
+telemetry is written to a file, the value of this property will be included, or it will default to
+a `default` attribution.
+
+For example, to collect and write metadata for the `otel.semconv-stability.opt-in=database` option
+set for an instrumentation:
+
+```kotlin
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
+tasks {
+  val testStableSemconv by registering(Test::class) {
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  test {
+    systemProperty("collectMetadata", collectMetadata)
+  }
+
+  check {
+    dependsOn(testStableSemconv)
+  }
+}
+```
+
+Then, prior to running the analyzer, run the following command to generate `.telemetry` files:
+
+`./gradlew test -PcollectMetadata=true`
+
+Then run the doc generator
+
+`./gradlew :instrumentation-docs:runAnalysis`
+
+or use the helper script that will run only the currently supported tests (recommended):
+
+```bash
+./instrumentation-docs/collect.sh
+```
+
 ## Instrumentation Hierarchy
 
 An "InstrumentationModule" represents a module that that targets specific code in a
@@ -70,6 +128,12 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * configurations settings
   * List of settings that are available for the instrumentation module
   * Each setting has a name, description, type, and default value
+* metrics
+  * List of metrics that the instrumentation module collects, including the metric name, description, type, and attributes.
+  * Separate lists for the metrics emitted by default vs via configuration options.
+* spans
+  * List of spans kinds the instrumentation module generates, including the attributes and their types.
+  * Separate lists for the spans emitted by default vs via configuration options.
 
 ## Methodology
 
@@ -107,3 +171,31 @@ name is determined by the instrumentation module name:  `io.opentelemetry.{instr
 
 We will implement gatherers for the schemaUrl and scope attributes when instrumentations start
 implementing them.
+
+### Spans and Metrics
+
+In order to identify what telemetry is emitted from instrumentations, we can hook into the
+`InstrumentationTestRunner` class and collect the metrics and spans generated during runs. We can then
+leverage the `afterTestClass()` in the Agent and library test runners to then write this information
+into temporary files. When we analyze the instrumentation modules, we can read these files and
+generate the telemetry section of the instrumentation-list.yaml file.
+
+The data is written into a `.telemetry` directory in the root of each instrumentation module. This
+data will be excluded from git and just generated on demand.
+
+Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
+emitted by default or via a configuration option.
+
+## Doc Synchronization
+
+The documentation site has a section that lists all the instrumentations in the context of
+documenting how to disable them.
+
+We have a class `DocSynchronization` that runs a check against our instrumentation-list.yaml file to
+identify when we have missing entries, so we know to go update them.
+
+You can run this via:
+
+`./gradlew :instrumentation-docs:docSiteAudit`
+
+This is setup to run nightly in a github action.

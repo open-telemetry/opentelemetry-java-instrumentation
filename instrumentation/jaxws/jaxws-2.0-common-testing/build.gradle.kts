@@ -1,5 +1,5 @@
 plugins {
-  id("org.unbroken-dome.xjc")
+  id("com.github.bjornvester.xjc")
   id("otel.java-conventions")
 }
 
@@ -8,6 +8,11 @@ tasks {
     // exclude generated web service classes
     exclude("**/hello_web_service/**")
   }
+}
+
+xjc {
+  xsdDir.set(layout.projectDirectory.dir("src/main/schema"))
+  useJakarta.set(false)
 }
 
 dependencies {

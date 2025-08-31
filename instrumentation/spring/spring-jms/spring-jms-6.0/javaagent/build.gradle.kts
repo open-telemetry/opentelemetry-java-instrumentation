@@ -34,16 +34,27 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_17)
 }
 
+testing {
+  suites {
+    val testReceiveSpansDisabled by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
+            }
+            include("**/SpringListenerSuppressReceiveSpansTest.*")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testReceiveSpansDisabled by registering(Test::class) {
-    filter {
-      includeTestsMatching("SpringListenerSuppressReceiveSpansTest")
-    }
-    include("**/SpringListenerSuppressReceiveSpansTest.*")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   test {
@@ -54,6 +65,6 @@ tasks {
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testing.suites)
   }
 }

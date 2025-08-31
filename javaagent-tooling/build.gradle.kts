@@ -19,8 +19,8 @@ dependencies {
   implementation(project(":sdk-autoconfigure-support"))
 
   implementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
   implementation("io.opentelemetry:opentelemetry-sdk")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
@@ -86,6 +86,18 @@ testing {
 
         // Used by byte-buddy but not brought in as a transitive dependency.
         compileOnly("com.google.code.findbugs:annotations")
+      }
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              // Helper class used in test that refers to a class that is missing from the test
+              // classpath. We need to exclude it to avoid junit failing while it is searching for
+              // test classes.
+              excludeTestsMatching("MissingTypeTest\$SomeClass")
+            }
+          }
+        }
       }
     }
 

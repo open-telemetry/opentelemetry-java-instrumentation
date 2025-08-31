@@ -12,6 +12,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.COUCHBASE;
+import static java.util.Collections.emptyList;
 
 import com.couchbase.client.java.bucket.BucketType;
 import com.couchbase.client.java.cluster.BucketSettings;
@@ -26,10 +28,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -125,8 +125,7 @@ public abstract class AbstractCouchbaseTest {
     span.hasName(spanName).hasKind(SpanKind.CLIENT);
 
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(
-        equalTo(maybeStable(DB_SYSTEM), DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE));
+    assertions.add(equalTo(maybeStable(DB_SYSTEM), COUCHBASE));
     if (operation != null) {
       assertions.add(equalTo(maybeStable(DB_OPERATION), operation));
     }
@@ -136,7 +135,22 @@ public abstract class AbstractCouchbaseTest {
     if (statement != null) {
       assertions.add(satisfies(maybeStable(DB_STATEMENT), s -> s.startsWith(statement)));
     }
-    assertions.addAll(couchbaseAttributes());
+
+    if (statement != null) {
+      if (statement.startsWith("SELECT")) {
+        // N1QL queries get operation_id but NOT local.address experimental attribute
+        assertions.addAll(couchbaseN1qlAttributes());
+      } else {
+        // ViewQuery operations get local.address but NOT operation_id experimental attribute
+        assertions.addAll(couchbaseQueryAttributes());
+      }
+    } else if (operation != null && operation.startsWith("ClusterManager.")) {
+      // ClusterManager operations have no experimental attributes
+      assertions.addAll(couchbaseClusterManagerAttributes());
+    } else {
+      // KV operations (get, upsert, etc.) get both experimental attributes
+      assertions.addAll(couchbaseAttributes());
+    }
 
     span.hasAttributesSatisfyingExactly(assertions);
 
@@ -144,6 +158,18 @@ public abstract class AbstractCouchbaseTest {
   }
 
   protected List<AttributeAssertion> couchbaseAttributes() {
-    return Collections.emptyList();
+    return emptyList();
+  }
+
+  protected List<AttributeAssertion> couchbaseQueryAttributes() {
+    return emptyList();
+  }
+
+  protected List<AttributeAssertion> couchbaseClusterManagerAttributes() {
+    return emptyList();
+  }
+
+  protected List<AttributeAssertion> couchbaseN1qlAttributes() {
+    return emptyList();
   }
 }

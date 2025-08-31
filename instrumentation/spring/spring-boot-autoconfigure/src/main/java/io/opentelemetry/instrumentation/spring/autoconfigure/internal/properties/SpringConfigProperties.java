@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 
 import io.opentelemetry.api.internal.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
-import io.opentelemetry.instrumentation.resources.ResourceProviderPropertiesCustomizer;
+import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;

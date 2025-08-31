@@ -22,8 +22,28 @@ dependencies {
   testImplementation(project(":instrumentation:oshi:testing"))
 }
 
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
+            systemProperty("testExperimental", "true")
+            systemProperty("metadataConfig", "otel.instrumentation.oshi.experimental-metrics.enabled=true")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.oshi.experimental-metrics.enabled=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  check {
+    dependsOn(testing.suites)
   }
 }

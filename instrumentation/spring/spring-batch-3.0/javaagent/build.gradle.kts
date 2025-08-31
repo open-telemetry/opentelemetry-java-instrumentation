@@ -24,35 +24,53 @@ dependencies {
   latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+") // documented limitation
 }
 
+testing {
+  suites {
+    val testChunkRootSpan by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("*ChunkRootSpanTest")
+            }
+            include("**/*ChunkRootSpanTest.*")
+            jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
+          }
+        }
+      }
+    }
+
+    val testItemLevelSpan by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("*ItemLevelSpanTest")
+              includeTestsMatching("*CustomSpanEventTest")
+            }
+            include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
+            jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
-  val testChunkRootSpan by registering(Test::class) {
-    filter {
-      includeTestsMatching("*ChunkRootSpanTest")
-    }
-    include("**/*ChunkRootSpanTest.*")
-    jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
-  }
-
-  val testItemLevelSpan by registering(Test::class) {
-    filter {
-      includeTestsMatching("*ItemLevelSpanTest")
-      includeTestsMatching("*CustomSpanEventTest")
-    }
-    include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
-    jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
-  }
-
   test {
     filter {
       excludeTestsMatching("*ChunkRootSpanTest")
       excludeTestsMatching("*ItemLevelSpanTest")
       excludeTestsMatching("*CustomSpanEventTest")
     }
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testChunkRootSpan)
-    dependsOn(testItemLevelSpan)
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {

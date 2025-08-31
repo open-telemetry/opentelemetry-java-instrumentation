@@ -6,6 +6,10 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -23,8 +27,8 @@ import java.util.Map;
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
  * <code>db.sql.table</code> attribute. The raw SQL statements returned by the {@link
- * SqlClientAttributesGetter#getRawQueryText(Object)} method are sanitized before use, all statement
- * parameters are removed.
+ * SqlClientAttributesGetter#getRawQueryTexts(Object)} method are sanitized before use, all
+ * statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     extends DbClientCommonAttributesExtractor<
@@ -32,14 +36,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
-  private static final AttributeKey<String> DB_OPERATION_NAME =
-      AttributeKey.stringKey("db.operation.name");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
-  private static final AttributeKey<String> DB_QUERY_TEXT = AttributeKey.stringKey("db.query.text");
-  static final AttributeKey<String> DB_COLLECTION_NAME =
-      AttributeKey.stringKey("db.collection.name");
-  private static final AttributeKey<Long> DB_OPERATION_BATCH_SIZE =
-      AttributeKey.longKey("db.operation.batch.size");
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 

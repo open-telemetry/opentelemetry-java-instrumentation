@@ -43,7 +43,7 @@ class HystrixObservableTest {
   void testCommands(Parameter parameter) {
 
     class TestCommand extends HystrixObservableCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
@@ -246,7 +246,7 @@ class HystrixObservableTest {
   void testCommandFallbacks(Parameter parameter) {
 
     class TestCommand extends HystrixObservableCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
@@ -335,7 +335,7 @@ class HystrixObservableTest {
   void testNoFallbackResultsInErrorForAction(Parameter parameter) {
 
     class TestCommand extends HystrixObservableCommand<String> {
-      protected TestCommand(Setter setter) {
+      TestCommand(Setter setter) {
         super(setter);
       }
 
@@ -450,11 +450,11 @@ class HystrixObservableTest {
   }
 
   private static class Parameter {
-    public final Scheduler observeOn;
-    public final Scheduler subscribeOn;
-    public final Function<HystrixObservableCommand<String>, String> operation;
+    final Scheduler observeOn;
+    final Scheduler subscribeOn;
+    final Function<HystrixObservableCommand<String>, String> operation;
 
-    public Parameter(
+    Parameter(
         Scheduler observeOn,
         Scheduler subscribeOn,
         Function<HystrixObservableCommand<String>, String> operation) {

@@ -21,9 +21,24 @@ class StructuredTaskScopeTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
+  @SuppressWarnings({
+    "unchecked",
+    "rawtypes"
+  }) // type arguments for StructuredTaskScope change between jdk 21 and 25
   @Test
   void multipleForkJoin() throws Exception {
-    StructuredTaskScope<Object> taskScope = new StructuredTaskScope.ShutdownOnFailure();
+    StructuredTaskScope tmp;
+    try {
+      // since jdk 25-ea+24
+      tmp = (StructuredTaskScope) StructuredTaskScope.class.getMethod("open").invoke(null);
+    } catch (NoSuchMethodException exception) {
+      tmp =
+          Class.forName("java.util.concurrent.StructuredTaskScope$ShutdownOnFailure")
+              .asSubclass(StructuredTaskScope.class)
+              .getConstructor()
+              .newInstance();
+    }
+    StructuredTaskScope taskScope = tmp;
 
     Callable<String> callable1 =
         () -> {

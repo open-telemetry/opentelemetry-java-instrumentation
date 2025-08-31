@@ -9,30 +9,41 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import javax.annotation.Nullable;
 
 public final class MethodSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.methods";
 
-  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
+  private static final Instrumenter<MethodAndType, Void> INSTRUMENTER;
   private static final ClassLoader bootstrapLoader = new BootstrapLoader();
 
   static {
-    CodeAttributesGetter<ClassAndMethod> codeAttributesGetter =
-        ClassAndMethod.codeAttributesGetter();
+    CodeAttributesGetter<MethodAndType> codeAttributesGetter =
+        new CodeAttributesGetter<MethodAndType>() {
+          @Nullable
+          @Override
+          public Class<?> getCodeClass(MethodAndType methodAndType) {
+            return methodAndType.getClassAndMethod().declaringClass();
+          }
+
+          @Nullable
+          @Override
+          public String getMethodName(MethodAndType methodAndType) {
+            return methodAndType.getClassAndMethod().methodName();
+          }
+        };
 
     INSTRUMENTER =
-        Instrumenter.<ClassAndMethod, Void>builder(
+        Instrumenter.<MethodAndType, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .buildInstrumenter(SpanKindExtractor.alwaysInternal());
+            .buildInstrumenter(MethodAndType::getSpanKind);
   }
 
-  public static Instrumenter<ClassAndMethod, Void> instrumenter() {
+  public static Instrumenter<MethodAndType, Void> instrumenter() {
     return INSTRUMENTER;
   }
 

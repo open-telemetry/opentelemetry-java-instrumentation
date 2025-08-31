@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.ASYNC_HANDLER_REQUEST_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -14,9 +15,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,15 +44,14 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteRequestAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) AsyncHandler<?> handler,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Scope onEnter(
+        @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> handler) {
       Context parentContext = currentContext();
       RequestContext requestContext = new RequestContext(parentContext, request);
       if (!instrumenter().shouldStart(parentContext, requestContext)) {
-        return;
+        return null;
       }
 
       Context context = instrumenter().start(parentContext, requestContext);
@@ -70,12 +70,12 @@ public class AsyncHttpClientInstrumentation implements TypeInstrumentation {
       // 2.1, so the instrumentation module will need to be essentially duplicated (or a common
       // module introduced)
 
-      VirtualField.find(AsyncHandler.class, RequestContext.class).set(handler, requestContext);
-      scope = context.makeCurrent();
+      ASYNC_HANDLER_REQUEST_CONTEXT.set(handler, requestContext);
+      return context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

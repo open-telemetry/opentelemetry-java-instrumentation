@@ -46,10 +46,10 @@ class LettuceArgSplitterTest {
   }
 
   private static class Parameter {
-    public final String args;
-    public final List<String> result;
+    final String args;
+    final List<String> result;
 
-    public Parameter(String query, List<String> result) {
+    Parameter(String query, List<String> result) {
       this.args = query;
       this.result = result;
     }

@@ -43,16 +43,37 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-security:2.+") // see spring-webmvc-6.0 module
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+testing {
+  suites {
+    val testExperimental by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+            jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
+          }
+        }
+      }
+    }
+  }
+}
 
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-  jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.common.experimental.view-telemetry.enabled=true")
+  }
+
+  check {
+    dependsOn(testing.suites)
+  }
 }
 
 configurations.testRuntimeClasspath {

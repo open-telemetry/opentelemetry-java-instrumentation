@@ -21,6 +21,12 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
 
-  latestDepTestLibrary("io.vertx:vertx-core:4.+") // documented limitation, 5.x not supported yet
-  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // documented limitation, 5.x not supported yet
+  latestDepTestLibrary("io.vertx:vertx-core:4.+") // see vertx-http-client-5.0 module
+  latestDepTestLibrary("io.vertx:vertx-codegen:4.+") // see vertx-http-client-5.0 module
+}
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
 }

@@ -41,6 +41,26 @@ testing {
         implementation(project(":instrumentation:opentelemetry-instrumentation-api:testing"))
       }
     }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=code")
+          }
+        }
+      }
+    }
+
+    val testBothSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -66,6 +86,7 @@ configurations.configureEach {
 }
 
 tasks {
+
   check {
     dependsOn(testing.suites)
   }

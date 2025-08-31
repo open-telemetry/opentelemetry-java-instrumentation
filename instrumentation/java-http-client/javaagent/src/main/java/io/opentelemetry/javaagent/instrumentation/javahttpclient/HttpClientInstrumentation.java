@@ -28,7 +28,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -68,84 +70,122 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SendAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
-        return;
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+      private final HttpRequest request;
+
+      private AdviceScope(Context context, Scope scope, HttpRequest request) {
+        this.context = context;
+        this.scope = scope;
+        this.request = request;
       }
 
-      context = instrumenter().start(parentContext, httpRequest);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(HttpRequest request) {
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(context, context.makeCurrent(), request);
+      }
+
+      public void end(@Nullable HttpResponse<?> response, @Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, request, response, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope methodEnter(@Advice.Argument(value = 0) HttpRequest httpRequest) {
+      return AdviceScope.start(httpRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) HttpRequest httpRequest,
-        @Advice.Return HttpResponse<?> httpResponse,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
+        @Advice.Return @Nullable HttpResponse<?> httpResponse,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope scope) {
 
-      scope.close();
-      instrumenter().end(context, httpRequest, httpResponse, throwable);
+      if (scope != null) {
+        scope.end(httpResponse, throwable);
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class SendAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelScope") Scope scope) {
-      callDepth = CallDepth.forClass(HttpClient.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
+    public static class AsyncAdviceScope {
+      private final Context parentContext;
+      private final Context context;
+      private final Scope scope;
+      private final CallDepth callDepth;
+      private final HttpRequest request;
+
+      public AsyncAdviceScope(
+          Context parentContext,
+          Context context,
+          Scope scope,
+          CallDepth callDepth,
+          HttpRequest request) {
+        this.parentContext = parentContext;
+        this.context = context;
+        this.scope = scope;
+        this.callDepth = callDepth;
+        this.request = request;
       }
 
-      parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, httpRequest)) {
-        return;
+      @Nullable
+      public static AsyncAdviceScope start(HttpRequest request) {
+        CallDepth callDepth = CallDepth.forClass(HttpClient.class);
+        if (callDepth.getAndIncrement() > 0) {
+          return new AsyncAdviceScope(null, null, null, callDepth, request);
+        }
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AsyncAdviceScope(
+            parentContext, context, context.makeCurrent(), callDepth, request);
       }
 
-      context = instrumenter().start(parentContext, httpRequest);
-      scope = context.makeCurrent();
+      public CompletableFuture<HttpResponse<?>> end(
+          @Nullable Throwable throwable, @Nullable CompletableFuture<HttpResponse<?>> future) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
+          // async end nested call
+          return future;
+        }
+        scope.close();
+        if (throwable != null) {
+          // async end with exception: ending span and no wrapping needed
+          instrumenter().end(context, request, null, throwable);
+          return future;
+        }
+        future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
+        return CompletableFutureWrapper.wrap(future, parentContext);
+      }
     }
 
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AsyncAdviceScope methodEnter(
+        @Advice.Argument(value = 0) HttpRequest httpRequest) {
+      return AsyncAdviceScope.start(httpRequest);
+    }
+
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Argument(value = 0) HttpRequest httpRequest,
-        @Advice.Return(readOnly = false) CompletableFuture<HttpResponse<?>> future,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelParentContext") Context parentContext,
-        @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-      if (throwable != null) {
-        instrumenter().end(context, httpRequest, null, throwable);
-      } else {
-        future = future.whenComplete(new ResponseConsumer(instrumenter(), context, httpRequest));
-        future = CompletableFutureWrapper.wrap(future, parentContext);
-      }
+    public static CompletableFuture<HttpResponse<?>> methodExit(
+        @Advice.Return @Nullable CompletableFuture<HttpResponse<?>> future,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AsyncAdviceScope scope) {
+      return scope == null ? future : scope.end(throwable, future);
     }
   }
 }

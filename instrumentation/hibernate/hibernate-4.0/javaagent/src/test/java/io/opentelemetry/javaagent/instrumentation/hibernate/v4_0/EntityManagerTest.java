@@ -371,12 +371,12 @@ class EntityManagerTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
-    public final String methodName;
-    public final boolean attach;
-    public final boolean flushOnCommit;
-    public final BiConsumer<EntityManager, Value> sessionMethodTest;
+    final String methodName;
+    final boolean attach;
+    final boolean flushOnCommit;
+    final BiConsumer<EntityManager, Value> sessionMethodTest;
 
-    public Parameter(
+    Parameter(
         String methodName,
         boolean attach,
         boolean flushOnCommit,

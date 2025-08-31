@@ -35,6 +35,16 @@ testing {
         implementation(project(":instrumentation:jedis:jedis-1.4:testing"))
       }
     }
+
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=database")
+          }
+        }
+      }
+    }
   }
 }
 
@@ -43,12 +53,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val testStableSemconv by registering(Test::class) {
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
   check {
     dependsOn(testing.suites)
-    dependsOn(testStableSemconv)
   }
 }

@@ -40,26 +40,44 @@ dependencies {
   latestDepTestLibrary("org.springframework.cloud:spring-cloud-stream-binder-rabbit:3.+") // documented limitation
 }
 
+testing {
+  suites {
+    val testWithRabbitInstrumentation by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("SpringIntegrationAndRabbitTest")
+            }
+            include("**/SpringIntegrationAndRabbitTest.*")
+            jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
+            jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+            systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
+          }
+        }
+      }
+    }
+
+    val testWithProducerInstrumentation by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            filter {
+              includeTestsMatching("SpringCloudStreamProducerTest")
+            }
+            include("**/SpringCloudStreamProducerTest.*")
+            jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
+            jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
+            jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
+            systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
+          }
+        }
+      }
+    }
+  }
+}
+
 tasks {
-  val testWithRabbitInstrumentation by registering(Test::class) {
-    filter {
-      includeTestsMatching("SpringIntegrationAndRabbitTest")
-    }
-    include("**/SpringIntegrationAndRabbitTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
-  }
-
-  val testWithProducerInstrumentation by registering(Test::class) {
-    filter {
-      includeTestsMatching("SpringCloudStreamProducerTest")
-    }
-    include("**/SpringCloudStreamProducerTest.*")
-    jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
-    jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
-  }
-
   test {
     filter {
       excludeTestsMatching("SpringIntegrationAndRabbitTest")
@@ -70,13 +88,14 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation)
-    dependsOn(testWithProducerInstrumentation)
+    dependsOn(testing.suites)
   }
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
 

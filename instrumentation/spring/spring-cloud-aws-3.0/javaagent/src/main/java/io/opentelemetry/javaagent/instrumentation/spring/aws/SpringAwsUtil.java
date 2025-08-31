@@ -53,6 +53,14 @@ public final class SpringAwsUtil {
     tracingContextField.set(convertedMessage, new TracingContext(tracingList, message));
   }
 
+  public static void copyTracingState(Message<?> original, Message<?> transformed) {
+    if (original == transformed) {
+      return;
+    }
+
+    tracingContextField.set(transformed, tracingContextField.get(original));
+  }
+
   public static MessageScope handleMessage(Message<?> message) {
     TracingContext tracingContext = tracingContextField.get(message);
     if (tracingContext == null) {

@@ -31,3 +31,33 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
   testImplementation("io.opentelemetry:opentelemetry-extension-annotations")
 }
+
+testing {
+  suites {
+    val testStableSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=code")
+          }
+        }
+      }
+    }
+
+    val testBothSemconv by registering(JvmTestSuite::class) {
+      targets {
+        all {
+          testTask.configure {
+            jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+          }
+        }
+      }
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
+}
