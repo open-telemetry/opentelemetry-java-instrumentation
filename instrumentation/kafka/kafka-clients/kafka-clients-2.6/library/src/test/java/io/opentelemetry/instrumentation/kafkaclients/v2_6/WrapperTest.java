@@ -95,10 +95,18 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 satisfies(MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     return assertions;
   }
