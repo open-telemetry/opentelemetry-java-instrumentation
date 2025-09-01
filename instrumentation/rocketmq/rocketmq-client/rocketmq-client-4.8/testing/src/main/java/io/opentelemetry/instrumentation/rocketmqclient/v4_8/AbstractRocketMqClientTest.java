@@ -460,7 +460,7 @@ abstract class AbstractRocketMqClientTest {
 
   private AttributeKey<List<String>> headerAttributeKey() {
     if (SemconvStability.isEmitOldMessageSemconv()) {
-      return AttributeKey.stringArrayKey("messaging.header.Test_MessageHeader");
+      return AttributeKey.stringArrayKey("messaging.header.Test_Message_Header");
     } else {
       return AttributeKey.stringArrayKey("messaging.header.Test-Message-Header");
     }
