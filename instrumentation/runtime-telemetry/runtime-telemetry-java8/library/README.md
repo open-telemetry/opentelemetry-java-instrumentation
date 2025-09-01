@@ -7,7 +7,7 @@ This module provides JVM runtime metrics as documented in the [semantic conventi
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-runtime-telemetry-java8).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-runtime-telemetry-java8).
 
 For Maven, add to your `pom.xml` dependencies:
 

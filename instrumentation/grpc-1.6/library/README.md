@@ -6,7 +6,7 @@ Provides OpenTelemetry instrumentation for [gRPC](https://grpc.io/).
 
 ### Add the following dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-grpc-1.6).
+Replace `OPENTELEMETRY_VERSION` with the [latest release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-grpc-1.6).
 
 For Maven, add the following to your `pom.xml` dependencies:
 

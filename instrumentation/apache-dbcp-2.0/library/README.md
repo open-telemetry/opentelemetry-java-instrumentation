@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [Apache DBCP](https://commons.apache.
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-apache-dbcp-2.0).
+release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-apache-dbcp-2.0).
 
 For Maven, add to your `pom.xml` dependencies:
 

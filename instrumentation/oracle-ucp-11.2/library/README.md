@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [Oracle UCP](https://docs.oracle.com/
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-oracle-ucp-11.2).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-oracle-ucp-11.2).
 
 For Maven, add to your `pom.xml` dependencies:
 

@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [GraphQL Java](https://www.graphql-ja
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-graphql-java-12.0).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-graphql-java-12.0).
 
 For Maven, add to your `pom.xml` dependencies:
 

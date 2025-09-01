@@ -9,7 +9,7 @@ sends Micrometer metrics to the
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://mvnrepository.com/artifact/io.opentelemetry.instrumentation/opentelemetry-micrometer-1.5).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-micrometer-1.5).
 
 For Maven, add to your `pom.xml` dependencies:
 
