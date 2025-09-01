@@ -27,7 +27,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executor;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
 import net.bytebuddy.asm.Advice;
@@ -91,9 +90,10 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(
+        @Advice.This Object executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(Executor.class);
+      callDepth = CallDepth.forClass(executor.getClass());
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }
@@ -155,9 +155,10 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(
+        @Advice.This Object executor,
         @Advice.Argument(value = 0, readOnly = false) Runnable task,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(Executor.class);
+      callDepth = CallDepth.forClass(executor.getClass());
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }
@@ -196,8 +197,10 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(0) Callable<?> task, @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(Executor.class);
+        @Advice.This Object executor,
+        @Advice.Argument(0) Callable<?> task,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(executor.getClass());
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }
@@ -236,13 +239,14 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> submitEnter(
+        @Advice.This Object executor,
         @Advice.Argument(0) Collection<? extends Callable<?>> tasks,
         @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (tasks == null) {
         return Collections.emptyList();
       }
 
-      callDepth = CallDepth.forClass(Executor.class);
+      callDepth = CallDepth.forClass(executor.getClass());
       if (callDepth.getAndIncrement() > 0) {
         return Collections.emptyList();
       }
