@@ -64,8 +64,6 @@ tasks {
   task relocateJavaagentLibs(type: ShadowJar) {
     configurations = [project.configurations.javaagentLibs]
 
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
-
     archiveFileName.set("javaagentLibs-relocated.jar")
 
     mergeServiceFiles()
@@ -104,8 +102,6 @@ tasks {
     from(tasks.isolateJavaagentLibs.outputs)
 
     archiveClassifier.set("all")
-
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     mergeServiceFiles {
       include("inst/META-INF/services/*")

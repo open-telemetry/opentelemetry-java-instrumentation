@@ -37,6 +37,8 @@ tasks {
     relocate("org.HdrHistogram", "io.opentelemetry.testing.internal.org.hdrhistogram")
     relocate("org.LatencyUtils", "io.opentelemetry.testing.internal.org.latencyutils")
 
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
   }
 

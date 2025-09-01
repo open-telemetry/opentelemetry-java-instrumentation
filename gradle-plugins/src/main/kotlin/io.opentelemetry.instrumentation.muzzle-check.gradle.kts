@@ -74,6 +74,8 @@ val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
 // this is a copied from io.opentelemetry.instrumentation.javaagent-shadowing for now at least to
 // avoid publishing io.opentelemetry.instrumentation.javaagent-shadowing publicly
 tasks.withType<ShadowJar>().configureEach {
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
   mergeServiceFiles()
   // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
   // service loader...)

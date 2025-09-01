@@ -35,6 +35,9 @@ dependencies {
 
 shadowJar {
   configurations = [project.configurations.runtimeClasspath, project.configurations.testInstrumentation]
+
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
   mergeServiceFiles()
 
   archiveFileName = 'agent-testing.jar'
