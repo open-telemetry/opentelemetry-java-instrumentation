@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.CONTEXTS;
+import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.REQUEST_INFO;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v3_0.client.VertxClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
@@ -16,7 +18,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -25,7 +26,10 @@ import io.opentelemetry.javaagent.instrumentation.vertx.client.ExceptionHandlerW
 import io.vertx.core.Handler;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -83,41 +87,47 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class EndRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void attachContext(
-        @Advice.This HttpClientRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
 
-      VertxRequestInfo requestInfo =
-          VirtualField.find(HttpClientRequest.class, VertxRequestInfo.class).get(request);
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public void end(@Nullable Throwable throwable, HttpClientRequest request) {
+        scope.close();
+        if (throwable != null) {
+          instrumenter().end(context, request, null, throwable);
+        }
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope attachContext(@Advice.This HttpClientRequest request) {
+      VertxRequestInfo requestInfo = REQUEST_INFO.get(request);
       if (requestInfo == null) {
-        return;
+        return null;
       }
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+        return null;
       }
-
-      context = instrumenter().start(parentContext, request);
-      Contexts contexts = new Contexts(parentContext, context);
-      VirtualField.find(HttpClientRequest.class, Contexts.class).set(request, contexts);
-
-      scope = context.makeCurrent();
+      Context context = instrumenter().start(parentContext, request);
+      CONTEXTS.set(request, new Contexts(parentContext, context));
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endScope(
         @Advice.This HttpClientRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-      if (scope != null) {
-        scope.close();
-      }
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable, request);
       }
     }
   }
@@ -125,25 +135,23 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleExceptionAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void handleException(
-        @Advice.This HttpClientRequest request,
-        @Advice.Argument(0) Throwable t,
-        @Advice.Local("otelScope") Scope scope) {
-      Contexts contexts = VirtualField.find(HttpClientRequest.class, Contexts.class).get(request);
+    public static Scope handleException(
+        @Advice.This HttpClientRequest request, @Advice.Argument(0) Throwable t) {
 
+      Contexts contexts = CONTEXTS.get(request);
       if (contexts == null) {
-        return;
+        return null;
       }
-
       instrumenter().end(contexts.context, request, null, t);
 
       // Scoping all potential callbacks etc to the parent context
-      scope = contexts.parentContext.makeCurrent();
+      return contexts.parentContext.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Local("otelScope") Scope scope) {
+    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -153,25 +161,23 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandleResponseAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void handleResponseEnter(
-        @Advice.This HttpClientRequest request,
-        @Advice.Argument(0) HttpClientResponse response,
-        @Advice.Local("otelScope") Scope scope) {
-      Contexts contexts = VirtualField.find(HttpClientRequest.class, Contexts.class).get(request);
+    public static Scope handleResponseEnter(
+        @Advice.This HttpClientRequest request, @Advice.Argument(0) HttpClientResponse response) {
 
+      Contexts contexts = CONTEXTS.get(request);
       if (contexts == null) {
-        return;
+        return null;
       }
-
       instrumenter().end(contexts.context, request, response, null);
 
       // Scoping all potential callbacks etc to the parent context
-      scope = contexts.parentContext.makeCurrent();
+      return contexts.parentContext.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void handleResponseExit(@Advice.Local("otelScope") Scope scope) {
+    public static void handleResponseExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -181,19 +187,18 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MountContextAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void mountContext(
-        @Advice.This HttpClientRequest request, @Advice.Local("otelScope") Scope scope) {
-      Contexts contexts = VirtualField.find(HttpClientRequest.class, Contexts.class).get(request);
+    public static Scope mountContext(@Advice.This HttpClientRequest request) {
+      Contexts contexts = CONTEXTS.get(request);
       if (contexts == null) {
-        return;
+        return null;
       }
-
-      scope = contexts.context.makeCurrent();
+      return contexts.context.makeCurrent();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void unmountContext(@Advice.Local("otelScope") Scope scope) {
+    public static void unmountContext(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }
@@ -203,15 +208,16 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExceptionHandlerAdvice {
 
+    @Nullable
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapExceptionHandler(
+    public static Handler<Throwable> wrapExceptionHandler(
         @Advice.This HttpClientRequest request,
-        @Advice.Argument(value = 0, readOnly = false) Handler<Throwable> handler) {
-      if (handler != null) {
-        VirtualField<HttpClientRequest, Contexts> virtualField =
-            VirtualField.find(HttpClientRequest.class, Contexts.class);
-        handler = ExceptionHandlerWrapper.wrap(instrumenter(), request, virtualField, handler);
+        @Advice.Argument(0) @Nullable Handler<Throwable> handler) {
+      if (handler == null) {
+        return null;
       }
+      return ExceptionHandlerWrapper.wrap(instrumenter(), request, CONTEXTS, handler);
     }
   }
 }
