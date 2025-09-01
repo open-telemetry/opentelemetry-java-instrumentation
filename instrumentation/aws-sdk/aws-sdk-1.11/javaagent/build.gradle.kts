@@ -128,18 +128,6 @@ testing {
         }
       }
     }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-            systemProperty("collectMetadata", collectMetadata)
-            systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-          }
-        }
-      }
-    }
   }
 }
 
@@ -165,6 +153,19 @@ tasks {
     // TODO run tests both with and without experimental span attributes
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
+  }
+
+  check {
+    dependsOn(testStableSemconv)
   }
 }
 
