@@ -50,7 +50,7 @@ link to tracing information provided by Lambda itself. To do so, add a dependenc
 `io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.contrib%20AND%20a:opentelemetry-aws-xray-propagator).
+release](https://mvnrepository.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
 Gradle:
 
