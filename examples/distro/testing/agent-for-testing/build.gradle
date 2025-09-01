@@ -59,7 +59,7 @@ tasks {
   task relocateJavaagentLibs(type: ShadowJar) {
     configurations = [project.configurations.javaagentLibs]
 
-    duplicatesStrategy = DuplicatesStrategy.FAIL
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     archiveFileName.set("javaagentLibs-relocated.jar")
 

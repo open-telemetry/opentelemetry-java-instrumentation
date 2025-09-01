@@ -161,7 +161,7 @@ tasks {
 
     excludeBootstrapClasses()
 
-    duplicatesStrategy = DuplicatesStrategy.FAIL
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
   }
@@ -183,7 +183,7 @@ tasks {
     // remove MPL licensed content
     exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
-    duplicatesStrategy = DuplicatesStrategy.FAIL
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 
     archiveFileName.set("javaagentLibs-relocated-tmp.jar")
   }
