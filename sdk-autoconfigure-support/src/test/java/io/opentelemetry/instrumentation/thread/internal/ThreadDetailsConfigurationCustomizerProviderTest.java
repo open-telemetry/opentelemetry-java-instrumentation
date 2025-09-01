@@ -19,23 +19,38 @@ import org.junit.jupiter.api.Test;
 
 class ThreadDetailsConfigurationCustomizerProviderTest {
 
+  static final String PROCESSOR = "AddThreadDetailsSpanProcessor";
+
   @Test
-  void addSpanProcessor() {
-    OpenTelemetryConfigurationModel model =
-        new DeclarativeConfigurationBuilder()
-            .customizeModel(
-                new OpenTelemetryConfigurationModel()
-                    .withFileFormat("1.0-rc.1")
-                    .withTracerProvider(new TracerProviderModel())
-                    .withInstrumentationDevelopment(
-                        new InstrumentationModel()
-                            .withJava(
-                                new ExperimentalLanguageSpecificInstrumentationModel()
-                                    .withAdditionalProperty(
-                                        "thread_details", singletonMap("enabled", true)))));
+  void disabledByDefault() {
+    OpenTelemetryConfigurationModel model = modelWithTracer();
 
     try (OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model)) {
-      assertThat(sdk.toString()).containsOnlyOnce("AddThreadDetailsSpanProcessor");
+      assertThat(sdk.toString()).doesNotContain(PROCESSOR);
     }
+  }
+
+  @Test
+  void enabled() {
+    OpenTelemetryConfigurationModel model =
+        modelWithTracer()
+            .withInstrumentationDevelopment(
+                new InstrumentationModel()
+                    .withJava(
+                        new ExperimentalLanguageSpecificInstrumentationModel()
+                            .withAdditionalProperty(
+                                "thread_details", singletonMap("enabled", true))));
+
+    try (OpenTelemetrySdk sdk = DeclarativeConfiguration.create(model)) {
+      assertThat(sdk.toString()).containsOnlyOnce(PROCESSOR);
+    }
+  }
+
+  private static OpenTelemetryConfigurationModel modelWithTracer() {
+    return new DeclarativeConfigurationBuilder()
+        .customizeModel(
+            new OpenTelemetryConfigurationModel()
+                .withFileFormat("1.0-rc.1")
+                .withTracerProvider(new TracerProviderModel()));
   }
 }
