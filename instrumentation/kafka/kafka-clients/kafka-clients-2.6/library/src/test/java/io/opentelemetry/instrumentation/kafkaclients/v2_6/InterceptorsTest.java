@@ -20,10 +20,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -69,9 +72,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasNoParent()
                         .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringArrayKey("messaging.header.Test-Message-Header"),
-                                singletonList("test")),
+                            equalTo(headerAttributeKey(), singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "receive"),
@@ -86,9 +87,7 @@ class InterceptorsTest extends AbstractInterceptorsTest {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(producerSpanContext.get()))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringArrayKey("messaging.header.Test-Message-Header"),
-                                singletonList("test")),
+                            equalTo(headerAttributeKey(), singletonList("test")),
                             equalTo(MESSAGING_SYSTEM, "kafka"),
                             equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                             equalTo(MESSAGING_OPERATION, "process"),
@@ -114,5 +113,13 @@ class InterceptorsTest extends AbstractInterceptorsTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+  }
+
+  private AttributeKey<List<String>> headerAttributeKey() {
+    if (SemconvStability.isEmitOldMessageSemconv()) {
+      return AttributeKey.stringArrayKey("messaging.header.Test_MessageHeader");
+    } else {
+      return AttributeKey.stringArrayKey("messaging.header.Test-Message-Header");
+    }
   }
 }

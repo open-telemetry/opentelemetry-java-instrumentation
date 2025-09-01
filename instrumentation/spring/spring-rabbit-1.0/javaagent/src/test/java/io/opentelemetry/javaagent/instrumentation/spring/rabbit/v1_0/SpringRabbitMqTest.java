@@ -21,6 +21,7 @@ import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -128,10 +129,18 @@ public class SpringRabbitMqTest {
           satisfies(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, AbstractStringAssert::isNotBlank));
     }
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     return assertions;
   }

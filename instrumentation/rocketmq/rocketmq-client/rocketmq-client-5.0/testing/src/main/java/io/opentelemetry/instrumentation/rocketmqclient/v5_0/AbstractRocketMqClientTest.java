@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -370,10 +371,7 @@ public abstract class AbstractRocketMqClientTest {
                               keys,
                               body,
                               sendReceipt,
-                              equalTo(
-                                  AttributeKey.stringArrayKey(
-                                      "messaging.header.Test-Message-Header"),
-                                  Collections.singletonList("test")))
+                              equalTo(headerAttributeKey(), Collections.singletonList("test")))
                           .hasParent(trace.getSpan(0)));
               sendSpanData.set(trace.getSpan(1));
             },
@@ -390,10 +388,7 @@ public abstract class AbstractRocketMqClientTest {
                                 keys,
                                 body,
                                 sendReceipt,
-                                equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test-Message-Header"),
-                                    Collections.singletonList("test")))
+                                equalTo(headerAttributeKey(), Collections.singletonList("test")))
                             // As the child of receive span.
                             .hasParent(trace.getSpan(0)),
                     span ->
@@ -604,5 +599,13 @@ public abstract class AbstractRocketMqClientTest {
         // Link to send span.
         .hasLinks(LinkData.create(linkedSpan.getSpanContext()))
         .hasAttributesSatisfyingExactly(attributeAssertions);
+  }
+
+  private AttributeKey<List<String>> headerAttributeKey() {
+    if (SemconvStability.isEmitOldMessageSemconv()) {
+      return AttributeKey.stringArrayKey("messaging.header.Test_MessageHeader");
+    } else {
+      return AttributeKey.stringArrayKey("messaging.header.Test-Message-Header");
+    }
   }
 }

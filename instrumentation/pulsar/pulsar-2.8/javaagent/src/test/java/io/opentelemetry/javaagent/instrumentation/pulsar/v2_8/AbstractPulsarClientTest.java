@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -361,10 +362,18 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGE_TYPE, "normal")));
 
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {
@@ -397,10 +406,18 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     if (isBatch) {
       assertions.add(satisfies(MESSAGING_BATCH_MESSAGE_COUNT, AbstractLongAssert::isPositive));
@@ -424,10 +441,18 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 satisfies(MESSAGING_MESSAGE_BODY_SIZE, AbstractLongAssert::isNotNegative)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     int partitionIndex = TopicName.getPartitionIndex(destination);
     if (partitionIndex != -1) {

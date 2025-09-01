@@ -20,6 +20,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -407,10 +408,7 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(
                                     AttributeKey.stringKey("messaging.rocketmq.send_result"),
                                     "SEND_OK"),
-                                equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test-Message-Header"),
-                                    singletonList("test"))),
+                                equalTo(headerAttributeKey(), singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -434,10 +432,7 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     AttributeKey.longKey("messaging.rocketmq.queue_offset"),
                                     val -> val.isInstanceOf(Long.class)),
-                                equalTo(
-                                    AttributeKey.stringArrayKey(
-                                        "messaging.header.Test-Message-Header"),
-                                    singletonList("test"))),
+                                equalTo(headerAttributeKey(), singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
                             .hasParent(trace.getSpan(2))
@@ -461,5 +456,13 @@ abstract class AbstractRocketMqClientTest {
                 });
       }
     };
+  }
+
+  private AttributeKey<List<String>> headerAttributeKey() {
+    if (SemconvStability.isEmitOldMessageSemconv()) {
+      return AttributeKey.stringArrayKey("messaging.header.Test_MessageHeader");
+    } else {
+      return AttributeKey.stringArrayKey("messaging.header.Test-Message-Header");
+    }
   }
 }

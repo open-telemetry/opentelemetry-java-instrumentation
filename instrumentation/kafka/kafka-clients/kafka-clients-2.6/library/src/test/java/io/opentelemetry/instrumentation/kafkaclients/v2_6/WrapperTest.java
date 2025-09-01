@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.StandardCharsets;
@@ -121,10 +122,18 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(
                     MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer"))));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     return assertions;
   }
@@ -141,10 +150,18 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_CLIENT_ID, stringAssert -> stringAssert.startsWith("consumer")),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     if (testHeaders) {
-      assertions.add(
-          equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-              Collections.singletonList("test")));
+      if (SemconvStability.isEmitOldMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+                Collections.singletonList("test")));
+      }
+      if (SemconvStability.isEmitStableMessageSemconv()) {
+        assertions.add(
+            equalTo(
+                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
+                Collections.singletonList("test")));
+      }
     }
     return assertions;
   }

@@ -29,6 +29,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -91,10 +92,18 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                       MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))));
 
                       if (captureHeaders) {
-                        attributes.add(
-                            satisfies(
-                                stringArrayKey("messaging.header.Test-Message-Header"),
-                                v -> v.isEqualTo(ImmutableList.of("test"))));
+                        if (SemconvStability.isEmitOldMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringKey("messaging.header.Test_Message_Header"),
+                                  v -> v.isEqualTo("test")));
+                        }
+                        if (SemconvStability.isEmitStableMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test-Message-Header"),
+                                  v -> v.isEqualTo(ImmutableList.of("test"))));
+                        }
                       }
                       span.hasName("testSdkSqs publish")
                           .hasKind(SpanKind.PRODUCER)
@@ -161,10 +170,18 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
 
                         if (captureHeaders) {
-                          attributes.add(
-                              satisfies(
-                                  stringArrayKey("messaging.header.Test-Message-Header"),
-                                  v -> v.isEqualTo(ImmutableList.of("test"))));
+                          if (SemconvStability.isEmitOldMessageSemconv()) {
+                            attributes.add(
+                                satisfies(
+                                    stringKey("messaging.header.Test_Message_Header"),
+                                    v -> v.isEqualTo("test")));
+                          }
+                          if (SemconvStability.isEmitStableMessageSemconv()) {
+                            attributes.add(
+                                satisfies(
+                                    stringArrayKey("messaging.header.Test-Message-Header"),
+                                    v -> v.isEqualTo(ImmutableList.of("test"))));
+                          }
                         }
 
                         if (withParent) {

@@ -40,6 +40,7 @@ import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -180,10 +181,18 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
-                        attributes.add(
-                            satisfies(
-                                stringArrayKey("messaging.header.Test-Message-Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                        if (SemconvStability.isEmitOldMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  val -> val.isEqualTo(singletonList("test"))));
+                        }
+                        if (SemconvStability.isEmitStableMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test-Message-Header"),
+                                  val -> val.isEqualTo(singletonList("test"))));
+                        }
                       }
 
                       span.hasName("testSdkSqs publish")
@@ -220,10 +229,18 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
-                        attributes.add(
-                            satisfies(
-                                stringArrayKey("messaging.header.Test-Message-Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                        if (SemconvStability.isEmitOldMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  val -> val.isEqualTo(singletonList("test"))));
+                        }
+                        if (SemconvStability.isEmitStableMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test-Message-Header"),
+                                  val -> val.isEqualTo(singletonList("test"))));
+                        }
                       }
 
                       span.hasName("testSdkSqs receive")

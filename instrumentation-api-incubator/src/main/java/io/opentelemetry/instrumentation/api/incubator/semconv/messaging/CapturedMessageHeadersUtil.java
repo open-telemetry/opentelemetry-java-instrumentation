@@ -12,14 +12,26 @@ import java.util.concurrent.ConcurrentMap;
 
 final class CapturedMessageHeadersUtil {
 
-  private static final ConcurrentMap<String, AttributeKey<List<String>>> attributeKeysCache =
-      new ConcurrentHashMap<>();
+  private static final ConcurrentMap<String, AttributeKey<List<String>>>
+      oldSemconvAttributeKeysCache = new ConcurrentHashMap<>();
+  private static final ConcurrentMap<String, AttributeKey<List<String>>>
+      stableSemconvAttributeKeysCache = new ConcurrentHashMap<>();
 
-  static AttributeKey<List<String>> attributeKey(String headerName) {
-    return attributeKeysCache.computeIfAbsent(headerName, n -> createKey(n));
+  static AttributeKey<List<String>> oldSemconvAttributeKey(String headerName) {
+    return oldSemconvAttributeKeysCache.computeIfAbsent(headerName, n -> createOldSemconvKey(n));
   }
 
-  private static AttributeKey<List<String>> createKey(String headerName) {
+  static AttributeKey<List<String>> stableSemconvAttributeKey(String headerName) {
+    return stableSemconvAttributeKeysCache.computeIfAbsent(
+        headerName, n -> createStableSemconvKey(n));
+  }
+
+  private static AttributeKey<List<String>> createOldSemconvKey(String headerName) {
+    String key = "messaging.header." + headerName.replace('-', '_');
+    return AttributeKey.stringArrayKey(key);
+  }
+
+  private static AttributeKey<List<String>> createStableSemconvKey(String headerName) {
     String key = "messaging.header." + headerName;
     return AttributeKey.stringArrayKey(key);
   }
