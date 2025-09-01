@@ -10,7 +10,7 @@ Replace `SPRING_VERSION` with the version of spring you're using.
 `Minimum version: 3.1`
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-spring-web-3.1).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-spring-web-3.1).
 
 For Maven, add to your `pom.xml` dependencies:
 
