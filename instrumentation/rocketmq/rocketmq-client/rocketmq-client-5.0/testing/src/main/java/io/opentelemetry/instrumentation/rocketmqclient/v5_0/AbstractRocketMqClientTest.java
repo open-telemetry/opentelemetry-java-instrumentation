@@ -601,7 +601,7 @@ public abstract class AbstractRocketMqClientTest {
         .hasAttributesSatisfyingExactly(attributeAssertions);
   }
 
-  private AttributeKey<List<String>> headerAttributeKey() {
+  private static AttributeKey<List<String>> headerAttributeKey() {
     if (SemconvStability.isEmitOldMessageSemconv()) {
       return AttributeKey.stringArrayKey("messaging.header.Test_Message_Header");
     } else {
