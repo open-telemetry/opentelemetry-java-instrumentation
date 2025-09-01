@@ -52,6 +52,8 @@ import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
 public abstract class AbstractGrpcStreamingTest {
 
+  private static final String EXPERIMENTAL_PROPERTY = "otel.instrumentation.grpc.experimental-span-attributes";
+
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
   protected abstract ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client);
@@ -59,6 +61,20 @@ public abstract class AbstractGrpcStreamingTest {
   protected abstract InstrumentationExtension testing();
 
   private final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
+
+  public static String experimental(String value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_PROPERTY)) {
+      return null;
+    }
+    return value;
+  }
+
+  protected static Long experimental(long value) {
+    if (!Boolean.getBoolean(EXPERIMENTAL_PROPERTY)) {
+      return null;
+    }
+    return value;
+  }
 
   @AfterEach
   void tearDown() throws Throwable {
