@@ -216,10 +216,18 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                         MESSAGING_MESSAGE_ID, v -> v.isInstanceOf(String.class))));
 
                         if (captureHeaders) {
-                          attributes.add(
-                              satisfies(
-                                  stringArrayKey("messaging.header.Test-Message-Header"),
-                                  v -> v.isEqualTo(singletonList("test"))));
+                          if (SemconvStability.isEmitOldMessageSemconv()) {
+                            attributes.add(
+                                satisfies(
+                                    stringKey("messaging.header.Test_Message_Header"),
+                                    v -> v.isEqualTo("test")));
+                          }
+                          if (SemconvStability.isEmitStableMessageSemconv()) {
+                            attributes.add(
+                                satisfies(
+                                    stringArrayKey("messaging.header.Test-Message-Header"),
+                                    v -> v.isEqualTo(singletonList("test"))));
+                          }
                         }
 
                         span.hasName("testSdkSqs process")
