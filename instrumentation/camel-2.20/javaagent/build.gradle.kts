@@ -69,8 +69,6 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
 
     // TODO: fix camel instrumentation so that it uses semantic attributes extractors
@@ -81,14 +79,22 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testStableSemconv)
+    dependsOn(testStableSemconv, testExperimental)
   }
 }
 

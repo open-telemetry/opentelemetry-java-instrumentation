@@ -122,6 +122,9 @@ readonly INSTRUMENTATIONS=(
   "cassandra:cassandra-4.0:javaagent:testStableSemconv"
   "cassandra:cassandra-4.4:javaagent:test"
   "cassandra:cassandra-4.4:javaagent:testStableSemconv"
+  "camel-2.20:javaagent:test"
+  "camel-2.20:javaagent:testStableSemconv"
+  "camel-2.20:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

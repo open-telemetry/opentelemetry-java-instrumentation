@@ -62,6 +62,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.openai.TestHelper;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -545,14 +546,14 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     assertThat(toolCalls).hasSize(2);
     String newYorkCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("New York"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("New York"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
     String londonCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("London"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("London"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
 
@@ -1217,6 +1218,57 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 "message", Value.of(KeyValue.of("content", Value.of(content2)))))));
   }
 
+  protected List<ChatCompletionMessageToolCall> getToolCalls(List<ChatCompletionChunk> chunks) {
+    List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
+
+    TestHelper.MessageToolCallBuilder currentToolCall = null;
+    TestHelper.MessageToolCallBuilder.FunctionBuilder currentFunction = null;
+    StringBuilder currentArgs = null;
+
+    for (ChatCompletionChunk chunk : chunks) {
+      List<ChatCompletionChunk.Choice.Delta.ToolCall> calls =
+          chunk.choices().get(0).delta().toolCalls().orElse(emptyList());
+      if (calls.isEmpty()) {
+        continue;
+      }
+      for (ChatCompletionChunk.Choice.Delta.ToolCall call : calls) {
+        if (call.id().isPresent()) {
+          if (currentToolCall != null) {
+            if (currentFunction != null && currentArgs != null) {
+              currentFunction.arguments(currentArgs.toString());
+              currentToolCall.function(currentFunction);
+            }
+            toolCalls.add(currentToolCall.build());
+          }
+          currentToolCall = testHelper.messageToolCallBuilder().id(call.id().get());
+          currentFunction = testHelper.messageToolCallFunctionBuilder();
+          currentArgs = new StringBuilder();
+        }
+        if (call.function().isPresent()) {
+          if (call.function().get().name().isPresent()) {
+            if (currentFunction != null) {
+              currentFunction.name(call.function().get().name().get());
+            }
+          }
+          if (call.function().get().arguments().isPresent()) {
+            if (currentArgs != null) {
+              currentArgs.append(call.function().get().arguments().get());
+            }
+          }
+        }
+      }
+    }
+    if (currentToolCall != null) {
+      if (currentFunction != null && currentArgs != null) {
+        currentFunction.arguments(currentArgs.toString());
+        currentToolCall.function(currentFunction);
+      }
+      toolCalls.add(currentToolCall.build());
+    }
+
+    return toolCalls;
+  }
+
   @Test
   void streamToolCalls() {
     List<ChatCompletionMessageParam> chatMessages = new ArrayList<>();
@@ -1232,55 +1284,18 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
 
     List<ChatCompletionChunk> chunks = doCompletionsStreaming(params);
 
-    List<ChatCompletionMessageToolCall> toolCalls = new ArrayList<>();
-
-    ChatCompletionMessageToolCall.Builder currentToolCall = null;
-    ChatCompletionMessageToolCall.Function.Builder currentFunction = null;
-    StringBuilder currentArgs = null;
-
-    for (ChatCompletionChunk chunk : chunks) {
-      List<ChatCompletionChunk.Choice.Delta.ToolCall> calls =
-          chunk.choices().get(0).delta().toolCalls().orElse(emptyList());
-      if (calls.isEmpty()) {
-        continue;
-      }
-      for (ChatCompletionChunk.Choice.Delta.ToolCall call : calls) {
-        if (call.id().isPresent()) {
-          if (currentToolCall != null) {
-            currentFunction.arguments(currentArgs.toString());
-            currentToolCall.function(currentFunction.build());
-            toolCalls.add(currentToolCall.build());
-          }
-          currentToolCall = ChatCompletionMessageToolCall.builder().id(call.id().get());
-          currentFunction = ChatCompletionMessageToolCall.Function.builder();
-          currentArgs = new StringBuilder();
-        }
-        if (call.function().isPresent()) {
-          if (call.function().get().name().isPresent()) {
-            currentFunction.name(call.function().get().name().get());
-          }
-          if (call.function().get().arguments().isPresent()) {
-            currentArgs.append(call.function().get().arguments().get());
-          }
-        }
-      }
-    }
-    if (currentToolCall != null) {
-      currentFunction.arguments(currentArgs.toString());
-      currentToolCall.function(currentFunction.build());
-      toolCalls.add(currentToolCall.build());
-    }
+    List<ChatCompletionMessageToolCall> toolCalls = getToolCalls(chunks);
 
     String newYorkCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("New York"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("New York"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
     String londonCallId =
         toolCalls.stream()
-            .filter(call -> call.function().arguments().contains("London"))
-            .map(ChatCompletionMessageToolCall::id)
+            .filter(call -> testHelper.arguments(call).contains("London"))
+            .map(call -> testHelper.id(call))
             .findFirst()
             .get();
 
@@ -1637,20 +1652,18 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
     Map<String, JsonValue> properties = new HashMap<>();
     properties.put("location", JsonObject.of(location));
 
-    return ChatCompletionTool.builder()
-        .function(
-            FunctionDefinition.builder()
-                .name("get_weather")
-                .parameters(
-                    FunctionParameters.builder()
-                        .putAdditionalProperty("type", JsonValue.from("object"))
-                        .putAdditionalProperty(
-                            "required", JsonValue.from(Collections.singletonList("location")))
-                        .putAdditionalProperty("additionalProperties", JsonValue.from(false))
-                        .putAdditionalProperty("properties", JsonObject.of(properties))
-                        .build())
-                .build())
-        .build();
+    return testHelper.chatCompletionTool(
+        FunctionDefinition.builder()
+            .name("get_weather")
+            .parameters(
+                FunctionParameters.builder()
+                    .putAdditionalProperty("type", JsonValue.from("object"))
+                    .putAdditionalProperty(
+                        "required", JsonValue.from(Collections.singletonList("location")))
+                    .putAdditionalProperty("additionalProperties", JsonValue.from(false))
+                    .putAdditionalProperty("properties", JsonObject.of(properties))
+                    .build())
+            .build());
   }
 
   protected static ChatCompletionMessageParam createToolMessage(String response, String id) {
