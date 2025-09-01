@@ -276,10 +276,18 @@ public abstract class AbstractSqsTracingTest {
                                   equalTo(NETWORK_PROTOCOL_VERSION, "1.1")));
 
                       if (testCaptureHeaders) {
-                        attributes.add(
-                            satisfies(
-                                stringArrayKey("messaging.header.Test-Message-Header"),
-                                val -> val.isEqualTo(singletonList("test"))));
+                        if (SemconvStability.isEmitOldMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
+                                  val -> val.isEqualTo(singletonList("test"))));
+                        }
+                        if (SemconvStability.isEmitStableMessageSemconv()) {
+                          attributes.add(
+                              satisfies(
+                                  stringArrayKey("messaging.header.Test-Message-Header"),
+                                  val -> val.isEqualTo(singletonList("test"))));
+                        }
                       }
                       span.hasName("testSdkSqs process")
                           .hasKind(SpanKind.CONSUMER)
