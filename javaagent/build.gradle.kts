@@ -151,7 +151,7 @@ tasks {
 
     excludeNonBootstrapClasses()
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("bootstrapLibs.jar")
   }
