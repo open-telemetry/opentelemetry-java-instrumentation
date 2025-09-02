@@ -21,7 +21,7 @@ class ExperimentalTestHelper {
       longKey("grpc.received.message_count");
   static final AttributeKey<Long> GRPC_SENT_MESSAGE_COUNT = longKey("grpc.sent.message_count");
 
-  public static AttributeAssertion experimentalSatisfies(
+  static AttributeAssertion experimentalSatisfies(
       AttributeKey<Long> key, Consumer<? super Long> assertion) {
     return satisfies(
         key, val -> val.satisfiesAnyOf(v -> assertThat(isEnabled).isFalse(), assertion::accept));
