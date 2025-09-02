@@ -91,9 +91,25 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Context context, Scope scope) {
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope startAndAttachContext(HttpClientRequest request) {
+        VertxRequestInfo requestInfo = REQUEST_INFO.get(request);
+        if (requestInfo == null) {
+          return null;
+        }
+
+        Context parentContext = Java8BytecodeBridge.currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        CONTEXTS.set(request, new Contexts(parentContext, context));
+        return new AdviceScope(context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable, HttpClientRequest request) {
@@ -107,18 +123,7 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope attachContext(@Advice.This HttpClientRequest request) {
-      VertxRequestInfo requestInfo = REQUEST_INFO.get(request);
-      if (requestInfo == null) {
-        return null;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return null;
-      }
-      Context context = instrumenter().start(parentContext, request);
-      CONTEXTS.set(request, new Contexts(parentContext, context));
-      return new AdviceScope(context, context.makeCurrent());
+      return AdviceScope.startAndAttachContext(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
