@@ -7,10 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.common;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
-public class ClickHouseAttributesGetter
+final class ClickHouseAttributesGetter
     implements DbClientAttributesGetter<ClickHouseDbRequest, Void> {
+
+  private final Function<Throwable, String> errorCodeExtractor;
+
+  ClickHouseAttributesGetter(Function<Throwable, String> errorCodeExtractor) {
+    this.errorCodeExtractor = errorCodeExtractor;
+  }
 
   @Nullable
   @Override
@@ -63,6 +70,6 @@ public class ClickHouseAttributesGetter
   @Nullable
   @Override
   public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
-    return null;
+    return errorCodeExtractor.apply(error);
   }
 }

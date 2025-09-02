@@ -14,11 +14,17 @@ public final class ClickHouseScope {
   private final ClickHouseDbRequest clickHouseDbRequest;
   private final Context context;
   private final Scope scope;
+  private final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
 
-  private ClickHouseScope(ClickHouseDbRequest clickHouseDbRequest, Context context, Scope scope) {
+  private ClickHouseScope(
+      ClickHouseDbRequest clickHouseDbRequest,
+      Context context,
+      Scope scope,
+      Instrumenter<ClickHouseDbRequest, Void> instrumenter) {
     this.clickHouseDbRequest = clickHouseDbRequest;
     this.context = context;
     this.scope = scope;
+    this.instrumenter = instrumenter;
   }
 
   public static ClickHouseScope start(
@@ -30,10 +36,10 @@ public final class ClickHouseScope {
     }
 
     Context context = instrumenter.start(parentContext, clickHouseDbRequest);
-    return new ClickHouseScope(clickHouseDbRequest, context, context.makeCurrent());
+    return new ClickHouseScope(clickHouseDbRequest, context, context.makeCurrent(), instrumenter);
   }
 
-  public void end(Instrumenter<ClickHouseDbRequest, Void> instrumenter, Throwable throwable) {
+  public void end(Throwable throwable) {
     scope.close();
     instrumenter.end(context, clickHouseDbRequest, null, throwable);
   }
