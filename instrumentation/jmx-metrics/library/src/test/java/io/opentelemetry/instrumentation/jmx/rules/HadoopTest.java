@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jmx.rules;
 
 import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attribute;
-import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAttributes.attributeGroup;
 
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
 import java.io.IOException;
@@ -61,7 +60,7 @@ class HadoopTest extends TargetSystemTest {
     try (Stream<String> lines = Files.lines(path)) {
       data =
           lines
-              .map(line -> line.replace(ENDPOINT_PLACEHOLDER, otlpEndpoint))
+              .map(line -> line.replace(ENDPOINT_PLACEHOLDER, getOtlpEndpoint()))
               .collect(Collectors.joining("\n"));
     }
 
@@ -164,14 +163,20 @@ class HadoopTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(nodeNameAttribute))
         .add(
-            "hadoop.dfs.data_node.count",
+            "hadoop.dfs.data_node.live",
             metric ->
                 metric
-                    .hasDescription("The number of DataNodes.")
+                    .hasDescription("Number of data nodes which are currently live.")
                     .hasUnit("{node}")
                     .isUpDownCounter()
-                    .hasDataPointsWithAttributes(
-                        attributeGroup(attribute("hadoop.node.state", "live"), nodeNameAttribute),
-                        attributeGroup(attribute("hadoop.node.state", "dead"), nodeNameAttribute)));
+                    .hasDataPointsWithOneAttribute(nodeNameAttribute))
+        .add(
+            "hadoop.dfs.data_node.dead",
+            metric ->
+                metric
+                    .hasDescription("Number of data nodes which are currently dead.")
+                    .hasUnit("{node}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithOneAttribute(nodeNameAttribute));
   }
 }

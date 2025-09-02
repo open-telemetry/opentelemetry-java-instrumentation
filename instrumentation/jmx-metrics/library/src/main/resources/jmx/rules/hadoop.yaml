@@ -54,18 +54,15 @@ rules:
         unit: "{connection}"
         desc: Current number of connections.
 
-      # hadoop.dfs.data_node.count
+      # hadoop.dfs.data_node.live
       NumLiveDataNodes:
-        metric: &metric data_node.count
-        type: &type updowncounter
-        unit: &unit "{node}"
-        desc: &desc The number of DataNodes.
-        metricAttribute:
-          hadoop.node.state: const(live)
+        metric: data_node.live
+        type: updowncounter
+        unit: "{node}"
+        desc: Number of data nodes which are currently live.
+      # hadoop.dfs.data_node.dead
       NumDeadDataNodes:
-        metric: *metric
-        type: *type
-        unit: *unit
-        desc: *desc
-        metricAttribute:
-          hadoop.node.state: const(dead)
+        metric: data_node.dead
+        type: updowncounter
+        unit: "{node}"
+        desc: Number of data nodes which are currently dead.
