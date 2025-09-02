@@ -28,6 +28,7 @@ import io.vertx.sqlclient.Pool;
 import io.vertx.sqlclient.SqlConnectOptions;
 import io.vertx.sqlclient.SqlConnection;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -61,23 +62,23 @@ public class PoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PoolAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
+      CallDepth callDepth = null;
       callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
-        return;
+        return callDepth;
       }
 
       // set connection options to ThreadLocal, they will be read in SqlClientBase constructor
       setSqlConnectOptions(sqlConnectOptions);
+      return callDepth;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
         @Advice.Return Pool pool,
         @Advice.Argument(1) SqlConnectOptions sqlConnectOptions,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -93,14 +94,14 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This Pool pool, @Advice.Return(readOnly = false) Future<SqlConnection> future) {
+    public static Future<SqlConnection> onExit(
+        @Advice.This Pool pool, @Advice.Return Future<SqlConnection> future) {
       // copy connect options stored on pool to new connection
       SqlConnectOptions sqlConnectOptions = getPoolSqlConnectOptions(pool);
 
-      future = attachConnectOptions(future, sqlConnectOptions);
-      future = wrapContext(future);
+      return wrapContext(attachConnectOptions(future, sqlConnectOptions));
     }
   }
 }
