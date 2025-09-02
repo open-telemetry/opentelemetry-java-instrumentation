@@ -117,6 +117,7 @@ readonly INSTRUMENTATIONS=(
   "openai:openai-java-1.1:javaagent:test"
   "aws-lambda:aws-lambda-core-1.0:javaagent:test"
   "aws-lambda:aws-lambda-events-2.2:javaagent:test"
+  "aws-lambda:aws-lambda-events-3.11:library:test"
   "cassandra:cassandra-3.0:javaagent:test"
   "cassandra:cassandra-3.0:javaagent:testStableSemconv"
   "cassandra:cassandra-4.0:javaagent:test"
@@ -132,6 +133,14 @@ readonly INSTRUMENTATIONS=(
   "couchbase:couchbase-2.6:javaagent:testStableSemconv"
   "couchbase:couchbase-2.6:javaagent:testExperimental"
   "dropwizard:dropwizard-views-0.7:javaagent:test"
+  "geode-1.4:javaagent:test"
+  "geode-1.4:javaagent:testStableSemconv"
+  "grails-3.0:javaagent:test"
+  "grizzly-2.3:javaagent:test"
+  "gwt-2.0:javaagent:test"
+  "graphql-java:graphql-java-12.0:javaagent:test"
+  "graphql-java:graphql-java-20.0:javaagent:test"
+  "graphql-java:graphql-java-20.0:javaagent:testDataFetcher"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

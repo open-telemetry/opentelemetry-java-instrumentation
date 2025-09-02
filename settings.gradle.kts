@@ -41,8 +41,6 @@ dependencyResolutionManagement {
         plugin("versions", "org.springframework.boot").version(version)
       }
     }
-    // r2dbc is not compatible with earlier versions
-    addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
     // spring boot 3.0 is not compatible with graalvm native image
     addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
     addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
@@ -477,7 +475,9 @@ include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
 include(":instrumentation:quarkus-resteasy-reactive:common-testing")
 include(":instrumentation:quarkus-resteasy-reactive:javaagent")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus2-plugin")
 include(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus3-plugin")
 include(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")

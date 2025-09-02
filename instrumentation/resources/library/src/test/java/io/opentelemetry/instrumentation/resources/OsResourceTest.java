@@ -121,7 +121,7 @@ class OsResourceTest {
     Resource resource = OsResource.buildResource();
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_24_0);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_TYPE))
-        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.Z_OS);
+        .isEqualTo(OsIncubatingAttributes.OsTypeIncubatingValues.ZOS);
     assertThat(resource.getAttribute(OsIncubatingAttributes.OS_DESCRIPTION)).isNotEmpty();
   }
 

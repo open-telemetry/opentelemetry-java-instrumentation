@@ -923,6 +923,7 @@ libraries:
   - name: aws-lambda-core-1.0
     description: |
       Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+      For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` environment variable to contain your lambda handler method (in the format `package.ClassName::methodName`) and use one of wrappers as your lambda `Handler`.
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -945,7 +946,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-2.2
     description: |
-      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+.
+      This version of the library instrumentation is deprecated, please use the `aws-lambda-events-3.11` library instrumentation instead. This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -960,6 +961,11 @@ libraries:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -984,6 +990,8 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: aws-lambda-events-3.11
+    description: |
+      This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
       name: io.opentelemetry.aws-lambda-events-3.11
@@ -991,6 +999,42 @@ libraries:
       library:
       - com.amazonaws:aws-lambda-java-events:3.11.0
       - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: cloud.account.id
+          type: STRING
+        - name: cloud.resource_id
+          type: STRING
+        - name: faas.invocation_id
+          type: STRING
+        - name: faas.trigger
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: url.full
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
@@ -1277,9 +1321,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
+        - name: gen_ai.provider.name
           type: STRING
-        - name: gen_ai.system
+        - name: gen_ai.request.model
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -1288,9 +1332,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
+        - name: gen_ai.provider.name
           type: STRING
-        - name: gen_ai.system
+        - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -1341,6 +1385,8 @@ libraries:
           type: STRING
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.max_tokens
           type: LONG
         - name: gen_ai.request.model
@@ -1353,8 +1399,6 @@ libraries:
           type: DOUBLE
         - name: gen_ai.response.finish_reasons
           type: STRING_ARRAY
-        - name: gen_ai.system
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
         - name: gen_ai.usage.output_tokens
@@ -1389,6 +1433,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1421,6 +1467,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1525,6 +1573,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1557,6 +1607,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -2873,20 +2925,94 @@ libraries:
           type: STRING
   geode:
   - name: geode-1.4
+    description: This instrumentation enables database CLIENT spans and metrics for
+      Apache Geode cache operations.
     source_path: instrumentation/geode-1.4
     scope:
       name: io.opentelemetry.geode-1.4
     target_versions:
       javaagent:
       - org.apache.geode:geode-core:[1.4.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   google:
   - name: google-http-client-1.19
+    description: This instrumentation enables HTTP CLIENT spans and metrics for Google
+      HTTP Client requests.
     source_path: instrumentation/google-http-client-1.19
     scope:
       name: io.opentelemetry.google-http-client-1.19
     target_versions:
       javaagent:
       - com.google.http-client:google-http-client:[1.19.0,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -2920,14 +3046,27 @@ libraries:
           type: STRING
   grails:
   - name: grails-3.0
+    description: |
+      This instrumentation enriches existing SERVER spans with route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
     source_path: instrumentation/grails-3.0
     scope:
       name: io.opentelemetry.grails-3.0
     target_versions:
       javaagent:
       - org.grails:grails-web-url-mappings:[3.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   graphql:
   - name: graphql-java-12.0
+    description: This instrumentation enables spans for GraphQL Java operations.
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
       name: io.opentelemetry.graphql-java-12.0
@@ -2936,7 +3075,30 @@ libraries:
       - com.graphql-java:graphql-java:[12,20)
       library:
       - com.graphql-java:graphql-java:[12.0,19.+)
+    configurations:
+    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+      description: Enables sanitization of sensitive information from queries so they
+        aren't added as span attributes.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+      description: |
+        Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
   - name: graphql-java-20.0
+    description: This instrumentation enables spans for GraphQL Java operations.
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
     scope:
@@ -2946,14 +3108,132 @@ libraries:
       - com.graphql-java:graphql-java:[20,)
       library:
       - com.graphql-java:graphql-java:20.0
+    configurations:
+    - name: otel.instrumentation.graphql.query-sanitizer.enabled
+      description: Enables sanitization of sensitive information from queries so they
+        aren't added as span attributes.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.graphql.add-operation-name-to-span-name.enabled
+      description: |
+        Whether GraphQL operation name is added to the span name. WARNING: The GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.graphql.data-fetcher.enabled
+      description: Enables span generation for data fetchers.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.graphql.trivial-data-fetcher.enabled
+      description: Whether to create spans for trivial data fetchers. A trivial data
+        fetcher is one that simply maps data from an object to a field.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
+    - when: otel.instrumentation.graphql.data-fetcher.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: graphql.document
+          type: STRING
+        - name: graphql.field.name
+          type: STRING
+        - name: graphql.field.path
+          type: STRING
+        - name: graphql.operation.name
+          type: STRING
+        - name: graphql.operation.type
+          type: STRING
   grizzly:
   - name: grizzly-2.3
+    description: This instrumentation enables HTTP SERVER spans and metrics for Grizzly
+      applications.
     source_path: instrumentation/grizzly-2.3
     scope:
       name: io.opentelemetry.grizzly-2.3
     target_versions:
       javaagent:
       - org.glassfish.grizzly:grizzly-http:[2.3,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   grpc:
   - name: grpc-1.6
     source_path: instrumentation/grpc-1.6
@@ -2976,6 +3256,7 @@ libraries:
       - com.google.guava:guava:10.0
   gwt:
   - name: gwt-2.0
+    description: This instrumentation enables SERVER spans for GWT RPC requests.
     source_path: instrumentation/gwt-2.0
     scope:
       name: io.opentelemetry.gwt-2.0
@@ -2983,6 +3264,17 @@ libraries:
       javaagent:
       - com.google.gwt:gwt-servlet:[2.0.0,)
       - org.gwtproject:gwt-servlet:[2.10.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
   hibernate:
   - name: hibernate-3.3
     source_path: instrumentation/hibernate/hibernate-3.3
@@ -3724,6 +4016,16 @@ libraries:
     target_versions:
       library:
       - org.apache.kafka:kafka-clients:2.6.0
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
   - name: kafka-streams-0.11
     source_path: instrumentation/kafka/kafka-streams-0.11
     scope:
@@ -4352,11 +4654,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.system
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -4365,11 +4667,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.system
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -4378,19 +4680,21 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.encoding_formats
           type: STRING_ARRAY
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
           type: STRING
-        - name: gen_ai.system
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.request.frequency_penalty
           type: DOUBLE
@@ -4413,8 +4717,6 @@ libraries:
         - name: gen_ai.response.id
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.system
           type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
@@ -5375,6 +5677,8 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.operation
           type: STRING
     - when: otel.instrumentation.spring-integration.producer.enabled=true
@@ -5446,6 +5750,10 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
+        - name: messaging.header.Test_Message_Int_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -5584,6 +5892,8 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation

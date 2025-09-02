@@ -89,3 +89,16 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
+
+if (findProperty("testLatestDeps") as Boolean) {
+  configurations.named("latestDepTestRuntimeClasspath") {
+    resolutionStrategy {
+      eachDependency {
+        // finatra 24.2.0 doesn't work with jackson 2.20.0
+        if (requested.group.startsWith("com.fasterxml.jackson")) {
+          useVersion("2.19.2")
+        }
+      }
+    }
+  }
+}

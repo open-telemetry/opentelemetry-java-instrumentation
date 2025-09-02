@@ -177,8 +177,8 @@ abstract class AbstractJms1Test {
     // given
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("a message");
-    sentMessage.setStringProperty("test_message_header", "test");
-    sentMessage.setIntProperty("test_message_int_header", 1234);
+    sentMessage.setStringProperty("Test_Message_Header", "test");
+    sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer::close);
@@ -215,10 +215,10 @@ abstract class AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span ->
                     span.hasName(destinationName + " process")
@@ -231,10 +231,10 @@ abstract class AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
