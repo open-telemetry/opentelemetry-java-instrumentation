@@ -18,11 +18,9 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -101,7 +99,7 @@ class JarServiceNameDetectorTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(SunCommandLineProvider.class)
+  @MethodSource("sunCommandLineArguments")
   void createResource_sunCommandLine(String commandLine, Path jarPath) {
     Function<String, String> getProperty =
         key -> "sun.java.command".equals(key) ? commandLine : null;
@@ -131,18 +129,14 @@ class JarServiceNameDetectorTest {
     assertThat(resource.getAttributes()).isEmpty();
   }
 
-  static final class SunCommandLineProvider implements ArgumentsProvider {
-
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      Path path = Paths.get("path", "to", "my-service.jar");
-      Path pathWithSpaces = Paths.get("path to app", "with spaces", "my-service.jar");
-      Path pathWithoutExtension = Paths.get("path to app", "with spaces", "my-service");
-      return Stream.of(
-          arguments(path.toString(), path),
-          arguments(pathWithSpaces + " 1 2 3", pathWithSpaces),
-          arguments(pathWithoutExtension + " 1 2 3", pathWithoutExtension));
-    }
+  private static Stream<Arguments> sunCommandLineArguments() {
+    Path path = Paths.get("path", "to", "my-service.jar");
+    Path pathWithSpaces = Paths.get("path to app", "with spaces", "my-service.jar");
+    Path pathWithoutExtension = Paths.get("path to app", "with spaces", "my-service");
+    return Stream.of(
+        arguments(path.toString(), path),
+        arguments(pathWithSpaces + " 1 2 3", pathWithSpaces),
+        arguments(pathWithoutExtension + " 1 2 3", pathWithoutExtension));
   }
 
   static boolean failPath(Path file) {

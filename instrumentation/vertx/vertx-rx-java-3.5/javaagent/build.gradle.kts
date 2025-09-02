@@ -22,8 +22,12 @@ dependencies {
   testInstrumentation(project(":instrumentation:rxjava:rxjava-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-web-3.0:javaagent"))
 }
+
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
 
 testing {
   suites {
@@ -33,48 +37,64 @@ testing {
         // inclusion of this artifact inside :testing-common
         compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
+        val version = if (testLatestDeps) "3.+" else "3.5.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
-        compileOnly("io.vertx:vertx-codegen:$vertxVersion")
-        implementation("io.vertx:vertx-web:$vertxVersion")
-        implementation("io.vertx:vertx-rx-java2:$vertxVersion")
-        implementation("io.vertx:vertx-web-client:$vertxVersion")
-        implementation("io.vertx:vertx-jdbc-client:$vertxVersion")
-        implementation("io.vertx:vertx-circuit-breaker:$vertxVersion")
+        compileOnly("io.vertx:vertx-codegen:$version")
+        implementation("io.vertx:vertx-web:$version")
+        implementation("io.vertx:vertx-rx-java2:$version")
+        implementation("io.vertx:vertx-web-client:$version")
+        implementation("io.vertx:vertx-jdbc-client:$version")
+        implementation("io.vertx:vertx-circuit-breaker:$version")
       }
     }
 
-    val latestDepTest by registering(JvmTestSuite::class) {
+    val version41Test by registering(JvmTestSuite::class) {
       dependencies {
         // this only exists to make Intellij happy since it doesn't (currently at least) understand our
         // inclusion of this artifact inside :testing-common
         compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
 
+        val version = if (testLatestDeps) "4.+" else "4.1.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
-        implementation("io.vertx:vertx-web:latest.release")
-        implementation("io.vertx:vertx-rx-java2:latest.release")
-        implementation("io.vertx:vertx-web-client:latest.release")
-        implementation("io.vertx:vertx-jdbc-client:latest.release")
-        implementation("io.vertx:vertx-circuit-breaker:latest.release")
+        compileOnly("io.vertx:vertx-codegen:$version")
+        implementation("io.vertx:vertx-web:$version")
+        implementation("io.vertx:vertx-rx-java2:$version")
+        implementation("io.vertx:vertx-web-client:$version")
+        implementation("io.vertx:vertx-jdbc-client:$version")
+        implementation("io.vertx:vertx-circuit-breaker:$version")
+      }
+    }
+
+    val version5Test by registering(JvmTestSuite::class) {
+      dependencies {
+        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
+        // inclusion of this artifact inside :testing-common
+        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+
+        val version = if (testLatestDeps) "latest.release" else "5.0.0"
+        implementation("org.hsqldb:hsqldb:2.3.4")
+        compileOnly("io.vertx:vertx-codegen:$version")
+        implementation("io.vertx:vertx-web:$version")
+        implementation("io.vertx:vertx-rx-java2:$version")
+        implementation("io.vertx:vertx-web-client:$version")
+        implementation("io.vertx:vertx-jdbc-client:$version")
+        implementation("io.vertx:vertx-circuit-breaker:$version")
       }
     }
   }
 }
 
-val testLatestDeps = findProperty("testLatestDeps") as Boolean
-
 tasks {
-  if (testLatestDeps) {
-    // disable regular test running and compiling tasks when latest dep test task is run
-    named("test") {
-      enabled = false
-    }
-    named("compileTestGroovy") {
-      enabled = false
-    }
+  named("compileVersion5TestJava", JavaCompile::class).configure {
+    options.release.set(11)
   }
-
-  named("latestDepTest") {
-    enabled = testLatestDeps
+  val testJavaVersion =
+    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
+      ?: JavaVersion.current()
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
+    named("version5Test", Test::class).configure {
+      enabled = false
+    }
   }
 
   check {

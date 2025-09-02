@@ -1,0 +1,6 @@
+description: When the OSHI library is detected on the classpath, this instrumentation will use the system class loader to load classes from the oshi-core jar that are then used to generate system metrics.
+configurations:
+  - name: otel.instrumentation.oshi.experimental-metrics.enabled
+    description: Enable the OSHI process runtime metrics.
+    type: boolean
+    default: false

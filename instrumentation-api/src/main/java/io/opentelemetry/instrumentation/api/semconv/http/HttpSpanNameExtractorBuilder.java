@@ -11,10 +11,12 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -27,6 +29,12 @@ public final class HttpSpanNameExtractorBuilder<REQUEST> {
   @Nullable final HttpClientAttributesGetter<REQUEST, ?> clientGetter;
   @Nullable final HttpServerAttributesGetter<REQUEST, ?> serverGetter;
   Set<String> knownMethods = HttpConstants.KNOWN_METHODS;
+  Function<REQUEST, String> urlTemplateExtractor = unused -> null;
+
+  static {
+    Experimental.internalSetUrlTemplateExtractor(
+        (builder, urlTemplateExtractor) -> builder.urlTemplateExtractor = urlTemplateExtractor);
+  }
 
   public HttpSpanNameExtractorBuilder(
       @Nullable HttpClientAttributesGetter<REQUEST, ?> clientGetter,
@@ -87,7 +95,7 @@ public final class HttpSpanNameExtractorBuilder<REQUEST> {
   public SpanNameExtractor<REQUEST> build() {
     Set<String> knownMethods = new HashSet<>(this.knownMethods);
     return clientGetter != null
-        ? new HttpSpanNameExtractor.Client<>(clientGetter, knownMethods)
+        ? new HttpSpanNameExtractor.Client<>(clientGetter, knownMethods, urlTemplateExtractor)
         : new HttpSpanNameExtractor.Server<>(requireNonNull(serverGetter), knownMethods);
   }
 }

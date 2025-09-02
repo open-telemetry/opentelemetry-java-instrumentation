@@ -36,6 +36,8 @@ tasks {
   }
 
   val testPropagationDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("KafkaClientPropagationDisabledTest")
     }
@@ -44,6 +46,8 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("KafkaClientSuppressReceiveSpansTest")
     }
@@ -59,7 +63,6 @@ tasks {
   }
 
   check {
-    dependsOn(testPropagationDisabled)
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testPropagationDisabled, testReceiveSpansDisabled)
   }
 }

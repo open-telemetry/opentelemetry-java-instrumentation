@@ -81,10 +81,10 @@ public class DefaultExecControllerInstrumentation implements TypeInstrumentation
       @ToField(value = "initializers", index = 0),
       @ToField(value = "interceptors", index = 1)
     })
-    public static Object[] exit(
+    public static ImmutableList<?>[] exit(
         @Advice.FieldValue("initializers") ImmutableList<? extends ExecInitializer> initializers,
         @Advice.FieldValue("interceptors") ImmutableList<? extends ExecInterceptor> interceptors) {
-      return new Object[] {
+      return new ImmutableList<?>[] {
         ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE),
         ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE)
       };

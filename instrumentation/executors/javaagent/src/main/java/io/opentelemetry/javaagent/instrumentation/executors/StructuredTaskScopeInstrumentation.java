@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.executors;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -24,7 +25,10 @@ public class StructuredTaskScopeInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("java.util.concurrent.StructuredTaskScope");
+    return namedOneOf(
+        "java.util.concurrent.StructuredTaskScope",
+        // since jdk 25-ea+24
+        "java.util.concurrent.StructuredTaskScopeImpl");
   }
 
   @Override

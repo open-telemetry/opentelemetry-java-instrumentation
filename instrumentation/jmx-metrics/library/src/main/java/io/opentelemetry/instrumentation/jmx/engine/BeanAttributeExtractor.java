@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.INFO;
 
+import io.opentelemetry.instrumentation.jmx.yaml.StateMapping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -103,7 +104,7 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
     segments.add(newSegment);
   }
 
-  public BeanAttributeExtractor(String baseName, String... nameChain) {
+  private BeanAttributeExtractor(String baseName, String... nameChain) {
     if (baseName == null || nameChain == null) {
       throw new IllegalArgumentException("null argument for BeanAttributeExtractor");
     }
@@ -286,5 +287,50 @@ public class BeanAttributeExtractor implements MetricAttributeExtractor {
       return ((Enum<?>) value).name();
     }
     return null;
+  }
+
+  /**
+   * Provides a bean attribute extractor to filter-out negative values by replacing them with
+   * {@literal null}.
+   *
+   * @param extractor original extractor
+   * @return equivalent extractor filtering-out negative values
+   */
+  public static BeanAttributeExtractor filterNegativeValues(BeanAttributeExtractor extractor) {
+    return new BeanAttributeExtractor(extractor.baseName, extractor.nameChain) {
+      @Nullable
+      @Override
+      protected Number extractNumericalAttribute(
+          MBeanServerConnection connection, ObjectName objectName) {
+        Number v = super.extractNumericalAttribute(connection, objectName);
+        if (v instanceof Long || v instanceof Integer || v instanceof Short || v instanceof Byte) {
+          return v.longValue() < 0 ? null : v;
+        } else if (v instanceof Double || v instanceof Float) {
+          return v.doubleValue() < 0 ? null : v;
+        }
+        return v;
+      }
+    };
+  }
+
+  public static BeanAttributeExtractor forStateMetric(
+      BeanAttributeExtractor extractor, String key, StateMapping stateMapping) {
+    return new BeanAttributeExtractor(extractor.baseName, extractor.nameChain) {
+      @Override
+      protected Object getSampleValue(MBeanServerConnection connection, ObjectName objectName) {
+        // metric actual type is sampled in the discovery process, so we have to
+        // make this extractor as extracting integers.
+        return 0;
+      }
+
+      @Nullable
+      @Override
+      protected Number extractNumericalAttribute(
+          MBeanServerConnection connection, ObjectName objectName) {
+        String rawStateValue = extractor.extractValue(connection, objectName);
+        String mappedStateValue = stateMapping.getStateValue(rawStateValue);
+        return key.equals(mappedStateValue) ? 1 : 0;
+      }
+    };
   }
 }

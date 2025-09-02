@@ -35,6 +35,7 @@ dependencies {
   // some classes in earlier versions of derby were split out into derbytools in later versions
   latestDepTestLibrary("org.apache.derby:derbytools:latest.release")
 
+  testImplementation("com.google.guava:guava")
   testImplementation(project(":instrumentation:jdbc:testing"))
 
   // these dependencies are for SlickTest
@@ -55,28 +56,31 @@ sourceSets {
 
 tasks {
   val testSlick by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SlickTest")
     }
     include("**/SlickTest.*")
   }
 
-  test {
-    filter {
-      excludeTestsMatching("SlickTest")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-  }
-
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       excludeTestsMatching("SlickTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   val testSlickStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SlickTest")
     }
@@ -84,9 +88,32 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
+  val testCaptureParameters by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("SlickTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
+  }
+
   check {
-    dependsOn(testSlick)
-    dependsOn(testStableSemconv)
-    dependsOn(testSlickStableSemconv)
+    dependsOn(testSlick, testStableSemconv, testSlickStableSemconv, testCaptureParameters)
+  }
+}
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }

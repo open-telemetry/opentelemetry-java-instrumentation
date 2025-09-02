@@ -27,8 +27,7 @@ public final class SpringAwsUtil {
 
   // put the TracingList into thread local, so we can use it in attachTracingState method
   public static void initialize(Collection<?> messages) {
-    if (messages instanceof TracingList) {
-      TracingList tracingList = (TracingList) messages;
+    if (messages instanceof TracingList tracingList) {
       // disable tracing int the iterator of TracingList, we'll do the tracing when message handler
       // is called
       tracingList.disableTracing();
@@ -47,14 +46,19 @@ public final class SpringAwsUtil {
     if (tracingList == null) {
       return;
     }
-    if (!(originalMessage instanceof software.amazon.awssdk.services.sqs.model.Message)) {
+    if (!(originalMessage instanceof software.amazon.awssdk.services.sqs.model.Message message)) {
       return;
     }
 
-    tracingContextField.set(
-        convertedMessage,
-        new TracingContext(
-            tracingList, (software.amazon.awssdk.services.sqs.model.Message) originalMessage));
+    tracingContextField.set(convertedMessage, new TracingContext(tracingList, message));
+  }
+
+  public static void copyTracingState(Message<?> original, Message<?> transformed) {
+    if (original == transformed) {
+      return;
+    }
+
+    tracingContextField.set(transformed, tracingContextField.get(original));
   }
 
   public static MessageScope handleMessage(Message<?> message) {

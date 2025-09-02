@@ -6,7 +6,9 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 
 /**
@@ -18,6 +20,10 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<HttpClientAttributesExtractorBuilder<?, ?>, Boolean>
       redactHttpClientQueryParameters;
+
+  @Nullable
+  private static volatile BiConsumer<HttpSpanNameExtractorBuilder<?>, Function<?, String>>
+      urlTemplateExtractorSetter;
 
   private Experimental() {}
 
@@ -32,5 +38,20 @@ public final class Experimental {
       BiConsumer<HttpClientAttributesExtractorBuilder<?, ?>, Boolean>
           redactHttpClientQueryParameters) {
     Experimental.redactHttpClientQueryParameters = redactHttpClientQueryParameters;
+  }
+
+  public static <REQUEST> void setUrlTemplateExtractor(
+      HttpSpanNameExtractorBuilder<REQUEST> builder,
+      Function<REQUEST, String> urlTemplateExtractor) {
+    if (urlTemplateExtractorSetter != null) {
+      urlTemplateExtractorSetter.accept(builder, urlTemplateExtractor);
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public static <REQUEST> void internalSetUrlTemplateExtractor(
+      BiConsumer<HttpSpanNameExtractorBuilder<REQUEST>, Function<REQUEST, String>>
+          urlTemplateExtractorSetter) {
+    Experimental.urlTemplateExtractorSetter = (BiConsumer) urlTemplateExtractorSetter;
   }
 }

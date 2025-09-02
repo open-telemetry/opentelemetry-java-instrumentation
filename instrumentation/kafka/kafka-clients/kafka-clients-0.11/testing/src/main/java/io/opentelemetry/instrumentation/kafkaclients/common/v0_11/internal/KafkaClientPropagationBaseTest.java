@@ -13,7 +13,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("OtelInternalJavadoc")
 public abstract class KafkaClientPropagationBaseTest extends KafkaClientBaseTest {
   private static final boolean producerPropagationEnabled =
       Boolean.parseBoolean(

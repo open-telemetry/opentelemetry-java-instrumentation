@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SNS_TOPIC_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -24,13 +25,13 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 class AwsSpanAssertions {
@@ -65,53 +66,50 @@ class AwsSpanAssertions {
       throw new IllegalStateException("can't get rpc method from span name " + spanName);
     }
 
-    List<AttributeAssertion> attributeAssertions = new ArrayList<>();
-    attributeAssertions.addAll(
-        Arrays.asList(
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
-            satisfies(
-                stringKey("aws.queue.name"),
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isEqualTo(queueName), v -> assertThat(v).isNull())),
-            satisfies(
-                stringKey("aws.queue.url"),
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
-            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),
-            satisfies(SERVER_ADDRESS, stringAssert -> stringAssert.isInstanceOf(String.class)),
-            satisfies(
-                SERVER_PORT,
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(v).isNull(),
-                        v -> assertThat(v).isInstanceOf(Number.class))),
-            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            satisfies(RPC_METHOD, stringAssert -> stringAssert.isEqualTo(rpcMethod)),
-            equalTo(RPC_SERVICE, "AmazonSQS")));
+    List<AttributeAssertion> attributeAssertions =
+        new ArrayList<>(
+            asList(
+                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                satisfies(
+                    stringKey("aws.queue.name"),
+                    val ->
+                        val.satisfiesAnyOf(
+                            v -> assertThat(v).isEqualTo(queueName), v -> assertThat(v).isNull())),
+                satisfies(
+                    stringKey("aws.queue.url"),
+                    val ->
+                        val.satisfiesAnyOf(
+                            v -> assertThat(v).isEqualTo(queueUrl), v -> assertThat(v).isNull())),
+                satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),
+                satisfies(SERVER_ADDRESS, stringAssert -> stringAssert.isInstanceOf(String.class)),
+                satisfies(
+                    SERVER_PORT,
+                    val ->
+                        val.satisfiesAnyOf(
+                            v -> assertThat(v).isNull(),
+                            v -> assertThat(v).isInstanceOf(Number.class))),
+                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(RPC_SYSTEM, "aws-api"),
+                satisfies(RPC_METHOD, stringAssert -> stringAssert.isEqualTo(rpcMethod)),
+                equalTo(RPC_SERVICE, "AmazonSQS")));
 
     if (spanName.endsWith("receive")
         || spanName.endsWith("process")
         || spanName.endsWith("publish")) {
       attributeAssertions.addAll(
-          Arrays.asList(
+          asList(
               equalTo(MESSAGING_DESTINATION_NAME, queueName), equalTo(MESSAGING_SYSTEM, AWS_SQS)));
       if (spanName.endsWith("receive")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "receive"));
       } else if (spanName.endsWith("process")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "process"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       } else if (spanName.endsWith("publish")) {
         attributeAssertions.add(equalTo(MESSAGING_OPERATION, "publish"));
-        attributeAssertions.add(
-            satisfies(MESSAGING_MESSAGE_ID, val -> assertThat(val).isNotNull()));
+        attributeAssertions.add(satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotNull()));
       }
     }
 
@@ -124,7 +122,6 @@ class AwsSpanAssertions {
     return span.hasName(spanName)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
             equalTo(stringKey("aws.bucket.name"), bucketName),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_METHOD, spanName.substring(3)),
@@ -141,17 +138,18 @@ class AwsSpanAssertions {
                         v -> val.isInstanceOf(Number.class), v -> assertThat(v).isNull())));
   }
 
-  static SpanDataAssert sns(SpanDataAssert span, String spanName, String topicArn) {
+  static SpanDataAssert sns(
+      SpanDataAssert span, String spanName, String topicArn, String destinationName) {
     return span.hasName(spanName)
         .hasKind(CLIENT)
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            satisfies(stringKey("aws.endpoint"), val -> val.isInstanceOf(String.class)),
             satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)),
+            equalTo(AWS_SNS_TOPIC_ARN, topicArn),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_METHOD, spanName.substring(4)),
             equalTo(RPC_SERVICE, "AmazonSNS"),
-            equalTo(MESSAGING_DESTINATION_NAME, topicArn),
+            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
             equalTo(HTTP_REQUEST_METHOD, "POST"),
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             satisfies(URL_FULL, val -> val.isInstanceOf(String.class)),

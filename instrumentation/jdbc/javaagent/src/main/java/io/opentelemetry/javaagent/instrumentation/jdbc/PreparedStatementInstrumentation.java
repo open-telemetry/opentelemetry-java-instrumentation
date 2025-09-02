@@ -8,11 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.CAPTURE_QUERY_PARAMETERS;
 import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.statementInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
@@ -23,8 +26,15 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.net.URL;
+import java.sql.Date;
 import java.sql.PreparedStatement;
+import java.sql.RowId;
 import java.sql.Statement;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.util.Calendar;
+import java.util.Map;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,13 +55,51 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         nameStartsWith("execute")
-            .and(not(named("executeBatch")))
+            .and(not(namedOneOf("executeBatch", "executeLargeBatch")))
             .and(takesArguments(0))
             .and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$PreparedStatementAdvice");
     transformer.applyAdviceToMethod(
         named("addBatch").and(takesNoArguments()).and(isPublic()),
         PreparedStatementInstrumentation.class.getName() + "$AddBatchAdvice");
+    transformer.applyAdviceToMethod(
+        namedOneOf(
+                "setBoolean",
+                "setShort",
+                "setInt",
+                "setLong",
+                "setFloat",
+                "setDouble",
+                "setBigDecimal",
+                "setString",
+                "setDate",
+                "setTime",
+                "setTimestamp",
+                "setURL",
+                "setRowId",
+                "setNString",
+                "setObject")
+            .and(takesArgument(0, int.class))
+            .and(takesArguments(2))
+            .and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$SetParameter2Advice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("setDate", "setTime", "setTimestamp")
+            .and(takesArgument(0, int.class))
+            .and(takesArgument(2, Calendar.class))
+            .and(takesArguments(3))
+            .and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$SetTimeParameter3Advice");
+    transformer.applyAdviceToMethod(
+        namedOneOf("setObject")
+            .and(takesArgument(0, int.class))
+            .and(takesArgument(2, int.class))
+            .and(takesArguments(3))
+            .and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$SetParameter3Advice");
+    transformer.applyAdviceToMethod(
+        named("clearParameters").and(takesNoArguments()).and(isPublic()),
+        PreparedStatementInstrumentation.class.getName() + "$ClearParametersAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -83,7 +131,8 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       }
 
       Context parentContext = currentContext();
-      request = DbRequest.create(statement);
+      Map<String, String> parameters = JdbcData.getParameters(statement);
+      request = DbRequest.create(statement, parameters);
 
       if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
         return;
@@ -117,6 +166,102 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addBatch(@Advice.This PreparedStatement statement) {
       JdbcData.addPreparedStatementBatch(statement);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetParameter2Advice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This PreparedStatement statement,
+        @Advice.Argument(0) int index,
+        @Advice.Argument(1) Object value) {
+      if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+
+      String str = null;
+
+      if (value instanceof Boolean
+          // Short, Int, Long, Float, Double, BigDecimal
+          || value instanceof Number
+          || value instanceof String
+          || value instanceof Date
+          || value instanceof Time
+          || value instanceof Timestamp
+          || value instanceof URL
+          || value instanceof RowId) {
+        str = value.toString();
+      }
+
+      if (str != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetParameter3Advice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This PreparedStatement statement,
+        @Advice.Argument(0) int index,
+        @Advice.Argument(1) Object value,
+        @Advice.Argument(2) int targetSqlType) {
+      if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+
+      String str = null;
+
+      if (value instanceof Boolean
+          // Short, Int, Long, Float, Double, BigDecimal
+          || value instanceof Number
+          || value instanceof String
+          || value instanceof Date
+          || value instanceof Time
+          || value instanceof Timestamp
+          || value instanceof URL
+          || value instanceof RowId) {
+        str = value.toString();
+      }
+
+      if (str != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class SetTimeParameter3Advice {
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.This PreparedStatement statement,
+        @Advice.Argument(0) int index,
+        @Advice.Argument(1) Object value,
+        @Advice.Argument(2) Calendar calendar) {
+      if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+
+      String str = null;
+
+      if (value instanceof Date || value instanceof Time || value instanceof Timestamp) {
+        str = value.toString();
+      }
+
+      if (str != null) {
+        JdbcData.addParameter(statement, Integer.toString(index - 1), str);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ClearParametersAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void clearBatch(@Advice.This PreparedStatement statement) {
+      JdbcData.clearParameters(statement);
     }
   }
 }

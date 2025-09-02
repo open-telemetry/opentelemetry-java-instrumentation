@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import com.google.common.util.concurrent.MoreExecutors;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -258,6 +260,11 @@ class SpymemcachedTest {
                                             EXCEPTION_STACKTRACE,
                                             val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                ERROR_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "net.spy.memcached.internal.CheckedOperationTimeoutException"
+                                    : null),
                             equalTo(
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
@@ -880,6 +887,11 @@ class SpymemcachedTest {
                             new IllegalArgumentException("Key is too long (maxlen = 250)"))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
+                                ERROR_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "java.lang.IllegalArgumentException"
+                                    : null),
+                            equalTo(
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),
                             equalTo(maybeStable(DB_OPERATION), "decr"))));
@@ -965,6 +977,11 @@ class SpymemcachedTest {
                         .hasException(
                             new IllegalArgumentException("Key is too long (maxlen = 250)"))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                ERROR_TYPE,
+                                SemconvStability.emitStableDatabaseSemconv()
+                                    ? "java.lang.IllegalArgumentException"
+                                    : null),
                             equalTo(
                                 maybeStable(DB_SYSTEM),
                                 DbIncubatingAttributes.DbSystemIncubatingValues.MEMCACHED),

@@ -19,6 +19,7 @@ dependencies {
   // Include kafka-clients instrumentation for tests.
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
 
+  testImplementation("com.google.guava:guava")
   testImplementation("org.testcontainers:kafka")
 }
 
@@ -33,6 +34,8 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
     }

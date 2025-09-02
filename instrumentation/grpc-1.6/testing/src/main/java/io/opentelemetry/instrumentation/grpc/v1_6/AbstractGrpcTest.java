@@ -73,11 +73,9 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -177,7 +175,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -330,7 +328,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -495,7 +493,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -562,7 +560,7 @@ public abstract class AbstractGrpcTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(ErrorProvider.class)
+  @MethodSource("provideErrorArguments")
   void errorReturned(Status status) throws Exception {
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -628,7 +626,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).isNotEmpty();
@@ -691,7 +689,7 @@ public abstract class AbstractGrpcTest {
   }
 
   @ParameterizedTest
-  @ArgumentsSource(ErrorProvider.class)
+  @MethodSource("provideErrorArguments")
   void errorThrown(Status status) throws Exception {
     BindableService greeter =
         new GreeterGrpc.GreeterImplBase() {
@@ -767,7 +765,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfying(
                                 events -> {
                                   assertThat(events).hasSize(2);
@@ -824,25 +822,22 @@ public abstract class AbstractGrpcTest {
                                                     (long) Status.Code.UNKNOWN.value()))))));
   }
 
-  static class ErrorProvider implements ArgumentsProvider {
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      return Stream.of(
-          arguments(Status.UNKNOWN.withCause(new RuntimeException("some error"))),
-          arguments(Status.DEADLINE_EXCEEDED.withCause(new RuntimeException("some error"))),
-          arguments(Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))),
-          arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
-          arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
-          arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
-          arguments(Status.NOT_FOUND.withCause(new RuntimeException("some error"))),
-          arguments(Status.UNKNOWN.withDescription("some description")),
-          arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
-          arguments(Status.UNIMPLEMENTED.withDescription("some description")),
-          arguments(Status.INTERNAL.withDescription("some description")),
-          arguments(Status.UNAVAILABLE.withDescription("some description")),
-          arguments(Status.DATA_LOSS.withDescription("some description")),
-          arguments(Status.NOT_FOUND.withDescription("some description")));
-    }
+  private static Stream<Arguments> provideErrorArguments() {
+    return Stream.of(
+        arguments(Status.UNKNOWN.withCause(new RuntimeException("some error"))),
+        arguments(Status.DEADLINE_EXCEEDED.withCause(new RuntimeException("some error"))),
+        arguments(Status.UNIMPLEMENTED.withCause(new RuntimeException("some error"))),
+        arguments(Status.INTERNAL.withCause(new RuntimeException("some error"))),
+        arguments(Status.UNAVAILABLE.withCause(new RuntimeException("some error"))),
+        arguments(Status.DATA_LOSS.withCause(new RuntimeException("some error"))),
+        arguments(Status.NOT_FOUND.withCause(new RuntimeException("some error"))),
+        arguments(Status.UNKNOWN.withDescription("some description")),
+        arguments(Status.DEADLINE_EXCEEDED.withDescription("some description")),
+        arguments(Status.UNIMPLEMENTED.withDescription("some description")),
+        arguments(Status.INTERNAL.withDescription("some description")),
+        arguments(Status.UNAVAILABLE.withDescription("some description")),
+        arguments(Status.DATA_LOSS.withDescription("some description")),
+        arguments(Status.NOT_FOUND.withDescription("some description")));
   }
 
   @Test
@@ -1007,7 +1002,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1125,7 +1120,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1240,7 +1235,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1341,7 +1336,7 @@ public abstract class AbstractGrpcTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()))
+                                satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .hasEventsSatisfyingExactly(
                                 event ->
                                     event
@@ -1600,7 +1595,7 @@ public abstract class AbstractGrpcTest {
     if (Boolean.getBoolean("testLatestDeps")) {
       result.add(equalTo(NETWORK_TYPE, "ipv4"));
       result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
-      result.add(satisfies(NETWORK_PEER_PORT, val -> assertThat(val).isNotNull()));
+      result.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
     }
     return result;
   }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -24,8 +25,7 @@ import org.springframework.context.ConfigurableApplicationContext;
 class MulticastDirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
 
   @RegisterExtension
-  public static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forAgent();
+  static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
   private ConfigurableApplicationContext appContext;
 
@@ -71,18 +71,18 @@ class MulticastDirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableA
                         .hasKind(SpanKind.INTERNAL)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://input")),
+                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
                 span ->
                     span.hasName("first")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://first")),
+                            equalTo(stringKey("camel.uri"), experimental("direct://first"))),
                 span ->
                     span.hasName("second")
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), "direct://second"))));
+                            equalTo(stringKey("camel.uri"), experimental("direct://second")))));
   }
 }

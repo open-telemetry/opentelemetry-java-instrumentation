@@ -26,7 +26,8 @@ public final class HttpServerTestOptions {
   public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES =
       Collections.unmodifiableSet(
           new HashSet<>(Arrays.asList(HttpAttributes.HTTP_ROUTE, ServerAttributes.SERVER_PORT)));
-
+  public static final Set<AttributeKey<?>> DEFAULT_HTTP_ATTRIBUTES_WITHOUT_ROUTE =
+      Collections.singleton(ServerAttributes.SERVER_PORT);
   public static final SpanNameMapper DEFAULT_EXPECTED_SERVER_SPAN_NAME_MAPPER =
       (uri, method, route) -> {
         if (HttpConstants._OTHER.equals(method)) {

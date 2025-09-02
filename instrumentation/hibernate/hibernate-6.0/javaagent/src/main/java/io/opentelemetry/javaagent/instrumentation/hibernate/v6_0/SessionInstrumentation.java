@@ -64,7 +64,9 @@ public class SessionInstrumentation implements TypeInstrumentation {
                     "fireLock",
                     "refresh",
                     "insert",
-                    "delete")),
+                    "delete",
+                    "remove",
+                    "upsert")),
         SessionInstrumentation.class.getName() + "$SessionMethodAdvice");
     // Handle the non-generic 'get' separately.
     transformer.applyAdviceToMethod(

@@ -1,0 +1,9 @@
+file_format: "0.4"
+instrumentation/development:
+  java:
+    methods:
+      include:
+        - class: io.opentelemetry.javaagent.instrumentation.methods.MethodTest$ConfigTracedCallable
+          methods:
+            - name: call
+              span_kind: SERVER

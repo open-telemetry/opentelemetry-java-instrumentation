@@ -79,7 +79,7 @@ public class Netty41ClientExtension implements BeforeAllCallback, AfterAllCallba
                 ChannelPipeline pipeline = socketChannel.pipeline();
                 if (https) {
                   SslContext sslContext = SslContextBuilder.forClient().build();
-                  pipeline.addLast(sslContext.newHandler(socketChannel.alloc()));
+                  pipeline.addLast(sslContext.newHandler(socketChannel.alloc(), "localhost", -1));
                 }
                 if (readTimeout) {
                   pipeline.addLast(

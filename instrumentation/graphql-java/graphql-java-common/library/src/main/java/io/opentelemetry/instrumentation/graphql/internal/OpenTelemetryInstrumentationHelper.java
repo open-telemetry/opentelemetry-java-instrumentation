@@ -48,16 +48,22 @@ public final class OpenTelemetryInstrumentationHelper {
 
   private final Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter;
   private final boolean sanitizeQuery;
+  private final boolean addOperationNameToSpanName;
 
   private OpenTelemetryInstrumentationHelper(
       Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter,
-      boolean sanitizeQuery) {
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     this.instrumenter = instrumenter;
     this.sanitizeQuery = sanitizeQuery;
+    this.addOperationNameToSpanName = addOperationNameToSpanName;
   }
 
   public static OpenTelemetryInstrumentationHelper create(
-      OpenTelemetry openTelemetry, String instrumentationName, boolean sanitizeQuery) {
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     InstrumenterBuilder<OpenTelemetryInstrumentationState, ExecutionResult> builder =
         Instrumenter.<OpenTelemetryInstrumentationState, ExecutionResult>builder(
                 openTelemetry, instrumentationName, ignored -> "GraphQL Operation")
@@ -76,7 +82,8 @@ public final class OpenTelemetryInstrumentationHelper {
                 });
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
 
-    return new OpenTelemetryInstrumentationHelper(builder.buildInstrumenter(), sanitizeQuery);
+    return new OpenTelemetryInstrumentationHelper(
+        builder.buildInstrumenter(), sanitizeQuery, addOperationNameToSpanName);
   }
 
   public InstrumentationContext<ExecutionResult> beginExecution(
@@ -118,7 +125,7 @@ public final class OpenTelemetryInstrumentationHelper {
     String operationName = operationDefinition.getName();
 
     String spanName = operationType;
-    if (operationName != null && !operationName.isEmpty()) {
+    if (addOperationNameToSpanName && operationName != null && !operationName.isEmpty()) {
       spanName += " " + operationName;
     }
     span.updateName(spanName);

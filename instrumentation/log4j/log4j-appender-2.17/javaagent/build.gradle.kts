@@ -26,6 +26,7 @@ dependencies {
     // this dependency is needed for the slf4j->log4j test
     testImplementation("org.apache.logging.log4j:log4j-slf4j2-impl:2.+")
     testCompileOnly("biz.aQute.bnd:biz.aQute.bnd.annotation:7.0.0")
+    testCompileOnly("com.google.errorprone:error_prone_annotations")
   } else {
     // log4j 2.17 doesn't have an slf4j2 bridge
     testImplementation("org.apache.logging.log4j:log4j-slf4j-impl:2.17.0")
@@ -46,6 +47,8 @@ tasks.withType<Test>().configureEach {
 
 tasks {
   val testAsync by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 

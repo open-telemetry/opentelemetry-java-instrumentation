@@ -7,21 +7,16 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
 
-import javax.servlet.AsyncContext;
-import javax.servlet.ServletRequest;
-import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 
 @SuppressWarnings("unused")
 public class Servlet3AsyncContextStartAdvice {
 
+  @AssignReturned.ToArguments(@ToArgument(0))
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void start(
-      @Advice.This AsyncContext asyncContext,
-      @Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
-    ServletRequest request = asyncContext.getRequest();
-    if (request instanceof HttpServletRequest) {
-      runnable = helper().wrapAsyncRunnable((HttpServletRequest) request, runnable);
-    }
+  public static Runnable start(@Advice.Argument(0) Runnable runnable) {
+    return helper().wrapAsyncRunnable(runnable);
   }
 }

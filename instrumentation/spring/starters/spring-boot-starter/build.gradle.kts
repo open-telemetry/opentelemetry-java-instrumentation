@@ -21,7 +21,9 @@ dependencies {
   api("io.opentelemetry:opentelemetry-exporter-otlp")
   api("io.opentelemetry:opentelemetry-sdk")
 
+  implementation("io.opentelemetry.contrib:opentelemetry-azure-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
+  implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
 }

@@ -75,4 +75,14 @@ public interface ExperimentalInstrumentationModule {
   default Map<JavaModule, List<String>> jpmsModulesToOpen() {
     return Collections.emptyMap();
   }
+
+  /**
+   * Signals that the advice in this module is ready to be used with indy instrumentation and the
+   * automatic advice conversion doesn't need to be applied.
+   *
+   * @return true if module is ready to be used with indy instrumentation.
+   */
+  default boolean isIndyReady() {
+    return false;
+  }
 }

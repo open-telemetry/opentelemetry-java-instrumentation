@@ -1,5 +1,6 @@
 plugins {
   id("otel.java-conventions")
+  id("otel.nullaway-conventions")
 }
 
 otelJava {
@@ -7,20 +8,30 @@ otelJava {
 }
 
 dependencies {
-  implementation("org.yaml:snakeyaml:2.4")
+  implementation("org.yaml:snakeyaml:2.5")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.12.1"))
-  testImplementation("org.assertj:assertj-core:3.27.3")
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
+  testImplementation("org.assertj:assertj-core:3.27.4")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }
 
 tasks {
-  val generateDocs by registering(JavaExec::class) {
+  val runAnalysis by registering(JavaExec::class) {
     dependsOn(classes)
 
+    systemProperty("basePath", project.rootDir)
     mainClass.set("io.opentelemetry.instrumentation.docs.DocGeneratorApplication")
+    classpath(sourceSets["main"].runtimeClasspath)
+  }
+
+  val docSiteAudit by registering(JavaExec::class) {
+    dependsOn(classes)
+
+    systemProperty("basePath", project.rootDir)
+    mainClass.set("io.opentelemetry.instrumentation.docs.DocSynchronization")
     classpath(sourceSets["main"].runtimeClasspath)
   }
 }

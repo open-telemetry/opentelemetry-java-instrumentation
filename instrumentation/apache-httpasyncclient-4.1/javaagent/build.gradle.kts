@@ -16,3 +16,9 @@ muzzle {
 dependencies {
   library("org.apache.httpcomponents:httpasyncclient:4.1")
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

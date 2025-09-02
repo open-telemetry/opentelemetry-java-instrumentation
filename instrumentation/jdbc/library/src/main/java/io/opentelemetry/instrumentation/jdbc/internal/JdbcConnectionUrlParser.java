@@ -324,12 +324,12 @@ public enum JdbcConnectionUrlParser {
       portLoc = clusterSepLoc != -1 && clusterSepLoc < portLoc ? -1 : portLoc;
       int dbLoc = jdbcUrl.indexOf("/", Math.max(portLoc, clusterSepLoc));
 
-      int paramLoc = jdbcUrl.indexOf("?", dbLoc);
+      int paramLoc = dbLoc != -1 ? jdbcUrl.indexOf("?", dbLoc) : -1;
 
       if (paramLoc > 0) {
         populateStandardProperties(builder, splitQuery(jdbcUrl.substring(paramLoc + 1), "&"));
         builder.db(jdbcUrl.substring(dbLoc + 1, paramLoc));
-      } else {
+      } else if (dbLoc != -1) {
         builder.db(jdbcUrl.substring(dbLoc + 1));
       }
 
@@ -337,6 +337,7 @@ public enum JdbcConnectionUrlParser {
         return MARIA_ADDRESS.doParse(jdbcUrl, builder);
       }
 
+      dbLoc = dbLoc != -1 ? dbLoc : jdbcUrl.length();
       if (portLoc > 0) {
         hostEndLoc = portLoc;
         int portEndLoc = clusterSepLoc > 0 ? clusterSepLoc : dbLoc;
@@ -892,6 +893,24 @@ public enum JdbcConnectionUrlParser {
 
       return builder;
     }
+  },
+  /**
+   * <a
+   * href="https://clickhouse.com/docs/integrations/language-clients/java/jdbc#configuration">Driver
+   * configuration doc</a> mentions that besides <code>clickhouse</code> <code>ch</code> could also
+   * be used but ClickHouse Connection implementation always returns full prefix <code>
+   * jdbc:clickhouse:</code>
+   */
+  CLICKHOUSE("clickhouse") {
+    @Override
+    DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
+      String clickhouseUrl = jdbcUrl.substring("clickhouse:".length());
+      int typeEndIndex = clickhouseUrl.indexOf("://");
+      if (typeEndIndex > 0) {
+        builder.subtype(clickhouseUrl.substring(0, typeEndIndex));
+      }
+      return GENERIC_URL_LIKE.doParse(clickhouseUrl, builder);
+    }
   };
 
   private static final Logger logger = Logger.getLogger(JdbcConnectionUrlParser.class.getName());
@@ -1079,6 +1098,8 @@ public enum JdbcConnectionUrlParser {
         return DbSystemValues.MSSQL;
       case "sap": // SAP Hana
         return DbSystemValues.HANADB;
+      case "clickhouse": // ClickHouse
+        return DbSystemValues.CLICKHOUSE;
       default:
         return DbSystemValues.OTHER_SQL; // Unknown DBMS
     }
@@ -1098,6 +1119,7 @@ public enum JdbcConnectionUrlParser {
     static final String DERBY = "derby";
     static final String MARIADB = "mariadb";
     static final String H2 = "h2";
+    static final String CLICKHOUSE = "clickhouse";
 
     private DbSystemValues() {}
   }

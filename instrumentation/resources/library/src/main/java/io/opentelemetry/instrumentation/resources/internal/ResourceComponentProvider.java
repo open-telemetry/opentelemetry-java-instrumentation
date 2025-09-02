@@ -13,9 +13,11 @@ import java.util.function.Supplier;
 /** Abstract class to simply {@link Resource} {@link ComponentProvider} implementations. */
 abstract class ResourceComponentProvider implements ComponentProvider<Resource> {
 
+  private final String name;
   private final Supplier<Resource> supplier;
 
-  ResourceComponentProvider(Supplier<Resource> supplier) {
+  ResourceComponentProvider(String name, Supplier<Resource> supplier) {
+    this.name = name;
     this.supplier = supplier;
   }
 
@@ -26,8 +28,7 @@ abstract class ResourceComponentProvider implements ComponentProvider<Resource> 
 
   @Override
   public String getName() {
-    // getName() is unused for Resource ComponentProviders
-    return "unused";
+    return name;
   }
 
   @Override

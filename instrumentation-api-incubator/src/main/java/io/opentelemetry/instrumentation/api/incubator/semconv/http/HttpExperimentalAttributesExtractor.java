@@ -26,6 +26,9 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<Long> HTTP_RESPONSE_BODY_SIZE =
       AttributeKey.longKey("http.response.body.size");
 
+  // copied from UrlIncubatingAttributes
+  private static final AttributeKey<String> URL_TEMPLATE = AttributeKey.stringKey("url.template");
+
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
       HttpClientAttributesGetter<REQUEST, RESPONSE> getter) {
     return new HttpExperimentalAttributesExtractor<>(getter);
@@ -60,6 +63,12 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
     if (response != null) {
       Long responseBodySize = responseBodySize(request, response);
       internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
+    }
+
+    if (getter instanceof HttpClientExperimentalAttributesGetter) {
+      HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalGetter =
+          (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) getter;
+      internalSet(attributes, URL_TEMPLATE, experimentalGetter.getUrlTemplate(request));
     }
   }
 

@@ -23,6 +23,8 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("InterceptorsSuppressReceiveSpansTest")
       includeTestsMatching("WrapperSuppressReceiveSpansTest")
@@ -36,6 +38,7 @@ tasks {
       excludeTestsMatching("WrapperSuppressReceiveSpansTest")
     }
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
 
   check {

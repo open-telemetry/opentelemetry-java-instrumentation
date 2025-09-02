@@ -10,11 +10,9 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.JfrFeature;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.AbstractThreadDispatchingHandler;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.Constants;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.DurationUtil;
-import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.ThreadGrouper;
-import java.util.function.Consumer;
+import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RecordedEventHandler;
 import jdk.jfr.consumer.RecordedEvent;
 
 // jdk.SocketWrite {
@@ -39,14 +37,15 @@ import jdk.jfr.consumer.RecordedEvent;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class NetworkWriteHandler extends AbstractThreadDispatchingHandler {
+public final class NetworkWriteHandler implements RecordedEventHandler {
   private static final String EVENT_NAME = "jdk.SocketWrite";
+  private static final String BYTES_WRITTEN = "bytesWritten";
 
   private final LongHistogram bytesHistogram;
   private final DoubleHistogram durationHistogram;
+  private final Attributes attributes;
 
-  public NetworkWriteHandler(Meter meter, ThreadGrouper nameNormalizer) {
-    super(nameNormalizer);
+  public NetworkWriteHandler(Meter meter) {
     bytesHistogram =
         meter
             .histogramBuilder(Constants.METRIC_NAME_NETWORK_BYTES)
@@ -60,6 +59,7 @@ public final class NetworkWriteHandler extends AbstractThreadDispatchingHandler 
             .setDescription(Constants.METRIC_DESCRIPTION_NETWORK_DURATION)
             .setUnit(Constants.SECONDS)
             .build();
+    attributes = Attributes.of(Constants.ATTR_NETWORK_MODE, Constants.NETWORK_MODE_WRITE);
   }
 
   @Override
@@ -73,33 +73,8 @@ public final class NetworkWriteHandler extends AbstractThreadDispatchingHandler 
   }
 
   @Override
-  public Consumer<RecordedEvent> createPerThreadSummarizer(String threadName) {
-    return new PerThreadNetworkWriteHandler(bytesHistogram, durationHistogram, threadName);
-  }
-
-  private static final class PerThreadNetworkWriteHandler implements Consumer<RecordedEvent> {
-    private static final String BYTES_WRITTEN = "bytesWritten";
-
-    private final LongHistogram bytesHistogram;
-    private final DoubleHistogram durationHistogram;
-    private final Attributes attributes;
-
-    private PerThreadNetworkWriteHandler(
-        LongHistogram bytesHistogram, DoubleHistogram durationHistogram, String threadName) {
-      this.bytesHistogram = bytesHistogram;
-      this.durationHistogram = durationHistogram;
-      this.attributes =
-          Attributes.of(
-              Constants.ATTR_THREAD_NAME,
-              threadName,
-              Constants.ATTR_NETWORK_MODE,
-              Constants.NETWORK_MODE_WRITE);
-    }
-
-    @Override
-    public void accept(RecordedEvent ev) {
-      bytesHistogram.record(ev.getLong(BYTES_WRITTEN), attributes);
-      durationHistogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
-    }
+  public void accept(RecordedEvent ev) {
+    bytesHistogram.record(ev.getLong(BYTES_WRITTEN), attributes);
+    durationHistogram.record(DurationUtil.toSeconds(ev.getDuration()), attributes);
   }
 }

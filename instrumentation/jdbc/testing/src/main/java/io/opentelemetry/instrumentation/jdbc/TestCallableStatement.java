@@ -13,6 +13,7 @@ import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
 import java.sql.Clob;
+import java.sql.Connection;
 import java.sql.Date;
 import java.sql.NClob;
 import java.sql.Ref;
@@ -25,6 +26,10 @@ import java.util.Calendar;
 import java.util.Map;
 
 class TestCallableStatement extends TestPreparedStatement implements CallableStatement {
+  TestCallableStatement(Connection connection) {
+    super(connection);
+  }
+
   @Override
   public Array getArray(int parameterIndex) throws SQLException {
     return null;

@@ -103,22 +103,6 @@ public final class SpringWebMvcTelemetryBuilder {
   }
 
   /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
-   *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(SpringWebMvcTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerTelemetry(emitExperimentalHttpServerMetrics);
-    return this;
-  }
-
-  /**
    * Returns a new {@link SpringWebMvcTelemetry} with the settings of this {@link
    * SpringWebMvcTelemetryBuilder}.
    */

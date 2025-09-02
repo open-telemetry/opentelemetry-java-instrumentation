@@ -4,23 +4,25 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "1.3.1"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.1.20"
+    id("org.jetbrains.kotlin.jvm") version "2.2.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("org.unbroken-dome.xjc") version "2.0.0"
-    id("org.graalvm.buildtools.native") version "0.10.6"
+    id("com.github.bjornvester.xjc") version "1.8.2"
+    id("org.graalvm.buildtools.native") version "0.11.0"
+    id("com.google.osdetector") version "1.7.3"
+    id("com.google.protobuf") version "0.9.5"
   }
 }
 
 plugins {
-  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.1"
-  id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
+  id("com.gradle.common-custom-user-data-gradle-plugin") version "2.3"
+  id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0"
   // this can't live in pluginManagement currently due to
   // https://github.com/bmuschko/gradle-docker-plugin/issues/1123
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "3.19.2"
+  id("com.gradle.develocity") version "4.1.1"
 }
 
 dependencyResolutionManagement {
@@ -39,8 +41,6 @@ dependencyResolutionManagement {
         plugin("versions", "org.springframework.boot").version(version)
       }
     }
-    // r2dbc is not compatible with earlier versions
-    addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
     // spring boot 3.0 is not compatible with graalvm native image
     addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
     addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
@@ -103,6 +103,7 @@ include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:armeria-shaded-for-testing")
 include(":testing:proto-shaded-for-testing")
+include(":testing:wiremock-shaded-for-testing")
 include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
@@ -156,12 +157,15 @@ include(":instrumentation:armeria:armeria-1.3:testing")
 include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
+include(":instrumentation:avaje-jex-3.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:library")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:testing")
 include(":instrumentation:aws-lambda:aws-lambda-events-2.2:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-events-2.2:library")
 include(":instrumentation:aws-lambda:aws-lambda-events-2.2:testing")
+include(":instrumentation:aws-lambda:aws-lambda-events-3.11:library")
+include(":instrumentation:aws-lambda:aws-lambda-events-common-2.2:library")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:javaagent")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:library")
 include(":instrumentation:aws-sdk:aws-sdk-1.11:library-autoconfigure")
@@ -251,6 +255,7 @@ include(":instrumentation:hibernate:hibernate-6.0:spring-testing")
 include(":instrumentation:hibernate:hibernate-common:javaagent")
 include(":instrumentation:hibernate:hibernate-procedure-call-4.3:javaagent")
 include(":instrumentation:hibernate:hibernate-reactive-1.0:javaagent")
+include(":instrumentation:hibernate:hibernate-reactive-1.0:hibernate-reactive-2.0-testing")
 include(":instrumentation:hikaricp-3.0:javaagent")
 include(":instrumentation:hikaricp-3.0:library")
 include(":instrumentation:hikaricp-3.0:testing")
@@ -344,6 +349,7 @@ include(":instrumentation:jms:jms-common:javaagent")
 include(":instrumentation:jms:jms-common:javaagent-unit-tests")
 include(":instrumentation:jmx-metrics:javaagent")
 include(":instrumentation:jmx-metrics:library")
+include(":instrumentation:jmx-metrics:testing-webapp")
 include(":instrumentation:jodd-http-4.2:javaagent")
 include(":instrumentation:jodd-http-4.2:javaagent-unit-tests")
 include(":instrumentation:jsf:jsf-jakarta-common:javaagent")
@@ -421,9 +427,15 @@ include(":instrumentation:okhttp:okhttp-2.2:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:javaagent")
 include(":instrumentation:okhttp:okhttp-3.0:library")
 include(":instrumentation:okhttp:okhttp-3.0:testing")
+include(":instrumentation:openai:openai-java-1.1:javaagent")
+include(":instrumentation:openai:openai-java-1.1:library")
+include(":instrumentation:openai:openai-java-1.1:testing")
+include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common:javaagent")
+include(":instrumentation:opensearch:opensearch-rest-common:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
@@ -436,6 +448,8 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.38:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")
@@ -462,7 +476,9 @@ include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
 include(":instrumentation:quarkus-resteasy-reactive:common-testing")
 include(":instrumentation:quarkus-resteasy-reactive:javaagent")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus2-plugin")
 include(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus3-plugin")
 include(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")
@@ -581,6 +597,7 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
+include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")
@@ -598,12 +615,18 @@ include(":instrumentation:vaadin-14.2:javaagent")
 include(":instrumentation:vaadin-14.2:testing")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-http-client:vertx-http-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-http-client:vertx-http-client-common:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:javaagent")
 include(":instrumentation:vertx:vertx-kafka-client-3.6:testing")
+include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-3.6-testing")
+include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-4-testing")
+include(":instrumentation:vertx:vertx-kafka-client-3.6:vertx-kafka-client-5-testing")
 include(":instrumentation:vertx:vertx-redis-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-rx-java-3.5:javaagent")
-include(":instrumentation:vertx:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
+include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")
 include(":instrumentation:vibur-dbcp-11.0:javaagent")

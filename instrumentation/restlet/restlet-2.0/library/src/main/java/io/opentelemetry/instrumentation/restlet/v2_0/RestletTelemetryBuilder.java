@@ -84,22 +84,6 @@ public final class RestletTelemetryBuilder {
     return this;
   }
 
-  /**
-   * Configures the instrumentation to emit experimental HTTP server metrics.
-   *
-   * @param emitExperimentalHttpServerMetrics {@code true} if the experimental HTTP server metrics
-   *     are to be emitted.
-   * @deprecated Use {@link Experimental#setEmitExperimentalTelemetry(RestletTelemetryBuilder,
-   *     boolean)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public RestletTelemetryBuilder setEmitExperimentalHttpServerMetrics(
-      boolean emitExperimentalHttpServerMetrics) {
-    builder.setEmitExperimentalHttpServerTelemetry(emitExperimentalHttpServerMetrics);
-    return this;
-  }
-
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setSpanNameExtractor(

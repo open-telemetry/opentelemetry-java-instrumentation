@@ -41,7 +41,7 @@ public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPO
     }
 
     ServletResponseContext<RESPONSE> responseContext = new ServletResponseContext<>(response);
-    if (throwable != null || mustEndOnHandlerMethodExit(request)) {
+    if (throwable != null || mustEndOnHandlerMethodExit(context)) {
       instrumenter.end(context, requestContext, responseContext, throwable);
     }
   }

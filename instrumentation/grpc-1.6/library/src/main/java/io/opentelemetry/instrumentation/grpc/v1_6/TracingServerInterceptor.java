@@ -20,7 +20,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
 
 final class TracingServerInterceptor implements ServerInterceptor {
@@ -46,9 +45,6 @@ final class TracingServerInterceptor implements ServerInterceptor {
   private static final AtomicLongFieldUpdater<TracingServerCall> RECEIVED_MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "receivedMessageId");
 
-  private static final VirtualField<ServerCall<?, ?>, String> AUTHORITY_FIELD =
-      VirtualField.find(ServerCall.class, String.class);
-
   private final Instrumenter<GrpcRequest, Status> instrumenter;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean emitMessageEvents;
@@ -72,7 +68,7 @@ final class TracingServerInterceptor implements ServerInterceptor {
       // Armeria grpc server call does not implement getAuthority(). In
       // ArmeriaServerCallInstrumentation we store the value for the authority header in a virtual
       // field.
-      authority = AUTHORITY_FIELD.get(call);
+      authority = GrpcAuthorityStorage.getAuthority(call);
     }
     GrpcRequest request =
         new GrpcRequest(

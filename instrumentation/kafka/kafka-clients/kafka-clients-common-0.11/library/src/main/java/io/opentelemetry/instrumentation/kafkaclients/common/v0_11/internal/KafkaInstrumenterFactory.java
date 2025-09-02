@@ -62,17 +62,6 @@ public final class KafkaInstrumenterFactory {
     return this;
   }
 
-  /**
-   * @deprecated if you have a need for this configuration option please open an issue in the <a
-   *     href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues">opentelemetry-java-instrumentation</a>
-   *     repository.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public KafkaInstrumenterFactory setPropagationEnabled(boolean propagationEnabled) {
-    return this;
-  }
-
   @CanIgnoreReturnValue
   public KafkaInstrumenterFactory setMessagingReceiveInstrumentationEnabled(
       boolean messagingReceiveInstrumentationEnabled) {

@@ -8,40 +8,27 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import javax.annotation.Nullable;
 
 /** An interface for getting attributes common to database clients. */
-public interface DbClientCommonAttributesGetter<REQUEST> {
+public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
+
+  String getDbSystem(REQUEST request);
 
   @Deprecated
   @Nullable
-  default String getSystem(REQUEST request) {
+  default String getUser(REQUEST request) {
     return null;
   }
 
-  // TODO: make this required to implement
   @Nullable
-  default String getDbSystem(REQUEST request) {
-    return getSystem(request);
-  }
+  String getDbNamespace(REQUEST request);
 
   @Deprecated
   @Nullable
-  String getUser(REQUEST request);
-
-  /**
-   * @deprecated Use {@link #getDbNamespace(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getName(REQUEST request) {
+  default String getConnectionString(REQUEST request) {
     return null;
   }
 
-  // TODO: make this required to implement
   @Nullable
-  default String getDbNamespace(REQUEST request) {
-    return getName(request);
+  default String getResponseStatus(@Nullable RESPONSE response, @Nullable Throwable error) {
+    return null;
   }
-
-  @Deprecated
-  @Nullable
-  String getConnectionString(REQUEST request);
 }

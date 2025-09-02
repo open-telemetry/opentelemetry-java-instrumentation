@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
@@ -61,6 +62,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
 
     context = addServletContextPath(context, request);
+    context = addAsyncContext(context);
 
     attachServerContext(context, request);
 
@@ -69,6 +71,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   protected Context addServletContextPath(Context context, REQUEST request) {
     return ServletContextPath.init(context, contextPathExtractor, request);
+  }
+
+  protected Context addAsyncContext(Context context) {
+    return ServletAsyncContext.init(context);
   }
 
   public Context getServerContext(REQUEST request) {
@@ -87,6 +93,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   public Context updateContext(
       Context context, REQUEST request, MappingResolver mappingResolver, boolean servlet) {
     Context result = addServletContextPath(context, request);
+    result = addAsyncContext(result);
+
     if (mappingResolver != null) {
       HttpServerRoute.update(
           result, servlet ? SERVER : SERVER_FILTER, spanNameProvider, mappingResolver, request);
@@ -125,7 +133,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
-    parameterExtractor.setAttributes(request, (key, value) -> serverSpan.setAttribute(key, value));
+    parameterExtractor.setAttributes(request, serverSpan::setAttribute);
   }
 
   /**

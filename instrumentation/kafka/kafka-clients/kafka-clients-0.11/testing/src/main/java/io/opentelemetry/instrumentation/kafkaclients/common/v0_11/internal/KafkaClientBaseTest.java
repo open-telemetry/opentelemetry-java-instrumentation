@@ -58,7 +58,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.kafka.KafkaContainer;
 import org.testcontainers.utility.DockerImageName;
 
-@SuppressWarnings("OtelInternalJavadoc")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class KafkaClientBaseTest {
   private static final Logger logger = LoggerFactory.getLogger(KafkaClientBaseTest.class);
@@ -189,7 +188,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -212,7 +211,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -250,7 +249,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.test_message_header"),
+              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
               Collections.singletonList("test")));
     }
 

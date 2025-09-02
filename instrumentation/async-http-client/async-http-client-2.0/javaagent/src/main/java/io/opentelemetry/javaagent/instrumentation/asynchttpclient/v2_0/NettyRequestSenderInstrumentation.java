@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0;
 
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.ASYNC_HANDLER_REQUEST_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v2_0.AsyncHttpClientSingletons.REQUEST_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -12,14 +14,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.asynchttpclient.AsyncHandler;
 import org.asynchttpclient.Request;
 import org.asynchttpclient.netty.NettyResponseFuture;
 
@@ -59,8 +59,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter
     public static void attachContext(@Advice.Argument(0) Request request) {
-      VirtualField.find(Request.class, Context.class)
-          .set(request, Java8BytecodeBridge.currentContext());
+      REQUEST_CONTEXT.set(request, Java8BytecodeBridge.currentContext());
     }
   }
 
@@ -70,7 +69,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static Scope mountContext(@Advice.Argument(0) NettyResponseFuture<?> responseFuture) {
       Request request = responseFuture.getCurrentRequest();
-      Context context = VirtualField.find(Request.class, Context.class).get(request);
+      Context context = REQUEST_CONTEXT.get(request);
       return context == null ? null : context.makeCurrent();
     }
 
@@ -88,8 +87,7 @@ public class NettyRequestSenderInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static void rememberNettyRequest(@Advice.Return NettyResponseFuture<?> responseFuture) {
       RequestContext requestContext =
-          VirtualField.find(AsyncHandler.class, RequestContext.class)
-              .get(responseFuture.getAsyncHandler());
+          ASYNC_HANDLER_REQUEST_CONTEXT.get(responseFuture.getAsyncHandler());
       if (requestContext != null) {
         requestContext.setNettyRequest(responseFuture.getNettyRequest());
       }

@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.hasParameters;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
@@ -79,13 +80,13 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         tracedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        tracedMethodsWithoutParameters,
+        tracedMethodsWithoutParameters.and(isMethod()),
         WithSpanInstrumentation.class.getName() + "$WithSpanAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
     // with @SpanAttribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
-        tracedMethodsWithParameters,
+        tracedMethodsWithParameters.and(isMethod()),
         WithSpanInstrumentation.class.getName() + "$WithSpanAttributesAdvice");
   }
 

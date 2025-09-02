@@ -5,12 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
-    implements DbClientAttributesGetter<OpenSearchRestRequest> {
+    implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
@@ -48,5 +50,12 @@ final class OpenSearchRestAttributesGetter
   @Nullable
   public String getDbOperationName(OpenSearchRestRequest request) {
     return request.getMethod();
+  }
+
+  @Nullable
+  @Override
+  public String getResponseStatus(
+      @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
+    return response != null ? dbResponseStatusCode(response.getStatusCode()) : null;
   }
 }

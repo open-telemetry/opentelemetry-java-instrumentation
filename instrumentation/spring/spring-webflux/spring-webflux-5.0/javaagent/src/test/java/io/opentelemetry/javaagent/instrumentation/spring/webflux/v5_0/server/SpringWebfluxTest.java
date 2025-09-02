@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionPrefixAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -24,13 +26,12 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
 import static org.junit.jupiter.api.Named.named;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.EventDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -139,18 +140,19 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.isEqualTo("handle")
-                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
-                          satisfies(
-                              CODE_NAMESPACE,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                  : val -> val.isEqualTo(TestController.class.getName())));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));
+  }
+
+  private static List<AttributeAssertion> assertCodeFunction(Parameter parameter) {
+    String expectedFunctionName =
+        parameter.annotatedMethod == null ? "handle" : parameter.annotatedMethod;
+    String expectedPrefix =
+        parameter.annotatedMethod == null
+            ? INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX
+            : TestController.class.getName();
+
+    return codeFunctionPrefixAssertions(expectedPrefix, expectedFunctionName);
   }
 
   private static Stream<Arguments> provideParameters() {
@@ -263,17 +265,7 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.isEqualTo("handle")
-                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
-                          satisfies(
-                              CODE_NAMESPACE,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                  : val -> val.isEqualTo(TestController.class.getName())));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 },
                 span ->
                     span.hasName("tracedMethod")
@@ -374,17 +366,7 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.isEqualTo("handle")
-                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
-                          satisfies(
-                              CODE_NAMESPACE,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                  : val -> val.isEqualTo(TestController.class.getName())));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 },
                 span ->
                     span.hasName("tracedMethod")
@@ -445,10 +427,9 @@ public class SpringWebfluxTest {
                         .hasStatus(StatusData.error())
                         .hasEventsSatisfyingExactly(SpringWebfluxTest::resource404Exception)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION, "handle"),
-                            equalTo(
-                                CODE_NAMESPACE,
-                                "org.springframework.web.reactive.resource.ResourceWebHandler"))));
+                            codeFunctionAssertions(
+                                "org.springframework.web.reactive.resource.ResourceWebHandler",
+                                "handle"))));
   }
 
   private static void resource404Exception(EventDataAssert event) {
@@ -503,8 +484,7 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION, "handle"),
-                            equalTo(CODE_NAMESPACE, EchoHandlerFunction.class.getName())),
+                            codeFunctionAssertions(EchoHandlerFunction.class, "handle")),
                 span ->
                     span.hasName("echo").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0)));
   }
@@ -560,17 +540,7 @@ public class SpringWebfluxTest {
                                       satisfies(
                                           EXCEPTION_STACKTRACE,
                                           val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.isEqualTo("handle")
-                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
-                          satisfies(
-                              CODE_NAMESPACE,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                  : val -> val.isEqualTo(TestController.class.getName())));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 }));
   }
 
@@ -625,10 +595,8 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION, "handle"),
-                            satisfies(
-                                CODE_NAMESPACE,
-                                val -> val.startsWith("server.RedirectComponent$$Lambda")))),
+                            codeFunctionPrefixAssertions(
+                                "server.RedirectComponent$$Lambda", "handle"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -654,10 +622,8 @@ public class SpringWebfluxTest {
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(CODE_FUNCTION, "handle"),
-                          satisfies(
-                              CODE_NAMESPACE,
-                              val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)));
+                          codeFunctionPrefixAssertions(
+                              INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX, "handle"));
                 }));
   }
 
@@ -711,17 +677,7 @@ public class SpringWebfluxTest {
                   }
                   span.hasKind(SpanKind.INTERNAL)
                       .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.isEqualTo("handle")
-                                  : val -> val.isEqualTo(parameter.annotatedMethod)),
-                          satisfies(
-                              CODE_NAMESPACE,
-                              parameter.annotatedMethod == null
-                                  ? val -> val.contains(INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX)
-                                  : val -> val.isEqualTo(TestController.class.getName())));
+                      .hasAttributesSatisfyingExactly(assertCodeFunction(parameter));
                 });
 
     testing.waitAndAssertTraces(Collections.nCopies(requestsCount, traceAssertion));
@@ -789,17 +745,18 @@ public class SpringWebfluxTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION, "handle"),
-                            satisfies(
-                                CODE_NAMESPACE,
-                                val ->
-                                    val.startsWith(
-                                        "server.SpringWebFluxTestApplication$$Lambda")))));
+                            codeFunctionPrefixAssertions(
+                                "server.SpringWebFluxTestApplication$$Lambda", "handle"))));
 
     SpringWebFluxTestApplication.resumeSlowRequest();
   }
 
   private static class Parameter {
+    final String urlPath;
+    final String urlPathWithVariables;
+    final String annotatedMethod;
+    final String expectedResponseBody;
+
     Parameter(
         String urlPath,
         String urlPathWithVariables,
@@ -810,10 +767,5 @@ public class SpringWebfluxTest {
       this.annotatedMethod = annotatedMethod;
       this.expectedResponseBody = expectedResponseBody;
     }
-
-    public final String urlPath;
-    public final String urlPathWithVariables;
-    public final String annotatedMethod;
-    public final String expectedResponseBody;
   }
 }

@@ -1,0 +1,6 @@
+description: This instrumentation enables tracing for Spring Scheduling tasks.
+configurations:
+  - name: otel.instrumentation.spring-scheduling.experimental-span-attributes
+    description: Adds the experimental span attribute `job.system` with the value `spring_scheduling`.
+    type: boolean
+    default: false

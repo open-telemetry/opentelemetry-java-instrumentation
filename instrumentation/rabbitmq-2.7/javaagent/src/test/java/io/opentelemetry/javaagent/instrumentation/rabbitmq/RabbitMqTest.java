@@ -513,7 +513,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   void captureMessageHeaderAsSpanAttributes() throws IOException, InterruptedException {
     String queueName = channel.queueDeclare().getQueue();
     Map<String, Object> headers = new java.util.HashMap<>();
-    headers.put("test-message-header", "test");
+    headers.put("Test_Message_Header", "test");
     AMQP.BasicProperties properties = new AMQP.BasicProperties.Builder().headers(headers).build();
     channel.basicPublish(
         "", queueName, properties, "Hello, world!".getBytes(Charset.defaultCharset()));
@@ -555,7 +555,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                                   List<String> verifyHeaders =
                                       attrs.get(
                                           AttributeKey.stringArrayKey(
-                                              "messaging.header.test_message_header"));
+                                              "messaging.header.Test_Message_Header"));
                                   assertNotNull(verifyHeaders);
                                   assertTrue(verifyHeaders.contains("test"));
                                 });
@@ -579,7 +579,7 @@ class RabbitMqTest extends AbstractRabbitMqTest {
                                   List<String> verifyHeaders =
                                       attrs.get(
                                           AttributeKey.stringArrayKey(
-                                              "messaging.header.test_message_header"));
+                                              "messaging.header.Test_Message_Header"));
                                   assertNotNull(verifyHeaders);
                                   assertTrue(verifyHeaders.contains("test"));
                                 });

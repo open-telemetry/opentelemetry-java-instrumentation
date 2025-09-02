@@ -46,14 +46,6 @@ public final class KafkaTelemetryBuilder {
     return this;
   }
 
-  /** Use {@link #addConsumerProcessAttributesExtractors(AttributesExtractor)} instead. */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public KafkaTelemetryBuilder addConsumerAttributesExtractors(
-      AttributesExtractor<KafkaProcessRequest, Void> extractor) {
-    return addConsumerProcessAttributesExtractors(extractor);
-  }
-
   @CanIgnoreReturnValue
   public KafkaTelemetryBuilder addConsumerProcessAttributesExtractors(
       AttributesExtractor<KafkaProcessRequest, Void> extractor) {

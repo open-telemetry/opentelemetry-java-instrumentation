@@ -81,6 +81,7 @@ enum KafkaConsumerAttributesGetter implements MessagingAttributesGetter<KafkaPro
   @Override
   public List<String> getMessageHeader(KafkaProcessRequest request, String name) {
     return StreamSupport.stream(request.getRecord().headers().headers(name).spliterator(), false)
+        .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), StandardCharsets.UTF_8))
         .collect(Collectors.toList());
   }

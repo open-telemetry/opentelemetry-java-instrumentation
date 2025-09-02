@@ -1,0 +1,8 @@
+description: > 
+  This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also
+  optionally enables experimental controller (INTERNAL) spans.
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller (INTERNAL) spans.
+    type: boolean
+    default: false

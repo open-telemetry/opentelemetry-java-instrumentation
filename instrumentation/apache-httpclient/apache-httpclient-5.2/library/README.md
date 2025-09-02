@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [Apache Http Client 5.2](https://hc.a
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-apache-httpclient-5.2).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-apache-httpclient-5.2).
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -47,12 +47,12 @@ public class ApacheHttpClientConfiguration {
     this.openTelemetry = openTelemetry;
   }
 
-  // creates a new http client builder for constructing http clients with open telemetry instrumentation
+  // creates a new http client builder for constructing http clients with opentelemetry instrumentation
   public HttpClientBuilder createBuilder() {
     return ApacheHttpClientTelemetry.builder(openTelemetry).build().newHttpClientBuilder();
   }
 
-  // creates a new http client with open telemetry instrumentation
+  // creates a new http client with opentelemetry instrumentation
   public HttpClient newHttpClient() {
     return ApacheHttpClientTelemetry.builder(openTelemetry).build().newHttpClient();
   }

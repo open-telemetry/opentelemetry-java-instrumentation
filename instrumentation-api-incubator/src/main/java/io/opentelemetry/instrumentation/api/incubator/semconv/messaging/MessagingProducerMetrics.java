@@ -47,7 +47,7 @@ public final class MessagingProducerMetrics implements OperationListener {
   }
 
   public static OperationMetrics get() {
-    return OperationMetricsUtil.create("messaging produce", MessagingProducerMetrics::new);
+    return OperationMetricsUtil.create("messaging producer", MessagingProducerMetrics::new);
   }
 
   @Override

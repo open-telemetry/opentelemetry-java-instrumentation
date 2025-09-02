@@ -16,10 +16,15 @@ public final class GraphqlSingletons {
   private static final boolean QUERY_SANITIZATION_ENABLED =
       AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
+  private static final boolean ADD_OPERATION_NAME_TO_SPAN_NAME =
+      AgentInstrumentationConfig.get()
+          .getBoolean(
+              "otel.instrumentation.graphql.add-operation-name-to-span-name.enabled", false);
 
   private static final GraphQLTelemetry TELEMETRY =
       GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
           .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
+          .setAddOperationNameToSpanName(ADD_OPERATION_NAME_TO_SPAN_NAME)
           .build();
 
   private GraphqlSingletons() {}

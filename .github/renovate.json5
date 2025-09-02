@@ -1,9 +1,8 @@
 {
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
   extends: [
-    'config:recommended',
-    'docker:pinDigests',
-    'helpers:pinGitHubActionDigests',
+    'config:best-practices',
+    'helpers:pinGitHubActionDigestsToSemver',
   ],
   ignorePaths: [
     'instrumentation/**',
@@ -28,9 +27,11 @@
     },
     {
       matchPackageNames: [
+        'io.opentelemetry.contrib:opentelemetry-azure-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-resources',
         'io.opentelemetry.contrib:opentelemetry-aws-xray-propagator',
         'io.opentelemetry.contrib:opentelemetry-gcp-resources',
+        'io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources',
         'io.opentelemetry.contrib:opentelemetry-baggage-processor',
         'io.opentelemetry.proto:opentelemetry-proto',
         'io.opentelemetry.semconv:opentelemetry-semconv',
@@ -76,6 +77,12 @@
       groupName: 'gradle shadow packages',
       matchPackageNames: [
         'com.gradleup.shadow{/,}**',
+      ],
+    },
+    {
+      groupName: 'guava packages',
+      matchPackageNames: [
+        'com.google.guava{/,}**',
       ],
     },
     {
@@ -135,6 +142,16 @@
         'minor',
       ],
       enabled: false,
+    },
+    {
+      // wiremock 3+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'com.github.tomakehurst:wiremock-jre8'
+      ],
     },
     {
       // intentionally using Spring Boot 2 in this smoke tests
@@ -322,8 +339,8 @@
     {
       customType: 'regex',
       datasourceTemplate: 'pypi',
-      fileMatch: [
-        '^.github/workflows/',
+      managerFilePatterns: [
+        '/^.github/workflows//',
       ],
       matchStrings: [
         'pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)',
@@ -332,8 +349,8 @@
     {
       customType: 'regex',
       datasourceTemplate: 'npm',
-      fileMatch: [
-        '^.github/workflows/',
+      managerFilePatterns: [
+        '/^.github/workflows//',
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
