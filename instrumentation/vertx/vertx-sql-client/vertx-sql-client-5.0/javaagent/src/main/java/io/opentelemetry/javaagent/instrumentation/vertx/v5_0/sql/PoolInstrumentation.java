@@ -19,7 +19,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -61,6 +60,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class PoolAdvice {
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
       CallDepth callDepth = CallDepth.forClass(Pool.class);
@@ -81,10 +81,6 @@ public class PoolInstrumentation implements TypeInstrumentation {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
-
-      VirtualField<Pool, SqlConnectOptions> virtualField =
-          VirtualField.find(Pool.class, SqlConnectOptions.class);
-      virtualField.set(pool, sqlConnectOptions);
 
       setPoolConnectOptions(pool, sqlConnectOptions);
       setSqlConnectOptions(null);
