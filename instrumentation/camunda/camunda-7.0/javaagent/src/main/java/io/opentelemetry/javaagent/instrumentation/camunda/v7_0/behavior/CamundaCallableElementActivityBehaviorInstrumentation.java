@@ -73,10 +73,6 @@ public class CamundaCallableElementActivityBehaviorInstrumentation implements Ty
       request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
       request.setBusinessKey(Optional.ofNullable(execution.getProcessBusinessKey()));
 
-      if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {
-        // log
-      }
-
       Context parentContext =
           getOpentelemetry()
               .getPropagators()

@@ -73,7 +73,8 @@ public abstract class AbstractCamundaTest {
                     span.hasName("testMainProcess")
                         .hasKind(SpanKind.INTERNAL)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camunda.processdefinitionkey"), "testMainProcess")),
+                            equalTo(stringKey("camunda.processdefinitionkey"), "testMainProcess"))
+                        .hasNoParent(),
                 span ->
                     span.hasName("Get Product Info Task")
                         .hasKind(SpanKind.INTERNAL)

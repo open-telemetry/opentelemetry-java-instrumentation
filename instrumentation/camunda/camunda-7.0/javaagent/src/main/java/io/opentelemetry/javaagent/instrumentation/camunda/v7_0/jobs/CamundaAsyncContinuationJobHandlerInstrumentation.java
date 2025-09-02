@@ -26,11 +26,6 @@ import org.camunda.bpm.engine.impl.persistence.entity.ExecutionEntity;
 public class CamundaAsyncContinuationJobHandlerInstrumentation implements TypeInstrumentation {
 
   @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.camunda.bpm.engine.impl.jobexecutor.AsyncContinuationJobHandler");
-  }
-
-  @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return ElementMatchers.named(
         "org.camunda.bpm.engine.impl.jobexecutor.AsyncContinuationJobHandler");
