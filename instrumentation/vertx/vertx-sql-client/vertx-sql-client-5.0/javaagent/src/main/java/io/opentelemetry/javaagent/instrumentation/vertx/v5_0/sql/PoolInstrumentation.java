@@ -63,8 +63,7 @@ public class PoolInstrumentation implements TypeInstrumentation {
   public static class PoolAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth onEnter(@Advice.Argument(1) SqlConnectOptions sqlConnectOptions) {
-      CallDepth callDepth = null;
-      callDepth = CallDepth.forClass(Pool.class);
+      CallDepth callDepth = CallDepth.forClass(Pool.class);
       if (callDepth.getAndIncrement() > 0) {
         return callDepth;
       }
