@@ -45,7 +45,7 @@ public class InstrumentationUtilInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodEnter(
+    public static void methodExit(
         @Advice.Argument(0) Context context, @Advice.Return(readOnly = false) boolean result) {
       result =
           InstrumentationUtil.shouldSuppressInstrumentation(

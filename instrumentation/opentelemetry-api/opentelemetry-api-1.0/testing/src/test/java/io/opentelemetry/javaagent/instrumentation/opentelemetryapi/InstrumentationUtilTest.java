@@ -11,7 +11,7 @@ import io.opentelemetry.api.internal.InstrumentationUtil;
 import io.opentelemetry.context.Context;
 import org.junit.jupiter.api.Test;
 
-public class InstrumentationUtilTest {
+class InstrumentationUtilTest {
 
   @Test
   void instrumentationSuppression() {
