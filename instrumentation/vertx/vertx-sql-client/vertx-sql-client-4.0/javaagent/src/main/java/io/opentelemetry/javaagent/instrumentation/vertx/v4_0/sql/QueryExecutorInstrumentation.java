@@ -62,11 +62,12 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
       @Nullable private final Context context;
       @Nullable private final Scope scope;
 
+      private AdviceScope(CallDepth callDepth) {
+        this(callDepth, null, null, null);
+      }
+
       private AdviceScope(
-          CallDepth callDepth,
-          @Nullable VertxSqlClientRequest otelRequest,
-          @Nullable Context context,
-          @Nullable Scope scope) {
+          CallDepth callDepth, VertxSqlClientRequest otelRequest, Context context, Scope scope) {
         this.callDepth = callDepth;
         this.otelRequest = otelRequest;
         this.context = context;
@@ -76,7 +77,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
       public static AdviceScope start(Object queryExecutor, Object[] arguments) {
         CallDepth callDepth = CallDepth.forClass(queryExecutor.getClass());
         if (callDepth.getAndIncrement() > 0) {
-          return new AdviceScope(callDepth, null, null, null);
+          return new AdviceScope(callDepth);
         }
 
         // The parameter we need are in different positions, we are not going to have separate
@@ -97,7 +98,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
           }
         }
         if (sql == null || promiseInternal == null) {
-          return new AdviceScope(callDepth, null, null, null);
+          return new AdviceScope(callDepth);
         }
 
         VertxSqlClientRequest otelRequest =
