@@ -102,10 +102,8 @@ tasks {
 
     // mergeServiceFiles requires that duplicate strategy is set to include
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    mergeServiceFiles("inst/META-INF/services")
 
-    mergeServiceFiles {
-      include("inst/META-INF/services/*")
-    }
     exclude("**/module-info.class")
     relocatePackages(it)
 
