@@ -20,9 +20,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.base.BaseConf;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
@@ -408,7 +408,10 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(
                                     AttributeKey.stringKey("messaging.rocketmq.send_result"),
                                     "SEND_OK"),
-                                equalTo(headerAttributeKey(), singletonList("test"))),
+                                equalTo(
+                                    SemconvMessageStabilityUtil.headerAttributeKey(
+                                        "Test-Message-Header"),
+                                    singletonList("test"))),
                     span ->
                         span.hasName(sharedTopic + " process")
                             .hasKind(SpanKind.CONSUMER)
@@ -432,7 +435,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     AttributeKey.longKey("messaging.rocketmq.queue_offset"),
                                     val -> val.isInstanceOf(Long.class)),
-                                equalTo(headerAttributeKey(), singletonList("test"))),
+                                equalTo(
+                                    SemconvMessageStabilityUtil.headerAttributeKey(
+                                        "Test-Message-Header"),
+                                    singletonList("test"))),
                     span ->
                         span.hasName("messageListener")
                             .hasParent(trace.getSpan(2))
@@ -456,13 +462,5 @@ abstract class AbstractRocketMqClientTest {
                 });
       }
     };
-  }
-
-  private static AttributeKey<List<String>> headerAttributeKey() {
-    if (SemconvStability.isEmitOldMessageSemconv()) {
-      return AttributeKey.stringArrayKey("messaging.header.Test_Message_Header");
-    } else {
-      return AttributeKey.stringArrayKey("messaging.header.Test-Message-Header");
-    }
   }
 }

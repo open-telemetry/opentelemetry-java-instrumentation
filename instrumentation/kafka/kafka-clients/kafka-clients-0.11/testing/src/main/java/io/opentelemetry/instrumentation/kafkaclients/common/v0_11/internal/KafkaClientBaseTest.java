@@ -19,7 +19,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -187,18 +187,10 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_TOMBSTONE, true));
     }
     if (testHeaders) {
-      if (SemconvStability.isEmitOldMessageSemconv()) {
-        assertions.add(
-            equalTo(
-                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-                Collections.singletonList("test")));
-      }
-      if (SemconvStability.isEmitStableMessageSemconv()) {
-        assertions.add(
-            equalTo(
-                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-                Collections.singletonList("test")));
-      }
+      assertions.add(
+          equalTo(
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
+              Collections.singletonList("test")));
     }
     return assertions;
   }
@@ -218,18 +210,10 @@ public abstract class KafkaClientBaseTest {
       assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
     }
     if (testHeaders) {
-      if (SemconvStability.isEmitOldMessageSemconv()) {
-        assertions.add(
-            equalTo(
-                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-                Collections.singletonList("test")));
-      }
-      if (SemconvStability.isEmitStableMessageSemconv()) {
-        assertions.add(
-            equalTo(
-                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-                Collections.singletonList("test")));
-      }
+      assertions.add(
+          equalTo(
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
+              Collections.singletonList("test")));
     }
     return assertions;
   }
@@ -264,18 +248,10 @@ public abstract class KafkaClientBaseTest {
               MESSAGING_MESSAGE_BODY_SIZE, messageValue.getBytes(StandardCharsets.UTF_8).length));
     }
     if (testHeaders) {
-      if (SemconvStability.isEmitOldMessageSemconv()) {
-        assertions.add(
-            equalTo(
-                AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
-                Collections.singletonList("test")));
-      }
-      if (SemconvStability.isEmitStableMessageSemconv()) {
-        assertions.add(
-            equalTo(
-                AttributeKey.stringArrayKey("messaging.header.Test-Message-Header"),
-                Collections.singletonList("test")));
-      }
+      assertions.add(
+          equalTo(
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
+              Collections.singletonList("test")));
     }
 
     if (testMultiBaggage) {
