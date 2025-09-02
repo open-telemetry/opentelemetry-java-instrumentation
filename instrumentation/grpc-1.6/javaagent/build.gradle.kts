@@ -56,6 +56,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
+    // replicated base config from standard test task
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
