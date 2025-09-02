@@ -56,9 +56,9 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
   public static class QueryAdvice {
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final @Nullable VertxSqlClientRequest otelRequest;
-      private final @Nullable Context context;
-      private final @Nullable Scope scope;
+      @Nullable private final VertxSqlClientRequest otelRequest;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(CallDepth callDepth) {
         this(callDepth, null, null, null);

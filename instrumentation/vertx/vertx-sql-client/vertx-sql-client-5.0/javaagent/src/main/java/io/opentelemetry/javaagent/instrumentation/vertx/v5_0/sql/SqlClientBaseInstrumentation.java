@@ -51,8 +51,7 @@ public class SqlClientBaseInstrumentation implements TypeInstrumentation {
   public static class QueryAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static CallDepth onEnter(@Advice.This SqlClientBase sqlClientBase) {
-      CallDepth callDepth = null;
-      callDepth = CallDepth.forClass(SqlClientBase.class);
+      CallDepth callDepth = CallDepth.forClass(SqlClientBase.class);
       if (callDepth.getAndIncrement() > 0) {
         return callDepth;
       }
