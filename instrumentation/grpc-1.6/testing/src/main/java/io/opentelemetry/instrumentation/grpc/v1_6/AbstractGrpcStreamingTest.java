@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
+import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
+import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
+import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -52,8 +55,6 @@ import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
 public abstract class AbstractGrpcStreamingTest {
 
-  private static final String EXPERIMENTAL_PROPERTY = "otel.instrumentation.grpc.experimental-span-attributes";
-
   protected abstract ServerBuilder<?> configureServer(ServerBuilder<?> server);
 
   protected abstract ManagedChannelBuilder<?> configureClient(ManagedChannelBuilder<?> client);
@@ -61,20 +62,6 @@ public abstract class AbstractGrpcStreamingTest {
   protected abstract InstrumentationExtension testing();
 
   private final Queue<ThrowingRunnable<?>> closer = new ConcurrentLinkedQueue<>();
-
-  public static String experimental(String value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_PROPERTY)) {
-      return null;
-    }
-    return value;
-  }
-
-  protected static Long experimental(long value) {
-    if (!Boolean.getBoolean(EXPERIMENTAL_PROPERTY)) {
-      return null;
-    }
-    return value;
-  }
 
   @AfterEach
   void tearDown() throws Throwable {
@@ -262,6 +249,11 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                experimentalSatisfies(
+                                    GRPC_RECEIVED_MESSAGE_COUNT,
+                                    v -> assertThat(v).isGreaterThan(0)),
+                                experimentalSatisfies(
+                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .satisfies(
                                 spanData ->

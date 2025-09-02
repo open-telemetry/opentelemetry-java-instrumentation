@@ -61,6 +61,12 @@ tasks {
     jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
+
     systemProperty("collectMetadata", collectMetadata)
     systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
