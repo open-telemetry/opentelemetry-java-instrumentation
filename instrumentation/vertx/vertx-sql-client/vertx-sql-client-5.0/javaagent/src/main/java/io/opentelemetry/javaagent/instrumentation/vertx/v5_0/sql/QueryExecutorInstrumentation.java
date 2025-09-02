@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sql.VertxSqlClientUtil.getSqlConnectOptions;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v5_0.sql.VertxSqlClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -102,7 +101,7 @@ public class QueryExecutorInstrumentation implements TypeInstrumentation {
 
         VertxSqlClientRequest otelRequest =
             new VertxSqlClientRequest(sql, QueryExecutorUtil.getConnectOptions(queryExecutor));
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return new AdviceScope(callDepth);
         }

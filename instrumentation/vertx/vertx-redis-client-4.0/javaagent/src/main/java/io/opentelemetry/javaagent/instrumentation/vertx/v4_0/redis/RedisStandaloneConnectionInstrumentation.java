@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.vertx.v4_0.redis.VertxRedisClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -64,7 +63,7 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
         VertxRedisClientRequest otelRequest =
             new VertxRedisClientRequest(
                 commandName, RequestUtil.getArgs(request), redisUri, netSocket);
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return null;
         }
