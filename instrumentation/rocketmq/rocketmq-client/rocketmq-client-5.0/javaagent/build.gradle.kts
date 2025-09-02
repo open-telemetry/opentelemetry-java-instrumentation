@@ -17,24 +17,16 @@ dependencies {
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client:rocketmq-client-5.0:testing"))
 }
 
-testing {
-  suites {
-    val testReceiveSpanDisabled by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-            }
-            include("**/RocketMqClientSuppressReceiveSpanTest.*")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
+  val testReceiveSpanDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    }
+    include("**/RocketMqClientSuppressReceiveSpanTest.*")
+  }
+
   test {
     filter {
       excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
@@ -44,6 +36,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testReceiveSpanDisabled)
   }
 }

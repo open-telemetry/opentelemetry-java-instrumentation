@@ -95,6 +95,8 @@ import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerAsyncClientBuilder;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClient;
 import software.amazon.awssdk.services.secretsmanager.SecretsManagerClientBuilder;
+import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretRequest;
+import software.amazon.awssdk.services.secretsmanager.model.DescribeSecretResponse;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueRequest;
 import software.amazon.awssdk.services.secretsmanager.model.GetSecretValueResponse;
 import software.amazon.awssdk.services.sfn.SfnAsyncClient;
@@ -473,8 +475,8 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
-  void testS3SendOperationRequestWithBuilder(
-      String operation, String method, Function<S3Client, Object> call) throws Exception {
+  void testS3Client(String operation, String method, Function<S3Client, Object> call)
+      throws Exception {
     S3ClientBuilder builder = S3Client.builder();
     if (Boolean.getBoolean("testLatestDeps")) {
       Method forcePathStyleMethod =
@@ -493,26 +495,26 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     Object response = call.apply(client);
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(v).startsWith(operation),
-            v -> assertThat(response).isInstanceOf(ResponseInputStream.class));
+            r -> assertThat(r.getClass().getSimpleName()).startsWith(operation),
+            r -> assertThat(r).isInstanceOf(ResponseInputStream.class));
     clientAssertions("S3", operation, method, response, "UNKNOWN");
   }
 
   @ParameterizedTest
   @MethodSource("provideS3Arguments")
-  void testS3AsyncSendOperationRequestWithBuilder(
+  void testS3AsyncClient(
       String operation,
       String method,
       Function<S3Client, Object> call,
       Function<S3AsyncClient, Future<?>> asyncCall,
       String body)
-      throws NoSuchMethodException,
-          InvocationTargetException,
+      throws ExecutionException,
           IllegalAccessException,
-          ExecutionException,
-          InterruptedException {
+          InterruptedException,
+          InvocationTargetException,
+          NoSuchMethodException {
     S3AsyncClientBuilder builder = S3AsyncClient.builder();
     if (Boolean.getBoolean("testLatestDeps")) {
       Method forcePathStyleMethod =
@@ -536,7 +538,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @Test
-  void testKinesisSendOperationRequestWithBuilder() {
+  void testKinesisClient() {
     KinesisClientBuilder builder = KinesisClient.builder();
     configureSdkClient(builder);
     KinesisClient client =
@@ -551,10 +553,10 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     Object response =
         client.deleteStream(DeleteStreamRequest.builder().streamName("somestream").build());
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(v).startsWith("DeleteStream"),
-            v -> assertThat(response).isInstanceOf(ResponseInputStream.class));
+            r -> assertThat(r.getClass().getSimpleName()).startsWith("DeleteStream"),
+            r -> assertThat(r).isInstanceOf(ResponseInputStream.class));
     clientAssertions("Kinesis", "DeleteStream", "POST", response, "UNKNOWN");
   }
 
@@ -626,7 +628,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideSqsArguments")
-  void testSqsSendOperationRequestWithBuilder(
+  void testSqsClient(
       String operation,
       String requestId,
       Callable<HttpResponse> serverResponse,
@@ -646,16 +648,16 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     server.enqueue(serverResponse.call());
     Object response = call.apply(client);
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(v).startsWith(operation),
-            v -> assertThat(response).isInstanceOf(ResponseInputStream.class));
+            r -> assertThat(r.getClass().getSimpleName()).startsWith(operation),
+            r -> assertThat(r).isInstanceOf(ResponseInputStream.class));
     clientAssertions("Sqs", operation, "POST", response, requestId);
   }
 
   @ParameterizedTest
   @MethodSource("provideSqsArguments")
-  void testSqsAsyncSendOperationRequestWithBuilder(
+  void testSqsAsyncClient(
       String operation,
       String requestId,
       Callable<HttpResponse> serverResponse,
@@ -716,7 +718,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideSnsArguments")
-  void testSnsSendOperationRequestWithBuilder(
+  void testSnsClient(
       Function<SnsClient, Object> call,
       String operation,
       String method,
@@ -734,17 +736,17 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
     Object response = call.apply(client);
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(response).isInstanceOf(CreateTopicResponse.class),
-            v -> assertThat(response).isInstanceOf(PublishResponse.class),
-            v -> assertThat(response).isInstanceOf(SubscribeResponse.class));
+            r -> assertThat(r).isInstanceOf(CreateTopicResponse.class),
+            r -> assertThat(r).isInstanceOf(PublishResponse.class),
+            r -> assertThat(r).isInstanceOf(SubscribeResponse.class));
     clientAssertions("Sns", operation, method, response, requestId);
   }
 
   @ParameterizedTest
   @MethodSource("provideSnsArguments")
-  void testSnsAsyncSendOperationRequestWithBuilder(
+  void testSnsAsyncClient(
       Function<SnsClient, Object> call,
       String operation,
       String method,
@@ -762,16 +764,16 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
     Object response = call.apply(wrapClient(SnsClient.class, SnsAsyncClient.class, client));
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(response).isInstanceOf(CreateTopicResponse.class),
-            v -> assertThat(response).isInstanceOf(PublishResponse.class),
-            v -> assertThat(response).isInstanceOf(SubscribeResponse.class));
+            r -> assertThat(r).isInstanceOf(CreateTopicResponse.class),
+            r -> assertThat(r).isInstanceOf(PublishResponse.class),
+            r -> assertThat(r).isInstanceOf(SubscribeResponse.class));
     clientAssertions("Sns", operation, method, response, requestId);
   }
 
   @Test
-  void testEc2SendOperationRequestWithBuilder() {
+  void testEc2Client() {
     Ec2ClientBuilder builder = Ec2Client.builder();
     configureSdkClient(builder);
     Ec2Client client =
@@ -784,16 +786,16 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ec2BodyContent));
     Object response = client.allocateAddress();
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(v).startsWith("AllocateAddress"),
-            v -> assertThat(response).isInstanceOf(ResponseInputStream.class));
+            r -> assertThat(r.getClass().getSimpleName()).startsWith("AllocateAddress"),
+            r -> assertThat(r).isInstanceOf(ResponseInputStream.class));
     clientAssertions(
         "Ec2", "AllocateAddress", "POST", response, "59dbff89-35bd-4eac-99ed-be587EXAMPLE");
   }
 
   @Test
-  void testEc2AsyncSendOperationRequestWithBuilder() {
+  void testEc2AsyncClient() {
     Ec2AsyncClientBuilder builder = Ec2AsyncClient.builder();
     configureSdkClient(builder);
     Ec2AsyncClient client =
@@ -811,7 +813,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
   }
 
   @Test
-  void testRdsSendOperationRequestWithBuilder() {
+  void testRdsClient() {
     RdsClientBuilder builder = RdsClient.builder();
     configureSdkClient(builder);
     RdsClient client =
@@ -824,16 +826,16 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, rdsBodyContent));
     Object response = client.deleteOptionGroup(DeleteOptionGroupRequest.builder().build());
 
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v -> assertThat(v).startsWith("DeleteOptionGroup"),
-            v -> assertThat(response).isInstanceOf(ResponseInputStream.class));
+            r -> assertThat(r.getClass().getSimpleName()).startsWith("DeleteOptionGroup"),
+            r -> assertThat(r).isInstanceOf(ResponseInputStream.class));
     clientAssertions(
         "Rds", "DeleteOptionGroup", "POST", response, "0ac9cda2-bbf4-11d3-f92b-31fa5e8dbc99");
   }
 
   @Test
-  void testRdsAsyncSendOperationRequestWithBuilder() {
+  void testRdsAsyncClient() {
     RdsAsyncClientBuilder builder = RdsAsyncClient.builder();
     configureSdkClient(builder);
     RdsAsyncClient client =
@@ -971,7 +973,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideStepFunctionsArguments")
-  void testSfnSendOperationRequestWithBuilder(
+  void testSfnClient(
       Function<SfnClient, Object> call, String operation, String method, String requestId) {
     SfnClientBuilder builder = SfnClient.builder();
     configureSdkClient(builder);
@@ -984,14 +986,14 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
     Object response = call.apply(client);
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.sfn.model.DescribeActivityResponse.class),
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.sfn.model.DescribeStateMachineResponse
                             .class));
@@ -1000,7 +1002,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideStepFunctionsArguments")
-  void testSfnAsyncSendOperationRequestWithBuilder(
+  void testSfnAsyncClient(
       Function<SfnClient, Object> call, String operation, String method, String requestId) {
     SfnAsyncClientBuilder builder = SfnAsyncClient.builder();
     configureSdkClient(builder);
@@ -1013,22 +1015,50 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
     Object response = call.apply(wrapClient(SfnClient.class, SfnAsyncClient.class, client));
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.sfn.model.DescribeActivityResponse.class),
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.sfn.model.DescribeStateMachineResponse
                             .class));
     clientAssertions("Sfn", operation, method, response, requestId);
   }
 
-  @Test
-  void testSecretsManagerSendOperationRequestWithBuilder() {
+  private static Stream<Arguments> provideSecretsManagerArguments() {
+    return Stream.of(
+        Arguments.of(
+            (Function<SecretsManagerClient, Object>)
+                c ->
+                    c.getSecretValue(
+                        GetSecretValueRequest.builder().secretId("MySecretFromCLI").build()),
+            "GetSecretValue",
+            "POST",
+            secretsManagerBodyContent,
+            "UNKNOWN"),
+        Arguments.of(
+            (Function<SecretsManagerClient, Object>)
+                c ->
+                    c.describeSecret(
+                        DescribeSecretRequest.builder().secretId("MySecretFromCLI").build()),
+            "DescribeSecret",
+            "POST",
+            secretsManagerBodyContent,
+            "UNKNOWN"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideSecretsManagerArguments")
+  void testSecretsManagerClient(
+      Function<SecretsManagerClient, Object> call,
+      String operation,
+      String method,
+      String responseBody,
+      String requestId) {
     SecretsManagerClientBuilder builder = SecretsManagerClient.builder();
     configureSdkClient(builder);
     SecretsManagerClient client =
@@ -1038,19 +1068,23 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    server.enqueue(
-        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, secretsManagerBodyContent));
-    Object response =
-        client.getSecretValue(GetSecretValueRequest.builder().secretId("MySecretFromCLI").build());
-    assertThat(response.getClass().getSimpleName())
-        .satisfies(
-            v -> assertThat(v).isEqualTo("GetSecretValueResponse"),
-            v -> assertThat(response).isInstanceOf(GetSecretValueResponse.class));
-    clientAssertions("SecretsManager", "GetSecretValue", "POST", response, "UNKNOWN");
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
+    Object response = call.apply(client);
+    assertThat(response)
+        .satisfiesAnyOf(
+            r -> assertThat(r).isInstanceOf(GetSecretValueResponse.class),
+            r -> assertThat(r).isInstanceOf(DescribeSecretResponse.class));
+    clientAssertions("SecretsManager", operation, method, response, requestId);
   }
 
-  @Test
-  void testSecretsManagerAsyncSendOperationRequestWithBuilder() {
+  @ParameterizedTest
+  @MethodSource("provideSecretsManagerArguments")
+  void testSecretsManagerAsyncClient(
+      Function<SecretsManagerClient, Object> call,
+      String operation,
+      String method,
+      String responseBody,
+      String requestId) {
     SecretsManagerAsyncClientBuilder builder = SecretsManagerAsyncClient.builder();
     configureSdkClient(builder);
     SecretsManagerAsyncClient client =
@@ -1060,11 +1094,10 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
 
-    server.enqueue(
-        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, secretsManagerBodyContent));
+    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
     Object response =
-        client.getSecretValue(GetSecretValueRequest.builder().secretId("MySecretFromCLI").build());
-    clientAssertions("SecretsManager", "GetSecretValue", "POST", response, "UNKNOWN");
+        call.apply(wrapClient(SecretsManagerClient.class, SecretsManagerAsyncClient.class, client));
+    clientAssertions("SecretsManager", operation, method, response, requestId);
   }
 
   private static Stream<Arguments> provideLambdaArguments() {
@@ -1109,7 +1142,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideLambdaArguments")
-  void testLambdaSendOperationRequestWithBuilder(
+  void testLambdaClient(
       Function<LambdaClient, Object> call,
       String operation,
       String method,
@@ -1126,19 +1159,19 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
     Object response = call.apply(client);
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.lambda.model.GetFunctionResponse.class),
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.lambda.model
                             .CreateEventSourceMappingResponse.class),
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse
                             .class));
@@ -1147,7 +1180,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
   @ParameterizedTest
   @MethodSource("provideLambdaArguments")
-  void testLambdaAsyncSendOperationRequestWithBuilder(
+  void testLambdaAsyncClient(
       Function<LambdaClient, Object> call,
       String operation,
       String method,
@@ -1164,19 +1197,19 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
 
     server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, responseBody));
     Object response = call.apply(wrapClient(LambdaClient.class, LambdaAsyncClient.class, client));
-    assertThat(response.getClass().getSimpleName())
+    assertThat(response)
         .satisfiesAnyOf(
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.lambda.model.GetFunctionResponse.class),
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.lambda.model
                             .CreateEventSourceMappingResponse.class),
-            v ->
-                assertThat(response)
+            r ->
+                assertThat(r)
                     .isInstanceOf(
                         software.amazon.awssdk.services.lambda.model.GetEventSourceMappingResponse
                             .class));
