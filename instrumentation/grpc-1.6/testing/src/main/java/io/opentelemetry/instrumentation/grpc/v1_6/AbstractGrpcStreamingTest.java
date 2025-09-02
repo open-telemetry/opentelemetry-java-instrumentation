@@ -226,6 +226,12 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
+                                    experimentalSatisfies(
+                                        GRPC_RECEIVED_MESSAGE_COUNT,
+                                        v -> assertThat(v).isGreaterThan(0)),
+                                    experimentalSatisfies(
+                                        GRPC_SENT_MESSAGE_COUNT,
+                                        v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "Conversation"),
@@ -241,6 +247,11 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
+                                experimentalSatisfies(
+                                    GRPC_RECEIVED_MESSAGE_COUNT,
+                                    v -> assertThat(v).isGreaterThan(0)),
+                                experimentalSatisfies(
+                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "Conversation"),
