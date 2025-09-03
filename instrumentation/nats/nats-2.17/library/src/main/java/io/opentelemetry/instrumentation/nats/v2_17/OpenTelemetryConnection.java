@@ -91,41 +91,52 @@ final class OpenTelemetryConnection implements InvocationHandler {
   // void publish(String subject, String replyTo, Headers headers, byte[] body)
   // void publish(Message message)
   private void publish(Method method, Object[] args) throws Throwable {
-    Message message = null;
-    NatsRequest natsRequest = null;
+    String subject = null;
+    String replyTo = null;
+    Headers headers = null;
+    byte[] body = null;
 
     if (method.getParameterCount() == 2
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (byte[]) args[1]);
+      subject = (String) args[0];
+      body = (byte[]) args[1];
     } else if (method.getParameterCount() == 3
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == Headers.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message =
-          NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1], (byte[]) args[2]);
+      subject = (String) args[0];
+      headers = (Headers) args[1];
+      body = (byte[]) args[2];
     } else if (method.getParameterCount() == 3
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == String.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message =
-          NatsMessageWritableHeaders.create((String) args[0], (String) args[1], (byte[]) args[2]);
+      subject = (String) args[0];
+      replyTo = (String) args[1];
+      body = (byte[]) args[2];
     } else if (method.getParameterCount() == 4
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == String.class
         && method.getParameterTypes()[2] == Headers.class
         && method.getParameterTypes()[3] == byte[].class) {
-      message =
-          NatsMessageWritableHeaders.create(
-              (String) args[0], (String) args[1], (Headers) args[2], (byte[]) args[3]);
+      subject = (String) args[0];
+      replyTo = (String) args[1];
+      headers = (Headers) args[2];
+      body = (byte[]) args[3];
     } else if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == Message.class) {
-      message = NatsMessageWritableHeaders.create((Message) args[0]);
+      subject = ((Message) args[0]).getSubject();
+      replyTo = ((Message) args[0]).getReplyTo();
+      headers = ((Message) args[0]).getHeaders();
+      body = ((Message) args[0]).getData();
     }
 
     Context parentContext = Context.current();
+    headers = NatsMessageWritableHeaders.create(headers);
+    NatsRequest natsRequest = null;
 
-    if (message != null) {
-      natsRequest = NatsRequest.create(delegate, message);
+    if (subject != null) {
+      natsRequest = NatsRequest.create(delegate, subject, replyTo, headers, body);
     }
 
     if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
@@ -135,7 +146,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
     Context context = producerInstrumenter.start(parentContext, natsRequest);
     try (Scope ignored = context.makeCurrent()) {
-      delegate.publish(message);
+      delegate.publish(subject, replyTo, headers, body);
     } finally {
       producerInstrumenter.end(context, natsRequest, null, null);
     }
@@ -146,31 +157,38 @@ final class OpenTelemetryConnection implements InvocationHandler {
   // InterruptedException;
   // Message request(Message message, Duration timeout) throws InterruptedException;
   private Message request(Method method, Object[] args) throws Throwable {
-    Message message = null;
-    NatsRequest natsRequest = null;
+    String subject = null;
+    Headers headers = null;
+    byte[] body = null;
     Duration timeout = null;
 
     if (method.getParameterCount() == 3
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (byte[]) args[1]);
+      subject = (String) args[0];
+      body = (byte[]) args[1];
       timeout = (Duration) args[2];
     } else if (method.getParameterCount() == 4
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == Headers.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message =
-          NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1], (byte[]) args[2]);
+      subject = (String) args[0];
+      headers = (Headers) args[1];
+      body = (byte[]) args[2];
       timeout = (Duration) args[3];
     } else if (method.getParameterCount() == 2 && method.getParameterTypes()[0] == Message.class) {
-      message = NatsMessageWritableHeaders.create((Message) args[0]);
+      subject = ((Message) args[0]).getSubject();
+      headers = ((Message) args[0]).getHeaders();
+      body = ((Message) args[0]).getData();
       timeout = (Duration) args[1];
     }
 
     Context parentContext = Context.current();
+    headers = NatsMessageWritableHeaders.create(headers);
+    NatsRequest natsRequest = null;
 
-    if (message != null) {
-      natsRequest = NatsRequest.create(delegate, message);
+    if (subject != null) {
+      natsRequest = NatsRequest.create(delegate, subject, null, headers, body);
     }
 
     if (timeout == null
@@ -182,16 +200,20 @@ final class OpenTelemetryConnection implements InvocationHandler {
     Context context = producerInstrumenter.start(parentContext, natsRequest);
     NatsRequest response = null;
 
+    Throwable throwable = null;
     try (Scope ignored = context.makeCurrent()) {
-      Message result = delegate.request(message, timeout);
+      Message result = delegate.request(subject, headers, body, timeout);
 
       if (result != null) {
         response = NatsRequest.create(delegate, result);
       }
 
       return result;
+    } catch (InterruptedException t) {
+      throwable = t;
+      throw t;
     } finally {
-      producerInstrumenter.end(context, natsRequest, response, null);
+      producerInstrumenter.end(context, natsRequest, response, throwable);
     }
   }
 
@@ -204,45 +226,56 @@ final class OpenTelemetryConnection implements InvocationHandler {
   // CompletableFuture<Message> requestWithTimeout(Message message, Duration timeout);
   @SuppressWarnings("unchecked")
   private CompletableFuture<Message> requestAsync(Method method, Object[] args) throws Throwable {
-    Message message = null;
-    NatsRequest natsRequest = null;
+    String subject = null;
+    Headers headers = null;
+    byte[] body = null;
     Duration timeout = null;
 
     if ((method.getParameterCount() == 2)
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (byte[]) args[1]);
+      subject = (String) args[0];
+      body = (byte[]) args[1];
     } else if ((method.getParameterCount() == 3)
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == byte[].class) {
-      message = NatsMessageWritableHeaders.create((String) args[0], (byte[]) args[1]);
+      subject = (String) args[0];
+      body = (byte[]) args[1];
       timeout = (Duration) args[2];
     } else if ((method.getParameterCount() == 3)
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == Headers.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message =
-          NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1], (byte[]) args[2]);
+      subject = (String) args[0];
+      headers = (Headers) args[1];
+      body = (byte[]) args[2];
     } else if ((method.getParameterCount() == 4)
         && method.getParameterTypes()[0] == String.class
         && method.getParameterTypes()[1] == Headers.class
         && method.getParameterTypes()[2] == byte[].class) {
-      message =
-          NatsMessageWritableHeaders.create((String) args[0], (Headers) args[1], (byte[]) args[2]);
+      subject = (String) args[0];
+      headers = (Headers) args[1];
+      body = (byte[]) args[2];
       timeout = (Duration) args[3];
     } else if ((method.getParameterCount() == 1)
         && method.getParameterTypes()[0] == Message.class) {
-      message = NatsMessageWritableHeaders.create((Message) args[0]);
+      subject = ((Message) args[0]).getSubject();
+      headers = ((Message) args[0]).getHeaders();
+      body = ((Message) args[0]).getData();
     } else if ((method.getParameterCount() == 2)
         && method.getParameterTypes()[0] == Message.class) {
-      message = NatsMessageWritableHeaders.create((Message) args[0]);
+      subject = ((Message) args[0]).getSubject();
+      headers = ((Message) args[0]).getHeaders();
+      body = ((Message) args[0]).getData();
       timeout = (Duration) args[1];
     }
 
     Context parentContext = Context.current();
+    headers = NatsMessageWritableHeaders.create(headers);
+    NatsRequest natsRequest = null;
 
-    if (message != null) {
-      natsRequest = NatsRequest.create(delegate, message);
+    if (subject != null) {
+      natsRequest = NatsRequest.create(delegate, subject, null, headers, body);
     }
 
     if (natsRequest == null || !producerInstrumenter.shouldStart(parentContext, natsRequest)) {
@@ -254,9 +287,9 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
     CompletableFuture<Message> future;
     if (timeout != null) {
-      future = delegate.requestWithTimeout(message, timeout);
+      future = delegate.requestWithTimeout(subject, headers, body, timeout);
     } else {
-      future = delegate.request(message);
+      future = delegate.request(subject, headers, body);
     }
 
     return future.whenComplete(

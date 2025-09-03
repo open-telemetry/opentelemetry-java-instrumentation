@@ -26,7 +26,6 @@ class NatsInstrumentationExperimentalTest extends AbstractNatsInstrumentationExp
   static void beforeAll() {
     connection =
         NatsTelemetry.builder(testing.getOpenTelemetry())
-            .setMessagingReceiveInstrumentationEnabled(true)
             .setCapturedHeaders(singletonList("captured-header"))
             .build()
             .wrap(connection);

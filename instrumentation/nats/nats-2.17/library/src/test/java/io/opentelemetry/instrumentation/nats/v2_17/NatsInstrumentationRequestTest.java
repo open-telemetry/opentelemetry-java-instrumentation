@@ -27,8 +27,7 @@ class NatsInstrumentationRequestTest extends AbstractNatsInstrumentationRequestT
   static void beforeAll() throws IOException, InterruptedException {
     NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
     connection =
-        telemetry.wrap(
-            Nats.connect(
-                telemetry.wrap(Options.builder().server(connection.getConnectedUrl())).build()));
+        telemetry.newConnection(
+            Options.builder().server(connection.getConnectedUrl()).build(), Nats::connect);
   }
 }

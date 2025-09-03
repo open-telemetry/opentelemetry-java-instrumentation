@@ -16,9 +16,6 @@ import java.util.List;
 
 public final class NatsSingletons {
 
-  private static final boolean messagingReceiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
-
   private static final List<String> capturedHeaders =
       ExperimentalConfig.get().getMessagingHeaders();
 
@@ -26,8 +23,7 @@ public final class NatsSingletons {
       createProducerInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
 
   public static final Instrumenter<NatsRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
-      createConsumerProcessInstrumenter(
-          GlobalOpenTelemetry.get(), messagingReceiveInstrumentationEnabled, capturedHeaders);
+      createConsumerProcessInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);
 
   private NatsSingletons() {}
 }

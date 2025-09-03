@@ -11,8 +11,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import java.util.List;
 
 /**
@@ -38,9 +36,7 @@ public final class NatsInstrumenterFactory {
   }
 
   public static Instrumenter<NatsRequest, Void> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry,
-      boolean messagingReceiveInstrumentationEnabled,
-      List<String> capturedHeaders) {
+      OpenTelemetry openTelemetry, List<String> capturedHeaders) {
     InstrumenterBuilder<NatsRequest, Void> builder =
         Instrumenter.<NatsRequest, Void>builder(
                 openTelemetry,
@@ -53,15 +49,7 @@ public final class NatsInstrumenterFactory {
                     .setCapturedHeaders(capturedHeaders)
                     .build());
 
-    if (messagingReceiveInstrumentationEnabled) {
-      builder.addSpanLinksExtractor(
-          new PropagatorBasedSpanLinksExtractor<>(
-              openTelemetry.getPropagators().getTextMapPropagator(),
-              NatsRequestTextMapGetter.INSTANCE));
-      return builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
-    } else {
-      return builder.buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
-    }
+    return builder.buildConsumerInstrumenter(NatsRequestTextMapGetter.INSTANCE);
   }
 
   private NatsInstrumenterFactory() {}

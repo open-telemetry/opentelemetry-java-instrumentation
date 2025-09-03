@@ -18,15 +18,25 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class NatsRequest {
 
+  public static NatsRequest create(
+      Connection connection, String subject, String replyTo, Headers headers, byte[] body) {
+    return new AutoValue_NatsRequest(
+        replyTo,
+        connection.getServerInfo().getClientId(),
+        subject,
+        headers,
+        getDataSize(body),
+        connection.getOptions().getInboxPrefix());
+  }
+
   public static NatsRequest create(Connection connection, Message message) {
     return new AutoValue_NatsRequest(
         message.getReplyTo(),
-        (message.getConnection() == null ? connection : message.getConnection())
-            .getServerInfo()
-            .getClientId(),
+        connection.getServerInfo().getClientId(),
         message.getSubject(),
         message.getHeaders(),
-        getDataSize(message.getData()));
+        getDataSize(message.getData()),
+        connection.getOptions().getInboxPrefix());
   }
 
   @Nullable
@@ -44,4 +54,6 @@ public abstract class NatsRequest {
   private static long getDataSize(byte[] data) {
     return data == null ? 0 : data.length;
   }
+
+  public abstract String getInboxPrefix();
 }

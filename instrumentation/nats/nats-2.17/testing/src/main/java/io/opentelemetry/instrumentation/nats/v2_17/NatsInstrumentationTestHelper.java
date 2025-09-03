@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -23,6 +22,11 @@ import java.time.Duration;
 public class NatsInstrumentationTestHelper {
 
   public static AttributeAssertion[] messagingAttributes(
+      String operation, String subject, int clientId, AttributeAssertion other) {
+    return messagingAttributes(operation, subject, clientId, new AttributeAssertion[] {other});
+  }
+
+  public static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId, AttributeAssertion[] other) {
     AttributeAssertion[] standard = messagingAttributes(operation, subject, clientId);
     AttributeAssertion[] result = new AttributeAssertion[standard.length + other.length];
@@ -33,15 +37,10 @@ public class NatsInstrumentationTestHelper {
 
   public static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId) {
-    AttributeAssertion destinationName = equalTo(MESSAGING_DESTINATION_NAME, subject);
-    if (subject.startsWith("_INBOX.")) {
-      destinationName = satisfies(MESSAGING_DESTINATION_NAME, name -> name.startsWith("_INBOX."));
-    }
-
     return new AttributeAssertion[] {
       equalTo(MESSAGING_OPERATION, operation),
       equalTo(MESSAGING_SYSTEM, "nats"),
-      destinationName,
+      equalTo(MESSAGING_DESTINATION_NAME, subject),
       equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
       equalTo(AttributeKey.stringKey("messaging.client_id"), String.valueOf(clientId))
     };

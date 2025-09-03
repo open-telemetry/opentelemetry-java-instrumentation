@@ -12,6 +12,7 @@ import io.nats.client.impl.OpenTelemetryDispatcherFactory;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
+import java.io.IOException;
 
 public final class NatsTelemetry {
 
@@ -33,18 +34,12 @@ public final class NatsTelemetry {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  /**
-   * Returns a decorated {@link Connection} with messaging spans instrumentation. This will *not*
-   * instrument the connection's main inbox by default. Use {@link #wrap(Options.Builder)}
-   * beforehand to build an Options doing so.
-   */
-  public Connection wrap(Connection connection) {
+  Connection wrap(Connection connection) {
     return OpenTelemetryConnection.wrap(
         connection, producerInstrumenter, consumerProcessInstrumenter);
   }
 
-  /** Returns a {@link Options.Builder} with instrumented {@link DispatcherFactory}. */
-  public Options.Builder wrap(Options.Builder options) {
+  Options.Builder configure(Options.Builder options) {
     DispatcherFactory factory = options.build().getDispatcherFactory();
 
     if (factory == null) {
@@ -53,5 +48,22 @@ public final class NatsTelemetry {
 
     return options.dispatcherFactory(
         new OpenTelemetryDispatcherFactory(factory, consumerProcessInstrumenter));
+  }
+
+  /** Returns a {@link Connection} with messaging spans instrumentation. */
+  public Connection newConnection(Options options, ConnectionFactory<Options> connectionFactory)
+      throws IOException, InterruptedException {
+    return wrap(connectionFactory.create(configure(new Options.Builder(options)).build()));
+  }
+
+  /** Returns a {@link Connection} with messaging spans instrumentation. */
+  public Connection newConnection(
+      Options.Builder builder, ConnectionFactory<Options.Builder> connectionFactory)
+      throws IOException, InterruptedException {
+    return wrap(connectionFactory.create(configure(builder)));
+  }
+
+  public interface ConnectionFactory<T> {
+    Connection create(T options) throws IOException, InterruptedException;
   }
 }

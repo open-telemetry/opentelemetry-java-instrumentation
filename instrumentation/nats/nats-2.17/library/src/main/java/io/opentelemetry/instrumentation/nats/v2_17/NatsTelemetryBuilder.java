@@ -17,17 +17,10 @@ import java.util.List;
 public final class NatsTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
-  private boolean messagingReceiveInstrumentationEnabled = false;
   private List<String> capturedHeaders = emptyList();
 
   NatsTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
-  }
-
-  @CanIgnoreReturnValue
-  public NatsTelemetryBuilder setMessagingReceiveInstrumentationEnabled(boolean enabled) {
-    this.messagingReceiveInstrumentationEnabled = enabled;
-    return this;
   }
 
   @CanIgnoreReturnValue
@@ -39,7 +32,6 @@ public final class NatsTelemetryBuilder {
   public NatsTelemetry build() {
     return new NatsTelemetry(
         NatsInstrumenterFactory.createProducerInstrumenter(openTelemetry, capturedHeaders),
-        NatsInstrumenterFactory.createConsumerProcessInstrumenter(
-            openTelemetry, messagingReceiveInstrumentationEnabled, capturedHeaders));
+        NatsInstrumenterFactory.createConsumerProcessInstrumenter(openTelemetry, capturedHeaders));
   }
 }

@@ -81,7 +81,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body) {
-      connection.publish(NatsMessageWritableHeaders.create(subject, body));
+      connection.publish(subject, null, null, body);
       return true;
     }
   }
@@ -94,7 +94,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) Headers headers,
         @Advice.Argument(2) byte[] body) {
-      connection.publish(NatsMessageWritableHeaders.create(subject, headers, body));
+      connection.publish(subject, null, headers, body);
       return true;
     }
   }
@@ -107,39 +107,28 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) String replyTo,
         @Advice.Argument(2) byte[] body) {
-      connection.publish(NatsMessageWritableHeaders.create(subject, replyTo, body));
+      connection.publish(subject, replyTo, null, body);
       return true;
     }
   }
 
   @SuppressWarnings("unused")
   public static class PublishReplyToHeadersBodyAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static boolean onEnter(
-        @Advice.This Connection connection,
-        @Advice.Argument(0) String subject,
-        @Advice.Argument(1) String replyTo,
-        @Advice.Argument(2) Headers headers,
-        @Advice.Argument(3) byte[] body) {
-      connection.publish(NatsMessageWritableHeaders.create(subject, replyTo, headers, body));
-      return true;
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class PublishMessageAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
         @Advice.This Connection connection,
-        @Advice.Argument(value = 0, readOnly = false) Message message,
+        @Advice.Argument(0) String subject,
+        @Advice.Argument(1) String replyTo,
+        @Advice.Argument(value = 2, readOnly = false) Headers headers,
+        @Advice.Argument(3) byte[] body,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      message = NatsMessageWritableHeaders.create(message);
+      headers = NatsMessageWritableHeaders.create(headers);
 
       Context parentContext = Context.current();
-      natsRequest = NatsRequest.create(connection, message);
+      natsRequest = NatsRequest.create(connection, subject, replyTo, headers, body);
 
       if (!PRODUCER_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
         return;
@@ -161,6 +150,17 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
 
       otelScope.close();
       PRODUCER_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PublishMessageAdvice {
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static boolean onEnter(
+        @Advice.This Connection connection, @Advice.Argument(0) Message message) {
+      connection.publish(
+          message.getSubject(), message.getReplyTo(), message.getHeaders(), message.getData());
+      return true;
     }
   }
 }

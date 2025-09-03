@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.assertTraceparentHeader;
 import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.messagingAttributes;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static java.util.Arrays.asList;
 
 import io.nats.client.Dispatcher;
@@ -20,7 +22,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CancellationException;
 import java.util.function.Consumer;
-import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -284,26 +285,20 @@ public abstract class AbstractNatsInstrumentationRequestTest
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(1)),
                           span ->
-                              span.has(
-                                      new Condition<>(
-                                          data ->
-                                              data.getName().startsWith("_INBOX.")
-                                                  && data.getName().endsWith(" publish"),
-                                          "Name condition"))
+                              span.hasName("(temporary) publish")
                                   .hasKind(SpanKind.PRODUCER)
                                   .hasParent(trace.getSpan(2)),
                           // publisher: process
                           span ->
-                              span.has(
-                                      new Condition<>(
-                                          data ->
-                                              data.getName().startsWith("_INBOX.")
-                                                  && data.getName().endsWith(" process"),
-                                          "Name condition"))
+                              span.hasName("(temporary) process")
                                   .hasKind(SpanKind.CONSUMER)
                                   .hasParent(trace.getSpan(3))
                                   .hasAttributesSatisfyingExactly(
-                                      messagingAttributes("process", "_INBOX.", clientId))));
+                                      messagingAttributes(
+                                          "process",
+                                          "(temporary)",
+                                          clientId,
+                                          equalTo(MESSAGING_DESTINATION_TEMPORARY, true)))));
 
               trace.hasSpansSatisfyingExactly(asserts);
             });
