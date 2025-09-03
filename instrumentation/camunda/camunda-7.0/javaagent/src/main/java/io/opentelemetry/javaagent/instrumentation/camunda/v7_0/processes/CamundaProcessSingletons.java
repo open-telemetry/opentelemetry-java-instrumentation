@@ -23,7 +23,7 @@ public class CamundaProcessSingletons {
     opentelemetry = GlobalOpenTelemetry.get();
 
     InstrumenterBuilder<CamundaCommonRequest, Void> builder =
-        Instrumenter.<CamundaCommonRequest, String>builder(
+        Instrumenter.<CamundaCommonRequest, Void>builder(
                 opentelemetry,
                 "io.opentelemetry.camunda-process",
                 new CamundaProcessSpanNameExtractor())
