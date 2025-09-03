@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CamundaAsyncContinuationJobHandlerModule extends InstrumentationModule {
 
   public CamundaAsyncContinuationJobHandlerModule() {
-    super("camunda", "camunda-7.0", "camunda-job", "camunda-job-7_18");
+    super("camunda", "camunda-7.0", "camunda-job");
   }
 
   @Override

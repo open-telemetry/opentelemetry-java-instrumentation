@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CamundaTopicSubscriptionManagerModule extends InstrumentationModule {
 
   public CamundaTopicSubscriptionManagerModule() {
-    super("camunda", "camunda-7.0", "camunda-task", "camunda-task-7_18");
+    super("camunda", "camunda-7.0", "camunda-task");
   }
 
   @Override

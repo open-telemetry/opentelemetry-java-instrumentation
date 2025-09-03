@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CamundaProcessInstantiationBuilderModule extends InstrumentationModule {
 
   public CamundaProcessInstantiationBuilderModule() {
-    super("camunda", "camunda-7.0", "camunda-process", "camunda-process-7_18");
+    super("camunda", "camunda-7.0", "camunda-process");
   }
 
   @Override

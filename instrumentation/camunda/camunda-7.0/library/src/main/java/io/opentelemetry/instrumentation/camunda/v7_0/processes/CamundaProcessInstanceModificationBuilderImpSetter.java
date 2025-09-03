@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.camunda.v7_0.processes;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import org.camunda.bpm.engine.impl.ProcessInstanceModificationBuilderImpl;
 
-// TODO use this or  activityinstanctiationbuildersetter ??
 public class CamundaProcessInstanceModificationBuilderImpSetter
     implements TextMapSetter<ProcessInstanceModificationBuilderImpl> {
 

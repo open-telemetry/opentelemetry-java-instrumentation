@@ -94,7 +94,7 @@ public class CamundaProcessInstantiationBuilderInstrumentation implements TypeIn
         @Advice.Return ProcessInstance pi) {
 
       if (context != null && scope != null) {
-        CamundaProcessSingletons.getInstumenter().end(context, request, "NA", throwable);
+        CamundaProcessSingletons.getInstumenter().end(context, request, null, throwable);
         scope.close();
       }
     }

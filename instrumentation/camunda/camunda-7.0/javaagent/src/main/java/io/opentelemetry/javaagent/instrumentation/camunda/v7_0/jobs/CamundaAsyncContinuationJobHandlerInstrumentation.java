@@ -69,10 +69,6 @@ public class CamundaAsyncContinuationJobHandlerInstrumentation implements TypeIn
         request.setActivityName(Optional.ofNullable(executionEntity.getActivity().getName()));
       }
 
-      if (Java8BytecodeBridge.currentContext() == Java8BytecodeBridge.rootContext()) {
-        // log
-      }
-
       Context parentContext =
           getOpentelemetry()
               .getPropagators()
@@ -100,7 +96,7 @@ public class CamundaAsyncContinuationJobHandlerInstrumentation implements TypeIn
         @Advice.Thrown Throwable throwable) {
 
       if (context != null && scope != null) {
-        getInstumenter().end(context, request, "NA", throwable);
+        getInstumenter().end(context, request, null, throwable);
         scope.close();
       }
 

@@ -25,6 +25,7 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
+import org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior;
 import org.camunda.bpm.model.bpmn.instance.CompensateEventDefinition;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.ErrorEventDefinition;
@@ -83,7 +84,6 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
       request.setBusinessKey(Optional.ofNullable(execution.getProcessBusinessKey()));
 
       if (execution.getBpmnModelElementInstance() != null) {
-        // TODO lambda does not work due to access modifier
         if (execution.getBpmnModelElementInstance() instanceof EndEvent) {
           EndEvent e = (EndEvent) execution.getBpmnModelElementInstance();
 
@@ -102,7 +102,7 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
             }
           }
         } else if (execution.getBpmnModelElementInstance() instanceof Gateway) {
-          // TODO
+          // TODO future enhancement
         } else {
           request.setActivityName(Optional.ofNullable(execution.getCurrentActivityName()));
         }
@@ -121,12 +121,16 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
 
       parentScope = parentContext.makeCurrent();
 
+      if (!getInstumenter().shouldStart(Java8BytecodeBridge.currentContext(), request)) {
+        return
+      }
+
       if (getInstumenter().shouldStart(Java8BytecodeBridge.currentContext(), request)) {
         context = getInstumenter().start(Java8BytecodeBridge.currentContext(), request);
         scope = context.makeCurrent();
 
         if (target.getClass()
-            == org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior.class) {
+            == ExternalTaskActivityBehavior.class) {
 
           getOpentelemetry()
               .getPropagators()
@@ -146,7 +150,7 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
         @Advice.Thrown Throwable throwable) {
 
       if (context != null && scope != null) {
-        getInstumenter().end(context, request, "NA", throwable);
+        getInstumenter().end(context, request, null, throwable);
         scope.close();
       }
 

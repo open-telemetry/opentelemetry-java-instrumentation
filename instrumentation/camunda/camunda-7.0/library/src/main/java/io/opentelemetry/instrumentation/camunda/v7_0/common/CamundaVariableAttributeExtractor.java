@@ -38,7 +38,6 @@ public class CamundaVariableAttributeExtractor
       CamundaCommonRequest request,
       String response,
       Throwable error) {
-    // TODO Auto-generated method stub
 
   }
 }

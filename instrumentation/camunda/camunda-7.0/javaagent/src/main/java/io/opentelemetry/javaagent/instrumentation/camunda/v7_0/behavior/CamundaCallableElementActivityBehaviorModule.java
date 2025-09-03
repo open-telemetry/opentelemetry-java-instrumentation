@@ -20,12 +20,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CamundaCallableElementActivityBehaviorModule extends InstrumentationModule {
 
   public CamundaCallableElementActivityBehaviorModule() {
-    super("camunda", "camunda-7.0", "camunda-behavior", "camunda-behavior-7_18");
-  }
-
-  @Override
-  public boolean defaultEnabled(ConfigProperties config) {
-    return config.getBoolean("otel.instrumentation.common.default-enabled", true);
+    super("camunda", "camunda-7.0", "camunda-behavior");
   }
 
   @Override

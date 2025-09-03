@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior.CamundaBehaviorSingletons.getInstumenter;
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.behavior.CamundaBehaviorSingletons.getOpentelemetry;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -24,7 +25,6 @@ import java.util.Optional;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import net.bytebuddy.matcher.ElementMatchers;
 import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 import org.camunda.bpm.engine.variable.VariableMap;
 
@@ -45,7 +45,7 @@ public class CamundaCallableElementActivityBehaviorInstrumentation implements Ty
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        ElementMatchers.isMethod().and(ElementMatchers.named("startInstance")),
+        isMethod().and(named("startInstance")),
         this.getClass().getName() + "$CamundaCallableElementActivityBehaviorAdvice");
   }
 
@@ -62,7 +62,6 @@ public class CamundaCallableElementActivityBehaviorInstrumentation implements Ty
         @Advice.Local("otelScope") Scope scope) {
 
       if (execution == null) {
-        // log warning
         return;
       }
 
@@ -112,7 +111,7 @@ public class CamundaCallableElementActivityBehaviorInstrumentation implements Ty
         @Advice.Thrown Throwable throwable) {
 
       if (context != null && scope != null) {
-        getInstumenter().end(context, request, "NA", throwable);
+        getInstumenter().end(context, request, null, throwable);
         scope.close();
       }
 

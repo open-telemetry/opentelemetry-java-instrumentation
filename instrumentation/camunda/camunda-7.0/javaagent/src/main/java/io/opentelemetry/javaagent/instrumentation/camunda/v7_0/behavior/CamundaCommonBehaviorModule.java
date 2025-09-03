@@ -19,7 +19,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CamundaCommonBehaviorModule extends InstrumentationModule {
 
   public CamundaCommonBehaviorModule() {
-    super("camunda", "camunda-7.0", "camunda-behavior", "camunda-behavior-7_18");
+    super("camunda", "camunda-7.0", "camunda-behavior");
   }
 
   @Override

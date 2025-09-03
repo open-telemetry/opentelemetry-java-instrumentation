@@ -15,14 +15,14 @@ import io.opentelemetry.instrumentation.camunda.v7_0.common.CamundaVariableAttri
 
 public class CamundaBehaviorSingletons {
 
-  private static final Instrumenter<CamundaCommonRequest, String> instrumenter;
+  private static final Instrumenter<CamundaCommonRequest, Void> instrumenter;
 
   private static final OpenTelemetry opentelemetry;
 
   static {
     opentelemetry = GlobalOpenTelemetry.get();
 
-    InstrumenterBuilder<CamundaCommonRequest, String> builder =
+    InstrumenterBuilder<CamundaCommonRequest, Void> builder =
         Instrumenter.<CamundaCommonRequest, String>builder(
                 opentelemetry,
                 "io.opentelemetry.camunda-behavior",
@@ -36,7 +36,7 @@ public class CamundaBehaviorSingletons {
     return opentelemetry;
   }
 
-  public static Instrumenter<CamundaCommonRequest, String> getInstumenter() {
+  public static Instrumenter<CamundaCommonRequest, Void> getInstumenter() {
     return instrumenter;
   }
 

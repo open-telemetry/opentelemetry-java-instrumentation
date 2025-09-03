@@ -111,7 +111,7 @@ public class CamundaTopicSubscriptionMangerInstrumentation implements TypeInstru
         @Advice.Thrown Throwable throwable) {
 
       if (context != null && scope != null) {
-        getInstumenter().end(context, request, "NA", throwable);
+        getInstumenter().end(context, request, null, throwable);
         scope.close();
       }
 
