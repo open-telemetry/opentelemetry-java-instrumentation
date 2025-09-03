@@ -18,9 +18,9 @@ public final class FinatraResponseListener implements FutureEventListener<Respon
       VirtualField.find(Response.class, Throwable.class);
 
   private final Context context;
-  private final Class<?> request;
+  private final FinatraRequest request;
 
-  public FinatraResponseListener(Context context, Class<?> request) {
+  public FinatraResponseListener(Context context, FinatraRequest request) {
     this.context = context;
     this.request = request;
   }

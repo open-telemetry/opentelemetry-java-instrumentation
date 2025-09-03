@@ -79,7 +79,7 @@ class Netty41ClientSslTest {
                 ChannelPipeline pipeline = socketChannel.pipeline();
 
                 SslContext sslContext = SslContextBuilder.forClient().build();
-                SSLEngine sslEngine = sslContext.newEngine(socketChannel.alloc());
+                SSLEngine sslEngine = sslContext.newEngine(socketChannel.alloc(), "localhost", -1);
                 if (enabledProtocols != null) {
                   sslEngine.setEnabledProtocols(enabledProtocols.toArray(new String[0]));
                 }

@@ -23,12 +23,16 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
+import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
+import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -51,7 +55,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
-  final SpanNameExtractor<? super REQUEST> spanNameExtractor;
+  SpanNameExtractor<? super REQUEST> spanNameExtractor;
 
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
@@ -281,6 +285,9 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private Instrumenter<REQUEST, RESPONSE> buildInstrumenter(
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
+
+    applyCustomizers(this);
+
     this.spanKindExtractor = spanKindExtractor;
     return constructor.create(this);
   }
@@ -373,6 +380,49 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private void propagateOperationListenersToOnEnd() {
     propagateOperationListenersToOnEnd = true;
+  }
+
+  private static <REQUEST, RESPONSE> void applyCustomizers(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder) {
+    for (InternalInstrumenterCustomizerProvider provider :
+        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders()) {
+      provider.customize(
+          new InternalInstrumenterCustomizer<REQUEST, RESPONSE>() {
+            @Override
+            public String getInstrumentationName() {
+              return builder.instrumentationName;
+            }
+
+            @Override
+            public void addAttributesExtractor(AttributesExtractor<REQUEST, RESPONSE> extractor) {
+              builder.addAttributesExtractor(extractor);
+            }
+
+            @Override
+            public void addAttributesExtractors(
+                Iterable<? extends AttributesExtractor<REQUEST, RESPONSE>> extractors) {
+              builder.addAttributesExtractors(extractors);
+            }
+
+            @Override
+            public void addOperationMetrics(OperationMetrics operationMetrics) {
+              builder.addOperationMetrics(operationMetrics);
+            }
+
+            @Override
+            public void addContextCustomizer(ContextCustomizer<REQUEST> customizer) {
+              builder.addContextCustomizer(customizer);
+            }
+
+            @Override
+            public void setSpanNameExtractor(
+                Function<SpanNameExtractor<? super REQUEST>, SpanNameExtractor<? super REQUEST>>
+                    spanNameExtractorTransformer) {
+              builder.spanNameExtractor =
+                  spanNameExtractorTransformer.apply(builder.spanNameExtractor);
+            }
+          });
+    }
   }
 
   private interface InstrumenterConstructor<RQ, RS> {

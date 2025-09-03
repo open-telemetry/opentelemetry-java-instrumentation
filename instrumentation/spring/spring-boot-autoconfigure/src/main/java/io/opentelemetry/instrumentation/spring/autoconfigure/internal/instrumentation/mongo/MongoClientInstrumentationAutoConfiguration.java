@@ -22,7 +22,7 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @ConditionalOnBean(OpenTelemetry.class)
-@ConditionalOnClass(MongoClientSettings.class)
+@ConditionalOnClass({MongoClientSettings.class, MongoClientSettingsBuilderCustomizer.class})
 @ConditionalOnEnabledInstrumentation(module = "mongo")
 @Configuration
 public class MongoClientInstrumentationAutoConfiguration {

@@ -1,0 +1,8 @@
+description: >
+  Instruments the Cassandra database client, providing database client spans and metrics for
+  Cassandra queries.
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true

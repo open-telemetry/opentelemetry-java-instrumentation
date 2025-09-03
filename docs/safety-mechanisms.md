@@ -29,7 +29,7 @@ of the agent.
 ## Muzzle compile time checks
 
 Muzzle is the tool we use to ensure we do not apply agent instrumentation if it would break the
-user's app. Details on its implementation can be found [here](./contributing/muzzle.md).
+user's app. Details on its implementation can be found in [muzzle](./contributing/muzzle.md).
 
 Continuous build runs a muzzle compile time check for every library. This check will select random
 versions of the library available in Maven and check if our agent will cleanly apply to it. The
@@ -51,7 +51,7 @@ potentially cause linkage errors.
 
 ## Classloader separation
 
-See more detail about the class loader separation [here](./contributing/javaagent-structure.md).
+See more details about the class loader separation in [javaagent structure](./contributing/javaagent-structure.md).
 
 The Java agent makes sure to include as little code as possible in the user app's class loader, and
 all code that is included is either unique to the agent itself or shaded in the agent build. This is

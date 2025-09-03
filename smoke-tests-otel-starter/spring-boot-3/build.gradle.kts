@@ -25,6 +25,13 @@ dependencies {
   testImplementation("org.testcontainers:kafka")
   testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
+
+  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  if (testLatestDeps) {
+    // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
+    // are not in sync
+    testImplementation("org.mongodb:mongodb-driver-sync:latest.release")
+  }
 }
 
 springBoot {
@@ -51,6 +58,9 @@ tasks {
   }
   checkstyleAotTest {
     isEnabled = false
+  }
+  bootJar {
+    enabled = false
   }
 }
 

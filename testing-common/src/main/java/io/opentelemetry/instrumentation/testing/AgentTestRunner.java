@@ -10,11 +10,15 @@ import ch.qos.logback.classic.Logger;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.test.utils.LoggerUtils;
+import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
 import io.opentelemetry.javaagent.testing.common.TestAgentListenerAccess;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.List;
 import org.slf4j.LoggerFactory;
 
@@ -50,7 +54,7 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public void afterTestClass() {
+  public void afterTestClass() throws IOException {
     // Cleanup before assertion.
     assert TestAgentListenerAccess.getInstrumentationErrorCount() == 0
         : TestAgentListenerAccess.getInstrumentationErrorCount()
@@ -59,9 +63,21 @@ public final class AgentTestRunner extends InstrumentationTestRunner {
     assert adviceFailureCount == 0 : adviceFailureCount + " Advice failures during test";
     int muzzleFailureCount = TestAgentListenerAccess.getAndResetMuzzleFailureCount();
     assert muzzleFailureCount == 0 : muzzleFailureCount + " Muzzle failures during test";
+
+    // Generates files in a `.telemetry` directory within the instrumentation module with all
+    // captured emitted metadata to be used by the instrumentation-docs Doc generator.
+    if (Boolean.getBoolean("collectMetadata")) {
+      URL resource = this.getClass().getClassLoader().getResource("");
+      if (resource == null) {
+        return;
+      }
+      String path = Paths.get(resource.getPath()).toString();
+
+      MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
+    }
+
     // additional library ignores are ignored during tests, because they can make it really
-    // confusing for contributors wondering why their instrumentation is not applied
-    //
+    // confusing for contributors wondering why their instrumentation is not applied,
     // but we then need to make sure that the additional library ignores won't then silently prevent
     // the instrumentation from being applied in real life outside of these tests
     assert TestAgentListenerAccess.getIgnoredButTransformedClassNames().isEmpty()

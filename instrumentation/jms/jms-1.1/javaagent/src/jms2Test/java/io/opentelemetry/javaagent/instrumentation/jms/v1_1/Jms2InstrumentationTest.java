@@ -57,12 +57,10 @@ import org.hornetq.core.server.HornetQServers;
 import org.hornetq.jms.client.HornetQConnectionFactory;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public class Jms2InstrumentationTest {
@@ -136,7 +134,7 @@ public class Jms2InstrumentationTest {
     }
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
+  @MethodSource("destinationArguments")
   @ParameterizedTest
   void testMessageConsumer(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
@@ -196,7 +194,7 @@ public class Jms2InstrumentationTest {
                             messagingTempDestination(isTemporary))));
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
+  @MethodSource("destinationArguments")
   @ParameterizedTest
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
@@ -253,7 +251,7 @@ public class Jms2InstrumentationTest {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @ArgumentsSource(EmptyReceiveArgumentsProvider.class)
+  @MethodSource("emptyReceiveArguments")
   @ParameterizedTest
   void shouldNotEmitTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
@@ -279,38 +277,30 @@ public class Jms2InstrumentationTest {
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
-  static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> emptyReceiveArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    MessageReceiver receive = consumer -> consumer.receive(100);
+    MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      MessageReceiver receive = consumer -> consumer.receive(100);
-      MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
-
-      return Stream.of(
-          arguments(topic, receive),
-          arguments(queue, receive),
-          arguments(topic, receiveNoWait),
-          arguments(queue, receiveNoWait));
-    }
+    return Stream.of(
+        arguments(topic, receive),
+        arguments(queue, receive),
+        arguments(topic, receiveNoWait),
+        arguments(queue, receiveNoWait));
   }
 
-  static final class DestinationsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> destinationArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    DestinationFactory tempTopic = Session::createTemporaryTopic;
+    DestinationFactory tempQueue = Session::createTemporaryQueue;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      DestinationFactory tempTopic = Session::createTemporaryTopic;
-      DestinationFactory tempQueue = Session::createTemporaryQueue;
-
-      return Stream.of(
-          arguments(topic, "someTopic", false),
-          arguments(queue, "someQueue", false),
-          arguments(tempTopic, "(temporary)", true),
-          arguments(tempQueue, "(temporary)", true));
-    }
+    return Stream.of(
+        arguments(topic, "someTopic", false),
+        arguments(queue, "someQueue", false),
+        arguments(tempTopic, "(temporary)", true),
+        arguments(tempQueue, "(temporary)", true));
   }
 
   @FunctionalInterface

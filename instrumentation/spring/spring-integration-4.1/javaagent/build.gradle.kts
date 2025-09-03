@@ -42,15 +42,20 @@ dependencies {
 
 tasks {
   val testWithRabbitInstrumentation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringIntegrationAndRabbitTest")
     }
     include("**/SpringIntegrationAndRabbitTest.*")
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=true")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-rabbit.enabled=true")
   }
 
   val testWithProducerInstrumentation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringCloudStreamProducerTest")
     }
@@ -58,6 +63,7 @@ tasks {
     jvmArgs("-Dotel.instrumentation.rabbitmq.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-rabbit.enabled=false")
     jvmArgs("-Dotel.instrumentation.spring-integration.producer.enabled=true")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-integration.producer.enabled=true")
   }
 
   test {
@@ -70,13 +76,14 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation)
-    dependsOn(testWithProducerInstrumentation)
+    dependsOn(testWithRabbitInstrumentation, testWithProducerInstrumentation)
   }
 
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }
 

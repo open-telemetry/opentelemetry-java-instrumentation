@@ -10,6 +10,7 @@ import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
@@ -28,15 +29,11 @@ final class DbClientMetricsAdvice {
     ((ExtendedDoubleHistogramBuilder) builder)
         .setAttributesAdvice(
             asList(
-                DbClientCommonAttributesExtractor.DB_SYSTEM_NAME,
-                SqlClientAttributesExtractor.DB_COLLECTION_NAME,
-                DbClientCommonAttributesExtractor.DB_NAMESPACE,
-                DbClientAttributesExtractor.DB_OPERATION_NAME,
-                // will be implemented in
-                // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12804
-                DbClientAttributesExtractor.DB_RESPONSE_STATUS_CODE,
-                // will be implemented in
-                // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12804
+                DbAttributes.DB_SYSTEM_NAME,
+                DbAttributes.DB_COLLECTION_NAME,
+                DbAttributes.DB_NAMESPACE,
+                DbAttributes.DB_OPERATION_NAME,
+                DbAttributes.DB_RESPONSE_STATUS_CODE,
                 ErrorAttributes.ERROR_TYPE,
                 NetworkAttributes.NETWORK_PEER_ADDRESS,
                 NetworkAttributes.NETWORK_PEER_PORT,

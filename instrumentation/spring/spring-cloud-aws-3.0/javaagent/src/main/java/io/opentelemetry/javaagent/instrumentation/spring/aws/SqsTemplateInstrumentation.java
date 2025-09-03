@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,9 +33,10 @@ public class SqsTemplateInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetQueueAttributesAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) CompletableFuture<?> result) {
-      result = CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
+    public static CompletableFuture<?> methodExit(@Advice.Return CompletableFuture<?> result) {
+      return CompletableFutureWrapper.wrap(result, Java8BytecodeBridge.currentContext());
     }
   }
 }

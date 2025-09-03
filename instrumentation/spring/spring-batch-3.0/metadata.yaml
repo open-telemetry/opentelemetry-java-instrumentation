@@ -1,1 +1,15 @@
-disabledByDefault: true
+disabled_by_default: true
+description: This instrumentation enables INTERNAL spans for jobs run by the Spring Batch framework.
+configurations:
+  - name: otel.instrumentation.spring-batch.experimental-span-attributes
+    type: boolean
+    description: Adds the experimental attribute `job.system` to spans.
+    default: false
+  - name: otel.instrumentation.spring-batch.experimental.chunk.new-trace
+    type: boolean
+    description: When enabled, a new root span will be created for each chunk processing. Please note that this may lead to a high number of spans being created.
+    default: false
+  - name: otel.instrumentation.spring-batch.item.enabled
+    type: boolean
+    description: When enabled, spans will be created for each item processed. Please note that this may lead to a high number of spans being created.
+    default: false

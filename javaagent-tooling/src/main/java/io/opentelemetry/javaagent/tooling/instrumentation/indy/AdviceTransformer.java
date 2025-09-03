@@ -37,6 +37,9 @@ class AdviceTransformer {
   private static final Type OBJECT_TYPE = Type.getType(Object.class);
   private static final Type OBJECT_ARRAY_TYPE = Type.getType(Object[].class);
 
+  static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
+  static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
+
   static byte[] transform(byte[] bytes) {
     ClassReader cr = new ClassReader(bytes);
     ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
@@ -152,8 +155,12 @@ class AdviceTransformer {
   private static List<OutputArgument> getWritableArguments(MethodNode source) {
     List<OutputArgument> result = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_ARGUMENT.equals(annotationType) && isWriteable(annotationNode)) {
@@ -163,7 +170,6 @@ class AdviceTransformer {
             }
           }
         }
-        i++;
       }
     }
 
@@ -175,15 +181,18 @@ class AdviceTransformer {
   /** Argument annotated with {@code @Advice.Return(readOnly = false)} or {@code null}. */
   private static OutputArgument getWritableReturnValue(MethodNode source) {
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_RETURN.equals(annotationType) && isWriteable(annotationNode)) {
             return new OutputArgument(i, -1);
           }
         }
-        i++;
       }
     }
 
@@ -196,8 +205,12 @@ class AdviceTransformer {
   private static OutputArgument getEnterArgument(MethodNode source) {
     Type[] argumentTypes = Type.getArgumentTypes(source.desc);
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_ENTER.equals(annotationType)
@@ -205,7 +218,6 @@ class AdviceTransformer {
             return new OutputArgument(i, -1);
           }
         }
-        i++;
       }
     }
 
@@ -218,8 +230,12 @@ class AdviceTransformer {
   private static List<AdviceLocal> getLocals(MethodNode source) {
     List<AdviceLocal> result = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int i = 0;
-      for (List<AnnotationNode> list : source.visibleParameterAnnotations) {
+      for (int i = 0; i < source.visibleParameterAnnotations.length; i++) {
+        List<AnnotationNode> list = source.visibleParameterAnnotations[i];
+        if (list == null) {
+          continue;
+        }
+
         for (AnnotationNode annotationNode : list) {
           Type annotationType = Type.getType(annotationNode.desc);
           if (ADVICE_LOCAL.equals(annotationType)) {
@@ -229,14 +245,12 @@ class AdviceTransformer {
             }
           }
         }
-        i++;
       }
     }
 
     return result;
   }
 
-  static final Type ADVICE_ON_METHOD_ENTER = Type.getType(Advice.OnMethodEnter.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_RETURNED =
       Type.getType(Advice.AssignReturned.ToReturned.class);
   private static final Type ADVICE_ASSIGN_RETURNED_TO_ARGUMENTS =
@@ -265,8 +279,6 @@ class AdviceTransformer {
   private static boolean isEnterAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_ENTER);
   }
-
-  static final Type ADVICE_ON_METHOD_EXIT = Type.getType(Advice.OnMethodExit.class);
 
   private static boolean isExitAdvice(MethodNode source) {
     return hasAnnotation(source, ADVICE_ON_METHOD_EXIT);
@@ -836,7 +848,7 @@ class AdviceTransformer {
           @Override
           public void visit(String name, Object value) {
             if ("inline".equals(name)) {
-              value = Boolean.FALSE;
+              value = false;
               hasInline = true;
             } else if ("skipOn".equals(name) && value != void.class) {
               hasSkipOn = true;
@@ -847,7 +859,7 @@ class AdviceTransformer {
           @Override
           public void visitEnd() {
             if (!hasInline) {
-              visit("inline", Boolean.FALSE);
+              visit("inline", false);
             }
             if (context.canChangeReturnType() && hasSkipOn) {
               visit("skipOnIndex", 0);
@@ -875,7 +887,7 @@ class AdviceTransformer {
           @Override
           public void visit(String name, Object value) {
             if ("readOnly".equals(name)) {
-              value = Boolean.TRUE;
+              value = true;
             }
             super.visit(name, value);
           }

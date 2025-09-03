@@ -16,6 +16,8 @@ dependencies {
 
   library("org.mongodb:mongodb-driver-core:4.0.0")
 
+  // using 4.0.1 in tests to work around https://jira.mongodb.org/browse/JAVA-3647
+  testLibrary("org.mongodb:mongodb-driver-core:4.0.1")
   testLibrary("org.mongodb:mongodb-driver-sync:4.0.0")
   testLibrary("org.mongodb:mongodb-driver-reactivestreams:4.0.0")
 
@@ -33,6 +35,8 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

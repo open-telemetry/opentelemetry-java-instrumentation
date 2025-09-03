@@ -394,7 +394,7 @@ Due to the changes needed on most of the instrumentation modules the migration c
 we thus have to implement it in two steps:
 
 - `InstrumentationModule#isIndyModule` implementation return `true` (and changes needed to make it indy compatible)
-- set `inlined = false` on advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit`
+- set `inline = false` on advice methods annotated with `@Advice.OnMethodEnter` or `@Advice.OnMethodExit`
 
 The `otel.javaagent.experimental.indy` (default `false`) configuration option allows to opt-in for
 using "indy". When set to `true`, the `io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceTransformer`
@@ -403,7 +403,7 @@ be removed once all the instrumentations are "indy native".
 
 This configuration is automatically enabled in CI with `testIndy*` checks or when the `-PtestIndy=true` parameter is added to gradle.
 
-In order to preserve compatibility with both instrumentation strategies, we have to omit the `inlined = false`
+In order to preserve compatibility with both instrumentation strategies, we have to omit the `inline = false`
 from the advice method annotations.
 
 We have three sets of instrumentation modules:
@@ -445,12 +445,12 @@ return a value from the enter advice and get the value in the exit advice with a
 with `@Advice.Enter`, for example:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "enterValue";
 }
 
-@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inlined = false)
+@Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
 public static void onExit(@Advice.Argument(1) Object request,
                           @Advice.Enter Object enterValue) {
   // do something with enterValue
@@ -467,7 +467,7 @@ annotated parameters, however modifying the values is done through the advice me
 and `@Advice.AssignReturned.ToArguments` annotation:
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 @Advice.AssignReturned.ToArguments(@ToArgument(1))
 public static Object onEnter(@Advice.Argument(1) Object request) {
   return "hello";
@@ -487,7 +487,7 @@ annotated parameter, however modifying the value is done through the advice meth
 and `@Advice.AssignReturned.ToReturned`.
 
 ```java
-@Advice.OnMethodExit(suppress = Throwable.class, inlined = false)
+@Advice.OnMethodExit(suppress = Throwable.class, inline = false)
 @Advice.AssignReturned.ToReturned
 public static Object onExit(@Advice.Return Object returnValue) {
   return "hello";
@@ -504,7 +504,7 @@ annotated parameter, however modifying the value is done through the advice meth
 and `@Advice.AssignReturned.ToFields` annotation.
 
 ```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inlined = false)
+@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
 @Advice.AssignReturned.ToFields(@ToField("fieldName"))
 public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFieldValue) {
   return "newFieldValue";

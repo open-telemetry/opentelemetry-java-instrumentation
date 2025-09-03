@@ -9,6 +9,8 @@ import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentCo
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.util.ArrayDeque;
@@ -55,7 +57,7 @@ public class PekkoHttpServerTracer
   private class TracingLogic extends GraphStageLogic {
     private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
-    public TracingLogic() {
+    TracingLogic() {
       super(shape);
 
       // server pulls response, pass response from user code to server
@@ -142,6 +144,14 @@ public class PekkoHttpServerTracer
                 List<HttpHeader> headers = responseMutator.getHeaders();
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
+                }
+                PekkoRouteHolder routeHolder = PekkoRouteHolder.get(tracingRequest.context);
+                if (routeHolder != null) {
+                  routeHolder.pushIfNotCompletelyMatched("*");
+                  HttpServerRoute.update(
+                      tracingRequest.context,
+                      HttpServerRouteSource.CONTROLLER,
+                      routeHolder.route());
                 }
 
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);

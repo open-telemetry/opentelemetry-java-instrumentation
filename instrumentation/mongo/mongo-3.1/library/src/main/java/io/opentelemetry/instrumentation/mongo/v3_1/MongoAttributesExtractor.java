@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static java.util.Arrays.asList;
 
 import com.mongodb.event.CommandStartedEvent;
@@ -21,8 +22,6 @@ import org.bson.BsonValue;
 
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
   // copied from DbIncubatingAttributes
-  private static final AttributeKey<String> DB_COLLECTION_NAME =
-      AttributeKey.stringKey("db.collection.name");
   private static final AttributeKey<String> DB_MONGODB_COLLECTION =
       AttributeKey.stringKey("db.mongodb.collection");
 

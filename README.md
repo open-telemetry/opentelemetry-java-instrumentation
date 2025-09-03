@@ -39,13 +39,6 @@ This package includes the instrumentation agent as well as
 instrumentations for all supported libraries and all available data exporters.
 The package provides a completely automatic, out-of-the-box experience.
 
-*Note: There are 2.x releases and 1.x releases. The 2.0 release included significant breaking
-changes, the details of which can be found in the [release notes](https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/tag/v2.0.0).
-It is recommended to use the latest 2.x release which will have the latest features and improvements.
-1.x will receive security patches for a limited time and will not include other bug fixes and
-enhancements.*
-
-
 Enable the instrumentation agent using the `-javaagent` flag to the JVM.
 
 ```
@@ -136,39 +129,39 @@ Debug logging negatively impacts the performance of your application.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md).
 
-Triagers ([@open-telemetry/java-instrumentation-triagers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-triagers)):
-
-- [Jonas Kunz](https://github.com/JonasKunz), Elastic
-- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
-
-Approvers ([@open-telemetry/java-instrumentation-approvers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-approvers)):
-
-- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
-- [Jack Berg](https://github.com/jack-berg), New Relic
-- [Jason Plumb](https://github.com/breedx-splk), Splunk
-- [Jay DeLuca](https://github.com/jaydeluca)
-- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
-- [John Watson](https://github.com/jkwatson), Cloudera
-- [Steve Rao](https://github.com/steverao), Alibaba
-
-Maintainers ([@open-telemetry/java-instrumentation-maintainers](https://github.com/orgs/open-telemetry/teams/java-instrumentation-maintainers)):
+### Maintainers
 
 - [Lauri Tulmin](https://github.com/laurit), Splunk
 - [Trask Stalnaker](https://github.com/trask), Microsoft
 
-Emeritus maintainers:
+For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#maintainer).
+
+### Approvers
+
+- [Gregor Zeitlinger](https://github.com/zeitlinger), Grafana
+- [Jack Berg](https://github.com/jack-berg), New Relic
+- [Jason Plumb](https://github.com/breedx-splk), Splunk
+- [Jay DeLuca](https://github.com/jaydeluca), Grafana
+- [Jean Bisutti](https://github.com/jeanbisutti), Microsoft
+- [John Watson](https://github.com/jkwatson), Cloudera
+- [Jonas Kunz](https://github.com/JonasKunz), Elastic
+- [Steve Rao](https://github.com/steverao), Alibaba
+- [Sylvain Juge](https://github.com/SylvainJuge), Elastic
+
+For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#approver).
+
+### Emeritus maintainers
 
 - [Mateusz Rzeszutek](https://github.com/mateuszrzeszutek)
 - [Nikita Salnikov-Tarnovski](https://github.com/iNikem)
 - [Tyler Benson](https://github.com/tylerbenson)
 
-Learn more about roles in
-the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md).
+For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
-Thanks to all the people who already contributed!
+### Thanks to all of our contributors!
 
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
-  <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
+  <img alt="Repo contributors" src="https://contrib.rocks/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
 </a>
 
 [config-agent]: https://opentelemetry.io/docs/zero-code/java/agent/configuration/

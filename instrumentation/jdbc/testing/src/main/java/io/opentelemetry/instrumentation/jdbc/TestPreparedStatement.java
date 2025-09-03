@@ -26,15 +26,21 @@ import java.sql.SQLXML;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
 
 class TestPreparedStatement extends TestStatement implements PreparedStatement {
-
-  TestPreparedStatement() {
-    super();
-  }
+  private boolean hasResultSet = true;
+  Map<String, String> parameters;
 
   TestPreparedStatement(Connection connection) {
     super(connection);
+    this.parameters = new HashMap<>();
+  }
+
+  @Override
+  protected boolean hasResultSet() {
+    return hasResultSet;
   }
 
   @Override
@@ -50,11 +56,12 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
 
   @Override
   public ResultSet executeQuery() throws SQLException {
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
   public int executeUpdate() throws SQLException {
+    hasResultSet = false;
     return 0;
   }
 
@@ -144,7 +151,9 @@ class TestPreparedStatement extends TestStatement implements PreparedStatement {
   public void setFloat(int parameterIndex, float x) throws SQLException {}
 
   @Override
-  public void setInt(int parameterIndex, int x) throws SQLException {}
+  public void setInt(int parameterIndex, int x) throws SQLException {
+    parameters.put(Integer.toString(parameterIndex), Integer.toString(x));
+  }
 
   @Override
   public void setLong(int parameterIndex, long x) throws SQLException {}

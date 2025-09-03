@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import static java.util.Arrays.asList;
+
 import com.google.auto.service.AutoService;
-import io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor;
 import io.opentelemetry.javaagent.extension.instrumentation.HelperResourceBuilder;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.ClassInjector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
+import java.util.List;
 
 @AutoService(InstrumentationModule.class)
 public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationModule {
@@ -32,8 +35,14 @@ public class AwsSdkInstrumentationModule extends AbstractAwsSdkInstrumentationMo
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
-            "io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor")
+            "io.opentelemetry.javaagent.instrumentation.awssdk.v2_2.TracingExecutionInterceptor")
         .inject(InjectionMode.CLASS_ONLY);
+  }
+
+  @Override
+  public List<TypeInstrumentation> typeInstrumentations() {
+    return asList(
+        new ResourceInjectingTypeInstrumentation(), new AwsAsyncClientHandlerInstrumentation());
   }
 
   @Override

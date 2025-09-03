@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.async;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5Singletons.helper;
 
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
@@ -17,16 +18,17 @@ import net.bytebuddy.implementation.bytecode.assign.Assigner;
 public class AsyncStartAdvice {
 
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static void startAsyncEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+  public static CallDepth startAsyncEnter() {
     // This allows to detect the outermost invocation of startAsync in method exit
-    callDepth = CallDepth.forClass(AsyncContext.class);
+    CallDepth callDepth = CallDepth.forClass(AsyncContext.class);
     callDepth.getAndIncrement();
+    return callDepth;
   }
 
   @Advice.OnMethodExit(suppress = Throwable.class)
   public static void startAsyncExit(
       @Advice.This(typing = Assigner.Typing.DYNAMIC) HttpServletRequest request,
-      @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      @Advice.Enter CallDepth callDepth) {
 
     if (callDepth.decrementAndGet() != 0) {
       // This is not the outermost invocation, ignore.
@@ -34,9 +36,7 @@ public class AsyncStartAdvice {
     }
 
     if (request != null) {
-      if (!helper().isAsyncListenerAttached(request)) {
-        helper().attachAsyncListener(request);
-      }
+      helper().attachAsyncListener(request, Java8BytecodeBridge.currentContext());
     }
   }
 }

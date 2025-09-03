@@ -73,7 +73,7 @@ public class AkkaFlowWrapper
   private class TracingLogic extends GraphStageLogic {
     private final Deque<TracingRequest> requests = new ArrayDeque<>();
 
-    public TracingLogic() {
+    TracingLogic() {
       super(shape);
 
       // server pulls response, pass response from user code to server

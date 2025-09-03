@@ -7,3 +7,9 @@ muzzle {
     coreJdk()
   }
 }
+
+tasks {
+  test {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+}

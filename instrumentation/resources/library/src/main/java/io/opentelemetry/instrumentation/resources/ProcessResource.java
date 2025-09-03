@@ -93,6 +93,8 @@ public final class ProcessResource {
 
       String[] args = ProcessArguments.getProcessArguments();
       // This will only work with Java 9+ but provides everything except the executablePath.
+      // Argument array may be empty on Java 9+ when the command line is too long, see
+      // https://bugs.openjdk.org/browse/JDK-8345117
       if (args.length > 0) {
         List<String> commandArgs = new ArrayList<>(args.length + 1);
         commandArgs.add(executablePath.toString());

@@ -1,15 +1,12 @@
-import org.springframework.boot.gradle.tasks.bundling.BootJar
-
 plugins {
   id("otel.java-conventions")
-  id("org.springframework.boot") version "2.6.15"
 }
 
 description = "smoke-tests-otel-starter-spring-boot-common"
 
 dependencies {
   // spring dependencies are compile only to enable testing against different versions of spring
-  compileOnly(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
+  compileOnly(platform("org.springframework.boot:spring-boot-dependencies:2.6.15"))
   compileOnly("org.springframework.boot:spring-boot-starter-web")
   compileOnly("org.springframework.boot:spring-boot-starter-test")
   compileOnly("org.springframework.boot:spring-boot-starter-data-jdbc")
@@ -27,6 +24,11 @@ dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
 }
 
-tasks.withType<BootJar> {
-  enabled = false
+tasks {
+  compileJava {
+    with(options) {
+      // preserve parameter names for @SpanAttribute
+      compilerArgs.add("-parameters")
+    }
+  }
 }

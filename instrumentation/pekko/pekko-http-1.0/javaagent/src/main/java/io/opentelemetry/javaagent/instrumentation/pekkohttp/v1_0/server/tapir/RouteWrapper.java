@@ -5,7 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
+import java.nio.charset.Charset;
+import org.apache.pekko.http.scaladsl.model.Uri;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
 import org.apache.pekko.http.scaladsl.server.RouteResult;
 import scala.Function1;
@@ -19,6 +23,7 @@ import sttp.tapir.EndpointInput;
 import sttp.tapir.server.ServerEndpoint;
 
 public class RouteWrapper implements Function1<RequestContext, Future<RouteResult>> {
+  private static final Uri.Path EMPTY = Uri.Path$.MODULE$.apply("", Charset.defaultCharset());
   private final Function1<RequestContext, Future<RouteResult>> route;
   private final ServerEndpoint<?, ?> serverEndpoint;
 
@@ -28,7 +33,13 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
     this.serverEndpoint = serverEndpoint;
   }
 
-  public class Finalizer implements PartialFunction<Try<RouteResult>, Unit> {
+  class Finalizer implements PartialFunction<Try<RouteResult>, Unit> {
+    private final Uri.Path beforeMatch;
+
+    public Finalizer(Uri.Path beforeMatch) {
+      this.beforeMatch = beforeMatch;
+    }
+
     @Override
     public boolean isDefinedAt(Try<RouteResult> tryResult) {
       return tryResult.isSuccess();
@@ -36,7 +47,9 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
 
     @Override
     public Unit apply(Try<RouteResult> tryResult) {
-      if (tryResult.isSuccess()) {
+      Context context = Java8BytecodeBridge.currentContext();
+      PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
+      if (routeHolder != null && tryResult.isSuccess()) {
         RouteResult result = tryResult.get();
         if (result.getClass() == RouteResult.Complete.class) {
           String path =
@@ -50,9 +63,7 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
                   "*",
                   Option.apply("*"),
                   Option.apply("*"));
-
-          PekkoRouteHolder.push(path);
-          PekkoRouteHolder.endMatched();
+          routeHolder.push(beforeMatch, EMPTY, path);
         }
       }
       return null;
@@ -61,6 +72,6 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
 
   @Override
   public Future<RouteResult> apply(RequestContext ctx) {
-    return route.apply(ctx).andThen(new Finalizer(), ctx.executionContext());
+    return route.apply(ctx).andThen(new Finalizer(ctx.unmatchedPath()), ctx.executionContext());
   }
 }

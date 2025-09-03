@@ -31,6 +31,11 @@ tasks {
       compilerArgs.add("-Xlint:-cast")
     }
   }
+
+  named<Checkstyle>("checkstyleMain") {
+    // exclude generated classes
+    exclude("**/example/**")
+  }
 }
 
 protobuf {

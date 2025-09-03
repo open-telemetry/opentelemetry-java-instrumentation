@@ -39,6 +39,8 @@ val javaagentLibs by configurations.creating {
 listOf(baseJavaagentLibs, javaagentLibs).forEach {
   it.run {
     exclude("io.opentelemetry", "opentelemetry-api")
+    exclude("io.opentelemetry", "opentelemetry-common")
+    exclude("io.opentelemetry", "opentelemetry-context")
     exclude("io.opentelemetry.semconv", "opentelemetry-semconv")
     exclude("io.opentelemetry.semconv", "opentelemetry-semconv-incubating")
     // events API and metrics advice API
@@ -55,7 +57,6 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-incubator")
-  bootstrapLibs(project(":instrumentation-api-incubator"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -69,8 +70,11 @@ dependencies {
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
   }
   baseJavaagentLibs(project(":javaagent-extension-api"))
+  baseJavaagentLibs(project(":instrumentation-api-incubator"))
 
-  baseJavaagentLibs(project(":javaagent-tooling"))
+  baseJavaagentLibs(project(":javaagent-tooling")) {
+    exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
+  }
   baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
@@ -86,6 +90,8 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.40:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
@@ -143,8 +149,7 @@ tasks {
   val buildBootstrapLibs by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
-    exclude("io/opentelemetry/javaagent/extension/**")
+    excludeNonBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -176,8 +181,7 @@ tasks {
 
     excludeBootstrapClasses()
     // remove MPL licensed content
-    exclude("okhttp3/internal/publicsuffix/NOTICE")
-    exclude("okhttp3/internal/publicsuffix/publicsuffixes.gz")
+    exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
 
@@ -283,7 +287,8 @@ tasks {
     doLast {
       val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
       if (Files.exists(filePath)) {
-        val datePattern = Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
+        val datePattern =
+          Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
         val lines = Files.readAllLines(filePath)
         // 4th line contains the timestamp of when the license report was generated, replace it with
         // an empty line
@@ -409,7 +414,8 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
     eachFile {
       if (path.startsWith("net/bytebuddy/") &&
         // this is our class that we have placed in the byte buddy package, need to preserve it
-        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
+        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")
+      ) {
         exclude()
       } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
         path = path.removePrefix("META-INF/versions/9/")
@@ -420,16 +426,29 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
 }
 
 // exclude bootstrap projects from javaagent libs - they won't be added to inst/
+fun ShadowJar.excludeNonBootstrapClasses() {
+  // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
+  exclude("io/opentelemetry/javaagent/extension/**")
+  exclude("**/instrumentation/api/incubator/sdk/**")
+}
+
+// exclude bootstrap projects from javaagent libs - they won't be added to inst/
 fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
-    exclude(project(":instrumentation-api-incubator"))
     exclude(project(":instrumentation-annotations-support"))
     exclude(project(":javaagent-bootstrap"))
   }
 
   // exclude the bootstrap part of the javaagent-extension-api
   exclude("io/opentelemetry/javaagent/bootstrap/**")
+
+  // all in instrumentation-api-incubator except the bridge package
+  exclude("io/opentelemetry/instrumentation/api/incubator/builder/**")
+  exclude("io/opentelemetry/instrumentation/api/incubator/config/**")
+  exclude("io/opentelemetry/instrumentation/api/incubator/instrumenter/**")
+  exclude("io/opentelemetry/instrumentation/api/incubator/log/**")
+  exclude("io/opentelemetry/instrumentation/api/incubator/semconv/**")
 }
 
 class JavaagentProvider(

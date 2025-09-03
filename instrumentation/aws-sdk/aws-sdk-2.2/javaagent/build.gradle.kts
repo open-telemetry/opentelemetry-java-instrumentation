@@ -97,7 +97,6 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library-autoconfigure"))
   implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
 
   library("software.amazon.awssdk:aws-core:2.2.0")
@@ -122,35 +121,41 @@ dependencies {
   testLibrary("software.amazon.awssdk:lambda:2.2.0")
   testLibrary("software.amazon.awssdk:rds:2.2.0")
   testLibrary("software.amazon.awssdk:s3:2.2.0")
-  testLibrary("software.amazon.awssdk:sqs:2.2.0")
-  testLibrary("software.amazon.awssdk:sns:2.2.0")
   testLibrary("software.amazon.awssdk:ses:2.2.0")
+  testLibrary("software.amazon.awssdk:secretsmanager:2.2.0")
+  testLibrary("software.amazon.awssdk:sfn:2.2.0")
+  testLibrary("software.amazon.awssdk:sns:2.2.0")
+  testLibrary("software.amazon.awssdk:sqs:2.2.0")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
     val s3PresignerTest by registering(JvmTestSuite::class) {
       dependencies {
-        if (latestDepTest) {
-          implementation("software.amazon.awssdk:s3:latest.release")
-        } else {
-          implementation("software.amazon.awssdk:s3:2.10.12")
-        }
+        val version = if (latestDepTest) "latest.release" else "2.10.12"
+        implementation("software.amazon.awssdk:s3:$version")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+      }
+    }
+
+    val s3CrtTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("software.amazon.awssdk:s3:" + if (latestDepTest) "latest.release" else "2.27.21")
+        implementation("software.amazon.awssdk.crt:aws-crt:" + if (latestDepTest) "latest.release" else "0.30.11")
+        implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
+        implementation("org.testcontainers:localstack")
       }
     }
 
     val testBedrockRuntime by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:testing"))
-        if (findProperty("testLatestDeps") as Boolean) {
-          implementation("software.amazon.awssdk:bedrockruntime:latest.release")
-        } else {
-          // First release with Converse API
-          implementation("software.amazon.awssdk:bedrockruntime:2.25.63")
-        }
+        // 2.25.63 is the first release with Converse API
+        val version = if (latestDepTest) "latest.release" else "2.25.63"
+        implementation("software.amazon.awssdk:bedrockruntime:$version")
       }
 
       targets {
@@ -158,6 +163,7 @@ testing {
           testTask.configure {
             // TODO run tests both with and without genai message capture
             systemProperty("otel.instrumentation.genai.capture-message-content", "true")
+            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -167,6 +173,9 @@ testing {
 
 tasks {
   val testExperimentalSqs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
@@ -175,10 +184,26 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   test {
@@ -186,12 +211,11 @@ tasks {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
-    dependsOn(testExperimentalSqs)
-    dependsOn(testReceiveSpansDisabled)
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimentalSqs, testStableSemconv, testReceiveSpansDisabled)
   }
 
   withType<Test>().configureEach {
@@ -199,23 +223,12 @@ tasks {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", "true")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
     mergeServiceFiles {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
     }
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }

@@ -12,14 +12,14 @@ import java.sql.SQLWarning;
 import java.sql.Statement;
 
 class TestStatement implements Statement {
-  final Connection connection;
-
-  TestStatement() {
-    this.connection = null;
-  }
+  private final Connection connection;
 
   TestStatement(Connection connection) {
     this.connection = connection;
+  }
+
+  protected boolean hasResultSet() {
+    return true;
   }
 
   @Override
@@ -67,7 +67,7 @@ class TestStatement implements Statement {
 
   @Override
   public ResultSet executeQuery(String sql) throws SQLException {
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
@@ -107,7 +107,7 @@ class TestStatement implements Statement {
 
   @Override
   public ResultSet getGeneratedKeys() throws SQLException {
-    return null;
+    return new TestResultSet(this);
   }
 
   @Override
@@ -137,7 +137,7 @@ class TestStatement implements Statement {
 
   @Override
   public ResultSet getResultSet() throws SQLException {
-    return null;
+    return hasResultSet() ? new TestResultSet(this) : null;
   }
 
   @Override

@@ -39,12 +39,10 @@ import org.apache.activemq.command.ActiveMQTextMessage;
 import org.assertj.core.api.AbstractAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.ArgumentsProvider;
-import org.junit.jupiter.params.provider.ArgumentsSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -93,8 +91,8 @@ abstract class AbstractJms1Test {
     }
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void testMessageListener(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
       throws Exception {
@@ -150,8 +148,8 @@ abstract class AbstractJms1Test {
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @ArgumentsSource(EmptyReceiveArgumentsProvider.class)
   @ParameterizedTest
+  @MethodSource("emptyReceiveArguments")
   void shouldNotEmitTelemetryOnEmptyReceive(
       DestinationFactory destinationFactory, MessageReceiver receiver) throws JMSException {
 
@@ -170,8 +168,8 @@ abstract class AbstractJms1Test {
     testing.waitForTraces(0);
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void shouldCaptureMessageHeaders(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
       throws Exception {
@@ -179,8 +177,8 @@ abstract class AbstractJms1Test {
     // given
     Destination destination = destinationFactory.create(session);
     TextMessage sentMessage = session.createTextMessage("a message");
-    sentMessage.setStringProperty("test_message_header", "test");
-    sentMessage.setIntProperty("test_message_int_header", 1234);
+    sentMessage.setStringProperty("Test_Message_Header", "test");
+    sentMessage.setIntProperty("Test_Message_Int_Header", 1234);
 
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer::close);
@@ -217,10 +215,10 @@ abstract class AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span ->
                     span.hasName(destinationName + " process")
@@ -233,16 +231,16 @@ abstract class AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 singletonList("test")),
                             equalTo(
-                                stringArrayKey("messaging.header.test_message_int_header"),
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
                                 singletonList("1234"))),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
-  @ArgumentsSource(DestinationsProvider.class)
   @ParameterizedTest
+  @MethodSource("destinationArguments")
   void shouldFailWhenSendingReadOnlyMessage(
       DestinationFactory destinationFactory, String destinationName, boolean isTemporary)
       throws Exception {
@@ -307,38 +305,30 @@ abstract class AbstractJms1Test {
         : satisfies(MESSAGING_DESTINATION_TEMPORARY, AbstractAssert::isNull);
   }
 
-  static final class EmptyReceiveArgumentsProvider implements ArgumentsProvider {
+  private static Stream<Arguments> emptyReceiveArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    MessageReceiver receive = consumer -> consumer.receive(100);
+    MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      MessageReceiver receive = consumer -> consumer.receive(100);
-      MessageReceiver receiveNoWait = MessageConsumer::receiveNoWait;
-
-      return Stream.of(
-          arguments(topic, receive),
-          arguments(queue, receive),
-          arguments(topic, receiveNoWait),
-          arguments(queue, receiveNoWait));
-    }
+    return Stream.of(
+        arguments(topic, receive),
+        arguments(queue, receive),
+        arguments(topic, receiveNoWait),
+        arguments(queue, receiveNoWait));
   }
 
-  static final class DestinationsProvider implements ArgumentsProvider {
+  protected static Stream<Arguments> destinationArguments() {
+    DestinationFactory topic = session -> session.createTopic("someTopic");
+    DestinationFactory queue = session -> session.createQueue("someQueue");
+    DestinationFactory tempTopic = Session::createTemporaryTopic;
+    DestinationFactory tempQueue = Session::createTemporaryQueue;
 
-    @Override
-    public Stream<? extends Arguments> provideArguments(ExtensionContext context) {
-      DestinationFactory topic = session -> session.createTopic("someTopic");
-      DestinationFactory queue = session -> session.createQueue("someQueue");
-      DestinationFactory tempTopic = Session::createTemporaryTopic;
-      DestinationFactory tempQueue = Session::createTemporaryQueue;
-
-      return Stream.of(
-          arguments(topic, "someTopic", false),
-          arguments(queue, "someQueue", false),
-          arguments(tempTopic, "(temporary)", true),
-          arguments(tempQueue, "(temporary)", true));
-    }
+    return Stream.of(
+        arguments(topic, "someTopic", false),
+        arguments(queue, "someQueue", false),
+        arguments(tempTopic, "(temporary)", true),
+        arguments(tempQueue, "(temporary)", true));
   }
 
   @FunctionalInterface

@@ -215,7 +215,7 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
     MessageId msgId =
         testing.runWithSpan(
             "parent",
-            () -> producer.newMessage().value(msg).property("test-message-header", "test").send());
+            () -> producer.newMessage().value(msg).property("Test-Message-Header", "test").send());
 
     latch.await(1, TimeUnit.MINUTES);
 

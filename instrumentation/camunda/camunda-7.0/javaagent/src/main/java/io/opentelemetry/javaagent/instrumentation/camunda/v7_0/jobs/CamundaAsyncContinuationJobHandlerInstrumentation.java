@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camunda.v7_0.jobs;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.jobs.CamundaJobSingletons.getInstumenter;
 import static io.opentelemetry.javaagent.instrumentation.camunda.v7_0.jobs.CamundaJobSingletons.getOpentelemetry;
 

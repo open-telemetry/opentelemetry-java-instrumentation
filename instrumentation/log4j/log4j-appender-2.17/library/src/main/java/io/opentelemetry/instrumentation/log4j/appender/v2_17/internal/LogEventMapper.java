@@ -8,10 +8,13 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17.internal;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -33,9 +36,9 @@ public final class LogEventMapper<T> {
   // copied from CodeIncubatingAttributes
   private static final AttributeKey<String> CODE_FILEPATH = AttributeKey.stringKey("code.filepath");
   private static final AttributeKey<String> CODE_FUNCTION = AttributeKey.stringKey("code.function");
-  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
+  private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
@@ -115,7 +118,7 @@ public final class LogEventMapper<T> {
     }
 
     if (throwable != null) {
-      setThrowable(attributes, throwable);
+      setThrowable(builder, attributes, throwable);
     }
 
     captureContextDataAttributes(attributes, contextData);
@@ -130,13 +133,31 @@ public final class LogEventMapper<T> {
       if (source != null) {
         String fileName = source.getFileName();
         if (fileName != null) {
-          attributes.put(CODE_FILEPATH, fileName);
+          if (SemconvStability.isEmitStableCodeSemconv()) {
+            attributes.put(CodeAttributes.CODE_FILE_PATH, fileName);
+          }
+          if (SemconvStability.isEmitOldCodeSemconv()) {
+            attributes.put(CODE_FILEPATH, fileName);
+          }
         }
-        attributes.put(CODE_NAMESPACE, source.getClassName());
-        attributes.put(CODE_FUNCTION, source.getMethodName());
+        if (SemconvStability.isEmitStableCodeSemconv()) {
+          attributes.put(
+              CodeAttributes.CODE_FUNCTION_NAME,
+              source.getClassName() + "." + source.getMethodName());
+        }
+        if (SemconvStability.isEmitOldCodeSemconv()) {
+          attributes.put(CODE_NAMESPACE, source.getClassName());
+          attributes.put(CODE_FUNCTION, source.getMethodName());
+        }
+
         int lineNumber = source.getLineNumber();
         if (lineNumber > 0) {
-          attributes.put(CODE_LINENO, lineNumber);
+          if (SemconvStability.isEmitStableCodeSemconv()) {
+            attributes.put(CodeAttributes.CODE_LINE_NUMBER, lineNumber);
+          }
+          if (SemconvStability.isEmitOldCodeSemconv()) {
+            attributes.put(CODE_LINENO, lineNumber);
+          }
         }
       }
     }
@@ -213,14 +234,17 @@ public final class LogEventMapper<T> {
         key, k -> AttributeKey.stringKey("log4j.map_message." + k));
   }
 
-  private static void setThrowable(AttributesBuilder attributes, Throwable throwable) {
-    // TODO (trask) extract method for recording exception into
-    // io.opentelemetry:opentelemetry-api
-    attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-    attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-    StringWriter writer = new StringWriter();
-    throwable.printStackTrace(new PrintWriter(writer));
-    attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+  private static void setThrowable(
+      LogRecordBuilder builder, AttributesBuilder attributes, Throwable throwable) {
+    if (builder instanceof ExtendedLogRecordBuilder) {
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
+    } else {
+      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+      StringWriter writer = new StringWriter();
+      throwable.printStackTrace(new PrintWriter(writer));
+      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+    }
   }
 
   private static Severity levelToSeverity(Level level) {

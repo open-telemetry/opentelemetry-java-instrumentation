@@ -318,7 +318,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     private final ThreadLocal<Boolean> loadingAnnotations = new ThreadLocal<>();
     private final WeakReference<ClassLoader> classLoaderRef;
 
-    public AgentTypePool(
+    AgentTypePool(
         TypePool.CacheProvider cacheProvider,
         ClassFileLocator classFileLocator,
         ClassLoader classLoader,
@@ -344,7 +344,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
      * @param name The name of the type to resolve.
      * @return The resolution for the type of this name.
      */
-    protected TypePool.Resolution doResolve(String name) {
+    private TypePool.Resolution doResolve(String name) {
       TypePool.Resolution resolution = cacheProvider.find(name);
       if (resolution == null) {
         // calling super.doDescribe that will locate the class bytes and parse them unlike
@@ -355,7 +355,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     void enterLoadAnnotations() {
-      loadingAnnotations.set(Boolean.TRUE);
+      loadingAnnotations.set(true);
     }
 
     void exitLoadAnnotations() {
@@ -381,7 +381,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         // Like jdk, byte-buddy getDeclaredAnnotations does not report annotations whose class is
         // missing. To do this it needs to locate the bytes for annotation types used in class.
         // Which means that if we have a matcher that matches methods annotated with @Foo byte-buddy
-        // will end up location bytes for all annotations used on any method in the classes that
+        // will end up locating bytes for all annotations used on any method in the classes that
         // this matcher is applied to. From our perspective this is unreasonable, we just want to
         // match based on annotation name with as little overhead as possible. As we match only
         // based on annotation name we never need to locate the bytes for the annotation type.
@@ -691,7 +691,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
   private static class DelegatingMethodDescription
       extends MethodDescription.InDefinedShape.AbstractBase {
-    protected final MethodDescription.InDefinedShape method;
+    final MethodDescription.InDefinedShape method;
 
     DelegatingMethodDescription(MethodDescription.InDefinedShape method) {
       this.method = method;

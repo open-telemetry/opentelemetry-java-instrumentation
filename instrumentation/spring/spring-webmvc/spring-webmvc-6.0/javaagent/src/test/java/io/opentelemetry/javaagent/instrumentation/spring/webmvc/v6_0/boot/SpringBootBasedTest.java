@@ -5,17 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.boot;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
-import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
-import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest;
 import io.opentelemetry.instrumentation.spring.webmvc.boot.AppConfig;
@@ -26,6 +23,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -55,7 +53,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
     app.setDefaultProperties(
-        ImmutableMap.of(
+        Map.of(
             "server.port",
             port,
             "server.context-path",
@@ -78,8 +76,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
           .hasKind(SpanKind.INTERNAL)
           .hasStatus(StatusData.error())
           .hasAttributesSatisfyingExactly(
-              equalTo(CODE_NAMESPACE, ResourceHttpRequestHandler.class.getName()),
-              equalTo(CODE_FUNCTION, "handleRequest"))
+              codeFunctionAssertions(ResourceHttpRequestHandler.class, "handleRequest"))
           .hasEventsSatisfyingExactly(
               event ->
                   event
@@ -88,7 +85,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
                           equalTo(
                               EXCEPTION_TYPE,
                               "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          satisfies(EXCEPTION_MESSAGE, val -> assertThat(val).isNotNull()),
+                          satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
                           satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {

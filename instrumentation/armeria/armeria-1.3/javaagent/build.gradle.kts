@@ -19,10 +19,14 @@ dependencies {
   testLibrary("com.linecorp.armeria:armeria-junit5:1.3.0")
 
   testImplementation(project(":instrumentation:armeria:armeria-1.3:testing"))
+
+  // needed for latest dep tests
+  testCompileOnly("com.google.errorprone:error_prone_annotations")
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 }

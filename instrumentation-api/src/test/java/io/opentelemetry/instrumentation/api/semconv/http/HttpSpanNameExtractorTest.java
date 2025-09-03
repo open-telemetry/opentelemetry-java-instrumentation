@@ -9,6 +9,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,9 @@ import org.mockito.quality.Strictness;
 @MockitoSettings(strictness = Strictness.LENIENT)
 class HttpSpanNameExtractorTest {
 
-  @Mock private HttpClientAttributesGetter<Map<String, String>, Map<String, String>> clientGetter;
+  @Mock
+  private HttpClientExperimentalAttributesGetter<Map<String, String>, Map<String, String>>
+      clientGetter;
 
   @Mock private HttpServerAttributesGetter<Map<String, String>, Map<String, String>> serverGetter;
 
@@ -39,6 +43,16 @@ class HttpSpanNameExtractorTest {
     when(clientGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
     assertThat(HttpSpanNameExtractor.create(clientGetter).extract(Collections.emptyMap()))
         .isEqualTo("GET");
+  }
+
+  @Test
+  void methodAndTemplate() {
+    when(clientGetter.getUrlTemplate(anyMap())).thenReturn("/cats/{id}");
+    when(clientGetter.getHttpRequestMethod(anyMap())).thenReturn("GET");
+    HttpSpanNameExtractorBuilder<Map<String, String>> builder =
+        HttpSpanNameExtractor.builder(clientGetter);
+    Experimental.setUrlTemplateExtractor(builder, clientGetter::getUrlTemplate);
+    assertThat(builder.build().extract(Collections.emptyMap())).isEqualTo("GET /cats/{id}");
   }
 
   @Test

@@ -63,7 +63,7 @@ public class PekkoFlowWrapper
   private class TracingLogic extends GraphStageLogic {
     private final Queue<PekkoTracingRequest> requests = new ArrayDeque<>();
 
-    public TracingLogic() {
+    TracingLogic() {
       super(shape);
 
       // server pulls response, pass response from user code to server

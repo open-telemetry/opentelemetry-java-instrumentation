@@ -1,2 +1,2 @@
-Comparing source compatibility of opentelemetry-instrumentation-api-2.15.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.14.0.jar
+Comparing source compatibility of opentelemetry-instrumentation-api-2.20.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.19.0.jar
 No changes.

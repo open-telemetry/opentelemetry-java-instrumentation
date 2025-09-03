@@ -52,7 +52,7 @@ public abstract class AbstractMongoClientTest<T> {
   @BeforeAll
   void setup() {
     mongodb =
-        new GenericContainer<>("mongo:4.0")
+        new GenericContainer<>("mongo:4.2")
             .withExposedPorts(27017)
             .withLogConsumer(new Slf4jLogConsumer(LoggerFactory.getLogger("mongodb")));
     mongodb.start();

@@ -1,0 +1,33 @@
+---
+id: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+name: model_coherecommandr-v1_invoke
+request:
+  url: /model/cohere.command-r-v1%3A0/invoke
+  method: POST
+  bodyPatterns:
+    - equalToJson: |-
+        {
+          "message" : "Say this is a test",
+          "max_tokens" : 10,
+          "temperature" : 0.8,
+          "p" : 1,
+          "stop_sequences" : [ "|" ]
+        }
+      ignoreArrayOrder: false
+      ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"response_id\":\"379ed018/a23f0c4a-6922-49f2-8ffe-9135b5f1eb9d\",\"text\":\"This is a
+    test. How\\u0027s it going?\",\"generation_id\":\"d50288c6-62d0-4f22-9fc5-ce026d675f00\",
+    \"chat_history\":[{\"role\":\"USER\",\"message\":\"Say this is a test\"},{\"role\":\"CHATBOT\",
+    \"message\":\"This is a test. How\\u0027s it going?\"}],\"finish_reason\":\"MAX_TOKENS\"}"
+  headers:
+    Date: "Wed, 19 Mar 2025 05:44:06 GMT"
+    Content-Type: application/json
+    x-amzn-RequestId: 1c4e6b83-4da3-430c-b21f-34b0cb003f06
+    X-Amzn-Bedrock-Invocation-Latency: "658"
+    X-Amzn-Bedrock-Output-Token-Count: "10"
+    X-Amzn-Bedrock-Input-Token-Count: "5"
+uuid: dbcd468d-58ca-4d6f-87e9-7d377f1aae67
+persistent: true
+insertionIndex: 20

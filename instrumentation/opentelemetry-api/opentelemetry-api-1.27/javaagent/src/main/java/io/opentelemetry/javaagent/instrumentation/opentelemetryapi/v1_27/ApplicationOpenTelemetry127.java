@@ -120,10 +120,28 @@ public final class ApplicationOpenTelemetry127 implements OpenTelemetry {
   }
 
   private static ApplicationLoggerFactory getLoggerFactory() {
-    // this class is defined in opentelemetry-api-1.47
+    // this class is defined in opentelemetry-api-1.52
     ApplicationLoggerFactory loggerFactory =
         getLoggerFactory(
-            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs.ApplicationLoggerFactory147Incubator");
+            "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_52.incubator.logs.ApplicationLoggerFactory150Incubator");
+    // this class is defined in opentelemetry-api-1.50
+    if (loggerFactory == null) {
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.incubator.logs.ApplicationLoggerFactory150Incubator");
+    }
+    if (loggerFactory == null) {
+      // this class is defined in opentelemetry-api-1.50
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_50.logs.ApplicationLoggerFactory150");
+    }
+    if (loggerFactory == null) {
+      // this class is defined in opentelemetry-api-1.47
+      loggerFactory =
+          getLoggerFactory(
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_47.incubator.logs.ApplicationLoggerFactory147Incubator");
+    }
     if (loggerFactory == null) {
       // this class is defined in opentelemetry-api-1.42
       loggerFactory =

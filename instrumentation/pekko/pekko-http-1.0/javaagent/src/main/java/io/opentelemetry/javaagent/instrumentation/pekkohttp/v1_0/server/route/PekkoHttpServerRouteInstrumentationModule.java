@@ -34,7 +34,6 @@ public class PekkoHttpServerRouteInstrumentationModule extends InstrumentationMo
     return asList(
         new PathMatcherInstrumentation(),
         new PathMatcherStaticInstrumentation(),
-        new RouteConcatenationInstrumentation(),
-        new PathConcatenationInstrumentation());
+        new RouteConcatenationInstrumentation());
   }
 }

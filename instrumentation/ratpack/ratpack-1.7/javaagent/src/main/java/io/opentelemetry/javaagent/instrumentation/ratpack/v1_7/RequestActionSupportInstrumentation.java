@@ -63,7 +63,7 @@ public class RequestActionSupportInstrumentation implements TypeInstrumentation 
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
-    public static Object wrapDownstream(@Advice.Argument(0) Downstream<?> downstream) {
+    public static Downstream<?> wrapDownstream(@Advice.Argument(0) Downstream<?> downstream) {
       // Propagate the current context to downstream
       // since that is the subsequent code chained to the http client call
       return DownstreamWrapper.wrapIfNeeded(downstream);
