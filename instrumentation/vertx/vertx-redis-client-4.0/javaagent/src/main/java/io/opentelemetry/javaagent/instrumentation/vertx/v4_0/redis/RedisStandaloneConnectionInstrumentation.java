@@ -42,9 +42,15 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
   @SuppressWarnings("unused")
   public static class SendAdvice {
     public static class AdviceScope {
-      public VertxRedisClientRequest otelRequest;
-      public Context context;
-      public Scope scope;
+      private final VertxRedisClientRequest otelRequest;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(VertxRedisClientRequest otelRequest, Context context, Scope scope) {
+        this.otelRequest = otelRequest;
+        this.context = context;
+        this.scope = scope;
+      }
 
       @Nullable
       public static AdviceScope start(
@@ -67,11 +73,8 @@ public class RedisStandaloneConnectionInstrumentation implements TypeInstrumenta
         if (!instrumenter().shouldStart(parentContext, otelRequest)) {
           return null;
         }
-        AdviceScope locals = new AdviceScope();
-        locals.otelRequest = otelRequest;
-        locals.context = instrumenter().start(parentContext, locals.otelRequest);
-        locals.scope = locals.context.makeCurrent();
-        return locals;
+        Context context = instrumenter().start(parentContext, otelRequest);
+        return new AdviceScope(otelRequest, context, context.makeCurrent());
       }
 
       @Nullable
