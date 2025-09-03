@@ -54,7 +54,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
@@ -116,7 +115,6 @@ class PostgresKafkaConnectSinkTaskTest {
   private static AdminClient adminClient;
 
   // Static methods
-
 
   private static String getKafkaConnectUrl() {
     return format(
@@ -406,18 +404,24 @@ class PostgresKafkaConnectSinkTaskTest {
                     }
 
                     // Look for JDBC spans (executeBatch, executeUpdate, etc.)
-                    if (spanName.contains("INSERT") || spanName.contains("UPDATE") 
-                        || spanName.contains("DELETE") || spanName.contains("SELECT")
-                        || spanName.contains("executeBatch") || spanName.contains("executeUpdate")) {
+                    if (spanName.contains("INSERT")
+                        || spanName.contains("UPDATE")
+                        || spanName.contains("DELETE")
+                        || spanName.contains("SELECT")
+                        || spanName.contains("executeBatch")
+                        || spanName.contains("executeUpdate")) {
                       foundJdbcSpan = true;
                       logger.info("Found JDBC span: {}", spanName);
-                      
+
                       // Check if this JDBC span is a child of Kafka Connect span
-                      if (parentSpanIdNode != null && kafkaConnectSpanId != null 
+                      if (parentSpanIdNode != null
+                          && kafkaConnectSpanId != null
                           && kafkaConnectSpanId.equals(parentSpanIdNode.asText())) {
                         foundParentChildRelationship = true;
-                        logger.info("Found parent-child relationship: JDBC span {} is child of Kafka Connect span {}", 
-                            spanName, kafkaConnectSpanId);
+                        logger.info(
+                            "Found parent-child relationship: JDBC span {} is child of Kafka Connect span {}",
+                            spanName,
+                            kafkaConnectSpanId);
                       }
                     }
                   }
@@ -439,32 +443,36 @@ class PostgresKafkaConnectSinkTaskTest {
     assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
 
     assertThat(foundKafkaConnectSpan).as("Should find Kafka Connect span").isTrue();
-    
+
     // JDBC spans are created by the instrumentation, as confirmed by container logs.
     // However, in this test environment, we may see spans from both:
     // 1. Test setup operations (CREATE TABLE, SELECT COUNT(*) - no parent-child relationship)
     // 2. Actual Kafka Connect container operations (with perfect parent-child relationships)
-    // 
+    //
     // Container logs show perfect trace propagation: Producer → Kafka Connect → JDBC operations
     // But test environment may only capture the test-related JDBC spans, not container spans.
     assertThat(foundJdbcSpan)
         .as("Should find JDBC spans - JDBC instrumentation is active")
         .isTrue();
-    
+
     logger.info("JDBC instrumentation test result: JDBC spans were found");
-    
+
     // Parent-child relationships depend on the span source:
     // - Container spans (actual Kafka Connect operations): Perfect parent-child relationships ✅
     // - Test environment spans (test setup): No parent-child relationships ❌
-    // 
+    //
     // The container logs prove that trace propagation works perfectly when both
     // instrumentations run in the same JVM process.
     if (foundParentChildRelationship) {
-      logger.info("✅ SUCCESS: Parent-child relationship found - complete trace propagation verified!");
+      logger.info(
+          "✅ SUCCESS: Parent-child relationship found - complete trace propagation verified!");
     } else {
-      logger.info("ℹ️  No parent-child relationship in test spans (expected for cross-process scenario)");
-      logger.info("📋 Container logs confirm perfect trace propagation: Producer → Kafka Connect → Database");
-      logger.info("🎯 This demonstrates the instrumentation works correctly for same-JVM deployments");
+      logger.info(
+          "ℹ️  No parent-child relationship in test spans (expected for cross-process scenario)");
+      logger.info(
+          "📋 Container logs confirm perfect trace propagation: Producer → Kafka Connect → Database");
+      logger.info(
+          "🎯 This demonstrates the instrumentation works correctly for same-JVM deployments");
     }
   }
 

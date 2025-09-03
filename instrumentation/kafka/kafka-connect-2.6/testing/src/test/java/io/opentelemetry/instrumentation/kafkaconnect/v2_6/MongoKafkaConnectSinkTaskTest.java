@@ -51,7 +51,6 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
-
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
@@ -108,7 +107,6 @@ class MongoKafkaConnectSinkTaskTest {
   private static AdminClient adminClient;
 
   // Static methods
-
 
   private static String getKafkaConnectUrl() {
     return format(
@@ -381,11 +379,12 @@ class MongoKafkaConnectSinkTaskTest {
                   JsonNode nameNode = span.get("name");
                   JsonNode spanIdNode = span.get("spanId");
                   JsonNode parentSpanIdNode = span.get("parentSpanId");
-                  
+
                   if (nameNode != null && spanIdNode != null) {
                     String spanName = nameNode.asText();
                     String spanId = spanIdNode.asText();
-                    String parentSpanId = parentSpanIdNode != null ? parentSpanIdNode.asText() : null;
+                    String parentSpanId =
+                        parentSpanIdNode != null ? parentSpanIdNode.asText() : null;
 
                     // Check for Kafka Connect spans
                     if (spanName.equals("KafkaConnect.put")) {
@@ -393,12 +392,15 @@ class MongoKafkaConnectSinkTaskTest {
                       kafkaConnectSpanId = spanId;
                       logger.info("Found Kafka Connect span with ID: {}", spanId);
                     }
-                    
+
                     // Check for MongoDB spans (insert, update, delete commands)
-                    if (spanName.equals("insert") || spanName.equals("update") || spanName.equals("delete")) {
+                    if (spanName.equals("insert")
+                        || spanName.equals("update")
+                        || spanName.equals("delete")) {
                       foundMongoSpan = true;
-                      logger.info("Found MongoDB span '{}' with parent ID: {}", spanName, parentSpanId);
-                      
+                      logger.info(
+                          "Found MongoDB span '{}' with parent ID: {}", spanName, parentSpanId);
+
                       // Check if MongoDB span is a child of Kafka Connect span
                       if (kafkaConnectSpanId != null && kafkaConnectSpanId.equals(parentSpanId)) {
                         foundParentChildRelationship = true;
@@ -418,67 +420,76 @@ class MongoKafkaConnectSinkTaskTest {
     assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
 
     assertThat(foundKafkaConnectSpan).as("Should find Kafka Connect span").isTrue();
-    
-    // Note: MongoDB spans are NOT expected from the Kafka Connect integration because 
+
+    // Note: MongoDB spans are NOT expected from the Kafka Connect integration because
     // the MongoDB Kafka Connector creates its own MongoDB client without TracingCommandListener
-    // See: https://github.com/mongodb/mongo-kafka/blob/master/src/main/java/com/mongodb/kafka/connect/sink/StartedMongoSinkTask.java
-    // This demonstrates that trace propagation depends on how connectors integrate with instrumented libraries.
-    // 
+    // See:
+    // https://github.com/mongodb/mongo-kafka/blob/master/src/main/java/com/mongodb/kafka/connect/sink/StartedMongoSinkTask.java
+    // This demonstrates that trace propagation depends on how connectors integrate with
+    // instrumented libraries.
+    //
     // Unlike JDBC Kafka Connector (which uses instrumented PreparedStatement operations),
-    // MongoDB Kafka Connector bypasses OpenTelemetry instrumentation, so we only get 
+    // MongoDB Kafka Connector bypasses OpenTelemetry instrumentation, so we only get
     // the Kafka Connect span with span links to producers.
-    logger.info("MongoDB span found: {} (expected: false for Kafka Connect integration)", foundMongoSpan);
-    logger.info("Parent-child relationship found: {} (expected: false for Kafka Connect integration)", foundParentChildRelationship);
-    
+    logger.info(
+        "MongoDB span found: {} (expected: false for Kafka Connect integration)", foundMongoSpan);
+    logger.info(
+        "Parent-child relationship found: {} (expected: false for Kafka Connect integration)",
+        foundParentChildRelationship);
+
     // The separate testTracePropagationWithInstrumentedMongoDB() demonstrates that
     // MongoDB instrumentation works perfectly when properly configured
-    
+
   }
 
   @Test
   public void testTracePropagationWithInstrumentedMongoDB() throws Exception {
     logger.info("=== Testing Trace Propagation with Properly Instrumented MongoDB ===");
-    
+
     // Create a properly instrumented MongoDB client (this will have TracingCommandListener)
-    String mongoConnectionString = String.format(Locale.ROOT, "mongodb://%s:%d", 
-        mongoDB.getHost(), mongoDB.getMappedPort(27017));
-    
-    try (com.mongodb.client.MongoClient instrumentedClient = 
-         com.mongodb.client.MongoClients.create(mongoConnectionString)) {
-      
+    String mongoConnectionString =
+        String.format(
+            Locale.ROOT, "mongodb://%s:%d", mongoDB.getHost(), mongoDB.getMappedPort(27017));
+
+    try (com.mongodb.client.MongoClient instrumentedClient =
+        com.mongodb.client.MongoClients.create(mongoConnectionString)) {
+
       // Get the collection
-      com.mongodb.client.MongoCollection<org.bson.Document> collection = 
+      com.mongodb.client.MongoCollection<org.bson.Document> collection =
           instrumentedClient.getDatabase("test").getCollection("demo");
-      
+
       // Clear spans from backend to isolate our test
       clearBackendTraces();
-      
+
       // Perform a MongoDB operation - this should create a span with proper instrumentation
-      org.bson.Document doc = new org.bson.Document("demo", "trace-propagation-test")
-          .append("timestamp", System.currentTimeMillis());
+      org.bson.Document doc =
+          new org.bson.Document("demo", "trace-propagation-test")
+              .append("timestamp", System.currentTimeMillis());
       collection.insertOne(doc);
-      
+
       // Wait for spans to arrive
       Thread.sleep(1000);
-      
+
       // Check if MongoDB span was created
       String backendUrl = getBackendUrl();
-      String tracesJson = given()
-          .when()
-          .get(backendUrl + "/get-traces")
-          .then()
-          .statusCode(200)
-          .extract()
-          .asString();
-      
+      String tracesJson =
+          given()
+              .when()
+              .get(backendUrl + "/get-traces")
+              .then()
+              .statusCode(200)
+              .extract()
+              .asString();
+
       if (!tracesJson.equals("[]")) {
         logger.info("✅ SUCCESS: MongoDB operation created spans with proper instrumentation!");
-        logger.info("This proves that trace propagation works when downstream systems are properly instrumented.");
-        
+        logger.info(
+            "This proves that trace propagation works when downstream systems are properly instrumented.");
+
         // Parse and verify MongoDB spans
         ObjectMapper objectMapper = new ObjectMapper();
         JsonNode tracesNode = objectMapper.readTree(tracesJson);
-        
+
         boolean foundMongoSpan = false;
         for (JsonNode trace : tracesNode) {
           JsonNode resourceSpans = trace.get("resourceSpans");
@@ -505,14 +516,16 @@ class MongoKafkaConnectSinkTaskTest {
             }
           }
         }
-        
+
         assertThat(foundMongoSpan)
             .as("Should find MongoDB span when using properly instrumented client")
             .isTrue();
-            
+
       } else {
-        logger.info("ℹ️  No spans captured - this may indicate MongoDB instrumentation is not active");
-        // Don't fail the test - this demonstrates the difference between instrumented and non-instrumented clients
+        logger.info(
+            "ℹ️  No spans captured - this may indicate MongoDB instrumentation is not active");
+        // Don't fail the test - this demonstrates the difference between instrumented and
+        // non-instrumented clients
       }
     }
   }
