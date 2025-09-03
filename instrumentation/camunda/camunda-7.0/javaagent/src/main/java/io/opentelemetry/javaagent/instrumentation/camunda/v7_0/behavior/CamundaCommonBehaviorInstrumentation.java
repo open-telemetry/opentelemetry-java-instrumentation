@@ -122,7 +122,7 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
       parentScope = parentContext.makeCurrent();
 
       if (!getInstumenter().shouldStart(Java8BytecodeBridge.currentContext(), request)) {
-        return
+        return;
       }
 
       if (getInstumenter().shouldStart(Java8BytecodeBridge.currentContext(), request)) {
