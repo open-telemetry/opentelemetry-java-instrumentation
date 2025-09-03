@@ -24,8 +24,8 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import net.bytebuddy.matcher.ElementMatchers;
-import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 import org.camunda.bpm.engine.impl.bpmn.behavior.ExternalTaskActivityBehavior;
+import org.camunda.bpm.engine.impl.pvm.delegate.ActivityExecution;
 import org.camunda.bpm.model.bpmn.instance.CompensateEventDefinition;
 import org.camunda.bpm.model.bpmn.instance.EndEvent;
 import org.camunda.bpm.model.bpmn.instance.ErrorEventDefinition;
@@ -129,8 +129,7 @@ public class CamundaCommonBehaviorInstrumentation implements TypeInstrumentation
         context = getInstumenter().start(Java8BytecodeBridge.currentContext(), request);
         scope = context.makeCurrent();
 
-        if (target.getClass()
-            == ExternalTaskActivityBehavior.class) {
+        if (target.getClass() == ExternalTaskActivityBehavior.class) {
 
           getOpentelemetry()
               .getPropagators()
