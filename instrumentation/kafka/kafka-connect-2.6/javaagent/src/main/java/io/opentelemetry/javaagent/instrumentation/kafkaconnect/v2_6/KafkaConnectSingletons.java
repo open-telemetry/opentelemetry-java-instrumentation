@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 public final class KafkaConnectSingletons {
@@ -24,7 +25,7 @@ public final class KafkaConnectSingletons {
       Instrumenter.<KafkaConnectTask, Void>builder(
               GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, KafkaConnectTask::getSpanName)
           .addSpanLinksExtractor(new KafkaConnectBatchProcessSpanLinksExtractor(PROPAGATOR))
-          .buildInstrumenter();
+          .buildInstrumenter(SpanKindExtractor.alwaysConsumer());
 
   public static Instrumenter<KafkaConnectTask, Void> instrumenter() {
     return INSTRUMENTER;

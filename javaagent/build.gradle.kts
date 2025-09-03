@@ -92,6 +92,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-api:javaagent"))
   baseJavaagentLibs(project(":instrumentation:kafka:kafka-connect-2.6:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:jdbc:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
