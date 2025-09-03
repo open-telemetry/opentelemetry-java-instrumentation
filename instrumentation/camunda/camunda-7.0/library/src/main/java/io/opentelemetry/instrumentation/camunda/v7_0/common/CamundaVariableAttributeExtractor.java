@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 
 public class CamundaVariableAttributeExtractor
-    implements AttributesExtractor<CamundaCommonRequest, String> {
+    implements AttributesExtractor<CamundaCommonRequest, Void> {
 
   @Override
   public void onStart(
