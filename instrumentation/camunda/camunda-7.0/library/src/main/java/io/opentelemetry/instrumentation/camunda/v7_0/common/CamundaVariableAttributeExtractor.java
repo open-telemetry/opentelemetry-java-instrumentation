@@ -36,6 +36,6 @@ public class CamundaVariableAttributeExtractor
       AttributesBuilder attributes,
       Context context,
       CamundaCommonRequest request,
-      String response,
+      Void response,
       Throwable error) {}
 }
