@@ -141,6 +141,8 @@ readonly INSTRUMENTATIONS=(
   "graphql-java:graphql-java-12.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:testDataFetcher"
+  "grpc-1.6:javaagent:test"
+  "grpc-1.6:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

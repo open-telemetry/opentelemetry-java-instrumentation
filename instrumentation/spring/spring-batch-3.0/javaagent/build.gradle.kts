@@ -24,40 +24,28 @@ dependencies {
   latestDepTestLibrary("org.springframework.batch:spring-batch-core:4.+") // documented limitation
 }
 
-testing {
-  suites {
-    val testChunkRootSpan by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("*ChunkRootSpanTest")
-            }
-            include("**/*ChunkRootSpanTest.*")
-            jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
-          }
-        }
-      }
-    }
-
-    val testItemLevelSpan by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("*ItemLevelSpanTest")
-              includeTestsMatching("*CustomSpanEventTest")
-            }
-            include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
-            jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
+  val testChunkRootSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*ChunkRootSpanTest")
+    }
+    include("**/*ChunkRootSpanTest.*")
+    jvmArgs("-Dotel.instrumentation.spring-batch.experimental.chunk.new-trace=true")
+  }
+
+  val testItemLevelSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*ItemLevelSpanTest")
+      includeTestsMatching("*CustomSpanEventTest")
+    }
+    include("**/*ItemLevelSpanTest.*", "**/*CustomSpanEventTest.*")
+    jvmArgs("-Dotel.instrumentation.spring-batch.item.enabled=true")
+  }
+
   test {
     filter {
       excludeTestsMatching("*ChunkRootSpanTest")
@@ -70,7 +58,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testChunkRootSpan, testItemLevelSpan)
   }
 
   withType<Test>().configureEach {

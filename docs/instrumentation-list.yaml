@@ -1321,9 +1321,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -1332,9 +1332,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -1385,6 +1385,8 @@ libraries:
           type: STRING
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.max_tokens
           type: LONG
         - name: gen_ai.request.model
@@ -1397,8 +1399,6 @@ libraries:
           type: DOUBLE
         - name: gen_ai.response.finish_reasons
           type: STRING_ARRAY
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
         - name: gen_ai.usage.output_tokens
@@ -1433,6 +1433,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1465,6 +1467,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1569,6 +1573,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1601,6 +1607,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -3228,6 +3236,8 @@ libraries:
           type: STRING
   grpc:
   - name: grpc-1.6
+    description: This instrumentation enables RPC CLIENT and SERVER spans and metrics
+      for gRPC version 1.6 and above.
     source_path: instrumentation/grpc-1.6
     scope:
       name: io.opentelemetry.grpc-1.6
@@ -3236,6 +3246,182 @@ libraries:
       - io.grpc:grpc-core:[1.6.0,)
       library:
       - io.grpc:grpc-core:1.6.0
+    configurations:
+    - name: otel.instrumentation.grpc.emit-message-events
+      description: Determines whether to emit a span event for each individual message
+        received and sent.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.grpc.experimental-span-attributes
+      description: |
+        Enable the capture of experimental span attributes `grpc.received.message_count`, `grpc.sent.message_count` and `grpc.canceled`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.grpc.capture-metadata.client.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC client instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.grpc.capture-metadata.server.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC server instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.grpc.experimental-span-attributes=true
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   guava:
   - name: guava-10.0
     source_path: instrumentation/guava-10.0
@@ -4646,11 +4832,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -4659,11 +4845,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -4672,19 +4858,21 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.encoding_formats
           type: STRING_ARRAY
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
           type: STRING
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.request.frequency_penalty
           type: DOUBLE
@@ -4707,8 +4895,6 @@ libraries:
         - name: gen_ai.response.id
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
@@ -5669,6 +5855,8 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.operation
           type: STRING
     - when: otel.instrumentation.spring-integration.producer.enabled=true
@@ -5740,6 +5928,10 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
+        - name: messaging.header.Test_Message_Int_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -5878,6 +6070,8 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation
