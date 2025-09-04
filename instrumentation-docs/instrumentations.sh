@@ -66,8 +66,8 @@ readonly INSTRUMENTATIONS=(
   # "vibur-dbcp-11.0:javaagent:testStableSemconv"
   #"elasticsearch:elasticsearch-api-client-7.16:javaagent:test"
   #"elasticsearch:elasticsearch-api-client-7.16:javaagent:testStableSemconv"
-  # "elasticsearch:elasticsearch-rest-7.0:javaagent:test"
-  # "elasticsearch:elasticsearch-rest-7.0:javaagent:testStableSemconv"
+   "elasticsearch:elasticsearch-rest-7.0:javaagent:test"
+   "elasticsearch:elasticsearch-rest-7.0:javaagent:testStableSemconv"
   # "elasticsearch:elasticsearch-transport-5.0:javaagent:test"
   # "elasticsearch:elasticsearch-transport-5.0:javaagent:testStableSemconv"
   # "elasticsearch:elasticsearch-transport-5.0:javaagent:testExperimental"
@@ -145,6 +145,13 @@ readonly INSTRUMENTATIONS=(
   # "grpc-1.6:javaagent:testExperimental"
 
   "hibernate:hibernate-3.3:javaagent:test"
+  "hibernate:hibernate-3.3:javaagent:testExperimental"
+
+  "hibernate:hibernate-4.0:javaagent:test"
+  "hibernate:hibernate-4.0:javaagent:testExperimental"
+
+  "hibernate:hibernate-6.0:javaagent:test"
+  "hibernate:hibernate-6.0:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
