@@ -23,6 +23,8 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("InterceptorsSuppressReceiveSpansTest")
       includeTestsMatching("WrapperSuppressReceiveSpansTest")
@@ -41,5 +43,14 @@ tasks {
 
   check {
     dependsOn(testReceiveSpansDisabled)
+  }
+}
+
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+// kafka 4.1 requires java 11
+if (latestDepTest) {
+  otelJava {
+    minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }

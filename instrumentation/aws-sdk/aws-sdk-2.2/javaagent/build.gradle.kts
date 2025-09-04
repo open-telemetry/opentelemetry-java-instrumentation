@@ -173,6 +173,9 @@ testing {
 
 tasks {
   val testExperimentalSqs by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
@@ -181,10 +184,26 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
     }
     include("**/Aws2SqsSuppressReceiveSpansTest.*")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
+
+    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   test {
@@ -196,9 +215,7 @@ tasks {
   }
 
   check {
-    dependsOn(testExperimentalSqs)
-    dependsOn(testReceiveSpansDisabled)
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testExperimentalSqs, testStableSemconv, testReceiveSpansDisabled)
   }
 
   withType<Test>().configureEach {
@@ -213,19 +230,5 @@ tasks {
     mergeServiceFiles {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
     }
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    filter {
-      excludeTestsMatching("Aws2SqsSuppressReceiveSpansTest")
-    }
-    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
   }
 }

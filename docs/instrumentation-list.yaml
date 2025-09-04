@@ -923,6 +923,7 @@ libraries:
   - name: aws-lambda-core-1.0
     description: |
       Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+      For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` environment variable to contain your lambda handler method (in the format `package.ClassName::methodName`) and use one of wrappers as your lambda `Handler`.
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -945,7 +946,7 @@ libraries:
           type: STRING
   - name: aws-lambda-events-2.2
     description: |
-      Provides full instrumentation of the Lambda library, including standard and custom event types, from `aws-lambda-java-events` 2.2+.
+      This version of the library instrumentation is deprecated, please use the `aws-lambda-events-3.11` library instrumentation instead. This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -960,6 +961,11 @@ libraries:
       description: Flush timeout in milliseconds.
       type: int
       default: 10000
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
     telemetry:
     - when: default
       spans:
@@ -984,6 +990,8 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: aws-lambda-events-3.11
+    description: |
+      This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
       name: io.opentelemetry.aws-lambda-events-3.11
@@ -991,6 +999,42 @@ libraries:
       library:
       - com.amazonaws:aws-lambda-java-events:3.11.0
       - com.amazonaws:aws-lambda-java-core:1.0.0
+    configurations:
+    - name: otel.instrumentation.aws-lambda.flush-timeout
+      description: Flush timeout in milliseconds.
+      type: int
+      default: 10000
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: SERVER
+        attributes:
+        - name: cloud.account.id
+          type: STRING
+        - name: cloud.resource_id
+          type: STRING
+        - name: faas.invocation_id
+          type: STRING
+        - name: faas.trigger
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: url.full
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
@@ -1277,9 +1321,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
+        - name: gen_ai.provider.name
           type: STRING
-        - name: gen_ai.system
+        - name: gen_ai.request.model
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -1288,9 +1332,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
+        - name: gen_ai.provider.name
           type: STRING
-        - name: gen_ai.system
+        - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -1341,6 +1385,8 @@ libraries:
           type: STRING
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.max_tokens
           type: LONG
         - name: gen_ai.request.model
@@ -1353,8 +1399,6 @@ libraries:
           type: DOUBLE
         - name: gen_ai.response.finish_reasons
           type: STRING_ARRAY
-        - name: gen_ai.system
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
         - name: gen_ai.usage.output_tokens
@@ -1389,6 +1433,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1421,6 +1467,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1525,6 +1573,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1557,6 +1607,8 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -3964,6 +4016,16 @@ libraries:
     target_versions:
       library:
       - org.apache.kafka:kafka-clients:2.6.0
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: A comma-separated list of header names to capture as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
   - name: kafka-streams-0.11
     source_path: instrumentation/kafka/kafka-streams-0.11
     scope:
@@ -4592,11 +4654,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.system
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -4605,11 +4667,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.system
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -4618,19 +4680,21 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.encoding_formats
           type: STRING_ARRAY
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
           type: STRING
-        - name: gen_ai.system
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.request.frequency_penalty
           type: DOUBLE
@@ -4653,8 +4717,6 @@ libraries:
         - name: gen_ai.response.id
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.system
           type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
@@ -5615,6 +5677,8 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.operation
           type: STRING
     - when: otel.instrumentation.spring-integration.producer.enabled=true
@@ -5686,6 +5750,10 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
+        - name: messaging.header.Test_Message_Int_Header
+          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -5824,6 +5892,8 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
+        - name: messaging.header.Test_Message_Header
+          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation
