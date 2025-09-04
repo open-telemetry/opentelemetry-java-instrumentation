@@ -11,6 +11,8 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -20,6 +22,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import java.util.function.Consumer;
@@ -67,9 +70,9 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            satisfies(
+                            experimentalSatisfies(
                                 stringKey("hibernate.session_id"),
-                                val -> val.isInstanceOf(String.class))),
+                                val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT db1.Value")
                         .hasKind(CLIENT)
@@ -93,10 +96,11 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(
                                 stringKey("hibernate.session_id"),
-                                trace
-                                    .getSpan(1)
-                                    .getAttributes()
-                                    .get(stringKey("hibernate.session_id"))))));
+                                experimental(
+                                    trace
+                                        .getSpan(1)
+                                        .getAttributes()
+                                        .get(stringKey("hibernate.session_id")))))));
   }
 
   private static Stream<Arguments> provideArguments() {

@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -18,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
@@ -56,12 +59,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     Value entity;
     if (parameter.attach) {
-      entity =
-          testing.runWithSpan(
-              "setup",
-              () -> {
-                return entityManager.merge(prepopulated.get(0));
-              });
+      entity = testing.runWithSpan("setup", () -> entityManager.merge(prepopulated.get(0)));
       testing.clearData();
     } else {
       entity = prepopulated.get(0);
@@ -99,10 +97,11 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertTransactionCommitSpan(
                         span,
                         trace.getSpan(0),
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+                        experimental(
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id")))));
           } else {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -118,10 +117,11 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertTransactionCommitSpan(
                         span,
                         trace.getSpan(0),
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+                        experimental(
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id")))));
           }
         });
   }
@@ -166,10 +166,11 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertTransactionCommitSpan(
                         span,
                         trace.getSpan(0),
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                        experimental(
+                            trace
+                                .getSpan(1)
+                                .getAttributes()
+                                .get(AttributeKey.stringKey("hibernate.session_id"))))));
   }
 
   @Test
@@ -361,9 +362,9 @@ class EntityManagerTest extends AbstractHibernateTest {
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            satisfies(
+            experimentalSatisfies(
                 AttributeKey.stringKey("hibernate.session_id"),
-                val -> val.isInstanceOf(String.class)));
+                val -> assertThat(val).isInstanceOf(String.class)));
   }
 
   private static SpanDataAssert assertTransactionCommitSpan(

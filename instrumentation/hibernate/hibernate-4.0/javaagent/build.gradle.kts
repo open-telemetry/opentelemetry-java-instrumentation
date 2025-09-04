@@ -32,6 +32,7 @@ dependencies {
 
   testImplementation("org.hibernate:hibernate-core:4.0.0.Final")
   testImplementation("org.hibernate:hibernate-entitymanager:4.0.0.Final")
+  testImplementation(project(":instrumentation:hibernate:testing"))
 
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
@@ -78,10 +79,17 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
   }
 
   val testStableSemconv by registering(Test::class) {
@@ -92,6 +100,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv, testExperimental)
   }
 }
