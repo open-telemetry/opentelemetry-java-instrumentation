@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -15,6 +16,8 @@ import javax.annotation.Nullable;
 public class ExperimentalTestHelper {
   public static final boolean isEnabled =
       Boolean.getBoolean("otel.instrumentation.grpc.experimental-span-attributes");
+
+  public static final AttributeKey<String> HIBERNATE_SESSION_ID = stringKey("hibernate.session_id");
 
   @Nullable
   public static String experimental(String value) {

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -57,11 +57,7 @@ class CriteriaTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        experimental(
-                            trace
-                                .getSpan(1)
-                                .getAttributes()
-                                .get(stringKey("hibernate.session_id"))))));
+                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
   }
 
   private static Stream<Arguments> provideArguments() {

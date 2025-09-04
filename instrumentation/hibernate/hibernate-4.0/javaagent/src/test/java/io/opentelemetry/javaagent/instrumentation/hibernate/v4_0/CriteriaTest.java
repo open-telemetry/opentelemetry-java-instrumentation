@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v4_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -71,7 +71,7 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             experimentalSatisfies(
-                                stringKey("hibernate.session_id"),
+                                HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
                     span.hasName("SELECT db1.Value")
@@ -95,12 +95,9 @@ class CriteriaTest extends AbstractHibernateTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
                             equalTo(
-                                stringKey("hibernate.session_id"),
+                                HIBERNATE_SESSION_ID,
                                 experimental(
-                                    trace
-                                        .getSpan(1)
-                                        .getAttributes()
-                                        .get(stringKey("hibernate.session_id")))))));
+                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
   private static Stream<Arguments> provideArguments() {

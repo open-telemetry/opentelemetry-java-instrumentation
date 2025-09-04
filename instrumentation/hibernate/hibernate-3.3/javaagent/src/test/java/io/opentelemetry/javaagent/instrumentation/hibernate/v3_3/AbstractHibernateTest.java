@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -104,8 +104,7 @@ abstract class AbstractHibernateTest {
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
             experimentalSatisfies(
-                stringKey("hibernate.session_id"),
-                val -> assertThat(val).isInstanceOf(String.class)));
+                HIBERNATE_SESSION_ID, val -> assertThat(val).isInstanceOf(String.class)));
   }
 
   static void assertSpanWithSessionId(
@@ -113,7 +112,6 @@ abstract class AbstractHibernateTest {
     span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("hibernate.session_id"), experimental(sessionId)));
+        .hasAttributesSatisfyingExactly(equalTo(HIBERNATE_SESSION_ID, experimental(sessionId)));
   }
 }

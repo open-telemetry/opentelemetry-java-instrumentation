@@ -41,6 +41,11 @@ val latestDepTest = findProperty("testLatestDeps") as Boolean
 testing {
   suites {
     val hibernate6Test by registering(JvmTestSuite::class) {
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+      }
       dependencies {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
@@ -53,6 +58,11 @@ testing {
     }
 
     val hibernate7Test by registering(JvmTestSuite::class) {
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+      }
       dependencies {
         implementation("com.h2database:h2:1.4.197")
         implementation("org.hsqldb:hsqldb:2.0.0")
@@ -68,9 +78,6 @@ testing {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
-//    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
