@@ -22,6 +22,8 @@ import io.opentelemetry.api.metrics.Meter;
 public final class FailsafeTelemetry {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.failsafe-3.0";
 
+  private static final AttributeKey<String> CIRCUIT_BREAKER_NAME = AttributeKey.stringKey("name");
+
   /** Returns a new {@link FailsafeTelemetry} configured with the given {@link OpenTelemetry}. */
   public static FailsafeTelemetry create(OpenTelemetry openTelemetry) {
     return new FailsafeTelemetry(openTelemetry);
@@ -45,7 +47,7 @@ public final class FailsafeTelemetry {
       CircuitBreaker<R> delegate, String circuitBreakerName) {
     CircuitBreakerConfig<R> userConfig = delegate.getConfig();
     Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
-    Attributes attributes = Attributes.of(AttributeKey.stringKey("name"), circuitBreakerName);
+    Attributes attributes = Attributes.of(CIRCUIT_BREAKER_NAME, circuitBreakerName);
     return CircuitBreaker.builder(userConfig)
         .onFailure(buildInstrumentedFailureListener(userConfig, meter, attributes))
         .onSuccess(buildInstrumentedSuccessListener(userConfig, meter, attributes))
