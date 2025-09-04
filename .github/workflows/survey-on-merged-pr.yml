@@ -33,7 +33,7 @@ jobs:
             echo "MEMBER_FOUND=false" >> $GITHUB_ENV
           fi
         env:
-          GH_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add comment to PR if author is not a member
         if: env.MEMBER_FOUND == 'false'
