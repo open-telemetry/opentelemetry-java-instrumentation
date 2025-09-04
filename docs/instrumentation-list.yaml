@@ -3236,6 +3236,8 @@ libraries:
           type: STRING
   grpc:
   - name: grpc-1.6
+    description: This instrumentation enables RPC CLIENT and SERVER spans and metrics
+      for gRPC version 1.6 and above.
     source_path: instrumentation/grpc-1.6
     scope:
       name: io.opentelemetry.grpc-1.6
@@ -3244,6 +3246,27 @@ libraries:
       - io.grpc:grpc-core:[1.6.0,)
       library:
       - io.grpc:grpc-core:1.6.0
+    configurations:
+    - name: otel.instrumentation.grpc.emit-message-events
+      description: Determines whether to emit a span event for each individual message
+        received and sent.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.grpc.experimental-span-attributes
+      description: |
+        Enable the capture of experimental span attributes `grpc.received.message_count`, `grpc.sent.message_count` and `grpc.canceled`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.grpc.capture-metadata.client.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC client instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.grpc.capture-metadata.server.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC server instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
     telemetry:
     - when: default
       metrics:
@@ -3286,8 +3309,6 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
-        - name: rpc.grpc.request.metadata.some-client-key
-          type: STRING_ARRAY
         - name: rpc.grpc.status_code
           type: LONG
         - name: rpc.method
@@ -3308,8 +3329,6 @@ libraries:
           type: LONG
         - name: network.type
           type: STRING
-        - name: rpc.grpc.request.metadata.some-server-key
-          type: STRING_ARRAY
         - name: rpc.grpc.status_code
           type: LONG
         - name: rpc.method
@@ -3367,8 +3386,6 @@ libraries:
           type: LONG
         - name: grpc.sent.message_count
           type: LONG
-        - name: rpc.grpc.request.metadata.some-client-key
-          type: STRING_ARRAY
         - name: rpc.grpc.status_code
           type: LONG
         - name: rpc.method
@@ -3393,8 +3410,6 @@ libraries:
           type: LONG
         - name: network.type
           type: STRING
-        - name: rpc.grpc.request.metadata.some-server-key
-          type: STRING_ARRAY
         - name: rpc.grpc.status_code
           type: LONG
         - name: rpc.method

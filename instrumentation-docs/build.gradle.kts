@@ -8,7 +8,7 @@ otelJava {
 }
 
 dependencies {
-  implementation("org.yaml:snakeyaml:2.4")
+  implementation("org.yaml:snakeyaml:2.5")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
