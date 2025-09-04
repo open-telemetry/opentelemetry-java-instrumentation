@@ -107,7 +107,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.7.0-alpha",
+  "io.opentelemetry.proto:opentelemetry-proto:1.8.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
   "org.assertj:assertj-core:3.27.4",
   "org.awaitility:awaitility:4.3.0",

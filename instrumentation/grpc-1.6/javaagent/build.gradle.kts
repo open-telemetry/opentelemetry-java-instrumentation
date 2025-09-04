@@ -28,6 +28,8 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
+
 tasks {
   test {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
@@ -46,6 +48,34 @@ tasks {
     classpath = classpath.filter {
       !it.absolutePath.contains("opentelemetry-grpc-1.6")
     }
+
+    systemProperty("collectMetadata", collectMetadata)
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    // replicated base config from standard test task
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+    jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
+    jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.client.request=some-client-key")
+    jvmArgs("-Dotel.instrumentation.grpc.capture-metadata.server.request=some-server-key")
+    jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+    // breaks the tests
+    classpath = classpath.filter {
+      !it.absolutePath.contains("opentelemetry-grpc-1.6")
+    }
+
+    systemProperty("collectMetadata", collectMetadata)
+    systemProperty("metadataConfig", "otel.instrumentation.grpc.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.grpc.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
   }
 }
 
