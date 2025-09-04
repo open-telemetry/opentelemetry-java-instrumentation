@@ -56,12 +56,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     Value entity;
     if (parameter.attach) {
-      entity =
-          testing.runWithSpan(
-              "setup",
-              () -> {
-                return entityManager.merge(prepopulated.get(0));
-              });
+      entity = testing.runWithSpan("setup", () -> entityManager.merge(prepopulated.get(0)));
       testing.clearData();
     } else {
       entity = prepopulated.get(0);

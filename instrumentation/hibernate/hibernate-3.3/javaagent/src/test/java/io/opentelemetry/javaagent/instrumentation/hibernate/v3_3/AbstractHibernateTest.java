@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -17,8 +20,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -35,7 +38,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 abstract class AbstractHibernateTest {
-
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -66,8 +68,8 @@ abstract class AbstractHibernateTest {
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent) {
-    return span.hasKind(SpanKind.CLIENT)
+  static void assertClientSpan(SpanDataAssert span, SpanData parent) {
+    span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
@@ -80,8 +82,8 @@ abstract class AbstractHibernateTest {
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent, String verb) {
-    return span.hasName(verb.concat(" db1.Value"))
+  static void assertClientSpan(SpanDataAssert span, SpanData parent, String verb) {
+    span.hasName(verb.concat(" db1.Value"))
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -101,17 +103,17 @@ abstract class AbstractHibernateTest {
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                AttributeKey.stringKey("hibernate.session_id"),
-                val -> val.isInstanceOf(String.class)));
+            experimentalSatisfies(
+                stringKey("hibernate.session_id"),
+                val -> assertThat(val).isInstanceOf(String.class)));
   }
 
-  static SpanDataAssert assertSpanWithSessionId(
+  static void assertSpanWithSessionId(
       SpanDataAssert span, SpanData parent, String spanName, String sessionId) {
-    return span.hasName(spanName)
+    span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("hibernate.session_id"), sessionId));
+            equalTo(stringKey("hibernate.session_id"), experimental(sessionId)));
   }
 }

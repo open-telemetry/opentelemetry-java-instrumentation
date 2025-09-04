@@ -2547,47 +2547,6 @@ libraries:
         Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
       type: list
       default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
-    telemetry:
-    - when: default
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
-    - when: otel.semconv-stability.opt-in=database
-      metrics:
-      - name: db.client.operation.duration
-        description: Duration of database client operations.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: db.system.name
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: elasticsearch-transport-5.0
     description: |
       This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
@@ -3455,7 +3414,9 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
-    description: This instrumentation
+    description: This instrumentation enables the generation of `INTERNAL` spans for
+      Hibernate operations, including session methods (e.g., `save`, `update`, `delete`),
+      transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
@@ -3472,16 +3433,23 @@ libraries:
     - when: default
       spans:
       - span_kind: INTERNAL
-        attributes:
-        - name: hibernate.session_id
-          type: STRING
+        attributes: []
   - name: hibernate-4.0
+    description: This instrumentation enables the generation of `INTERNAL` spans for
+      Hibernate operations, including session methods (e.g., `save`, `update`, `delete`),
+      transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
   - name: hibernate-6.0
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11

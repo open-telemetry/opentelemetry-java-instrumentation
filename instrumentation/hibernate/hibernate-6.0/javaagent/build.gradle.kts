@@ -28,6 +28,7 @@ dependencies {
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
   testImplementation("javax.activation:activation:1.1.1")
   testImplementation("org.hsqldb:hsqldb:2.0.0")
+  testImplementation(project(":instrumentation:hibernate:testing"))
   testLibrary("org.springframework.data:spring-data-jpa:3.0.0")
 }
 
@@ -68,7 +69,9 @@ testing {
 tasks {
   withType<Test>().configureEach {
     // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+//    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   named("compileHibernate7TestJava", JavaCompile::class).configure {
@@ -83,6 +86,14 @@ tasks {
     }
   }
 
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+  }
+
   val testStableSemconv by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -91,6 +102,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites, testStableSemconv)
+    dependsOn(testing.suites, testStableSemconv, testExperimental)
   }
 }
