@@ -3244,6 +3244,169 @@ libraries:
       - io.grpc:grpc-core:[1.6.0,)
       library:
       - io.grpc:grpc-core:1.6.0
+    telemetry:
+    - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.grpc.request.metadata.some-client-key
+          type: STRING_ARRAY
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.request.metadata.some-server-key
+          type: STRING_ARRAY
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.grpc.experimental-span-attributes=true
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: rpc.grpc.request.metadata.some-client-key
+          type: STRING_ARRAY
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.request.metadata.some-server-key
+          type: STRING_ARRAY
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   guava:
   - name: guava-10.0
     source_path: instrumentation/guava-10.0
@@ -3277,12 +3440,26 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
+    description: This instrumentation
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-4.0
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
