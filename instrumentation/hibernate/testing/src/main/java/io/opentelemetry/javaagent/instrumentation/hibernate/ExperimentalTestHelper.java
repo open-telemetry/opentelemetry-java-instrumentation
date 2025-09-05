@@ -15,7 +15,7 @@ import javax.annotation.Nullable;
 
 public class ExperimentalTestHelper {
   public static final boolean isEnabled =
-      Boolean.getBoolean("otel.instrumentation.grpc.experimental-span-attributes");
+      Boolean.getBoolean("otel.instrumentation.hibernate.experimental-span-attributes");
 
   public static final AttributeKey<String> HIBERNATE_SESSION_ID = stringKey("hibernate.session_id");
 

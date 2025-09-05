@@ -41,6 +41,11 @@ val latestDepTest = findProperty("testLatestDeps") as Boolean
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+      }
       dependencies {
         sources {
           java {
@@ -57,6 +62,7 @@ testing {
         implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
         implementation("javax.activation:activation:1.1.1")
         implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation(project(":instrumentation:hibernate:testing"))
 
         if (latestDepTest) {
           implementation("org.hibernate:hibernate-core:5.0.0.Final")
