@@ -1,8 +1,3 @@
 description: >
   This instrumentation does not emit any telemetry on its own. Instead, it enables context
   propagation for Hibernate Reactive asynchronous operations.
-configurations:
-  - name: otel.instrumentation.hibernate.experimental-span-attributes
-    type: boolean
-    description: Enables the addition of the experimental `hibernate.session_id` span attribute.
-    default: false

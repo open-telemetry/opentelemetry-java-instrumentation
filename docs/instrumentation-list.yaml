@@ -3560,12 +3560,6 @@ libraries:
     target_versions:
       javaagent:
       - org.hibernate.reactive:hibernate-reactive-core:(,)
-    configurations:
-    - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
-      type: boolean
-      default: false
   hikaricp:
   - name: hikaricp-3.0
     source_path: instrumentation/hikaricp-3.0
