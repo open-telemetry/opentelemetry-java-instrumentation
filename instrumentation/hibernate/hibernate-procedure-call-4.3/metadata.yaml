@@ -1,0 +1,6 @@
+description: This instrumentation enables the generation of INTERNAL spans for Hibernate stored procedure calls.
+configurations:
+  - name: otel.instrumentation.hibernate.experimental-span-attributes
+    type: boolean
+    description: Enables the addition of the experimental `hibernate.session_id` span attribute.
+    default: false
