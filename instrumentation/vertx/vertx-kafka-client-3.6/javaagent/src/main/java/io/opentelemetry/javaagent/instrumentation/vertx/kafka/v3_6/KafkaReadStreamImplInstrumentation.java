@@ -16,6 +16,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Handler;
 import io.vertx.kafka.client.consumer.impl.KafkaReadStreamImpl;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -47,24 +49,26 @@ public class KafkaReadStreamImplInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static <K, V> void onEnter(
+    public static <K, V> Handler<ConsumerRecord<K, V>> onEnter(
         @Advice.This KafkaReadStreamImpl<K, V> readStream,
-        @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecord<K, V>> handler) {
+        @Advice.Argument(0) Handler<ConsumerRecord<K, V>> handler) {
 
-      handler = new InstrumentedSingleRecordHandler<>(handler);
+      return new InstrumentedSingleRecordHandler<>(handler);
     }
   }
 
   @SuppressWarnings("unused")
   public static class BatchHandlerAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static <K, V> void onEnter(
+    public static <K, V> Handler<ConsumerRecords<K, V>> onEnter(
         @Advice.This KafkaReadStreamImpl<K, V> readStream,
-        @Advice.Argument(value = 0, readOnly = false) Handler<ConsumerRecords<K, V>> handler) {
+        @Advice.Argument(0) Handler<ConsumerRecords<K, V>> handler) {
 
-      handler = new InstrumentedBatchRecordsHandler<>(handler);
+      return new InstrumentedBatchRecordsHandler<>(handler);
     }
   }
 
