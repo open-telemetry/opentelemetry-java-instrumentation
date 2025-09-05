@@ -68,7 +68,7 @@ or use the helper script that will run only the currently supported tests (recom
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationModule" represents a module that that targets specific code in a
+An "InstrumentationModule" represents a module that targets specific code in a
 framework/library/technology. Each module will have a name, a namespace, and a group.
 
 Using these structures as examples:
