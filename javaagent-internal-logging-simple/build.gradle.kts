@@ -22,6 +22,8 @@ dependencies {
 
 tasks {
   val shadowJar by existing(ShadowJar::class) {
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     // required for META-INF/services files relocation
     mergeServiceFiles()
 

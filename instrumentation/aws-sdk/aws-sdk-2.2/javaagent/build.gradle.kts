@@ -227,6 +227,8 @@ tasks {
   }
 
   withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
     }
