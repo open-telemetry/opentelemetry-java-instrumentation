@@ -57,6 +57,7 @@ dependencies {
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-incubator")
+  bootstrapLibs(project(":instrumentation-api-incubator"))
   bootstrapLibs(project(":instrumentation-annotations-support"))
   bootstrapLibs(project(":javaagent-bootstrap"))
 
@@ -70,11 +71,8 @@ dependencies {
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
   }
   baseJavaagentLibs(project(":javaagent-extension-api"))
-  baseJavaagentLibs(project(":instrumentation-api-incubator"))
 
-  baseJavaagentLibs(project(":javaagent-tooling")) {
-    exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
-  }
+  baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
@@ -149,7 +147,8 @@ tasks {
   val buildBootstrapLibs by registering(ShadowJar::class) {
     configurations = listOf(bootstrapLibs)
 
-    excludeNonBootstrapClasses()
+    // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
+    exclude("io/opentelemetry/javaagent/extension/**")
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 
@@ -426,29 +425,16 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
 }
 
 // exclude bootstrap projects from javaagent libs - they won't be added to inst/
-fun ShadowJar.excludeNonBootstrapClasses() {
-  // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
-  exclude("io/opentelemetry/javaagent/extension/**")
-  exclude("**/instrumentation/api/incubator/sdk/**")
-}
-
-// exclude bootstrap projects from javaagent libs - they won't be added to inst/
 fun ShadowJar.excludeBootstrapClasses() {
   dependencies {
     exclude(project(":instrumentation-api"))
+    exclude(project(":instrumentation-api-incubator"))
     exclude(project(":instrumentation-annotations-support"))
     exclude(project(":javaagent-bootstrap"))
   }
 
   // exclude the bootstrap part of the javaagent-extension-api
   exclude("io/opentelemetry/javaagent/bootstrap/**")
-
-  // all in instrumentation-api-incubator except the bridge package
-  exclude("io/opentelemetry/instrumentation/api/incubator/builder/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/config/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/instrumenter/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/log/**")
-  exclude("io/opentelemetry/instrumentation/api/incubator/semconv/**")
 }
 
 class JavaagentProvider(
