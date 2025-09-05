@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.v4_0.client;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.vertx.core.Handler;
+import javax.annotation.Nullable;
 
 public class HandlerWrapper<T> implements Handler<T> {
   private final Handler<T> delegate;
@@ -18,7 +19,8 @@ public class HandlerWrapper<T> implements Handler<T> {
     this.context = context;
   }
 
-  public static <T> Handler<T> wrap(Handler<T> handler) {
+  @Nullable
+  public static <T> Handler<T> wrap(@Nullable Handler<T> handler) {
     Context current = Context.current();
     if (handler != null && !(handler instanceof HandlerWrapper) && current != Context.root()) {
       handler = new HandlerWrapper<>(handler, current);
