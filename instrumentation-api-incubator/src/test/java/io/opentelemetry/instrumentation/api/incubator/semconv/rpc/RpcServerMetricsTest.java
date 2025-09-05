@@ -100,6 +100,7 @@ class RpcServerMetricsTest {
                                                 RpcIncubatingAttributes.RPC_METHOD,
                                                 "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
@@ -127,6 +128,7 @@ class RpcServerMetricsTest {
                                                 RpcIncubatingAttributes.RPC_METHOD,
                                                 "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
@@ -154,6 +156,7 @@ class RpcServerMetricsTest {
                                                 RpcIncubatingAttributes.RPC_METHOD,
                                                 "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
@@ -184,6 +187,7 @@ class RpcServerMetricsTest {
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_METHOD,
                                                 "exampleMethod"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
 
