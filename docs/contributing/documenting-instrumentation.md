@@ -44,6 +44,7 @@ For Gradle, add to your dependencies:
     ```
 
 ### Usage
+
 [Code examples showing integration]
 ```
 
