@@ -443,7 +443,6 @@ class PostgresKafkaConnectSinkTaskTest {
     assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
 
     assertThat(foundKafkaConnectSpan).as("Should find Kafka Connect span").isTrue();
-   
   }
 
   @AfterAll
