@@ -1,0 +1,6 @@
+file_format: 1.0-rc.1
+# add extra resource attributes to verify that declarative config is picked up
+resource:
+  attributes:
+    - name: service.name
+      value: declarative-config-smoke-test
