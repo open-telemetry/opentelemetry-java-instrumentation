@@ -1,4 +1,14 @@
 file_format: 1.0-rc.1
+
+tracer_provider:
+  processors:
+    - batch:
+        schedule_delay: 10
+        max_export_batch_size: 1
+        exporter:
+          otlp_grpc:
+            endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT}
+
 # add extra resource attributes to verify that declarative config is picked up
 resource:
   attributes:

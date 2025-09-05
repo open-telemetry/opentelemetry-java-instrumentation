@@ -47,6 +47,9 @@ class ResourceCustomizerSmokeTest extends SmokeTest {
     client().get("/greeting").aggregate().join()
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
+    then: "There is one trace"
+    traces.size() > 0
+
     then: "declarative config is applied"
     def serviceName = findResourceAttribute(traces, "service.name")
         .map { it.stringValue }
@@ -65,7 +68,7 @@ class ResourceCustomizerSmokeTest extends SmokeTest {
         .map { it.stringValue }
         .findAny()
     distroName.isPresent()
-    serviceName.get() == "opentelemetry-java-instrumentation"
+    distroName.get() == "opentelemetry-java-instrumentation"
 
     cleanup:
     stopTarget()
