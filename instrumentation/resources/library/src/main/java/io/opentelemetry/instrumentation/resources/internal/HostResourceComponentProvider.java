@@ -21,6 +21,6 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 @AutoService(ComponentProvider.class)
 public class HostResourceComponentProvider extends ResourceComponentProvider {
   public HostResourceComponentProvider() {
-    super("host", () -> HostResource.get().merge(HostIdResource.get()).merge(OsResource.get()));
+    super("host", p -> HostResource.get().merge(HostIdResource.get()).merge(OsResource.get()));
   }
 }

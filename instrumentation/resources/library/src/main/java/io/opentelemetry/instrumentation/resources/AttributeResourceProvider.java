@@ -45,7 +45,6 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
   }
 
   private Set<AttributeKey<?>> filteredKeys;
-
   private final Map<AttributeKey<Object>, Function<D, Optional<?>>> attributeGetters =
       new HashMap<>();
 
