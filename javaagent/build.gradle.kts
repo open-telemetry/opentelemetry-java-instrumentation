@@ -69,15 +69,10 @@ dependencies {
     exclude("io.opentelemetry", "opentelemetry-sdk")
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure")
     exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
-    exclude("io.opentelemetry.instrumentation", "declarative-config-bridge")
   }
   baseJavaagentLibs(project(":javaagent-extension-api"))
 
-  baseJavaagentLibs(project(":javaagent-tooling")) {
-    // exclude javaagent dependencies from the bootstrap classpath
-    exclude("io.opentelemetry", "opentelemetry-api-incubator")
-    exclude("io.opentelemetry", "opentelemetry-sdk-extension-autoconfigure-spi")
-  }
+  baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":javaagent-internal-logging-application"))
   baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
   baseJavaagentLibs(project(":muzzle"))
