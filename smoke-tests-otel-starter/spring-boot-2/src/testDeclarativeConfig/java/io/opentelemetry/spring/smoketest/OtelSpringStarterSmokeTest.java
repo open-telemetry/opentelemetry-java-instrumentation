@@ -7,6 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
+import io.opentelemetry.semconv.ServiceAttributes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -42,7 +43,16 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
-                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+                span ->
+                    HttpSpanDataAssert.create(span)
+                        .assertClientGetRequest("/ping")
+                        .hasResourceSatisfying(
+                            r ->
+                                r.hasAttribute(
+                                    // to make sure the declarative config is picked up
+                                    // in application.yaml
+                                    ServiceAttributes.SERVICE_NAME,
+                                    "declarative-config-spring-boot-2")),
                 span ->
                     span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 AbstractSpringStarterSmokeTest::withSpanAssert));
