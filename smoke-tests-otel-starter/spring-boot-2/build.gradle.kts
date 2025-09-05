@@ -1,6 +1,5 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot2.plugins.versions)
 }
 
 description = "smoke-tests-otel-starter-spring-boot-2"
@@ -13,7 +12,8 @@ dependencies {
   implementation("org.springframework.kafka:spring-kafka")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   implementation("org.springframework.boot:spring-boot-starter-aop")
-  implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
+  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "2.+" else "2.6.15"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
@@ -21,10 +21,6 @@ dependencies {
   testImplementation("org.testcontainers:kafka")
   testImplementation("org.testcontainers:mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
-}
-
-springBoot {
-  mainClass = "io.opentelemetry.spring.smoketest.OtelSpringStarterSmokeTestApplication"
 }
 
 configurations.configureEach {

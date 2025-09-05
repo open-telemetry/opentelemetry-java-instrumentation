@@ -42,6 +42,8 @@ dependencies {
 
 tasks {
   val testWithRabbitInstrumentation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringIntegrationAndRabbitTest")
     }
@@ -52,6 +54,8 @@ tasks {
   }
 
   val testWithProducerInstrumentation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("SpringCloudStreamProducerTest")
     }
@@ -72,8 +76,7 @@ tasks {
   }
 
   check {
-    dependsOn(testWithRabbitInstrumentation)
-    dependsOn(testWithProducerInstrumentation)
+    dependsOn(testWithRabbitInstrumentation, testWithProducerInstrumentation)
   }
 
   withType<Test>().configureEach {

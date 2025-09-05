@@ -21,7 +21,9 @@ class ReflectiveMethodsFactory {
     public void destroyMethod() {}
 
     public ReturnT<String> echo(String param) {
-      return new ReturnT<>("echo: " + param);
+      ReturnT<String> result = new ReturnT<>();
+      result.setContent("echo: " + param);
+      return result;
     }
   }
 

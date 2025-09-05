@@ -1,0 +1,8 @@
+description: >
+  This instrumentation enriches existing SERVER spans with route information, and optionally enables
+  experimental controller (INTERNAL) spans for Grails applications.
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller (INTERNAL) spans.
+    type: boolean
+    default: false

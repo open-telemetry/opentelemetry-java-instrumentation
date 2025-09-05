@@ -2,12 +2,14 @@ pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "2.9"
     id("com.google.cloud.tools.jib") version "3.4.5"
-    id("com.gradle.plugin-publish") version "1.3.1"
+    id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.10"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
-    id("org.unbroken-dome.xjc") version "2.0.0"
+    id("com.github.bjornvester.xjc") version "1.8.2"
     id("org.graalvm.buildtools.native") version "0.11.0"
+    id("com.google.osdetector") version "1.7.3"
+    id("com.google.protobuf") version "0.9.5"
   }
 }
 
@@ -39,8 +41,6 @@ dependencyResolutionManagement {
         plugin("versions", "org.springframework.boot").version(version)
       }
     }
-    // r2dbc is not compatible with earlier versions
-    addSpringBootCatalog("springBoot2", "2.6.15", "2.+")
     // spring boot 3.0 is not compatible with graalvm native image
     addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
     addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
@@ -86,6 +86,7 @@ include(":javaagent-internal-logging-application")
 include(":javaagent-internal-logging-simple")
 include(":javaagent")
 include(":sdk-autoconfigure-support")
+include(":declarative-config-bridge")
 
 include(":bom")
 include(":bom-alpha")
@@ -434,6 +435,7 @@ include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:testing")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.10:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.15:javaagent")
@@ -473,7 +475,9 @@ include(":instrumentation:pulsar:pulsar-2.8:javaagent")
 include(":instrumentation:pulsar:pulsar-2.8:javaagent-unit-tests")
 include(":instrumentation:quarkus-resteasy-reactive:common-testing")
 include(":instrumentation:quarkus-resteasy-reactive:javaagent")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus2-plugin")
 include(":instrumentation:quarkus-resteasy-reactive:quarkus2-testing")
+includeBuild("instrumentation/quarkus-resteasy-reactive/quarkus3-plugin")
 include(":instrumentation:quarkus-resteasy-reactive:quarkus3-testing")
 include(":instrumentation:quartz-2.0:javaagent")
 include(":instrumentation:quartz-2.0:library")
@@ -592,6 +596,7 @@ include(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-common:testing")
 include(":instrumentation:spring:spring-ws-2.0:javaagent")
+include(":instrumentation:spring:spring-ws-2.0:testing")
 include(":instrumentation:spring:starters:spring-boot-starter")
 include(":instrumentation:spring:starters:zipkin-spring-boot-starter")
 include(":instrumentation:spymemcached-2.12:javaagent")

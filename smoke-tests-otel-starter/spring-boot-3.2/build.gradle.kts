@@ -56,6 +56,9 @@ tasks {
   checkstyleAotTest {
     isEnabled = false
   }
+  bootJar {
+    enabled = false
+  }
 }
 
 // To be able to execute the tests as GraalVM native executables

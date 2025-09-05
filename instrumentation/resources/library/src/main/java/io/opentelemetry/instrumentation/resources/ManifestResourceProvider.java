@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.resources;
 
-import static java.util.logging.Level.WARNING;
+import static java.util.logging.Level.FINE;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
@@ -73,7 +73,7 @@ public final class ManifestResourceProvider extends AttributeResourceProvider<Ma
     try (JarFile jarFile = new JarFile(jarPath.toFile(), false)) {
       return Optional.of(jarFile.getManifest());
     } catch (IOException exception) {
-      logger.log(WARNING, "Error reading manifest", exception);
+      logger.log(FINE, "Error reading manifest", exception);
       return Optional.empty();
     }
   }

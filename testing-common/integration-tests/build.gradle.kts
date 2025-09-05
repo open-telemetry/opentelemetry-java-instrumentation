@@ -29,6 +29,8 @@ dependencies {
 
 tasks {
   val testFieldInjectionDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("context.FieldInjectionDisabledTest")
     }
@@ -37,6 +39,8 @@ tasks {
   }
 
   val testFieldBackedImplementation by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("context.FieldBackedImplementationTest")
     }
@@ -59,7 +63,6 @@ tasks {
   }
 
   check {
-    dependsOn(testFieldInjectionDisabled)
-    dependsOn(testFieldBackedImplementation)
+    dependsOn(testFieldInjectionDisabled, testFieldBackedImplementation)
   }
 }

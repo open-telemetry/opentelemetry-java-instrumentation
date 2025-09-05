@@ -6,6 +6,9 @@ targets:
     # (as opposed to internal testing modules
     - type: gradle
       path: ./
+      target: ':declarative-config-bridge'
+    - type: gradle
+      path: ./
       target: ':instrumentation-annotations'
     - type: gradle
       path: ./

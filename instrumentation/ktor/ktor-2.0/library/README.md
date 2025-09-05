@@ -8,7 +8,7 @@ Server and client instrumentations are supported.
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-ktor-2.0).
+release]( https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-ktor-2.0).
 
 For Maven, add to your `pom.xml` dependencies:
 

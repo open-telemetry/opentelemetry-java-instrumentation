@@ -31,6 +31,8 @@ tasks {
   }
 
   val testAddBaggage by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Log4j27BaggageTest")
     }
@@ -38,6 +40,8 @@ tasks {
   }
 
   val testLoggingKeys by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("Log4j27LoggingKeysTest")
     }
@@ -47,7 +51,6 @@ tasks {
   }
 
   named("check") {
-    dependsOn(testAddBaggage)
-    dependsOn(testLoggingKeys)
+    dependsOn(testAddBaggage, testLoggingKeys)
   }
 }

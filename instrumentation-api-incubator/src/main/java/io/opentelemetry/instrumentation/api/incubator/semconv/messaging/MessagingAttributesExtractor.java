@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -85,7 +86,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       List<String> capturedHeaders) {
     this.getter = getter;
     this.operation = operation;
-    this.capturedHeaders = CapturedMessageHeadersUtil.lowercase(capturedHeaders);
+    this.capturedHeaders = new ArrayList<>(capturedHeaders);
   }
 
   @Override

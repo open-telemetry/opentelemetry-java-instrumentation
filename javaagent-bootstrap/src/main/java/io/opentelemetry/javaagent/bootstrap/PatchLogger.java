@@ -344,15 +344,15 @@ public class PatchLogger {
     return global;
   }
 
-  public static void setFilter(Filter filter) {}
+  public void setFilter(Filter filter) {}
 
-  public static Filter getFilter() {
+  public Filter getFilter() {
     return null;
   }
 
-  public static void setUseParentHandlers(boolean useParentHandlers) {}
+  public void setUseParentHandlers(boolean useParentHandlers) {}
 
-  public static boolean getUseParentHandlers() {
+  public boolean getUseParentHandlers() {
     return true;
   }
 

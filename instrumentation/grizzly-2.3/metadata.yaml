@@ -1,0 +1,27 @@
+description: This instrumentation enables HTTP SERVER spans and metrics for Grizzly applications.
+configurations:
+  - name: otel.instrumentation.http.known-methods
+    description: >
+      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
+      other methods will be treated as `_OTHER`.
+    type: list
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+  - name: otel.instrumentation.http.server.capture-request-headers
+    description: List of HTTP request headers to capture in HTTP server telemetry.
+    type: list
+    default: ""
+  - name: otel.instrumentation.http.server.capture-response-headers
+    description: List of HTTP response headers to capture in HTTP server telemetry.
+    type: list
+    default: ""
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""
+  - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    description: >
+      Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and
+      `http.response.body.size` attributes to spans, and records `http.server.request.body.size`
+      and `http.server.response.body.size` metrics.
+    type: boolean
+    default: false

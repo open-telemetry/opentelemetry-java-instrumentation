@@ -33,17 +33,21 @@ dependencies {
 }
 
 tasks {
-
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
   val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
   }
 
   check {
-    dependsOn(testStableSemconv)
-    dependsOn(testBothSemconv)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }

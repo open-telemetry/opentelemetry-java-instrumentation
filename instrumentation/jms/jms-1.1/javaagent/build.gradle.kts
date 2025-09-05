@@ -54,6 +54,9 @@ tasks {
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("Jms1SuppressReceiveSpansTest")
     }
@@ -68,8 +71,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testing.suites, testReceiveSpansDisabled)
   }
 }
 

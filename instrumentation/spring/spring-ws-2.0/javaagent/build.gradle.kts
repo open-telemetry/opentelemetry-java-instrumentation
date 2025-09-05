@@ -1,5 +1,4 @@
 plugins {
-  id("org.unbroken-dome.xjc")
   id("otel.javaagent-instrumentation")
 }
 
@@ -11,21 +10,6 @@ muzzle {
     // broken versions, jars don't contain classes
     skip("3.0.11.RELEASE", "3.1.0")
     assertInverse.set(true)
-  }
-}
-
-sourceSets {
-  test {
-    resources {
-      srcDirs("src/test/schema")
-    }
-  }
-}
-
-tasks {
-  named<Checkstyle>("checkstyleTest") {
-    // exclude generated web service classes
-    exclude("**/hello_web_service/**")
   }
 }
 
@@ -46,7 +30,9 @@ dependencies {
   testImplementation("javax.xml.bind:jaxb-api:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-core:2.2.11")
   testImplementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+  testImplementation("javax.activation:activation:1.1.1")
   testImplementation("com.google.guava:guava")
+  testImplementation(project(":instrumentation:spring:spring-ws-2.0:testing"))
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
 }

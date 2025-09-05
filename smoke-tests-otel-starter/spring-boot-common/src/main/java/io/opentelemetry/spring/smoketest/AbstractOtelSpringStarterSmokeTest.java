@@ -30,12 +30,12 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
@@ -180,9 +180,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                 UrlAttributes.URL_FULL,
                                 stringAssert -> stringAssert.endsWith("/ping")),
                             equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            satisfies(
-                                ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero())),
+                            satisfies(ServerAttributes.SERVER_PORT, val -> val.isNotZero())),
                 serverSpan ->
                     HttpSpanDataAssert.create(serverSpan)
                         .assertServerGetRequest("/ping")
@@ -195,7 +193,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                                     .hasAttribute(
                                         satisfies(
                                             ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
-                                            AbstractCharSequenceAssert::isNotBlank)))
+                                            val -> val.isNotBlank())))
                         .hasAttributesSatisfying(
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
                             equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
@@ -207,10 +205,11 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
                             equalTo(
                                 AttributeKey.stringArrayKey("http.request.header.key"),
                                 Collections.singletonList("value")),
+                            satisfies(ServerAttributes.SERVER_PORT, val -> val.isNotZero()),
+                            satisfies(ThreadIncubatingAttributes.THREAD_ID, val -> val.isNotZero()),
                             satisfies(
-                                ServerAttributes.SERVER_PORT,
-                                integerAssert -> integerAssert.isNotZero())),
-                span -> withSpanAssert(span)));
+                                ThreadIncubatingAttributes.THREAD_NAME, val -> val.isNotBlank())),
+                val -> withSpanAssert(val)));
 
     // Metric
     testing.waitAndAssertMetrics(

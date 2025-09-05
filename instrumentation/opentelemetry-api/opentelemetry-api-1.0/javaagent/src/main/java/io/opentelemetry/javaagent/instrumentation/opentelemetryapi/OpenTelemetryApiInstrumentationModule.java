@@ -27,7 +27,8 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
         new ContextInstrumentation(),
         new ContextStorageWrappersInstrumentation(),
         new OpenTelemetryInstrumentation(),
-        new SpanInstrumentation());
+        new SpanInstrumentation(),
+        new InstrumentationUtilInstrumentation());
   }
 
   @Override

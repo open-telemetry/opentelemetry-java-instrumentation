@@ -6,8 +6,8 @@ We follow the [Google Java Style Guide](https://google.github.io/styleguide/java
 
 The build will fail if the source code is not formatted according to the google java style.
 
-The main goal is to avoid extensive reformatting caused by different IDEs having different opinion
-about how things should be formatted by establishing.
+The main goal is to avoid extensive reformatting caused by different IDEs having different opinions
+about how things should be formatted by establishing a consistent standard.
 
 Running
 
@@ -23,7 +23,7 @@ Running
 ./gradlew spotlessCheck
 ```
 
-runs formatting verify task only.
+runs the formatting verification task only.
 
 ### Pre-commit hook
 
@@ -37,7 +37,7 @@ git config core.hooksPath .githooks
 
 ### Editorconfig
 
-As additional convenience for IntelliJ users, we provide `.editorconfig`
+As additional convenience for IntelliJ users, we provide an `.editorconfig`
 file. IntelliJ will automatically use it to adjust its code formatting settings.
 It does not support all required rules, so you still have to run
 `spotlessApply` from time to time.
@@ -55,8 +55,8 @@ To run these checks locally:
 
 ## Static imports
 
-We leverage static imports for many common types of operations. However, not all static methods or
-constants are necessarily good candidates for a static import. The following list is a very
+We use static imports for many common types of operations. However, not all static methods or
+constants are necessarily good candidates for a static import. The following list is a
 rough guideline of what are commonly accepted static imports:
 
 - Test assertions (JUnit and AssertJ)
@@ -70,8 +70,8 @@ rough guideline of what are commonly accepted static imports:
 
 Some of these are enforced by checkstyle rules:
 
-- look for `RegexpSinglelineJava` in `checkstyle.xml`
-- use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
+- Look for `RegexpSinglelineJava` in `checkstyle.xml`
+- Use `@SuppressWarnings("checkstyle:RegexpSinglelineJava")` to suppress the checkstyle warning
 
 ## Ordering of class contents
 
@@ -84,7 +84,7 @@ The following order is preferred:
 - Nested classes
 
 If methods call each other, it's nice if the calling method is ordered (somewhere) above
-the method that it calls. So, for one example, a private method would be ordered (somewhere) below
+the method that it calls. For example, a private method would be ordered (somewhere) below
 the non-private methods that use it.
 
 In static utility classes (where all members are static), the private constructor
@@ -102,7 +102,7 @@ Method parameters and local variables should never be declared `final`.
 
 ## `@Nullable` annotation usage
 
-[Note: this section is aspirational, as opposed to a reflection of the current codebase]
+**Note: this section is aspirational, as opposed to a reflection of the current codebase**
 
 All parameters and fields which can be `null` should be annotated with `@Nullable`
 (specifically `javax.annotation.Nullable`, which is included by the
@@ -125,7 +125,7 @@ plugins {
 ## java.util.Optional usage
 
 Following the reasoning from [Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12),
-usage of `java.util.Optional` is kept at a minimum in this project.
+usage of `java.util.Optional` is kept to a minimum in this project.
 
 It is ok to use `Optional` in places where it does not leak into public API signatures.
 
@@ -137,9 +137,9 @@ itself uses it.
 Avoid allocations whenever possible on the hot path (instrumentation code).
 This includes `Iterator` allocations from collections; note that
 `for(SomeType t : plainJavaArray)` does not allocate an iterator object.
-Non-allocating stream api usage on the hot path is acceptable but may not
-fit the surrounding code style; this is a judgement call.  Note that
-some stream apis make it much more difficult to allocate efficiently
+Non-allocating stream API usage on the hot path is acceptable but may not
+fit the surrounding code style; this is a judgment call. Note that
+some stream APIs make it much more difficult to allocate efficiently
 (e.g., `collect` with presized sink data structures involves
 convoluted `Supplier` code, or lambdas passed to `forEach` might be
 capturing/allocating lambdas).

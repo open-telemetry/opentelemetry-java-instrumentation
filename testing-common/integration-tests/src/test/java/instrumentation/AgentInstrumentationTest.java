@@ -50,10 +50,15 @@ class AgentInstrumentationTest {
     for (ClassPath.ClassInfo info : getTestClasspath().getAllClasses()) {
       for (String bootstrapPrefix : BOOTSTRAP_PACKAGE_PREFIXES) {
         if (info.getName().startsWith(bootstrapPrefix)) {
-          Class<?> bootstrapClass = Class.forName(info.getName());
-          ClassLoader loader = bootstrapClass.getClassLoader();
-          if (loader != BOOTSTRAP_CLASSLOADER) {
-            bootstrapClassesIncorrectlyLoaded.add(bootstrapClass);
+          try {
+            Class<?> bootstrapClass = Class.forName(info.getName());
+            ClassLoader loader = bootstrapClass.getClassLoader();
+            if (loader != BOOTSTRAP_CLASSLOADER) {
+              bootstrapClassesIncorrectlyLoaded.add(bootstrapClass);
+            }
+          } catch (ClassNotFoundException | NoClassDefFoundError e) {
+            throw new RuntimeException(
+                "Failed to load bootstrap class: " + info.getName() + " in " + bootstrapPrefix, e);
           }
         }
       }
