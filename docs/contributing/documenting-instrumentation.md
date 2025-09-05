@@ -174,6 +174,6 @@ within 24 hours.
 All of our instrumentation modules are listed on the opentelemetry.io website in the context of how
 to [suppress specific instrumentation](https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation).
 
-All new instrumentations should be added to this list. There is a 
+All new instrumentations should be added to this list. There is a
 [Github action](../../.github/workflows/documentation-disable-list-audit.yml) that runs nightly to check
 for any missing instrumentations, and will open an issue if any are found.
