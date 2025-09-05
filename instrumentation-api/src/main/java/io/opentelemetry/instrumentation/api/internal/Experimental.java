@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import java.util.function.BiConsumer;
@@ -24,6 +27,10 @@ public final class Experimental {
   @Nullable
   private static volatile BiConsumer<HttpSpanNameExtractorBuilder<?>, Function<?, String>>
       urlTemplateExtractorSetter;
+
+  @Nullable
+  private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
+      operationAttributesExtractorAdder;
 
   private Experimental() {}
 
@@ -53,5 +60,28 @@ public final class Experimental {
       BiConsumer<HttpSpanNameExtractorBuilder<REQUEST>, Function<REQUEST, String>>
           urlTemplateExtractorSetter) {
     Experimental.urlTemplateExtractorSetter = (BiConsumer) urlTemplateExtractorSetter;
+  }
+
+  /**
+   * Add an {@link AttributesExtractor} to the given {@link InstrumenterBuilder} that provides
+   * attributes that are passed to the {@link OperationListener}s. This can be used to add
+   * attributes to the metrics without adding them to the span. To add attributes to the span use
+   * {@link InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)}.
+   */
+  public static <REQUEST, RESPONSE> void addOperationAttributesExtractor(
+      InstrumenterBuilder<REQUEST, RESPONSE> builder,
+      AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
+    if (operationAttributesExtractorAdder != null) {
+      operationAttributesExtractorAdder.accept(builder, attributesExtractor);
+    }
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  public static <REQUEST, RESPONSE> void internalAddOperationAttributesExtractor(
+      BiConsumer<
+              InstrumenterBuilder<REQUEST, RESPONSE>,
+              AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+          operationAttributesExtractorAdder) {
+    Experimental.operationAttributesExtractorAdder = (BiConsumer) operationAttributesExtractorAdder;
   }
 }
