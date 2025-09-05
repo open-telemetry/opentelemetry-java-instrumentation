@@ -1433,8 +1433,6 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1467,8 +1465,6 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1573,8 +1569,6 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -1607,8 +1601,6 @@ libraries:
           type: LONG
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -5855,8 +5847,6 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
         - name: messaging.operation
           type: STRING
     - when: otel.instrumentation.spring-integration.producer.enabled=true
@@ -5928,10 +5918,6 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
-        - name: messaging.header.Test_Message_Int_Header
-          type: STRING_ARRAY
         - name: messaging.message.id
           type: STRING
         - name: messaging.operation
@@ -6070,8 +6056,6 @@ libraries:
         attributes:
         - name: messaging.destination.name
           type: STRING
-        - name: messaging.header.Test_Message_Header
-          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation
