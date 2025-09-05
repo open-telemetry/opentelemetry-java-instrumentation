@@ -40,7 +40,10 @@ public final class HttpRouteState implements ImplicitContextKeyed {
 
   // this method is used reflectively from InstrumentationApiContextBridging
   public static HttpRouteState create(
-      @Nullable String method, @Nullable String route, int updatedBySourceOrder, Span span) {
+      @Nullable String method,
+      @Nullable String route,
+      int updatedBySourceOrder,
+      @Nullable Span span) {
     return new HttpRouteState(method, route, updatedBySourceOrder, span);
   }
 
@@ -50,7 +53,10 @@ public final class HttpRouteState implements ImplicitContextKeyed {
   @Nullable private volatile Span span;
 
   private HttpRouteState(
-      @Nullable String method, @Nullable String route, int updatedBySourceOrder, Span span) {
+      @Nullable String method,
+      @Nullable String route,
+      int updatedBySourceOrder,
+      @Nullable Span span) {
     this.method = method;
     this.updatedBySourceOrder = updatedBySourceOrder;
     this.route = route;
