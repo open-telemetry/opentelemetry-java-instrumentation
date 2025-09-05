@@ -1,6 +1,11 @@
 otel:
   # "file_format" serves as opt-in to the new file format
-  file_format: "0.4"
+  file_format: "1.0-rc.1"
+  resource:
+    attributes:
+      - name: service.name
+        value: declarative-config-spring-boot-2
+
   tracer_provider:
     processors:
       - simple:
