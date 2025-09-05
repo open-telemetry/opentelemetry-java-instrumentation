@@ -22,9 +22,9 @@ public class ExperimentalTestHelper {
   @Nullable
   public static String experimental(String value) {
     if (isEnabled) {
-      return null;
+      return value;
     }
-    return value;
+    return null;
   }
 
   public static AttributeAssertion experimentalSatisfies(
