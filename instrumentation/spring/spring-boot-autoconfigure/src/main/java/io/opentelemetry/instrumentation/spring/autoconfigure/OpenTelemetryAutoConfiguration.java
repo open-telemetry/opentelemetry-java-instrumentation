@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
-import io.opentelemetry.instrumentation.sdk.DeclarativeConfigPropertiesBridgeBuilder;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeclarativeConfigEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
@@ -141,7 +141,7 @@ public class OpenTelemetryAutoConfiguration {
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
         return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
       }
-  }
+    }
 
     @Configuration
     @Conditional(DeclarativeConfigEnabled.class)

@@ -68,7 +68,9 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
@@ -181,16 +183,6 @@ testing {
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
           exclude("org.junit.vintage", "junit-vintage-engine")
-        }
-      }
-    }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
         }
       }
     }
