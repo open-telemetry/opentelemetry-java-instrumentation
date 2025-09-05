@@ -149,6 +149,8 @@ readonly INSTRUMENTATIONS=(
   "hibernate:hibernate-4.0:javaagent:testExperimental"
   "hibernate:hibernate-6.0:javaagent:test"
   "hibernate:hibernate-6.0:javaagent:testExperimental"
+  "hibernate:hibernate-procedure-call-4.3:javaagent:test"
+  "hibernate:hibernate-procedure-call-4.3:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
