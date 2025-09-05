@@ -3455,20 +3455,60 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-4.0
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-6.0
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
     scope:
@@ -3476,6 +3516,23 @@ libraries:
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[6.0.0.Final,)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-procedure-call-4.3
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
