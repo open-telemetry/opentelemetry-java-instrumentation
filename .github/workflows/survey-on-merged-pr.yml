@@ -15,9 +15,6 @@ jobs:
   comment-on-pr:
     name: Add survey to PR if author is not a member
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
     if: github.event.pull_request.merged == true
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -40,7 +37,7 @@ jobs:
             echo "MEMBER_FOUND=false" >> $GITHUB_ENV
           fi
         env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Add comment to PR if author is not a member
         if: env.MEMBER_FOUND == 'false'
