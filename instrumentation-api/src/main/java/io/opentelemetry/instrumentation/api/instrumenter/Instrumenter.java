@@ -78,6 +78,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[] attributesExtractors;
   private final ContextCustomizer<? super REQUEST>[] contextCustomizers;
   private final OperationListener[] operationListeners;
+  private final AttributesExtractor<? super REQUEST, ? super RESPONSE>[]
+      operationAttributesExtractors;
   private final ErrorCauseExtractor errorCauseExtractor;
   private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
@@ -94,6 +96,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.attributesExtractors = builder.attributesExtractors.toArray(new AttributesExtractor[0]);
     this.contextCustomizers = builder.contextCustomizers.toArray(new ContextCustomizer[0]);
     this.operationListeners = builder.buildOperationListeners().toArray(new OperationListener[0]);
+    this.operationAttributesExtractors =
+        builder.operationAttributesExtractors.toArray(new AttributesExtractor[0]);
     this.errorCauseExtractor = builder.errorCauseExtractor;
     this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
@@ -207,11 +211,21 @@ public class Instrumenter<REQUEST, RESPONSE> {
     context = context.with(span);
 
     if (operationListeners.length != 0) {
+      if (operationAttributesExtractors.length != 0) {
+        UnsafeAttributes operationAttributes = new UnsafeAttributes();
+        operationAttributes.putAll(attributes.asMap());
+        for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor :
+            operationAttributesExtractors) {
+          extractor.onStart(operationAttributes, parentContext, request);
+        }
+        attributes = operationAttributes;
+      }
+
       // operation listeners run after span start, so that they have access to the current span
       // for capturing exemplars
       long startNanos = getNanos(startTime);
-      for (int i = 0; i < operationListeners.length; i++) {
-        context = operationListeners[i].onStart(context, attributes, startNanos);
+      for (OperationListener operationListener : operationListeners) {
+        context = operationListener.onStart(context, attributes, startNanos);
       }
     }
     if (propagateOperationListenersToOnEnd || context.get(START_OPERATION_LISTENERS) != null) {
@@ -258,6 +272,16 @@ public class Instrumenter<REQUEST, RESPONSE> {
       operationListeners = this.operationListeners;
     }
     if (operationListeners.length != 0) {
+      if (operationAttributesExtractors.length != 0) {
+        UnsafeAttributes operationAttributes = new UnsafeAttributes();
+        operationAttributes.putAll(attributes.asMap());
+        for (AttributesExtractor<? super REQUEST, ? super RESPONSE> extractor :
+            operationAttributesExtractors) {
+          extractor.onEnd(operationAttributes, context, request, response, error);
+        }
+        attributes = operationAttributes;
+      }
+
       long endNanos = getNanos(endTime);
       for (int i = operationListeners.length - 1; i >= 0; i--) {
         operationListeners[i].onEnd(context, attributes, endNanos);
