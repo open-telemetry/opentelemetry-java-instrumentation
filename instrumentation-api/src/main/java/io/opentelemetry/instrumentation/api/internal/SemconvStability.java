@@ -24,12 +24,18 @@ public final class SemconvStability {
   private static final boolean emitOldCodeSemconv;
   private static final boolean emitStableCodeSemconv;
 
+  private static final boolean emitOldMessageSemconv;
+  private static final boolean emitStableMessageSemconv;
+
   static {
     boolean oldDatabase = true;
     boolean stableDatabase = false;
 
     boolean oldCode = true;
     boolean stableCode = false;
+
+    boolean oldMessage = true;
+    boolean stableMessage = false;
 
     String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
@@ -55,6 +61,15 @@ public final class SemconvStability {
         oldCode = true;
         stableCode = true;
       }
+
+      if (values.contains("message")) {
+        oldMessage = false;
+        stableMessage = true;
+      }
+      if (values.contains("message/dup")) {
+        oldMessage = true;
+        stableMessage = true;
+      }
     }
 
     emitOldDatabaseSemconv = oldDatabase;
@@ -62,6 +77,9 @@ public final class SemconvStability {
 
     emitOldCodeSemconv = oldCode;
     emitStableCodeSemconv = stableCode;
+
+    emitOldMessageSemconv = oldMessage;
+    emitStableMessageSemconv = stableMessage;
   }
 
   public static boolean emitOldDatabaseSemconv() {
@@ -103,6 +121,14 @@ public final class SemconvStability {
 
   public static boolean isEmitStableCodeSemconv() {
     return emitStableCodeSemconv;
+  }
+
+  public static boolean isEmitOldMessageSemconv() {
+    return emitOldMessageSemconv;
+  }
+
+  public static boolean isEmitStableMessageSemconv() {
+    return emitStableMessageSemconv;
   }
 
   private SemconvStability() {}
