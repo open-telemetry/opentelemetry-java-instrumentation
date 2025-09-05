@@ -1,11 +1,4 @@
-# OpenTelemetry Instrumentation API Incubator
-
-Instrumentation API Incubator is a collection of libraries that provide additional functionality
-for OpenTelemetry instrumentation and auto-configuration. It is intended to be used by
-instrumentation authors and auto-configuration providers to enhance their capabilities and provide a
-more consistent experience when working with OpenTelemetry.
-
-## Declarative Config Bridge
+# Declarative Config Bridge
 
 Declarative Config Bridge allows instrumentation authors to access configuration in a uniform way,
 regardless of the configuration source.
@@ -13,7 +6,7 @@ regardless of the configuration source.
 The bridge allows you to read configuration using the system property style when dealing with
 declarative configuration.
 
-### Example
+## Example
 
 As an example, let's look at the inferred spans configuration.
 First, there is a configuration method that reads the properties and is unaware of the source of the

@@ -14,8 +14,6 @@ dependencies {
   api("io.opentelemetry.semconv:opentelemetry-semconv")
   api(project(":instrumentation-api"))
   api("io.opentelemetry:opentelemetry-api-incubator")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -24,8 +22,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 }
 
 tasks {
