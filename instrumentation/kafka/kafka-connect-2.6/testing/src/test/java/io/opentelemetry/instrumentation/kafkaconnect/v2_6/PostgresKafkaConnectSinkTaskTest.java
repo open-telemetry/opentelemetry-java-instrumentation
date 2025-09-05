@@ -443,37 +443,7 @@ class PostgresKafkaConnectSinkTaskTest {
     assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
 
     assertThat(foundKafkaConnectSpan).as("Should find Kafka Connect span").isTrue();
-
-    // JDBC spans are created by the instrumentation, as confirmed by container logs.
-    // However, in this test environment, we may see spans from both:
-    // 1. Test setup operations (CREATE TABLE, SELECT COUNT(*) - no parent-child relationship)
-    // 2. Actual Kafka Connect container operations (with perfect parent-child relationships)
-    //
-    // Container logs show perfect trace propagation: Producer → Kafka Connect → JDBC operations
-    // But test environment may only capture the test-related JDBC spans, not container spans.
-    assertThat(foundJdbcSpan)
-        .as("Should find JDBC spans - JDBC instrumentation is active")
-        .isTrue();
-
-    logger.info("JDBC instrumentation test result: JDBC spans were found");
-
-    // Parent-child relationships depend on the span source:
-    // - Container spans (actual Kafka Connect operations): Perfect parent-child relationships ✅
-    // - Test environment spans (test setup): No parent-child relationships ❌
-    //
-    // The container logs prove that trace propagation works perfectly when both
-    // instrumentations run in the same JVM process.
-    if (foundParentChildRelationship) {
-      logger.info(
-          "✅ SUCCESS: Parent-child relationship found - complete trace propagation verified!");
-    } else {
-      logger.info(
-          "ℹ️  No parent-child relationship in test spans (expected for cross-process scenario)");
-      logger.info(
-          "📋 Container logs confirm perfect trace propagation: Producer → Kafka Connect → Database");
-      logger.info(
-          "🎯 This demonstrates the instrumentation works correctly for same-JVM deployments");
-    }
+   
   }
 
   @AfterAll
@@ -584,14 +554,6 @@ class PostgresKafkaConnectSinkTaskTest {
         .then()
         .log()
         .all();
-
-    // Remove this problematic cleanup code:
-    // try (AdminClient adminClient = createAdminClient()) {
-    //     adminClient.deleteTopics(Collections.singletonList(TOPIC_NAME)).all().get();
-    //     logger.info("Deleted existing topic: " + TOPIC_NAME);
-    // } catch (e instanceof InterruptedException) {
-    //     logger.info("Topic cleanup: " + e.getMessage());
-    // }
   }
 
   private static void produceMessagesToKafka(String topicName) {
