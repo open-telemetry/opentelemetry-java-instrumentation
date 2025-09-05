@@ -62,6 +62,8 @@ libraries:
     description: This instrumentation provides context propagation for Akka actors,
       it does not emit any telemetry on its own.
     source_path: instrumentation/akka/akka-actor-2.3
+    classification:
+    - propagator
     scope:
       name: io.opentelemetry.akka-actor-2.3
     target_versions:
@@ -73,6 +75,8 @@ libraries:
     description: This instrumentation provides context propagation for the Akka Fork-Join
       Pool, it does not emit any telemetry on its own.
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
+    classification:
+    - propagator
     scope:
       name: io.opentelemetry.akka-actor-fork-join-2.5
     target_versions:
@@ -668,6 +672,8 @@ libraries:
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
     source_path: instrumentation/apache-shenyu-2.4
+    classification:
+    - enricher
     scope:
       name: io.opentelemetry.apache-shenyu-2.4
     target_versions:
@@ -913,6 +919,8 @@ libraries:
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER spans and HTTP server metrics.
     source_path: instrumentation/avaje-jex-3.0
+    classification:
+    - enricher
     minimum_java_version: 21
     scope:
       name: io.opentelemetry.avaje-jex-3.0
@@ -1624,6 +1632,8 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     source_path: instrumentation/azure-core/azure-core-1.14
+    classification:
+    - propagator
     scope:
       name: io.opentelemetry.azure-core-1.14
     target_versions:
@@ -1633,6 +1643,8 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     source_path: instrumentation/azure-core/azure-core-1.19
+    classification:
+    - propagator
     scope:
       name: io.opentelemetry.azure-core-1.19
     target_versions:
@@ -1642,6 +1654,8 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     source_path: instrumentation/azure-core/azure-core-1.36
+    classification:
+    - propagator
     scope:
       name: io.opentelemetry.azure-core-1.36
     target_versions:
@@ -2269,6 +2283,8 @@ libraries:
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1
+    classification:
+    - configuration
     scope:
       name: io.opentelemetry.couchbase-3.1
     target_versions:
@@ -2278,6 +2294,8 @@ libraries:
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.1.6
+    classification:
+    - configuration
     scope:
       name: io.opentelemetry.couchbase-3.1.6
     target_versions:
@@ -2287,6 +2305,8 @@ libraries:
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     source_path: instrumentation/couchbase/couchbase-3.2
+    classification:
+    - configuration
     scope:
       name: io.opentelemetry.couchbase-3.2
     target_versions:
@@ -2869,6 +2889,8 @@ libraries:
     description: |
       The executor instrumentation ensures that context is automatically propagated when using common Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task is submitted, the current context is captured and bound to the task. Then, when the task eventually runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling consistent correlation across concurrent and asynchronous workflows.
     source_path: instrumentation/executors
+    classification:
+    - propagator
     scope:
       name: io.opentelemetry.executors
     target_versions:
@@ -5757,6 +5779,8 @@ libraries:
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to SERVER spans and HTTP server metrics.
     source_path: instrumentation/spark-2.3
+    classification:
+    - enricher
     scope:
       name: io.opentelemetry.spark-2.3
     target_versions:
@@ -6185,6 +6209,8 @@ libraries:
       This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
       NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
     source_path: instrumentation/spring/spring-security-config-6.0
+    classification:
+    - enricher
     minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-security-config-6.0

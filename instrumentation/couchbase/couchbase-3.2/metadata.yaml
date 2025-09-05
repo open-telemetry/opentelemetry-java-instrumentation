@@ -1,3 +1,6 @@
 description: >
   Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation
   automatically configures the instrumentation provided by the Couchbase library.
+classification:
+  - library
+  - configuration

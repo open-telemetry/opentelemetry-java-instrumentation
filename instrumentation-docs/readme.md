@@ -108,9 +108,12 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 ## Instrumentation metadata
 
 * classification
-  * `library` - Instrumentation that targets a library
-  * `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent
-  * `custom` - Utilities that are used to create custom instrumentation
+  * `library` - Instrumentation that targets a library.
+  * `internal` - Instrumentation that is used internally by the OpenTelemetry Java Agent.
+  * `custom` - Utilities that are used by end users to create custom instrumentation.
+  * `enricher` - Instrumentation that enriches the telemetry produced by other instrumentations but does not generate or emit telemetry on its own.
+  * `propagator` - Instrumentation that acts as a bridge for context propagation but does not generate or emit telemetry on its own.
+  * `configuration` - Instrumentation that configures or sets up native library instrumentation.
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
@@ -147,7 +150,9 @@ As of now, the following fields are supported, all of which are optional:
 ```yaml
 description: "Instruments..."   # Description of the instrumentation module
 disabled_by_default: true       # Defaults to `false`
-classification: internal        # instrumentation classification: library | internal | custom
+classification:
+  - library
+  - enricher
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.
