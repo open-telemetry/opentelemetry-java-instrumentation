@@ -31,7 +31,7 @@ class DeclarativeConfigTest {
   @Test
   void endToEnd() {
     String yaml =
-        "file_format: \"0.4\"\n"
+        "file_format: \"1.0-rc.1\"\n"
             + "tracer_provider:\n"
             + "resource:\n"
             + "  attributes:\n"
