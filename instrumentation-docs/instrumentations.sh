@@ -149,6 +149,8 @@ readonly INSTRUMENTATIONS=(
   "hibernate:hibernate-4.0:javaagent:testExperimental"
   "hibernate:hibernate-6.0:javaagent:test"
   "hibernate:hibernate-6.0:javaagent:testExperimental"
+  "nats:nats-2.17:javaagent:test"
+  "nats:nats-2.17:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
