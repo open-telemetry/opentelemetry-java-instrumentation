@@ -8,6 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -18,10 +21,10 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -56,12 +59,7 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     Value entity;
     if (parameter.attach) {
-      entity =
-          testing.runWithSpan(
-              "setup",
-              () -> {
-                return entityManager.merge(prepopulated.get(0));
-              });
+      entity = testing.runWithSpan("setup", () -> entityManager.merge(prepopulated.get(0)));
       testing.clearData();
     } else {
       entity = prepopulated.get(0);
@@ -99,10 +97,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertTransactionCommitSpan(
                         span,
                         trace.getSpan(0),
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
           } else {
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -118,10 +113,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertTransactionCommitSpan(
                         span,
                         trace.getSpan(0),
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))));
+                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
           }
         });
   }
@@ -166,10 +158,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                     assertTransactionCommitSpan(
                         span,
                         trace.getSpan(0),
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
   }
 
   @Test
@@ -326,8 +315,8 @@ class EntityManagerTest extends AbstractHibernateTest {
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  private static SpanDataAssert assertClientSpan(SpanDataAssert span, SpanData parent) {
-    return span.hasKind(SpanKind.CLIENT)
+  private static void assertClientSpan(SpanDataAssert span, SpanData parent) {
+    span.hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
@@ -340,9 +329,8 @@ class EntityManagerTest extends AbstractHibernateTest {
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
-  private static SpanDataAssert assertClientSpan(
-      SpanDataAssert span, SpanData parent, String spanName) {
-    return span.hasName(spanName)
+  private static void assertClientSpan(SpanDataAssert span, SpanData parent, String spanName) {
+    span.hasName(spanName)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
@@ -355,23 +343,20 @@ class EntityManagerTest extends AbstractHibernateTest {
             equalTo(maybeStable(DB_SQL_TABLE), "Value"));
   }
 
-  private static SpanDataAssert assertSessionSpan(
-      SpanDataAssert span, SpanData parent, String spanName) {
-    return span.hasName(spanName)
+  private static void assertSessionSpan(SpanDataAssert span, SpanData parent, String spanName) {
+    span.hasName(spanName)
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            satisfies(
-                AttributeKey.stringKey("hibernate.session_id"),
-                val -> val.isInstanceOf(String.class)));
+            experimentalSatisfies(
+                HIBERNATE_SESSION_ID, val -> assertThat(val).isInstanceOf(String.class)));
   }
 
-  private static SpanDataAssert assertTransactionCommitSpan(
+  private static void assertTransactionCommitSpan(
       SpanDataAssert span, SpanData parent, String sessionId) {
-    return span.hasName("Transaction.commit")
+    span.hasName("Transaction.commit")
         .hasKind(SpanKind.INTERNAL)
         .hasParent(parent)
-        .hasAttributesSatisfyingExactly(
-            equalTo(AttributeKey.stringKey("hibernate.session_id"), sessionId));
+        .hasAttributesSatisfyingExactly(equalTo(HIBERNATE_SESSION_ID, sessionId));
   }
 }

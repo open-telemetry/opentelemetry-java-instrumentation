@@ -17,47 +17,31 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    val testAsyncLogger by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
-          }
-        }
-      }
-    }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=code")
-          }
-        }
-      }
-    }
-
-    val testBothSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
   }
 
+  val testAsyncLogger by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testAsyncLogger, testStableSemconv, testBothSemconv)
   }
 }

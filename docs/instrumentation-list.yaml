@@ -1321,9 +1321,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -1332,9 +1332,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -1385,6 +1385,8 @@ libraries:
           type: STRING
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.max_tokens
           type: LONG
         - name: gen_ai.request.model
@@ -1397,8 +1399,6 @@ libraries:
           type: DOUBLE
         - name: gen_ai.response.finish_reasons
           type: STRING_ARRAY
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
         - name: gen_ai.usage.output_tokens
@@ -3228,6 +3228,8 @@ libraries:
           type: STRING
   grpc:
   - name: grpc-1.6
+    description: This instrumentation enables RPC CLIENT and SERVER spans and metrics
+      for gRPC version 1.6 and above.
     source_path: instrumentation/grpc-1.6
     scope:
       name: io.opentelemetry.grpc-1.6
@@ -3236,6 +3238,182 @@ libraries:
       - io.grpc:grpc-core:[1.6.0,)
       library:
       - io.grpc:grpc-core:1.6.0
+    configurations:
+    - name: otel.instrumentation.grpc.emit-message-events
+      description: Determines whether to emit a span event for each individual message
+        received and sent.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.grpc.experimental-span-attributes
+      description: |
+        Enable the capture of experimental span attributes `grpc.received.message_count`, `grpc.sent.message_count` and `grpc.canceled`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.grpc.capture-metadata.client.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC client instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.grpc.capture-metadata.server.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC server instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.grpc.experimental-span-attributes=true
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   guava:
   - name: guava-10.0
     source_path: instrumentation/guava-10.0
@@ -3269,20 +3447,60 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-4.0
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-6.0
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
     scope:
@@ -3290,6 +3508,23 @@ libraries:
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[6.0.0.Final,)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-procedure-call-4.3
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
@@ -4699,11 +4934,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -4712,11 +4947,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -4725,19 +4960,21 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.encoding_formats
           type: STRING_ARRAY
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
           type: STRING
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.request.frequency_penalty
           type: DOUBLE
@@ -4760,8 +4997,6 @@ libraries:
         - name: gen_ai.response.id
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
