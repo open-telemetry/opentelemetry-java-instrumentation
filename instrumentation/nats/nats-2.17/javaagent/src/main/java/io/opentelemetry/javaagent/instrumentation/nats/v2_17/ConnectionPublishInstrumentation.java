@@ -81,6 +81,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body) {
+      // call the instrumented publish method
       connection.publish(subject, null, null, body);
       return true;
     }
@@ -94,6 +95,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) Headers headers,
         @Advice.Argument(2) byte[] body) {
+      // call the instrumented publish method
       connection.publish(subject, null, headers, body);
       return true;
     }
@@ -107,6 +109,7 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) String replyTo,
         @Advice.Argument(2) byte[] body) {
+      // call the instrumented publish method
       connection.publish(subject, replyTo, null, body);
       return true;
     }
@@ -158,6 +161,11 @@ public class ConnectionPublishInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static boolean onEnter(
         @Advice.This Connection connection, @Advice.Argument(0) Message message) {
+      if (message == null) {
+        return false;
+      }
+
+      // call the instrumented publish method
       connection.publish(
           message.getSubject(), message.getReplyTo(), message.getHeaders(), message.getData());
       return true;

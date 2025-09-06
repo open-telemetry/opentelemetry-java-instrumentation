@@ -16,7 +16,7 @@ muzzle {
 }
 
 dependencies {
-  library("io.nats:jnats:2.17.7")
+  library("io.nats:jnats:2.17.2")
 
   implementation(project(":instrumentation:nats:nats-2.17:library"))
   testImplementation(project(":instrumentation:nats:nats-2.17:testing"))

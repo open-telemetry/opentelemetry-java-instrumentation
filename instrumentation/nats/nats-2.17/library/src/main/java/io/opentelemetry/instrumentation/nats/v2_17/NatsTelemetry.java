@@ -34,12 +34,23 @@ public final class NatsTelemetry {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  Connection wrap(Connection connection) {
+  /**
+   * Returns a {@link Connection} with telemetry instrumentation.
+   *
+   * <p>This does *not* monitor the main inbox of the default dispatcher. {@link
+   * #configure(Options.Builder)} {@link #newConnection(Options.Builder, ConnectionFactory)} {@link
+   * #newConnection(Options, ConnectionFactory)}
+   */
+  public Connection wrap(Connection connection) {
     return OpenTelemetryConnection.wrap(
         connection, producerInstrumenter, consumerProcessInstrumenter);
   }
 
-  Options.Builder configure(Options.Builder options) {
+  /**
+   * Returns a {@link Options.Builder} with the main inbox from the default dispatcher monitored
+   * with telemetry instrumentation.
+   */
+  public Options.Builder configure(Options.Builder options) {
     DispatcherFactory factory = options.build().getDispatcherFactory();
 
     if (factory == null) {
@@ -50,13 +61,13 @@ public final class NatsTelemetry {
         new OpenTelemetryDispatcherFactory(factory, consumerProcessInstrumenter));
   }
 
-  /** Returns a {@link Connection} with messaging spans instrumentation. */
+  /** Returns a {@link Connection} with telemetry instrumentation. */
   public Connection newConnection(Options options, ConnectionFactory<Options> connectionFactory)
       throws IOException, InterruptedException {
     return wrap(connectionFactory.create(configure(new Options.Builder(options)).build()));
   }
 
-  /** Returns a {@link Connection} with messaging spans instrumentation. */
+  /** Returns a {@link Connection} with telemetry instrumentation. */
   public Connection newConnection(
       Options.Builder builder, ConnectionFactory<Options.Builder> connectionFactory)
       throws IOException, InterruptedException {

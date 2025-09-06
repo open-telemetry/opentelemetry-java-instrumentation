@@ -38,15 +38,15 @@ public final class OpenTelemetryMessageHandler implements MessageHandler {
     }
 
     Context processContext = consumerProcessInstrumenter.start(parentContext, natsRequest);
-    InterruptedException exception = null;
+    Throwable error = null;
 
     try (Scope ignored = processContext.makeCurrent()) {
       delegate.onMessage(message);
-    } catch (InterruptedException e) {
-      exception = e;
-      throw e;
+    } catch (Throwable t) {
+      error = t;
+      throw t;
     } finally {
-      consumerProcessInstrumenter.end(processContext, natsRequest, null, exception);
+      consumerProcessInstrumenter.end(processContext, natsRequest, null, error);
     }
   }
 }

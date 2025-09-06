@@ -129,6 +129,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(2) Duration timeout,
         @Advice.Local("message") Message message)
         throws InterruptedException {
+      // call the instrumented request method
       message = connection.request(subject, null, body, timeout);
       return message;
     }
@@ -151,7 +152,6 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(value = 1, readOnly = false) Headers headers,
         @Advice.Argument(2) byte[] body,
-        @Advice.Argument(3) Duration timeout,
         @Advice.Local("otelContext") Context otelContext,
         @Advice.Local("otelScope") Scope otelScope,
         @Advice.Local("natsRequest") NatsRequest natsRequest) {
@@ -199,6 +199,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Duration timeout,
         @Advice.Local("response") Message response)
         throws InterruptedException {
+      if (request == null) {
+        return null;
+      }
+
+      // call the instrumented request method
       response =
           connection.request(
               request.getSubject(), request.getHeaders(), request.getData(), timeout);
@@ -223,6 +228,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
         @Advice.Local("future") CompletableFuture<Message> future) {
+      // call the instrumented request method
       future = connection.request(subject, null, body);
       return future;
     }
@@ -294,6 +300,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) Message message,
         @Advice.Local("future") CompletableFuture<Message> future) {
+      if (message == null) {
+        return null;
+      }
+
+      // call the instrumented request method
       future = connection.request(message.getSubject(), message.getHeaders(), message.getData());
       return future;
     }
@@ -317,6 +328,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) byte[] body,
         @Advice.Argument(2) Duration timeout,
         @Advice.Local("future") CompletableFuture<Message> future) {
+      // call the instrumented requestWithTimeout method
       future = connection.requestWithTimeout(subject, null, body, timeout);
       return future;
     }
@@ -389,6 +401,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Argument(value = 0, readOnly = false) Message message,
         @Advice.Argument(1) Duration timeout,
         @Advice.Local("future") CompletableFuture<Message> future) {
+      if (message == null) {
+        return null;
+      }
+
+      // call the instrumented requestWithTimeout method
       future =
           connection.requestWithTimeout(
               message.getSubject(), message.getHeaders(), message.getData(), timeout);

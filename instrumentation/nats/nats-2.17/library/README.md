@@ -31,7 +31,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-nats-2.17:OPENTEL
 
 The instrumentation library provides the class `NatsTelemetry` that has a builder
 method and allows the creation of an instance of the `Connection` to provide
-OpenTelemetry-based spans and context propagation:
+OpenTelemetry-based instrumentation:
 
 ```java
 import io.nats.client.Connection;
@@ -39,6 +39,7 @@ import io.nats.client.Nats;
 import io.nats.client.Options;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.nats.v2_17.NatsTelemetry;
+import java.io.IOException;
 
 public class OpenTelemetryNatsConnection {
 
@@ -50,19 +51,13 @@ public class OpenTelemetryNatsConnection {
     this.telemetry = NatsTelemetry.create(openTelemetry);
   }
 
-  // creates a new connection with opentelemetry instrumentation.
-  // This will *not* instrument the connection's main inbox
-  // if you're using the default NatsConnection implementation
-  public Connection wrap(Connection connection) {
-    return telemetry.wrap(connection);
+  public Connection newConnection() throws IOException, InterruptedException {
+    return newConnection(Options.builder());
   }
 
-  // prefer wrapping the Options.Builder to get the full instrumentation
-  // when using the default NatsConnection implementation
-  public Connection create(Options.Builder builder) throws IOException, InterruptedException {
-    Options options = telemetry.configureDispatcher(builder).build();
-    Connection connection = Nats.connect(options);
-    return wrap(connection);
+  public Connection newConnection(Options.Builder options) throws IOException, InterruptedException {
+    return telemetry.newConnection(options.build(), Nats::connect);
   }
+
 }
 ```

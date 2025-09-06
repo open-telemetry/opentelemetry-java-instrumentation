@@ -124,7 +124,9 @@ final class OpenTelemetryConnection implements InvocationHandler {
       replyTo = (String) args[1];
       headers = (Headers) args[2];
       body = (byte[]) args[3];
-    } else if (method.getParameterCount() == 1 && method.getParameterTypes()[0] == Message.class) {
+    } else if (method.getParameterCount() == 1
+        && method.getParameterTypes()[0] == Message.class
+        && args[0] != null) {
       subject = ((Message) args[0]).getSubject();
       replyTo = ((Message) args[0]).getReplyTo();
       headers = ((Message) args[0]).getHeaders();
@@ -145,10 +147,14 @@ final class OpenTelemetryConnection implements InvocationHandler {
     }
 
     Context context = producerInstrumenter.start(parentContext, natsRequest);
+    Throwable throwable = null;
     try (Scope ignored = context.makeCurrent()) {
       delegate.publish(subject, replyTo, headers, body);
+    } catch (Throwable t) {
+      throwable = t;
+      throw t;
     } finally {
-      producerInstrumenter.end(context, natsRequest, null, null);
+      producerInstrumenter.end(context, natsRequest, null, throwable);
     }
   }
 
@@ -156,6 +162,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
   // Message request(String subject, Headers headers, byte[] body, Duration timeout) throws
   // InterruptedException;
   // Message request(Message message, Duration timeout) throws InterruptedException;
+  @SuppressWarnings("InterruptedExceptionSwallowed")
   private Message request(Method method, Object[] args) throws Throwable {
     String subject = null;
     Headers headers = null;
@@ -176,7 +183,9 @@ final class OpenTelemetryConnection implements InvocationHandler {
       headers = (Headers) args[1];
       body = (byte[]) args[2];
       timeout = (Duration) args[3];
-    } else if (method.getParameterCount() == 2 && method.getParameterTypes()[0] == Message.class) {
+    } else if (method.getParameterCount() == 2
+        && method.getParameterTypes()[0] == Message.class
+        && args[0] != null) {
       subject = ((Message) args[0]).getSubject();
       headers = ((Message) args[0]).getHeaders();
       body = ((Message) args[0]).getData();
@@ -199,8 +208,8 @@ final class OpenTelemetryConnection implements InvocationHandler {
 
     Context context = producerInstrumenter.start(parentContext, natsRequest);
     NatsRequest response = null;
-
     Throwable throwable = null;
+
     try (Scope ignored = context.makeCurrent()) {
       Message result = delegate.request(subject, headers, body, timeout);
 
@@ -209,7 +218,7 @@ final class OpenTelemetryConnection implements InvocationHandler {
       }
 
       return result;
-    } catch (InterruptedException t) {
+    } catch (Throwable t) {
       throwable = t;
       throw t;
     } finally {
@@ -258,12 +267,14 @@ final class OpenTelemetryConnection implements InvocationHandler {
       body = (byte[]) args[2];
       timeout = (Duration) args[3];
     } else if ((method.getParameterCount() == 1)
-        && method.getParameterTypes()[0] == Message.class) {
+        && method.getParameterTypes()[0] == Message.class
+        && args[0] != null) {
       subject = ((Message) args[0]).getSubject();
       headers = ((Message) args[0]).getHeaders();
       body = ((Message) args[0]).getData();
     } else if ((method.getParameterCount() == 2)
-        && method.getParameterTypes()[0] == Message.class) {
+        && method.getParameterTypes()[0] == Message.class
+        && args[0] != null) {
       subject = ((Message) args[0]).getSubject();
       headers = ((Message) args[0]).getHeaders();
       body = ((Message) args[0]).getData();
@@ -286,10 +297,15 @@ final class OpenTelemetryConnection implements InvocationHandler {
     Context context = producerInstrumenter.start(parentContext, notNullNatsRequest);
 
     CompletableFuture<Message> future;
-    if (timeout != null) {
-      future = delegate.requestWithTimeout(subject, headers, body, timeout);
-    } else {
-      future = delegate.request(subject, headers, body);
+    try {
+      if (timeout != null) {
+        future = delegate.requestWithTimeout(subject, headers, body, timeout);
+      } else {
+        future = delegate.request(subject, headers, body);
+      }
+    } catch (Throwable t) {
+      producerInstrumenter.end(context, notNullNatsRequest, null, t);
+      throw t;
     }
 
     return future.whenComplete(

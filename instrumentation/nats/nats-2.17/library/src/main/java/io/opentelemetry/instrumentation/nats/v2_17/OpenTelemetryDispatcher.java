@@ -48,8 +48,7 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
     }
   }
 
-  private static Object invokeProxyMethod(Method method, Object target, Object[] args)
-      throws Throwable {
+  private static Object invokeMethod(Method method, Object target, Object[] args) throws Throwable {
     try {
       return method.invoke(target, args);
     } catch (InvocationTargetException exception) {
@@ -69,7 +68,7 @@ final class OpenTelemetryDispatcher implements InvocationHandler {
           new OpenTelemetryMessageHandler((MessageHandler) args[2], consumerProcessInstrumenter);
     }
 
-    return (Subscription) invokeProxyMethod(method, delegate, args);
+    return (Subscription) invokeMethod(method, delegate, args);
   }
 
   Dispatcher getDelegate() {
