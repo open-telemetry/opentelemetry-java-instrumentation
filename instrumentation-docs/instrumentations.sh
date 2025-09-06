@@ -149,6 +149,9 @@ readonly INSTRUMENTATIONS=(
   "hibernate:hibernate-4.0:javaagent:testExperimental"
   "hibernate:hibernate-6.0:javaagent:test"
   "hibernate:hibernate-6.0:javaagent:testExperimental"
+  "influxdb-2.4:javaagent:test"
+  "influxdb-2.4:javaagent:testStableSemconv"
+  "java-http-server:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
