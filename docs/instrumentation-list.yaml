@@ -3722,12 +3722,35 @@ libraries:
           type: STRING
   hystrix:
   - name: hystrix-1.4
+    description: This instrumentation enables the generation of INTERNAL spans for
+      Hystrix command executions and fallbacks.
     source_path: instrumentation/hystrix-1.4
     scope:
       name: io.opentelemetry.hystrix-1.4
     target_versions:
       javaagent:
       - com.netflix.hystrix:hystrix-core:[1.4.0,)
+    configurations:
+    - name: otel.instrumentation.hystrix.experimental-span-attributes
+      description: Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open`
+        and `hystrix.group` span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hystrix.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hystrix.circuit_open
+          type: BOOLEAN
+        - name: hystrix.command
+          type: STRING
+        - name: hystrix.group
+          type: STRING
   influxdb:
   - name: influxdb-2.4
     source_path: instrumentation/influxdb-2.4
