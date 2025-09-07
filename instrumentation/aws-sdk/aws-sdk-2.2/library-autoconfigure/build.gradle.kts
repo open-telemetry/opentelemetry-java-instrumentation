@@ -28,11 +28,14 @@ tasks {
   withType<Test>().configureEach {
     systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", true)
     systemProperty("otel.instrumentation.aws-sdk.experimental-record-individual-http-error", true)
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "test-message-header")
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 

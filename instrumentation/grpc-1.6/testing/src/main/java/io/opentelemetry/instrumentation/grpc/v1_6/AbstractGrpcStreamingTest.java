@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExtraClientAttributes;
+import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
+import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
+import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -223,6 +226,12 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasNoParent()
                             .hasAttributesSatisfyingExactly(
                                 addExtraClientAttributes(
+                                    experimentalSatisfies(
+                                        GRPC_RECEIVED_MESSAGE_COUNT,
+                                        v -> assertThat(v).isGreaterThan(0)),
+                                    experimentalSatisfies(
+                                        GRPC_SENT_MESSAGE_COUNT,
+                                        v -> assertThat(v).isGreaterThan(0)),
                                     equalTo(RPC_SYSTEM, "grpc"),
                                     equalTo(RPC_SERVICE, "example.Greeter"),
                                     equalTo(RPC_METHOD, "Conversation"),
@@ -238,6 +247,11 @@ public abstract class AbstractGrpcStreamingTest {
                             .hasKind(SpanKind.SERVER)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
+                                experimentalSatisfies(
+                                    GRPC_RECEIVED_MESSAGE_COUNT,
+                                    v -> assertThat(v).isGreaterThan(0)),
+                                experimentalSatisfies(
+                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 equalTo(RPC_SYSTEM, "grpc"),
                                 equalTo(RPC_SERVICE, "example.Greeter"),
                                 equalTo(RPC_METHOD, "Conversation"),
@@ -246,6 +260,11 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(SERVER_PORT, server.getPort()),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                experimentalSatisfies(
+                                    GRPC_RECEIVED_MESSAGE_COUNT,
+                                    v -> assertThat(v).isGreaterThan(0)),
+                                experimentalSatisfies(
+                                    GRPC_SENT_MESSAGE_COUNT, v -> assertThat(v).isGreaterThan(0)),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
                             .satisfies(
                                 spanData ->

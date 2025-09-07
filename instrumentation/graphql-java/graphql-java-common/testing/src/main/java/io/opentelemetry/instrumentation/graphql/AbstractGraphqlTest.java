@@ -44,6 +44,9 @@ import org.junit.jupiter.api.TestInstance;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractGraphqlTest {
 
+  private static final String DATA_FETCHER_PROPERTY =
+      "otel.instrumentation.graphql.data-fetcher.enabled";
+
   private final List<Map<String, String>> books = new ArrayList<>();
   private final List<Map<String, String>> authors = new ArrayList<>();
 
@@ -56,6 +59,10 @@ public abstract class AbstractGraphqlTest {
 
   protected boolean hasDataFetcherSpans() {
     return false;
+  }
+
+  private boolean includeDataFetcher() {
+    return Boolean.getBoolean(DATA_FETCHER_PROPERTY) && hasDataFetcherSpans();
   }
 
   @BeforeAll
@@ -162,7 +169,7 @@ public abstract class AbstractGraphqlTest {
                               normalizedQueryEqualsTo(
                                   GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT,
                                   "query findBookById { bookById(id: ?) { name } }")));
-              if (hasDataFetcherSpans()) {
+              if (includeDataFetcher()) {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
@@ -174,7 +181,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("fetchBookById")
-                          .hasParent(trace.getSpan(hasDataFetcherSpans() ? 1 : 0)));
+                          .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
 
               trace.hasSpansSatisfyingExactly(assertions);
             });
@@ -207,7 +214,7 @@ public abstract class AbstractGraphqlTest {
                               normalizedQueryEqualsTo(
                                   AttributeKey.stringKey("graphql.document"),
                                   "{ bookById(id: ?) { name } }")));
-              if (hasDataFetcherSpans()) {
+              if (includeDataFetcher()) {
                 assertions.add(
                     span ->
                         span.hasName("bookById")
@@ -219,7 +226,7 @@ public abstract class AbstractGraphqlTest {
               assertions.add(
                   span ->
                       span.hasName("fetchBookById")
-                          .hasParent(trace.getSpan(hasDataFetcherSpans() ? 1 : 0)));
+                          .hasParent(trace.getSpan(includeDataFetcher() ? 1 : 0)));
               trace.hasSpansSatisfyingExactly(assertions);
             });
   }

@@ -6,6 +6,9 @@ targets:
     # (as opposed to internal testing modules
     - type: gradle
       path: ./
+      target: ':declarative-config-bridge'
+    - type: gradle
+      path: ./
       target: ':instrumentation-annotations'
     - type: gradle
       path: ./
@@ -346,6 +349,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:aws-lambda:aws-lambda-events-2.2:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:aws-lambda:aws-lambda-events-3.11:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:aws-lambda:aws-lambda-events-common-2.2:library'
     - type: gradle
       path: ./
       target: ':instrumentation:aws-sdk:aws-sdk-1.11:javaagent'

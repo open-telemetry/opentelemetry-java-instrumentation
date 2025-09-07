@@ -29,6 +29,7 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+@SuppressWarnings("deprecation") // testing deprecated class
 @ExtendWith(MockitoExtension.class)
 class AwsLambdaWrapperTest {
 

@@ -17,6 +17,7 @@ dependencies {
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-sdk")

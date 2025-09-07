@@ -93,7 +93,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                       if (captureHeaders) {
                         attributes.add(
                             satisfies(
-                                stringArrayKey("messaging.header.test_message_header"),
+                                stringArrayKey("messaging.header.Test_Message_Header"),
                                 v -> v.isEqualTo(ImmutableList.of("test"))));
                       }
                       span.hasName("testSdkSqs publish")
@@ -163,7 +163,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.test_message_header"),
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
                                   v -> v.isEqualTo(ImmutableList.of("test"))));
                         }
 
@@ -201,7 +201,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                         if (captureHeaders) {
                           attributes.add(
                               satisfies(
-                                  stringArrayKey("messaging.header.test_message_header"),
+                                  stringArrayKey("messaging.header.Test_Message_Header"),
                                   v -> v.isEqualTo(singletonList("test"))));
                         }
 
@@ -238,13 +238,13 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
         sendMessageRequest.toBuilder()
             .messageAttributes(
                 Collections.singletonMap(
-                    "test-message-header",
+                    "Test-Message-Header",
                     MessageAttributeValue.builder().dataType("String").stringValue("test").build()))
             .build();
     client.sendMessage(newSendMessageRequest);
 
     ReceiveMessageRequest newReceiveMessageRequest =
-        receiveMessageRequest.toBuilder().messageAttributeNames("test-message-header").build();
+        receiveMessageRequest.toBuilder().messageAttributeNames("Test-Message-Header").build();
     ReceiveMessageResponse response = client.receiveMessage(newReceiveMessageRequest);
 
     assertThat(response.messages().size()).isEqualTo(1);

@@ -17,10 +17,10 @@ enum BedrockRuntimeAttributesGetter
     implements GenAiAttributesGetter<ExecutionAttributes, Response> {
   INSTANCE;
 
-  static final class GenAiSystemIncubatingValues {
+  static final class GenAiProviderNameIncubatingValues {
     static final String AWS_BEDROCK = "aws.bedrock";
 
-    private GenAiSystemIncubatingValues() {}
+    private GenAiProviderNameIncubatingValues() {}
   }
 
   @Override
@@ -30,7 +30,7 @@ enum BedrockRuntimeAttributesGetter
 
   @Override
   public String getSystem(ExecutionAttributes executionAttributes) {
-    return GenAiSystemIncubatingValues.AWS_BEDROCK;
+    return GenAiProviderNameIncubatingValues.AWS_BEDROCK;
   }
 
   @Nullable
