@@ -7,6 +7,8 @@ plugins {
 // NOTE: any modifications below should also be made in
 //       io.opentelemetry.instrumentation.muzzle-check.gradle.kts
 tasks.withType<ShadowJar>().configureEach {
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  duplicatesStrategy = DuplicatesStrategy.INCLUDE
   mergeServiceFiles()
   // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
   // service loader...)

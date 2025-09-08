@@ -150,7 +150,7 @@ tasks {
     // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
     exclude("io/opentelemetry/javaagent/extension/**")
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("bootstrapLibs.jar")
   }
@@ -159,8 +159,6 @@ tasks {
     configurations = listOf(baseJavaagentLibs)
 
     excludeBootstrapClasses()
-
-    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
   }
@@ -181,8 +179,6 @@ tasks {
     excludeBootstrapClasses()
     // remove MPL licensed content
     exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
-
-    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("javaagentLibs-relocated-tmp.jar")
   }
