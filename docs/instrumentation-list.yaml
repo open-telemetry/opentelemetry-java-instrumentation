@@ -3526,13 +3526,34 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-procedure-call-4.3
+    description: This instrumentation enables the generation of INTERNAL spans for
+      Hibernate stored procedure calls.
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
       name: io.opentelemetry.hibernate-procedure-call-4.3
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[4.3.0.Final,)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-reactive-1.0
+    description: |
+      This instrumentation does not emit any telemetry on its own. Instead, it enables context propagation for Hibernate Reactive asynchronous operations.
     source_path: instrumentation/hibernate/hibernate-reactive-1.0
     scope:
       name: io.opentelemetry.hibernate-reactive-1.0
