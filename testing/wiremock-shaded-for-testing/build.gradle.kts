@@ -35,6 +35,8 @@ tasks {
     relocate("javax.servlet", "io.opentelemetry.testing.internal.servlet")
     relocate("org.yaml", "io.opentelemetry.testing.internal.yaml")
 
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
   }
 
