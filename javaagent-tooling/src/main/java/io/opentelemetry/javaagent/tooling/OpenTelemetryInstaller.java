@@ -80,7 +80,7 @@ public final class OpenTelemetryInstaller {
         instrumentationConfig
             .getStructured("java", empty())
             .getStructured("agent", empty())
-            .getString("instrumentation_profile", "default");
+            .getString("instrumentation_mode", "default");
 
     switch (profile) {
       case "none":
