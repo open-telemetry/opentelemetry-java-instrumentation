@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -337,9 +336,9 @@ class InstrumentationCustomizerTest {
         AttributesBuilder attributes,
         Context context,
         Map<String, String> request,
-        @Nullable Map<String, String> response,
+        Map<String, String> response,
         @Nullable Throwable error) {
-      attributes.put("resp1", requireNonNull(response).get("resp1"));
+      attributes.put("resp1", response.get("resp1"));
       attributes.put("resp2", response.get("resp2"));
     }
   }
@@ -359,9 +358,9 @@ class InstrumentationCustomizerTest {
         AttributesBuilder attributes,
         Context context,
         Map<String, String> request,
-        @Nullable Map<String, String> response,
+        Map<String, String> response,
         @Nullable Throwable error) {
-      attributes.put("resp3", requireNonNull(response).get("resp3"));
+      attributes.put("resp3", response.get("resp3"));
       attributes.put("resp2", response.get("resp2_2"));
     }
   }

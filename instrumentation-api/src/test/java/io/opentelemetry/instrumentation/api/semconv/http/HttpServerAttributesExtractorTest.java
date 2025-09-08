@@ -26,7 +26,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
-import static java.util.Objects.requireNonNull;
 import static org.assertj.core.api.Assertions.entry;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -53,13 +52,11 @@ class HttpServerAttributesExtractorTest {
       implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
 
     @Override
-    @Nullable
     public String getHttpRequestMethod(Map<String, String> request) {
       return request.get("method");
     }
 
     @Override
-    @Nullable
     public String getUrlScheme(Map<String, String> request) {
       return request.get("urlScheme");
     }
@@ -77,7 +74,6 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public String getHttpRoute(Map<String, String> request) {
       return request.get("route");
     }
@@ -89,7 +85,6 @@ class HttpServerAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public Integer getHttpResponseStatusCode(
         Map<String, String> request, Map<String, String> response, @Nullable Throwable error) {
       String value = response.get("statusCode");
@@ -120,15 +115,15 @@ class HttpServerAttributesExtractorTest {
     @Nullable
     @Override
     public String getNetworkProtocolName(
-        Map<String, String> request, @Nullable Map<String, String> response) {
+        Map<String, String> request, Map<String, String> response) {
       return request.get("networkProtocolName");
     }
 
     @Nullable
     @Override
     public String getNetworkProtocolVersion(
-        Map<String, String> request, @Nullable Map<String, String> response) {
-      return requireNonNull(request).get("networkProtocolVersion");
+        Map<String, String> request, Map<String, String> response) {
+      return request.get("networkProtocolVersion");
     }
 
     @Nullable

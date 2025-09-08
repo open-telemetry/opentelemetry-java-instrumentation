@@ -135,13 +135,11 @@ class MessagingAttributesExtractorTest {
     INSTANCE;
 
     @Override
-    @Nullable
     public String getSystem(Map<String, String> request) {
       return request.get("system");
     }
 
     @Override
-    @Nullable
     public String getDestination(Map<String, String> request) {
       return request.get("destination");
     }
@@ -163,7 +161,6 @@ class MessagingAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public String getConversationId(Map<String, String> request) {
       return request.get("conversationId");
     }
@@ -183,7 +180,6 @@ class MessagingAttributesExtractorTest {
     }
 
     @Override
-    @Nullable
     public String getMessageId(Map<String, String> request, String response) {
       return response;
     }
