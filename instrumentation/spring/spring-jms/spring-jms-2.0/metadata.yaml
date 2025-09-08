@@ -1,4 +1,4 @@
-description: This instrumentation enables the generation of CONSUMER spans for Spring JMS.
+description: This instrumentation enables the generation of consumer messaging spans for Spring JMS.
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >
