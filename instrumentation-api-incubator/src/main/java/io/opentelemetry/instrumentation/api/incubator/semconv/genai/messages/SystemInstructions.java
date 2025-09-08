@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.messages;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
@@ -7,9 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.auto.value.AutoValue;
 import java.util.List;
 
-/**
- * Represents the list of system instructions sent to the model.
- */
+/** Represents the list of system instructions sent to the model. */
 @AutoValue
 @JsonClassDescription("System instructions")
 public abstract class SystemInstructions {

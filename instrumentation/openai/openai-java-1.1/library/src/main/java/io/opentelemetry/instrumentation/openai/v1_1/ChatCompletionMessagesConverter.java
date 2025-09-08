@@ -46,8 +46,7 @@ public final class ChatCompletionMessagesConverter {
     this.captureMessageContent = captureMessageContent;
   }
 
-  public InputMessages createInputMessages(
-      ChatCompletionCreateParams request) {
+  public InputMessages createInputMessages(ChatCompletionCreateParams request) {
     if (!captureMessageContent) {
       return null;
     }
@@ -56,11 +55,15 @@ public final class ChatCompletionMessagesConverter {
     for (ChatCompletionMessageParam msg : request.messages()) {
 
       if (msg.isSystem()) {
-        inputMessages.append(InputMessage.create(Role.SYSTEM, contentToMessageParts(msg.asSystem().content())));
+        inputMessages.append(
+            InputMessage.create(Role.SYSTEM, contentToMessageParts(msg.asSystem().content())));
       } else if (msg.isDeveloper()) {
-        inputMessages.append(InputMessage.create(Role.DEVELOPER, contentToMessageParts(msg.asDeveloper().content())));
+        inputMessages.append(
+            InputMessage.create(
+                Role.DEVELOPER, contentToMessageParts(msg.asDeveloper().content())));
       } else if (msg.isUser()) {
-        inputMessages.append(InputMessage.create(Role.USER, contentToMessageParts(msg.asUser().content())));
+        inputMessages.append(
+            InputMessage.create(Role.USER, contentToMessageParts(msg.asUser().content())));
       } else if (msg.isAssistant()) {
         ChatCompletionAssistantMessageParam assistantMsg = msg.asAssistant();
         List<MessagePart> messageParts = new ArrayList<>();
@@ -69,16 +72,21 @@ public final class ChatCompletionMessagesConverter {
             .ifPresent(content -> messageParts.addAll(contentToMessageParts(content)));
 
         assistantMsg
-            .toolCalls().ifPresent(toolCalls -> {
-              messageParts.addAll(toolCalls.stream()
-                  .map(ChatCompletionMessagesConverter::toolCallToMessagePart)
-                  .filter(Objects::nonNull)
-                  .collect(Collectors.toList()));
-            });
+            .toolCalls()
+            .ifPresent(
+                toolCalls -> {
+                  messageParts.addAll(
+                      toolCalls.stream()
+                          .map(ChatCompletionMessagesConverter::toolCallToMessagePart)
+                          .filter(Objects::nonNull)
+                          .collect(Collectors.toList()));
+                });
         inputMessages.append(InputMessage.create(Role.ASSISTANT, messageParts));
       } else if (msg.isTool()) {
         ChatCompletionToolMessageParam toolMsg = msg.asTool();
-        inputMessages.append(InputMessage.create(Role.TOOL, contentToMessageParts(toolMsg.toolCallId(), toolMsg.content())));
+        inputMessages.append(
+            InputMessage.create(
+                Role.TOOL, contentToMessageParts(toolMsg.toolCallId(), toolMsg.content())));
       } else {
         continue;
       }
@@ -86,8 +94,7 @@ public final class ChatCompletionMessagesConverter {
     return inputMessages;
   }
 
-  public OutputMessages createOutputMessages(
-      ChatCompletion completion) {
+  public OutputMessages createOutputMessages(ChatCompletion completion) {
     if (!captureMessageContent) {
       return null;
     }
@@ -97,31 +104,26 @@ public final class ChatCompletionMessagesConverter {
       ChatCompletionMessage choiceMsg = choice.message();
       List<MessagePart> messageParts = new ArrayList<>();
 
-      choiceMsg
-          .content()
-          .ifPresent(
-              content -> messageParts.add(TextPart.create(content)));
+      choiceMsg.content().ifPresent(content -> messageParts.add(TextPart.create(content)));
       choiceMsg
           .toolCalls()
           .ifPresent(
               toolCalls -> {
                 messageParts.addAll(
                     toolCalls.stream()
-                    .map(ChatCompletionMessagesConverter::toolCallToMessagePart)
-                    .filter(Objects::nonNull)
-                    .collect(Collectors.toList()));
+                        .map(ChatCompletionMessagesConverter::toolCallToMessagePart)
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList()));
               });
 
       outputMessages.append(
-          OutputMessage.create(
-              Role.ASSISTANT,
-              messageParts,
-              choice.finishReason().asString()));
+          OutputMessage.create(Role.ASSISTANT, messageParts, choice.finishReason().asString()));
     }
     return outputMessages;
   }
 
-  private static List<MessagePart> contentToMessageParts(String toolCallId, ChatCompletionToolMessageParam.Content content) {
+  private static List<MessagePart> contentToMessageParts(
+      String toolCallId, ChatCompletionToolMessageParam.Content content) {
     if (content.isText()) {
       return Collections.singletonList(ToolCallResponsePart.create(toolCallId, content.asText()));
     } else if (content.isArrayOfContentParts()) {
@@ -134,7 +136,8 @@ public final class ChatCompletionMessagesConverter {
     }
   }
 
-  private static List<MessagePart> contentToMessageParts(ChatCompletionAssistantMessageParam.Content content) {
+  private static List<MessagePart> contentToMessageParts(
+      ChatCompletionAssistantMessageParam.Content content) {
     if (content.isText()) {
       return Collections.singletonList(TextPart.create(content.asText()));
     } else if (content.isArrayOfContentParts()) {
@@ -157,7 +160,8 @@ public final class ChatCompletionMessagesConverter {
     }
   }
 
-  private static List<MessagePart> contentToMessageParts(ChatCompletionSystemMessageParam.Content content) {
+  private static List<MessagePart> contentToMessageParts(
+      ChatCompletionSystemMessageParam.Content content) {
     if (content.isText()) {
       return Collections.singletonList(TextPart.create(content.asText()));
     } else if (content.isArrayOfContentParts()) {
@@ -167,7 +171,8 @@ public final class ChatCompletionMessagesConverter {
     }
   }
 
-  private static List<MessagePart> contentToMessageParts(ChatCompletionDeveloperMessageParam.Content content) {
+  private static List<MessagePart> contentToMessageParts(
+      ChatCompletionDeveloperMessageParam.Content content) {
     if (content.isText()) {
       return Collections.singletonList(TextPart.create(content.asText()));
     } else if (content.isArrayOfContentParts()) {
@@ -177,7 +182,8 @@ public final class ChatCompletionMessagesConverter {
     }
   }
 
-  private static List<MessagePart> contentToMessageParts(ChatCompletionUserMessageParam.Content content) {
+  private static List<MessagePart> contentToMessageParts(
+      ChatCompletionUserMessageParam.Content content) {
     if (content.isText()) {
       return Collections.singletonList(TextPart.create(content.asText()));
     } else if (content.isArrayOfContentParts()) {
@@ -191,7 +197,8 @@ public final class ChatCompletionMessagesConverter {
     }
   }
 
-  private static List<MessagePart> joinContentParts(List<ChatCompletionContentPartText> contentParts) {
+  private static List<MessagePart> joinContentParts(
+      List<ChatCompletionContentPartText> contentParts) {
     return contentParts.stream()
         .map(ChatCompletionContentPartText::text)
         .map(TextPart::create)
@@ -201,7 +208,8 @@ public final class ChatCompletionMessagesConverter {
   private static MessagePart toolCallToMessagePart(ChatCompletionMessageToolCall call) {
     FunctionAccess functionAccess = getFunctionAccess(call);
     if (functionAccess != null) {
-      return ToolCallRequestPart.create(functionAccess.id(), functionAccess.name(), functionAccess.arguments());
+      return ToolCallRequestPart.create(
+          functionAccess.id(), functionAccess.name(), functionAccess.arguments());
     }
     return null;
   }

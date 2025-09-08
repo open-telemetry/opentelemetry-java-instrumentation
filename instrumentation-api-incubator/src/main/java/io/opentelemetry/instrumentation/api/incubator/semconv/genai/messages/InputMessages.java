@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.messages;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -6,9 +11,7 @@ import com.google.auto.value.AutoValue;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Represents a collection of input messages sent to the model.
- */
+/** Represents a collection of input messages sent to the model. */
 @AutoValue
 public abstract class InputMessages {
 

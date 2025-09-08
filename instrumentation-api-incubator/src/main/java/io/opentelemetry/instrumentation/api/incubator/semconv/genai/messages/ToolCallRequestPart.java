@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.messages;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
@@ -6,9 +11,7 @@ import com.fasterxml.jackson.annotation.JsonPropertyDescription;
 import com.google.auto.value.AutoValue;
 import javax.annotation.Nullable;
 
-/**
- * Represents a tool call requested by the model.
- */
+/** Represents a tool call requested by the model. */
 @AutoValue
 @JsonClassDescription("Tool call request part")
 public abstract class ToolCallRequestPart implements MessagePart {

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.messages;
 
 import com.fasterxml.jackson.annotation.JsonClassDescription;
@@ -7,8 +12,8 @@ import com.google.auto.value.AutoValue;
 import java.util.Map;
 
 /**
- * Represents an arbitrary message part with any type and properties.
- * This allows for extensibility with custom message part types.
+ * Represents an arbitrary message part with any type and properties. This allows for extensibility
+ * with custom message part types.
  */
 @AutoValue
 @JsonClassDescription("Generic part")
