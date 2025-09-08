@@ -1,5 +1,5 @@
 # https://github.com/zulu-openjdk/zulu-openjdk/blob/master/ubuntu/8u412-8.78/Dockerfile
-FROM ubuntu:noble-20250716@sha256:7c06e91f61fa88c08cc74f7e1b7c69ae24910d745357e0dfe1d2c0322aaf20f9
+FROM ubuntu:noble-20250805@sha256:9cbed754112939e914291337b5e554b07ad7c392491dba6daf25eef1332a22e8
 
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
