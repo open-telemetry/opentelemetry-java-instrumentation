@@ -30,6 +30,7 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
+import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -1118,6 +1119,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
               if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
                 assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
+              }
+              if (httpClientAttributes.contains(UrlIncubatingAttributes.URL_TEMPLATE)) {
+                assertThat(attrs)
+                    .containsEntry(UrlIncubatingAttributes.URL_TEMPLATE, uri.getPath());
               }
               if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
                 assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
