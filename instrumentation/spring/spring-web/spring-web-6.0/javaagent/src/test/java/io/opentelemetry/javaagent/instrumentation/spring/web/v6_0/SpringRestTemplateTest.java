@@ -100,20 +100,6 @@ public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<St
 
     // no enum value for TEST
     optionsBuilder.disableTestNonStandardHttpMethod();
-    optionsBuilder.setExpectedClientSpanNameMapper(
-        (uri, method) -> {
-          return method + " " + uri.getPath();
-          /*
-          switch (uri.toString()) {
-            case "http://localhost:61/": // unopened port
-            case "https://192.0.2.1/": // non routable address
-              return "CONNECT";
-            default:
-              return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
-                  uri, method);
-          }
-
-           */
-        });
+    optionsBuilder.setExpectedClientSpanNameMapper((uri, method) -> method + " " + uri.getPath());
   }
 }
