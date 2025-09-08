@@ -1,3 +1,1 @@
-description: >
-  This instrumentation enables the generation of database CLIENT spans and metrics for operations
-  executed using the InfluxDB Java client.
+description: This instrumentation enables the generation of database client spans and metrics for the InfluxDB Java client.

@@ -1,4 +1,4 @@
-description: This instrumentation enables HTTP CLIENT spans and metrics for requests made using the `java.net.http.HttpClient`.
+description: This instrumentation enables HTTP client spans and HTTP client metrics for requests made using the Java HTTP client.
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >

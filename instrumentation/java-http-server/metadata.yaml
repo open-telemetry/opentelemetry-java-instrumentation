@@ -1,4 +1,4 @@
-description: This instrumentation enables HTTP SERVER spans and metrics for incoming requests to servers that use or extend `com.sun.net.httpserver.HttpServer`.
+description: This instrumentation enables HTTP server spans and HTTP server metrics for the Java HTTP server.
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >

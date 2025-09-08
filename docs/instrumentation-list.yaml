@@ -3563,7 +3563,7 @@ libraries:
   hikaricp:
   - name: hikaricp-3.0
     description: |
-      This instrumentation provides database CLIENT metrics for HikariCP 3.0+ connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool stats such as active, idle, and pending connections.
+      This instrumentation provides database client metrics for HikariCP 3.0+ connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
     source_path: instrumentation/hikaricp-3.0
     scope:
       name: io.opentelemetry.hikaricp-3.0
@@ -3702,8 +3702,8 @@ libraries:
           type: STRING
   http:
   - name: http-url-connection
-    description: This instrumentation enables the generation of CLIENT spans for requests
-      made using `java.net.HttpURLConnection`.
+    description: |
+      This instrumentation enables the generation of HTTP client spans and HTTP client metrics for requests made using `java.net.HttpURLConnection`.
     source_path: instrumentation/http-url-connection
     scope:
       name: io.opentelemetry.http-url-connection
@@ -3783,8 +3783,8 @@ libraries:
       - com.netflix.hystrix:hystrix-core:[1.4.0,)
   influxdb:
   - name: influxdb-2.4
-    description: |
-      This instrumentation enables the generation of database CLIENT spans and metrics for operations executed using the InfluxDB Java client.
+    description: This instrumentation enables the generation of database client spans
+      and metrics for the InfluxDB Java client.
     source_path: instrumentation/influxdb-2.4
     scope:
       name: io.opentelemetry.influxdb-2.4
@@ -3842,8 +3842,8 @@ libraries:
           type: LONG
   java:
   - name: java-http-client
-    description: This instrumentation enables HTTP CLIENT spans and metrics for requests
-      made using the `java.net.http.HttpClient`.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for requests made using the Java HTTP client.
     source_path: instrumentation/java-http-client
     minimum_java_version: 11
     scope:
@@ -3917,8 +3917,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: java-http-server
-    description: This instrumentation enables HTTP SERVER spans and metrics for incoming
-      requests to servers that use or extend `com.sun.net.httpserver.HttpServer`.
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for the Java HTTP server.
     source_path: instrumentation/java-http-server
     scope:
       name: io.opentelemetry.java-http-server
@@ -4000,7 +4000,7 @@ libraries:
           type: STRING
   javalin:
   - name: javalin-5.0
-    description: This instrumentation enriches existing SERVER spans with route information,
+    description: This instrumentation enriches existing server spans with route information,
       it does not emit any telemetry on its own.
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11

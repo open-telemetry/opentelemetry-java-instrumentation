@@ -1,5 +1,6 @@
-description: This instrumentation enables the generation of CLIENT spans for requests
-  made using `java.net.HttpURLConnection`.
+description: >
+  This instrumentation enables the generation of HTTP client spans and HTTP client metrics for
+  requests made using `java.net.HttpURLConnection`.
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >
