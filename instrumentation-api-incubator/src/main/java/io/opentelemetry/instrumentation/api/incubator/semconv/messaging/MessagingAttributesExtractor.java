@@ -77,12 +77,12 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private final MessagingAttributesGetter<REQUEST, RESPONSE> getter;
-  @Nullable private final MessageOperation operation;
+  private final MessageOperation operation;
   private final List<String> capturedHeaders;
 
   MessagingAttributesExtractor(
       MessagingAttributesGetter<REQUEST, RESPONSE> getter,
-      @Nullable MessageOperation operation,
+      MessageOperation operation,
       List<String> capturedHeaders) {
     this.getter = getter;
     this.operation = operation;
