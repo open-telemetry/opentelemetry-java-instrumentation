@@ -125,7 +125,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * List of supported versions by the module, broken down by `library` or `javaagent` support
 * scope
   * Name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
-* configurations settings
+* configuration settings
   * List of settings that are available for the instrumentation module
   * Each setting has a name, description, type, and default value
 * metrics
