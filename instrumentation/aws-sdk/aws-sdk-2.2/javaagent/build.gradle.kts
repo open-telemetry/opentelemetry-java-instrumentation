@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -226,11 +228,13 @@ tasks {
     systemProperty("collectMetadata", collectMetadata)
   }
 
-  withType<com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar>().configureEach {
-    // mergeServiceFiles requires that duplicate strategy is set to include
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  withType<ShadowJar>().configureEach {
     mergeServiceFiles {
       include("software/amazon/awssdk/global/handlers/execution.interceptors")
+    }
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("software/amazon/awssdk/global/handlers/execution.interceptors") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
   }
 }
