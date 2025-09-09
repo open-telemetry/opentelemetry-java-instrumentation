@@ -25,8 +25,6 @@
 
 package io.opentelemetry.instrumentation.api.internal.cache.weaklockfree;
 
-import static java.util.Objects.requireNonNull;
-
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -161,11 +159,11 @@ public class WeakConcurrentMap<K, V>
     }
 
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
       if (other instanceof WeakConcurrentMap.LookupKey<?>) {
         return ((LookupKey<?>) other).key == key;
       } else {
-        return ((AbstractWeakConcurrentMap.WeakKey<?>) requireNonNull(other)).get() == key;
+        return ((AbstractWeakConcurrentMap.WeakKey<?>) other).get() == key;
       }
     }
 

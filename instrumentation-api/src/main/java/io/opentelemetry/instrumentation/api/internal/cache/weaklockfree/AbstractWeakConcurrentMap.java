@@ -333,11 +333,11 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
     }
 
     @Override
-    public boolean equals(@Nullable Object other) {
+    public boolean equals(Object other) {
       if (other instanceof WeakKey<?>) {
         return ((WeakKey<?>) other).get() == get();
       } else {
-        return requireNonNull(other).equals(this);
+        return other.equals(this);
       }
     }
 
@@ -379,11 +379,12 @@ abstract class AbstractWeakConcurrentMap<K, V, L> implements Iterable<Map.Entry<
 
     @Override
     public Map.Entry<K, V> next() {
-      if (nextKey == null) {
+      K key = nextKey;
+      if (key == null) {
         throw new NoSuchElementException();
       }
       try {
-        return new SimpleEntry(requireNonNull(nextKey), requireNonNull(nextEntry));
+        return new SimpleEntry(key, requireNonNull(nextEntry));
       } finally {
         findNext();
       }
