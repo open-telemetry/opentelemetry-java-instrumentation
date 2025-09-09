@@ -1,8 +1,7 @@
 # Library Instrumentation for Alibaba Druid version 1.0 and higher
 
-Provides OpenTelemetry instrumentation for [Alibaba Druid](https://github.com/alibaba/druid).
-
-This instrumentation generates database connection pool metrics for druid data sources.
+Provides OpenTelemetry instrumentation for [Alibaba Druid](https://github.com/alibaba/druid),
+enabling database connection pool metrics for druid data sources.
 
 ## Quickstart
 
