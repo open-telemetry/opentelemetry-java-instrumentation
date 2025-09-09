@@ -666,7 +666,7 @@ libraries:
           type: STRING
   - name: apache-shenyu-2.4
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it augments existing server spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
+      This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
     source_path: instrumentation/apache-shenyu-2.4
     scope:
       name: io.opentelemetry.apache-shenyu-2.4
@@ -3039,7 +3039,7 @@ libraries:
   grails:
   - name: grails-3.0
     description: |
-      This instrumentation enriches existing server spans with route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
+      This instrumentation enriches existing HTTP server spans with HTTP route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
     source_path: instrumentation/grails-3.0
     scope:
       name: io.opentelemetry.grails-3.0
