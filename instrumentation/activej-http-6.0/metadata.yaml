@@ -1,1 +1,2 @@
 description: This instrumentation enables SERVER spans and metrics for the ActiveJ HTTP server.
+library_link: https://activej.io/

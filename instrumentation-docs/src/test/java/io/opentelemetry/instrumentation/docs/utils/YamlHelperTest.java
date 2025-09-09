@@ -43,6 +43,7 @@ class YamlHelperTest {
             "Spring Web 6.0 instrumentation",
             InstrumentationClassification.LIBRARY.toString(),
             true,
+            null,
             null);
 
     modules.add(
@@ -114,6 +115,7 @@ class YamlHelperTest {
             "Spring Web 6.0 instrumentation",
             InstrumentationClassification.LIBRARY.toString(),
             false,
+            null,
             List.of(
                 new ConfigurationOption(
                     "otel.instrumentation.spring-web-6.0.enabled",
@@ -134,7 +136,7 @@ class YamlHelperTest {
 
     InstrumentationMetaData internalMetadata =
         new InstrumentationMetaData(
-            null, InstrumentationClassification.INTERNAL.toString(), null, null);
+            null, InstrumentationClassification.INTERNAL.toString(), null, null, null);
 
     modules.add(
         new InstrumentationModule.Builder()
@@ -148,7 +150,7 @@ class YamlHelperTest {
 
     InstrumentationMetaData customMetadata =
         new InstrumentationMetaData(
-            null, InstrumentationClassification.CUSTOM.toString(), null, null);
+            null, InstrumentationClassification.CUSTOM.toString(), null, null, null);
 
     Map<InstrumentationType, Set<String>> externalAnnotationsVersions =
         Map.of(
@@ -214,6 +216,7 @@ class YamlHelperTest {
             description: test description
             classification: internal
             disabled_by_default: true
+            library_link: https://example.com/test-library
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -233,6 +236,7 @@ class YamlHelperTest {
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");
     assertThat(metadata.getDisabledByDefault()).isEqualTo(true);
+    assertThat(metadata.getLibraryLink()).isEqualTo("https://example.com/test-library");
   }
 
   @Test
@@ -241,6 +245,18 @@ class YamlHelperTest {
     InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getLibraryLink()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+    assertThat(metadata.getConfigurations()).isEmpty();
+  }
+
+  @Test
+  void testMetadataParserWithOnlyLibraryLink() throws JsonProcessingException {
+    String input = "library_link: https://example.com/only-link";
+    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getLibraryLink()).isEqualTo("https://example.com/only-link");
     assertThat(metadata.getDisabledByDefault()).isFalse();
     assertThat(metadata.getConfigurations()).isEmpty();
   }
@@ -484,5 +500,81 @@ class YamlHelperTest {
     String yaml2 = stringWriter2.toString();
 
     assertThat(yaml1).isEqualTo(yaml2);
+  }
+
+  @Test
+  void testYamlGenerationWithLibraryLink() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
+    targetVersions.put(
+        InstrumentationType.JAVAAGENT, new HashSet<>(List.of("com.example:test-library:[1.0.0,)")));
+
+    InstrumentationMetaData metadataWithLink =
+        new InstrumentationMetaData(
+            "Test library instrumentation with link",
+            InstrumentationClassification.LIBRARY.toString(),
+            false,
+            "https://example.com/test-library-docs",
+            emptyList());
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test-lib/test-lib-1.0")
+            .instrumentationName("test-lib-1.0")
+            .namespace("test-lib")
+            .group("test-lib")
+            .targetVersions(targetVersions)
+            .metadata(metadataWithLink)
+            .build());
+
+    InstrumentationMetaData metadataWithoutLink =
+        new InstrumentationMetaData(
+            "Test library instrumentation without link",
+            InstrumentationClassification.LIBRARY.toString(),
+            false,
+            null,
+            emptyList());
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/other-lib/other-lib-1.0")
+            .instrumentationName("other-lib-1.0")
+            .namespace("other-lib")
+            .group("other-lib")
+            .targetVersions(targetVersions)
+            .metadata(metadataWithoutLink)
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+            libraries:
+              other-lib:
+              - name: other-lib-1.0
+                description: Test library instrumentation without link
+                source_path: instrumentation/other-lib/other-lib-1.0
+                scope:
+                  name: io.opentelemetry.other-lib-1.0
+                target_versions:
+                  javaagent:
+                  - com.example:test-library:[1.0.0,)
+              test-lib:
+              - name: test-lib-1.0
+                description: Test library instrumentation with link
+                library_link: https://example.com/test-library-docs
+                source_path: instrumentation/test-lib/test-lib-1.0
+                scope:
+                  name: io.opentelemetry.test-lib-1.0
+                target_versions:
+                  javaagent:
+                  - com.example:test-library:[1.0.0,)
+            """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }
 }

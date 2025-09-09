@@ -1651,6 +1651,7 @@ libraries:
   - name: c3p0-0.9
     description: The c3p0 instrumentation provides connection pool metrics for c3p0
       data sources.
+    library_link: https://github.com/swaldman/c3p0
     source_path: instrumentation/c3p0-0.9
     scope:
       name: io.opentelemetry.c3p0-0.9
@@ -2971,6 +2972,7 @@ libraries:
   - name: google-http-client-1.19
     description: This instrumentation enables HTTP CLIENT spans and metrics for Google
       HTTP Client requests.
+    library_link: https://github.com/googleapis/google-http-java-client
     source_path: instrumentation/google-http-client-1.19
     scope:
       name: io.opentelemetry.google-http-client-1.19
@@ -3059,6 +3061,7 @@ libraries:
   graphql:
   - name: graphql-java-12.0
     description: This instrumentation enables spans for GraphQL Java operations.
+    library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
       name: io.opentelemetry.graphql-java-12.0

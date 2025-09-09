@@ -1,4 +1,5 @@
 description: This instrumentation enables HTTP CLIENT spans and metrics for Google HTTP Client requests.
+library_link: https://github.com/googleapis/google-http-java-client
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >
