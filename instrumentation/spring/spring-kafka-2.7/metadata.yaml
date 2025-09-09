@@ -1,4 +1,4 @@
-description: This instrumentation enables CONSUMER spans for Spring Kafka listeners.
+description: This instrumentation enables consumer messaging spans for Spring Kafka listeners.
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >

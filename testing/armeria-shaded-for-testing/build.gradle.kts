@@ -37,9 +37,11 @@ tasks {
     relocate("org.HdrHistogram", "io.opentelemetry.testing.internal.org.hdrhistogram")
     relocate("org.LatencyUtils", "io.opentelemetry.testing.internal.org.latencyutils")
 
-    // mergeServiceFiles requires that duplicate strategy is set to include
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
   }
 
   val extractShadowJar by registering(Copy::class) {
