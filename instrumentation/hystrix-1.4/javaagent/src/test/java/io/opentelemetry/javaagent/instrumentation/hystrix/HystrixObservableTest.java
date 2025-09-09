@@ -5,8 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.hystrix;
 
-import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_CIRCUIT_OPEN;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_COMMAND;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.HYSTRIX_GROUP;
+import static io.opentelemetry.javaagent.instrumentation.hystrix.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
@@ -36,7 +38,7 @@ import rx.schedulers.Schedulers;
 class HystrixObservableTest {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @ParameterizedTest
   @MethodSource("provideCommandActionArguments")
@@ -83,9 +85,9 @@ class HystrixObservableTest {
                     span.hasName("ExampleGroup.TestCommand.execute")
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "ExampleGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false)),
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
                 span ->
                     span.hasName("tracedMethod")
                         .hasParent(trace.getSpan(1))
@@ -292,9 +294,9 @@ class HystrixObservableTest {
                     span.hasName("ExampleGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "ExampleGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false))));
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("ExampleGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandFallbackArguments() {
@@ -383,17 +385,17 @@ class HystrixObservableTest {
                         .hasStatus(StatusData.error())
                         .hasException(exception.getCause())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "FailingGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false)),
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("FailingGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false))),
                 span ->
                     span.hasName("FailingGroup.TestCommand.fallback")
                         .hasParent(trace.getSpan(1))
                         .hasException(hystrixRuntimeException.getFallbackException())
                         .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), "TestCommand"),
-                            equalTo(stringKey("hystrix.group"), "FailingGroup"),
-                            equalTo(booleanKey("hystrix.circuit_open"), false))));
+                            equalTo(HYSTRIX_COMMAND, experimental("TestCommand")),
+                            equalTo(HYSTRIX_GROUP, experimental("FailingGroup")),
+                            equalTo(HYSTRIX_CIRCUIT_OPEN, experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandNoFallbackResultsInErrorArguments() {
