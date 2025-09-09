@@ -1,7 +1,7 @@
 description: >
-  This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests.
-  Each call produces a span named after the Elasticsearch action, enriched with transport-specific
-  attributes.
+  This instrumentation enables database client spans and database client metrics for Elasticsearch
+  transport client requests. Each call produces a span named after the Elasticsearch action,
+  enriched with transport-specific attributes.
 configurations:
   - name: otel.instrumentation.elasticsearch.experimental-span-attributes
     description: >

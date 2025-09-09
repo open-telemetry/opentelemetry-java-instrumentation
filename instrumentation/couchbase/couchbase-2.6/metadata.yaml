@@ -1,7 +1,7 @@
 description: >
-  This instrumentation enables database CLIENT spans and metrics for Couchbase 2.6 operations.
-  It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL
-  queries, and cluster management operations.
+  This instrumentation enables database client spans and database client metrics for Couchbase 2.6
+  operations. It automatically traces key-value operations (get, upsert, replace, remove), view
+  queries, N1QL queries, and cluster management operations.
 configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
     description: >

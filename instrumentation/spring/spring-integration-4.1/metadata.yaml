@@ -1,4 +1,4 @@
-description: This instrumentation enables PRODUCER and CONSUMER spans for Spring Integration.
+description: This instrumentation enables producer and consumer messaging spans for Spring Integration.
 configurations:
   - name: otel.instrumentation.spring-integration.producer.enabled
     type: boolean
