@@ -24,7 +24,7 @@ import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
 @SuppressWarnings("PreferJavaTimeOverload")
-public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
+class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
