@@ -1,8 +1,7 @@
 # Library Instrumentation for Elasticsearch REST Client version 7.0 and higher
 
-Provides OpenTelemetry instrumentation for the [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high.html).
-
-This instrumentation generates CLIENT spans and metrics for each Elasticsearch request.
+Provides OpenTelemetry instrumentation for the [Elasticsearch REST Client](https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high.html), enabling database
+client spans and metrics.
 
 ## Quickstart
 

@@ -1,8 +1,7 @@
 # Library Instrumentation for Jetty HttpClient version 9.2 and higher
 
-Provides OpenTelemetry instrumentation for the [Jetty HttpClient](https://github.com/jetty/jetty.project/tree/jetty-9.4.x).
-
-This instrumentation generates CLIENT spans and metrics for each HTTP request.
+Provides OpenTelemetry instrumentation for the [Jetty HttpClient](https://github.com/jetty/jetty.project/tree/jetty-9.4.x), enabling http client spans
+and metrics.
 
 ## Quickstart
 

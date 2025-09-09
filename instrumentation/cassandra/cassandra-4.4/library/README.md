@@ -1,8 +1,7 @@
 # Library Instrumentation for Cassandra version 4.4 and higher
 
-Provides OpenTelemetry instrumentation for the [DataStax Java Driver for Apache Cassandra](https://docs.datastax.com/en/developer/java-driver/latest/).
-
-This instrumentation generates CLIENT spans for each CQL query.
+Provides OpenTelemetry instrumentation for the [DataStax Java Driver for Apache Cassandra](https://docs.datastax.com/en/developer/java-driver/latest/),
+enabling database client spans and metrics.
 
 ## Quickstart
 

@@ -1,8 +1,6 @@
 # Library Instrumentation for Apache HttpClient version 4.3 and higher
 
-Provides OpenTelemetry instrumentation for [Apache HttpClient](https://hc.apache.org/httpcomponents-client-ga/).
-
-This instrumentation generates CLIENT spans for each HTTP request.
+Provides OpenTelemetry instrumentation for the [Apache HttpClient](https://hc.apache.org/httpcomponents-client-ga/), enabling HTTP client spans and metrics.
 
 ## Quickstart
 

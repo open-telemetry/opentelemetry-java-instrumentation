@@ -1,8 +1,7 @@
 # Library Instrumentation for Armeria version 1.3 and higher
 
-Provides OpenTelemetry instrumentation for [Armeria](https://armeria.dev/).
-
-This instrumentation generates both CLIENT and SERVER spans for each HTTP request.
+Provides OpenTelemetry instrumentation for [Armeria](https://armeria.dev/), enabling HTTP client spans and metrics,
+and HTTP server spans and metrics.
 
 ## Quickstart
 
