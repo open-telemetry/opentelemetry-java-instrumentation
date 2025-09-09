@@ -35,9 +35,11 @@ tasks {
     relocate("javax.servlet", "io.opentelemetry.testing.internal.servlet")
     relocate("org.yaml", "io.opentelemetry.testing.internal.yaml")
 
-    // mergeServiceFiles requires that duplicate strategy is set to include
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     mergeServiceFiles()
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
   }
 
   val extractShadowJar by registering(Copy::class) {

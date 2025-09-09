@@ -22,10 +22,12 @@ dependencies {
 
 tasks {
   val shadowJar by existing(ShadowJar::class) {
-    // mergeServiceFiles requires that duplicate strategy is set to include
-    duplicatesStrategy = DuplicatesStrategy.INCLUDE
     // required for META-INF/services files relocation
     mergeServiceFiles()
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
 
     // Prevents configuration naming conflict with other SLF4J instances
     relocate("org.slf4j", "io.opentelemetry.javaagent.slf4j")
