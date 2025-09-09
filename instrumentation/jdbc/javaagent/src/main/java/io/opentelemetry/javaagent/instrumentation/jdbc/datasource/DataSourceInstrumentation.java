@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -44,7 +45,13 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
     public static void start(
         @Advice.This DataSource ds,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(DataSource.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return;
+      }
+
       Context parentContext = Java8BytecodeBridge.currentContext();
       if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
         // this instrumentation is already very noisy, and calls to getConnection outside of an
@@ -64,7 +71,12 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         @Advice.Return Connection connection,
         @Advice.Thrown Throwable throwable,
         @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+        @Advice.Local("otelScope") Scope scope,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       if (scope == null) {
         return;
       }
