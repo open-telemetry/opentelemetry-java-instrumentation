@@ -1,4 +1,4 @@
-description: This instrumentation enables HTTP CLIENT spans and metrics for Google HTTP Client requests.
+description: This instrumentation enables HTTP client spans and HTTP client metrics for Google HTTP Client requests.
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >

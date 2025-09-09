@@ -86,33 +86,33 @@ At a minimum, every instrumentation metadata file should include a `description`
 
 Some example descriptions:
 
-* This instrumentation enables SERVER spans and metrics for the ActiveJ HTTP server.
+* This instrumentation enables HTTP server spans and HTTP server metrics for the ActiveJ HTTP server.
 * This instrumentation provides context propagation for Akka actors, it does not emit any telemetry
   on its own.
 * The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
-* The Apache Dubbo instrumentation provides CLIENT and SERVER spans
-  for Apache Dubbo RPC calls. Each call produces a span named after the Dubbo
-  method, enriched with standard RPC attributes (system, service, method), network
-  attributes, and error details if an exception occurs.
+* The Apache Dubbo instrumentation provides RPC client spans and RPC server spans for Apache Dubbo
+  RPC calls. Each call produces a span named after the Dubbo method, enriched with standard RPC
+  attributes (system, service, method), network attributes, and error details if an exception
+  occurs.
 
 Some notes when writing descriptions:
 
 * You don't always need to explicitly name the instrumentation, and you can start with "This
   instrumentation..."
 * Prefer the convention of using the word "enables" when describing what the instrumentation does,
-  "This instrumentation enables SERVER spans and metrics for the ActiveJ" instead of something like
-  "This instrumentation provides SERVER spans and metrics for the ActiveJ".
+  "This instrumentation **enables** HTTP server spans and HTTP server metrics for the ActiveJ" instead
+  of something like "This instrumentation **provides** HTTP server spans and HTTP server metrics for the ActiveJ".
 * Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
   * If it doesn't generate new telemetry, clearly explain what it's purpose is, for example whether it
     augments or enriches existing telemetry produced by other instrumentations (e.g., by adding
     attributes or ensuring context propagation).
+* When describing the functionality of the instrumentation and the telemetry, specify using
+  [semantic convention categories](https://opentelemetry.io/docs/specs/semconv/) when possible
+  (e.g., "database client spans", "RPC server metrics", "consumer messaging spans").
 * Do not include specific method names, class names, or other low-level implementation details in
   the description unless they are essential to understanding the purpose of the instrumentation.
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
-* When an instrumentation generates spans, be specific about the SpanKind (e.g., SERVER, CLIENT,
-  PRODUCER, CONSUMER, INTERNAL).
-  * Capitalize SpanKind values (e.g., SERVER, CLIENT) when used in descriptions.
 
 
 ### Configurations
