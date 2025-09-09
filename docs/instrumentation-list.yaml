@@ -4000,7 +4000,7 @@ libraries:
           type: STRING
   javalin:
   - name: javalin-5.0
-    description: This instrumentation enriches existing server spans with route information,
+    description: This instrumentation enriches existing HTTP server spans with route information,
       it does not emit any telemetry on its own.
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11
