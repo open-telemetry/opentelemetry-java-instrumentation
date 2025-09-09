@@ -151,6 +151,8 @@ readonly INSTRUMENTATIONS=(
   "hibernate:hibernate-6.0:javaagent:testExperimental"
   "hibernate:hibernate-procedure-call-4.3:javaagent:test"
   "hibernate:hibernate-procedure-call-4.3:javaagent:testExperimental"
+  "hystrix-1.4:javaagent:test"
+  "hystrix-1.4:javaagent:testExperimental"
   "influxdb-2.4:javaagent:test"
   "influxdb-2.4:javaagent:testStableSemconv"
   "java-http-server:javaagent:test"
