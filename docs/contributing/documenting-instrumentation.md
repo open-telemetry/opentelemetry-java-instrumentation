@@ -86,7 +86,7 @@ Example:
 description: "This instrumentation enables..."
 disabled_by_default: true
 classification: library
-library_link: "https://..."
+library_link: https://github.com/...
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.

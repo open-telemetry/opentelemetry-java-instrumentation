@@ -151,7 +151,7 @@ As of now, the following fields are supported, all of which are optional:
 description: "This instrumentation enables..."    # Description of the instrumentation module
 disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
-library_link: "https://..."                       # URL to the library or framework's main website or documentation
+library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.

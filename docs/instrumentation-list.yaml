@@ -7,7 +7,7 @@ libraries:
   - name: activej-http-6.0
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the ActiveJ HTTP server.
-    library_link: https://github.com/activej/activej
+    library_link: https://activej.io/
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
     scope:
