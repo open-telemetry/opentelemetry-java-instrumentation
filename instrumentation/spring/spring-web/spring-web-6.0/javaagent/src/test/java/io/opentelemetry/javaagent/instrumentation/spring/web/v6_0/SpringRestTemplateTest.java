@@ -6,15 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
 
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.InputStream;
 import java.net.URI;
 import java.util.Map;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -100,6 +103,41 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
 
     // no enum value for TEST
     optionsBuilder.disableTestNonStandardHttpMethod();
-    optionsBuilder.setExpectedClientSpanNameMapper((uri, method) -> method + " " + uri.getPath());
+    optionsBuilder.setExpectedClientSpanNameMapper(
+        (uri, method) -> method + " " + getTemplate(uri));
+    optionsBuilder.setExpectedUrlTemplateMapper(SpringRestTemplateTest::getTemplate);
+    optionsBuilder.setHasUrlTemplate(true);
+  }
+
+  private static String getTemplate(URI uri) {
+    String path = uri.getPath();
+    if (path.startsWith("/hello/")) {
+      return "/hello/{name}";
+    }
+    return path;
+  }
+
+  @Test
+  void requestWithTemplate() {
+    URI rootUri = resolveAddress("/");
+    URI uri = resolveAddress("/hello/world");
+    String method = "GET";
+    int responseCode =
+        restTemplate
+            .exchange(
+                rootUri + "hello/{name}", HttpMethod.valueOf(method), null, String.class, "world")
+            .getStatusCode()
+            .value();
+
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(span, uri, method, responseCode, null)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 }

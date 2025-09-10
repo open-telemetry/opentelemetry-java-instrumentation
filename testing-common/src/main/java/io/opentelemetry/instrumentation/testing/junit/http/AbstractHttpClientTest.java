@@ -1059,8 +1059,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
-  // Visible for spock bridge.
-  SpanDataAssert assertClientSpan(
+  protected SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
       String method,
@@ -1120,9 +1119,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
                 assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
               }
-              if (httpClientAttributes.contains(UrlIncubatingAttributes.URL_TEMPLATE)) {
+              if (options.getHasUrlTemplate()) {
                 assertThat(attrs)
-                    .containsEntry(UrlIncubatingAttributes.URL_TEMPLATE, uri.getPath());
+                    .containsEntry(
+                        UrlIncubatingAttributes.URL_TEMPLATE,
+                        options.getExpectedUrlTemplateMapper().apply(uri));
               }
               if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
                 assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
@@ -1153,8 +1154,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             });
   }
 
-  // Visible for spock bridge.
-  static SpanDataAssert assertServerSpan(SpanDataAssert span) {
+  protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {
     return span.hasName("test-http-server").hasKind(SpanKind.SERVER);
   }
 
