@@ -13,8 +13,8 @@ import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 
 /**
- * Extracts trace context from Kafka Connect SinkRecord headers for distributed tracing.
- * This enables proper trace propagation from the original producer through Kafka Connect processing.
+ * Extracts trace context from Kafka Connect SinkRecord headers for distributed tracing. This
+ * enables proper trace propagation from the original producer through Kafka Connect processing.
  */
 enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
   INSTANCE;
@@ -24,7 +24,7 @@ enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
     if (record.headers() == null) {
       return java.util.Collections.emptyList();
     }
-    
+
     return StreamSupport.stream(record.headers().spliterator(), false)
         .map(Header::key)
         .collect(java.util.stream.Collectors.toList());

@@ -27,15 +27,18 @@ public final class KafkaConnectSingletons {
   private static final Instrumenter<KafkaConnectTask, Void> INSTRUMENTER;
 
   static {
-    KafkaConnectBatchProcessSpanLinksExtractor spanLinksExtractor = new KafkaConnectBatchProcessSpanLinksExtractor(PROPAGATOR);
+    KafkaConnectBatchProcessSpanLinksExtractor spanLinksExtractor =
+        new KafkaConnectBatchProcessSpanLinksExtractor(PROPAGATOR);
 
     INSTRUMENTER =
         Instrumenter.<KafkaConnectTask, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                MessagingSpanNameExtractor.create(KafkaConnectAttributesGetter.INSTANCE, MessageOperation.PROCESS))
+                MessagingSpanNameExtractor.create(
+                    KafkaConnectAttributesGetter.INSTANCE, MessageOperation.PROCESS))
             .addAttributesExtractor(
-                MessagingAttributesExtractor.builder(KafkaConnectAttributesGetter.INSTANCE, MessageOperation.PROCESS)
+                MessagingAttributesExtractor.builder(
+                        KafkaConnectAttributesGetter.INSTANCE, MessageOperation.PROCESS)
                     .build())
             .addSpanLinksExtractor(spanLinksExtractor)
             .buildInstrumenter(SpanKindExtractor.alwaysConsumer());

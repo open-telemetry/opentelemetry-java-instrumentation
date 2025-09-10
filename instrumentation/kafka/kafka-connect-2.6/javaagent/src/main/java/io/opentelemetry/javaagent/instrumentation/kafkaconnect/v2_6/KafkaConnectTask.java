@@ -21,9 +21,9 @@ public final class KafkaConnectTask {
   }
 
   /**
-   * Returns the first record in the batch, used for extracting destination information.
-   * Kafka Connect processes records in batches, but all records in a batch typically
-   * come from the same topic, so we use the first record for span naming.
+   * Returns the first record in the batch, used for extracting destination information. Kafka
+   * Connect processes records in batches, but all records in a batch typically come from the same
+   * topic, so we use the first record for span naming.
    */
   public SinkRecord getFirstRecord() {
     return records.isEmpty() ? null : records.iterator().next();

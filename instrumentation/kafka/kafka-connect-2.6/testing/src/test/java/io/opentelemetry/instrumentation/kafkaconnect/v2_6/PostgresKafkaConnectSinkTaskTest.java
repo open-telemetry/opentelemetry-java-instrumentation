@@ -148,7 +148,7 @@ class PostgresKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
-    
+
     // Create log directory on desktop
     File logDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
     if (!logDir.exists()) {
@@ -407,7 +407,10 @@ class PostgresKafkaConnectSinkTaskTest {
                       foundKafkaConnectSpan = true;
                       if (spanIdNode != null) {
                         kafkaConnectSpanId = spanIdNode.asText();
-                        logger.info("Found Kafka Connect span '{}' with ID: {}", spanName, kafkaConnectSpanId);
+                        logger.info(
+                            "Found Kafka Connect span '{}' with ID: {}",
+                            spanName,
+                            kafkaConnectSpanId);
                       }
                     }
 

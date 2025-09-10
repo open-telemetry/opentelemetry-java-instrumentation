@@ -127,7 +127,7 @@ class MongoKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
-    
+
     // Create log directory on desktop
     File logDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
     if (!logDir.exists()) {
@@ -227,8 +227,8 @@ class MongoKafkaConnectSinkTaskTest {
                 new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
             // Save logs to desktop
             .withFileSystemBind(
-                System.getProperty("user.home") + "/Desktop/kafka-connect-logs", 
-                "/var/log/kafka-connect", 
+                System.getProperty("user.home") + "/Desktop/kafka-connect-logs",
+                "/var/log/kafka-connect",
                 BindMode.READ_WRITE)
             // Copy the agent jar to the container
             .withCopyFileToContainer(
@@ -270,11 +270,11 @@ class MongoKafkaConnectSinkTaskTest {
             .withCommand(
                 "bash",
                 "-c",
-                "mkdir -p /var/log/kafka-connect && " +
-                "confluent-hub install --no-prompt --component-dir /usr/share/java " +
-                "mongodb/kafka-connect-mongodb:1.11.0 && " +
-                "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && " +
-                "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
+                "mkdir -p /var/log/kafka-connect && "
+                    + "confluent-hub install --no-prompt --component-dir /usr/share/java "
+                    + "mongodb/kafka-connect-mongodb:1.11.0 && "
+                    + "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && "
+                    + "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
 
     mongoDB =
         new MongoDBContainer(DockerImageName.parse("mongo:4.4"))

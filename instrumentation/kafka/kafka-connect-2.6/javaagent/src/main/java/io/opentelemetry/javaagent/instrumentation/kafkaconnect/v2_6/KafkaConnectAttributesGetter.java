@@ -91,7 +91,7 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
     if (firstRecord == null || firstRecord.headers() == null) {
       return Collections.emptyList();
     }
-    
+
     return StreamSupport.stream(firstRecord.headers().spliterator(), false)
         .filter(header -> name.equals(header.key()) && header.value() != null)
         .map(header -> convertHeaderValue(header))
