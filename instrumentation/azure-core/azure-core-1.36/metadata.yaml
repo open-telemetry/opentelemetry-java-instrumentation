@@ -1,1 +1,2 @@
 description: This instrumentation enables context propagation for the Azure Core library, it does not emit any telemetry on its own.
+library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable

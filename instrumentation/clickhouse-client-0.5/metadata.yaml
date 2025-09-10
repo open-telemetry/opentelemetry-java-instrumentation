@@ -1,4 +1,5 @@
 description: Instruments the V1 ClickHouseClient, providing database client spans and metrics.
+library_link: https://github.com/ClickHouse/clickhouse-java
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.

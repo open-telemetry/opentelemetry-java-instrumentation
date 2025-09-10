@@ -114,6 +114,9 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
+* library_link
+  * URL to the library or framework's main website or documentation, or if those don't exist, the
+  GitHub repository.
 * source_path
   * Path to the source code of the instrumentation module
 * minimum_java_version
@@ -145,9 +148,10 @@ additional information about the instrumentation module.
 As of now, the following fields are supported, all of which are optional:
 
 ```yaml
-description: "Instruments..."   # Description of the instrumentation module
-disabled_by_default: true       # Defaults to `false`
-classification: internal        # instrumentation classification: library | internal | custom
+description: "This instrumentation enables..."    # Description of the instrumentation module
+disabled_by_default: true                         # Defaults to `false`
+classification: internal                          # instrumentation classification: library | internal | custom
+library_link: "https://..."                       # URL to the library or framework's main website or documentation
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.

@@ -80,6 +80,20 @@ Each instrumentation should have a `metadata.yaml` file in the root of the instr
 (`instrumentation/{some instrumentation}/metadata.yaml`) that contains structured metadata about the
 instrumentation.
 
+Example:
+
+```yaml
+description: "This instrumentation enables..."
+disabled_by_default: true
+classification: library
+library_link: "https://..."
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true
+```
+
 ### Description (required)
 
 At a minimum, every instrumentation metadata file should include a `description`.
@@ -114,6 +128,10 @@ Some notes when writing descriptions:
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
 
+### Library Link
+
+For library instrumentations, include a `library_link` field with a URL to the library or framework's
+main website or documentation, or if those don't exist, the GitHub repository.
 
 ### Configurations
 
