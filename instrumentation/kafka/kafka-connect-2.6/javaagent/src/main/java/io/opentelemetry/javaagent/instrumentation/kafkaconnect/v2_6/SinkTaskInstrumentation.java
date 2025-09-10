@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6.KafkaConnectSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperType;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -58,11 +59,11 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
       }
 
       task = new KafkaConnectTask(records);
-      if (!KafkaConnectSingletons.instrumenter().shouldStart(parentContext, task)) {
+      if (!instrumenter().shouldStart(parentContext, task)) {
         return;
       }
 
-      context = KafkaConnectSingletons.instrumenter().start(parentContext, task);
+      context = instrumenter().start(parentContext, task);
       scope = context.makeCurrent();
     }
 
@@ -77,7 +78,7 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
         return;
       }
       scope.close();
-      KafkaConnectSingletons.instrumenter().end(context, task, null, throwable);
+      instrumenter().end(context, task, null, throwable);
     }
   }
 }

@@ -12,8 +12,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-final class KafkaConnectBatchProcessSpanLinksExtractor
-    implements SpanLinksExtractor<KafkaConnectTask> {
+/**
+ * Extracts span links from Kafka Connect SinkRecord headers for batch processing scenarios.
+ * This ensures that when processing a batch of records that may come from different traces,
+ * we create links to all the original trace contexts rather than losing them.
+ */
+final class KafkaConnectBatchProcessSpanLinksExtractor implements SpanLinksExtractor<KafkaConnectTask> {
 
   private final SpanLinksExtractor<SinkRecord> singleRecordLinkExtractor;
 
@@ -23,10 +27,13 @@ final class KafkaConnectBatchProcessSpanLinksExtractor
   }
 
   @Override
-  public void extract(SpanLinksBuilder spanLinks, Context parentContext, KafkaConnectTask task) {
+  public void extract(
+      SpanLinksBuilder spanLinks, Context parentContext, KafkaConnectTask request) {
 
-    for (SinkRecord record : task.getRecords()) {
-      singleRecordLinkExtractor.extract(spanLinks, parentContext, record);
+    for (SinkRecord record : request.getRecords()) {
+      // Create a link to each record's original trace context
+      // Using Context.root() to avoid linking to the current span
+      singleRecordLinkExtractor.extract(spanLinks, Context.root(), record);
     }
   }
 }

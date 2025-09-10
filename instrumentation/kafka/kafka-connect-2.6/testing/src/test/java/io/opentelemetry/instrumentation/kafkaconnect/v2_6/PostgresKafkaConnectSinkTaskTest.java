@@ -17,6 +17,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.restassured.http.ContentType;
+import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.sql.Connection;
@@ -147,6 +148,13 @@ class PostgresKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
+    
+    // Create log directory on desktop
+    File logDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
+    if (!logDir.exists()) {
+      logDir.mkdirs();
+      logger.info("Created log directory: {}", logDir.getAbsolutePath());
+    }
 
     network = Network.newNetwork();
 
@@ -154,7 +162,7 @@ class PostgresKafkaConnectSinkTaskTest {
     backend =
         new GenericContainer<>(
                 DockerImageName.parse(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891"))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20250811.16876216352"))
             .withExposedPorts(BACKEND_PORT)
             .withNetwork(network)
             .withNetworkAliases(BACKEND_ALIAS)
@@ -394,12 +402,12 @@ class PostgresKafkaConnectSinkTaskTest {
                     JsonNode spanIdNode = span.get("spanId");
                     JsonNode parentSpanIdNode = span.get("parentSpanId");
 
-                    // Look for specific Kafka Connect span name
-                    if ("KafkaConnect.put".equals(spanName)) {
+                    // Look for Kafka Connect span (format: "{topicName} process")
+                    if (spanName.endsWith(" process")) {
                       foundKafkaConnectSpan = true;
                       if (spanIdNode != null) {
                         kafkaConnectSpanId = spanIdNode.asText();
-                        logger.info("Found Kafka Connect span with ID: {}", kafkaConnectSpanId);
+                        logger.info("Found Kafka Connect span '{}' with ID: {}", spanName, kafkaConnectSpanId);
                       }
                     }
 

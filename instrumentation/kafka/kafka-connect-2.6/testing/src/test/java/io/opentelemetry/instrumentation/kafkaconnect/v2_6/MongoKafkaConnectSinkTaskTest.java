@@ -46,6 +46,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
@@ -66,7 +67,7 @@ class MongoKafkaConnectSinkTaskTest {
 
   private static final Logger logger = LoggerFactory.getLogger(MongoKafkaConnectSinkTaskTest.class);
 
-  // Using the same fake backend pattern as smoke tests
+  // Using the same fake backend pattern as smoke tests (with ARM64 support)
   private static GenericContainer<?> backend;
 
   private static final String CONFLUENT_VERSION = "7.5.9";
@@ -126,6 +127,13 @@ class MongoKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
+    
+    // Create log directory on desktop
+    File logDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
+    if (!logDir.exists()) {
+      logDir.mkdirs();
+      logger.info("Created log directory: {}", logDir.getAbsolutePath());
+    }
 
     network = Network.newNetwork();
 
@@ -133,7 +141,7 @@ class MongoKafkaConnectSinkTaskTest {
     backend =
         new GenericContainer<>(
                 DockerImageName.parse(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20221127.3559314891"))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend:20250811.16876216352"))
             .withExposedPorts(BACKEND_PORT)
             .withNetwork(network)
             .withNetworkAliases(BACKEND_ALIAS)
@@ -217,6 +225,11 @@ class MongoKafkaConnectSinkTaskTest {
             .withExposedPorts(CONNECT_REST_PORT_INTERNAL)
             .withLogConsumer(
                 new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
+            // Save logs to desktop
+            .withFileSystemBind(
+                System.getProperty("user.home") + "/Desktop/kafka-connect-logs", 
+                "/var/log/kafka-connect", 
+                BindMode.READ_WRITE)
             // Copy the agent jar to the container
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
@@ -257,8 +270,11 @@ class MongoKafkaConnectSinkTaskTest {
             .withCommand(
                 "bash",
                 "-c",
-                "confluent-hub install --no-prompt --component-dir /usr/share/java "
-                    + "mongodb/kafka-connect-mongodb:1.11.0 && /etc/confluent/docker/run");
+                "mkdir -p /var/log/kafka-connect && " +
+                "confluent-hub install --no-prompt --component-dir /usr/share/java " +
+                "mongodb/kafka-connect-mongodb:1.11.0 && " +
+                "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && " +
+                "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
 
     mongoDB =
         new MongoDBContainer(DockerImageName.parse("mongo:4.4"))
@@ -386,11 +402,11 @@ class MongoKafkaConnectSinkTaskTest {
                     String parentSpanId =
                         parentSpanIdNode != null ? parentSpanIdNode.asText() : null;
 
-                    // Check for Kafka Connect spans
-                    if (spanName.equals("KafkaConnect.put")) {
+                    // Check for Kafka Connect spans (format: "{topicName} process")
+                    if (spanName.endsWith(" process")) {
                       foundKafkaConnectSpan = true;
                       kafkaConnectSpanId = spanId;
-                      logger.info("Found Kafka Connect span with ID: {}", spanId);
+                      logger.info("Found Kafka Connect span '{}' with ID: {}", spanName, spanId);
                     }
 
                     // Check for MongoDB spans (insert, update, delete commands)
