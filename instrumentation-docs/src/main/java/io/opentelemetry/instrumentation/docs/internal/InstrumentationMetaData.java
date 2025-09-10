@@ -25,6 +25,10 @@ public class InstrumentationMetaData {
 
   private String classification;
 
+  @JsonProperty("library_link")
+  @Nullable
+  private String libraryLink;
+
   private List<ConfigurationOption> configurations = Collections.emptyList();
 
   public InstrumentationMetaData() {
@@ -35,10 +39,12 @@ public class InstrumentationMetaData {
       @Nullable String description,
       String classification,
       @Nullable Boolean disabledByDefault,
+      @Nullable String libraryLink,
       @Nullable List<ConfigurationOption> configurations) {
     this.classification = classification;
     this.disabledByDefault = disabledByDefault;
     this.description = description;
+    this.libraryLink = libraryLink;
     this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
   }
 
@@ -76,5 +82,14 @@ public class InstrumentationMetaData {
 
   public void setConfigurations(@Nullable List<ConfigurationOption> configurations) {
     this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+  }
+
+  @Nullable
+  public String getLibraryLink() {
+    return libraryLink;
+  }
+
+  public void setLibraryLink(@Nullable String libraryLink) {
+    this.libraryLink = libraryLink;
   }
 }

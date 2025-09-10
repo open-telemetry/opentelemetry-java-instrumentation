@@ -1,1 +1,2 @@
 description: This instrumentation enables HTTP client spans and HTTP client metrics for versions 2 and 3 of the Apache HttpClient.
+library_link: https://hc.apache.org/index.html
