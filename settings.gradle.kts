@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.10"
+    id("org.jetbrains.kotlin.jvm") version "2.2.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
     id("org.graalvm.buildtools.native") version "0.11.0"
