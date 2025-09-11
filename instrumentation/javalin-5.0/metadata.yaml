@@ -1,0 +1,1 @@
+description: This instrumentation enriches existing HTTP server spans with route information, it does not emit any telemetry on its own.
