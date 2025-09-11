@@ -124,6 +124,12 @@ public final class HttpClientTestServer extends ServerExtension {
 
               return writer;
             })
+        .service(
+            "/hello/{name}",
+            (ctx, req) -> {
+              String name = ctx.pathParam("name");
+              return HttpResponse.of("Hello, %s!", name != null ? name : "unknown");
+            })
         .decorator(
             (delegate, ctx, req) -> {
               for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {

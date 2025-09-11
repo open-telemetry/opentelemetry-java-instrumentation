@@ -1,0 +1,24 @@
+description: This instrumentation enables RPC client spans and metrics, and RPC server spans and metrics for gRPC version 1.6 and above.
+configurations:
+  - name: otel.instrumentation.grpc.emit-message-events
+    type: boolean
+    description: Determines whether to emit a span event for each individual message received and sent.
+    default: true
+  - name: otel.instrumentation.grpc.experimental-span-attributes
+    type: boolean
+    description: >
+      Enable the capture of experimental span attributes `grpc.received.message_count`,
+      `grpc.sent.message_count` and `grpc.canceled`.
+    default: false
+  - name: otel.instrumentation.grpc.capture-metadata.client.request
+    type: list
+    description: >
+      A comma-separated list of request metadata keys. gRPC client instrumentation will capture
+      metadata values corresponding to configured keys as span attributes.
+    default: ''
+  - name: otel.instrumentation.grpc.capture-metadata.server.request
+    type: list
+    description: >
+      A comma-separated list of request metadata keys. gRPC server instrumentation will capture
+      metadata values corresponding to configured keys as span attributes.
+    default: ''

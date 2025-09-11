@@ -141,6 +141,21 @@ readonly INSTRUMENTATIONS=(
   "graphql-java:graphql-java-12.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:test"
   "graphql-java:graphql-java-20.0:javaagent:testDataFetcher"
+  "grpc-1.6:javaagent:test"
+  "grpc-1.6:javaagent:testExperimental"
+  "hibernate:hibernate-3.3:javaagent:test"
+  "hibernate:hibernate-3.3:javaagent:testExperimental"
+  "hibernate:hibernate-4.0:javaagent:test"
+  "hibernate:hibernate-4.0:javaagent:testExperimental"
+  "hibernate:hibernate-6.0:javaagent:test"
+  "hibernate:hibernate-6.0:javaagent:testExperimental"
+  "hibernate:hibernate-procedure-call-4.3:javaagent:test"
+  "hibernate:hibernate-procedure-call-4.3:javaagent:testExperimental"
+  "hystrix-1.4:javaagent:test"
+  "hystrix-1.4:javaagent:testExperimental"
+  "influxdb-2.4:javaagent:test"
+  "influxdb-2.4:javaagent:testStableSemconv"
+  "java-http-server:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

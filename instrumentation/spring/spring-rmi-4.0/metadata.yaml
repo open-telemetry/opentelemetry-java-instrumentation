@@ -1,1 +1,1 @@
-description: This instrumentation enables CLIENT and SERVER spans for Spring RMI applications.
+description: This instrumentation enables RPC client and RPC server spans for Spring RMI applications.
