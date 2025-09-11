@@ -47,23 +47,22 @@ class ManifestResourceExtractorTest {
                 DynamicTest.dynamicTest(
                     t.name,
                     () -> {
-                      ManifestResourceExtractor finder =
+                      Resource resource =
                           new ManifestResourceExtractor(
-                              new MainJarPathFinder(
-                                  () -> JarServiceNameResourceExtractorTest.getArgs("app.jar"),
-                                  prop -> null,
-                                  JarServiceNameResourceExtractorTest::failPath),
-                              p -> {
-                                try {
-                                  Manifest manifest = new Manifest();
-                                  manifest.read(t.input);
-                                  return Optional.of(manifest);
-                                } catch (Exception e) {
-                                  return Optional.empty();
-                                }
-                              });
-
-                      Resource resource = finder.extract();
+                                  new MainJarPathFinder(
+                                      () -> JarServiceNameResourceExtractorTest.getArgs("app.jar"),
+                                      prop -> null,
+                                      JarServiceNameResourceExtractorTest::failPath),
+                                  p -> {
+                                    try {
+                                      Manifest manifest = new Manifest();
+                                      manifest.read(t.input);
+                                      return Optional.of(manifest);
+                                    } catch (Exception e) {
+                                      return Optional.empty();
+                                    }
+                                  })
+                              .extract();
                       assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo(t.expectedName);
                       assertThat(resource.getAttribute(SERVICE_VERSION))
                           .isEqualTo(t.expectedVersion);
