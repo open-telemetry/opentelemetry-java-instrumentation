@@ -15,7 +15,7 @@ import java.time.Duration
 import static io.opentelemetry.smoketest.TestContainerManager.useWindowsContainers
 
 @IgnoreIf({ useWindowsContainers() })
-class ResourceCustomizerSmokeTest extends SmokeTest {
+class DeclarativeConfigurationSmokeTest extends SmokeTest {
 
   protected String getTargetImage(String jdk) {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk$jdk-20241021.11448062567"

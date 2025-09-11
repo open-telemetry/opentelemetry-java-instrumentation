@@ -20,9 +20,6 @@ import java.util.stream.Collectors;
 /**
  * Adds essential resource detectors to the resource model in declarative configuration, if they are
  * not already present.
- *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
  */
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public class ResourceCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
