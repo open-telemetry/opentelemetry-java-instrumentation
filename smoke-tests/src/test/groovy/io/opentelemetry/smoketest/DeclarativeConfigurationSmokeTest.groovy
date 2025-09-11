@@ -50,12 +50,20 @@ class DeclarativeConfigurationSmokeTest extends SmokeTest {
     then: "There is one trace"
     traces.size() > 0
 
+    then: "explicitly set attribute is present"
+    hasResourceAttribute(traces, "service.name", "declarative-config-smoke-test")
+
+    then: "explicitly set container detector is used"
+    findResourceAttribute(traces, "container.id").findAny().isPresent()
+
+    then: "explicitly set container process detector is used"
+    findResourceAttribute(traces, "process.executable.path").findAny().isPresent()
+
+    then: "explicitly set container host detector is used"
+    findResourceAttribute(traces, "host.name").findAny().isPresent()
+
     then: "distro detector is added by customizer"
-    def distroName = findResourceAttribute(traces, "telemetry.distro.name")
-        .map { it.stringValue }
-        .findAny()
-    distroName.isPresent()
-    distroName.get() == "opentelemetry-javaagent"
+    hasResourceAttribute(traces, "telemetry.distro.name", "opentelemetry-javaagent")
 
     cleanup:
     stopTarget()

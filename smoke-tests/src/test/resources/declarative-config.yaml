@@ -11,6 +11,11 @@ tracer_provider:
 
 # add extra resource attributes to verify that declarative config is picked up
 resource:
+  detection/development:
+    detectors:
+      - container:
+      - host:
+      - process:
   attributes:
     - name: service.name
       value: declarative-config-smoke-test
