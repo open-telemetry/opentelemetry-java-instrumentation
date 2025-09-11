@@ -17,7 +17,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.BiConsumer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -82,7 +81,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       return callDepth;
     }
 
-    @AssignReturned.ToReturned
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static HttpClient stopSpan(
         @Advice.Thrown Throwable throwable,
@@ -99,14 +98,12 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnRequestAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
-        @Advice.Argument(0)
-            BiConsumer<? super HttpClientRequest, ? super Connection> originalCallback) {
-      BiConsumer<? super HttpClientRequest, ? super Connection> callback = originalCallback;
+        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnRequestDecorator(callback);
+        return new DecoratorFunctions.OnRequestDecorator(callback);
       }
       return callback;
     }
@@ -115,7 +112,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnRequestErrorAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static BiConsumer<? super HttpClientRequest, ? super Throwable> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
@@ -129,7 +126,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnResponseAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Connection> callback,
@@ -145,7 +142,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnResponseErrorAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static BiConsumer<? super HttpClientResponse, ? super Throwable> onEnter(
         @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
@@ -159,15 +156,11 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnErrorAdvice {
 
-    @AssignReturned.ToArguments({
-      @ToArgument(value = 0, index = 0),
-      @ToArgument(value = 1, index = 1)
-    })
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object[] onEnter(
-        @Advice.Argument(0)
+    public static void onEnter(
+        @Advice.Argument(value = 0, readOnly = false)
             BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
-        @Advice.Argument(1)
+        @Advice.Argument(value = 1, readOnly = false)
             BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback = new DecoratorFunctions.OnRequestErrorDecorator(requestCallback);
@@ -175,7 +168,6 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       if (DecoratorFunctions.shouldDecorate(responseCallback.getClass())) {
         responseCallback = new DecoratorFunctions.OnResponseErrorDecorator(responseCallback);
       }
-      return new Object[] {requestCallback, responseCallback};
     }
   }
 }
