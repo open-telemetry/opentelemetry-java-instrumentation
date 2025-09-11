@@ -75,7 +75,7 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
     return create();
   }
 
-  public Resource createResource(DeclarativeConfigProperties config) {
+  Resource createResource(DeclarativeConfigProperties config) {
     return create();
   }
 

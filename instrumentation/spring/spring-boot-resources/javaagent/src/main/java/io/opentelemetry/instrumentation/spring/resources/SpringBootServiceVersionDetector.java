@@ -45,7 +45,7 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
     return create();
   }
 
-  public Resource createResource(DeclarativeConfigProperties config) {
+  Resource createResource(DeclarativeConfigProperties config) {
     return create();
   }
 
