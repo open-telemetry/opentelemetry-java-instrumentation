@@ -65,6 +65,9 @@ class DeclarativeConfigurationSmokeTest extends SmokeTest {
     then: "distro detector is added by customizer"
     hasResourceAttribute(traces, "telemetry.distro.name", "opentelemetry-javaagent")
 
+    then: "service detector is added by customizer"
+    findResourceAttribute(traces, "service.instance.id").findAny().isPresent()
+
     cleanup:
     stopTarget()
 
