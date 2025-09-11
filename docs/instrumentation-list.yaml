@@ -2097,16 +2097,84 @@ libraries:
         - name: server.port
           type: LONG
   clickhouse:
-  - name: clickhouse-client-0.5
-    description: Instruments the V1 ClickHouseClient, providing database client spans
-      and metrics.
+  - name: clickhouse-client-v1-0.5
+    description: This instrumentation enables database client spans and metrics for
+      the V1 ClickHouse client.
     library_link: https://github.com/ClickHouse/clickhouse-java
-    source_path: instrumentation/clickhouse-client-0.5
+    source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
     scope:
-      name: io.opentelemetry.clickhouse-client-0.5
+      name: io.opentelemetry.clickhouse-client-v1-0.5
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.response.status_code
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+  - name: clickhouse-client-v2-0.8
+    description: This instrumentation enables database client spans and metrics for
+      the V2 ClickHouse client.
+    library_link: https://github.com/ClickHouse/clickhouse-java
+    source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
+    scope:
+      name: io.opentelemetry.clickhouse-client-v2-0.8
+    target_versions:
+      javaagent:
+      - com.clickhouse:client-v2:[0.6.4,)
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
@@ -4072,8 +4140,8 @@ libraries:
           type: STRING
   javalin:
   - name: javalin-5.0
-    description: This instrumentation enriches existing HTTP server spans with route information,
-      it does not emit any telemetry on its own.
+    description: This instrumentation enriches existing HTTP server spans with route
+      information, it does not emit any telemetry on its own.
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11
     scope:
@@ -6550,6 +6618,7 @@ libraries:
     description: This instrumentation enriches HTTP server spans and metrics with
       route information.
     source_path: instrumentation/spring/spring-web/spring-web-6.0
+    minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-web-6.0
     target_versions:
