@@ -158,17 +158,21 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class OnErrorAdvice {
 
     @AssignReturned.ToArguments({
-        @ToArgument(value = 0, index = 0),
-        @ToArgument(value = 1, index = 1)
+      @ToArgument(value = 0, index = 0),
+      @ToArgument(value = 1, index = 1)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] onEnter(
-        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,
-        @Advice.Argument(1) BiConsumer<? super HttpClientResponse, ? super Throwable> originalResponseCallback) {
+        @Advice.Argument(0)
+            BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,
+        @Advice.Argument(1)
+            BiConsumer<? super HttpClientResponse, ? super Throwable> originalResponseCallback) {
 
       // intermediate variables needed for inlined instrumentation
-      BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback = originalRequestCallback;
-      BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback = originalResponseCallback;
+      BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback =
+          originalRequestCallback;
+      BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback =
+          originalResponseCallback;
 
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback = new DecoratorFunctions.OnRequestErrorDecorator(requestCallback);
