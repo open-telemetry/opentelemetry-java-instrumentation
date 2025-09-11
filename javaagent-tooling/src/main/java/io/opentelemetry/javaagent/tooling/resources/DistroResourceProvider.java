@@ -20,17 +20,14 @@ public class DistroResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
-    return get();
+    return get("opentelemetry-java-instrumentation");
   }
 
-  static Resource get() {
+  static Resource get(String distroName) {
     return AgentVersion.VERSION == null
         ? Resource.empty()
         : Resource.create(
             Attributes.of(
-                TELEMETRY_DISTRO_NAME,
-                "opentelemetry-java-instrumentation",
-                TELEMETRY_DISTRO_VERSION,
-                AgentVersion.VERSION));
+                TELEMETRY_DISTRO_NAME, distroName, TELEMETRY_DISTRO_VERSION, AgentVersion.VERSION));
   }
 }

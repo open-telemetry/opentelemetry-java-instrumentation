@@ -21,11 +21,11 @@ public class DistroComponentProvider implements ComponentProvider<Resource> {
 
   @Override
   public String getName() {
-    return "distribution";
+    return "opentelemetry-javaagent-distribution";
   }
 
   @Override
   public Resource create(DeclarativeConfigProperties config) {
-    return DistroResourceProvider.get();
+    return DistroResourceProvider.get("opentelemetry-javaagent");
   }
 }

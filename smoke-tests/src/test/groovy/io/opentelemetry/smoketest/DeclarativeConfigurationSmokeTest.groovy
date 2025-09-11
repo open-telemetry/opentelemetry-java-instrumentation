@@ -50,25 +50,12 @@ class DeclarativeConfigurationSmokeTest extends SmokeTest {
     then: "There is one trace"
     traces.size() > 0
 
-    then: "declarative config is applied"
-    def serviceName = findResourceAttribute(traces, "service.name")
-        .map { it.stringValue }
-        .findAny()
-    serviceName.isPresent()
-    serviceName.get() == "declarative-config-smoke-test"
-
-    then: "service detector is added by customizer"
-    def serviceInstanceId = findResourceAttribute(traces, "service.instance.id")
-        .map { it.stringValue }
-        .findAny()
-    serviceInstanceId.isPresent()
-
     then: "distro detector is added by customizer"
     def distroName = findResourceAttribute(traces, "telemetry.distro.name")
         .map { it.stringValue }
         .findAny()
     distroName.isPresent()
-    distroName.get() == "opentelemetry-java-instrumentation"
+    distroName.get() == "opentelemetry-javaagent"
 
     cleanup:
     stopTarget()

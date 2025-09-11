@@ -11,7 +11,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectionModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalResourceDetectorModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ResourceModel;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -24,11 +24,10 @@ import java.util.stream.Collectors;
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public class ResourceCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
 
-  // distribution: adds "distro.name" and "distro.version" attributes
+  // opentelemetry-javaagent-distribution: adds "distro.name" and "distro.version" attributes
   // (DistroComponentProvider in this package)
-  // service: adds "service.name" and "service.instance.id" attributes
-  // (https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/ServiceResourceDetector.java)
-  private static final List<String> REQUIRED_DETECTORS = Arrays.asList("distribution", "service");
+  private static final List<String> REQUIRED_DETECTORS =
+      Collections.singletonList("opentelemetry-javaagent-distribution");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
@@ -55,7 +54,9 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
             if (!names.contains(name)) {
               ExperimentalResourceDetectorModel detector = new ExperimentalResourceDetectorModel();
               detector.getAdditionalProperties().put(name, null);
-              detectors.add(detector);
+              // add first (the least precedence)
+              // so that the user can add a differently named detector that takes precedence
+              detectors.add(0, detector);
             }
           }
           return model;
