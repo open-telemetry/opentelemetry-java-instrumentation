@@ -6,7 +6,7 @@ Provides OpenTelemetry instrumentation for the [Apache HttpClient](https://hc.ap
 
 ### Add these dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-apache-httpclient-4.3).
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-apache-httpclient-4.3).
 
 For Maven, add to your `pom.xml` dependencies:
 
