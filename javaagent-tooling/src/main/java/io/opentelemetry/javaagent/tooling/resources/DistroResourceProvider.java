@@ -3,29 +3,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.tooling;
+package io.opentelemetry.javaagent.tooling.resources;
 
 import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME;
 import static io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.javaagent.tooling.AgentVersion;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
 @AutoService(ResourceProvider.class)
-public class DistroVersionResourceProvider implements ResourceProvider {
+public class DistroResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return get("opentelemetry-java-instrumentation");
+  }
+
+  static Resource get(String distroName) {
     return AgentVersion.VERSION == null
         ? Resource.empty()
         : Resource.create(
             Attributes.of(
-                TELEMETRY_DISTRO_NAME,
-                "opentelemetry-java-instrumentation",
-                TELEMETRY_DISTRO_VERSION,
-                AgentVersion.VERSION));
+                TELEMETRY_DISTRO_NAME, distroName, TELEMETRY_DISTRO_VERSION, AgentVersion.VERSION));
   }
 }

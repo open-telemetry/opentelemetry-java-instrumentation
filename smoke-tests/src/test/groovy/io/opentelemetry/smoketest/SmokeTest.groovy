@@ -118,6 +118,15 @@ abstract class SmokeTest extends Specification {
       .map { it.value }
   }
 
+  protected static boolean hasResourceAttribute(Collection<ExportTraceServiceRequest> traces,
+                                                String attributeKey,
+                                                String attributeValue) {
+    return findResourceAttribute(traces, attributeKey)
+        .filter { it.stringValue == attributeValue }
+        .findAny()
+        .isPresent()
+  }
+
   protected static int countSpansByName(Collection<ExportTraceServiceRequest> traces, String spanName) {
     return getSpanStream(traces).filter { it.name == spanName }.count()
   }
