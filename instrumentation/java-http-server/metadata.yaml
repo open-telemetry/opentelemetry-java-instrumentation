@@ -1,4 +1,5 @@
 description: This instrumentation enables HTTP server spans and HTTP server metrics for the Java HTTP server.
+library_link: https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >

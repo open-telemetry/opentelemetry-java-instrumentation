@@ -1,3 +1,4 @@
 description: >
   This instrumentation does not emit any telemetry on its own. Instead, it enables context
   propagation for Hibernate Reactive asynchronous operations.
+library_link: https://hibernate.org/reactive/
