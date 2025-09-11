@@ -15,7 +15,7 @@ import io.opentelemetry.semconv.ServiceAttributes;
 import java.util.Map;
 
 /**
- * A {@link ResourceProvider} that will attempt to detect the <code>service.name</code> from the *
+ * A {@link ResourceProvider} that will attempt to detect the <code>service.name</code> from the
  * main jar file name.
  */
 @AutoService(ResourceProvider.class)
