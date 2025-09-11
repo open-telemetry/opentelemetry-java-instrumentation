@@ -1,4 +1,5 @@
 description: This instrumentation enables consumer messaging spans for Spring Kafka listeners.
+library_link: https://spring.io/projects/spring-kafka
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >

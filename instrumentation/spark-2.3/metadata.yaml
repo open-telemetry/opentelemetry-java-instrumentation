@@ -1,3 +1,4 @@
 description: > 
   This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and
   attaches it to HTTP server spans and HTTP server metrics.
+library_link: https://github.com/perwendel/spark
