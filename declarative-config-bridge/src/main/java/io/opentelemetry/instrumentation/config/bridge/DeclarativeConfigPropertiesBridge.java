@@ -9,12 +9,14 @@ import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
@@ -99,11 +101,77 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   @Nullable
   @Override
   public Duration getDuration(String propertyName) {
-    Long millis = getPropertyValue(propertyName, Long.class, DeclarativeConfigProperties::getLong);
-    if (millis == null) {
+    // If this is a raw integer number then assume it is the number of milliseconds
+    Long millis = getLong(propertyName);
+    if (millis != null) {
+      return Duration.ofMillis(millis);
+    }
+
+    // If this is a string than it consists of value and time unit
+    String value = getString(propertyName);
+    if (value == null) {
       return null;
     }
-    return Duration.ofMillis(millis);
+    String unitString = getUnitString(value);
+    String numberString = value.substring(0, value.length() - unitString.length());
+    try {
+      long rawNumber = Long.parseLong(numberString.trim());
+      TimeUnit unit = getDurationUnit(unitString.trim());
+      return Duration.ofNanos(TimeUnit.NANOSECONDS.convert(rawNumber, unit));
+    } catch (NumberFormatException ex) {
+      throw new ConfigurationException(
+          "Invalid duration property "
+              + propertyName
+              + "="
+              + value
+              + ". Expected number, found: "
+              + numberString,
+          ex);
+    } catch (ConfigurationException ex) {
+      throw new ConfigurationException(
+          "Invalid duration property " + propertyName + "=" + value + ". " + ex.getMessage());
+    }
+  }
+
+  /** Returns the TimeUnit associated with a unit string. Defaults to milliseconds. */
+  private static TimeUnit getDurationUnit(String unitString) {
+    switch (unitString) {
+      case "us":
+        return TimeUnit.MICROSECONDS;
+      case "ns":
+        return TimeUnit.NANOSECONDS;
+      case "": // Fallthrough expected
+      case "ms":
+        return TimeUnit.MILLISECONDS;
+      case "s":
+        return TimeUnit.SECONDS;
+      case "m":
+        return TimeUnit.MINUTES;
+      case "h":
+        return TimeUnit.HOURS;
+      case "d":
+        return TimeUnit.DAYS;
+      default:
+        throw new ConfigurationException("Invalid duration string, found: " + unitString);
+    }
+  }
+
+  /**
+   * Fragments the 'units' portion of a config value from the 'value' portion.
+   *
+   * <p>E.g. "1ms" would return the string "ms".
+   */
+  private static String getUnitString(String rawValue) {
+    int lastDigitIndex = rawValue.length() - 1;
+    while (lastDigitIndex >= 0) {
+      char c = rawValue.charAt(lastDigitIndex);
+      if (Character.isDigit(c)) {
+        break;
+      }
+      lastDigitIndex--;
+    }
+    // Pull everything after the last digit.
+    return rawValue.substring(lastDigitIndex + 1);
   }
 
   @SuppressWarnings("unchecked")

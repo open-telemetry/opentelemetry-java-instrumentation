@@ -14,6 +14,8 @@ instrumentation/development:
       bool_key: true
       int_key: 1
       double_key: 1.1
+      duration_key1: 123
+      duration_key2: 987ns
       list_key:
         - value1
         - value2
