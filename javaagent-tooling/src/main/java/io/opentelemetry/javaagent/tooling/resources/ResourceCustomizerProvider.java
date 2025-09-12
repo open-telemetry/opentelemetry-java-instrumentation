@@ -28,7 +28,8 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
   // (DistroComponentProvider in this package)
   // service: adds "service.name" and "service.instance.id" attributes
   // (https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/ServiceResourceDetector.java)
-  private static final List<String> REQUIRED_DETECTORS = Arrays.asList("opentelemetry-javaagent-distribution", "service");
+  private static final List<String> REQUIRED_DETECTORS =
+      Arrays.asList("opentelemetry-javaagent-distribution", "service");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
