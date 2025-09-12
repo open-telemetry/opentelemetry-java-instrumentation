@@ -7,21 +7,20 @@ package io.opentelemetry.smoketest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.GeneratedMessage;
-import com.google.protobuf.InvalidProtocolBufferException;
+import io.opentelemetry.testing.internal.protobuf.GeneratedMessage;
+import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class JavaTelemetryRetriever {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
@@ -37,17 +36,10 @@ public class JavaTelemetryRetriever {
 
   public List<SpanData> waitForTraces() {
     Collection<ExportTraceServiceRequest> collection =
-        waitForTelemetry("get-traces", () -> ExportTraceServiceRequest.newBuilder());
-    Stream<io.opentelemetry.proto.trace.v1.Span> objectStream =
-        collection.stream()
-            .flatMap(
-                req ->
-                    req.getResourceSpansList().stream()
-                        .flatMap(
-                            rs ->
-                                rs.getScopeSpansList().stream()
-                                    .flatMap(ss -> ss.getSpansList().stream())));
-
+        waitForTelemetry("get-traces", () -> {
+          ExportTraceServiceRequest.Builder builder = ExportTraceServiceRequest.newBuilder();
+          return builder;
+        });
     return AgentTestingExporterAccess.getSpanData(
         collection.stream().flatMap(req -> req.getResourceSpansList().stream()));
   }
