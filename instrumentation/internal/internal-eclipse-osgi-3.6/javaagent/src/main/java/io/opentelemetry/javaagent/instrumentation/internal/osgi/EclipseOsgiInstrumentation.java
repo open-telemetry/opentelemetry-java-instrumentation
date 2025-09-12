@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.InClassLoaderMatcher;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -52,13 +53,15 @@ class EclipseOsgiInstrumentation implements TypeInstrumentation {
       return InClassLoaderMatcher.get() && !packageName.startsWith("io.opentelemetry.");
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) boolean result,
-        @Advice.Enter boolean inClassLoaderMatcher) {
+    public static boolean onExit(
+        @Advice.Return boolean originalResult, @Advice.Enter boolean inClassLoaderMatcher) {
+      boolean result = originalResult;
       if (inClassLoaderMatcher) {
         result = false;
       }
+      return result;
     }
   }
 }
