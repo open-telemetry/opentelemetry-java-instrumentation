@@ -60,6 +60,8 @@ public final class LoggingEventMapper {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+  // copied from EventIncubatingAttributes
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   private static final boolean supportsInstant = supportsInstant();
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
@@ -84,6 +86,7 @@ public final class LoggingEventMapper {
   private final boolean captureLoggerContext;
   private final boolean captureArguments;
   private final boolean captureLogstashAttributes;
+  private final boolean captureEventName;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
@@ -96,6 +99,7 @@ public final class LoggingEventMapper {
     this.captureLogstashAttributes = builder.captureLogstashAttributes;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
+    this.captureEventName = builder.captureEventName;
   }
 
   public static Builder builder() {
@@ -213,8 +217,21 @@ public final class LoggingEventMapper {
     if (supportsLogstashMarkers && captureLogstashAttributes) {
       captureLogstashAttributes(attributes, loggingEvent);
     }
-
-    builder.setAllAttributes(attributes.build());
+    Attributes realizedAttributes = attributes.build();
+    if (captureEventName) {
+      realizedAttributes.forEach(
+          (attributeKey, value) -> {
+            if (attributeKey.equals(EVENT_NAME)) {
+              builder.setEventName(String.valueOf(value));
+            } else {
+              @SuppressWarnings("unchecked")
+              AttributeKey<Object> attributeKeyAsObject = (AttributeKey<Object>) attributeKey;
+              builder.setAttribute(attributeKeyAsObject, value);
+            }
+          });
+    } else {
+      builder.setAllAttributes(realizedAttributes);
+    }
 
     // span context
     builder.setContext(Context.current());
@@ -642,6 +659,7 @@ public final class LoggingEventMapper {
     private boolean captureLoggerContext;
     private boolean captureArguments;
     private boolean captureLogstashAttributes;
+    private boolean captureEventName;
 
     Builder() {}
 
@@ -690,6 +708,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
       this.captureLogstashAttributes = captureLogstashAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureEventName(boolean captureEventName) {
+      this.captureEventName = captureEventName;
       return this;
     }
 

@@ -42,6 +42,8 @@ public final class LogEventMapper<T> {
   // copied from ThreadIncubatingAttributes
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
+  // copied from EventIncubatingAttributes
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
@@ -60,6 +62,7 @@ public final class LogEventMapper<T> {
   private final boolean captureMarkerAttribute;
   private final List<String> captureContextDataAttributes;
   private final boolean captureAllContextDataAttributes;
+  private final boolean captureEventName;
 
   public LogEventMapper(
       ContextDataAccessor<T> contextDataAccessor,
@@ -67,7 +70,8 @@ public final class LogEventMapper<T> {
       boolean captureCodeAttributes,
       boolean captureMapMessageAttributes,
       boolean captureMarkerAttribute,
-      List<String> captureContextDataAttributes) {
+      List<String> captureContextDataAttributes,
+      boolean captureEventName) {
 
     this.contextDataAccessor = contextDataAccessor;
     this.captureCodeAttributes = captureCodeAttributes;
@@ -77,6 +81,7 @@ public final class LogEventMapper<T> {
     this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
+    this.captureEventName = captureEventName;
   }
 
   /**
@@ -162,7 +167,22 @@ public final class LogEventMapper<T> {
       }
     }
 
-    builder.setAllAttributes(attributes.build());
+    Attributes realizedAttributes = attributes.build();
+    if (captureEventName) {
+      realizedAttributes.forEach(
+          (attributeKey, value) -> {
+            if (attributeKey.equals(EVENT_NAME)) {
+              builder.setEventName(String.valueOf(value));
+            } else {
+              @SuppressWarnings("unchecked")
+              AttributeKey<Object> attributeKeyAsObject = (AttributeKey<Object>) attributeKey;
+              builder.setAttribute(attributeKeyAsObject, value);
+            }
+          });
+    } else {
+      builder.setAllAttributes(realizedAttributes);
+    }
+
     builder.setContext(context);
   }
 
