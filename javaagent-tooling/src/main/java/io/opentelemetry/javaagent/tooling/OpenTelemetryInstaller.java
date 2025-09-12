@@ -76,19 +76,19 @@ public final class OpenTelemetryInstaller {
       return true;
     }
 
-    String profile =
+    String mode =
         instrumentationConfig
             .getStructured("java", empty())
             .getStructured("agent", empty())
             .getString("instrumentation_mode", "default");
 
-    switch (profile) {
+    switch (mode) {
       case "none":
         return false;
       case "default":
         return true;
       default:
-        throw new ConfigurationException("Unknown instrumentation profile: " + profile);
+        throw new ConfigurationException("Unknown instrumentation mode: " + mode);
     }
   }
 

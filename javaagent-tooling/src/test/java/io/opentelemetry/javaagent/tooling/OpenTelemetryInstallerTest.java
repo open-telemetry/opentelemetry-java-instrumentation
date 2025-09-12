@@ -51,14 +51,14 @@ class OpenTelemetryInstallerTest {
   })
   void defaultEnabledInDeclarativeConfigPropertiesBridge(
       String propertyValue, boolean expected, boolean fail) {
-    String profile = propertyValue == null ? "" : "instrumentation_mode: \"" + propertyValue + "\"";
+    String mode = propertyValue == null ? "" : "instrumentation_mode: \"" + propertyValue + "\"";
     String yaml =
         "file_format: \"1.0-rc.1\"\n"
             + "instrumentation/development:\n"
             + "  java:\n"
             + "    agent:\n"
             + "      "
-            + profile;
+            + mode;
 
     Supplier<ConfigProperties> configPropertiesSupplier =
         () ->
@@ -71,7 +71,7 @@ class OpenTelemetryInstallerTest {
     if (fail) {
       assertThatCode(() -> configPropertiesSupplier.get())
           .isInstanceOf(ConfigurationException.class)
-          .hasMessage("Unknown instrumentation profile: invalid");
+          .hasMessage("Unknown instrumentation mode: invalid");
     } else {
       assertThat(
               configPropertiesSupplier
