@@ -130,7 +130,8 @@ public abstract class AbstractGrpcTest {
                 "parent",
                 () -> client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build()));
 
-    assertThat(response.getMessage()).isEqualTo("Hello " + paramName);
+    String prefix = "Hello ";
+    assertThat(response.getMessage()).isEqualTo(prefix + paramName);
 
     testing()
         .waitAndAssertTraces(
@@ -274,13 +275,14 @@ public abstract class AbstractGrpcTest {
 
     AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () -> {
               ListenableFuture<Helloworld.Response> future =
                   Futures.transform(
-                      client.sayHello(Helloworld.Request.newBuilder().setName("test").build()),
+                      client.sayHello(request),
                       resp -> {
                         testing().runWithSpan("child", () -> {});
                         return resp;
@@ -294,7 +296,8 @@ public abstract class AbstractGrpcTest {
             });
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    Helloworld.Response res = response.get();
+    assertThat(res.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -443,12 +446,13 @@ public abstract class AbstractGrpcTest {
     AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () ->
                 client.sayHello(
-                    Helloworld.Request.newBuilder().setName("test").build(),
+                    request,
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
@@ -470,7 +474,8 @@ public abstract class AbstractGrpcTest {
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    Helloworld.Response res = response.get();
+    assertThat(res.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -613,8 +618,8 @@ public abstract class AbstractGrpcTest {
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
-    assertThatThrownBy(
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("error").build();
+    assertThatThrownBy(() -> client.sayHello(request))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,
             t -> {
@@ -752,9 +757,8 @@ public abstract class AbstractGrpcTest {
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
-
-    assertThatThrownBy(
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("error").build();
+    assertThatThrownBy(() -> client.sayHello(request))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,
             t -> {
@@ -971,12 +975,13 @@ public abstract class AbstractGrpcTest {
     AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () ->
                 client.sayHello(
-                    Helloworld.Request.newBuilder().setName("test").build(),
+                    request,
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
@@ -1007,7 +1012,8 @@ public abstract class AbstractGrpcTest {
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    Helloworld.Response res = response.get();
+    assertThat(res.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -1105,17 +1111,20 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
     IllegalStateException thrown = new IllegalStateException("illegal");
+    AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () ->
                 client.sayMultipleHello(
-                    Helloworld.Request.newBuilder().setName("test").build(),
+                    request,
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
+                        response.set(r);
                         throw thrown;
                       }
 
@@ -1250,16 +1259,18 @@ public abstract class AbstractGrpcTest {
               }
             });
 
-    request.onNext(
+    ServerReflectionRequest serverReflectionRequest =
         ServerReflectionRequest.newBuilder()
             .setListServices("The content will not be checked?")
-            .build());
+            .build();
+    request.onNext(serverReflectionRequest);
     request.onCompleted();
 
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getListServicesResponse().getService(0).getName())
+    ServerReflectionResponse serverReflectionResponse = response.get();
+    assertThat(serverReflectionResponse.getListServicesResponse().getService(0).getName())
         .isEqualTo("grpc.reflection.v1alpha.ServerReflection");
 
     testing()
@@ -1368,11 +1379,8 @@ public abstract class AbstractGrpcTest {
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
-    Helloworld.Response response =
-        testing()
-            .runWithSpan(
-                "parent",
-                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    Helloworld.Response response = testing().runWithSpan("parent", () -> client.sayHello(request));
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
