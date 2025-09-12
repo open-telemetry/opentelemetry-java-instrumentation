@@ -77,10 +77,20 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
     @Nullable private final HttpClient.ResponseReceiver<?> modifiedReceiver;
     private final CallDepth callDepth;
 
-    /** Dedicated advice scope subclass that make instrumentation skip original method body. */
-    public static class SkipMethodBody extends AdviceScope {
-      private SkipMethodBody(CallDepth callDepth, HttpClient.ResponseReceiver<?> receiver) {
+    /**
+     * Dedicated advice scope subclass that make instrumentation skip original method body using
+     * {@code skipOn = Runnable.class } which does not require to expose an extra type
+     */
+    public static class SkipMethodBodyAdviceScope extends AdviceScope implements Runnable {
+      private SkipMethodBodyAdviceScope(
+          CallDepth callDepth, HttpClient.ResponseReceiver<?> receiver) {
         super(callDepth, receiver);
+      }
+
+      @Override
+      public void run() {
+        // do nothing, only using Runnable as a marker interface to enable skipping without
+        // exposing the actual type
       }
     }
 
@@ -95,7 +105,8 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
         return new AdviceScope(callDepth, null);
       }
       // original method body will be skipped due to return type and 'skipOn' value
-      return new SkipMethodBody(callDepth, HttpResponseReceiverInstrumenter.instrument(receiver));
+      return new SkipMethodBodyAdviceScope(
+          callDepth, HttpResponseReceiverInstrumenter.instrument(receiver));
     }
 
     public <T> T end(T returnValue, Function<HttpClient.ResponseReceiver<?>, T> receiverFunction) {
@@ -143,7 +154,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseMonoAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = AdviceScope.SkipMethodBody.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
@@ -160,7 +171,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseFluxAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = AdviceScope.SkipMethodBody.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
@@ -180,7 +191,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseConnectionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = AdviceScope.SkipMethodBody.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
@@ -200,7 +211,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseContentAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = AdviceScope.SkipMethodBody.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
@@ -216,7 +227,7 @@ public class ResponseReceiverInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResponseSingleAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = AdviceScope.SkipMethodBody.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, skipOn = Runnable.class)
     public static AdviceScope onEnter(@Advice.This HttpClient.ResponseReceiver<?> receiver) {
       return AdviceScope.start(CallDepth.forClass(HttpClient.ResponseReceiver.class), receiver);
     }
