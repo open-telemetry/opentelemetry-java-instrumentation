@@ -5,7 +5,7 @@
 
 package io.opentelemetry.smoketest;
 
-import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
+import io.opentelemetry.instrumentation.testing.internal.TelemetryConverter;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -29,7 +29,7 @@ public class JavaTelemetryRetriever {
 
   public List<SpanData> waitForTraces() {
     try {
-      return AgentTestingExporterAccess.getSpanData(
+      return TelemetryConverter.getSpanData(
           Collections.singletonList(waitForContent("get-traces")));
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -37,15 +37,21 @@ public class JavaTelemetryRetriever {
   }
 
   public Collection<MetricData> waitForMetrics() {
-    //    return waitForTelemetry("get-metrics", () -> ExportMetricsServiceRequest.newBuilder());
-    // todo
-    return Collections.emptyList();
+    try {
+      return TelemetryConverter.getMetricsData(
+          Collections.singletonList(waitForContent("get-metrics")));
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   public Collection<LogRecordData> waitForLogs() {
-    //    return waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
-    // todo
-    return Collections.emptyList();
+    try {
+      return TelemetryConverter.getLogRecordData(
+          Collections.singletonList(waitForContent("get-logs")));
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private byte[] waitForContent(String path) throws InterruptedException {
@@ -62,6 +68,9 @@ public class JavaTelemetryRetriever {
       System.out.println("Current content size " + previousSize);
       TimeUnit.MILLISECONDS.sleep(500);
     }
+
+    // todo remove debug
+    System.out.println(new String(content, StandardCharsets.UTF_8));
 
     return content;
   }
