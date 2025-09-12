@@ -40,4 +40,9 @@ public class TestInstrumentationModule extends InstrumentationModule
         .proxyBuilder("instrumentation.TestHelperClass")
         .inject(InjectionMode.CLASS_AND_RESOURCE);
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }
