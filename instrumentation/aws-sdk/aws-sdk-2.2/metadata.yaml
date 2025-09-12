@@ -2,6 +2,7 @@ description: >
   This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans
   and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS
   and Bedrock.
+library_link: https://aws.amazon.com/sdk-for-java/
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >

@@ -1,4 +1,5 @@
-description: This instrumentation enables RPC CLIENT and SERVER spans and metrics for gRPC version 1.6 and above.
+description: This instrumentation enables RPC client spans and metrics, and RPC server spans and metrics for gRPC version 1.6 and above.
+library_link: https://github.com/grpc/grpc-java
 configurations:
   - name: otel.instrumentation.grpc.emit-message-events
     type: boolean

@@ -5,3 +5,4 @@ description: >
   only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot,
   this happens automatically as all Spring beans that support JMX registration are automatically
   registered by default.
+library_link: https://commons.apache.org/proper/commons-dbcp/

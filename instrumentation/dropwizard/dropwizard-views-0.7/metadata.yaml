@@ -1,4 +1,5 @@
 description: This instrumentation enables the creation of spans for Dropwizard views.
+library_link: https://www.dropwizard.io/en/latest/manual/views.html
 configurations:
   - name: otel.instrumentation.common.experimental.view-telemetry.enabled
     description: Enables the creation of experimental view (INTERNAL) spans.

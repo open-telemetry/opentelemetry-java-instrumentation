@@ -198,6 +198,9 @@ public class YamlHelper {
       if (module.getMetadata().getDescription() != null) {
         moduleMap.put("description", module.getMetadata().getDescription());
       }
+      if (module.getMetadata().getLibraryLink() != null) {
+        moduleMap.put("library_link", module.getMetadata().getLibraryLink());
+      }
       if (module.getMetadata().getDisabledByDefault()) {
         moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
       }

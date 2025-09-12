@@ -3,6 +3,7 @@ description: >
   attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
   
   NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
+library_link: https://spring.io/projects/spring-security
 configurations:
   - name: otel.instrumentation.common.enduser.id.enabled
     description: Enables capturing the enduser.id attribute.
