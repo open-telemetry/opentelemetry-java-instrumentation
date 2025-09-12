@@ -126,21 +126,14 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
-        @Advice.Argument(2) Duration timeout,
-        @Advice.Local("message") Message message)
+        @Advice.Argument(2) Duration timeout)
         throws InterruptedException {
       // call the instrumented request method
-      message = connection.request(subject, null, body, timeout);
-      return message;
+      return connection.request(subject, null, body, timeout);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static Message onExit(
-        @Advice.Return(readOnly = false) Message returned,
-        @Advice.Local("message") Message message) {
-      returned = message;
-      return returned;
-    }
+    public static void onExit(@Advice.Enter Message message) {}
   }
 
   @SuppressWarnings("unused")
@@ -300,6 +293,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) Message message,
         @Advice.Local("future") CompletableFuture<Message> future) {
+      // execute original method body to handle null message
       if (message == null) {
         return null;
       }

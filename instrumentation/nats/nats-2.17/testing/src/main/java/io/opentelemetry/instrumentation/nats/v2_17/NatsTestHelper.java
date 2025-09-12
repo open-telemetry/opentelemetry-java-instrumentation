@@ -19,7 +19,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public class NatsInstrumentationTestHelper {
+public class NatsTestHelper {
 
   public static AttributeAssertion[] messagingAttributes(
       String operation, String subject, int clientId, AttributeAssertion other) {
@@ -52,5 +52,5 @@ public class NatsInstrumentationTestHelper {
     assertThat(published.getHeaders().get("traceparent")).isNotEmpty();
   }
 
-  private NatsInstrumentationTestHelper() {}
+  private NatsTestHelper() {}
 }

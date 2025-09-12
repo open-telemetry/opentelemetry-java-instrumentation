@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.assertTraceparentHeader;
-import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.messagingAttributes;
+import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
+import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static java.util.Arrays.asList;
@@ -27,8 +27,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationRequestTest
-    extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
 
   private int clientId;
   private Subscription subscription;

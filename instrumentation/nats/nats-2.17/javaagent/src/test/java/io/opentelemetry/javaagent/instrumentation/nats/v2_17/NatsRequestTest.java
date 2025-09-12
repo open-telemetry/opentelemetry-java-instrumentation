@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.nats.v2_17;
 
-import io.opentelemetry.instrumentation.nats.v2_17.AbstractNatsInstrumentationDispatcherTest;
+import io.opentelemetry.instrumentation.nats.v2_17.AbstractNatsRequestTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class NatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationDispatcherTest {
+class NatsRequestTest extends AbstractNatsRequestTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

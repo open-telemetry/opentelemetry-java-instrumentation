@@ -16,7 +16,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.utility.DockerImageName;
 
-abstract class AbstractNatsInstrumentationTest {
+abstract class AbstractNatsTest {
 
   static DockerImageName natsImage;
   static GenericContainer<?> natsContainer;

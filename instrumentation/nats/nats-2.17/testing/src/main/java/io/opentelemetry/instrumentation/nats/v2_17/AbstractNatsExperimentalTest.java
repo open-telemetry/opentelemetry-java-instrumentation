@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.messagingAttributes;
+import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.util.Collections.singletonList;
 
@@ -19,8 +19,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationExperimentalTest
-    extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsExperimentalTest extends AbstractNatsTest {
 
   private int clientId;
 

@@ -5,12 +5,15 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import io.nats.client.Nats;
+import io.nats.client.Options;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.io.IOException;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class NatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationDispatcherTest {
+class NatsRequestTest extends AbstractNatsRequestTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
@@ -21,7 +24,10 @@ class NatsInstrumentationDispatcherTest extends AbstractNatsInstrumentationDispa
   }
 
   @BeforeAll
-  static void beforeAll() {
-    connection = NatsTelemetry.create(testing.getOpenTelemetry()).wrap(connection);
+  static void beforeAll() throws IOException, InterruptedException {
+    NatsTelemetry telemetry = NatsTelemetry.create(testing.getOpenTelemetry());
+    connection =
+        telemetry.newConnection(
+            Options.builder().server(connection.getConnectedUrl()).build(), Nats::connect);
   }
 }

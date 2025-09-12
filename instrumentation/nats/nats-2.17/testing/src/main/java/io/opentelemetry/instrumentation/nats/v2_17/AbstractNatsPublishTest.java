@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
-import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.assertTraceparentHeader;
-import static io.opentelemetry.instrumentation.nats.v2_17.NatsInstrumentationTestHelper.messagingAttributes;
+import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.assertTraceparentHeader;
+import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagingAttributes;
 
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
@@ -18,8 +18,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public abstract class AbstractNatsInstrumentationPublishTest
-    extends AbstractNatsInstrumentationTest {
+public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
 
   private int clientId;
   private Subscription subscription;

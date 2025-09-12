@@ -14,12 +14,15 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import java.io.IOException;
 
+/** Entrypoint for instrumenting NATS clients. */
 public final class NatsTelemetry {
 
+  /** Returns a new {@link NatsTelemetry} configured with the given {@link OpenTelemetry}. */
   public static NatsTelemetry create(OpenTelemetry openTelemetry) {
     return new NatsTelemetryBuilder(openTelemetry).build();
   }
 
+  /** Returns a new {@link NatsTelemetryBuilder} configured with the given {@link OpenTelemetry}. */
   public static NatsTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new NatsTelemetryBuilder(openTelemetry);
   }
@@ -27,7 +30,7 @@ public final class NatsTelemetry {
   private final Instrumenter<NatsRequest, NatsRequest> producerInstrumenter;
   private final Instrumenter<NatsRequest, Void> consumerProcessInstrumenter;
 
-  public NatsTelemetry(
+  NatsTelemetry(
       Instrumenter<NatsRequest, NatsRequest> producerInstrumenter,
       Instrumenter<NatsRequest, Void> consumerProcessInstrumenter) {
     this.producerInstrumenter = producerInstrumenter;
@@ -37,9 +40,9 @@ public final class NatsTelemetry {
   /**
    * Returns a {@link Connection} with telemetry instrumentation.
    *
-   * <p>This does *not* monitor the main inbox of the default dispatcher. {@link
-   * #configure(Options.Builder)} {@link #newConnection(Options.Builder, ConnectionFactory)} {@link
-   * #newConnection(Options, ConnectionFactory)}
+   * <p>This method should be used together with {@link #configure(Options.Builder)}. Consider using
+   * {@link #newConnection(Options.Builder, ConnectionFactory)} or {@link #newConnection(Options,
+   * ConnectionFactory)} instead.
    */
   public Connection wrap(Connection connection) {
     return OpenTelemetryConnection.wrap(
@@ -47,8 +50,11 @@ public final class NatsTelemetry {
   }
 
   /**
-   * Returns a {@link Options.Builder} with the main inbox from the default dispatcher monitored
-   * with telemetry instrumentation.
+   * Returns a {@link Options.Builder} configured with telemetry instrumentation.
+   *
+   * <p>This method should be used together with {@link #wrap(Connection)}. Consider using {@link
+   * #newConnection(Options.Builder, ConnectionFactory)} or {@link #newConnection(Options,
+   * ConnectionFactory)} instead.
    */
   public Options.Builder configure(Options.Builder options) {
     DispatcherFactory factory = options.build().getDispatcherFactory();

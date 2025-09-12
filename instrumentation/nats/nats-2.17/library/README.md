@@ -1,6 +1,6 @@
 # Library Instrumentation for NATS version 2.17
 
-Provides OpenTelemetry instrumentation for [NATS 2.17](https://github.com/nats-io/nats.java).
+Provides OpenTelemetry instrumentation for [NATS Client](https://github.com/nats-io/nats.java).
 
 ## Quickstart
 

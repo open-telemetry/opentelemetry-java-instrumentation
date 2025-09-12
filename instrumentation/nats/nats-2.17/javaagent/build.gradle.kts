@@ -32,15 +32,14 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("NatsInstrumentationExperimentalTest")
+      includeTestsMatching("NatsExperimentalTest")
     }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.capture-headers=captured-header")
   }
 
   test {
     filter {
-      excludeTestsMatching("NatsInstrumentationExperimentalTest")
+      excludeTestsMatching("NatsExperimentalTest")
     }
   }
 
