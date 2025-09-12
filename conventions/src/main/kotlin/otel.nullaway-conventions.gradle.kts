@@ -18,10 +18,19 @@ nullaway {
 
 tasks {
   withType<JavaCompile>().configureEach {
-    if (!name.contains("test", ignoreCase = true)) {
+    if (name.contains("test", ignoreCase = true)) {
+      options.errorprone.nullaway {
+        enabled = false
+      }
+    } else {
       options.errorprone.nullaway {
         severity.set(CheckSeverity.ERROR)
       }
+    }
+    options.errorprone.nullaway {
+      customInitializerAnnotations.add("org.openjdk.jmh.annotations.Setup")
+      excludedFieldAnnotations.add("org.mockito.Mock")
+      excludedFieldAnnotations.add("org.mockito.InjectMocks")
     }
   }
 }

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
+import javax.annotation.Nullable;
+
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
@@ -29,8 +31,8 @@ public interface AddressAndPortExtractor<REQUEST> {
    */
   interface AddressPortSink {
 
-    void setAddress(String address);
+    void setAddress(@Nullable String address);
 
-    void setPort(Integer port);
+    void setPort(@Nullable Integer port);
   }
 }
