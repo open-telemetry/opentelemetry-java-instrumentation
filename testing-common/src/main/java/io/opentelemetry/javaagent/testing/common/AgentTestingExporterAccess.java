@@ -83,6 +83,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public final class AgentTestingExporterAccess {
   private static final char TRACESTATE_KEY_VALUE_DELIMITER = '=';
@@ -171,7 +172,7 @@ public final class AgentTestingExporterAccess {
       throw new AssertionError("Could not invoke getSpanExportRequests", t);
     }
 
-    List<ResourceSpans> allResourceSpans =
+    return getSpanData(
         exportRequests.stream()
             .map(
                 serialized -> {
@@ -181,79 +182,83 @@ public final class AgentTestingExporterAccess {
                     throw new AssertionError(e);
                   }
                 })
-            .flatMap(request -> request.getResourceSpansList().stream())
-            .collect(toList());
+            .flatMap(request -> request.getResourceSpansList().stream()));
+  }
+
+  public static List<SpanData> getSpanData(Stream<ResourceSpans> allResourceSpans) {
     List<SpanData> spans = new ArrayList<>();
-    for (ResourceSpans resourceSpans : allResourceSpans) {
-      Resource resource = resourceSpans.getResource();
-      for (ScopeSpans ilSpans : resourceSpans.getScopeSpansList()) {
-        InstrumentationScope instrumentationScope = ilSpans.getScope();
-        for (Span span : ilSpans.getSpansList()) {
-          String traceId = bytesToHex(span.getTraceId().toByteArray());
-          spans.add(
-              TestSpanData.builder()
-                  .setSpanContext(
-                      SpanContext.create(
-                          traceId,
-                          bytesToHex(span.getSpanId().toByteArray()),
-                          TraceFlags.getDefault(),
-                          extractTraceState(span.getTraceState())))
-                  // TODO is it ok to use default trace flags and default trace state here?
-                  .setParentSpanContext(
-                      SpanContext.create(
-                          traceId,
-                          bytesToHex(span.getParentSpanId().toByteArray()),
-                          TraceFlags.getDefault(),
-                          TraceState.getDefault()))
-                  .setResource(
-                      io.opentelemetry.sdk.resources.Resource.create(
-                          fromProto(resource.getAttributesList())))
-                  .setInstrumentationScopeInfo(
-                      InstrumentationScopeInfo.builder(instrumentationScope.getName())
-                          // emptyToNull since they are the same at protobuf layer,
-                          // and allows for simpler verification of InstrumentationScope
-                          .setVersion(emptyToNull(instrumentationScope.getVersion()))
-                          .build())
-                  .setName(span.getName())
-                  .setStartEpochNanos(span.getStartTimeUnixNano())
-                  .setEndEpochNanos(span.getEndTimeUnixNano())
-                  .setAttributes(fromProto(span.getAttributesList()))
-                  .setEvents(
-                      span.getEventsList().stream()
-                          .map(
-                              event ->
-                                  EventData.create(
-                                      event.getTimeUnixNano(),
-                                      event.getName(),
-                                      fromProto(event.getAttributesList()),
-                                      event.getDroppedAttributesCount()
-                                          + event.getAttributesCount()))
-                          .collect(toList()))
-                  .setStatus(fromProto(span.getStatus()))
-                  .setKind(fromProto(span.getKind()))
-                  .setLinks(
-                      span.getLinksList().stream()
-                          .map(
-                              link ->
-                                  LinkData.create(
-                                      SpanContext.create(
-                                          bytesToHex(link.getTraceId().toByteArray()),
-                                          bytesToHex(link.getSpanId().toByteArray()),
-                                          TraceFlags.getDefault(),
-                                          extractTraceState(link.getTraceState())),
-                                      fromProto(link.getAttributesList()),
-                                      link.getDroppedAttributesCount() + link.getAttributesCount()))
-                          .collect(toList()))
-                  // OTLP doesn't have hasRemoteParent
-                  .setHasEnded(true)
-                  .setTotalRecordedEvents(span.getEventsCount() + span.getDroppedEventsCount())
-                  .setTotalRecordedLinks(span.getLinksCount() + span.getDroppedLinksCount())
-                  .setTotalAttributeCount(
-                      span.getAttributesCount() + span.getDroppedAttributesCount())
-                  .build());
-        }
-      }
-    }
+    allResourceSpans.forEach(
+        resourceSpans -> {
+          Resource resource = resourceSpans.getResource();
+          for (ScopeSpans ilSpans : resourceSpans.getScopeSpansList()) {
+            InstrumentationScope instrumentationScope = ilSpans.getScope();
+            for (Span span : ilSpans.getSpansList()) {
+              String traceId = bytesToHex(span.getTraceId().toByteArray());
+              spans.add(
+                  TestSpanData.builder()
+                      .setSpanContext(
+                          SpanContext.create(
+                              traceId,
+                              bytesToHex(span.getSpanId().toByteArray()),
+                              TraceFlags.getDefault(),
+                              extractTraceState(span.getTraceState())))
+                      // TODO is it ok to use default trace flags and default trace state here?
+                      .setParentSpanContext(
+                          SpanContext.create(
+                              traceId,
+                              bytesToHex(span.getParentSpanId().toByteArray()),
+                              TraceFlags.getDefault(),
+                              TraceState.getDefault()))
+                      .setResource(
+                          io.opentelemetry.sdk.resources.Resource.create(
+                              fromProto(resource.getAttributesList())))
+                      .setInstrumentationScopeInfo(
+                          InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                              // emptyToNull since they are the same at protobuf layer,
+                              // and allows for simpler verification of InstrumentationScope
+                              .setVersion(emptyToNull(instrumentationScope.getVersion()))
+                              .build())
+                      .setName(span.getName())
+                      .setStartEpochNanos(span.getStartTimeUnixNano())
+                      .setEndEpochNanos(span.getEndTimeUnixNano())
+                      .setAttributes(fromProto(span.getAttributesList()))
+                      .setEvents(
+                          span.getEventsList().stream()
+                              .map(
+                                  event ->
+                                      EventData.create(
+                                          event.getTimeUnixNano(),
+                                          event.getName(),
+                                          fromProto(event.getAttributesList()),
+                                          event.getDroppedAttributesCount()
+                                              + event.getAttributesCount()))
+                              .collect(toList()))
+                      .setStatus(fromProto(span.getStatus()))
+                      .setKind(fromProto(span.getKind()))
+                      .setLinks(
+                          span.getLinksList().stream()
+                              .map(
+                                  link ->
+                                      LinkData.create(
+                                          SpanContext.create(
+                                              bytesToHex(link.getTraceId().toByteArray()),
+                                              bytesToHex(link.getSpanId().toByteArray()),
+                                              TraceFlags.getDefault(),
+                                              extractTraceState(link.getTraceState())),
+                                          fromProto(link.getAttributesList()),
+                                          link.getDroppedAttributesCount()
+                                              + link.getAttributesCount()))
+                              .collect(toList()))
+                      // OTLP doesn't have hasRemoteParent
+                      .setHasEnded(true)
+                      .setTotalRecordedEvents(span.getEventsCount() + span.getDroppedEventsCount())
+                      .setTotalRecordedLinks(span.getLinksCount() + span.getDroppedLinksCount())
+                      .setTotalAttributeCount(
+                          span.getAttributesCount() + span.getDroppedAttributesCount())
+                      .build());
+            }
+          }
+        });
     return spans;
   }
 
