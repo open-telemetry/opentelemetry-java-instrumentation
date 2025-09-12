@@ -11,11 +11,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class MongoClientInstrumentationModule extends InstrumentationModule {
+public class MongoClientInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public MongoClientInstrumentationModule() {
     super("mongo", "mongo-3.7");
@@ -33,5 +35,10 @@ public class MongoClientInstrumentationModule extends InstrumentationModule {
         new MongoClientSettingsBuilderInstrumentation(),
         new InternalStreamConnectionInstrumentation(),
         new BaseClusterInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
