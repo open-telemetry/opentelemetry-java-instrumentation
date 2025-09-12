@@ -9,8 +9,9 @@ import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 
 import java.util.Collections;
 import java.util.Map;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 public class SecurityManagerSmokeTest extends JavaSmokeTest {
@@ -27,7 +28,8 @@ public class SecurityManagerSmokeTest extends JavaSmokeTest {
         "OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true");
   }
 
-  @Test
+  @ParameterizedTest
+  @ValueSource(ints = {8, 11, 17, 21, 23})
   public void security_manager_smoke_test_on_JDK__jdk(int jdk) {
     startTarget(jdk);
 
@@ -36,8 +38,5 @@ public class SecurityManagerSmokeTest extends JavaSmokeTest {
             trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
 
     stopTarget();
-
-    //    where: DefaultGroovyMethods.leftShift(jdk, new ArrayList<Integer>(Arrays.asList(8, 11, 17,
-    // 21, 23)));
   }
 }

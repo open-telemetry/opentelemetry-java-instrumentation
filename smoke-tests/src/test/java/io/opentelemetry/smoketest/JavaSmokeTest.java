@@ -8,8 +8,8 @@ package io.opentelemetry.smoketest;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 
-import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
@@ -109,11 +109,11 @@ public abstract class JavaSmokeTest {
     return telemetryRetriever.waitForTraces();
   }
 
-  protected Collection<ExportMetricsServiceRequest> waitForMetrics() {
+  protected Collection<MetricData> waitForMetrics() {
     return telemetryRetriever.waitForMetrics();
   }
 
-  protected Collection<ExportLogsServiceRequest> waitForLogs() {
+  protected Collection<LogRecordData> waitForLogs() {
     return telemetryRetriever.waitForLogs();
   }
 
