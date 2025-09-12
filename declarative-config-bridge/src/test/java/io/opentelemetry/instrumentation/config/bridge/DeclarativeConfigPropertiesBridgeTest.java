@@ -72,8 +72,10 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getInt("otel.instrumentation.example-instrumentation.int_key")).isEqualTo(1);
     assertThat(bridge.getLong("otel.instrumentation.example-instrumentation.int_key"))
         .isEqualTo(1L);
-    assertThat(bridge.getDuration("otel.instrumentation.example-instrumentation.int_key"))
-        .isEqualTo(Duration.ofMillis(1));
+    assertThat(bridge.getDuration("otel.instrumentation.example-instrumentation.duration_key1"))
+        .isEqualTo(Duration.ofMillis(123));
+    assertThat(bridge.getDuration("otel.instrumentation.example-instrumentation.duration_key2"))
+        .isEqualTo(Duration.ofNanos(987));
     assertThat(bridge.getDouble("otel.instrumentation.example-instrumentation.double_key"))
         .isEqualTo(1.1);
     assertThat(bridge.getList("otel.instrumentation.example-instrumentation.list_key"))
