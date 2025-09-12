@@ -48,7 +48,11 @@ class DeclarativeConfigurationSmokeTest extends SmokeTest {
     Collection<ExportTraceServiceRequest> traces = waitForTraces()
 
     then: "There is one trace"
-    traces.size() > 0
+    traces.size() == 1
+
+    then: "There is one span (io.opentelemetry.opentelemetry-instrumentation-annotations-1.16 " +
+        "is not used, because instrumentation_mode=none)"
+    getSpanStream(traces).count() == 1
 
     then: "explicitly set attribute is present"
     hasResourceAttribute(traces, "service.name", "declarative-config-smoke-test")
