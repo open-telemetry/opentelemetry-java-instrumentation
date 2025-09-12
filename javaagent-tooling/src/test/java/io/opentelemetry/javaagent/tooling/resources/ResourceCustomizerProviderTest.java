@@ -27,7 +27,10 @@ class ResourceCustomizerProviderTest {
               try {
                 assertThat(objectMapper.writeValueAsString(configurationModel.getResource()))
                     .isEqualTo(
-                        "{\"attributes\":[],\"detection/development\":{\"detectors\":[{\"opentelemetry-javaagent-distribution\":null}]}}");
+                        "{\"attributes\":[],\"detection/development\":{\"detectors\":["
+                            + "{\"service\":null},"
+                            + "{\"opentelemetry-javaagent-distribution\":null}"
+                            + "]}}");
               } catch (JsonProcessingException e) {
                 throw new AssertionError(e);
               }
