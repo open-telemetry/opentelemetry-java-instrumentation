@@ -19,6 +19,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -69,14 +70,13 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
       return false;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
+    public static reactor.util.context.Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
-        @Advice.Argument(1) Context applicationContext,
-        @Advice.Return(readOnly = false) reactor.util.context.Context updatedReactorContext) {
-      updatedReactorContext =
-          ContextPropagationOperator.storeOpenTelemetryContext(
-              reactorContext, AgentContextStorage.getAgentContext(applicationContext));
+        @Advice.Argument(1) Context applicationContext) {
+      return ContextPropagationOperator.storeOpenTelemetryContext(
+          reactorContext, AgentContextStorage.getAgentContext(applicationContext));
     }
   }
 
@@ -87,19 +87,19 @@ public class ContextPropagationOperatorInstrumentation implements TypeInstrument
       return false;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
+    public static Context methodExit(
         @Advice.Argument(0) reactor.util.context.Context reactorContext,
-        @Advice.Argument(1) Context defaultContext,
-        @Advice.Return(readOnly = false) Context applicationContext) {
+        @Advice.Argument(1) Context defaultContext) {
 
       io.opentelemetry.context.Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContext(reactorContext, null);
       if (agentContext == null) {
-        applicationContext = defaultContext;
-      } else {
-        applicationContext = AgentContextStorage.toApplicationContext(agentContext);
+        return defaultContext;
       }
+
+      return AgentContextStorage.toApplicationContext(agentContext);
     }
   }
 
