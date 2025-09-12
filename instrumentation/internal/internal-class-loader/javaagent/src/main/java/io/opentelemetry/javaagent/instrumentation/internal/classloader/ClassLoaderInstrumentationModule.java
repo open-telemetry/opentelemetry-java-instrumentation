@@ -48,4 +48,9 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
         new ResourceInjectionInstrumentation(),
         new DefineClassInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }
