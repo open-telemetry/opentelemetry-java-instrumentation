@@ -30,6 +30,8 @@ public final class LoggingEventMapper {
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
+  // copied from EventIncubatingAttributes
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   private final List<String> captureMdcAttributes;
@@ -40,6 +42,11 @@ public final class LoggingEventMapper {
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
+
+  private final boolean captureEventName =
+      AgentInstrumentationConfig.get()
+          .getBoolean(
+              "otel.instrumentation.jboss-logmanager.experimental.capture-event-name", false);
 
   private LoggingEventMapper() {
     this.captureMdcAttributes =
@@ -90,7 +97,21 @@ public final class LoggingEventMapper {
       attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
     }
 
-    builder.setAllAttributes(attributes.build());
+    Attributes realizedAttributes = attributes.build();
+    if (captureEventName) {
+      realizedAttributes.forEach(
+          (attributeKey, value) -> {
+            if (attributeKey.equals(EVENT_NAME)) {
+              builder.setEventName(String.valueOf(value));
+            } else {
+              @SuppressWarnings("unchecked")
+              AttributeKey<Object> attributeKeyAsObject = (AttributeKey<Object>) attributeKey;
+              builder.setAttribute(attributeKeyAsObject, value);
+            }
+          });
+    } else {
+      builder.setAllAttributes(realizedAttributes);
+    }
 
     builder.setContext(Context.current());
 
