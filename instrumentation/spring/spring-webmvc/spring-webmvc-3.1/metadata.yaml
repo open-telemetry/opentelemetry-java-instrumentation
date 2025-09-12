@@ -1,5 +1,6 @@
 description: >
   This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 3.1+.
+library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
 configurations:
   - name: otel.instrumentation.spring-webmvc.experimental-span-attributes
     type: boolean

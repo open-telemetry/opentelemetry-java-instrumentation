@@ -5,6 +5,7 @@ description: >
   
   There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
   but is disabled by default due to the volume of telemetry produced.
+library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
 configurations:
   - name: otel.instrumentation.jdbc.statement-sanitizer.enabled
     description: Enables statement sanitization for database queries. Takes precedent to 
