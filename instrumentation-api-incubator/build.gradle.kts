@@ -14,8 +14,6 @@ dependencies {
   api("io.opentelemetry.semconv:opentelemetry-semconv")
   api(project(":instrumentation-api"))
   api("io.opentelemetry:opentelemetry-api-incubator")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -24,32 +22,6 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
-}
-
-testing {
-  suites {
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
-          }
-        }
-      }
-    }
-
-    val testBothSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
-          }
-        }
-      }
-    }
-  }
 }
 
 tasks {
@@ -69,7 +41,19 @@ tasks {
     dependsOn("generateJflex")
   }
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }

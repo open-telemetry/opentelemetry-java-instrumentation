@@ -192,6 +192,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.web.")
+        .allowClass("org.springframework.web.client.RestTemplate")
         .allowClass("org.springframework.web.servlet.")
         .allowClass("org.springframework.web.filter.")
         .allowClass("org.springframework.web.multipart.")

@@ -47,7 +47,7 @@ val muzzleBootstrap: Configuration by configurations.creating {
 }
 
 val shadowModule by tasks.registering(ShadowJar::class) {
-  from(tasks.jar)
+  from(zipTree(tasks.jar.get().archiveFile))
 
   configurations = listOf(project.configurations.runtimeClasspath.get())
 
@@ -75,9 +75,17 @@ val shadowMuzzleBootstrap by tasks.registering(ShadowJar::class) {
 // avoid publishing io.opentelemetry.instrumentation.javaagent-shadowing publicly
 tasks.withType<ShadowJar>().configureEach {
   mergeServiceFiles()
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  filesMatching("META-INF/services/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
   // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
   // service loader...)
   mergeServiceFiles("software/amazon/awssdk/global/handlers")
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  filesMatching("software/amazon/awssdk/global/handlers/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
 
   exclude("**/module-info.class")
 

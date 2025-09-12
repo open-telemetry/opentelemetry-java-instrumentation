@@ -34,41 +34,31 @@ dependencies {
   testCompileOnly("org.springframework:spring-core:4.3.30.RELEASE")
 }
 
-testing {
-  suites {
-    val testIncludeProperty by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("ConfiguredTraceAnnotationsTest")
-            }
-            include("**/ConfiguredTraceAnnotationsTest.*")
-            jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
-          }
-        }
-      }
-    }
-
-    val testExcludeMethodsProperty by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("TracedMethodsExclusionTest")
-            }
-            include("**/TracedMethodsExclusionTest.*")
-            jvmArgs(
-              "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
-            )
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
+  val testIncludeProperty by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("ConfiguredTraceAnnotationsTest")
+    }
+    include("**/ConfiguredTraceAnnotationsTest.*")
+    jvmArgs("-Dotel.instrumentation.external-annotations.include=io.opentelemetry.javaagent.instrumentation.extannotations.OuterClass\$InterestingMethod")
+  }
+
+  val testExcludeMethodsProperty by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      includeTestsMatching("TracedMethodsExclusionTest")
+    }
+    include("**/TracedMethodsExclusionTest.*")
+    jvmArgs(
+      "-Dotel.instrumentation.external-annotations.exclude-methods=io.opentelemetry.javaagent.instrumentation.extannotations.TracedMethodsExclusionTest\$TestClass[excluded,annotatedButExcluded]"
+    )
+  }
+
   test {
     filter {
       excludeTestsMatching("ConfiguredTraceAnnotationsTest")
@@ -77,6 +67,6 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testIncludeProperty, testExcludeMethodsProperty)
   }
 }
