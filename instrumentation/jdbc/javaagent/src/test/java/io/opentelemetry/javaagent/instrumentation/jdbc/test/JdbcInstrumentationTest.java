@@ -1041,7 +1041,6 @@ class JdbcInstrumentationTest {
       throws SQLException {
     // Tomcat's pool doesn't work because the getConnection method is
     // implemented in a parent class that doesn't implement DataSource
-    boolean recursive = datasource instanceof EmbeddedDataSource;
 
     if (init != null) {
       init.accept(datasource);
@@ -1073,14 +1072,6 @@ class JdbcInstrumentationTest {
                               .hasKind(SpanKind.INTERNAL)
                               .hasParent(trace.getSpan(0))
                               .hasAttributesSatisfyingExactly(attributesAssertions)));
-          if (recursive) {
-            assertions.add(
-                span ->
-                    span.hasName(datasource.getClass().getSimpleName() + ".getConnection")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(attributesAssertions));
-          }
           trace.hasSpansSatisfyingExactly(assertions);
         });
   }
