@@ -5,25 +5,18 @@
 
 package io.opentelemetry.smoketest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import io.opentelemetry.testing.internal.protobuf.GeneratedMessage;
-import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
-import com.google.protobuf.util.JsonFormat;
 import io.opentelemetry.javaagent.testing.common.AgentTestingExporterAccess;
-import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
-import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
+import java.nio.charset.StandardCharsets;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class JavaTelemetryRetriever {
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final WebClient client;
 
   public JavaTelemetryRetriever(int backendPort) {
@@ -35,58 +28,37 @@ public class JavaTelemetryRetriever {
   }
 
   public List<SpanData> waitForTraces() {
-    Collection<ExportTraceServiceRequest> collection =
-        waitForTelemetry("get-traces", () -> {
-          ExportTraceServiceRequest.Builder builder = ExportTraceServiceRequest.newBuilder();
-          return builder;
-        });
-    return AgentTestingExporterAccess.getSpanData(
-        collection.stream().flatMap(req -> req.getResourceSpansList().stream()));
-  }
-
-  public Collection<ExportMetricsServiceRequest> waitForMetrics() {
-    return waitForTelemetry("get-metrics", () -> ExportMetricsServiceRequest.newBuilder());
-  }
-
-  public Collection<ExportLogsServiceRequest> waitForLogs() {
-    return waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
-  }
-
-  @SuppressWarnings({"unchecked", "rawtypes"})
-  private <T extends GeneratedMessage, B extends GeneratedMessage.Builder>
-      Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {
     try {
-      return OBJECT_MAPPER
-          .readTree(waitForContent(path))
-          .valueStream()
-          .map(
-              it -> {
-                B builder = builderConstructor.get();
-                // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
-                try {
-                  JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
-                  return (T) builder.build();
-                } catch (InvalidProtocolBufferException | JsonProcessingException e) {
-                  throw new RuntimeException(e);
-                }
-              })
-          .collect(Collectors.toList());
-    } catch (JsonProcessingException | InterruptedException e) {
+      return AgentTestingExporterAccess.getSpanData(
+          Collections.singletonList(waitForContent("get-traces")));
+    } catch (InterruptedException e) {
       throw new RuntimeException(e);
     }
   }
 
-  private String waitForContent(String path) throws InterruptedException {
+  public Collection<MetricData> waitForMetrics() {
+    //    return waitForTelemetry("get-metrics", () -> ExportMetricsServiceRequest.newBuilder());
+    // todo
+    return Collections.emptyList();
+  }
+
+  public Collection<LogRecordData> waitForLogs() {
+    //    return waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
+    // todo
+    return Collections.emptyList();
+  }
+
+  private byte[] waitForContent(String path) throws InterruptedException {
     long previousSize = 0;
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
-    String content = "[]";
+    byte[] content = "[]".getBytes(StandardCharsets.UTF_8);
     while (System.currentTimeMillis() < deadline) {
-      content = client.get(path).aggregate().join().contentUtf8();
-      if (content.length() > 2 && content.length() == previousSize) {
+      content = client.get(path).aggregate().join().content().array();
+      if (content.length > 2 && content.length == previousSize) {
         break;
       }
 
-      previousSize = content.length();
+      previousSize = content.length;
       System.out.println("Current content size " + previousSize);
       TimeUnit.MILLISECONDS.sleep(500);
     }
