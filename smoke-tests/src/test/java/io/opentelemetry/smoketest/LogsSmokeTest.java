@@ -31,7 +31,7 @@ class LogsSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
-  void Should_export_logs(int jdk) {
+  void shouldExportLogs(int jdk) {
     startTarget(jdk);
 
     client().get("/greeting").aggregate().join();

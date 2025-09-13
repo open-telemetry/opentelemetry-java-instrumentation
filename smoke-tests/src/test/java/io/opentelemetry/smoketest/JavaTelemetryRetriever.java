@@ -88,6 +88,7 @@ public class JavaTelemetryRetriever {
     }
   }
 
+  @SuppressWarnings("SystemOut")
   private String waitForContent(String path) throws InterruptedException {
     long previousSize = 0;
     long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
