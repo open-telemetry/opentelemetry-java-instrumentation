@@ -9,6 +9,11 @@
 - Deprecated (and `-alpha`) SpanNames class was removed
   ([#14582](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14582))
 
+### 🌟 New javaagent instrumentation
+
+- Add ClickHouse client v2 instrumentation
+  ([#14501](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14501))
+
 ### 📈 Enhancements
 
 - Add code attributes for log4j1
@@ -25,8 +30,14 @@
   ([#14468](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14468))
 - Instrument instrumentation suppression API
   ([#14565](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14565))
-- Update declarative config file version support
+- Declarative config: update file version support
   ([#14593](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14593))
+- Add `url.template` support to Spring 6 RestTemplate
+  ([#14612](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14612))
+- Declarative config: add missing resource providers
+  ([#14222](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14222))
+- Declarative config: map common-enabled property
+  ([#14589](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14589))
 
 ### 🛠️ Bug fixes
 
@@ -34,12 +45,14 @@
   ([#14479](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14479))
 - Fix JUL logger methods parameter mismatch
   ([#14531](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14531))
+- Fix a test failure with latest Mongo release
+  ([#14642](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14642))
 
 ### 🧰 Tooling
 
 - Add constructor to AgentClassLoader for custom parent ClassLoader
   ([#14480](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14480))
-- Make declarative config bridge usable by Spring starter and contrib
+- Declarative config: make bridge usable by Spring starter and contrib
   ([#14497](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14497),
    [#14548](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14548))
 - Reduce log level for main jar detection
