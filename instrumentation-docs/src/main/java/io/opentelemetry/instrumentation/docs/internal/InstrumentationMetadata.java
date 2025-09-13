@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +17,7 @@ import javax.annotation.Nullable;
  * Represents the data in a metadata.yaml file. This class is internal and is hence not for public
  * use. Its APIs are unstable and can change at any time.
  */
-public class InstrumentationMetaData {
+public class InstrumentationMetadata {
   @Nullable private String description;
 
   @JsonProperty("disabled_by_default")
@@ -29,28 +30,43 @@ public class InstrumentationMetaData {
   @Nullable
   private String libraryLink;
 
+  @JsonProperty("display_name")
+  @Nullable
+  private String displayName;
+
   private List<ConfigurationOption> configurations = Collections.emptyList();
 
-  public InstrumentationMetaData() {
+  public InstrumentationMetadata() {
     this.classification = InstrumentationClassification.LIBRARY.toString();
   }
 
-  public InstrumentationMetaData(
+  public InstrumentationMetadata(
       @Nullable String description,
-      String classification,
       @Nullable Boolean disabledByDefault,
+      String classification,
       @Nullable String libraryLink,
+      @Nullable String displayName,
       @Nullable List<ConfigurationOption> configurations) {
     this.classification = classification;
     this.disabledByDefault = disabledByDefault;
     this.description = description;
     this.libraryLink = libraryLink;
+    this.displayName = displayName;
     this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
   }
 
   @Nullable
   public String getDescription() {
     return description;
+  }
+
+  public void setDisplayName(@Nullable String displayName) {
+    this.displayName = displayName;
+  }
+
+  @Nullable
+  public String getDisplayName() {
+    return displayName;
   }
 
   @Nonnull
@@ -91,5 +107,67 @@ public class InstrumentationMetaData {
 
   public void setLibraryLink(@Nullable String libraryLink) {
     this.libraryLink = libraryLink;
+  }
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static class Builder {
+
+    @Nullable private String description;
+    @Nullable private Boolean disabledByDefault;
+    @Nullable private String classification;
+    @Nullable private String libraryLink;
+    @Nullable private String displayName;
+    private List<ConfigurationOption> configurations = Collections.emptyList();
+
+    @CanIgnoreReturnValue
+    public Builder description(@Nullable String description) {
+      this.description = description;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder disabledByDefault(@Nullable Boolean disabledByDefault) {
+      this.disabledByDefault = disabledByDefault;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder classification(@Nullable String classification) {
+      this.classification = classification;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder libraryLink(@Nullable String libraryLink) {
+      this.libraryLink = libraryLink;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder displayName(@Nullable String displayName) {
+      this.displayName = displayName;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder configurations(@Nullable List<ConfigurationOption> configurations) {
+      this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+      return this;
+    }
+
+    public InstrumentationMetadata build() {
+      return new InstrumentationMetadata(
+          description,
+          disabledByDefault,
+          classification != null
+              ? classification
+              : InstrumentationClassification.LIBRARY.toString(),
+          libraryLink,
+          displayName,
+          configurations);
+    }
   }
 }
