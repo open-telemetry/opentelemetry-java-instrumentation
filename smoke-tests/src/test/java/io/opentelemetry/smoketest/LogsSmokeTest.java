@@ -2,13 +2,14 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import java.time.Duration;
 import java.util.Collection;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;

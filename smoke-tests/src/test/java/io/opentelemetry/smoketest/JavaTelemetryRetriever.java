@@ -56,11 +56,11 @@ public class JavaTelemetryRetriever {
 
   public Collection<LogRecordData> waitForLogs() {
     Collection<ExportLogsServiceRequest> requests =
-           waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
-       return TelemetryConverter.getLogRecordData(
-           requests.stream()
-               .flatMap(r -> r.getResourceLogsList().stream())
-               .collect(Collectors.toList()));
+        waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
+    return TelemetryConverter.getLogRecordData(
+        requests.stream()
+            .flatMap(r -> r.getResourceLogsList().stream())
+            .collect(Collectors.toList()));
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -102,9 +102,6 @@ public class JavaTelemetryRetriever {
       System.out.println("Current content size " + previousSize);
       TimeUnit.MILLISECONDS.sleep(500);
     }
-
-    // todo remove debug
-    //    System.out.println(new String(content, StandardCharsets.UTF_8));
 
     return content;
   }

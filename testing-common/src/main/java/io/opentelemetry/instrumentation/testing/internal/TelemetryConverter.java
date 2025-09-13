@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.testing.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanArrayKey;
@@ -73,8 +78,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change
- * at any time.
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
  */
 public class TelemetryConverter {
   private static final char TRACESTATE_KEY_VALUE_DELIMITER = '=';
