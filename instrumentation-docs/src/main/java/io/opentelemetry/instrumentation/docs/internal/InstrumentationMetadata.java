@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -34,10 +35,10 @@ public class InstrumentationMetadata {
   @Nullable
   private String displayName;
 
-  private List<ConfigurationOption> configurations = Collections.emptyList();
+  private List<ConfigurationOption> configurations = emptyList();
 
   public InstrumentationMetadata() {
-    this.classification = InstrumentationClassification.LIBRARY.toString();
+    this.classification = InstrumentationClassification.LIBRARY.name();
   }
 
   public InstrumentationMetadata(
@@ -52,7 +53,7 @@ public class InstrumentationMetadata {
     this.description = description;
     this.libraryLink = libraryLink;
     this.displayName = displayName;
-    this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+    this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 
   @Nullable
@@ -97,7 +98,7 @@ public class InstrumentationMetadata {
   }
 
   public void setConfigurations(@Nullable List<ConfigurationOption> configurations) {
-    this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+    this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 
   @Nullable
@@ -120,7 +121,7 @@ public class InstrumentationMetadata {
     @Nullable private String classification;
     @Nullable private String libraryLink;
     @Nullable private String displayName;
-    private List<ConfigurationOption> configurations = Collections.emptyList();
+    private List<ConfigurationOption> configurations = emptyList();
 
     @CanIgnoreReturnValue
     public Builder description(@Nullable String description) {
@@ -154,7 +155,7 @@ public class InstrumentationMetadata {
 
     @CanIgnoreReturnValue
     public Builder configurations(@Nullable List<ConfigurationOption> configurations) {
-      this.configurations = Objects.requireNonNullElse(configurations, Collections.emptyList());
+      this.configurations = Objects.requireNonNullElse(configurations, emptyList());
       return this;
     }
 
@@ -162,9 +163,7 @@ public class InstrumentationMetadata {
       return new InstrumentationMetadata(
           description,
           disabledByDefault,
-          classification != null
-              ? classification
-              : InstrumentationClassification.LIBRARY.toString(),
+          classification != null ? classification : InstrumentationClassification.LIBRARY.name(),
           libraryLink,
           displayName,
           configurations);

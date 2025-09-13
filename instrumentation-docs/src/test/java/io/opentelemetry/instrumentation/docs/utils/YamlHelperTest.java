@@ -42,7 +42,7 @@ class YamlHelperTest {
         new InstrumentationMetadata.Builder()
             .description("Spring Web 6.0 instrumentation")
             .displayName("Spring Web")
-            .classification(InstrumentationClassification.LIBRARY.toString())
+            .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(true)
             .build();
 
@@ -114,7 +114,7 @@ class YamlHelperTest {
     InstrumentationMetadata springMetadata =
         new InstrumentationMetadata.Builder()
             .description("Spring Web 6.0 instrumentation")
-            .classification(InstrumentationClassification.LIBRARY.toString())
+            .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
             .configurations(
                 List.of(
@@ -138,7 +138,7 @@ class YamlHelperTest {
 
     InstrumentationMetadata internalMetadata =
         new InstrumentationMetadata.Builder()
-            .classification(InstrumentationClassification.INTERNAL.toString())
+            .classification(InstrumentationClassification.INTERNAL.name())
             .build();
 
     modules.add(
@@ -153,7 +153,7 @@ class YamlHelperTest {
 
     InstrumentationMetadata customMetadata =
         new InstrumentationMetadata.Builder()
-            .classification(InstrumentationClassification.CUSTOM.toString())
+            .classification(InstrumentationClassification.CUSTOM.name())
             .build();
 
     Map<InstrumentationType, Set<String>> externalAnnotationsVersions =
@@ -516,7 +516,7 @@ class YamlHelperTest {
     InstrumentationMetadata metadataWithLink =
         new InstrumentationMetadata.Builder()
             .description("Test library instrumentation with link")
-            .classification(InstrumentationClassification.LIBRARY.toString())
+            .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
             .libraryLink("https://example.com/test-library-docs")
             .build();
@@ -534,7 +534,7 @@ class YamlHelperTest {
     InstrumentationMetadata metadataWithoutLink =
         new InstrumentationMetadata.Builder()
             .description("Test library instrumentation without link")
-            .classification(InstrumentationClassification.LIBRARY.toString())
+            .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
             .build();
 
