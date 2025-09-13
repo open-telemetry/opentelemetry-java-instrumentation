@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-public class AgentDebugLoggingTest extends JavaSmokeTest {
+class AgentDebugLoggingTest extends JavaSmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
@@ -25,7 +25,7 @@ public class AgentDebugLoggingTest extends JavaSmokeTest {
   }
 
   @Test
-  public void verify_that_debug_logging_is_working() {
+  void verify_that_debug_logging_is_working() {
     startTarget(8);
     stopTarget();
   }
