@@ -5,10 +5,15 @@
 
 package io.opentelemetry.javaagent.testing.common;
 
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.instrumentation.testing.internal.TelemetryConverter;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
+import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -75,7 +80,21 @@ public final class AgentTestingExporterAccess {
   @SuppressWarnings("unchecked")
   public static List<SpanData> getExportedSpans() {
     try {
-      return TelemetryConverter.getSpanData((List<byte[]>) getSpanExportRequests.invokeExact());
+      List<byte[]> bytes = (List<byte[]>) getSpanExportRequests.invokeExact();
+      List<ResourceSpans> allResourceSpans =
+          bytes.stream()
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportTraceServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
+              .flatMap(request -> request.getResourceSpansList().stream())
+              .collect(toList());
+
+      return TelemetryConverter.getSpanData(allResourceSpans);
     } catch (Throwable t) {
       throw new AssertionError("Could not invoke getSpanExportRequests", t);
     }
