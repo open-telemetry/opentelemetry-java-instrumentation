@@ -14,7 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-public class SecurityManagerSmokeTest extends JavaSmokeTest {
+class SecurityManagerSmokeTest extends JavaSmokeTest {
   @Override
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk"
@@ -30,7 +30,7 @@ public class SecurityManagerSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  public void security_manager_smoke_test_on_JDK__jdk(int jdk) {
+  void security_manager_smoke_test_on_JDK__jdk(int jdk) {
     startTarget(jdk);
 
     assertThat(waitForTraces())
