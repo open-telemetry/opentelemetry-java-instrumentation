@@ -6,15 +6,16 @@ package io.opentelemetry.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
 import java.time.Duration;
 import java.util.Collection;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class LogsSmokeTest extends SmokeTest {
+class LogsSmokeTest extends JavaSmokeTest {
+  @Override
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
         + jdk
@@ -33,7 +34,7 @@ class LogsSmokeTest extends SmokeTest {
     startTarget(jdk);
 
     client().get("/greeting").aggregate().join();
-    Collection<ExportLogsServiceRequest> logs = waitForLogs();
+    Collection<LogRecordData> logs = waitForLogs();
 
     assertThat(logs).isNotEmpty();
 
