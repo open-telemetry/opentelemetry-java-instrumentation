@@ -44,8 +44,6 @@ import io.opentelemetry.sdk.trace.data.EventData;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.ArrayValue;
 import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
@@ -67,7 +65,6 @@ import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.ScopeSpans;
 import io.opentelemetry.testing.internal.proto.trace.v1.Span;
 import io.opentelemetry.testing.internal.proto.trace.v1.Status;
-import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -168,19 +165,7 @@ public class TelemetryConverter {
     return spans;
   }
 
-  public static List<MetricData> getMetricsData(List<byte[]> exportRequests) {
-    List<ResourceMetrics> allResourceMetrics =
-        exportRequests.stream()
-            .map(
-                serialized -> {
-                  try {
-                    return ExportMetricsServiceRequest.parseFrom(serialized);
-                  } catch (InvalidProtocolBufferException e) {
-                    throw new AssertionError(e);
-                  }
-                })
-            .flatMap(request -> request.getResourceMetricsList().stream())
-            .collect(toList());
+  public static List<MetricData> getMetricsData(Collection<ResourceMetrics> allResourceMetrics) {
     List<MetricData> metrics = new ArrayList<>();
     for (ResourceMetrics resourceMetrics : allResourceMetrics) {
       Resource resource = resourceMetrics.getResource();
@@ -203,19 +188,7 @@ public class TelemetryConverter {
     return metrics;
   }
 
-  public static List<LogRecordData> getLogRecordData(List<byte[]> exportRequests) {
-    List<ResourceLogs> allResourceLogs =
-        exportRequests.stream()
-            .map(
-                serialized -> {
-                  try {
-                    return ExportLogsServiceRequest.parseFrom(serialized);
-                  } catch (InvalidProtocolBufferException e) {
-                    throw new AssertionError(e);
-                  }
-                })
-            .flatMap(request -> request.getResourceLogsList().stream())
-            .collect(toList());
+  public static List<LogRecordData> getLogRecordData(List<ResourceLogs> allResourceLogs) {
     List<LogRecordData> logs = new ArrayList<>();
     for (ResourceLogs resourceLogs : allResourceLogs) {
       Resource resource = resourceLogs.getResource();
