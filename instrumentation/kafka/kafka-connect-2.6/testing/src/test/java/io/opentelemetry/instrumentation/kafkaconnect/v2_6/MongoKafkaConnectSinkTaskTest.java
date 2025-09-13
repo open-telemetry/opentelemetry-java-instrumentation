@@ -372,7 +372,8 @@ class MongoKafkaConnectSinkTaskTest {
     // Write traces JSON to file for inspection
     writeTracesToFile(tracesJson, "mongo-traces.json");
 
-    // Use structured deserialization approach with JsonFormat and add distributed tracing assertions
+    // Use structured deserialization approach with JsonFormat and add distributed tracing
+    // assertions
     try {
       verifyDistributedTracingFlow(tracesJson, uniqueTopicName);
     } catch (Exception e) {
@@ -561,28 +562,28 @@ class MongoKafkaConnectSinkTaskTest {
     logger.info("Test cleanup complete");
   }
 
-  /**
-   * Writes traces JSON to a file for inspection and debugging.
-   */
+  /** Writes traces JSON to a file for inspection and debugging. */
   private static void writeTracesToFile(String tracesJson, String filename) {
     try {
       File outputDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
       if (!outputDir.exists()) {
         outputDir.mkdirs();
       }
-      
+
       File tracesFile = new File(outputDir, filename);
-      
+
       // Pretty print the JSON for better readability
       ObjectMapper objectMapper = new ObjectMapper();
       objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
       JsonNode jsonNode = objectMapper.readTree(tracesJson);
       String prettyJson = objectMapper.writeValueAsString(jsonNode);
-      
-      try (java.io.Writer writer = java.nio.file.Files.newBufferedWriter(tracesFile.toPath(), java.nio.charset.StandardCharsets.UTF_8)) {
+
+      try (java.io.Writer writer =
+          java.nio.file.Files.newBufferedWriter(
+              tracesFile.toPath(), java.nio.charset.StandardCharsets.UTF_8)) {
         writer.write(prettyJson);
       }
-      
+
       logger.info("📄 Traces JSON written to: {}", tracesFile.getAbsolutePath());
     } catch (Exception e) {
       logger.warn("Failed to write traces to file: {}", e.getMessage());
@@ -590,24 +591,25 @@ class MongoKafkaConnectSinkTaskTest {
   }
 
   /**
-   * Simple approach - just parse JSON and print the trace info you want to see!
-   * Since the JSON is already in resourceSpans format, we can extract what we need directly
+   * Simple approach - just parse JSON and print the trace info you want to see! Since the JSON is
+   * already in resourceSpans format, we can extract what we need directly
    */
-  private static void deserializeOtlpDataFromJson(String tracesJson, String expectedTopicName) throws Exception {
+  private static void deserializeOtlpDataFromJson(String tracesJson, String expectedTopicName)
+      throws Exception {
     logger.info("🔍 Parsing JSON traces to extract span information");
-    
+
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode tracesArray = objectMapper.readTree(tracesJson);
-    
+
     // Process each trace in the JSON array
     for (JsonNode traceNode : tracesArray) {
       JsonNode resourceSpansArray = traceNode.get("resourceSpans");
       if (resourceSpansArray != null && resourceSpansArray.isArray()) {
-        
+
         // Process each ResourceSpans
         for (JsonNode resourceSpansNode : resourceSpansArray) {
           logger.info("Processing Resource with attributes:");
-          
+
           JsonNode resourceNode = resourceSpansNode.get("resource");
           if (resourceNode != null) {
             JsonNode attributes = resourceNode.get("attributes");
@@ -619,31 +621,31 @@ class MongoKafkaConnectSinkTaskTest {
               }
             }
           }
-          
+
           JsonNode scopeSpansArray = resourceSpansNode.get("scopeSpans");
           if (scopeSpansArray != null && scopeSpansArray.isArray()) {
-            
+
             // Process each ScopeSpans
             for (JsonNode scopeSpansNode : scopeSpansArray) {
               JsonNode scopeNode = scopeSpansNode.get("scope");
               String scopeName = scopeNode != null ? scopeNode.path("name").asText() : "unknown";
               logger.info("Scope name: {}", scopeName);
-              
+
               JsonNode spansArray = scopeSpansNode.get("spans");
               if (spansArray != null && spansArray.isArray()) {
-                
+
                 // Process each Span
                 for (JsonNode spanNode : spansArray) {
                   String spanName = spanNode.path("name").asText();
                   String spanId = spanNode.path("spanId").asText();
                   String traceId = spanNode.path("traceId").asText();
                   String kind = spanNode.path("kind").asText();
-                  
+
                   logger.info("  Span: " + spanName);
                   logger.info("    Span ID: " + spanId);
                   logger.info("    Trace ID: " + traceId);
                   logger.info("    Kind: " + kind);
-                  
+
                   // Print span attributes
                   JsonNode spanAttributes = spanNode.path("attributes");
                   if (spanAttributes.isArray()) {
@@ -661,10 +663,8 @@ class MongoKafkaConnectSinkTaskTest {
       }
     }
   }
-  
-  /**
-   * Helper to extract attribute values from different types
-   */
+
+  /** Helper to extract attribute values from different types */
   private static String extractAttributeValue(JsonNode valueNode) {
     if (valueNode.has("stringValue")) {
       return valueNode.path("stringValue").asText();
@@ -677,14 +677,16 @@ class MongoKafkaConnectSinkTaskTest {
     }
     return valueNode.toString();
   }
-  
+
   /**
-   * Your exact deserializeOtlpData method using TracesData.parseFrom(otlpBytes)!
-   * Just prints trace info, no assertions
+   * Your exact deserializeOtlpData method using TracesData.parseFrom(otlpBytes)! Just prints trace
+   * info, no assertions
    */
-  private static void verifyDistributedTracingFlow(String tracesJson, String expectedTopicName) throws IOException {
-    logger.info("🔍 Verifying Kafka Connect distributed tracing flow for topic: {}", expectedTopicName);
-    
+  private static void verifyDistributedTracingFlow(String tracesJson, String expectedTopicName)
+      throws IOException {
+    logger.info(
+        "🔍 Verifying Kafka Connect distributed tracing flow for topic: {}", expectedTopicName);
+
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode rootNode = objectMapper.readTree(tracesJson);
 
@@ -714,8 +716,10 @@ class MongoKafkaConnectSinkTaskTest {
 
         for (JsonNode scopeSpansNode : scopeSpansArray) {
           JsonNode scopeNode = scopeSpansNode.get("scope");
-          String scopeName = scopeNode != null && scopeNode.get("name") != null ? 
-                            scopeNode.get("name").asText() : "";
+          String scopeName =
+              scopeNode != null && scopeNode.get("name") != null
+                  ? scopeNode.get("name").asText()
+                  : "";
 
           JsonNode spansArray = scopeSpansNode.get("spans");
           if (spansArray == null || !spansArray.isArray()) {
@@ -724,31 +728,40 @@ class MongoKafkaConnectSinkTaskTest {
 
           for (JsonNode spanNode : spansArray) {
             String spanName = spanNode.get("name") != null ? spanNode.get("name").asText() : "";
-            String traceId = spanNode.get("traceId") != null ? spanNode.get("traceId").asText() : "";
+            String traceId =
+                spanNode.get("traceId") != null ? spanNode.get("traceId").asText() : "";
             String spanId = spanNode.get("spanId") != null ? spanNode.get("spanId").asText() : "";
-            String parentSpanId = spanNode.get("parentSpanId") != null && !spanNode.get("parentSpanId").asText().isEmpty() ? 
-                                 spanNode.get("parentSpanId").asText() : null;
+            String parentSpanId =
+                spanNode.get("parentSpanId") != null
+                        && !spanNode.get("parentSpanId").asText().isEmpty()
+                    ? spanNode.get("parentSpanId").asText()
+                    : null;
             String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
-            
+
             // Identify spans in our Kafka Connect flow
-            if (scopeName.contains("kafka-connect") && spanName.contains(expectedTopicName) && 
-               spanKind.equals("SPAN_KIND_CONSUMER")) {
-              kafkaConnectConsumerSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+            if (scopeName.contains("kafka-connect")
+                && spanName.contains(expectedTopicName)
+                && spanKind.equals("SPAN_KIND_CONSUMER")) {
+              kafkaConnectConsumerSpan =
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
               logger.info("✅ Found Kafka Connect Consumer Span: {} ({})", spanName, spanId);
-              
+
               // Check for span links (indicating producer -> consumer linking)
               JsonNode linksArray = spanNode.get("links");
               if (linksArray != null && linksArray.isArray() && linksArray.size() > 0) {
                 hasSpanLinks = true;
                 logger.info("✅ Kafka Connect span has {} span links", linksArray.size());
                 for (JsonNode linkNode : linksArray) {
-                  String linkedTraceId = linkNode.get("traceId") != null ? linkNode.get("traceId").asText() : "";
-                  String linkedSpanId = linkNode.get("spanId") != null ? linkNode.get("spanId").asText() : "";
+                  String linkedTraceId =
+                      linkNode.get("traceId") != null ? linkNode.get("traceId").asText() : "";
+                  String linkedSpanId =
+                      linkNode.get("spanId") != null ? linkNode.get("spanId").asText() : "";
                   logger.info("  🔗 Linked to: Trace {} Span {}", linkedTraceId, linkedSpanId);
                 }
               }
             } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
-              databaseSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+              databaseSpan =
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
               logger.info("✅ Found Database Span: {} ({})", spanName, spanId);
             }
           }
@@ -761,24 +774,34 @@ class MongoKafkaConnectSinkTaskTest {
 
     // Check that we found the required spans
     if (kafkaConnectConsumerSpan == null) {
-      throw new AssertionError("❌ Kafka Connect Consumer span not found for topic: " + expectedTopicName);
+      throw new AssertionError(
+          "❌ Kafka Connect Consumer span not found for topic: " + expectedTopicName);
     }
     if (databaseSpan == null) {
-        throw new AssertionError("❌ Database span not found");
+      throw new AssertionError("❌ Database span not found");
     }
 
     // Assertion 1: Same Trace ID between Kafka Connect Consumer and Database spans
     if (!kafkaConnectConsumerSpan.traceId.equals(databaseSpan.traceId)) {
-      throw new AssertionError("❌ Trace ID mismatch between Kafka Connect Consumer (" + kafkaConnectConsumerSpan.traceId + 
-                              ") and Database (" + databaseSpan.traceId + ")");
+      throw new AssertionError(
+          "❌ Trace ID mismatch between Kafka Connect Consumer ("
+              + kafkaConnectConsumerSpan.traceId
+              + ") and Database ("
+              + databaseSpan.traceId
+              + ")");
     }
-    logger.info("✅ ASSERTION 1 PASSED: Kafka Connect and Database spans share the same trace ID: {}", kafkaConnectConsumerSpan.traceId);
+    logger.info(
+        "✅ ASSERTION 1 PASSED: Kafka Connect and Database spans share the same trace ID: {}",
+        kafkaConnectConsumerSpan.traceId);
 
-    // Assertion 2: Span linking - Kafka Connect span should have span links if trace context was propagated
+    // Assertion 2: Span linking - Kafka Connect span should have span links if trace context was
+    // propagated
     if (!hasSpanLinks) {
-      logger.info("ℹ️  ASSERTION 2 INFO: Kafka Connect span has no span links (expected since test JVM producer is not instrumented)");
+      logger.info(
+          "ℹ️  ASSERTION 2 INFO: Kafka Connect span has no span links (expected since test JVM producer is not instrumented)");
     } else {
-      logger.info("✅ ASSERTION 2 PASSED: Kafka Connect span has span links, indicating proper trace context propagation and KafkaConnectBatchProcessSpanLinksExtractor is working");
+      logger.info(
+          "✅ ASSERTION 2 PASSED: Kafka Connect span has span links, indicating proper trace context propagation and KafkaConnectBatchProcessSpanLinksExtractor is working");
     }
 
     // Assertion 3: Parent-child relationship between Kafka Connect and Database
@@ -786,15 +809,24 @@ class MongoKafkaConnectSinkTaskTest {
       throw new AssertionError("❌ Database span has no parent span ID");
     }
     if (!databaseSpan.parentSpanId.equals(kafkaConnectConsumerSpan.spanId)) {
-      throw new AssertionError("❌ Database span parent (" + databaseSpan.parentSpanId + 
-                              ") does not match Kafka Connect Consumer span (" + kafkaConnectConsumerSpan.spanId + ")");
+      throw new AssertionError(
+          "❌ Database span parent ("
+              + databaseSpan.parentSpanId
+              + ") does not match Kafka Connect Consumer span ("
+              + kafkaConnectConsumerSpan.spanId
+              + ")");
     }
     logger.info("✅ ASSERTION 3 PASSED: Database span is child of Kafka Connect Consumer span");
 
     logger.info("🎉 KAFKA CONNECT DISTRIBUTED TRACING ASSERTIONS COMPLETED!");
     logger.info("📊 Flow Summary:");
-    logger.info("   Consumer:  {} [{}] {}", kafkaConnectConsumerSpan.name, kafkaConnectConsumerSpan.spanId, hasSpanLinks ? "(has span links)" : "(no span links)");
-    logger.info("   Database:  {} [{}] (child of consumer)", databaseSpan.name, databaseSpan.spanId);
+    logger.info(
+        "   Consumer:  {} [{}] {}",
+        kafkaConnectConsumerSpan.name,
+        kafkaConnectConsumerSpan.spanId,
+        hasSpanLinks ? "(has span links)" : "(no span links)");
+    logger.info(
+        "   Database:  {} [{}] (child of consumer)", databaseSpan.name, databaseSpan.spanId);
     logger.info("   Trace ID:  {}", kafkaConnectConsumerSpan.traceId);
   }
 
@@ -807,7 +839,13 @@ class MongoKafkaConnectSinkTaskTest {
     final String kind;
     final String scope;
 
-    SpanInfo(String name, String traceId, String spanId, String parentSpanId, String kind, String scope) {
+    SpanInfo(
+        String name,
+        String traceId,
+        String spanId,
+        String parentSpanId,
+        String kind,
+        String scope) {
       this.name = name;
       this.traceId = traceId;
       this.spanId = spanId;
@@ -816,7 +854,4 @@ class MongoKafkaConnectSinkTaskTest {
       this.scope = scope;
     }
   }
-
-
-
 }

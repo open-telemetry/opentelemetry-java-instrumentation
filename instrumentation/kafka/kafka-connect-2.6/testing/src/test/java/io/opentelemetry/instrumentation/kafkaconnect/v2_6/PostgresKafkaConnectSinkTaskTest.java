@@ -68,7 +68,6 @@ class PostgresKafkaConnectSinkTaskTest {
   private static final Logger logger =
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
 
-
   private static final String CONFLUENT_VERSION = "7.5.9";
 
   // Ports
@@ -511,7 +510,6 @@ class PostgresKafkaConnectSinkTaskTest {
         logger.error("Error closing network: " + e.getMessage());
       }
     }
-
   }
 
   // Private methods

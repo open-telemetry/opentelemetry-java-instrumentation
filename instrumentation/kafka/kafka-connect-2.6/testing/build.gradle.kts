@@ -36,10 +36,10 @@ dependencies {
 // Configure test tasks to have access to agent jar
 tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
-  
-  // Make agent jar path available to tests  
+
+  // Make agent jar path available to tests
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-  
+
   // Configure test JVM (no agent attached to test process)
   jvmArgs(
     "-Dotel.traces.exporter=none",
