@@ -5,17 +5,15 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MINUTES;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.restassured.http.ContentType;
 import java.io.File;
 import java.io.IOException;
@@ -47,7 +45,6 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -71,8 +68,6 @@ class PostgresKafkaConnectSinkTaskTest {
   private static final Logger logger =
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
 
-  @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String CONFLUENT_VERSION = "7.5.9";
 
@@ -222,11 +217,11 @@ class PostgresKafkaConnectSinkTaskTest {
             .withEnv("KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS", "100")
             .withStartupTimeout(Duration.of(5, MINUTES));
 
-    // Get the agent path from system properties
-    String agentPath = System.getProperty("otel.javaagent.testing.javaagent-jar-path");
+    // Get the agent path from system properties (smoke test pattern)
+    String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
     if (agentPath == null) {
       throw new IllegalStateException(
-          "Agent path not found. Make sure the test is run with the agent.");
+          "Agent path not found. Make sure the shadowJar task is configured correctly.");
     }
 
     kafkaConnect =
@@ -517,12 +512,6 @@ class PostgresKafkaConnectSinkTaskTest {
       }
     }
 
-    // Small delay to ensure containers are fully stopped before next test
-    try {
-      Thread.sleep(2000);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-    }
   }
 
   // Private methods
