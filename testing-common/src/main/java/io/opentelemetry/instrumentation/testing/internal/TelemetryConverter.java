@@ -46,7 +46,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
 import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.ArrayValue;
 import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
@@ -94,19 +93,7 @@ public class TelemetryConverter {
   private static final boolean hasExtendedAttributes =
       classAvailable("io.opentelemetry.api.incubator.common.ExtendedAttributes");
 
-  public static List<SpanData> getSpanData(List<byte[]> exportRequests) {
-    List<ResourceSpans> allResourceSpans =
-        exportRequests.stream()
-            .map(
-                serialized -> {
-                  try {
-                    return ExportTraceServiceRequest.parseFrom(serialized);
-                  } catch (InvalidProtocolBufferException e) {
-                    throw new AssertionError(e);
-                  }
-                })
-            .flatMap(request -> request.getResourceSpansList().stream())
-            .collect(toList());
+  public static List<SpanData> getSpanData(Collection<ResourceSpans> allResourceSpans) {
     List<SpanData> spans = new ArrayList<>();
     for (ResourceSpans resourceSpans : allResourceSpans) {
       Resource resource = resourceSpans.getResource();

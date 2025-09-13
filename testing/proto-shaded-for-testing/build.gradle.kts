@@ -5,6 +5,7 @@ plugins {
 
 dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
+  implementation("com.google.protobuf:protobuf-java-util:4.32.1")
 }
 
 tasks {
