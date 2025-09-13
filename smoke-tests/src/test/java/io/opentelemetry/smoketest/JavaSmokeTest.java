@@ -103,6 +103,7 @@ public abstract class JavaSmokeTest {
 
   public void stopTarget() {
     containerManager.stopTarget();
+    cleanup();
   }
 
   protected List<SpanData> waitForTraces() {
