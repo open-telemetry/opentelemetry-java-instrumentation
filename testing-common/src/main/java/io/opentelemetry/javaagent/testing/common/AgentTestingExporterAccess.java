@@ -11,6 +11,8 @@ import io.opentelemetry.instrumentation.testing.internal.TelemetryConverter;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.testing.internal.proto.trace.v1.ResourceSpans;
 import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
@@ -104,7 +106,17 @@ public final class AgentTestingExporterAccess {
   public static List<MetricData> getExportedMetrics() {
     try {
       return TelemetryConverter.getMetricsData(
-          (List<byte[]>) getMetricExportRequests.invokeExact());
+          ((List<byte[]>) getMetricExportRequests.invokeExact()).stream()
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportMetricsServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
+              .flatMap(request -> request.getResourceMetricsList().stream())
+              .collect(toList()));
     } catch (Throwable t) {
       throw new AssertionError("Could not invoke getSpanExportRequests", t);
     }
@@ -113,7 +125,17 @@ public final class AgentTestingExporterAccess {
   @SuppressWarnings("unchecked")
   public static List<LogRecordData> getExportedLogRecords() {
     try {
-      return TelemetryConverter.getLogRecordData((List<byte[]>) getLogExportRequests.invokeExact());
+      return TelemetryConverter.getLogRecordData(((List<byte[]>) getLogExportRequests.invokeExact()).stream()
+          .map(
+              serialized -> {
+                try {
+                  return ExportLogsServiceRequest.parseFrom(serialized);
+                } catch (InvalidProtocolBufferException e) {
+                  throw new AssertionError(e);
+                }
+              })
+          .flatMap(request -> request.getResourceLogsList().stream())
+          .collect(toList()));
     } catch (Throwable t) {
       throw new AssertionError("Could not invoke getLogExportRequests", t);
     }

@@ -12,12 +12,13 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.jackson.core.JsonProcessingException;
 import io.opentelemetry.testing.internal.jackson.databind.ObjectMapper;
+import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
 import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.testing.internal.protobuf.GeneratedMessage;
 import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.testing.internal.protobuf.util.JsonFormat;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
@@ -45,23 +46,21 @@ public class JavaTelemetryRetriever {
   }
 
   public Collection<MetricData> waitForMetrics() {
-    //    try {
-    //      return TelemetryConverter.getMetricsData(singletonList(waitForContent("get-metrics")));
-    //    } catch (InterruptedException e) {
-    //      throw new RuntimeException(e);
-    //    }
-    // todo
-    return Collections.emptyList();
+    Collection<ExportMetricsServiceRequest> requests =
+        waitForTelemetry("get-metrics", () -> ExportMetricsServiceRequest.newBuilder());
+    return TelemetryConverter.getMetricsData(
+        requests.stream()
+            .flatMap(r -> r.getResourceMetricsList().stream())
+            .collect(Collectors.toList()));
   }
 
   public Collection<LogRecordData> waitForLogs() {
-    //    try {
-    //      return TelemetryConverter.getLogRecordData(singletonList(waitForContent("get-logs")));
-    //    } catch (InterruptedException e) {
-    //      throw new RuntimeException(e);
-    //    }
-    // todo
-    return Collections.emptyList();
+    Collection<ExportLogsServiceRequest> requests =
+           waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
+       return TelemetryConverter.getLogRecordData(
+           requests.stream()
+               .flatMap(r -> r.getResourceLogsList().stream())
+               .collect(Collectors.toList()));
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
