@@ -5,16 +5,16 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
+
 import io.opentelemetry.semconv.ServiceAttributes;
+import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import java.time.Duration;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class QuarkusSmokeTest extends JavaSmokeTest {
