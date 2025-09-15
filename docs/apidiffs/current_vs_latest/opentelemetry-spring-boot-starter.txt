@@ -1,2 +1,2 @@
-Comparing source compatibility of opentelemetry-spring-boot-starter-2.21.0-SNAPSHOT.jar against opentelemetry-spring-boot-starter-2.19.0.jar
+Comparing source compatibility of opentelemetry-spring-boot-starter-2.21.0-SNAPSHOT.jar against opentelemetry-spring-boot-starter-2.20.0.jar
 No changes.
