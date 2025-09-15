@@ -37,7 +37,7 @@ class QuarkusSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {17, 21, 23}) // Quarkus 3.7+ requires Java 17+
-  void quarkusSmokeTestOnJdk(int jdk) throws Exception {
+  void quarkusSmokeTest(int jdk) throws Exception {
     withTarget(
         jdk,
         () -> {

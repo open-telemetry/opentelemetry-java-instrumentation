@@ -6,6 +6,7 @@
 package io.opentelemetry.smoketest;
 
 import java.time.Duration;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 
@@ -24,8 +25,9 @@ class AgentDebugLoggingTest extends JavaSmokeTest {
         Duration.ofMinutes(1), ".*DEBUG io.opentelemetry.javaagent.tooling.VersionLogger.*");
   }
 
+  @DisplayName("verifies that debug logging is working by checking for a debug log on startup")
   @Test
-  void verifyThatDebugLoggingIsWorking() throws Exception {
+  void verifyLogging() throws Exception {
     withTarget(8, () -> {});
   }
 }

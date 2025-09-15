@@ -30,7 +30,7 @@ class SecurityManagerSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  void securityManagerSmokeTestOnJdk(int jdk) throws Exception {
+  void securityManagerSmokeTest(int jdk) throws Exception {
     withTarget(
         jdk,
         () ->
