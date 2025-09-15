@@ -1,4 +1,5 @@
-description: This instrumentation enables CONSUMER spans for Spring Pulsar listeners.
+description: This instrumentation enables consumer messaging spans for Spring Pulsar listeners.
+library_link: https://spring.io/projects/spring-pulsar
 configurations:
   - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
     description: >

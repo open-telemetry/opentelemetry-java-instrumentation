@@ -1,6 +1,7 @@
 description: >
-  This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER
+  This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server
   spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
+library_link: https://shenyu.apache.org/
 configurations:
   - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
     description: > 

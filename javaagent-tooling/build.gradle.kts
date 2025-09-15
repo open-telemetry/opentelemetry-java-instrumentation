@@ -17,10 +17,10 @@ dependencies {
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-sdk")
-  implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
   implementation("io.opentelemetry:opentelemetry-extension-kotlin")
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
   // the incubator's ViewConfigCustomizer is used to support loading yaml-based metric views
@@ -62,6 +62,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {

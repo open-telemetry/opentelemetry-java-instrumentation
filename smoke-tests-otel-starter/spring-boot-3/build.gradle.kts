@@ -82,3 +82,9 @@ graalvmNative {
     setForkEvery(1)
   }
 }
+
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata").configure {
+  enabled = false
+}

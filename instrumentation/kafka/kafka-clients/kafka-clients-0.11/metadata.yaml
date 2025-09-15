@@ -1,6 +1,7 @@
 description: >
   This instrumentation enables messaging spans and metrics for Apache Kafka 0.11 clients.
   It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
+library_link: https://kafka.apache.org/
 configurations:
   - name: otel.instrumentation.kafka.producer-propagation.enabled
     description: Enable context propagation for kafka message producers.
