@@ -65,6 +65,15 @@ public abstract class JavaSmokeTest {
     telemetryRetriever = new JavaTelemetryRetriever(containerManager.getBackendMappedPort());
   }
 
+  public void withTarget(int jdk, TargetRunner runner) throws Exception {
+    startTarget(jdk);
+    try {
+      runner.runInTarget();
+    } finally {
+      stopTarget();
+    }
+  }
+
   public Consumer<OutputFrame> startTarget(int jdk) {
     return startTarget(String.valueOf(jdk), null, false);
   }

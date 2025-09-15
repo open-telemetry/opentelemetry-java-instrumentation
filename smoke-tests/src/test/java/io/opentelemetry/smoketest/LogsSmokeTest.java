@@ -31,14 +31,12 @@ class LogsSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
-  void shouldExportLogs(int jdk) {
-    startTarget(jdk);
+  void shouldExportLogs(int jdk) throws Exception {
+    withTarget(jdk, () -> {
+      client().get("/greeting").aggregate().join();
+      Collection<LogRecordData> logs = waitForLogs();
 
-    client().get("/greeting").aggregate().join();
-    Collection<LogRecordData> logs = waitForLogs();
-
-    assertThat(logs).isNotEmpty();
-
-    stopTarget();
+      assertThat(logs).isNotEmpty();
+    });
   }
 }

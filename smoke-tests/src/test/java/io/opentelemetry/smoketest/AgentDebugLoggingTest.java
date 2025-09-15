@@ -25,8 +25,7 @@ class AgentDebugLoggingTest extends JavaSmokeTest {
   }
 
   @Test
-  void verify_that_debug_logging_is_working() {
-    startTarget(8);
-    stopTarget();
+  void verifyThatDebugLoggingIsWorking() throws Exception {
+    withTarget(8, () -> {});
   }
 }

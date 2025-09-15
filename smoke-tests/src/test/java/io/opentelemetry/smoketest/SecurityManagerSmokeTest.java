@@ -30,13 +30,12 @@ class SecurityManagerSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  void security_manager_smoke_test_on_JDK__jdk(int jdk) {
-    startTarget(jdk);
-
-    assertThat(waitForTraces())
-        .hasTracesSatisfyingExactly(
-            trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
-
-    stopTarget();
+  void securityManagerSmokeTestOnJdk(int jdk) throws Exception {
+    withTarget(
+        jdk,
+        () ->
+            assertThat(waitForTraces())
+                .hasTracesSatisfyingExactly(
+                    trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test"))));
   }
 }
