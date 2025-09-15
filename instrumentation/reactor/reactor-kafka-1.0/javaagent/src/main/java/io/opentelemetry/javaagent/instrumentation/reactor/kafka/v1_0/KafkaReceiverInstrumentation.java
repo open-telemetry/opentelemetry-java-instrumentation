@@ -37,10 +37,10 @@ public class KafkaReceiverInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static KafkaReceiver<?, ?> onExit(@Advice.Return KafkaReceiver<?, ?> receiver) {
-      if (!(receiver instanceof InstrumentedKafkaReceiver)) {
-        return new InstrumentedKafkaReceiver<>(receiver);
+      if (receiver instanceof InstrumentedKafkaReceiver) {
+        return receiver;
       }
-      return receiver;
+      return new InstrumentedKafkaReceiver<>(receiver);
     }
   }
 }

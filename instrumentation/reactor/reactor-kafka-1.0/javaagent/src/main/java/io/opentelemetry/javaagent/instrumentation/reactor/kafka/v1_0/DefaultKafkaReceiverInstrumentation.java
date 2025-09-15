@@ -36,12 +36,11 @@ public class DefaultKafkaReceiverInstrumentation implements TypeInstrumentation 
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static Flux<?> onExit(@Advice.Return Flux<?> originalFlux) {
-      Flux<?> flux = originalFlux;
-      if (!(flux instanceof TracingDisablingKafkaFlux)) {
-        flux = new TracingDisablingKafkaFlux<>(flux);
+    public static Flux<?> onExit(@Advice.Return Flux<?> flux) {
+      if (flux instanceof TracingDisablingKafkaFlux) {
+        return flux;
       }
-      return flux;
+      return new TracingDisablingKafkaFlux<>(flux);
     }
   }
 }
