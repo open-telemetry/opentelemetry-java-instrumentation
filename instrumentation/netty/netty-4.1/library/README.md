@@ -35,9 +35,8 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-netty-4.1:OPENTEL
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.http.HttpClientCodec;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
@@ -48,16 +47,19 @@ OpenTelemetry openTelemetry = ...;
 
 NettyClientTelemetry clientTelemetry = NettyClientTelemetry.create(openTelemetry);
 
+EventLoopGroup eventLoopGroup = ...; // Use appropriate EventLoopGroup for your platform
+Class<? extends Channel> channelClass = ...; // Use appropriate Channel class for your platform
+
 Bootstrap bootstrap = new Bootstrap();
-bootstrap.group(new NioEventLoopGroup())
-    .channel(NioSocketChannel.class)
+bootstrap.group(eventLoopGroup)
+    .channel(channelClass)
     .handler(new ChannelInitializer<SocketChannel>() {
         @Override
         protected void initChannel(SocketChannel ch) {
             ch.pipeline()
                 .addLast(new HttpClientCodec())
-                .addLast(clientTelemetry.createRequestHandler())
-                .addLast(clientTelemetry.createResponseHandler());
+                .addLast(clientTelemetry.createCombinedHandler())
+                .addLast(new YourClientHandler()); // Your application handler
         }
     });
 
@@ -71,9 +73,8 @@ NettyClientTelemetry.setChannelContext(channel, Context.current());
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.EventLoopGroup;
-import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.ServerChannel;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.codec.http.HttpServerCodec;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.netty.v4_1.NettyServerTelemetry;
@@ -83,19 +84,20 @@ OpenTelemetry openTelemetry = ...;
 
 NettyServerTelemetry serverTelemetry = NettyServerTelemetry.create(openTelemetry);
 
-EventLoopGroup bossGroup = new NioEventLoopGroup();
-EventLoopGroup workerGroup = new NioEventLoopGroup();
+EventLoopGroup bossGroup = ...; // Use appropriate EventLoopGroup for your platform
+EventLoopGroup workerGroup = ...; // Use appropriate EventLoopGroup for your platform
+Class<? extends ServerChannel> serverChannelClass = ...; // Use appropriate ServerChannel class for your platform
 
 ServerBootstrap bootstrap = new ServerBootstrap();
 bootstrap.group(bossGroup, workerGroup)
-    .channel(NioServerSocketChannel.class)
+    .channel(serverChannelClass)
     .childHandler(new ChannelInitializer<SocketChannel>() {
         @Override
         protected void initChannel(SocketChannel ch) {
             ch.pipeline()
                 .addLast(new HttpServerCodec())
-                .addLast(serverTelemetry.createRequestHandler())
-                .addLast(serverTelemetry.createResponseHandler());
+                .addLast(serverTelemetry.createCombinedHandler())
+                .addLast(new YourServerHandler()); // Your application handler
         }
     });
 

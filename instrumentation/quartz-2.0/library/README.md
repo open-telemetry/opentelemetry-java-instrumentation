@@ -1,7 +1,7 @@
 # Library Instrumentation for Quartz version 2.0 and higher
 
 Provides OpenTelemetry instrumentation for [Quartz Scheduler](https://www.quartz-scheduler.org/),
-enabling INTERNAL spans for each job execution.
+enabling job execution spans.
 
 ## Quickstart
 

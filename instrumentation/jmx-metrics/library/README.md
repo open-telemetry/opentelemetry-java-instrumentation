@@ -2,7 +2,7 @@
 
 Provides OpenTelemetry instrumentation for [Java Management Extensions (JMX)](https://docs.oracle.com/javase/tutorial/jmx/).
 
-This instrumentation collects JMX metrics and exports them as OpenTelemetry metrics.
+This instrumentation collects JMX-based metrics and exports them as OpenTelemetry metrics.
 
 ## Quickstart
 
