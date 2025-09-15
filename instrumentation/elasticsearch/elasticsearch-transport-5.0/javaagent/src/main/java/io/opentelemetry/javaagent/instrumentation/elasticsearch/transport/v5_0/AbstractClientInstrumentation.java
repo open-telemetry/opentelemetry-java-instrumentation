@@ -17,7 +17,10 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.ElasticTransportRequest;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.TransportActionListener;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.action.Action;
@@ -47,44 +50,53 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Action<?, ?, ?> action,
-        @Advice.Argument(1) ActionRequest<?> actionRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelRequest") ElasticTransportRequest transportRequest,
-        @Advice.Argument(value = 2, readOnly = false)
-            ActionListener<ActionResponse> actionListener) {
+    public static class AdviceScope {
+      private final ElasticTransportRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      transportRequest = ElasticTransportRequest.create(action, actionRequest);
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, transportRequest)) {
-        return;
+      public AdviceScope(ElasticTransportRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, transportRequest);
-      scope = context.makeCurrent();
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        if (throwable != null) {
+          instrumenter().end(context, request, null, throwable);
+        }
+      }
+    }
 
+    @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Object[] onEnter(
+        @Advice.Argument(0) Action<?, ?, ?> action,
+        @Advice.Argument(1) ActionRequest<?> actionRequest,
+        @Advice.Argument(2) ActionListener<ActionResponse> originalActionListener) {
+      ActionListener<ActionResponse> actionListener = originalActionListener;
+
+      ElasticTransportRequest request = ElasticTransportRequest.create(action, actionRequest);
+      Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return new Object[] {null, actionListener};
+      }
+
+      Context context = instrumenter().start(parentContext, request);
+      AdviceScope adviceScope = new AdviceScope(request, context, context.makeCurrent());
       actionListener =
           new TransportActionListener<>(
-              instrumenter(), transportRequest, actionListener, context, parentContext);
+              instrumenter(), request, actionListener, context, parentContext);
+      return new Object[] {adviceScope, actionListener};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelRequest") ElasticTransportRequest transportRequest) {
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-
-      if (throwable != null) {
-        instrumenter().end(context, transportRequest, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
+      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
     }
   }
