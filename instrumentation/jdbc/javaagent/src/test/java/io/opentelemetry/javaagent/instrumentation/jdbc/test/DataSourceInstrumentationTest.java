@@ -6,21 +6,22 @@
 package io.opentelemetry.javaagent.instrumentation.jdbc.test;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
 import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
 import com.alibaba.druid.pool.DruidDataSource;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.List;
-import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -73,20 +74,14 @@ class DataSourceInstrumentationTest {
                     span.hasName("DruidDataSource.getConnection")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfying(
+                        .hasAttributesSatisfyingExactly(
                             equalTo(CODE_NAMESPACE, "com.alibaba.druid.pool.DruidDataSource"),
                             equalTo(CODE_FUNCTION, "getConnection"),
-                            equalTo(DB_SYSTEM, "h2"),
-                            equalTo(DB_NAME, "test"))));
-
-    List<SpanData> spans = testing.spans();
-    List<SpanData> dataSourceSpans =
-        spans.stream()
-            .filter(span -> span.getName().equals("DruidDataSource.getConnection"))
-            .collect(Collectors.toList());
-
-    assertThat(dataSourceSpans)
-        .as("Should have exactly one DruidDataSource.getConnection span, not duplicates")
-        .hasSize(1);
+                            equalTo(
+                                DB_CONNECTION_STRING,
+                                emitStableDatabaseSemconv() ? null : "h2:mem:"),
+                            equalTo(maybeStable(DB_NAME), "test"),
+                            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("h2")),
+                            equalTo(DB_USER, emitStableDatabaseSemconv() ? null : "sa"))));
   }
 }
