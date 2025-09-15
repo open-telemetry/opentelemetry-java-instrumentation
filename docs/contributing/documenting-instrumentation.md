@@ -84,6 +84,10 @@ Example:
 
 ```yaml
 description: "This instrumentation enables..."
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - JVM_RUNTIME_METRICS
 disabled_by_default: true
 classification: library
 library_link: https://github.com/...
@@ -127,6 +131,32 @@ Some notes when writing descriptions:
   the description unless they are essential to understanding the purpose of the instrumentation.
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
+
+
+### Semantic Conventions
+
+If the instrumentation adheres to one or more specific semantic conventions, include a
+`semantic_conventions` field with a list of the relevant semantic convention categories.
+
+List of possible options:
+
+* HTTP_CLIENT_SPANS
+* HTTP_CLIENT_METRICS
+* HTTP_SERVER_SPANS
+* HTTP_SERVER_METRICS
+* RPC_CLIENT_SPANS
+* RPC_CLIENT_METRICS
+* RPC_SERVER_SPANS
+* RPC_SERVER_METRICS
+* MESSAGING_SPANS
+* DATABASE_CLIENT_SPANS
+* DATABASE_CLIENT_METRICS
+* DATABASE_POOL_METRICS
+* JVM_RUNTIME_METRICS
+* GRAPHQL_SERVER_SPANS
+* FAAS_SERVER_SPANS
+* GENAI_CLIENT_SPANS
+* GENAI_CLIENT_METRIC
 
 ### Library Link
 
