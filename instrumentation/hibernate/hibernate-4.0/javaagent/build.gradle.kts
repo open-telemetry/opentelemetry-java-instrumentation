@@ -32,6 +32,7 @@ dependencies {
 
   testImplementation("org.hibernate:hibernate-core:4.0.0.Final")
   testImplementation("org.hibernate:hibernate-entitymanager:4.0.0.Final")
+  testImplementation(project(":instrumentation:hibernate:testing"))
 
   testImplementation("org.javassist:javassist:3.28.0-GA")
 }
@@ -40,6 +41,11 @@ val latestDepTest = findProperty("testLatestDeps") as Boolean
 testing {
   suites {
     val version5Test by registering(JvmTestSuite::class) {
+      targets.all {
+        testTask.configure {
+          jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+        }
+      }
       dependencies {
         sources {
           java {
@@ -56,6 +62,7 @@ testing {
         implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
         implementation("javax.activation:activation:1.1.1")
         implementation("org.hsqldb:hsqldb:2.0.0")
+        implementation(project(":instrumentation:hibernate:testing"))
 
         if (latestDepTest) {
           implementation("org.hibernate:hibernate-core:5.0.0.Final")
@@ -65,16 +72,6 @@ testing {
           implementation("org.hibernate:hibernate-core:5.+")
           implementation("org.hibernate:hibernate-entitymanager:5.+")
           implementation("org.springframework.data:spring-data-jpa:(2.4.0,3)")
-        }
-      }
-    }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=database")
-          }
         }
       }
     }
@@ -88,13 +85,27 @@ tasks {
     jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
-
     jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.hibernate.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.hibernate.experimental-span-attributes=true")
+  }
+
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.semconv-stability.opt-in=database")
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testStableSemconv, testExperimental)
   }
 }

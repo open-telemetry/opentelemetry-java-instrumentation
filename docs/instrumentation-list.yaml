@@ -5,8 +5,10 @@
 libraries:
   activej:
   - name: activej-http-6.0
-    description: This instrumentation enables SERVER spans and metrics for the ActiveJ
-      HTTP server.
+    display_name: ActiveJ
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for the ActiveJ HTTP server.
+    library_link: https://activej.io/
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
     scope:
@@ -59,8 +61,10 @@ libraries:
           type: STRING
   akka:
   - name: akka-actor-2.3
+    display_name: Akka Actors
     description: This instrumentation provides context propagation for Akka actors,
       it does not emit any telemetry on its own.
+    library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
     source_path: instrumentation/akka/akka-actor-2.3
     scope:
       name: io.opentelemetry.akka-actor-2.3
@@ -70,8 +74,10 @@ libraries:
       - com.typesafe.akka:akka-actor_2.12:[2.3,)
       - com.typesafe.akka:akka-actor_2.13:[2.3,)
   - name: akka-actor-fork-join-2.5
+    display_name: Akka Actors
     description: This instrumentation provides context propagation for the Akka Fork-Join
       Pool, it does not emit any telemetry on its own.
+    library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
     scope:
       name: io.opentelemetry.akka-actor-fork-join-2.5
@@ -81,8 +87,10 @@ libraries:
       - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
       - com.typesafe.akka:akka-actor_2.11:[2.5,)
   - name: akka-http-10.0
-    description: This instrumentation enables CLIENT and SERVER spans and metrics
-      for the Akka HTTP client and server.
+    display_name: Akka HTTP
+    description: |
+      This instrumentation enables HTTP client spans and metrics for the Akka HTTP client, and HTTP server spans and metrics for the Akka HTTP server.
+    library_link: https://doc.akka.io/docs/akka-http/current/index.html
     source_path: instrumentation/akka/akka-http-10.0
     scope:
       name: io.opentelemetry.akka-http-10.0
@@ -171,6 +179,7 @@ libraries:
   - name: alibaba-druid-1.0
     description: |
       The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
+    library_link: https://github.com/alibaba/druid
     source_path: instrumentation/alibaba-druid-1.0
     scope:
       name: io.opentelemetry.alibaba-druid-1.0
@@ -266,6 +275,7 @@ libraries:
     description: |
       This instrumentation enables database connection pools metrics for Apache DBCP.
       The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
+    library_link: https://commons.apache.org/proper/commons-dbcp/
     source_path: instrumentation/apache-dbcp-2.0
     scope:
       name: io.opentelemetry.apache-dbcp-2.0
@@ -342,10 +352,11 @@ libraries:
         - name: db.client.connection.pool.name
           type: STRING
   - name: apache-dubbo-2.7
-    description: The Apache Dubbo instrumentation provides client and server spans
-      for Apache Dubbo RPC calls. Each call produces a span named after the Dubbo
-      method, enriched with standard RPC attributes (system, service, method), network
-      attributes, and error details if an exception occurs.
+    description: The Apache Dubbo instrumentation provides RPC client spans and RPC
+      server spans for Apache Dubbo RPC calls. Each call produces a span named after
+      the Dubbo method, enriched with standard RPC attributes (system, service, method),
+      network attributes, and error details if an exception occurs.
+    library_link: https://github.com/apache/dubbo/
     source_path: instrumentation/apache-dubbo-2.7
     scope:
       name: io.opentelemetry.apache-dubbo-2.7
@@ -386,8 +397,9 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: apache-httpasyncclient-4.1
-    description: This instrumentation enables CLIENT spans and metrics for the Apache
-      HttpAsyncClient.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for the Apache HttpAsyncClient.
+    library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpasyncclient-4.1
     scope:
       name: io.opentelemetry.apache-httpasyncclient-4.1
@@ -432,8 +444,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-2.0
-    description: This instrumentation enables CLIENT spans and metrics for versions
-      2 and 3 of the Apache HttpClient.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for versions 2 and 3 of the Apache HttpClient.
+    library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
       name: io.opentelemetry.apache-httpclient-2.0
@@ -476,8 +489,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
-    description: This instrumentation enables CLIENT spans and metrics for version
-      4 of the Apache HttpClient.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for version 4 of the Apache HttpClient.
+    library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
       name: io.opentelemetry.apache-httpclient-4.0
@@ -524,7 +538,8 @@ libraries:
           type: STRING
   - name: apache-httpclient-4.3
     description: This instrumentation provides a library integration that enables
-      CLIENT spans and metrics for the Apache HttpClient.
+      HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
     scope:
       name: io.opentelemetry.apache-httpclient-4.3
@@ -571,8 +586,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.0
-    description: This instrumentation enables CLIENT spans and metrics for version
-      5 of the Apache HttpClient.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for version 5 of the Apache HttpClient.
+    library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
       name: io.opentelemetry.apache-httpclient-5.0
@@ -618,7 +634,8 @@ libraries:
           type: STRING
   - name: apache-httpclient-5.2
     description: This instrumentation provides a library integration that enables
-      CLIENT spans and metrics for the Apache HttpClient.
+      HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
     scope:
       name: io.opentelemetry.apache-httpclient-5.2
@@ -666,7 +683,8 @@ libraries:
           type: STRING
   - name: apache-shenyu-2.4
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it augments existing SERVER spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
+      This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
+    library_link: https://shenyu.apache.org/
     source_path: instrumentation/apache-shenyu-2.4
     scope:
       name: io.opentelemetry.apache-shenyu-2.4
@@ -681,8 +699,9 @@ libraries:
       default: false
   armeria:
   - name: armeria-1.3
-    description: This instrumentation enables CLIENT and SERVER spans and metrics
-      for the Armeria HTTP client and server.
+    description: |
+      This instrumentation enables HTTP client spans and metrics for the Armeria HTTP client, and HTTP server spans and metrics for the Armeria HTTP server.
+    library_link: https://armeria.dev/
     source_path: instrumentation/armeria/armeria-1.3
     scope:
       name: io.opentelemetry.armeria-1.3
@@ -776,8 +795,9 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: armeria-grpc-1.14
-    description: This instrumentation enables CLIENT and SERVER spans and metrics
-      for the Armeria gRPC client and server.
+    description: |
+      This instrumentation enables RPC client spans and metrics for the Armeria gRPC client, and RPC server spans and metrics for the Armeria gRPC server.
+    library_link: https://armeria.dev/
     source_path: instrumentation/armeria/armeria-grpc-1.14
     scope:
       name: io.opentelemetry.armeria-grpc-1.14
@@ -817,8 +837,9 @@ libraries:
           type: LONG
   async:
   - name: async-http-client-1.9
-    description: This instrumentation enables CLIENT spans and metrics for version
-      1 of the AsyncHttpClient (AHC) HTTP client.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for version 1 of the AsyncHttpClient (AHC) HTTP client.
+    library_link: https://github.com/AsyncHttpClient/async-http-client
     source_path: instrumentation/async-http-client/async-http-client-1.9
     scope:
       name: io.opentelemetry.async-http-client-1.9
@@ -859,8 +880,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: async-http-client-2.0
-    description: This instrumentation enables CLIENT spans and metrics for version
-      2 of the AsyncHttpClient (AHC) HTTP client.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for version 2 of the AsyncHttpClient (AHC) HTTP client.
+    library_link: https://github.com/AsyncHttpClient/async-http-client
     source_path: instrumentation/async-http-client/async-http-client-2.0
     scope:
       name: io.opentelemetry.async-http-client-2.0
@@ -911,7 +933,8 @@ libraries:
   avaje:
   - name: avaje-jex-3.0
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing SERVER spans and HTTP server metrics.
+      This instrumentation does not emit telemetry on its own. Instead, it hooks into the Avaje Jex Context to extract the HTTP route and attach it to existing HTTP server spans and HTTP server metrics.
+    library_link: https://avaje.io/jex/
     source_path: instrumentation/avaje-jex-3.0
     minimum_java_version: 21
     scope:
@@ -922,8 +945,9 @@ libraries:
   aws:
   - name: aws-lambda-core-1.0
     description: |
-      Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS SERVER spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
+      Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS server spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
       For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` environment variable to contain your lambda handler method (in the format `package.ClassName::methodName`) and use one of wrappers as your lambda `Handler`.
+    library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
       name: io.opentelemetry.aws-lambda-core-1.0
@@ -947,6 +971,7 @@ libraries:
   - name: aws-lambda-events-2.2
     description: |
       This version of the library instrumentation is deprecated, please use the `aws-lambda-events-3.11` library instrumentation instead. This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
+    library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
       name: io.opentelemetry.aws-lambda-events-2.2
@@ -992,6 +1017,7 @@ libraries:
   - name: aws-lambda-events-3.11
     description: |
       This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
+    library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
       name: io.opentelemetry.aws-lambda-events-3.11
@@ -1038,6 +1064,7 @@ libraries:
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
+    library_link: https://aws.amazon.com/sdk-for-java/
     source_path: instrumentation/aws-sdk/aws-sdk-1.11
     scope:
       name: io.opentelemetry.aws-sdk-1.11
@@ -1265,6 +1292,7 @@ libraries:
   - name: aws-sdk-2.2
     description: |
       This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS and Bedrock.
+    library_link: https://aws.amazon.com/sdk-for-java/
     source_path: instrumentation/aws-sdk/aws-sdk-2.2
     scope:
       name: io.opentelemetry.aws-sdk-2.2
@@ -1321,9 +1349,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -1332,9 +1360,9 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
-        - name: gen_ai.request.model
-          type: STRING
         - name: gen_ai.provider.name
+          type: STRING
+        - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -1385,6 +1413,8 @@ libraries:
           type: STRING
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.max_tokens
           type: LONG
         - name: gen_ai.request.model
@@ -1397,8 +1427,6 @@ libraries:
           type: DOUBLE
         - name: gen_ai.response.finish_reasons
           type: STRING_ARRAY
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
         - name: gen_ai.usage.output_tokens
@@ -1623,6 +1651,7 @@ libraries:
   - name: azure-core-1.14
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
+    library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
     source_path: instrumentation/azure-core/azure-core-1.14
     scope:
       name: io.opentelemetry.azure-core-1.14
@@ -1632,6 +1661,7 @@ libraries:
   - name: azure-core-1.19
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
+    library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
     source_path: instrumentation/azure-core/azure-core-1.19
     scope:
       name: io.opentelemetry.azure-core-1.19
@@ -1641,6 +1671,7 @@ libraries:
   - name: azure-core-1.36
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
+    library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
     source_path: instrumentation/azure-core/azure-core-1.36
     scope:
       name: io.opentelemetry.azure-core-1.36
@@ -1651,6 +1682,7 @@ libraries:
   - name: c3p0-0.9
     description: The c3p0 instrumentation provides connection pool metrics for c3p0
       data sources.
+    library_link: https://github.com/swaldman/c3p0
     source_path: instrumentation/c3p0-0.9
     scope:
       name: io.opentelemetry.c3p0-0.9
@@ -1703,6 +1735,7 @@ libraries:
   - name: camel-2.20
     description: |
       This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    library_link: https://camel.apache.org/
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -1828,6 +1861,7 @@ libraries:
   - name: cassandra-3.0
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+    library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-3.0
     scope:
       name: io.opentelemetry.cassandra-3.0
@@ -1891,6 +1925,7 @@ libraries:
   - name: cassandra-4.0
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+    library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.0
     scope:
       name: io.opentelemetry.cassandra-4.0
@@ -1978,6 +2013,7 @@ libraries:
   - name: cassandra-4.4
     description: |
       Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+    library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.4
     scope:
       name: io.opentelemetry.cassandra-4.4
@@ -2065,12 +2101,13 @@ libraries:
         - name: server.port
           type: LONG
   clickhouse:
-  - name: clickhouse-client-0.5
-    description: Instruments the V1 ClickHouseClient, providing database client spans
-      and metrics.
-    source_path: instrumentation/clickhouse-client-0.5
+  - name: clickhouse-client-v1-0.5
+    description: This instrumentation enables database client spans and metrics for
+      the V1 ClickHouse client.
+    library_link: https://github.com/ClickHouse/clickhouse-java
+    source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
     scope:
-      name: io.opentelemetry.clickhouse-client-0.5
+      name: io.opentelemetry.clickhouse-client-v1-0.5
     target_versions:
       javaagent:
       - com.clickhouse.client:clickhouse-client:[0.5.0,)
@@ -2132,10 +2169,79 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+  - name: clickhouse-client-v2-0.8
+    description: This instrumentation enables database client spans and metrics for
+      the V2 ClickHouse client.
+    library_link: https://github.com/ClickHouse/clickhouse-java
+    source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
+    scope:
+      name: io.opentelemetry.clickhouse-client-v2-0.8
+    target_versions:
+      javaagent:
+      - com.clickhouse:client-v2:[0.6.4,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.response.status_code
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   couchbase:
   - name: couchbase-2.0
     description: |
-      This instrumentation enables database CLIENT spans and metrics for Couchbase 2.0 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+      This instrumentation enables database client spans and database client metrics for Couchbase 2.0 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+    library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-2.0
     scope:
       name: io.opentelemetry.couchbase-2.0
@@ -2179,7 +2285,8 @@ libraries:
           type: STRING
   - name: couchbase-2.6
     description: |
-      This instrumentation enables database CLIENT spans and metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+      This instrumentation enables database client spans and database client metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+    library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-2.6
     scope:
       name: io.opentelemetry.couchbase-2.6
@@ -2268,6 +2375,7 @@ libraries:
   - name: couchbase-3.1
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
@@ -2277,6 +2385,7 @@ libraries:
   - name: couchbase-3.1.6
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
@@ -2286,6 +2395,7 @@ libraries:
   - name: couchbase-3.2
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
@@ -2297,6 +2407,7 @@ libraries:
     description: |
       The dropwizard-metrics instrumentation for the dropwizard/codahale metrics library produces OpenTelemetry compliant versions of the metrics generated by the Dropwizard MetricRegistry.
       The Dropwizard metrics API does not have a concept of metric labels/tags/attributes, thus the data produced by this integration might be of very low quality, depending on how the API is used in the instrumented application.
+    library_link: https://metrics.dropwizard.io/4.2.0/
     disabled_by_default: true
     source_path: instrumentation/dropwizard/dropwizard-metrics-4.0
     scope:
@@ -2312,6 +2423,7 @@ libraries:
   - name: dropwizard-views-0.7
     description: This instrumentation enables the creation of spans for Dropwizard
       views.
+    library_link: https://www.dropwizard.io/en/latest/manual/views.html
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2331,7 +2443,8 @@ libraries:
   elasticsearch:
   - name: elasticsearch-api-client-7.16
     description: |
-      This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to Elasticsearch CLIENT spans. Versions 8.10 and later of the client have native support for OpenTelemetry.
+      This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to Elasticsearch database client spans. Versions 8.10 and later of the client have native support for OpenTelemetry.
+    library_link: https://www.elastic.co/docs/reference/elasticsearch/clients/java
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
       name: io.opentelemetry.elasticsearch-api-client-7.16
@@ -2395,8 +2508,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-5.0
-    description: This instrumentation enables database CLIENT spans and metrics for
-      Elasticsearch REST clients.
+    description: This instrumentation enables database client spans and database client
+      metrics for Elasticsearch REST clients.
+    library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-5.0
@@ -2457,8 +2571,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-6.4
-    description: This instrumentation enables database CLIENT spans and metrics for
-      Elasticsearch REST clients.
+    description: This instrumentation enables database client spans and database client
+      metrics for Elasticsearch REST clients.
+    library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
       name: io.opentelemetry.elasticsearch-rest-6.4
@@ -2518,8 +2633,9 @@ libraries:
         - name: url.full
           type: STRING
   - name: elasticsearch-rest-7.0
-    description: This instrumentation enables database CLIENT spans and metrics for
-      Elasticsearch REST clients.
+    description: This instrumentation enables database client spans and database client
+      metrics for Elasticsearch REST clients.
+    library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
       name: io.opentelemetry.elasticsearch-rest-7.0
@@ -2582,7 +2698,8 @@ libraries:
           type: STRING
   - name: elasticsearch-transport-5.0
     description: |
-      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.0
@@ -2674,7 +2791,8 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-5.3
     description: |
-      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
       name: io.opentelemetry.elasticsearch-transport-5.3
@@ -2771,7 +2889,8 @@ libraries:
           type: LONG
   - name: elasticsearch-transport-6.0
     description: |
-      This instrumentation enables CLIENT spans and metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+      This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
       name: io.opentelemetry.elasticsearch-transport-6.0
@@ -2868,6 +2987,7 @@ libraries:
   - name: executors
     description: |
       The executor instrumentation ensures that context is automatically propagated when using common Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task is submitted, the current context is captured and bound to the task. Then, when the task eventually runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling consistent correlation across concurrent and asynchronous workflows.
+    library_link: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html
     source_path: instrumentation/executors
     scope:
       name: io.opentelemetry.executors
@@ -2887,6 +3007,7 @@ libraries:
   - name: finagle-http-23.11
     description: |
       This instrumentation for Finagle HTTP clients and servers ensures that telemetry is correctly generated by the underlying Netty instrumentation. It augments existing telemetry by bridging the gap between Finagle's abstractions and Netty's pipeline, primarily for context propagation.
+    library_link: https://github.com/twitter/finagle
     source_path: instrumentation/finagle-http-23.11
     scope:
       name: io.opentelemetry.finagle-http-23.11
@@ -2899,6 +3020,7 @@ libraries:
     description: This instrumentation for the Finatra web framework augments the telemetry
       generated by the underlying Netty instrumentation. It provides more specific,
       high-level context, such as route information, to the spans generated by Netty.
+    library_link: https://github.com/twitter/finatra
     source_path: instrumentation/finatra-2.9
     scope:
       name: io.opentelemetry.finatra-2.9
@@ -2917,8 +3039,9 @@ libraries:
           type: STRING
   geode:
   - name: geode-1.4
-    description: This instrumentation enables database CLIENT spans and metrics for
-      Apache Geode cache operations.
+    description: This instrumentation enables database client spans and database client
+      metrics for Apache Geode cache operations.
+    library_link: https://geode.apache.org/
     source_path: instrumentation/geode-1.4
     scope:
       name: io.opentelemetry.geode-1.4
@@ -2969,8 +3092,9 @@ libraries:
           type: STRING
   google:
   - name: google-http-client-1.19
-    description: This instrumentation enables HTTP CLIENT spans and metrics for Google
-      HTTP Client requests.
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Google HTTP Client requests.
+    library_link: https://github.com/googleapis/google-http-java-client
     source_path: instrumentation/google-http-client-1.19
     scope:
       name: io.opentelemetry.google-http-client-1.19
@@ -3039,7 +3163,8 @@ libraries:
   grails:
   - name: grails-3.0
     description: |
-      This instrumentation enriches existing SERVER spans with route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
+      This instrumentation enriches existing HTTP server spans with HTTP route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
+    library_link: https://grails.apache.org/
     source_path: instrumentation/grails-3.0
     scope:
       name: io.opentelemetry.grails-3.0
@@ -3059,6 +3184,7 @@ libraries:
   graphql:
   - name: graphql-java-12.0
     description: This instrumentation enables spans for GraphQL Java operations.
+    library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
       name: io.opentelemetry.graphql-java-12.0
@@ -3091,6 +3217,7 @@ libraries:
           type: STRING
   - name: graphql-java-20.0
     description: This instrumentation enables spans for GraphQL Java operations.
+    library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
     scope:
@@ -3147,8 +3274,9 @@ libraries:
           type: STRING
   grizzly:
   - name: grizzly-2.3
-    description: This instrumentation enables HTTP SERVER spans and metrics for Grizzly
-      applications.
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Grizzly applications.
+    library_link: https://javaee.github.io/grizzly/httpserverframework.html
     source_path: instrumentation/grizzly-2.3
     scope:
       name: io.opentelemetry.grizzly-2.3
@@ -3228,6 +3356,9 @@ libraries:
           type: STRING
   grpc:
   - name: grpc-1.6
+    description: This instrumentation enables RPC client spans and metrics, and RPC
+      server spans and metrics for gRPC version 1.6 and above.
+    library_link: https://github.com/grpc/grpc-java
     source_path: instrumentation/grpc-1.6
     scope:
       name: io.opentelemetry.grpc-1.6
@@ -3236,6 +3367,182 @@ libraries:
       - io.grpc:grpc-core:[1.6.0,)
       library:
       - io.grpc:grpc-core:1.6.0
+    configurations:
+    - name: otel.instrumentation.grpc.emit-message-events
+      description: Determines whether to emit a span event for each individual message
+        received and sent.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.grpc.experimental-span-attributes
+      description: |
+        Enable the capture of experimental span attributes `grpc.received.message_count`, `grpc.sent.message_count` and `grpc.canceled`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.grpc.capture-metadata.client.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC client instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    - name: otel.instrumentation.grpc.capture-metadata.server.request
+      description: |
+        A comma-separated list of request metadata keys. gRPC server instrumentation will capture metadata values corresponding to configured keys as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.grpc.experimental-span-attributes=true
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - span_kind: SERVER
+        attributes:
+        - name: grpc.received.message_count
+          type: LONG
+        - name: grpc.sent.message_count
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   guava:
   - name: guava-10.0
     source_path: instrumentation/guava-10.0
@@ -3248,7 +3555,8 @@ libraries:
       - com.google.guava:guava:10.0
   gwt:
   - name: gwt-2.0
-    description: This instrumentation enables SERVER spans for GWT RPC requests.
+    description: This instrumentation enables RPC server spans for GWT RPC requests.
+    library_link: https://www.gwtproject.org/
     source_path: instrumentation/gwt-2.0
     scope:
       name: io.opentelemetry.gwt-2.0
@@ -3269,20 +3577,63 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
+    library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-4.0
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
+    library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-6.0
+    description: |
+      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
+    library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
     scope:
@@ -3290,14 +3641,54 @@ libraries:
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[6.0.0.Final,)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-procedure-call-4.3
+    description: This instrumentation enables the generation of INTERNAL spans for
+      Hibernate stored procedure calls.
+    library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
       name: io.opentelemetry.hibernate-procedure-call-4.3
     target_versions:
       javaagent:
       - org.hibernate:hibernate-core:[4.3.0.Final,)
+    configurations:
+    - name: otel.instrumentation.hibernate.experimental-span-attributes
+      description: Enables the addition of the experimental `hibernate.session_id`
+        span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hibernate.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hibernate.session_id
+          type: STRING
   - name: hibernate-reactive-1.0
+    description: |
+      This instrumentation does not emit any telemetry on its own. Instead, it enables context propagation for Hibernate Reactive asynchronous operations.
+    library_link: https://hibernate.org/reactive/
     source_path: instrumentation/hibernate/hibernate-reactive-1.0
     scope:
       name: io.opentelemetry.hibernate-reactive-1.0
@@ -3306,6 +3697,9 @@ libraries:
       - org.hibernate.reactive:hibernate-reactive-core:(,)
   hikaricp:
   - name: hikaricp-3.0
+    description: |
+      This instrumentation provides database client metrics for HikariCP 3.0+ connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
+    library_link: https://github.com/brettwooldridge/HikariCP
     source_path: instrumentation/hikaricp-3.0
     scope:
       name: io.opentelemetry.hikaricp-3.0
@@ -3444,12 +3838,43 @@ libraries:
           type: STRING
   http:
   - name: http-url-connection
+    description: |
+      This instrumentation enables the generation of HTTP client spans and HTTP client metrics for requests made using `java.net.HttpURLConnection`.
+    library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html
     source_path: instrumentation/http-url-connection
     scope:
       name: io.opentelemetry.http-url-connection
     target_versions:
       javaagent:
       - Java 8+
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -3487,22 +3912,101 @@ libraries:
           type: STRING
   hystrix:
   - name: hystrix-1.4
+    description: This instrumentation enables the generation of INTERNAL spans for
+      Hystrix command executions and fallbacks.
+    library_link: https://github.com/Netflix/Hystrix
     source_path: instrumentation/hystrix-1.4
     scope:
       name: io.opentelemetry.hystrix-1.4
     target_versions:
       javaagent:
       - com.netflix.hystrix:hystrix-core:[1.4.0,)
+    configurations:
+    - name: otel.instrumentation.hystrix.experimental-span-attributes
+      description: Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open`
+        and `hystrix.group` span attributes.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.hystrix.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: hystrix.circuit_open
+          type: BOOLEAN
+        - name: hystrix.command
+          type: STRING
+        - name: hystrix.group
+          type: STRING
   influxdb:
   - name: influxdb-2.4
+    description: This instrumentation enables the generation of database client spans
+      and metrics for the InfluxDB Java client.
+    library_link: https://github.com/influxdata/influxdb-java
     source_path: instrumentation/influxdb-2.4
     scope:
       name: io.opentelemetry.influxdb-2.4
     target_versions:
       javaagent:
       - org.influxdb:influxdb-java:[2.4,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   java:
   - name: java-http-client
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for requests made using the Java HTTP client.
+    library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html
     source_path: instrumentation/java-http-client
     minimum_java_version: 11
     scope:
@@ -3510,6 +4014,34 @@ libraries:
     target_versions:
       javaagent:
       - Java 11+
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -3548,14 +4080,93 @@ libraries:
         - name: url.full
           type: STRING
   - name: java-http-server
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for the Java HTTP server.
+    library_link: https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html
     source_path: instrumentation/java-http-server
     scope:
       name: io.opentelemetry.java-http-server
     target_versions:
       javaagent:
       - Java 8+
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   javalin:
   - name: javalin-5.0
+    description: This instrumentation enriches existing HTTP server spans with route
+      information, it does not emit any telemetry on its own.
+    library_link: https://javalin.io/
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11
     scope:
@@ -3691,6 +4302,7 @@ libraries:
     description: |
       The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
       There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections, but is disabled by default due to the volume of telemetry produced.
+    library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
     source_path: instrumentation/jdbc
     scope:
       name: io.opentelemetry.jdbc
@@ -3975,6 +4587,7 @@ libraries:
   - name: kafka-clients-0.11
     description: |
       This instrumentation enables messaging spans and metrics for Apache Kafka 0.11 clients. It automatically traces message production and consumption, propagates context, and emits metrics for production and consumption.
+    library_link: https://kafka.apache.org/
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
     scope:
       name: io.opentelemetry.kafka-clients-0.11
@@ -4002,6 +4615,7 @@ libraries:
   - name: kafka-clients-2.6
     description: |
       This instrumentation provides a library integration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
+    library_link: https://kafka.apache.org/
     source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
     scope:
       name: io.opentelemetry.kafka-clients-2.6
@@ -4019,6 +4633,7 @@ libraries:
       type: boolean
       default: false
   - name: kafka-streams-0.11
+    library_link: https://kafka.apache.org/documentation/streams/
     source_path: instrumentation/kafka/kafka-streams-0.11
     scope:
       name: io.opentelemetry.kafka-streams-0.11
@@ -4622,6 +5237,7 @@ libraries:
   - name: openai-java-1.1
     description: This instrumentation enables Gen AI client spans and metrics for
       OpenAI Java SDK 1.1+.
+    library_link: https://github.com/openai/openai-java
     source_path: instrumentation/openai/openai-java-1.1
     scope:
       name: io.opentelemetry.openai-java-1.1
@@ -4646,11 +5262,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
       - name: gen_ai.client.token.usage
         description: Measures number of input and output tokens used.
@@ -4659,11 +5275,11 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.token.type
           type: STRING
@@ -4672,19 +5288,21 @@ libraries:
         attributes:
         - name: gen_ai.operation.name
           type: STRING
+        - name: gen_ai.provider.name
+          type: STRING
         - name: gen_ai.request.encoding_formats
           type: STRING_ARRAY
         - name: gen_ai.request.model
           type: STRING
         - name: gen_ai.response.model
           type: STRING
-        - name: gen_ai.provider.name
-          type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
       - span_kind: INTERNAL
         attributes:
         - name: gen_ai.operation.name
+          type: STRING
+        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.request.frequency_penalty
           type: DOUBLE
@@ -4707,8 +5325,6 @@ libraries:
         - name: gen_ai.response.id
           type: STRING
         - name: gen_ai.response.model
-          type: STRING
-        - name: gen_ai.provider.name
           type: STRING
         - name: gen_ai.usage.input_tokens
           type: LONG
@@ -4735,6 +5351,7 @@ libraries:
   - name: oracle-ucp-11.2
     description: The Oracle Universal Connection Pool (UCP) instrumentation generates
       connection pool metrics.
+    library_link: https://docs.oracle.com/database/121/JJUCP/
     source_path: instrumentation/oracle-ucp-11.2
     scope:
       name: io.opentelemetry.oracle-ucp-11.2
@@ -4803,6 +5420,7 @@ libraries:
     description: When the OSHI library is detected on the classpath, this instrumentation
       will use the system class loader to load classes from the oshi-core jar that
       are then used to generate system metrics.
+    library_link: https://github.com/oshi/oshi/
     source_path: instrumentation/oshi
     scope:
       name: io.opentelemetry.oshi
@@ -5520,7 +6138,8 @@ libraries:
   spark:
   - name: spark-2.3
     description: |
-      This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to SERVER spans and HTTP server metrics.
+      This instrumentation does not emit telemetry on its own. Instead, it extracts the HTTP route and attaches it to HTTP server spans and HTTP server metrics.
+    library_link: https://sparkjava.com/
     source_path: instrumentation/spark-2.3
     scope:
       name: io.opentelemetry.spark-2.3
@@ -5531,6 +6150,7 @@ libraries:
   - name: spring-batch-3.0
     description: This instrumentation enables INTERNAL spans for jobs run by the Spring
       Batch framework.
+    library_link: https://spring.io/projects/spring-batch
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
     scope:
@@ -5563,6 +6183,7 @@ libraries:
   - name: spring-boot-actuator-autoconfigure-2.0
     description: |
       This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from Spring Boot Actuator. It does not produce telemetry on its own.
+    library_link: https://spring.io/projects/spring-boot
     disabled_by_default: true
     source_path: instrumentation/spring/spring-boot-actuator-autoconfigure-2.0
     scope:
@@ -5582,12 +6203,14 @@ libraries:
         - Check for application.yml in the current working dir
         - Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
         - Check for --spring.application.name program argument via sun.java.command system property
+    library_link: https://spring.io/projects/spring-boot
     source_path: instrumentation/spring/spring-boot-resources
     scope:
       name: io.opentelemetry.spring-boot-resources
   - name: spring-cloud-aws-3.0
     description: |
       This instrumentation enhances tracing for Spring Cloud AWS. It augments the existing AWS SDK instrumentation by providing higher-level tracing for SQS operations, capturing details specific to Spring Cloud AWS SQS usage and linking them to the underlying AWS SDK traces.
+    library_link: https://spring.io/projects/spring-cloud-aws
     source_path: instrumentation/spring/spring-cloud-aws-3.0
     minimum_java_version: 17
     scope:
@@ -5598,6 +6221,7 @@ libraries:
   - name: spring-cloud-gateway-2.0
     description: |
       This instrumentation enhances tracing for Spring Cloud Gateway. It does not generate new telemetry on its own, but rather enriches existing traces produced by other instrumentations like Netty and Spring WebFlux with Spring Cloud Gateway-specific attributes.
+    library_link: https://github.com/spring-cloud/spring-cloud-gateway
     source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-2.0
     scope:
       name: io.opentelemetry.spring-cloud-gateway-2.0
@@ -5613,6 +6237,7 @@ libraries:
   - name: spring-core-2.0
     description: |
       This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/core/package-summary.html
     source_path: instrumentation/spring/spring-core-2.0
     minimum_java_version: 17
     scope:
@@ -5623,6 +6248,7 @@ libraries:
   - name: spring-data-1.8
     description: |
       This instrumentation enhances tracing for Spring Data operations. It works in conjunction with other instrumentations, such as JDBC, to provide additional context and details for database interactions initiated through Spring Data.
+    library_link: https://spring.io/projects/spring-data
     source_path: instrumentation/spring/spring-data/spring-data-1.8
     scope:
       name: io.opentelemetry.spring-data-1.8
@@ -5640,8 +6266,9 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: spring-integration-4.1
-    description: This instrumentation enables PRODUCER and CONSUMER spans for Spring
-      Integration.
+    description: This instrumentation enables producer and consumer messaging spans
+      for Spring Integration.
+    library_link: https://spring.io/projects/spring-integration
     source_path: instrumentation/spring/spring-integration-4.1
     scope:
       name: io.opentelemetry.spring-integration-4.1
@@ -5682,8 +6309,9 @@ libraries:
         - name: messaging.operation
           type: STRING
   - name: spring-jms-2.0
-    description: This instrumentation enables the generation of CONSUMER spans for
-      Spring JMS.
+    description: This instrumentation enables the generation of consumer messaging
+      spans for Spring JMS.
+    library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
     source_path: instrumentation/spring/spring-jms/spring-jms-2.0
     scope:
       name: io.opentelemetry.spring-jms-2.0
@@ -5714,8 +6342,9 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-jms-6.0
-    description: This instrumentation enables the generation of CONSUMER spans for
-      Spring JMS.
+    description: This instrumentation enables the generation of consumer messaging
+      spans for Spring JMS.
+    library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
     source_path: instrumentation/spring/spring-jms/spring-jms-6.0
     minimum_java_version: 17
     scope:
@@ -5747,7 +6376,9 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-kafka-2.7
-    description: This instrumentation enables CONSUMER spans for Spring Kafka listeners.
+    description: This instrumentation enables consumer messaging spans for Spring
+      Kafka listeners.
+    library_link: https://spring.io/projects/spring-kafka
     source_path: instrumentation/spring/spring-kafka-2.7
     scope:
       name: io.opentelemetry.spring-kafka-2.7
@@ -5820,7 +6451,9 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-pulsar-1.0
-    description: This instrumentation enables CONSUMER spans for Spring Pulsar listeners.
+    description: This instrumentation enables consumer messaging spans for Spring
+      Pulsar listeners.
+    library_link: https://spring.io/projects/spring-pulsar
     source_path: instrumentation/spring/spring-pulsar-1.0
     minimum_java_version: 17
     scope:
@@ -5859,7 +6492,9 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-rabbit-1.0
-    description: This instrumentation enables CONSUMER spans for Spring RabbitMQ listeners.
+    description: This instrumentation enables consumer messaging spans for Spring
+      RabbitMQ listeners.
+    library_link: https://spring.io/projects/spring-amqp
     source_path: instrumentation/spring/spring-rabbit-1.0
     scope:
       name: io.opentelemetry.spring-rabbit-1.0
@@ -5885,8 +6520,9 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: spring-rmi-4.0
-    description: This instrumentation enables CLIENT and SERVER spans for Spring RMI
-      applications.
+    description: This instrumentation enables RPC client and RPC server spans for
+      Spring RMI applications.
+    library_link: https://docs.spring.io/spring-framework/docs/4.0.x/javadoc-api/org/springframework/remoting/rmi/package-summary.html
     source_path: instrumentation/spring/spring-rmi-4.0
     scope:
       name: io.opentelemetry.spring-rmi-4.0
@@ -5914,6 +6550,7 @@ libraries:
           type: STRING
   - name: spring-scheduling-3.1
     description: This instrumentation enables tracing for Spring Scheduling tasks.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/package-summary.html
     source_path: instrumentation/spring/spring-scheduling-3.1
     scope:
       name: io.opentelemetry.spring-scheduling-3.1
@@ -5949,6 +6586,7 @@ libraries:
     description: |
       This instrumentation does not emit any telemetry on its own. Instead, it captures enduser attributes, and is only enabled when at least one of the `enduser` configurations is enabled.
       NOTE: The `enduser` attributes have been deprecated and will be removed in 3.0+ of the java agent.
+    library_link: https://spring.io/projects/spring-security
     source_path: instrumentation/spring/spring-security-config-6.0
     minimum_java_version: 17
     scope:
@@ -5988,6 +6626,7 @@ libraries:
   - name: spring-web-3.1
     description: |
       This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate. The agent integration enriches HTTP server spans and metrics with route information.
+    library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
       name: io.opentelemetry.spring-web-3.1
@@ -6028,7 +6667,9 @@ libraries:
   - name: spring-web-6.0
     description: This instrumentation enriches HTTP server spans and metrics with
       route information.
+    library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-6.0
+    minimum_java_version: 17
     scope:
       name: io.opentelemetry.spring-web-6.0
     target_versions:
@@ -6037,6 +6678,7 @@ libraries:
   - name: spring-webflux-5.0
     description: |
       This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also optionally enables experimental controller (INTERNAL) spans.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
     scope:
       name: io.opentelemetry.spring-webflux-5.0
@@ -6090,6 +6732,7 @@ libraries:
   - name: spring-webflux-5.3
     description: |
       This instrumentation provides a library integration for the Spring WebFlux WebClient and Webflux server versions 5.3+ that enables HTTP client and server spans and metrics.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.3
     scope:
       name: io.opentelemetry.spring-webflux-5.3
@@ -6171,6 +6814,7 @@ libraries:
   - name: spring-webmvc-3.1
     description: |
       This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 3.1+.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
     scope:
       name: io.opentelemetry.spring-webmvc-3.1
@@ -6213,6 +6857,7 @@ libraries:
   - name: spring-webmvc-5.3
     description: |
       This instrumentation provides a library integration for Spring WebMVC controllers, that enables the creation of HTTP server spans and metrics for requests processed by the Spring servlet container.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-5.3
     scope:
       name: io.opentelemetry.spring-webmvc-5.3
@@ -6270,6 +6915,7 @@ libraries:
   - name: spring-webmvc-6.0
     description: |
       This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 6.0+.
+    library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
     minimum_java_version: 17
     scope:
@@ -6311,6 +6957,7 @@ libraries:
         - name: spring-webmvc.view.type
           type: STRING
   - name: spring-ws-2.0
+    library_link: https://spring.io/projects/spring-ws
     disabled_by_default: true
     source_path: instrumentation/spring/spring-ws-2.0
     scope:
@@ -6834,6 +7481,7 @@ libraries:
   - name: vibur-dbcp-11.0
     description: Instrumentation for the vibur-dbcp library, which provides connection
       pool metrics.
+    library_link: https://www.vibur.org/
     source_path: instrumentation/vibur-dbcp-11.0
     scope:
       name: io.opentelemetry.vibur-dbcp-11.0

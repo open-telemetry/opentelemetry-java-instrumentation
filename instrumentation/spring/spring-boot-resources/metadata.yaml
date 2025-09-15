@@ -11,4 +11,4 @@ description: >
     - Check for application.yml in the current working dir
     - Check for --spring.application.name program argument (not jvm arg) via ProcessHandle
     - Check for --spring.application.name program argument via sun.java.command system property
-
+library_link: https://spring.io/projects/spring-boot

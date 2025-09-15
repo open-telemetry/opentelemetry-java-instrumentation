@@ -65,7 +65,10 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
     }
 
-    if (getter instanceof HttpClientExperimentalAttributesGetter) {
+    String urlTemplate = HttpClientUrlTemplate.get(context);
+    if (urlTemplate != null) {
+      internalSet(attributes, URL_TEMPLATE, urlTemplate);
+    } else if (getter instanceof HttpClientExperimentalAttributesGetter) {
       HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalGetter =
           (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) getter;
       internalSet(attributes, URL_TEMPLATE, experimentalGetter.getUrlTemplate(request));

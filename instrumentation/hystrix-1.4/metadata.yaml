@@ -1,0 +1,8 @@
+description: This instrumentation enables the generation of INTERNAL spans for Hystrix command executions and fallbacks.
+library_link: https://github.com/Netflix/Hystrix
+configurations:
+  - name: otel.instrumentation.hystrix.experimental-span-attributes
+    description: Enables capturing the experimental `hystrix.command`, `hystrix.circuit_open` and `hystrix.group` span attributes.
+    type: boolean
+    default: false
+

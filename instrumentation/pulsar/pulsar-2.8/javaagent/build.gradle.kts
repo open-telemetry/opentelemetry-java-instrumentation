@@ -19,24 +19,16 @@ dependencies {
   testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
 
-testing {
-  suites {
-    val testReceiveSpanDisabled by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
-            }
-            include("**/PulsarClientSuppressReceiveSpansTest.*")
-          }
-        }
-      }
-    }
-  }
-}
-
 tasks {
+  val testReceiveSpanDisabled by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("PulsarClientSuppressReceiveSpansTest")
+    }
+    include("**/PulsarClientSuppressReceiveSpansTest.*")
+  }
+
   test {
     filter {
       excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
@@ -45,7 +37,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(testReceiveSpanDisabled)
   }
 }
 

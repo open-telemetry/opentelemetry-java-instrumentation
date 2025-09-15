@@ -34,6 +34,10 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
     transformer.applyAdviceToMethod(
         isConstructor().and(takesArgument(3, Consumer.class)),
         this.getClass().getName() + "$TaskArg3Advice");
+    // since 5.6.0
+    transformer.applyAdviceToMethod(
+        isConstructor().and(takesArgument(4, Consumer.class)),
+        this.getClass().getName() + "$TaskArg4Advice");
   }
 
   @SuppressWarnings("unused")
@@ -52,6 +56,16 @@ public class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumenta
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void wrapCallback(
         @Advice.Argument(value = 3, readOnly = false) Consumer<Object> action) {
+      action = new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TaskArg4Advice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void wrapCallback(
+        @Advice.Argument(value = 4, readOnly = false) Consumer<Object> action) {
       action = new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
     }
   }

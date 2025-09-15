@@ -57,6 +57,12 @@ graalvmNative {
   toolchainDetection.set(false)
 }
 
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata").configure {
+  enabled = false
+}
+
 // To be able to execute the tests as GraalVM native executables
 configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
@@ -121,33 +127,25 @@ testing {
         }
       }
     }
-
-    val testStableSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=code")
-          }
-        }
-      }
-    }
-
-    val testBothSemconv by registering(JvmTestSuite::class) {
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
-          }
-        }
-      }
-    }
   }
 }
 
 tasks {
 
+  val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code")
+  }
+
+  val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
+  }
+
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites, testStableSemconv, testBothSemconv)
   }
 }
 

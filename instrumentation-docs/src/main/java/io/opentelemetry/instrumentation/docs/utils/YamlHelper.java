@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import java.io.BufferedWriter;
@@ -195,8 +195,14 @@ public class YamlHelper {
   private static void addMetadataProperties(
       InstrumentationModule module, Map<String, Object> moduleMap) {
     if (module.getMetadata() != null) {
+      if (module.getMetadata().getDisplayName() != null) {
+        moduleMap.put("display_name", module.getMetadata().getDisplayName());
+      }
       if (module.getMetadata().getDescription() != null) {
         moduleMap.put("description", module.getMetadata().getDescription());
+      }
+      if (module.getMetadata().getLibraryLink() != null) {
+        moduleMap.put("library_link", module.getMetadata().getLibraryLink());
       }
       if (module.getMetadata().getDisabledByDefault()) {
         moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
@@ -287,9 +293,9 @@ public class YamlHelper {
     return innerMetricMap;
   }
 
-  public static InstrumentationMetaData metaDataParser(String input)
+  public static InstrumentationMetadata metaDataParser(String input)
       throws JsonProcessingException {
-    return mapper.readValue(input, InstrumentationMetaData.class);
+    return mapper.readValue(input, InstrumentationMetadata.class);
   }
 
   public static EmittedMetrics emittedMetricsParser(String input) throws JsonProcessingException {
