@@ -52,7 +52,7 @@ class LettuceShouldStartTest {
 
   @Test
   void shouldNotCreateSpansWhenInstrumentationDisabled() {
-    // Create OpenTelemetry instance with instrumentation disabled
+    // Create OpenTelemetry instance
     InMemorySpanExporter spanExporter = InMemorySpanExporter.create();
     SdkTracerProvider tracerProvider =
         SdkTracerProvider.builder()
@@ -63,9 +63,9 @@ class LettuceShouldStartTest {
         .setTracerProvider(tracerProvider)
         .build();
 
-    // Create LettuceTelemetry with disabled instrumenter (this is a simplified test)
-    // In a real scenario, instrumentation would be disabled via configuration
+    // Create LettuceTelemetry with instrumentation disabled
     LettuceTelemetry lettuceTelemetry = LettuceTelemetry.builder(openTelemetry)
+        .setInstrumentationEnabled(false)
         .build();
 
     redisClient = RedisClient.create(
@@ -82,9 +82,8 @@ class LettuceShouldStartTest {
     
     assertThat(value).isEqualTo("test-value");
 
-    // For this basic test, we just verify that operations work
-    // A more sophisticated test would involve actually disabling the instrumenter
-    // via configuration and verifying no spans are created
+    // Verify no spans were created due to disabled instrumentation
+    assertThat(spanExporter.getFinishedSpanItems()).isEmpty();
   }
 
   @Test

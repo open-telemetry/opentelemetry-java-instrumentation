@@ -40,6 +40,7 @@ public final class LettuceTelemetry {
   LettuceTelemetry(
       OpenTelemetry openTelemetry,
       boolean statementSanitizationEnabled,
+      boolean instrumentationEnabled,
       OperationListener metrics) {
     this.metrics = metrics;
     TracerBuilder tracerBuilder = openTelemetry.tracerBuilder(INSTRUMENTATION_NAME);
@@ -50,9 +51,11 @@ public final class LettuceTelemetry {
     tracer = tracerBuilder.build();
     sanitizer = RedisCommandSanitizer.create(statementSanitizationEnabled);
     
-    // Create instrumenter for shouldStart checks
+    // Create minimal instrumenter only for shouldStart checks
+    // The actual span creation is handled by the existing SpanBuilder mechanism
     instrumenter = Instrumenter.<Object, Void>builder(openTelemetry, INSTRUMENTATION_NAME, req -> "redis")
-        .buildInstrumenter(SpanKindExtractor.alwaysInternal());
+        .setEnabled(instrumentationEnabled)
+        .buildInstrumenter();
   }
 
   /**
