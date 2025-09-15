@@ -1,4 +1,5 @@
-description: This instrumentation enables HTTP SERVER spans and metrics for Grizzly applications.
+description: This instrumentation enables HTTP server spans and HTTP server metrics for Grizzly applications.
+library_link: https://javaee.github.io/grizzly/httpserverframework.html
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >

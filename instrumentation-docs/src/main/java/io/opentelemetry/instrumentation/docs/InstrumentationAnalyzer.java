@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.docs;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.ValueInstantiationException;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.parsers.GradleParser;
@@ -58,7 +58,7 @@ class InstrumentationAnalyzer {
   }
 
   private void enrichModule(InstrumentationModule module) throws IOException {
-    InstrumentationMetaData metaData = getMetadata(module);
+    InstrumentationMetadata metaData = getMetadata(module);
     if (metaData != null) {
       module.setMetadata(metaData);
     }
@@ -69,7 +69,7 @@ class InstrumentationAnalyzer {
   }
 
   @Nullable
-  private InstrumentationMetaData getMetadata(InstrumentationModule module)
+  private InstrumentationMetadata getMetadata(InstrumentationModule module)
       throws JsonProcessingException {
     String metadataFile = fileManager.getMetaDataFile(module.getSrcPath());
     if (metadataFile == null) {

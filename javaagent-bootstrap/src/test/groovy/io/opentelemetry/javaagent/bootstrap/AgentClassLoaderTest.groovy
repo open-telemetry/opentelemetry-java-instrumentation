@@ -56,7 +56,7 @@ class AgentClassLoaderTest extends Specification {
   def "multi release jar"() {
     setup:
     boolean jdk8 = "1.8" == System.getProperty("java.specification.version")
-    def mrJarClass = Class.forName("io.opentelemetry.instrumentation.resources.ProcessArguments")
+    def mrJarClass = Class.forName("io.opentelemetry.instrumentation.resources.internal.ProcessArguments")
     // sdk is a multi release jar
     URL multiReleaseJar = mrJarClass.getProtectionDomain().getCodeSource().getLocation()
     AgentClassLoader loader = new AgentClassLoader(new File(multiReleaseJar.toURI())) {
@@ -67,7 +67,7 @@ class AgentClassLoaderTest extends Specification {
     }
 
     when:
-    URL url = loader.findResource("io/opentelemetry/instrumentation/resources/ProcessArguments.class")
+    URL url = loader.findResource("io/opentelemetry/instrumentation/resources/internal/ProcessArguments.class")
 
     then:
     url != null
@@ -75,7 +75,7 @@ class AgentClassLoaderTest extends Specification {
     jdk8 != url.toString().contains("META-INF/versions/9/")
 
     and:
-    Class<?> clazz = loader.loadClass("io.opentelemetry.instrumentation.resources.ProcessArguments")
+    Class<?> clazz = loader.loadClass("io.opentelemetry.instrumentation.resources.internal.ProcessArguments")
     // class was loaded by agent loader used in this test
     clazz.getClassLoader() == loader
     Method method = clazz.getDeclaredMethod("getProcessArguments")

@@ -1,3 +1,4 @@
 description: >
   The Alibaba Druid instrumentation generates database connection pool metrics for druid data
   sources.
+library_link: https://github.com/alibaba/druid

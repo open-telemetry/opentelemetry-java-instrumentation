@@ -4,3 +4,4 @@ configurations:
     description: Enable the OSHI process runtime metrics.
     type: boolean
     default: false
+library_link: https://github.com/oshi/oshi/

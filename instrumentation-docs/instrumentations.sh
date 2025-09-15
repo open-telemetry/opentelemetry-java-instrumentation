@@ -22,8 +22,10 @@ readonly INSTRUMENTATIONS=(
   "apache-dubbo-2.7:javaagent:testDubbo"
   "c3p0-0.9:javaagent:test"
   "c3p0-0.9:javaagent:testStableSemconv"
-  "clickhouse-client-0.5:javaagent:test"
-  "clickhouse-client-0.5:javaagent:testStableSemconv"
+  "clickhouse:clickhouse-client-v1-0.5:javaagent:test"
+  "clickhouse:clickhouse-client-v1-0.5:javaagent:testStableSemconv"
+  "clickhouse:clickhouse-client-v2-0.8:javaagent:test"
+  "clickhouse:clickhouse-client-v2-0.8:javaagent:testStableSemconv"
   "aws-sdk:aws-sdk-1.11:javaagent:test"
   "google-http-client-1.19:javaagent:test"
   "http-url-connection:javaagent:test"
@@ -149,6 +151,13 @@ readonly INSTRUMENTATIONS=(
   "hibernate:hibernate-4.0:javaagent:testExperimental"
   "hibernate:hibernate-6.0:javaagent:test"
   "hibernate:hibernate-6.0:javaagent:testExperimental"
+  "hibernate:hibernate-procedure-call-4.3:javaagent:test"
+  "hibernate:hibernate-procedure-call-4.3:javaagent:testExperimental"
+  "hystrix-1.4:javaagent:test"
+  "hystrix-1.4:javaagent:testExperimental"
+  "influxdb-2.4:javaagent:test"
+  "influxdb-2.4:javaagent:testStableSemconv"
+  "java-http-server:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

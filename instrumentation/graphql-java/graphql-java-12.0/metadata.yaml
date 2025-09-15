@@ -1,4 +1,5 @@
 description: This instrumentation enables spans for GraphQL Java operations.
+library_link: https://www.graphql-java.com/
 configurations:
   - name: otel.instrumentation.graphql.query-sanitizer.enabled
     description: Enables sanitization of sensitive information from queries so they aren't added as span attributes.
