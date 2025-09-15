@@ -17,7 +17,6 @@ public final class LettuceTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean statementSanitizationEnabled = true;
-  private boolean instrumentationEnabled = true;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -36,16 +35,6 @@ public final class LettuceTelemetryBuilder {
   }
 
   /**
-   * Sets whether instrumentation should be enabled. If set to {@code false}, no spans will be 
-   * created by the constructed {@link LettuceTelemetry}. Enabled by default.
-   */
-  @CanIgnoreReturnValue
-  public LettuceTelemetryBuilder setInstrumentationEnabled(boolean instrumentationEnabled) {
-    this.instrumentationEnabled = instrumentationEnabled;
-    return this;
-  }
-
-  /**
    * Returns a new {@link LettuceTelemetry} with the settings of this {@link
    * LettuceTelemetryBuilder}.
    */
@@ -53,7 +42,6 @@ public final class LettuceTelemetryBuilder {
     return new LettuceTelemetry(
         openTelemetry,
         statementSanitizationEnabled,
-        instrumentationEnabled,
         DbClientMetrics.get().create(openTelemetry.getMeterProvider().get(INSTRUMENTATION_NAME)));
   }
 }

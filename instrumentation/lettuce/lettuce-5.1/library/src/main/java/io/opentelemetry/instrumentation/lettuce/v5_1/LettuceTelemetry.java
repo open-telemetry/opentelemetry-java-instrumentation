@@ -10,9 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
-import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 
 /** Entrypoint for instrumenting Lettuce or clients. */
@@ -35,12 +33,10 @@ public final class LettuceTelemetry {
   private final Tracer tracer;
   private final RedisCommandSanitizer sanitizer;
   private final OperationListener metrics;
-  private final Instrumenter<Object, Void> instrumenter;
 
   LettuceTelemetry(
       OpenTelemetry openTelemetry,
       boolean statementSanitizationEnabled,
-      boolean instrumentationEnabled,
       OperationListener metrics) {
     this.metrics = metrics;
     TracerBuilder tracerBuilder = openTelemetry.tracerBuilder(INSTRUMENTATION_NAME);
@@ -50,12 +46,6 @@ public final class LettuceTelemetry {
     }
     tracer = tracerBuilder.build();
     sanitizer = RedisCommandSanitizer.create(statementSanitizationEnabled);
-    
-    // Create minimal instrumenter only for shouldStart checks
-    // The actual span creation is handled by the existing SpanBuilder mechanism
-    instrumenter = Instrumenter.<Object, Void>builder(openTelemetry, INSTRUMENTATION_NAME, req -> "redis")
-        .setEnabled(instrumentationEnabled)
-        .buildInstrumenter();
   }
 
   /**
@@ -63,6 +53,6 @@ public final class LettuceTelemetry {
    * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
    */
   public Tracing newTracing() {
-    return new OpenTelemetryTracing(tracer, sanitizer, metrics, instrumenter);
+    return new OpenTelemetryTracing(tracer, sanitizer, metrics);
   }
 }
