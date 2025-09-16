@@ -140,23 +140,23 @@ If the instrumentation adheres to one or more specific semantic conventions, inc
 
 List of possible options:
 
-* HTTP_CLIENT_SPANS
-* HTTP_CLIENT_METRICS
-* HTTP_SERVER_SPANS
-* HTTP_SERVER_METRICS
-* RPC_CLIENT_SPANS
-* RPC_CLIENT_METRICS
-* RPC_SERVER_SPANS
-* RPC_SERVER_METRICS
-* MESSAGING_SPANS
-* DATABASE_CLIENT_SPANS
-* DATABASE_CLIENT_METRICS
-* DATABASE_POOL_METRICS
-* JVM_RUNTIME_METRICS
-* GRAPHQL_SERVER_SPANS
-* FAAS_SERVER_SPANS
-* GENAI_CLIENT_SPANS
-* GENAI_CLIENT_METRIC
+* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client)
+* [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
+* [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
+* [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
+* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes)
+* [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
+* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes)
+* [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
+* [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
+* [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
+* [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
+* [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
+* [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
+* [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
+* [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
 
 ### Library Link
 
