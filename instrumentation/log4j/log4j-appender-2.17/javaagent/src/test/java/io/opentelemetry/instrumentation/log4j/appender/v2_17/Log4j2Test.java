@@ -186,8 +186,8 @@ class Log4j2Test {
         codeFunctionAssertions(Log4j2Test.class, "testStringMapMessage");
     assertions.addAll(codeFileAndLineAssertions("Log4j2Test.java"));
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
+    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
+    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -210,7 +210,7 @@ class Log4j2Test {
         codeFunctionAssertions(Log4j2Test.class, "testStringMapMessageWithSpecialAttribute");
     assertions.addAll(codeFileAndLineAssertions("Log4j2Test.java"));
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
+    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -233,8 +233,8 @@ class Log4j2Test {
         codeFunctionAssertions(Log4j2Test.class, "testStructuredDataMapMessage");
     assertions.addAll(codeFileAndLineAssertions("Log4j2Test.java"));
     assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
+    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
+    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
