@@ -5,6 +5,9 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ServiceAttributes;
@@ -12,16 +15,12 @@ import io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
-import org.junit.jupiter.api.condition.DisabledIf;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {

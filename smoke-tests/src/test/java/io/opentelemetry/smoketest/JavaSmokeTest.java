@@ -8,9 +8,11 @@ package io.opentelemetry.smoketest;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.testing.junit.MetricsAssert;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
@@ -132,17 +134,22 @@ public abstract class JavaSmokeTest {
   @SuppressWarnings("varargs")
   protected final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
-    MetricsAssert.waitAndAssertMetrics(
-        () -> telemetryRetriever.waitForMetrics(), instrumentationName, assertions);
+    MetricsAssert.waitAndAssertMetrics(() -> waitForMetrics(), instrumentationName, assertions);
+  }
+
+  protected List<MetricData> waitForMetrics() {
+    return telemetryRetriever.waitForMetrics();
   }
 
   protected Collection<LogRecordData> waitForLogs() {
     return telemetryRetriever.waitForLogs();
   }
 
-  protected static boolean isVersionLogged(Consumer<OutputFrame> output, String version) {
-    return logLines(output)
-        .anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version));
+  protected static void assertVersionLogged(Consumer<OutputFrame> output, String version) {
+    assertThat(
+            logLines(output)
+                .anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version)))
+        .isTrue();
   }
 
   private static Stream<String> logLines(Consumer<OutputFrame> output) {

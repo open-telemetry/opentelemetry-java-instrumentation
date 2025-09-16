@@ -104,7 +104,7 @@ class SpringBootSmokeTest extends JavaSmokeTest {
                           span -> span.hasName("WebController.withSpan")));
 
           // Check agent version is logged on startup
-          assertThat(isVersionLogged(output, currentAgentVersion)).isTrue();
+          assertVersionLogged(output, currentAgentVersion);
 
           // Check trace IDs are logged via MDC instrumentation
           Set<String> loggedTraceIds = getLoggedTraceIds(output);

@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.assertj.MetricAssert;
-import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
@@ -39,8 +38,7 @@ public class MetricsAssert {
       assertThat(metrics)
           .describedAs(
               "Metrics for instrumentation %s and assertion %d", instrumentationName, index)
-          .anySatisfy(
-              metric -> assertions[index].accept(OpenTelemetryAssertions.assertThat(metric)));
+          .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
     }
   }
 
