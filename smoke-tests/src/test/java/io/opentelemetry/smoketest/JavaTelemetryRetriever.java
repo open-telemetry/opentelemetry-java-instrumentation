@@ -60,7 +60,7 @@ public class JavaTelemetryRetriever {
 
   private static <R, T> List<T> convert(Collection<R> items, Function<R, List<T>> converter) {
     return items.stream()
-        .flatMap(request -> converter.apply(request).stream())
+        .flatMap(item -> converter.apply(item).stream())
         .collect(Collectors.toList());
   }
 
