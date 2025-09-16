@@ -69,7 +69,7 @@ testing {
       dependencies {
         // this only exists to make Intellij happy since it doesn't (currently at least) understand our
         // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+        compileOnly(project.dependencies.project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 
         if (findProperty("testLatestDeps") as Boolean) {
           implementation("com.typesafe.akka:akka-http_2.13:latest.release")
