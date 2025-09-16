@@ -6,6 +6,10 @@ plugins {
 dependencies {
   implementation("com.linecorp.armeria:armeria-junit5:1.33.2")
   implementation("com.google.errorprone:error_prone_annotations")
+  implementation("io.opentelemetry.proto:opentelemetry-proto")
+  implementation("com.google.protobuf:protobuf-java-util:4.32.1")
+  implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
 }
 
 tasks {
@@ -14,6 +18,7 @@ tasks {
       exclude(dependency("org.slf4j:slf4j-api"))
       exclude(dependency("org.junit.jupiter:junit-jupiter-api"))
       exclude(dependency("org.junit.platform:junit-platform-commons"))
+      exclude(dependency("com.google.code.findbugs:annotations"))
     }
 
     // Ensures tests are not affected by Armeria instrumentation
@@ -37,11 +42,30 @@ tasks {
     relocate("org.HdrHistogram", "io.opentelemetry.testing.internal.org.hdrhistogram")
     relocate("org.LatencyUtils", "io.opentelemetry.testing.internal.org.latencyutils")
 
+    relocate("io.opentelemetry.proto", "io.opentelemetry.testing.internal.proto")
+    relocate("com.google.protobuf", "io.opentelemetry.testing.internal.protobuf")
+    relocate("com.google.gson", "io.opentelemetry.testing.internal.gson")
+    relocate("com.google.common", "io.opentelemetry.testing.internal.guava")
+    relocate("org.apache.commons", "io.opentelemetry.testing.internal.apachecommons")
+    relocate("org.apache.hc", "io.opentelemetry.testing.internal.apachehttp")
+    relocate("org.eclipse.jetty", "io.opentelemetry.testing.internal.jetty")
+    relocate("com.fasterxml.jackson", "io.opentelemetry.testing.internal.jackson")
+    relocate("com.jayway.jsonpath", "io.opentelemetry.testing.internal.jsonpath")
+    relocate("javax.servlet", "io.opentelemetry.testing.internal.servlet")
+    relocate("org.yaml", "io.opentelemetry.testing.internal.yaml")
+
+    // don't relocate wiremock itself
+    relocate("com.github.tomakehurst.wiremock", "com.github.tomakehurst.wiremock")
+
     mergeServiceFiles()
     // mergeServiceFiles requires that duplicate strategy is set to include
     filesMatching("META-INF/services/**") {
       duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
+
+    // relocate everything else
+    enableAutoRelocation = true
+    relocationPrefix = "io.opentelemetry.testing.internal"
   }
 
   val extractShadowJar by registering(Copy::class) {
