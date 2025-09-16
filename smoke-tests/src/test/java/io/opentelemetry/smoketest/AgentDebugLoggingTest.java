@@ -16,7 +16,7 @@ class AgentDebugLoggingTest extends JavaSmokeTest {
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
         + jdk
-        + "-20211213.1570880324";
+        + "-20250915.17728045097";
   }
 
   @Override

@@ -21,6 +21,7 @@ import io.opentelemetry.testing.internal.protobuf.util.JsonFormat;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -38,29 +39,29 @@ public class JavaTelemetryRetriever {
 
   public List<SpanData> waitForTraces() {
     Collection<ExportTraceServiceRequest> requests =
-        waitForTelemetry("get-traces", () -> ExportTraceServiceRequest.newBuilder());
+        waitForTelemetry("get-traces", ExportTraceServiceRequest::newBuilder);
     return TelemetryConverter.getSpanData(
-        requests.stream()
-            .flatMap(r -> r.getResourceSpansList().stream())
-            .collect(Collectors.toList()));
+        convert(requests, ExportTraceServiceRequest::getResourceSpansList));
   }
 
   public Collection<MetricData> waitForMetrics() {
     Collection<ExportMetricsServiceRequest> requests =
-        waitForTelemetry("get-metrics", () -> ExportMetricsServiceRequest.newBuilder());
+        waitForTelemetry("get-metrics", ExportMetricsServiceRequest::newBuilder);
     return TelemetryConverter.getMetricsData(
-        requests.stream()
-            .flatMap(r -> r.getResourceMetricsList().stream())
-            .collect(Collectors.toList()));
+        convert(requests, ExportMetricsServiceRequest::getResourceMetricsList));
   }
 
   public Collection<LogRecordData> waitForLogs() {
     Collection<ExportLogsServiceRequest> requests =
-        waitForTelemetry("get-logs", () -> ExportLogsServiceRequest.newBuilder());
+        waitForTelemetry("get-logs", ExportLogsServiceRequest::newBuilder);
     return TelemetryConverter.getLogRecordData(
-        requests.stream()
-            .flatMap(r -> r.getResourceLogsList().stream())
-            .collect(Collectors.toList()));
+        convert(requests, ExportLogsServiceRequest::getResourceLogsList));
+  }
+
+  private static <R, T> List<T> convert(Collection<R> items, Function<R, List<T>> converter) {
+    return items.stream()
+        .flatMap(request -> converter.apply(request).stream())
+        .collect(Collectors.toList());
   }
 
   @SuppressWarnings({"unchecked", "rawtypes"})
@@ -71,20 +72,19 @@ public class JavaTelemetryRetriever {
           .readTree(waitForContent(path))
           .valueStream()
           .map(
-              it -> {
+              jsonNode -> {
                 B builder = builderConstructor.get();
                 // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
                 try {
-                  JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
+                  JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(jsonNode), builder);
                   return (T) builder.build();
                 } catch (InvalidProtocolBufferException | JsonProcessingException e) {
-                  throw new RuntimeException(e);
+                  throw new IllegalStateException(e);
                 }
               })
           .collect(Collectors.toList());
-    } catch (InterruptedException
-        | io.opentelemetry.testing.internal.jackson.core.JsonProcessingException e) {
-      throw new RuntimeException(e);
+    } catch (InterruptedException | JsonProcessingException e) {
+      throw new IllegalStateException(e);
     }
   }
 

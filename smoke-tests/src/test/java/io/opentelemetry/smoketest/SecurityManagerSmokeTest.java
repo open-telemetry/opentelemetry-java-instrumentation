@@ -19,7 +19,7 @@ class SecurityManagerSmokeTest extends JavaSmokeTest {
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk"
         + jdk
-        + "-20241021.11448062560";
+        + "-20250915.17728045123";
   }
 
   @Override

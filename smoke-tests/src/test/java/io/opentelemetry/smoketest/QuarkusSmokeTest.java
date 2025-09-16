@@ -22,7 +22,7 @@ class QuarkusSmokeTest extends JavaSmokeTest {
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk"
         + jdk
-        + "-20241105.11678591860";
+        + "-20250915.17728045126";
   }
 
   @Override
