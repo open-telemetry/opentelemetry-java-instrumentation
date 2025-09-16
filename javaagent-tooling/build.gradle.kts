@@ -46,7 +46,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
-  implementation("io.opentelemetry.contrib:opentelemetry-sampler")
+  implementation("io.opentelemetry.contrib:opentelemetry-samplers")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
