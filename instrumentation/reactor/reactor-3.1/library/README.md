@@ -1,8 +1,7 @@
 # Library Instrumentation for Project Reactor version 3.1 and higher
 
-Provides OpenTelemetry instrumentation for [Project Reactor](https://projectreactor.io/).
-
-This instrumentation generates spans for each reactive operation.
+Provides OpenTelemetry instrumentation for [Project Reactor](https://projectreactor.io/), enabling
+context propagation through Reactor's execution model.
 
 ## Quickstart
 
@@ -38,8 +37,6 @@ import reactor.core.publisher.Flux;
 
 public class ReactorExample {
   public static void main(String[] args) {
-    OpenTelemetry openTelemetry = OpenTelemetry.noop();
-
     ContextPropagationOperator contextPropagationOperator = ContextPropagationOperator.create();
     contextPropagationOperator.registerOnEachOperator();
 

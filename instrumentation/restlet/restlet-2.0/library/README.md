@@ -1,4 +1,4 @@
-# Library Instrumentation for Restlet version 1.1 and higher
+# Library Instrumentation for Restlet version 2.0 and higher
 
 Provides OpenTelemetry instrumentation for [Restlet](https://restlet.talend.com/), enabling HTTP
 server spans.
@@ -7,7 +7,7 @@ server spans.
 
 ### Add these dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-restlet-1.1).
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-restlet-2.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -15,7 +15,7 @@ For Maven, add to your `pom.xml` dependencies:
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-restlet-1.1</artifactId>
+    <artifactId>opentelemetry-restlet-2.0</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -24,17 +24,17 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```kotlin
-implementation("io.opentelemetry.instrumentation:opentelemetry-restlet-1.1:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-restlet-2.0:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.restlet.v1_1.RestletTelemetry;
-import org.restlet.Filter;
+import io.opentelemetry.instrumentation.restlet.v2_0.RestletTelemetry;
 import org.restlet.Application;
 import org.restlet.Restlet;
+import org.restlet.routing.Filter;
 
 public class RestletExample {
   public static void main(String[] args) throws Exception {

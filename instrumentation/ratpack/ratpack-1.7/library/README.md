@@ -1,6 +1,7 @@
 # Library Instrumentation for Ratpack version 1.7 and higher
 
-Provides OpenTelemetry instrumentation for [Ratpack](https://ratpack.io/), enabling CLIENT and SERVER spans.
+Provides OpenTelemetry instrumentation for [Ratpack](https://ratpack.io/), enabling HTTP client and server spans and
+metrics.
 
 ## Quickstart
 
@@ -37,7 +38,8 @@ import ratpack.http.client.HttpClient;
 
 public class RatpackExample {
   public static void main(String[] args) throws Exception {
-    OpenTelemetry openTelemetry = OpenTelemetry.noop();
+    // Get an OpenTelemetry instance
+    OpenTelemetry openTelemetry = ...;
 
     // Server instrumentation
     RatpackServerTelemetry serverTelemetry = RatpackServerTelemetry.create(openTelemetry);
