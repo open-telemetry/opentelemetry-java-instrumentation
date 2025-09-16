@@ -52,7 +52,7 @@ public class TraceInspector {
   }
 
   public long countFilteredAttributes(String attributeName, Object attributeValue) {
-    final Object value;
+    Object value;
     if (attributeValue instanceof GString) {
       value = attributeValue.toString();
     } else {
@@ -67,7 +67,7 @@ public class TraceInspector {
   }
 
   public long countFilteredArrayAttributes(String attributeName, Object attributeValue) {
-    final Object value;
+    Object value;
     if (attributeValue instanceof GString) {
       value = attributeValue.toString();
     } else {
