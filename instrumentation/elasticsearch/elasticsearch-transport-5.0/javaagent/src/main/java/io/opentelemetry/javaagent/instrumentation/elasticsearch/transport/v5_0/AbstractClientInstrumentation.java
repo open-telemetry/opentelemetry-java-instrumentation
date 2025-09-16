@@ -64,7 +64,8 @@ public class AbstractClientInstrumentation implements TypeInstrumentation {
         this.scope = scope;
       }
 
-      public static @Nullable AdviceScope start(ElasticTransportRequest request) {
+      @Nullable
+      public static AdviceScope start(ElasticTransportRequest request) {
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
