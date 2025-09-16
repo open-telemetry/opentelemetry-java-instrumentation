@@ -5,16 +5,16 @@
 
 package io.opentelemetry.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import org.junit.jupiter.api.condition.DisabledIf;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
-
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -22,10 +22,9 @@ import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SpringBootSmokeTest extends JavaSmokeTest {
