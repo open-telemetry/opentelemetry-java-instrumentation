@@ -5,18 +5,19 @@
 
 package io.opentelemetry.instrumentation.failsafe.v3_0;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerOpenException;
 import dev.failsafe.Failsafe;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.MetricAssert;
+import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import java.time.Duration;
 import java.util.Objects;
+import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -60,29 +61,45 @@ final class FailsafeTelemetryTest {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.failsafe-3.0",
         metricAssert ->
-            assertCircuitBreakerMetric(metricAssert, "failsafe.circuit_breaker.failure.count", 2),
+            metricAssert
+                .hasName("failsafe.circuit_breaker.execution.count")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                buildCircuitBreakerAssertion(
+                                    2, "failsafe.circuit_breaker.outcome", "failure"),
+                                buildCircuitBreakerAssertion(
+                                    3, "failsafe.circuit_breaker.outcome", "success"))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.failsafe-3.0",
         metricAssert ->
-            assertCircuitBreakerMetric(metricAssert, "failsafe.circuit_breaker.success.count", 3),
-        metricAssert ->
-            assertCircuitBreakerMetric(metricAssert, "failsafe.circuit_breaker.open.count", 1),
-        metricAssert ->
-            assertCircuitBreakerMetric(metricAssert, "failsafe.circuit_breaker.half_open.count", 1),
-        metricAssert ->
-            assertCircuitBreakerMetric(metricAssert, "failsafe.circuit_breaker.closed.count", 1));
+            metricAssert
+                .hasName("failsafe.circuit_breaker.state_changes.count")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                buildCircuitBreakerAssertion(
+                                    1, "failsafe.circuit_breaker.state", "open"),
+                                buildCircuitBreakerAssertion(
+                                    1, "failsafe.circuit_breaker.state", "half_open"),
+                                buildCircuitBreakerAssertion(
+                                    1, "failsafe.circuit_breaker.state", "closed"))));
   }
 
-  private static void assertCircuitBreakerMetric(
-      MetricAssert metricAssert, String counterName, long expectedValue) {
-    metricAssert
-        .hasName(counterName)
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isMonotonic()
-                    .hasPointsSatisfying(
-                        point ->
-                            point
-                                .hasValue(expectedValue)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("name"), "testing"))));
+  private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(
+      long expectedValue, String expectedAttributeKey, String expectedAttributeValue) {
+    return longSumAssert ->
+        longSumAssert
+            .hasValue(expectedValue)
+            .hasAttributesSatisfying(
+                attributes ->
+                    assertEquals(
+                        Attributes.builder()
+                            .put("failsafe.circuit_breaker.name", "testing")
+                            .put(expectedAttributeKey, expectedAttributeValue)
+                            .build(),
+                        attributes));
   }
 }
