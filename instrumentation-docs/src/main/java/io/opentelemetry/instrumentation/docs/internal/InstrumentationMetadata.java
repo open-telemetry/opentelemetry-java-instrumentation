@@ -58,7 +58,6 @@ public class InstrumentationMetadata {
     this.libraryLink = libraryLink;
     this.displayName = displayName;
     this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
-    ;
     this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 
