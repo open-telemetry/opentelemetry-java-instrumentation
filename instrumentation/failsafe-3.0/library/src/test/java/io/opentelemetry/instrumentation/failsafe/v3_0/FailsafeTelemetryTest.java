@@ -43,15 +43,7 @@ final class FailsafeTelemetryTest {
     for (int i = 0; i < 5; i++) {
       try {
         int temp = i;
-        Failsafe.with(instrumentedCircuitBreaker)
-            .get(
-                () -> {
-                  if (temp < 2) {
-                    return null;
-                  } else {
-                    return new Object();
-                  }
-                });
+        Failsafe.with(instrumentedCircuitBreaker).get(() -> temp < 2 ? null : new Object());
       } catch (CircuitBreakerOpenException e) {
         assertThat(i).isEqualTo(2);
       }
