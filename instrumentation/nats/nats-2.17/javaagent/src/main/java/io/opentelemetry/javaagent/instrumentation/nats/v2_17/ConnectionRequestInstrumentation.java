@@ -133,7 +133,10 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Enter Message message) {}
+    public static void onExit(
+        @Advice.Enter Message message, @Advice.Return(readOnly = false) Message ret) {
+      ret = message;
+    }
   }
 
   @SuppressWarnings("unused")

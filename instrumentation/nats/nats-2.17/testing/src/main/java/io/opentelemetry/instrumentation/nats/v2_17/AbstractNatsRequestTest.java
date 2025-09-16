@@ -10,8 +10,10 @@ import static io.opentelemetry.instrumentation.nats.v2_17.NatsTestHelper.messagi
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPORARY;
 import static java.util.Arrays.asList;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.nats.client.Dispatcher;
+import io.nats.client.Message;
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
@@ -20,7 +22,9 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,12 +50,14 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
   @Test
   void testRequestTimeout() throws InterruptedException {
     // when
-    testing()
-        .runWithSpan(
-            "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
+    Message message =
+        testing()
+            .runWithSpan(
+                "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
 
     // then
     // assertTimeoutPublishSpan();
+    assertThat(message).isNull();
     assertTraceparentHeader(subscription);
   }
 
@@ -64,12 +70,14 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
             .subscribe("sub");
 
     // when
-    testing()
-        .runWithSpan(
-            "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
+    Message message =
+        testing()
+            .runWithSpan(
+                "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
     // then
+    assertThat(message).isNotNull();
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
   }
@@ -83,13 +91,17 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
             .subscribe("sub");
 
     // when
-    testing()
-        .runWithSpan(
-            "parent",
-            () -> connection.request("sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+    Message message =
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    connection.request(
+                        "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
     // then
+    assertThat(message).isNotNull();
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
   }
@@ -104,10 +116,12 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
+    Message response =
+        testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
     // then
+    assertThat(response).isNotNull();
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
   }
@@ -123,10 +137,12 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
+    Message response =
+        testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
     connection.closeDispatcher(dispatcher);
 
     // then
+    assertThat(response).isNotNull();
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
   }
@@ -140,13 +156,15 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
             .subscribe("sub");
 
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
-        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+    CompletableFuture<Message> message =
+        testing()
+            .runWithSpan("parent", () -> connection.request("sub", new byte[] {0}))
+            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
+    assertThat(message).isCompletedWithValueMatching(Objects::nonNull);
   }
 
   @Test
@@ -158,13 +176,15 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
             .subscribe("sub");
 
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.request("sub", new Headers(), new byte[] {0}))
-        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+    CompletableFuture<Message> message =
+        testing()
+            .runWithSpan("parent", () -> connection.request("sub", new Headers(), new byte[] {0}))
+            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
+    assertThat(message).isCompletedWithValueMatching(Objects::nonNull);
   }
 
   @Test
@@ -177,13 +197,15 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.request(message))
-        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+    CompletableFuture<Message> response =
+        testing()
+            .runWithSpan("parent", () -> connection.request(message))
+            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
+    assertThat(response).isCompletedWithValueMatching(Objects::nonNull);
   }
 
   @Test
@@ -197,41 +219,47 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.request(message))
-        .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
+    CompletableFuture<Message> response =
+        testing()
+            .runWithSpan("parent", () -> connection.request(message))
+            .whenComplete((m, e) -> connection.closeDispatcher(dispatcher));
 
     // then
     assertPublishReceiveSpansSameTrace();
     assertTraceparentHeader(subscription);
+    assertThat(response).isCompletedWithValueMatching(Objects::nonNull);
   }
 
   @Test
   void testRequestTimeoutFutureBody() throws InterruptedException {
     // when
-    testing()
-        .runWithSpan(
-            "parent",
-            () -> connection.requestWithTimeout("sub", new byte[] {0}, Duration.ofSeconds(1)));
+    CompletableFuture<Message> message =
+        testing()
+            .runWithSpan(
+                "parent",
+                () -> connection.requestWithTimeout("sub", new byte[] {0}, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
     assertTraceparentHeader(subscription);
+    assertThat(message).isCompletedExceptionally();
   }
 
   @Test
   void testRequestTimeoutFutureHeadersBody() throws InterruptedException {
     // when
-    testing()
-        .runWithSpan(
-            "parent",
-            () ->
-                connection.requestWithTimeout(
-                    "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+    CompletableFuture<Message> message =
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    connection.requestWithTimeout(
+                        "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
     assertTraceparentHeader(subscription);
+    assertThat(message).isCompletedExceptionally();
   }
 
   @Test
@@ -240,12 +268,15 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     NatsMessage message = NatsMessage.builder().subject("sub").data("x").build();
 
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+    CompletableFuture<Message> response =
+        testing()
+            .runWithSpan(
+                "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
     assertTraceparentHeader(subscription);
+    assertThat(response).isCompletedExceptionally();
   }
 
   @Test
@@ -255,12 +286,15 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
         NatsMessage.builder().subject("sub").headers(new Headers()).data("x").build();
 
     // when
-    testing()
-        .runWithSpan("parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
+    CompletableFuture<Message> response =
+        testing()
+            .runWithSpan(
+                "parent", () -> connection.requestWithTimeout(message, Duration.ofSeconds(1)));
 
     // then
     assertCancellationPublishSpan();
     assertTraceparentHeader(subscription);
+    assertThat(response).isCompletedExceptionally();
   }
 
   private void assertPublishReceiveSpansSameTrace() {
