@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static java.time.temporal.ChronoUnit.MINUTES;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -24,10 +24,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -47,6 +45,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
@@ -62,11 +61,14 @@ import org.testcontainers.utility.MountableFile;
 
 @Testcontainers
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
-@SuppressWarnings({"rawtypes", "unchecked", "deprecation", "unused"})
+@SuppressWarnings({"deprecation", "unused"})
 class PostgresKafkaConnectSinkTaskTest {
 
   private static final Logger logger =
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
+
+  // Using the same fake backend pattern as smoke tests (with ARM64 support)
+  private static GenericContainer<?> backend;
 
   private static final String CONFLUENT_VERSION = "7.5.9";
 
@@ -94,17 +96,15 @@ class PostgresKafkaConnectSinkTaskTest {
   private static final String PLUGIN_PATH_CONTAINER = "/usr/share/java";
   private static final ObjectMapper MAPPER =
       new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
-  private static final String CONNECTOR_NAME = "test-connector";
-  private static final String TOPIC_NAME = "test-topic";
+  private static final String CONNECTOR_NAME = "test-postgres-connector";
+  private static final String TOPIC_NAME = "test-postgres-topic";
 
   // Docker network / containers
   private static Network network;
-  private static GenericContainer<?> backend;
   private static FixedHostPortGenericContainer<?> kafka;
   private static GenericContainer<?> zookeeper;
   private static GenericContainer<?> kafkaConnect;
   private static PostgreSQLContainer<?> postgreSql;
-
   private static int kafkaExposedPort;
 
   private static AdminClient adminClient;
@@ -147,7 +147,6 @@ class PostgresKafkaConnectSinkTaskTest {
     File logDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
     if (!logDir.exists()) {
       logDir.mkdirs();
-      logger.info("Created log directory: {}", logDir.getAbsolutePath());
     }
 
     network = Network.newNetwork();
@@ -170,6 +169,15 @@ class PostgresKafkaConnectSinkTaskTest {
                 "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
 
     backend.start();
+
+    // Configure test JVM OTLP endpoint now that backend is running
+    String backendEndpoint =
+        format(
+            Locale.ROOT,
+            "http://%s:%d/v1/traces",
+            backend.getHost(),
+            backend.getMappedPort(BACKEND_PORT));
+    System.setProperty("otel.exporter.otlp.traces.endpoint", backendEndpoint);
 
     zookeeper =
         new GenericContainer<>("confluentinc/cp-zookeeper:" + CONFLUENT_VERSION)
@@ -222,6 +230,7 @@ class PostgresKafkaConnectSinkTaskTest {
       throw new IllegalStateException(
           "Agent path not found. Make sure the shadowJar task is configured correctly.");
     }
+    File agentFile = new File(agentPath);
 
     kafkaConnect =
         new GenericContainer<>("confluentinc/cp-kafka-connect:" + CONFLUENT_VERSION)
@@ -230,6 +239,11 @@ class PostgresKafkaConnectSinkTaskTest {
             .withExposedPorts(CONNECT_REST_PORT_INTERNAL)
             .withLogConsumer(
                 new Slf4jLogConsumer(LoggerFactory.getLogger("kafka-connect-container")))
+            // Save logs to desktop
+            .withFileSystemBind(
+                System.getProperty("user.home") + "/Desktop/kafka-connect-logs",
+                "/var/log/kafka-connect",
+                BindMode.READ_WRITE)
             // Copy the agent jar to the container
             .withCopyFileToContainer(
                 MountableFile.forHostPath(agentPath), "/opentelemetry-javaagent.jar")
@@ -270,8 +284,11 @@ class PostgresKafkaConnectSinkTaskTest {
             .withCommand(
                 "bash",
                 "-c",
-                "confluent-hub install --no-prompt --component-dir /usr/share/java "
-                    + "confluentinc/kafka-connect-jdbc:10.7.4 && /etc/confluent/docker/run");
+                "mkdir -p /var/log/kafka-connect && "
+                    + "confluent-hub install --no-prompt --component-dir /usr/share/java "
+                    + "confluentinc/kafka-connect-jdbc:10.7.4 && "
+                    + "echo 'Starting Kafka Connect with logging to /var/log/kafka-connect/' && "
+                    + "/etc/confluent/docker/run 2>&1 | tee /var/log/kafka-connect/kafka-connect.log");
 
     postgreSql =
         new PostgreSQLContainer<>(
@@ -299,6 +316,7 @@ class PostgresKafkaConnectSinkTaskTest {
   @BeforeEach
   public void reset() {
     deleteConnectorIfExists();
+    clearPostgresTable();
     // Clear spans from backend (like smoke tests)
     clearBackendTraces();
   }
@@ -313,12 +331,13 @@ class PostgresKafkaConnectSinkTaskTest {
   }
 
   @Test
-  public void testKafkaConnectSinkTaskInstrumentation() throws IOException, InterruptedException {
+  public void testKafkaConnectPostgresSinkTaskInstrumentation()
+      throws IOException, InterruptedException {
     // Create unique topic name
     String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
 
     // Setup Kafka Connect JDBC Sink connector
-    setupSinkConnector(uniqueTopicName);
+    setupPostgresSinkConnector(uniqueTopicName);
 
     // Create topic and wait for availability
     createTopic(uniqueTopicName);
@@ -364,90 +383,55 @@ class PostgresKafkaConnectSinkTaskTest {
               }
             });
 
-    // Retrieve and verify spans
+    // Retrieve and verify spans using clean protobuf approach
     String tracesJson =
         given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
 
-    // Parse and analyze spans
-    ObjectMapper objectMapper = new ObjectMapper();
-    JsonNode tracesNode = objectMapper.readTree(tracesJson);
-
-    boolean foundKafkaConnectSpan = false;
-    boolean foundJdbcSpan = false;
-    boolean foundParentChildRelationship = false;
-    String kafkaConnectSpanId = null;
-    int spanCount = 0;
-
-    for (JsonNode trace : tracesNode) {
-      JsonNode resourceSpans = trace.get("resourceSpans");
-      if (resourceSpans != null && resourceSpans.isArray()) {
-        for (JsonNode resourceSpan : resourceSpans) {
-          JsonNode scopeSpans = resourceSpan.get("scopeSpans");
-          if (scopeSpans != null && scopeSpans.isArray()) {
-            for (JsonNode scopeSpan : scopeSpans) {
-              JsonNode spans = scopeSpan.get("spans");
-              if (spans != null && spans.isArray()) {
-                for (JsonNode span : spans) {
-                  spanCount++;
-
-                  JsonNode nameNode = span.get("name");
-                  if (nameNode != null) {
-                    String spanName = nameNode.asText();
-                    JsonNode spanIdNode = span.get("spanId");
-                    JsonNode parentSpanIdNode = span.get("parentSpanId");
-
-                    // Look for Kafka Connect span (format: "{topicName} process")
-                    if (spanName.endsWith(" process")) {
-                      foundKafkaConnectSpan = true;
-                      if (spanIdNode != null) {
-                        kafkaConnectSpanId = spanIdNode.asText();
-                        logger.info(
-                            "Found Kafka Connect span '{}' with ID: {}",
-                            spanName,
-                            kafkaConnectSpanId);
-                      }
-                    }
-
-                    // Look for JDBC spans (executeBatch, executeUpdate, etc.)
-                    if (spanName.contains("INSERT")
-                        || spanName.contains("UPDATE")
-                        || spanName.contains("DELETE")
-                        || spanName.contains("SELECT")
-                        || spanName.contains("executeBatch")
-                        || spanName.contains("executeUpdate")) {
-                      foundJdbcSpan = true;
-                      logger.info("Found JDBC span: {}", spanName);
-
-                      // Check if this JDBC span is a child of Kafka Connect span
-                      if (parentSpanIdNode != null
-                          && kafkaConnectSpanId != null
-                          && kafkaConnectSpanId.equals(parentSpanIdNode.asText())) {
-                        foundParentChildRelationship = true;
-                        logger.info(
-                            "Found parent-child relationship: JDBC span {} is child of Kafka Connect span {}",
-                            spanName,
-                            kafkaConnectSpanId);
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    // Extract spans and links using separate deserialization method
+    TracingData tracingData;
+    try {
+      tracingData = deserializeAndExtractSpans(tracesJson, uniqueTopicName);
+    } catch (Exception e) {
+      logger.error("Failed to deserialize and extract spans: {}", e.getMessage(), e);
+      throw new AssertionError("Span deserialization failed", e);
     }
 
-    logger.info("Span analysis results:");
-    logger.info("Total spans found: {}", spanCount);
-    logger.info("Kafka Connect span found: {}", foundKafkaConnectSpan);
-    logger.info("JDBC span found: {}", foundJdbcSpan);
-    logger.info("Parent-child relationship found: {}", foundParentChildRelationship);
+    // Perform distributed tracing assertions
+    // Assertion 1: Verify all spans and links are not null
+    assertThat(tracingData.kafkaConnectConsumerSpan)
+        .as("Kafka Connect Consumer span should be found for topic: %s", uniqueTopicName)
+        .isNotNull();
+    assertThat(tracingData.databaseSpan).as("Database span should be found").isNotNull();
+    assertThat(tracingData.extractedSpanLink)
+        .as("Kafka Connect Consumer span should have span links")
+        .isNotNull();
+    assertThat(tracingData.extractedSpanLink.linkedTraceId)
+        .as("Span link should have a valid linked trace ID")
+        .isNotEmpty();
+    assertThat(tracingData.extractedSpanLink.linkedSpanId)
+        .as("Span link should have a valid linked span ID")
+        .isNotEmpty();
 
-    // Verify spans were found
-    assertThat(spanCount).as("Should find at least one span").isGreaterThan(0);
+    // Assertion 2: Check if link traceId and Kafka Connect trace ID are same or not
+    assertThat(tracingData.extractedSpanLink.linkedTraceId)
+        .as(
+            "Span link trace ID should match Kafka Connect Consumer trace ID (distributed trace continuity)")
+        .isEqualTo(tracingData.kafkaConnectConsumerSpan.traceId);
 
-    assertThat(foundKafkaConnectSpan).as("Should find Kafka Connect span").isTrue();
+    // Assertion 3: Check span kind is consumer
+    assertThat(tracingData.kafkaConnectConsumerSpan.kind)
+        .as("Kafka Connect span should have CONSUMER span kind")
+        .isEqualTo("SPAN_KIND_CONSUMER");
+
+    // Assertion 4: Check if Kafka Connect traceId and database span traceId are similar
+    assertThat(tracingData.kafkaConnectConsumerSpan.traceId)
+        .as("Kafka Connect Consumer and Database spans should share the same trace ID")
+        .isEqualTo(tracingData.databaseSpan.traceId);
+    assertThat(tracingData.databaseSpan.parentSpanId)
+        .as("Database span must have a parent span ID")
+        .isNotNull()
+        .as("Database span parent should be Kafka Connect Consumer span")
+        .isEqualTo(tracingData.kafkaConnectConsumerSpan.spanId);
   }
 
   @AfterAll
@@ -466,7 +450,6 @@ class PostgresKafkaConnectSinkTaskTest {
       try {
         kafkaConnect.stop();
       } catch (RuntimeException e) {
-        // Log but don't fail cleanup
         logger.error("Error stopping Kafka Connect: " + e.getMessage());
       }
     }
@@ -513,7 +496,7 @@ class PostgresKafkaConnectSinkTaskTest {
   }
 
   // Private methods
-  private static void setupSinkConnector(String topicName) throws IOException {
+  private static void setupPostgresSinkConnector(String topicName) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "io.confluent.connect.jdbc.JdbcSinkConnector");
     configMap.put("tasks.max", "1");
@@ -534,7 +517,7 @@ class PostgresKafkaConnectSinkTaskTest {
     configMap.put("key.converter", "org.apache.kafka.connect.storage.StringConverter");
     configMap.put("value.converter", "org.apache.kafka.connect.json.JsonConverter");
     configMap.put("value.converter.schemas.enable", "true");
-    configMap.put("table.name.format", "person");
+    configMap.put("table.name.format", DB_TABLE_PERSON);
     configMap.put("pk.mode", "none");
 
     String payload =
@@ -553,37 +536,16 @@ class PostgresKafkaConnectSinkTaskTest {
         .all();
   }
 
-  private static void produceMessagesToKafka(String topicName) {
-    Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    props.put(ProducerConfig.ACKS_CONFIG, "all");
-    props.put(ProducerConfig.CLIENT_ID_CONFIG, "test-producer-client"); // Add this line
-
-    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-      // Send only ONE message for simpler testing
-      producer.send(
-          new ProducerRecord<>(
-              topicName,
-              "1",
-              "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":1,\"name\":\"Alice\"}}"));
-      producer.flush();
-      logger.info("Produced 1 message to Kafka topic: {}", topicName);
-    }
-  }
-
   private static void createTopic(String topicName) {
     try (AdminClient adminClient = createAdminClient()) {
       NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
       adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
-      logger.info("Created topic: {}", topicName);
     } catch (Exception e) {
       if (e instanceof InterruptedException) {
         Thread.currentThread().interrupt();
         throw new VerifyException("Failed to create topic: " + topicName, e);
       } else if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
-        logger.info("Topic already exists: {}", topicName);
+        // Topic already exists, continue
       } else {
         logger.error("Error creating topic: {}", e.getMessage());
         throw new VerifyException("Failed to create topic: " + topicName, e);
@@ -606,36 +568,33 @@ class PostgresKafkaConnectSinkTaskTest {
     return KafkaAdminClient.create(properties);
   }
 
-  private static int getRecordCountFromPostgres() throws SQLException {
+  private static long getRecordCountFromPostgres() {
     try (Connection conn =
             DriverManager.getConnection(postgreSql.getJdbcUrl(), DB_USERNAME, DB_PASSWORD);
         Statement st = conn.createStatement();
         ResultSet rs = st.executeQuery("SELECT COUNT(*) FROM " + DB_TABLE_PERSON)) {
       if (rs.next()) {
-        return rs.getInt(1);
+        return rs.getLong(1);
       }
+    } catch (SQLException e) {
+      logger.warn("Failed to count PostgreSQL records: {}", e.getMessage());
+      return 0;
     }
     return 0;
   }
 
-  private static List<Map<String, Object>> getRecordsFromPostgres() throws SQLException {
-    List<Map<String, Object>> records = new ArrayList<>();
+  private static void clearPostgresTable() {
     try (Connection conn =
             DriverManager.getConnection(postgreSql.getJdbcUrl(), DB_USERNAME, DB_PASSWORD);
-        Statement st = conn.createStatement();
-        ResultSet rs = st.executeQuery("SELECT * FROM " + DB_TABLE_PERSON + " ORDER BY id")) {
-      while (rs.next()) {
-        Map<String, Object> record = new HashMap<>();
-        record.put("id", rs.getInt("id"));
-        record.put("name", rs.getString("name"));
-        records.add(record);
-      }
+        Statement st = conn.createStatement()) {
+      st.executeUpdate("DELETE FROM " + DB_TABLE_PERSON);
+      logger.info("Cleared PostgreSQL table: {}", DB_TABLE_PERSON);
+    } catch (SQLException e) {
+      logger.warn("Failed to clear PostgreSQL table: {}", e.getMessage());
     }
-    return records;
   }
 
   private static void deleteConnectorIfExists() {
-    logger.info("Deleting connector [ {} ] if exists", CONNECTOR_NAME);
     given()
         .log()
         .headers()
@@ -646,5 +605,155 @@ class PostgresKafkaConnectSinkTaskTest {
         .then()
         .log()
         .all();
+  }
+
+  /** Deserialize traces JSON and extract span information and links */
+  private static TracingData deserializeAndExtractSpans(String tracesJson, String expectedTopicName)
+      throws IOException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode rootNode = objectMapper.readTree(tracesJson);
+
+    assertThat(rootNode.isArray()).as("Traces JSON should be an array").isTrue();
+
+    // Extract all spans and organize by type
+    SpanInfo kafkaProducerSpan = null;
+    SpanInfo kafkaConnectConsumerSpan = null;
+    SpanInfo databaseSpan = null;
+    SpanLinkInfo extractedSpanLink = null;
+
+    // Process each trace request in the JSON array
+    for (JsonNode traceRequestNode : rootNode) {
+      JsonNode resourceSpansArray = traceRequestNode.get("resourceSpans");
+      if (resourceSpansArray == null || !resourceSpansArray.isArray()) {
+        continue;
+      }
+
+      for (JsonNode resourceSpansNode : resourceSpansArray) {
+        JsonNode scopeSpansArray = resourceSpansNode.get("scopeSpans");
+        if (scopeSpansArray == null || !scopeSpansArray.isArray()) {
+          continue;
+        }
+
+        for (JsonNode scopeSpansNode : scopeSpansArray) {
+          JsonNode scopeNode = scopeSpansNode.get("scope");
+          String scopeName =
+              scopeNode != null && scopeNode.get("name") != null
+                  ? scopeNode.get("name").asText()
+                  : "";
+
+          JsonNode spansArray = scopeSpansNode.get("spans");
+          if (spansArray == null || !spansArray.isArray()) {
+            continue;
+          }
+
+          for (JsonNode spanNode : spansArray) {
+            String spanName = spanNode.get("name") != null ? spanNode.get("name").asText() : "";
+            String traceId =
+                spanNode.get("traceId") != null ? spanNode.get("traceId").asText() : "";
+            String spanId = spanNode.get("spanId") != null ? spanNode.get("spanId").asText() : "";
+            String parentSpanId =
+                spanNode.get("parentSpanId") != null
+                        && !spanNode.get("parentSpanId").asText().isEmpty()
+                    ? spanNode.get("parentSpanId").asText()
+                    : null;
+            String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
+
+            // Identify spans in our end-to-end flow
+            if (scopeName.contains("kafka-clients")
+                && spanName.contains(expectedTopicName)
+                && spanKind.equals("SPAN_KIND_PRODUCER")) {
+              kafkaProducerSpan =
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+            } else if (scopeName.contains("kafka-connect")
+                && spanName.contains(expectedTopicName)
+                && spanKind.equals("SPAN_KIND_CONSUMER")) {
+              kafkaConnectConsumerSpan =
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+
+              // Extract span link information for verification
+              JsonNode linksArray = spanNode.get("links");
+              if (linksArray != null && linksArray.isArray() && linksArray.size() > 0) {
+                JsonNode firstLink = linksArray.get(0);
+                String linkedTraceId =
+                    firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
+                String linkedSpanId =
+                    firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
+                int flags = firstLink.get("flags") != null ? firstLink.get("flags").asInt() : 0;
+
+                extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId, flags);
+              }
+            } else if (scopeName.contains("jdbc")
+                && (spanName.contains("INSERT")
+                    || spanName.contains("UPDATE")
+                    || spanName.contains("DELETE")
+                    || spanName.contains("SELECT")
+                    || spanName.contains(DB_TABLE_PERSON))) {
+              databaseSpan =
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+            }
+          }
+        }
+      }
+    }
+
+    return new TracingData(
+        kafkaProducerSpan, kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+  }
+
+  // Helper class to hold all tracing data
+  private static class TracingData {
+    final SpanInfo kafkaProducerSpan;
+    final SpanInfo kafkaConnectConsumerSpan;
+    final SpanInfo databaseSpan;
+    final SpanLinkInfo extractedSpanLink;
+
+    TracingData(
+        SpanInfo kafkaProducerSpan,
+        SpanInfo kafkaConnectConsumerSpan,
+        SpanInfo databaseSpan,
+        SpanLinkInfo extractedSpanLink) {
+      this.kafkaProducerSpan = kafkaProducerSpan;
+      this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
+      this.databaseSpan = databaseSpan;
+      this.extractedSpanLink = extractedSpanLink;
+    }
+  }
+
+  // Helper class to hold span information
+  private static class SpanInfo {
+    final String name;
+    final String traceId;
+    final String spanId;
+    final String parentSpanId;
+    final String kind;
+    final String scope;
+
+    SpanInfo(
+        String name,
+        String traceId,
+        String spanId,
+        String parentSpanId,
+        String kind,
+        String scope) {
+      this.name = name;
+      this.traceId = traceId;
+      this.spanId = spanId;
+      this.parentSpanId = parentSpanId;
+      this.kind = kind;
+      this.scope = scope;
+    }
+  }
+
+  // Helper class to hold span link information
+  private static class SpanLinkInfo {
+    final String linkedTraceId;
+    final String linkedSpanId;
+    final int flags;
+
+    SpanLinkInfo(String linkedTraceId, String linkedSpanId, int flags) {
+      this.linkedTraceId = linkedTraceId;
+      this.linkedSpanId = linkedSpanId;
+      this.flags = flags;
+    }
   }
 }

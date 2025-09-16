@@ -39,11 +39,15 @@ tasks.withType<Test>().configureEach {
 
   // Make agent jar path available to tests
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-
-  // Configure test JVM (no agent attached to test process)
+  // Configure test JVM with agent for end-to-end tracing
   jvmArgs(
-    "-Dotel.traces.exporter=none",
+    "-javaagent:${agentShadowJar.get().archiveFile.get()}",
+    "-Dotel.traces.exporter=otlp",
     "-Dotel.metrics.exporter=none",
-    "-Dotel.logs.exporter=none"
+    "-Dotel.logs.exporter=none",
+    "-Dotel.service.name=kafka-connect-test-producer"
   )
+
+  // Pass backend endpoint as system property (will be set dynamically in test)
+  systemProperty("otel.exporter.otlp.traces.endpoint", System.getProperty("otel.exporter.otlp.traces.endpoint", "http://localhost:4318/v1/traces"))
 }
