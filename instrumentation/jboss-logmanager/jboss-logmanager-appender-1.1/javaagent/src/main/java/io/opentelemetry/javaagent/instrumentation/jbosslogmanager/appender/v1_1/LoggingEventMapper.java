@@ -10,8 +10,6 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
@@ -31,7 +29,7 @@ public final class LoggingEventMapper {
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
   // copied from EventIncubatingAttributes
-  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
+  private static final String EVENT_NAME = "event.name";
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
   private final List<String> captureMdcAttributes;
@@ -82,35 +80,17 @@ public final class LoggingEventMapper {
       builder.setSeverityText(level.toString());
     }
 
-    AttributesBuilder attributes = Attributes.builder();
-
     Throwable throwable = record.getThrown();
     if (throwable != null) {
       // this cast is safe within java agent instrumentation
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     }
-    captureMdcAttributes(attributes);
+    captureMdcAttributes(builder);
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
-    }
-
-    Attributes realizedAttributes = attributes.build();
-    if (captureEventName) {
-      realizedAttributes.forEach(
-          (attributeKey, value) -> {
-            if (attributeKey.equals(EVENT_NAME)) {
-              builder.setEventName(String.valueOf(value));
-            } else {
-              @SuppressWarnings("unchecked")
-              AttributeKey<Object> attributeKeyAsObject = (AttributeKey<Object>) attributeKey;
-              builder.setAttribute(attributeKeyAsObject, value);
-            }
-          });
-    } else {
-      builder.setAllAttributes(realizedAttributes);
+      builder.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
+      builder.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
     }
 
     builder.setContext(Context.current());
@@ -119,15 +99,19 @@ public final class LoggingEventMapper {
     builder.emit();
   }
 
-  private void captureMdcAttributes(AttributesBuilder attributes) {
+  private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Map<String, String> context = MDC.copy();
 
     if (captureAllMdcAttributes) {
       if (context != null) {
         for (Map.Entry<String, String> entry : context.entrySet()) {
-          attributes.put(
-              getMdcAttributeKey(String.valueOf(entry.getKey())), String.valueOf(entry.getValue()));
+          if (captureEventName && entry.getKey().equals(EVENT_NAME)) {
+            builder.setEventName(entry.getValue());
+          } else {
+            builder.setAttribute(
+                    getMdcAttributeKey(String.valueOf(entry.getKey())), String.valueOf(entry.getValue()));
+          }
         }
       }
       return;
@@ -136,7 +120,7 @@ public final class LoggingEventMapper {
     for (String key : captureMdcAttributes) {
       Object value = context.get(key);
       if (value != null) {
-        attributes.put(key, value.toString());
+        builder.setAttribute(key, value.toString());
       }
     }
   }
