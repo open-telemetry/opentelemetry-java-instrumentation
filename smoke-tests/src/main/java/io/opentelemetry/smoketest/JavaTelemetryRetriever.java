@@ -44,14 +44,14 @@ public class JavaTelemetryRetriever {
         convert(requests, ExportTraceServiceRequest::getResourceSpansList));
   }
 
-  public Collection<MetricData> waitForMetrics() {
+  public List<MetricData> waitForMetrics() {
     Collection<ExportMetricsServiceRequest> requests =
         waitForTelemetry("get-metrics", ExportMetricsServiceRequest::newBuilder);
     return TelemetryConverter.getMetricsData(
         convert(requests, ExportMetricsServiceRequest::getResourceMetricsList));
   }
 
-  public Collection<LogRecordData> waitForLogs() {
+  public List<LogRecordData> waitForLogs() {
     Collection<ExportLogsServiceRequest> requests =
         waitForTelemetry("get-logs", ExportLogsServiceRequest::newBuilder);
     return TelemetryConverter.getLogRecordData(
@@ -102,6 +102,10 @@ public class JavaTelemetryRetriever {
       previousSize = content.length();
       System.out.println("Current content size " + previousSize);
       TimeUnit.MILLISECONDS.sleep(500);
+    }
+
+    if ("true".equals(System.getenv("debug"))) {
+      System.out.println(content);
     }
 
     return content;

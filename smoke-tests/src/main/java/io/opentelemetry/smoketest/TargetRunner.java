@@ -5,7 +5,10 @@
 
 package io.opentelemetry.smoketest;
 
+import java.util.function.Consumer;
+import org.testcontainers.containers.output.OutputFrame;
+
 @FunctionalInterface
 public interface TargetRunner {
-  void runInTarget() throws Exception;
+  void runInTarget(Consumer<OutputFrame> startTarget) throws Exception;
 }

@@ -7,20 +7,29 @@ package io.opentelemetry.smoketest;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toSet;
 
+import io.opentelemetry.instrumentation.testing.junit.MetricsAssert;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.MetricAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.output.ToStringConsumer;
 
 public abstract class JavaSmokeTest {
+  private static final Pattern TRACE_ID_PATTERN =
+      Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
+
   protected static final TestContainerManager containerManager = createContainerManager();
   private JavaTelemetryRetriever telemetryRetriever;
 
@@ -65,16 +74,16 @@ public abstract class JavaSmokeTest {
     telemetryRetriever = new JavaTelemetryRetriever(containerManager.getBackendMappedPort());
   }
 
-  public void withTarget(int jdk, TargetRunner runner) throws Exception {
-    startTarget(jdk);
+  public void runTarget(int jdk, TargetRunner runner) throws Exception {
+    Consumer<OutputFrame> startTarget = startTarget(jdk);
     try {
-      runner.runInTarget();
+      runner.runInTarget(startTarget);
     } finally {
       stopTarget();
     }
   }
 
-  public Consumer<OutputFrame> startTarget(int jdk) {
+  private Consumer<OutputFrame> startTarget(int jdk) {
     return startTarget(String.valueOf(jdk), null, false);
   }
 
@@ -110,7 +119,7 @@ public abstract class JavaSmokeTest {
     telemetryRetriever.clearTelemetry();
   }
 
-  public void stopTarget() {
+  private void stopTarget() {
     containerManager.stopTarget();
     cleanup();
   }
@@ -119,12 +128,34 @@ public abstract class JavaSmokeTest {
     return telemetryRetriever.waitForTraces();
   }
 
-  protected Collection<MetricData> waitForMetrics() {
-    return telemetryRetriever.waitForMetrics();
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  protected final void waitAndAssertMetrics(
+      String instrumentationName, Consumer<MetricAssert>... assertions) {
+    MetricsAssert.waitAndAssertMetrics(
+        () -> telemetryRetriever.waitForMetrics(), instrumentationName, assertions);
   }
 
   protected Collection<LogRecordData> waitForLogs() {
     return telemetryRetriever.waitForLogs();
+  }
+
+  protected static boolean isVersionLogged(Consumer<OutputFrame> output, String version) {
+    return logLines(output)
+        .anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version));
+  }
+
+  private static Stream<String> logLines(Consumer<OutputFrame> output) {
+    return ((ToStringConsumer) output).toUtf8String().lines();
+  }
+
+  protected static Set<String> getLoggedTraceIds(Consumer<OutputFrame> output) {
+    return logLines(output).flatMap(l -> findTraceId(l)).collect(toSet());
+  }
+
+  private static Stream<String> findTraceId(String log) {
+    var m = TRACE_ID_PATTERN.matcher(log);
+    return m.matches() ? Stream.of(m.group("traceId")) : Stream.empty();
   }
 
   private static TestContainerManager createContainerManager() {

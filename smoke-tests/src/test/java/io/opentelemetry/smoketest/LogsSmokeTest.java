@@ -32,9 +32,9 @@ class LogsSmokeTest extends JavaSmokeTest {
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
   void shouldExportLogs(int jdk) throws Exception {
-    withTarget(
+    runTarget(
         jdk,
-        () -> {
+        output -> {
           client().get("/greeting").aggregate().join();
           Collection<LogRecordData> logs = waitForLogs();
 
