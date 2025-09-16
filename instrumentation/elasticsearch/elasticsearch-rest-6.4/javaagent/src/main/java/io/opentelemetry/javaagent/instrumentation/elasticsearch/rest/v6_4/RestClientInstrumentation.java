@@ -49,13 +49,30 @@ public class RestClientInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final ElasticsearchRestRequest request;
+      private final Context parentContext;
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(ElasticsearchRestRequest request, Context context, Scope scope) {
+      private AdviceScope(
+          ElasticsearchRestRequest request, Context parentContext, Context context, Scope scope) {
         this.request = request;
+        this.parentContext = parentContext;
         this.context = context;
         this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(ElasticsearchRestRequest request) {
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(request, parentContext, context, context.makeCurrent());
+      }
+
+      public RestResponseListener wrapListener(ResponseListener listener) {
+        return new RestResponseListener(listener, parentContext, instrumenter(), context, request);
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -72,21 +89,15 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     public static Object[] onEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) ResponseListener originalResponseListener) {
-
       ResponseListener responseListener = originalResponseListener;
 
-      Context parentContext = currentContext();
       ElasticsearchRestRequest otelRequest =
           ElasticsearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+      AdviceScope adviceScope = AdviceScope.start(otelRequest);
+      if (adviceScope == null) {
         return new Object[] {null, responseListener};
       }
-      Context context = instrumenter().start(parentContext, otelRequest);
-      AdviceScope adviceScope = new AdviceScope(otelRequest, context, context.makeCurrent());
-
-      responseListener =
-          new RestResponseListener(
-              responseListener, parentContext, instrumenter(), context, otelRequest);
+      responseListener = adviceScope.wrapListener(responseListener);
       return new Object[] {adviceScope, responseListener};
     }
 

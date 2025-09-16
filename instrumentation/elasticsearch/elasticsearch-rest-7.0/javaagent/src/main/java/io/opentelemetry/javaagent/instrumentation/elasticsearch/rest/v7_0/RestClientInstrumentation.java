@@ -67,7 +67,8 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    public static AdviceScope start(ElasticsearchRestRequest request, Context parentContext) {
+    public static AdviceScope start(ElasticsearchRestRequest request) {
+      Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
       }
@@ -107,7 +108,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
               // set by elasticsearch-api-client instrumentation
               ENDPOINT_DEFINITION.get(request),
               request.getEntity());
-      return AdviceScope.start(otelRequest, currentContext());
+      return AdviceScope.start(otelRequest);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -137,7 +138,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
               // set by elasticsearch-api-client instrumentation
               ENDPOINT_DEFINITION.get(request),
               request.getEntity());
-      AdviceScope adviceScope = AdviceScope.start(otelRequest, currentContext());
+      AdviceScope adviceScope = AdviceScope.start(otelRequest);
       if (adviceScope == null) {
         return new Object[] {null, responseListener};
       }
