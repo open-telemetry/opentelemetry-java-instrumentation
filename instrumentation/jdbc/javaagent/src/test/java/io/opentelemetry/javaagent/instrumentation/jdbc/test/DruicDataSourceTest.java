@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class DataSourceInstrumentationTest {
+class DruicDataSourceTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -55,14 +55,15 @@ class DataSourceInstrumentationTest {
   }
 
   @Test
-  void testDruidDataSourceGetConnection() throws SQLException {
+  void testGetConnection() throws SQLException {
+    // In DruidDataSource we instrument both DruidPooledConnection getConnection() and the bridge
+    // method Connection getConnection(). Here we call Connection getConnection() that delegates
+    // to DruidPooledConnection getConnection(), and verify that only one span is created.
     testing.runWithSpan(
         "parent",
         () -> {
           try (Connection connection = dataSource.getConnection()) {
             return null;
-          } catch (SQLException e) {
-            throw new RuntimeException(e);
           }
         });
 
