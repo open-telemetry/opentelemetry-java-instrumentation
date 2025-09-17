@@ -21,6 +21,7 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
@@ -59,12 +60,13 @@ public final class LoggingEventMapper {
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
   // copied from EventIncubatingAttributes
-  private static final String EVENT_NAME = "event.name";
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   private static final boolean supportsInstant = supportsInstant();
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final boolean supportsLogstashMarkers = supportsLogstashMarkers();
+  private static final Cache<String, AttributeKey<String>> attributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<List<String>> LOG_MARKER =
       AttributeKey.stringArrayKey("logback.marker");
@@ -241,14 +243,14 @@ public final class LoggingEventMapper {
   void captureMdcAttributes(LogRecordBuilder builder, Map<String, String> mdcProperties) {
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        setAttributeMaybeEventName(builder, entry.getKey(), entry.getValue());
+        setAttributeOrEventName(builder, getAttributeKey(entry.getKey()), entry.getValue());
       }
       return;
     }
 
     for (String key : captureMdcAttributes) {
       String value = mdcProperties.get(key);
-      setAttributeMaybeEventName(builder, key, value);
+      setAttributeOrEventName(builder, getAttributeKey(key), value);
     }
   }
 
@@ -347,22 +349,23 @@ public final class LoggingEventMapper {
             ((Collection<?>) value).toArray(),
             String::valueOf);
       } else {
-        setAttributeMaybeEventName(builder, captureEventName, keyStr, String.valueOf(value));
+        setAttributeOrEventName(builder, captureEventName, getAttributeKey(keyStr), value);
       }
     }
   }
 
-  private void setAttributeMaybeEventName(LogRecordBuilder builder, String key, String value) {
-    setAttributeMaybeEventName(builder, this.captureEventName, key, value);
+  private void setAttributeOrEventName(
+      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
+    setAttributeOrEventName(builder, this.captureEventName, key, value);
   }
 
-  private static void setAttributeMaybeEventName(
-      LogRecordBuilder builder, boolean captureEventName, String key, String value) {
+  private static void setAttributeOrEventName(
+      LogRecordBuilder builder, boolean captureEventName, AttributeKey<String> key, Object value) {
     if (value != null) {
       if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value);
+        builder.setEventName(value.toString());
       } else {
-        builder.setAttribute(key, value);
+        builder.setAttribute(key, value.toString());
       }
     }
   }
@@ -389,8 +392,12 @@ public final class LoggingEventMapper {
   private void captureLoggerContext(
       LogRecordBuilder builder, Map<String, String> loggerContextProperties) {
     for (Map.Entry<String, String> entry : loggerContextProperties.entrySet()) {
-      setAttributeMaybeEventName(builder, entry.getKey(), entry.getValue());
+      setAttributeOrEventName(builder, getAttributeKey(entry.getKey()), entry.getValue());
     }
+  }
+
+  public static AttributeKey<String> getAttributeKey(String key) {
+    return attributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   private static boolean supportsKeyValuePairs() {

@@ -9,10 +9,12 @@ import static java.util.Collections.emptyList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.List;
@@ -26,8 +28,10 @@ public final class LoggingEventMapper {
 
   public static final LoggingEventMapper INSTANCE = new LoggingEventMapper();
 
+  private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
+
   // copied from EventIncubatingAttributes
-  private static final String EVENT_NAME = "event.name";
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   private final List<String> captureMdcAttributes;
 
@@ -103,7 +107,7 @@ public final class LoggingEventMapper {
     if (captureAllMdcAttributes) {
       if (context != null) {
         for (Map.Entry<String, String> entry : context.entrySet()) {
-          setAttributeMaybeEventName(builder, entry.getKey(), String.valueOf(entry.getValue()));
+          setAttributeOrEventName(builder, getMdcAttributeKey(entry.getKey()), entry.getValue());
         }
       }
       return;
@@ -111,16 +115,21 @@ public final class LoggingEventMapper {
 
     for (String key : captureMdcAttributes) {
       Object value = context.get(key);
-      setAttributeMaybeEventName(builder, key, value.toString());
+      setAttributeOrEventName(builder, getMdcAttributeKey(key), value);
     }
   }
 
-  private void setAttributeMaybeEventName(LogRecordBuilder builder, String key, String value) {
+  public static AttributeKey<String> getMdcAttributeKey(String key) {
+    return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
+  }
+
+  private void setAttributeOrEventName(
+      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
     if (value != null) {
       if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value);
+        builder.setEventName(value.toString());
       } else {
-        builder.setAttribute(key, value);
+        builder.setAttribute(key, value.toString());
       }
     }
   }

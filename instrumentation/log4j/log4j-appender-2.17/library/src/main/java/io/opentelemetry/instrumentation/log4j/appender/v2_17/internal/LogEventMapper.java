@@ -41,10 +41,12 @@ public final class LogEventMapper<T> {
   private static final AttributeKey<Long> THREAD_ID = AttributeKey.longKey("thread.id");
   private static final AttributeKey<String> THREAD_NAME = AttributeKey.stringKey("thread.name");
   // copied from EventIncubatingAttributes
-  private static final String EVENT_NAME = "event.name";
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   private static final String SPECIAL_MAP_MESSAGE_ATTRIBUTE = "message";
 
+  private static final Cache<String, AttributeKey<String>> contextDataAttributeKeyCache =
+      Cache.bounded(100);
   private static final Cache<String, AttributeKey<String>> mapMessageAttributeKeyCache =
       Cache.bounded(100);
 
@@ -206,24 +208,30 @@ public final class LogEventMapper<T> {
 
     if (captureAllContextDataAttributes) {
       contextDataAccessor.forEach(
-          contextData, (key, value) -> setAttributeMaybeEventName(builder, key, value));
+          contextData,
+          (key, value) -> setAttributeOrEventName(builder, getContextDataAttributeKey(key), value));
       return;
     }
 
     for (String key : captureContextDataAttributes) {
       String value = contextDataAccessor.getValue(contextData, key);
-      setAttributeMaybeEventName(builder, key, value);
+      setAttributeOrEventName(builder, getContextDataAttributeKey(key), value);
     }
   }
 
-  private void setAttributeMaybeEventName(LogRecordBuilder builder, String key, String value) {
+  private void setAttributeOrEventName(
+      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
     if (value != null) {
       if (captureEventName && key.equals(EVENT_NAME)) {
-        builder.setEventName(value);
+        builder.setEventName(value.toString());
       } else {
-        builder.setAttribute(key, value);
+        builder.setAttribute(key, value.toString());
       }
     }
+  }
+
+  public static AttributeKey<String> getContextDataAttributeKey(String key) {
+    return contextDataAttributeKeyCache.computeIfAbsent(key, AttributeKey::stringKey);
   }
 
   public static AttributeKey<String> getMapMessageAttributeKey(String key) {

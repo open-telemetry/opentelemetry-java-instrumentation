@@ -65,7 +65,7 @@ class LogEventMapperTest {
     mapper.captureContextDataAttributes(builder, contextData);
 
     // then
-    verify(builder).setAttribute("key2", "value2");
+    verify(builder).setAttribute(AttributeKey.stringKey("key2"), "value2");
     verifyNoMoreInteractions(builder);
   }
 
@@ -90,8 +90,8 @@ class LogEventMapperTest {
     mapper.captureContextDataAttributes(builder, contextData);
 
     // then
-    verify(builder).setAttribute("key1", "value1");
-    verify(builder).setAttribute("key2", "value2");
+    verify(builder).setAttribute(AttributeKey.stringKey("key1"), "value1");
+    verify(builder).setAttribute(AttributeKey.stringKey("key2"), "value2");
     verifyNoMoreInteractions(builder);
   }
 
