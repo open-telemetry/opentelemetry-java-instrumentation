@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.CONNECTION_REQUEST_AND_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0.ReactorNettySingletons.connectionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -16,15 +17,16 @@ import io.netty.channel.ChannelPromise;
 import io.netty.resolver.AddressResolverGroup;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_1.InstrumentedAddressResolverGroup;
 import java.net.SocketAddress;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -68,58 +70,74 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ResolveAndConnectAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(3))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 3, readOnly = false) AddressResolverGroup<?> resolver) {
-      resolver = InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
+    public static AddressResolverGroup<?> onEnter(
+        @Advice.Argument(3) AddressResolverGroup<?> resolver) {
+      return InstrumentedAddressResolverGroup.wrap(connectionInstrumenter(), resolver);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Mono<Channel> mono) {
+    public static Mono<Channel> onExit(@Advice.Return Mono<Channel> mono) {
+
       // end the CONNECT span that was started in doConnect() instrumentation
-      mono = ConnectionWrapper.wrap(mono);
+      return ConnectionWrapper.wrap(mono);
+    }
+  }
+
+  public static class AdviceScope {
+    private final NettyConnectionRequest request;
+    private final Context context;
+    private final Scope scope;
+
+    private AdviceScope(NettyConnectionRequest request, Context context, Scope scope) {
+      this.request = request;
+      this.context = context;
+      this.scope = scope;
+    }
+
+    @Nullable
+    public static AdviceScope start(SocketAddress remoteAddress, ChannelPromise channelPromise) {
+
+      Context parentContext = Context.current();
+      NettyConnectionRequest request = NettyConnectionRequest.connect(remoteAddress);
+      if (!connectionInstrumenter().shouldStart(parentContext, request)) {
+        return null;
+      }
+
+      Context context = connectionInstrumenter().start(parentContext, request);
+      // the span is finished in the mono decorated by the ConnectionWrapper
+      CONNECTION_REQUEST_AND_CONTEXT.set(
+          channelPromise, ConnectionRequestAndContext.create(request, context));
+      return new AdviceScope(request, context, context.makeCurrent());
+    }
+
+    public void end(@Nullable Throwable throwable) {
+      scope.close();
+      if (throwable != null) {
+        connectionInstrumenter().end(context, request, null, throwable);
+      }
     }
   }
 
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    public static AdviceScope onEnter(
         @Advice.Argument(0) SocketAddress remoteAddress,
-        @Advice.Argument(2) ChannelPromise channelPromise,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelScope") Scope scope) {
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = NettyConnectionRequest.connect(remoteAddress);
-      if (!connectionInstrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = connectionInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
-
-      // the span is finished in the mono decorated by the ConnectionWrapper
-      VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class)
-          .set(channelPromise, ConnectionRequestAndContext.create(request, context));
+        @Advice.Argument(2) ChannelPromise channelPromise) {
+      return AdviceScope.start(remoteAddress, channelPromise);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      if (throwable != null) {
-        connectionInstrumenter().end(context, request, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
     }
   }
@@ -127,43 +145,21 @@ public class TransportConnectorInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectNewAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    public static AdviceScope onEnter(
         @Advice.Argument(0) List<SocketAddress> remoteAddresses,
         @Advice.Argument(2) ChannelPromise channelPromise,
-        @Advice.Argument(3) int index,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelScope") Scope scope) {
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = NettyConnectionRequest.connect(remoteAddresses.get(index));
-      if (!connectionInstrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = connectionInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
-
-      // the span is finished in the mono decorated by the ConnectionWrapper
-      VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class)
-          .set(channelPromise, ConnectionRequestAndContext.create(request, context));
+        @Advice.Argument(3) int index) {
+      SocketAddress remoteAddress = remoteAddresses.get(index);
+      return AdviceScope.start(remoteAddress, channelPromise);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void endConnect(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelRequest") NettyConnectionRequest request,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-
-      if (throwable != null) {
-        connectionInstrumenter().end(context, request, null, throwable);
+        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
     }
   }

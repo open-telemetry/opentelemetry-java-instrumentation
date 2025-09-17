@@ -2,9 +2,12 @@
 # The structure and contents are a work in progress and subject to change.
 # For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468
 
+file_format: 0.1
+
 libraries:
   activej:
   - name: activej-http-6.0
+    display_name: ActiveJ
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the ActiveJ HTTP server.
     library_link: https://activej.io/
@@ -60,6 +63,7 @@ libraries:
           type: STRING
   akka:
   - name: akka-actor-2.3
+    display_name: Akka Actors
     description: This instrumentation provides context propagation for Akka actors,
       it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
@@ -72,6 +76,7 @@ libraries:
       - com.typesafe.akka:akka-actor_2.12:[2.3,)
       - com.typesafe.akka:akka-actor_2.13:[2.3,)
   - name: akka-actor-fork-join-2.5
+    display_name: Akka Actors
     description: This instrumentation provides context propagation for the Akka Fork-Join
       Pool, it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
@@ -84,6 +89,7 @@ libraries:
       - com.typesafe.akka:akka-actor_2.13:[2.5.23,2.6)
       - com.typesafe.akka:akka-actor_2.11:[2.5,)
   - name: akka-http-10.0
+    display_name: Akka HTTP
     description: |
       This instrumentation enables HTTP client spans and metrics for the Akka HTTP client, and HTTP server spans and metrics for the Akka HTTP server.
     library_link: https://doc.akka.io/docs/akka-http/current/index.html

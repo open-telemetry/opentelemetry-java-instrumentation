@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Flux;
@@ -33,11 +34,13 @@ public class ConsumerHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ReceiveAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Flux<?> flux) {
-      if (!(flux instanceof TracingDisablingKafkaFlux)) {
-        flux = new TracingDisablingKafkaFlux<>(flux);
+    public static Flux<?> onExit(@Advice.Return Flux<?> flux) {
+      if (flux instanceof TracingDisablingKafkaFlux) {
+        return flux;
       }
+      return new TracingDisablingKafkaFlux<>(flux);
     }
   }
 }
