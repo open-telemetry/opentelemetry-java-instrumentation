@@ -528,7 +528,7 @@ class InstrumenterTest {
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
             .addOperationListener(operationListener)
             .addAttributesExtractor(new AttributesExtractor1());
-    Experimental.addOperationAttributesExtractor(builder, new AttributesExtractor2());
+    Experimental.addOperationListenerAttributesExtractor(builder, new AttributesExtractor2());
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         builder.buildServerInstrumenter(new MapGetter());
 

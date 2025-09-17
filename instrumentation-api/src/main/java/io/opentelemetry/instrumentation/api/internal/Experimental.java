@@ -30,7 +30,7 @@ public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
-      operationAttributesExtractorAdder;
+      operationListenerAttributesExtractorAdder;
 
   private Experimental() {}
 
@@ -68,20 +68,21 @@ public final class Experimental {
    * attributes to the metrics without adding them to the span. To add attributes to the span use
    * {@link InstrumenterBuilder#addAttributesExtractor(AttributesExtractor)}.
    */
-  public static <REQUEST, RESPONSE> void addOperationAttributesExtractor(
+  public static <REQUEST, RESPONSE> void addOperationListenerAttributesExtractor(
       InstrumenterBuilder<REQUEST, RESPONSE> builder,
       AttributesExtractor<? super REQUEST, ? super RESPONSE> attributesExtractor) {
-    if (operationAttributesExtractorAdder != null) {
-      operationAttributesExtractorAdder.accept(builder, attributesExtractor);
+    if (operationListenerAttributesExtractorAdder != null) {
+      operationListenerAttributesExtractorAdder.accept(builder, attributesExtractor);
     }
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})
-  public static <REQUEST, RESPONSE> void internalAddOperationAttributesExtractor(
+  public static <REQUEST, RESPONSE> void internalAddOperationListenerAttributesExtractor(
       BiConsumer<
               InstrumenterBuilder<REQUEST, RESPONSE>,
               AttributesExtractor<? super REQUEST, ? super RESPONSE>>
-          operationAttributesExtractorAdder) {
-    Experimental.operationAttributesExtractorAdder = (BiConsumer) operationAttributesExtractorAdder;
+          operationListenerAttributesExtractorAdder) {
+    Experimental.operationListenerAttributesExtractorAdder =
+        (BiConsumer) operationListenerAttributesExtractorAdder;
   }
 }

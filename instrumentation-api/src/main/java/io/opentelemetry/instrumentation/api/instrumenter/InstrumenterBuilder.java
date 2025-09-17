@@ -61,8 +61,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
-  final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> operationAttributesExtractors =
-      new ArrayList<>();
+  final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      operationListenerAttributesExtractors = new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   private final List<OperationListener> operationListeners = new ArrayList<>();
   private final List<OperationMetrics> operationMetrics = new ArrayList<>();
@@ -77,10 +77,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   boolean enabled = true;
 
   {
-    Experimental.internalAddOperationAttributesExtractor(
-        (builder, operationAttributesExtractor) ->
-            this.operationAttributesExtractors.add(
-                requireNonNull(operationAttributesExtractor, "operationAttributesExtractor")));
+    Experimental.internalAddOperationListenerAttributesExtractor(
+        (builder, operationListenerAttributesExtractor) ->
+            this.operationListenerAttributesExtractors.add(
+                requireNonNull(
+                    operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
   }
 
   InstrumenterBuilder(
