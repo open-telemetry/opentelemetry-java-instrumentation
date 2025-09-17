@@ -1,4 +1,4 @@
-name: opentelemetry.io documentation disable list audit
+name: Documentation Synchronization Audit (opentelemetry.io)
 
 on:
   schedule:
