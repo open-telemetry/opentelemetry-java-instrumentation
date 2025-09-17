@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-junit5:1.33.1")
+  implementation("com.linecorp.armeria:armeria-junit5:1.33.2")
   implementation("com.google.errorprone:error_prone_annotations")
 }
 
@@ -38,6 +38,10 @@ tasks {
     relocate("org.LatencyUtils", "io.opentelemetry.testing.internal.org.latencyutils")
 
     mergeServiceFiles()
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
   }
 
   val extractShadowJar by registering(Copy::class) {

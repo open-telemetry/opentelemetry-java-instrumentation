@@ -36,6 +36,9 @@ dependencies {
 
 tasks {
   val testIncludeProperty by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("ConfiguredTraceAnnotationsTest")
     }
@@ -44,6 +47,9 @@ tasks {
   }
 
   val testExcludeMethodsProperty by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("TracedMethodsExclusionTest")
     }
@@ -61,7 +67,6 @@ tasks {
   }
 
   check {
-    dependsOn(testIncludeProperty)
-    dependsOn(testExcludeMethodsProperty)
+    dependsOn(testIncludeProperty, testExcludeMethodsProperty)
   }
 }

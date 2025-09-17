@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Completable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -31,9 +32,10 @@ public class TransactionImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WrapHandlerAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrapHandler(@Advice.Return(readOnly = false) Completable<?> handler) {
-      handler = CompletableWrapper.wrap(handler);
+    public static Completable<?> wrapHandler(@Advice.Return Completable<?> handler) {
+      return CompletableWrapper.wrap(handler);
     }
   }
 }

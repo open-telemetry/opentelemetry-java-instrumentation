@@ -1,0 +1,2 @@
+description: This instrumentation enables RPC server spans for GWT RPC requests.
+library_link: https://www.gwtproject.org/

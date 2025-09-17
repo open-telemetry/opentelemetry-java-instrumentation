@@ -1,1 +1,2 @@
 description: The c3p0 instrumentation provides connection pool metrics for c3p0 data sources.
+library_link: https://github.com/swaldman/c3p0

@@ -39,4 +39,9 @@ public class ContextPropagationOperator34InstrumentationModule extends Instrumen
     // This module uses the api context bridge helpers, therefore must be in the same classloader
     return "opentelemetry-api-bridge";
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

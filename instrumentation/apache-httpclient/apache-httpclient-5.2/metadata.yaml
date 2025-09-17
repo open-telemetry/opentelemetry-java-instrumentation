@@ -1,1 +1,2 @@
-description: This instrumentation provides a library integration that enables CLIENT spans and metrics for the Apache HttpClient.
+description: This instrumentation provides a library integration that enables HTTP client spans and HTTP client metrics for the Apache HttpClient.
+library_link: https://hc.apache.org/index.html

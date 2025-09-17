@@ -89,7 +89,7 @@ public final class OsResource {
     } else if (os.startsWith("solaris")) {
       return OsTypeValues.SOLARIS;
     } else if (os.startsWith("z/os")) {
-      return OsTypeValues.Z_OS;
+      return OsTypeValues.ZOS;
     }
     return null;
   }
@@ -108,7 +108,7 @@ public final class OsResource {
     static final String HPUX = "hpux";
     static final String AIX = "aix";
     static final String SOLARIS = "solaris";
-    static final String Z_OS = "z_os";
+    static final String ZOS = "zos";
 
     private OsTypeValues() {}
   }

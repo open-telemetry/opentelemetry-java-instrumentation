@@ -1,1 +1,3 @@
+display_name: Akka Actors
 description: This instrumentation provides context propagation for the Akka Fork-Join Pool, it does not emit any telemetry on its own.
+library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html

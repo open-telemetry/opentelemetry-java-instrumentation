@@ -57,6 +57,8 @@ tasks {
   }
 
   val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     systemProperty("metadataConfig", "otel.instrumentation.spring-webmvc.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.spring-webmvc.experimental-span-attributes=true")
   }

@@ -150,7 +150,7 @@ tasks {
     // exclude the agent part of the javaagent-extension-api; these classes will be added in relocate tasks
     exclude("io/opentelemetry/javaagent/extension/**")
 
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    duplicatesStrategy = DuplicatesStrategy.FAIL
 
     archiveFileName.set("bootstrapLibs.jar")
   }
@@ -161,6 +161,13 @@ tasks {
     excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
+    // TODO: remove after updating contrib to 1.50.0
+    filesMatching("io/opentelemetry/contrib/gcp/resource/version.properties") {
+      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+    exclude("META-INF/LICENSE")
+    exclude("META-INF/NOTICE")
+    exclude("META-INF/maven/**")
 
     archiveFileName.set("baseJavaagentLibs-relocated-tmp.jar")
   }
@@ -183,6 +190,16 @@ tasks {
     exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
+    // TODO: remove after updating contrib to 1.50.0
+    filesMatching("io/opentelemetry/contrib/gcp/resource/version.properties") {
+      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+    filesMatching("META-INF/io/opentelemetry/instrumentation/**") {
+      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+    }
+    exclude("META-INF/LICENSE")
+    exclude("META-INF/NOTICE")
+    exclude("META-INF/maven/**")
 
     archiveFileName.set("javaagentLibs-relocated-tmp.jar")
   }
@@ -286,7 +303,8 @@ tasks {
     doLast {
       val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
       if (Files.exists(filePath)) {
-        val datePattern = Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
+        val datePattern =
+          Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
         val lines = Files.readAllLines(filePath)
         // 4th line contains the timestamp of when the license report was generated, replace it with
         // an empty line
@@ -394,8 +412,8 @@ fun CopySpec.isolateClasses(jar: Provider<RegularFile>) {
     // important to keep prefix "inst" short, as it is prefixed to lots of strings in runtime mem
     into("inst")
     rename("(^.*)\\.class\$", "\$1.classdata")
-    // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-    rename("""^LICENSE$""", "LICENSE.renamed")
+    exclude("""^LICENSE$""")
+    exclude("META-INF/LICENSE.txt")
     exclude("META-INF/INDEX.LIST")
     exclude("META-INF/*.DSA")
     exclude("META-INF/*.SF")
@@ -412,7 +430,8 @@ fun CopySpec.copyByteBuddy(jar: Provider<RegularFile>) {
     eachFile {
       if (path.startsWith("net/bytebuddy/") &&
         // this is our class that we have placed in the byte buddy package, need to preserve it
-        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")) {
+        !path.startsWith("net/bytebuddy/agent/builder/AgentBuilderUtil")
+      ) {
         exclude()
       } else if (path.startsWith("META-INF/versions/9/net/bytebuddy/")) {
         path = path.removePrefix("META-INF/versions/9/")

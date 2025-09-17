@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_SYSTEM;
+import static io.opentelemetry.instrumentation.openai.v1_1.GenAiAttributes.GEN_AI_PROVIDER_NAME;
 
 import com.openai.models.chat.completions.ChatCompletion;
 import com.openai.models.chat.completions.ChatCompletionAssistantMessageParam;
@@ -214,7 +214,7 @@ final class ChatCompletionEventsHelper {
     return eventLogger
         .logRecordBuilder()
         .setAttribute(EVENT_NAME, name)
-        .setAttribute(GEN_AI_SYSTEM, "openai");
+        .setAttribute(GEN_AI_PROVIDER_NAME, "openai");
   }
 
   private static Value<?> buildToolCallEventObject(

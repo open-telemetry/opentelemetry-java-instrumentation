@@ -17,6 +17,7 @@ dependencies {
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-sdk")
@@ -61,6 +62,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {
