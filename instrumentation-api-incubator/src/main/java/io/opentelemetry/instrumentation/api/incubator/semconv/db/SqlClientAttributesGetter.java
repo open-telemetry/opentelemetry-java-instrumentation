@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * An interface for getting SQL database client attributes.
