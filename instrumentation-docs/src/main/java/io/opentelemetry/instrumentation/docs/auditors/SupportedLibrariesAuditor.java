@@ -14,6 +14,7 @@ import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
@@ -189,6 +190,6 @@ public class SupportedLibrariesAuditor implements DocumentationAuditor {
    * @return normalized library name
    */
   private static String normalizeLibraryName(String libraryName) {
-    return libraryName.trim().toLowerCase(java.util.Locale.ROOT).replaceAll("\\s+", " ");
+    return libraryName.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
   }
 }

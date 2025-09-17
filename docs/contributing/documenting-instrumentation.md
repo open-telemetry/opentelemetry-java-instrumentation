@@ -238,5 +238,5 @@ page lists the instrumentations in the context of the keys needed for using
 the `otel.instrumentation.[name].enabled` configuration.
 
 All new instrumentations should be added to this list. There is a
-[Github action](../../.github/workflows/documentation-disable-list-audit.yml) that runs nightly to check
+[Github action](../../.github/workflows/documentation-synchronization-audit.yml) that runs nightly to check
 for any missing instrumentations, and will open an issue if any are found.
