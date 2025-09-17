@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Bean;
 /** Spring Boot auto configuration test for {@link OpenTelemetryAutoConfiguration}. */
 class OpenTelemetryAutoConfigurationTest {
   @TestConfiguration
-  static class CustomTracerConfiguration {
+  static class CustomOtelConfiguration {
     @Bean
     public OpenTelemetry customOpenTelemetry() {
       return OpenTelemetry.noop();
@@ -48,7 +48,7 @@ class OpenTelemetryAutoConfigurationTest {
       "when Application Context contains OpenTelemetry bean should NOT initialize openTelemetry")
   void customOpenTelemetry() {
     this.contextRunner
-        .withUserConfiguration(CustomTracerConfiguration.class)
+        .withUserConfiguration(CustomOtelConfiguration.class)
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .run(
             context ->

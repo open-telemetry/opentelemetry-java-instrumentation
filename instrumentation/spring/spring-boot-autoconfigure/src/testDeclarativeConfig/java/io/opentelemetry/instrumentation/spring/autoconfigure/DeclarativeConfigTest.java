@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.SpringWebInstrumentationAutoConfiguration;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ class DeclarativeConfigTest {
   void customOpenTelemetry() {
     this.contextRunner
         .withUserConfiguration(CustomTracerConfiguration.class)
+        .withPropertyValues("otel.file_format=1.0-rc.1")
         .run(
             context ->
                 assertThat(context)
@@ -72,7 +74,7 @@ class DeclarativeConfigTest {
   @Test
   void shouldInitializeSdkWhenNotDisabled() {
     this.contextRunner
-        .withPropertyValues("otel.disabled=false")
+        .withPropertyValues("otel.file_format=1.0-rc.1", "otel.disabled=false")
         .run(
             context ->
                 assertThat(context).getBean("openTelemetry").isInstanceOf(OpenTelemetrySdk.class));
@@ -82,10 +84,40 @@ class DeclarativeConfigTest {
   void shouldInitializeNoopOpenTelemetryWhenSdkIsDisabled() {
     this.contextRunner
         .withPropertyValues(
+            "otel.file_format=1.0-rc.1",
             "otel.disabled=true",
             "otel.resource.attributes=service.name=workflow-backend-dev,service.version=3c8f9ce9")
         .run(
             context ->
                 assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop()));
+  }
+
+  @Test
+  void shouldLoadInstrumentation() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
+        .withPropertyValues("otel.file_format=1.0-rc.1")
+        .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
+  }
+
+  @Test
+  void shouldNotLoadInstrumentationWhenDefaultIsDisabled() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
+        .withPropertyValues(
+            "otel.file_format=1.0-rc.1",
+            "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none")
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
+  }
+
+  @Test
+  void shouldLoadInstrumentationWhenExplicitlyEnabled() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
+        .withPropertyValues(
+            "otel.file_format=1.0-rc.1",
+            "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none",
+            "otel.instrumentation/development.java.spring_web.enabled=true")
+        .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
   }
 }

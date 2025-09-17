@@ -85,6 +85,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
+
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testRuntimeOnly("com.h2database:h2:1.4.197")
@@ -184,6 +185,7 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
+        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
       }
     }
   }
