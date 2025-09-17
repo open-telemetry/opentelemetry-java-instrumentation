@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.nats.v2_17;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
@@ -14,7 +15,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.nats.client.Message;
 import io.nats.client.Subscription;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Duration;
 
@@ -42,13 +42,13 @@ public class NatsTestHelper {
       equalTo(MESSAGING_SYSTEM, "nats"),
       equalTo(MESSAGING_DESTINATION_NAME, subject),
       equalTo(MESSAGING_MESSAGE_BODY_SIZE, 1),
-      equalTo(AttributeKey.stringKey("messaging.client_id"), String.valueOf(clientId))
+      equalTo(MESSAGING_CLIENT_ID, String.valueOf(clientId))
     };
   }
 
   public static void assertTraceparentHeader(Subscription subscription)
       throws InterruptedException {
-    Message published = subscription.nextMessage(Duration.ofSeconds(1));
+    Message published = subscription.nextMessage(Duration.ofSeconds(10));
     assertThat(published.getHeaders().get("traceparent")).isNotEmpty();
   }
 

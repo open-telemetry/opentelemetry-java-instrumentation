@@ -44,7 +44,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
 
   @AfterEach
   void afterEach() throws InterruptedException {
-    subscription.drain(Duration.ofSeconds(1));
+    subscription.drain(Duration.ofSeconds(10));
   }
 
   @Test
@@ -56,8 +56,18 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
 
     // then
-    // assertTimeoutPublishSpan();
     assertThat(message).isNull();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("sub publish")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes("publish", "sub", clientId))));
     assertTraceparentHeader(subscription);
   }
 
@@ -73,7 +83,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     Message message =
         testing()
             .runWithSpan(
-                "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(1)));
+                "parent", () -> connection.request("sub", new byte[] {0}, Duration.ofSeconds(10)));
     connection.closeDispatcher(dispatcher);
 
     // then
@@ -97,7 +107,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
                 "parent",
                 () ->
                     connection.request(
-                        "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(1)));
+                        "sub", new Headers(), new byte[] {0}, Duration.ofSeconds(10)));
     connection.closeDispatcher(dispatcher);
 
     // then
@@ -117,7 +127,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
 
     // when
     Message response =
-        testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
+        testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(10)));
     connection.closeDispatcher(dispatcher);
 
     // then
@@ -138,7 +148,7 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
 
     // when
     Message response =
-        testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(1)));
+        testing().runWithSpan("parent", () -> connection.request(message, Duration.ofSeconds(10)));
     connection.closeDispatcher(dispatcher);
 
     // then

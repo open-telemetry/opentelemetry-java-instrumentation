@@ -15,7 +15,6 @@ enum NatsRequestMessagingAttributesGetter
     implements MessagingAttributesGetter<NatsRequest, Object> {
   INSTANCE;
 
-  @Nullable
   @Override
   public String getSystem(NatsRequest request) {
     return "nats";
@@ -52,7 +51,6 @@ enum NatsRequestMessagingAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
   public Long getMessageBodySize(NatsRequest request) {
     return request.getDataSize();
@@ -70,7 +68,6 @@ enum NatsRequestMessagingAttributesGetter
     return null;
   }
 
-  @Nullable
   @Override
   public String getClientId(NatsRequest request) {
     return String.valueOf(request.getClientId());
@@ -85,8 +82,10 @@ enum NatsRequestMessagingAttributesGetter
   @Override
   public List<String> getMessageHeader(NatsRequest request, String name) {
     Headers headers = request.getHeaders();
-    return headers == null || headers.get(name) == null
-        ? Collections.emptyList()
-        : headers.get(name);
+    if (headers == null) {
+      return Collections.emptyList();
+    }
+    List<String> result = headers.get(name);
+    return result == null ? Collections.emptyList() : result;
   }
 }

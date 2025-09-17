@@ -7,8 +7,8 @@ package io.nats.client.impl;
 
 import io.nats.client.MessageHandler;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.nats.v2_17.OpenTelemetryMessageHandler;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

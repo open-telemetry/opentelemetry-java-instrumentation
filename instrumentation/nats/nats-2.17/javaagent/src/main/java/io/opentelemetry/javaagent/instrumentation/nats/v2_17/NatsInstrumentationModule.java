@@ -24,7 +24,6 @@ public class NatsInstrumentationModule extends InstrumentationModule {
     return asList(
         new ConnectionPublishInstrumentation(),
         new ConnectionRequestInstrumentation(),
-        new DispatcherInstrumentation(),
         new MessageHandlerInstrumentation());
   }
 }

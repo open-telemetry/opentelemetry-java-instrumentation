@@ -3,14 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.nats.v2_17;
+package io.opentelemetry.instrumentation.nats.v2_17.internal;
 
 import io.nats.client.Message;
 import io.nats.client.MessageHandler;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

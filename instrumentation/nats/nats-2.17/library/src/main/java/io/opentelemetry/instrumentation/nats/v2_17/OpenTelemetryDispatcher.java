@@ -10,6 +10,7 @@ import io.nats.client.MessageHandler;
 import io.nats.client.Subscription;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

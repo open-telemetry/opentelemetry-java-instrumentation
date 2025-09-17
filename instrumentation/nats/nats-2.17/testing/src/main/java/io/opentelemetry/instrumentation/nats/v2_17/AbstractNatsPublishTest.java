@@ -31,7 +31,7 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
 
   @AfterEach
   void afterEach() throws InterruptedException {
-    subscription.drain(Duration.ofSeconds(1));
+    subscription.drain(Duration.ofSeconds(10));
   }
 
   @Test

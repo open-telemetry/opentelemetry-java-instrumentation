@@ -15,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsMessageWritableHeaders;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
+import io.opentelemetry.instrumentation.nats.v2_17.internal.OpenTelemetryMessageHandler;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -134,10 +135,10 @@ final class OpenTelemetryConnection implements InvocationHandler {
     }
 
     Context parentContext = Context.current();
-    headers = NatsMessageWritableHeaders.create(headers);
     NatsRequest natsRequest = null;
 
     if (subject != null) {
+      headers = NatsMessageWritableHeaders.create(headers);
       natsRequest = NatsRequest.create(delegate, subject, replyTo, headers, body);
     }
 
@@ -193,10 +194,10 @@ final class OpenTelemetryConnection implements InvocationHandler {
     }
 
     Context parentContext = Context.current();
-    headers = NatsMessageWritableHeaders.create(headers);
     NatsRequest natsRequest = null;
 
     if (subject != null) {
+      headers = NatsMessageWritableHeaders.create(headers);
       natsRequest = NatsRequest.create(delegate, subject, null, headers, body);
     }
 
@@ -282,10 +283,10 @@ final class OpenTelemetryConnection implements InvocationHandler {
     }
 
     Context parentContext = Context.current();
-    headers = NatsMessageWritableHeaders.create(headers);
     NatsRequest natsRequest = null;
 
     if (subject != null) {
+      headers = NatsMessageWritableHeaders.create(headers);
       natsRequest = NatsRequest.create(delegate, subject, null, headers, body);
     }
 

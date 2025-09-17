@@ -12,11 +12,7 @@ import io.nats.client.Dispatcher;
 import io.nats.client.Subscription;
 import io.nats.client.impl.Headers;
 import io.nats.client.impl.NatsMessage;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.Tracer;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -32,7 +28,7 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
 
   @Test
   void testSubscribeDefaultHandler() {
-    Dispatcher d1 = connection.createDispatcher(msg -> addNestedSpan()).subscribe("sub");
+    Dispatcher d1 = connection.createDispatcher(msg -> addChildSpan()).subscribe("sub");
 
     publishAndAssertTraceAndSpans();
 
@@ -44,7 +40,7 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
   @Test
   void testSubscribeSubscriptionMessageHandler() {
     Dispatcher d1 = connection.createDispatcher();
-    Subscription s1 = d1.subscribe("sub", msg -> addNestedSpan());
+    Subscription s1 = d1.subscribe("sub", msg -> addChildSpan());
 
     publishAndAssertTraceAndSpans();
 
@@ -61,7 +57,7 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
   @Test
   void testSubscribeSubscriptionQueueMessageHandler() {
     Dispatcher d1 = connection.createDispatcher();
-    Subscription s1 = d1.subscribe("sub", "queue", msg -> addNestedSpan());
+    Subscription s1 = d1.subscribe("sub", "queue", msg -> addChildSpan());
 
     publishAndAssertTraceAndSpans();
 
@@ -108,7 +104,9 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1)),
                     span ->
-                        span.hasName("test").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
+                        span.hasName("child")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(2)),
                     span ->
                         span.hasName("sub publish")
                             .hasKind(SpanKind.PRODUCER)
@@ -120,17 +118,12 @@ public abstract class AbstractNatsDispatcherTest extends AbstractNatsTest {
                             .hasAttributesSatisfyingExactly(
                                 messagingAttributes("process", "sub", clientId)),
                     span ->
-                        span.hasName("test")
+                        span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(5))));
   }
 
-  void addNestedSpan() {
-    Context current = Context.current();
-    Tracer tracer = testing().getOpenTelemetry().getTracer("test");
-    try (Scope ignored = current.makeCurrent()) {
-      Span span = tracer.spanBuilder("test").startSpan();
-      span.end();
-    }
+  void addChildSpan() {
+    testing().runWithSpan("child", () -> {});
   }
 }

@@ -132,10 +132,10 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       return connection.request(subject, null, body, timeout);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.Enter Message message, @Advice.Return(readOnly = false) Message ret) {
-      ret = message;
+        @Advice.Return(readOnly = false) Message result, @Advice.Enter Message message) {
+      result = message;
     }
   }
 
@@ -192,26 +192,21 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static Message onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) Message request,
-        @Advice.Argument(1) Duration timeout,
-        @Advice.Local("response") Message response)
+        @Advice.Argument(1) Duration timeout)
         throws InterruptedException {
       if (request == null) {
         return null;
       }
 
       // call the instrumented request method
-      response =
-          connection.request(
-              request.getSubject(), request.getHeaders(), request.getData(), timeout);
-      return response;
+      return connection.request(
+          request.getSubject(), request.getHeaders(), request.getData(), timeout);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static Message onExit(
-        @Advice.Return(readOnly = false) Message returned,
-        @Advice.Local("response") Message response) {
-      returned = response;
-      return returned;
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Return(readOnly = false) Message result, @Advice.Enter Message response) {
+      result = response;
     }
   }
 
@@ -222,19 +217,16 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
-        @Advice.Argument(1) byte[] body,
-        @Advice.Local("future") CompletableFuture<Message> future) {
+        @Advice.Argument(1) byte[] body) {
       // call the instrumented request method
-      future = connection.request(subject, null, body);
-      return future;
+      return connection.request(subject, null, body);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("future") CompletableFuture<Message> future) {
-      messageFuture = future;
-      return messageFuture;
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Return(readOnly = false) CompletableFuture<Message> result,
+        @Advice.Enter CompletableFuture<Message> future) {
+      result = future;
     }
   }
 
@@ -293,25 +285,23 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static CompletableFuture<Message> onEnter(
-        @Advice.This Connection connection,
-        @Advice.Argument(0) Message message,
-        @Advice.Local("future") CompletableFuture<Message> future) {
+        @Advice.This Connection connection, @Advice.Argument(0) Message message) {
       // execute original method body to handle null message
       if (message == null) {
         return null;
       }
 
       // call the instrumented request method
-      future = connection.request(message.getSubject(), message.getHeaders(), message.getData());
-      return future;
+      return connection.request(message.getSubject(), message.getHeaders(), message.getData());
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("future") CompletableFuture<Message> future) {
-      messageFuture = future;
-      return messageFuture;
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Return(readOnly = false) CompletableFuture<Message> result,
+        @Advice.Enter CompletableFuture<Message> future) {
+      if (future != null) {
+        result = future;
+      }
     }
   }
 
@@ -323,19 +313,16 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.This Connection connection,
         @Advice.Argument(0) String subject,
         @Advice.Argument(1) byte[] body,
-        @Advice.Argument(2) Duration timeout,
-        @Advice.Local("future") CompletableFuture<Message> future) {
+        @Advice.Argument(2) Duration timeout) {
       // call the instrumented requestWithTimeout method
-      future = connection.requestWithTimeout(subject, null, body, timeout);
-      return future;
+      return connection.requestWithTimeout(subject, null, body, timeout);
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("future") CompletableFuture<Message> future) {
-      messageFuture = future;
-      return messageFuture;
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(
+        @Advice.Return(readOnly = false) CompletableFuture<Message> result,
+        @Advice.Enter CompletableFuture<Message> future) {
+      result = future;
     }
   }
 
@@ -396,25 +383,23 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
     public static CompletableFuture<Message> onEnter(
         @Advice.This Connection connection,
         @Advice.Argument(value = 0, readOnly = false) Message message,
-        @Advice.Argument(1) Duration timeout,
-        @Advice.Local("future") CompletableFuture<Message> future) {
+        @Advice.Argument(1) Duration timeout) {
       if (message == null) {
         return null;
       }
 
       // call the instrumented requestWithTimeout method
-      future =
-          connection.requestWithTimeout(
-              message.getSubject(), message.getHeaders(), message.getData(), timeout);
-      return future;
+      return connection.requestWithTimeout(
+          message.getSubject(), message.getHeaders(), message.getData(), timeout);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static CompletableFuture<Message> onExit(
-        @Advice.Return(readOnly = false) CompletableFuture<Message> messageFuture,
-        @Advice.Local("future") CompletableFuture<Message> future) {
-      messageFuture = future;
-      return messageFuture;
+    public static void onExit(
+        @Advice.Return(readOnly = false) CompletableFuture<Message> result,
+        @Advice.Enter CompletableFuture<Message> future) {
+      if (future != null) {
+        result = future;
+      }
     }
   }
 }
