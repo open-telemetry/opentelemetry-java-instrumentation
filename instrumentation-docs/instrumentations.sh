@@ -158,6 +158,7 @@ readonly INSTRUMENTATIONS=(
   "influxdb-2.4:javaagent:test"
   "influxdb-2.4:javaagent:testStableSemconv"
   "java-http-server:javaagent:test"
+  "failsafe-3.0:library:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
