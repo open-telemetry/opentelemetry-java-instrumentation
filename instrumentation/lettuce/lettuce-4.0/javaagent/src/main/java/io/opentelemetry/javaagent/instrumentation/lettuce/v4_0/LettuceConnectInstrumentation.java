@@ -58,7 +58,7 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
       if (!connectInstrumenter().shouldStart(parentContext, redisUri)) {
         return null;
       }
-      
+
       Context context = connectInstrumenter().start(parentContext, redisUri);
       return new AdviceScope(context, context.makeCurrent());
     }
