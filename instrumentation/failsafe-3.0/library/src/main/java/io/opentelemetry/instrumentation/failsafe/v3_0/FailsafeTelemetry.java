@@ -53,11 +53,13 @@ public final class FailsafeTelemetry {
         meter
             .counterBuilder("failsafe.circuit_breaker.execution.count")
             .setDescription("Count of circuit breaker executions.")
+            .setUnit("{execution}")
             .build();
     LongCounter stateChangesCounter =
         meter
             .counterBuilder("failsafe.circuit_breaker.state_changes.count")
             .setDescription("Count of circuit breaker state changes.")
+            .setUnit("{execution}")
             .build();
     Attributes attributes = Attributes.of(CIRCUIT_BREAKER_NAME, circuitBreakerName);
     return CircuitBreaker.builder(userConfig)
