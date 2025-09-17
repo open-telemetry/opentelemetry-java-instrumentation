@@ -227,7 +227,9 @@ All of our instrumentation modules are listed on the opentelemetry.io website in
 The [Supported Libraries](https://opentelemetry.io/docs/zero-code/java/agent/supported-libraries/)
 page lists all the library instrumentations that are included in the OpenTelemetry Java agent. It
 mostly mirrors the information from the [supported libraries](../supported-libraries.md) page in
-this repo, and should be updated when adding or removing library instrumentations.
+this repo, and should be updated when adding or removing library instrumentations. There is a
+[Github action](../../.github/workflows/documentation-synchronization-audit.yml) that runs nightly
+to check for any missing instrumentations, and will open an issue if any are found.
 
 This page may be automatically generated in the future, but for now it is manually maintained.
 
