@@ -13,14 +13,13 @@ import io.grpc.ManagedChannelBuilder;
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import io.opentelemetry.proto.collector.trace.v1.TraceServiceGrpc;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import java.time.Duration;
 import java.util.List;
 import java.util.Set;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
-
-import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
