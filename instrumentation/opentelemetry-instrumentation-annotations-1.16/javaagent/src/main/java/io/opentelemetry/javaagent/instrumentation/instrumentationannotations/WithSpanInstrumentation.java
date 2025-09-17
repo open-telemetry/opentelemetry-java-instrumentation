@@ -82,26 +82,26 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WithSpanAdvice {
 
-    public static class AdviceScope {
+    public static class WithSpanAdviceScope {
       private final Method method;
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Method method, Context context, Scope scope) {
+      public WithSpanAdviceScope(Method method, Context context, Scope scope) {
         this.method = method;
         this.context = context;
         this.scope = scope;
       }
 
       @Nullable
-      public static AdviceScope start(Method method) {
+      public static WithSpanAdviceScope start(Method method) {
         Instrumenter<Method, Object> instrumenter = instrumenter();
         Context current = AnnotationSingletons.getContextForMethod(method);
         if (!instrumenter.shouldStart(current, method)) {
           return null;
         }
         Context context = instrumenter.start(current, method);
-        return new AdviceScope(method, context, context.makeCurrent());
+        return new WithSpanAdviceScope(method, context, context.makeCurrent());
       }
 
       public Object end(@Nullable Object returnValue, @Nullable Throwable throwable) {
@@ -114,10 +114,10 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(@Advice.Origin Method originMethod) {
+    public static WithSpanAdviceScope onEnter(@Advice.Origin Method originMethod) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to advice scope so that there would be only one call to Class.getMethod.
-      return AdviceScope.start(originMethod);
+      return WithSpanAdviceScope.start(originMethod);
     }
 
     @AssignReturned.ToReturned
@@ -125,7 +125,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     public static Object stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
+        @Advice.Enter @Nullable WithSpanAdviceScope adviceScope) {
       if (adviceScope != null) {
         return adviceScope.end(returnValue, throwable);
       }
@@ -136,13 +136,14 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WithSpanAttributesAdvice {
 
-    public static class AdviceScope {
+    public static class WithSpanAttributesAdviceScope {
       private final Method method;
       private final MethodRequest request;
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(Method method, MethodRequest request, Context context, Scope scope) {
+      public WithSpanAttributesAdviceScope(
+          Method method, MethodRequest request, Context context, Scope scope) {
         this.method = method;
         this.request = request;
         this.context = context;
@@ -150,7 +151,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(Method method, Object[] args) {
+      public static WithSpanAttributesAdviceScope start(Method method, Object[] args) {
         Instrumenter<MethodRequest, Object> instrumenter = instrumenterWithAttributes();
         Context current = AnnotationSingletons.getContextForMethod(method);
         MethodRequest request = new MethodRequest(method, args);
@@ -158,7 +159,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
           return null;
         }
         Context context = instrumenter.start(current, request);
-        return new AdviceScope(method, request, context, context.makeCurrent());
+        return new WithSpanAttributesAdviceScope(method, request, context, context.makeCurrent());
       }
 
       public Object end(@Nullable Object returnValue, @Nullable Throwable throwable) {
@@ -172,13 +173,13 @@ class WithSpanInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(
+    public static WithSpanAttributesAdviceScope onEnter(
         @Advice.Origin Method originMethod,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
 
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to advice scope so that there would be only one call to Class.getMethod.
-      return AdviceScope.start(originMethod, args);
+      return WithSpanAttributesAdviceScope.start(originMethod, args);
     }
 
     @AssignReturned.ToReturned
@@ -186,7 +187,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     public static Object stopSpan(
         @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Enter WithSpanAttributesAdviceScope adviceScope) {
       if (adviceScope != null) {
         return adviceScope.end(returnValue, throwable);
       }
