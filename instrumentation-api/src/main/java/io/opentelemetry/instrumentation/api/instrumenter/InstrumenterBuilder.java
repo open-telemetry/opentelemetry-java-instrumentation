@@ -76,10 +76,10 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
 
-  {
+  static {
     Experimental.internalAddOperationListenerAttributesExtractor(
         (builder, operationListenerAttributesExtractor) ->
-            this.operationListenerAttributesExtractors.add(
+            builder.operationListenerAttributesExtractors.add(
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
   }
