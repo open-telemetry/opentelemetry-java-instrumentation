@@ -27,23 +27,6 @@ public class DocSynchronization {
   private static final List<DocumentationAuditor> AUDITORS =
       List.of(new SuppressionListAuditor(), new SupportedLibrariesAuditor());
 
-  // visible for testing
-  public static List<String> parseInstrumentationList(String fileContent) {
-    return SuppressionListAuditor.parseInstrumentationList(fileContent);
-  }
-
-  // visible for testing
-  public static List<String> parseDocumentationDisabledList(String fileContent) {
-    return SuppressionListAuditor.parseDocumentationDisabledList(fileContent);
-  }
-
-  // visible for testing
-  public static List<String> identifyMissingItems(
-      List<String> documentationDisabledList, List<String> instrumentationList) {
-    return SuppressionListAuditor.identifyMissingItems(
-        documentationDisabledList, instrumentationList);
-  }
-
   public static void main(String[] args) {
     HttpClient client = HttpClient.newHttpClient();
 

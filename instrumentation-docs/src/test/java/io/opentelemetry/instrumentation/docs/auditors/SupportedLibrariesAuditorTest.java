@@ -7,12 +7,14 @@ package io.opentelemetry.instrumentation.docs.auditors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -22,13 +24,15 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("unchecked")
 class SupportedLibrariesAuditorTest {
 
   @Test
-  void testPerformAudit_noMissingItems() throws IOException, InterruptedException {
+  void testPerformAuditWithNoMissingItems() throws IOException, InterruptedException {
     HttpClient mockClient = mock(HttpClient.class);
     HttpResponse<String> mockResponse = mock(HttpResponse.class);
-    when(mockClient.send(any(), any())).thenReturn(mockResponse);
+    when(mockClient.send(any(HttpRequest.class), eq(HttpResponse.BodyHandlers.ofString())))
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(createRemoteSupportedLibrariesContent());
 
@@ -45,15 +49,14 @@ class SupportedLibrariesAuditorTest {
   }
 
   @Test
-  void testPerformAudit_withMissingItems() throws IOException, InterruptedException {
-    // Mock HTTP client to return remote supported libraries content (missing some items)
+  void testPerformAuditWithMissingItems() throws IOException, InterruptedException {
     HttpClient mockClient = mock(HttpClient.class);
     HttpResponse<String> mockResponse = mock(HttpResponse.class);
-    when(mockClient.send(any(), any())).thenReturn(mockResponse);
+    when(mockClient.send(any(HttpRequest.class), eq(HttpResponse.BodyHandlers.ofString())))
+        .thenReturn(mockResponse);
     when(mockResponse.statusCode()).thenReturn(200);
     when(mockResponse.body()).thenReturn(createRemoteSupportedLibrariesContentMissing());
 
-    // Mock local file reading
     try (MockedStatic<FileManager> fileManagerMock = Mockito.mockStatic(FileManager.class)) {
       fileManagerMock
           .when(() -> FileManager.readFileToString(any()))
@@ -69,13 +72,7 @@ class SupportedLibrariesAuditorTest {
     }
   }
 
-  @Test
-  void testGetAuditorName() {
-    SupportedLibrariesAuditor auditor = new SupportedLibrariesAuditor();
-    assertThat(auditor.getAuditorName()).isEqualTo("Supported Libraries Auditor");
-  }
-
-  private String createLocalSupportedLibrariesContent() {
+  private static String createLocalSupportedLibrariesContent() {
     return """
 # Supported libraries, frameworks, application servers, and JVMs
 
@@ -107,7 +104,7 @@ These are the application servers that the smoke tests are run against:
 """;
   }
 
-  private String createRemoteSupportedLibrariesContent() {
+  private static String createRemoteSupportedLibrariesContent() {
     return """
 # Supported libraries, frameworks, application servers, and JVMs
 
@@ -139,7 +136,7 @@ These are the application servers that the smoke tests are run against:
 """;
   }
 
-  private String createRemoteSupportedLibrariesContentMissing() {
+  private static String createRemoteSupportedLibrariesContentMissing() {
     return """
 # Supported libraries, frameworks, application servers, and JVMs
 

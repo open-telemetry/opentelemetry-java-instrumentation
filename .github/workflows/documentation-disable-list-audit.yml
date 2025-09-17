@@ -34,7 +34,7 @@ jobs:
           if ! ./gradlew :instrumentation-docs:docSiteAudit > audit_output.txt 2>&1; then
             echo "AUDIT_FAILED=true" >> $GITHUB_OUTPUT
             echo "AUDIT_OUTPUT<<EOF" >> $GITHUB_OUTPUT
-            # Extract only the audit error messages between SEVERE: and FAILURE:
+            # Extract only the relevant lines with details about failures
             sed -n '/SEVERE: /,/^FAILURE:/p' audit_output.txt | \
               sed '/^FAILURE:/d' | \
               sed 's/^.*SEVERE: //' | \

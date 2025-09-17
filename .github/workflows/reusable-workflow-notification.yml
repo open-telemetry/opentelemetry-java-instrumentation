@@ -36,7 +36,7 @@ jobs:
 
           # Prepare the issue body with failure details if available
           if [[ -n "${{ inputs.failure-details }}" ]]; then
-            issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."$'\n\n'"## Failure Details"$'\n\n'"$(echo '```')"$'\n'"${{ inputs.failure-details }}"$'\n'"$(echo '```')"
+            issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."$'\n\n'"## Failure Details"$'\n\n''```'$'\n'"${{ inputs.failure-details }}"$'\n''```'
           else
             issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
           fi
