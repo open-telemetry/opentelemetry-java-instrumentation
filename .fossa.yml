@@ -474,6 +474,12 @@ targets:
       target: ':instrumentation:graphql-java:graphql-java-common:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:helidon:helidon-4.3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:helidon:helidon-4.3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:hibernate:hibernate-3.3:javaagent'
     - type: gradle
       path: ./
