@@ -39,10 +39,10 @@ public final class DubboTelemetryBuilder {
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
   private Function<
-      SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
       clientSpanNameExtractorTransformer = Function.identity();
   private Function<
-      SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
       serverSpanNameExtractorTransformer = Function.identity();
 
   DubboTelemetryBuilder(OpenTelemetry openTelemetry) {

@@ -191,9 +191,12 @@ public abstract class AbstractDubboTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(RPC_SYSTEM,
-                                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(RPC_SERVICE,
+                                                equalTo(
+                                                    RPC_SYSTEM,
+                                                    RpcIncubatingAttributes
+                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
+                                                equalTo(
+                                                    RPC_SERVICE,
                                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
                                                 equalTo(RPC_METHOD, "hello"))))));
 
@@ -211,14 +214,43 @@ public abstract class AbstractDubboTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(RPC_SYSTEM,
-                                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(RPC_SERVICE,
+                                                equalTo(
+                                                    RPC_SYSTEM,
+                                                    RpcIncubatingAttributes
+                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
+                                                equalTo(
+                                                    RPC_SERVICE,
                                                     "org.apache.dubbo.rpc.service.GenericService"),
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                                satisfies(SERVER_PORT,
-                                                    k -> k.isInstanceOf(Long.class)))))));
+                                                satisfies(
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                satisfies(
+                                                    NETWORK_PEER_ADDRESS,
+                                                    k ->
+                                                        k.satisfiesAnyOf(
+                                                            val -> assertThat(val).isNull(),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isInstanceOf(String.class))),
+                                                satisfies(
+                                                    NETWORK_PEER_PORT,
+                                                    k ->
+                                                        k.satisfiesAnyOf(
+                                                            val -> assertThat(val).isNull(),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isInstanceOf(Long.class))),
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    k ->
+                                                        k.satisfiesAnyOf(
+                                                            val -> assertThat(val).isNull(),
+                                                            val ->
+                                                                assertThat(val).isEqualTo("ipv4"),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isEqualTo("ipv6"))))))));
   }
 
   @Test
@@ -318,7 +350,6 @@ public abstract class AbstractDubboTest {
                                             val -> assertThat(val).isEqualTo("ipv4"),
                                             val -> assertThat(val).isEqualTo("ipv6"))))));
 
-    // Verify RPC metrics are collected
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.apache-dubbo-2.7",
@@ -333,9 +364,12 @@ public abstract class AbstractDubboTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(RPC_SYSTEM,
-                                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(RPC_SERVICE,
+                                                equalTo(
+                                                    RPC_SYSTEM,
+                                                    RpcIncubatingAttributes
+                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
+                                                equalTo(
+                                                    RPC_SERVICE,
                                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
                                                 equalTo(RPC_METHOD, "hello"))))));
 
@@ -353,37 +387,42 @@ public abstract class AbstractDubboTest {
                                     histogram.hasPointsSatisfying(
                                         point ->
                                             point.hasAttributesSatisfying(
-                                                equalTo(RPC_SYSTEM,
-                                                    RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
-                                                equalTo(RPC_SERVICE,
+                                                equalTo(
+                                                    RPC_SYSTEM,
+                                                    RpcIncubatingAttributes
+                                                        .RpcSystemIncubatingValues.APACHE_DUBBO),
+                                                equalTo(
+                                                    RPC_SERVICE,
                                                     "org.apache.dubbo.rpc.service.GenericService"),
                                                 equalTo(RPC_METHOD, "$invokeAsync"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
-                                                satisfies(SERVER_PORT,
-                                                    k -> k.isInstanceOf(Long.class)),
+                                                satisfies(
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                                 satisfies(
                                                     NETWORK_PEER_ADDRESS,
                                                     k ->
                                                         k.satisfiesAnyOf(
                                                             val -> assertThat(val).isNull(),
-                                                            val -> assertThat(val).isInstanceOf(
-                                                                String.class))),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isInstanceOf(String.class))),
                                                 satisfies(
                                                     NETWORK_PEER_PORT,
                                                     k ->
                                                         k.satisfiesAnyOf(
                                                             val -> assertThat(val).isNull(),
-                                                            val -> assertThat(val).isInstanceOf(
-                                                                Long.class))),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isInstanceOf(Long.class))),
                                                 satisfies(
                                                     NETWORK_TYPE,
                                                     k ->
                                                         k.satisfiesAnyOf(
                                                             val -> assertThat(val).isNull(),
-                                                            val -> assertThat(val).isEqualTo(
-                                                                "ipv4"),
-                                                            val -> assertThat(val).isEqualTo(
-                                                                "ipv6"))))))));
-
+                                                            val ->
+                                                                assertThat(val).isEqualTo("ipv4"),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isEqualTo("ipv6"))))))));
   }
 }
