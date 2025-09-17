@@ -1,11 +1,16 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
 
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0.OpenSearchJavaSingletons.instrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isPublic;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -32,8 +37,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
             .and(named("performRequest"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-            this.getClass().getName() + "$PerformRequestAdvice"
-    );
+        this.getClass().getName() + "$PerformRequestAdvice");
 
     transformer.applyAdviceToMethod(
         isMethod()
@@ -41,8 +45,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
             .and(named("performRequestAsync"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAdvice"
-    );
+        this.getClass().getName() + "$PerformRequestAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,8 +60,8 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = OpenSearchJavaRequest.create(endpoint.method(request),
-          endpoint.requestUrl(request));
+      otelRequest =
+          OpenSearchJavaRequest.create(endpoint.method(request), endpoint.requestUrl(request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -95,8 +98,8 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope) {
 
       Context parentContext = currentContext();
-      otelRequest = OpenSearchJavaRequest.create(endpoint.method(request),
-          endpoint.requestUrl(request));
+      otelRequest =
+          OpenSearchJavaRequest.create(endpoint.method(request), endpoint.requestUrl(request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
         return;
       }
@@ -122,9 +125,10 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         instrumenter().end(context, otelRequest, null, throwable);
       }
 
-      future.whenComplete((response, error) -> {
-        instrumenter().end(context, otelRequest, (OpenSearchJavaResponse) response, error);
-      });
+      future.whenComplete(
+          (response, error) -> {
+            instrumenter().end(context, otelRequest, (OpenSearchJavaResponse) response, error);
+          });
 
       future = CompletableFutureWrapper.wrap(future, context);
     }

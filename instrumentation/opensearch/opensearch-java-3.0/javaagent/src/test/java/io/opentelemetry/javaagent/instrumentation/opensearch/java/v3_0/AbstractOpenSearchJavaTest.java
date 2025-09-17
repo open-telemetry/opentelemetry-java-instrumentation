@@ -46,6 +46,7 @@ public abstract class AbstractOpenSearchJavaTest {
   protected URI httpHost;
 
   protected abstract OpenSearchClient buildOpenSearchClient() throws Exception;
+
   protected abstract OpenSearchAsyncClient buildOpenSearchAsyncClient() throws Exception;
 
   @RegisterExtension
@@ -73,7 +74,6 @@ public abstract class AbstractOpenSearchJavaTest {
     opensearch.stop();
   }
 
-
   @Test
   void shouldGetStatusWithTraces() throws IOException {
     HealthResponse healthResponse = openSearchClient.cluster().health();
@@ -90,17 +90,17 @@ public abstract class AbstractOpenSearchJavaTest {
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
                                 equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
-            span ->
-                span.hasName("GET")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                        equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                        equalTo(SERVER_PORT, httpHost.getPort()),
-                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(URL_FULL, httpHost + "/_cluster/health"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
@@ -140,5 +140,4 @@ public abstract class AbstractOpenSearchJavaTest {
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
-
 }

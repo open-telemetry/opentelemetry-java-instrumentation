@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
 
 import static java.util.Collections.singletonList;
@@ -13,7 +18,7 @@ public class OpenSearchJavaInstrumentationModule extends InstrumentationModule {
     super("opensearch-java", "opensearch-java-3.0", "opensearch");
   }
 
-    @Override
+  @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new OpenSearchTransportInstrumentation());
   }

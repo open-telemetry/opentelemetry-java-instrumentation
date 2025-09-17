@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -48,16 +53,18 @@ public class OpenSearchJavaApacheHttpClient5TransportTest extends AbstractOpenSe
     BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(
         new AuthScope(null, -1),
-        new UsernamePasswordCredentials(opensearch.getUsername(), opensearch.getPassword().toCharArray()));
+        new UsernamePasswordCredentials(
+            opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
     OpenSearchTransport apacheHttpClient5Transport =
         ApacheHttpClient5TransportBuilder.builder(host)
-            .setHttpClientConfigCallback(httpClientBuilder ->
-                httpClientBuilder
-                    .setDefaultCredentialsProvider(credentialsProvider)
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider)
-            ).build();
+            .setHttpClientConfigCallback(
+                httpClientBuilder ->
+                    httpClientBuilder
+                        .setDefaultCredentialsProvider(credentialsProvider)
+                        .setConnectionManager(connectionManager)
+                        .setDefaultCredentialsProvider(credentialsProvider))
+            .build();
     return new OpenSearchClient(apacheHttpClient5Transport);
   }
 
@@ -79,17 +86,18 @@ public class OpenSearchJavaApacheHttpClient5TransportTest extends AbstractOpenSe
     BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(
         new AuthScope(null, -1),
-        new UsernamePasswordCredentials(opensearch.getUsername(), opensearch.getPassword().toCharArray()));
+        new UsernamePasswordCredentials(
+            opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
     OpenSearchTransport apacheHttpClient5Transport =
         ApacheHttpClient5TransportBuilder.builder(host)
-            .setHttpClientConfigCallback(httpClientBuilder ->
-                httpClientBuilder
-                    .setDefaultCredentialsProvider(credentialsProvider)
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider)
-            ).build();
+            .setHttpClientConfigCallback(
+                httpClientBuilder ->
+                    httpClientBuilder
+                        .setDefaultCredentialsProvider(credentialsProvider)
+                        .setConnectionManager(connectionManager)
+                        .setDefaultCredentialsProvider(credentialsProvider))
+            .build();
     return new OpenSearchAsyncClient(apacheHttpClient5Transport);
   }
-
 }

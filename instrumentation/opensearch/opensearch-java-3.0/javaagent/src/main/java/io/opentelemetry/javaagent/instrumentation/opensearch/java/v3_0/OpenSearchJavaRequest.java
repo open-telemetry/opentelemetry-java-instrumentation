@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0.AutoValue_OpenSearchJavaRequest;
 
 @AutoValue
 public abstract class OpenSearchJavaRequest {
