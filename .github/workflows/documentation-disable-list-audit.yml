@@ -30,22 +30,13 @@ jobs:
       - name: Run doc site audit
         id: audit
         run: |
-          # Capture both stdout and stderr, and preserve exit code
-          if ! ./gradlew :instrumentation-docs:docSiteAudit > audit_output.txt 2>&1; then
+          if ! output=$(./gradlew :instrumentation-docs:docSiteAudit 2>&1); then
             echo "AUDIT_FAILED=true" >> $GITHUB_OUTPUT
             echo "AUDIT_OUTPUT<<EOF" >> $GITHUB_OUTPUT
-            # Extract only the relevant lines with details about failures
-            sed -n '/SEVERE: /,/^FAILURE:/p' audit_output.txt | \
-              sed '/^FAILURE:/d' | \
-              sed 's/^.*SEVERE: //' | \
-              sed '/^> Task/d' | \
-              sed '/^gradle\/actions:/d' | \
-              sed '/^$/d' >> $GITHUB_OUTPUT
-            # Add guidance on how to fix the issues
-            echo "" >> $GITHUB_OUTPUT
-            echo "## How to Fix" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            echo "For guidance on updating the OpenTelemetry.io documentation, see: [Documenting Instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/documenting-instrumentation.md#opentelemetryio)" >> $GITHUB_OUTPUT
+            # Extract only the content between our custom markers
+            echo "$output" | sed -n '/=== AUDIT_FAILURE_START ===/,/=== AUDIT_FAILURE_END ===/p' | \
+              sed '/=== AUDIT_FAILURE_START ===/d' | \
+              sed '/=== AUDIT_FAILURE_END ===/d' >> $GITHUB_OUTPUT
             echo "EOF" >> $GITHUB_OUTPUT
             exit 1
           else

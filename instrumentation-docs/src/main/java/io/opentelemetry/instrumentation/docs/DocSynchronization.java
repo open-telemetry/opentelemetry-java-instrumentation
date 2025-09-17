@@ -61,7 +61,16 @@ public class DocSynchronization {
       }
 
       if (hasFailures) {
-        logger.severe(combinedMessage.toString());
+        // Add custom markers and "How to Fix" section for GitHub workflow extraction
+        StringBuilder finalMessage = new StringBuilder();
+        finalMessage.append("=== AUDIT_FAILURE_START ===\n");
+        finalMessage.append(combinedMessage.toString());
+        finalMessage.append("\n\n## How to Fix\n\n");
+        finalMessage.append(
+            "For guidance on updating the OpenTelemetry.io documentation, see: [Documenting Instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/documenting-instrumentation.md#opentelemetryio)");
+        finalMessage.append("\n=== AUDIT_FAILURE_END ===");
+
+        logger.severe(finalMessage.toString());
         exit(1);
       } else {
         logger.info("All documentation audits passed successfully.");
