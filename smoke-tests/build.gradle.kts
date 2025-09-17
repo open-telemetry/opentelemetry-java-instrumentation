@@ -38,9 +38,8 @@ dependencies {
   implementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
   // make IntelliJ see shaded Armeria and protobuf
-  compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-  testCompileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-  compileOnly(project(":testing:proto-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
+  testCompileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {

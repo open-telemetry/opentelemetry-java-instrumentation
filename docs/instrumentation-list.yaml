@@ -10,6 +10,9 @@ libraries:
     display_name: ActiveJ
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the ActiveJ HTTP server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://activej.io/
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
@@ -92,6 +95,11 @@ libraries:
     display_name: Akka HTTP
     description: |
       This instrumentation enables HTTP client spans and metrics for the Akka HTTP client, and HTTP server spans and metrics for the Akka HTTP server.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://doc.akka.io/docs/akka-http/current/index.html
     source_path: instrumentation/akka/akka-http-10.0
     scope:
@@ -181,6 +189,8 @@ libraries:
   - name: alibaba-druid-1.0
     description: |
       The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/alibaba/druid
     source_path: instrumentation/alibaba-druid-1.0
     scope:
@@ -274,9 +284,12 @@ libraries:
           type: STRING
   apache:
   - name: apache-dbcp-2.0
+    display_name: Apache DBCP
     description: |
       This instrumentation enables database connection pools metrics for Apache DBCP.
       The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://commons.apache.org/proper/commons-dbcp/
     source_path: instrumentation/apache-dbcp-2.0
     scope:
@@ -354,10 +367,14 @@ libraries:
         - name: db.client.connection.pool.name
           type: STRING
   - name: apache-dubbo-2.7
+    display_name: Apache Dubbo
     description: The Apache Dubbo instrumentation provides RPC client spans and RPC
       server spans for Apache Dubbo RPC calls. Each call produces a span named after
       the Dubbo method, enriched with standard RPC attributes (system, service, method),
       network attributes, and error details if an exception occurs.
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_SERVER_SPANS
     library_link: https://github.com/apache/dubbo/
     source_path: instrumentation/apache-dubbo-2.7
     scope:
@@ -399,8 +416,12 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: apache-httpasyncclient-4.1
+    display_name: Apache HttpAsyncClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for the Apache HttpAsyncClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpasyncclient-4.1
     scope:
@@ -446,8 +467,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-2.0
+    display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for versions 2 and 3 of the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
@@ -491,8 +516,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
+    display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for version 4 of the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
@@ -539,8 +568,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.3
+    display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
       HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
     scope:
@@ -588,8 +621,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.0
+    display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for version 5 of the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
@@ -635,8 +672,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.2
+    display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
       HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
     scope:

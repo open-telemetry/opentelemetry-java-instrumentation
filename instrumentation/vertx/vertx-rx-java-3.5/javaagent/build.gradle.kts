@@ -35,7 +35,7 @@ testing {
       dependencies {
         // this only exists to make Intellij happy since it doesn't (currently at least) understand our
         // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+        compileOnly(project.dependencies.project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 
         val version = if (testLatestDeps) "3.+" else "3.5.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -52,7 +52,7 @@ testing {
       dependencies {
         // this only exists to make Intellij happy since it doesn't (currently at least) understand our
         // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+        compileOnly(project.dependencies.project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 
         val version = if (testLatestDeps) "4.+" else "4.1.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
@@ -69,7 +69,7 @@ testing {
       dependencies {
         // this only exists to make Intellij happy since it doesn't (currently at least) understand our
         // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+        compileOnly(project.dependencies.project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 
         val version = if (testLatestDeps) "latest.release" else "5.0.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
