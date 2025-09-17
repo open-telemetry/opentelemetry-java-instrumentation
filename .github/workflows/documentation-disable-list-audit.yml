@@ -11,6 +11,8 @@ permissions:
 jobs:
   crawl:
     runs-on: ubuntu-latest
+    outputs:
+      audit-output: ${{ steps.audit.outputs.AUDIT_OUTPUT }}
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
@@ -26,7 +28,29 @@ jobs:
         run: ./gradlew :instrumentation-docs:runAnalysis
 
       - name: Run doc site audit
-        run: ./gradlew :instrumentation-docs:docSiteAudit
+        id: audit
+        run: |
+          # Capture both stdout and stderr, and preserve exit code
+          if ! ./gradlew :instrumentation-docs:docSiteAudit > audit_output.txt 2>&1; then
+            echo "AUDIT_FAILED=true" >> $GITHUB_OUTPUT
+            echo "AUDIT_OUTPUT<<EOF" >> $GITHUB_OUTPUT
+            # Extract only the audit error messages between SEVERE: and FAILURE:
+            sed -n '/SEVERE: /,/^FAILURE:/p' audit_output.txt | \
+              sed '/^FAILURE:/d' | \
+              sed 's/^.*SEVERE: //' | \
+              sed '/^> Task/d' | \
+              sed '/^gradle\/actions:/d' | \
+              sed '/^$/d' >> $GITHUB_OUTPUT
+            # Add guidance on how to fix the issues
+            echo "" >> $GITHUB_OUTPUT
+            echo "## How to Fix" >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "For guidance on updating the OpenTelemetry.io documentation, see: [Documenting Instrumentation](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/docs/contributing/documenting-instrumentation.md#opentelemetryio)" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "AUDIT_FAILED=false" >> $GITHUB_OUTPUT
+          fi
 
   workflow-notification:
     permissions:
@@ -38,3 +62,4 @@ jobs:
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
       success: ${{ needs.crawl.result == 'success' }}
+      failure-details: ${{ needs.crawl.outputs.audit-output }}
