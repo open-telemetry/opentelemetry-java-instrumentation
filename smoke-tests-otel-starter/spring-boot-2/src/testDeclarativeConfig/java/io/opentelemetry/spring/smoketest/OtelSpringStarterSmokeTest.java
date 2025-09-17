@@ -5,9 +5,14 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServiceAttributes;
+import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -54,7 +59,21 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                                     ServiceAttributes.SERVICE_NAME,
                                     "declarative-config-spring-boot-2")),
                 span ->
-                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                    span.hasKind(SpanKind.SERVER)
+                        .hasResourceSatisfying(
+                            r ->
+                                r.hasAttribute(
+                                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME,
+                                        "opentelemetry-spring-boot-starter")
+                                    .hasAttribute(
+                                        satisfies(
+                                            TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
+                                            AbstractCharSequenceAssert::isNotBlank))
+                                    .hasAttribute(
+                                        satisfies(
+                                            ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
+                                            AbstractCharSequenceAssert::isNotBlank)))
+                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
                 AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }

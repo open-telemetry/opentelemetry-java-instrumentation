@@ -22,7 +22,9 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.SpringConfigProperties;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroComponentProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.DistroVersionResourceProvider;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.ResourceCustomizerProvider;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources.SpringResourceProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -30,10 +32,13 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.internal.SpiHelper;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.resources.Resource;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
@@ -72,16 +77,8 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @Conditional(OtelEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
+  @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
   static class OpenTelemetrySdkConfig {
-    @Bean
-    public ResourceProvider otelSpringResourceProvider(Optional<BuildProperties> buildProperties) {
-      return new SpringResourceProvider(buildProperties);
-    }
-
-    @Bean
-    public ResourceProvider otelDistroVersionResourceProvider() {
-      return new DistroVersionResourceProvider();
-    }
 
     @Configuration
     @EnableConfigurationProperties({
@@ -91,6 +88,17 @@ public class OpenTelemetryAutoConfiguration {
     })
     @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
+
+      @Bean
+      public ResourceProvider otelSpringResourceProvider(
+          Optional<BuildProperties> buildProperties) {
+        return new SpringResourceProvider(buildProperties);
+      }
+
+      @Bean
+      public ResourceProvider otelDistroVersionResourceProvider() {
+        return new DistroVersionResourceProvider();
+      }
 
       @Bean
       @ConfigurationPropertiesBinding
@@ -184,6 +192,16 @@ public class OpenTelemetryAutoConfiguration {
       public ConfigProperties otelProperties(ConfigProvider configProvider) {
         return new DeclarativeConfigPropertiesBridgeBuilder()
             .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
+      }
+
+      @Bean
+      public DeclarativeConfigurationCustomizerProvider distroConfigurationCustomizerProvider() {
+        return new ResourceCustomizerProvider();
+      }
+
+      @Bean
+      public ComponentProvider<Resource> distroComponentProvider() {
+        return new DistroComponentProvider();
       }
     }
   }
