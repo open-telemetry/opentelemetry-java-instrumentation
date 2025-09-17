@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
@@ -160,10 +159,6 @@ public class OpenTelemetryAutoConfiguration {
             DeclarativeConfiguration.create(
                 model, new OpenTelemetrySdkComponentLoader(applicationContext));
         Runtime.getRuntime().addShutdownHook(new Thread(sdk::close));
-        // todo there is no equivalent to
-        // https://github.com/open-telemetry/opentelemetry-java/blob/7655192df504d28da2d2013f2fc49ec44ef6202e/sdk-extensions/autoconfigure/src/main/java/io/opentelemetry/sdk/autoconfigure/LoggerProviderConfiguration.java#L96
-        // so we get a NPE when there is no global OpenTelemetry instance set
-        GlobalOpenTelemetry.set(sdk);
         logStart();
         return sdk;
       }
