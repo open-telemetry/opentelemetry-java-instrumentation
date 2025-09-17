@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,13 +42,16 @@ public class ContextStorageWrappersInstrumentation implements TypeInstrumentatio
   @SuppressWarnings("unused")
   public static class AddWrapperAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false)
-            List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers) {
+    public static List<Function<? super ContextStorage, ? extends ContextStorage>> methodExit(
+        @Advice.Return
+            List<Function<? super ContextStorage, ? extends ContextStorage>> originalWrappers) {
+      List<Function<? super ContextStorage, ? extends ContextStorage>> wrappers = originalWrappers;
       wrappers = new ArrayList<>(wrappers);
       // AgentContextStorage wrapper doesn't delegate, so needs to be the innermost wrapper
       wrappers.add(0, AgentContextStorage.wrap());
+      return wrappers;
     }
   }
 }
