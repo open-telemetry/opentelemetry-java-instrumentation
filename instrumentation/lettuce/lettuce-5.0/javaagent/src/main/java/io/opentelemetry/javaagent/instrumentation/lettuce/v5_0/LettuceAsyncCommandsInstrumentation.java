@@ -75,6 +75,10 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
     public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
 
       Context parentContext = currentContext();
+      if (!instrumenter().shouldStart(parentContext, command)) {
+        return null;
+      }
+
       Context context = instrumenter().start(parentContext, command);
       // remember the context that called dispatch, it is used in LettuceAsyncCommandInstrumentation
       context = context.with(LettuceSingletons.COMMAND_CONTEXT_KEY, parentContext);
@@ -85,10 +89,12 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
     public static void stopSpan(
         @Advice.Argument(0) RedisCommand<?, ?, ?> command,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return AsyncCommand<?, ?, ?> asyncCommand,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Return @Nullable AsyncCommand<?, ?, ?> asyncCommand,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
-      adviceScope.end(throwable, command, asyncCommand);
+      if (adviceScope != null) {
+        adviceScope.end(throwable, command, asyncCommand);
+      }
     }
   }
 }
