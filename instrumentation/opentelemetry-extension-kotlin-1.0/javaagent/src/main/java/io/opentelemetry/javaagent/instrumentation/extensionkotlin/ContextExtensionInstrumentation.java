@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import kotlin.coroutines.CoroutineContext;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -50,6 +51,7 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static CoroutineContext enter(@Advice.Argument(0) Context applicationContext) {
+
       if (applicationContext != null) {
         io.opentelemetry.context.Context agentContext =
             AgentContextStorage.getAgentContext(applicationContext);
@@ -58,13 +60,16 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) CoroutineContext result,
+    public static CoroutineContext onExit(
+        @Advice.Return CoroutineContext originalResult,
         @Advice.Enter CoroutineContext coroutineContext) {
+      CoroutineContext result = originalResult;
       if (coroutineContext != null) {
         result = coroutineContext;
       }
+      return result;
     }
   }
 
@@ -75,22 +80,28 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
     public static CoroutineContext enter(
         @Advice.Argument(0)
             application.io.opentelemetry.context.ImplicitContextKeyed implicitContextKeyed) {
+
       if (implicitContextKeyed != null) {
         Context applicationContext = Context.current().with(implicitContextKeyed);
         io.opentelemetry.context.Context agentContext =
             AgentContextStorage.getAgentContext(applicationContext);
+
         return ContextExtensionsKt.asContextElement(agentContext);
       }
+
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) CoroutineContext result,
+    public static CoroutineContext onExit(
+        @Advice.Return CoroutineContext originalResult,
         @Advice.Enter CoroutineContext coroutineContext) {
+      CoroutineContext result = originalResult;
       if (coroutineContext != null) {
         result = coroutineContext;
       }
+      return result;
     }
   }
 
@@ -99,6 +110,7 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Context enter(@Advice.Argument(0) CoroutineContext coroutineContext) {
+
       if (coroutineContext != null) {
         io.opentelemetry.context.Context agentContext =
             ContextExtensionsKt.getOpenTelemetryContext(coroutineContext);
@@ -107,12 +119,15 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Context result, @Advice.Enter Context context) {
+    public static Context onExit(
+        @Advice.Return Context originalResult, @Advice.Enter Context context) {
+      Context result = originalResult;
       if (context != null) {
         result = context;
       }
+      return result;
     }
   }
 }

@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -70,14 +71,16 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
       return AgentContextStorage.toApplicationContext(newAgentContext);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Enter Context newApplicationContext,
-        @Advice.Return(readOnly = false) Context result) {
+    public static Context onExit(
+        @Advice.Return Context originalResult, @Advice.Enter Context newApplicationContext) {
+      Context result = originalResult;
 
       if (newApplicationContext != null) {
         result = newApplicationContext;
       }
+      return result;
     }
   }
 
@@ -106,13 +109,16 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
       return Bridging.toApplication(agentSpan);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Enter Span applicationSpan, @Advice.Return(readOnly = false) Span result) {
+    public static Span onExit(
+        @Advice.Return Span originalResult, @Advice.Enter Span applicationSpan) {
+      Span result = originalResult;
 
       if (applicationSpan != null) {
         result = applicationSpan;
       }
+      return result;
     }
   }
 }
