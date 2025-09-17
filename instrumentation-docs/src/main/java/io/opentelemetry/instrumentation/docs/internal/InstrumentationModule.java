@@ -35,7 +35,7 @@ public class InstrumentationModule {
 
   @Nullable private Integer minJavaVersion;
 
-  @Nullable private InstrumentationMetaData metadata;
+  @Nullable private InstrumentationMetadata metadata;
 
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -79,9 +79,9 @@ public class InstrumentationModule {
     return scopeInfo;
   }
 
-  public InstrumentationMetaData getMetadata() {
+  public InstrumentationMetadata getMetadata() {
     if (metadata == null) {
-      metadata = new InstrumentationMetaData();
+      metadata = new InstrumentationMetadata();
     }
 
     return metadata;
@@ -109,7 +109,7 @@ public class InstrumentationModule {
     this.targetVersions = targetVersions;
   }
 
-  public void setMetadata(InstrumentationMetaData metadata) {
+  public void setMetadata(InstrumentationMetadata metadata) {
     this.metadata = metadata;
   }
 
@@ -135,7 +135,7 @@ public class InstrumentationModule {
     @Nullable private String namespace;
     @Nullable private String group;
     @Nullable private Integer minJavaVersion;
-    @Nullable private InstrumentationMetaData metadata;
+    @Nullable private InstrumentationMetadata metadata;
     @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
     @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
     @Nullable private Map<String, List<EmittedSpans.Span>> spans;
@@ -171,7 +171,7 @@ public class InstrumentationModule {
     }
 
     @CanIgnoreReturnValue
-    public Builder metadata(InstrumentationMetaData metadata) {
+    public Builder metadata(InstrumentationMetadata metadata) {
       this.metadata = metadata;
       return this;
     }

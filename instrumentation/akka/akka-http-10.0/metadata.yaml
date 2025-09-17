@@ -1,4 +1,10 @@
+display_name: Akka HTTP
 description: >
   This instrumentation enables HTTP client spans and metrics for the Akka HTTP client, and HTTP
   server spans and metrics for the Akka HTTP server.
 library_link: https://doc.akka.io/docs/akka-http/current/index.html
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS

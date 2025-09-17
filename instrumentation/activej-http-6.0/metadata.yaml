@@ -1,2 +1,6 @@
+display_name: ActiveJ
 description: This instrumentation enables HTTP server spans and HTTP server metrics for the ActiveJ HTTP server.
 library_link: https://activej.io/
+semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS

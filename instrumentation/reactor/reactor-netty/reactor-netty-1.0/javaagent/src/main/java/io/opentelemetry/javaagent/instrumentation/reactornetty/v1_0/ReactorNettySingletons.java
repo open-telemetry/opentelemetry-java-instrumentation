@@ -5,10 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.reactornetty.v1_0;
 
+import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
@@ -30,6 +32,10 @@ public final class ReactorNettySingletons {
 
   private static final Instrumenter<HttpClientRequest, HttpClientResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
+
+  public static final VirtualField<ChannelPromise, ConnectionRequestAndContext>
+      CONNECTION_REQUEST_AND_CONTEXT =
+          VirtualField.find(ChannelPromise.class, ConnectionRequestAndContext.class);
 
   static {
     INSTRUMENTER =

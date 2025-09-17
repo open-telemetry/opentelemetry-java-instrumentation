@@ -24,6 +24,6 @@ val KtorServerTelemetry = createRouteScopedPlugin("OpenTelemetry", { KtorServerT
   KtorServerTelemetryUtil.configureTelemetry(pluginConfig, application)
 
   application.monitor.subscribe(RoutingRoot.RoutingCallStarted) { call ->
-    HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg -> arg.route.parent.toString() }, call)
+    HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg -> arg!!.route.parent.toString() }, call)
   }
 }
