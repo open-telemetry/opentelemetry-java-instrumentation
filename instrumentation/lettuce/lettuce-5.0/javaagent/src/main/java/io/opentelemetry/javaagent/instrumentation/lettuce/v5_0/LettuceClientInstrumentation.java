@@ -85,8 +85,8 @@ public class LettuceClientInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return ConnectionFuture<?> connectionFuture,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Return @Nullable ConnectionFuture<?> connectionFuture,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable, redisUri, connectionFuture);
       }

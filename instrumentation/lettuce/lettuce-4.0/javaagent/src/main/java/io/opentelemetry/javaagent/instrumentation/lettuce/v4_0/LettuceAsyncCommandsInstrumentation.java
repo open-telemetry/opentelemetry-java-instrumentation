@@ -76,9 +76,9 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(0) RedisCommand<?, ?, ?> command,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Return AsyncCommand<?, ?, ?> asyncCommand,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Return @Nullable AsyncCommand<?, ?, ?> asyncCommand,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable, command, asyncCommand);
       }

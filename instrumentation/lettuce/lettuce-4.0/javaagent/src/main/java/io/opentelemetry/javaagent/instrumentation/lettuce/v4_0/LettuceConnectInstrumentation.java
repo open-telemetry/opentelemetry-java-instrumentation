@@ -67,7 +67,7 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Argument(1) RedisURI redisUri,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
         adviceScope.end(throwable, redisUri);
       }

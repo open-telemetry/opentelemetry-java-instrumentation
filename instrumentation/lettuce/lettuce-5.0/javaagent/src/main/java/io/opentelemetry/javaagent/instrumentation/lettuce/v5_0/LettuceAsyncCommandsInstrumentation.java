@@ -89,8 +89,8 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
     public static void stopSpan(
         @Advice.Argument(0) RedisCommand<?, ?, ?> command,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Return AsyncCommand<?, ?, ?> asyncCommand,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Return @Nullable AsyncCommand<?, ?, ?> asyncCommand,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
       if (adviceScope != null) {
         adviceScope.end(throwable, command, asyncCommand);
