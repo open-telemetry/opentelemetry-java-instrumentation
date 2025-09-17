@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import javax.annotation.Nullable;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
@@ -33,6 +34,7 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   // TODO: make this required to implement
+  @Nullable
   default Long getBatchSize(REQUEST request) {
     return null;
   }
