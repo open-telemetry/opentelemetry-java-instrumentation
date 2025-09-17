@@ -259,8 +259,7 @@ public final class LoggingEventMapper {
         Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
   }
 
-  private static void setThrowable(
-      LogRecordBuilder builder, Throwable throwable) {
+  private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
     if (builder instanceof ExtendedLogRecordBuilder) {
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     } else {
@@ -292,8 +291,7 @@ public final class LoggingEventMapper {
   }
 
   @NoMuzzle
-  private void captureKeyValuePairAttributes(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureKeyValuePairAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     List<KeyValuePair> keyValuePairs = loggingEvent.getKeyValuePairs();
     if (keyValuePairs != null) {
       for (KeyValuePair keyValuePair : keyValuePairs) {
@@ -303,8 +301,8 @@ public final class LoggingEventMapper {
   }
 
   // visible for testing
-  static void captureAttribute(LogRecordBuilder builder, boolean captureEventName, Object key,
-      Object value) {
+  static void captureAttribute(
+      LogRecordBuilder builder, boolean captureEventName, Object key, Object value) {
     // empty values are not serialized
     if (key != null && value != null) {
       String keyStr = key.toString();
@@ -337,10 +335,7 @@ public final class LoggingEventMapper {
             || value instanceof double[]
             || value instanceof Double[]) {
           captureArrayValueAttribute(
-              builder,
-              AttributeKey.doubleArrayKey(keyStr),
-              value,
-              o -> ((Number) o).doubleValue());
+              builder, AttributeKey.doubleArrayKey(keyStr), value, o -> ((Number) o).doubleValue());
         } else {
           captureArrayValueAttribute(
               builder, AttributeKey.stringArrayKey(keyStr), value, String::valueOf);
@@ -361,8 +356,8 @@ public final class LoggingEventMapper {
     setAttributeMaybeEventName(builder, this.captureEventName, key, value);
   }
 
-  private static void setAttributeMaybeEventName(LogRecordBuilder builder, boolean captureEventName,
-      String key, String value) {
+  private static void setAttributeMaybeEventName(
+      LogRecordBuilder builder, boolean captureEventName, String key, String value) {
     if (value != null) {
       if (captureEventName && key.equals(EVENT_NAME)) {
         builder.setEventName(value);
@@ -461,8 +456,7 @@ public final class LoggingEventMapper {
     return true;
   }
 
-  private void captureLogstashAttributes(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureLogstashAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
       captureMultipleLogstashAttributes(builder, loggingEvent);
     } else {
@@ -509,8 +503,7 @@ public final class LoggingEventMapper {
     }
   }
 
-  private void captureLogstashMarkerAttributes(
-      LogRecordBuilder builder, Object logstashMarker) {
+  private void captureLogstashMarkerAttributes(LogRecordBuilder builder, Object logstashMarker) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(builder, logstashMarker, this.captureEventName);

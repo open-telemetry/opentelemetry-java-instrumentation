@@ -194,7 +194,7 @@ public final class LogEventMapper<T> {
               (key, value) -> {
                 if (value != null
                     && (!checkSpecialMapMessageAttribute
-                    || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
+                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))) {
                   builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
                 }
               });
@@ -206,8 +206,7 @@ public final class LogEventMapper<T> {
 
     if (captureAllContextDataAttributes) {
       contextDataAccessor.forEach(
-          contextData,
-          (key, value) -> setAttributeMaybeEventName(builder, key, value));
+          contextData, (key, value) -> setAttributeMaybeEventName(builder, key, value));
       return;
     }
 
@@ -232,8 +231,7 @@ public final class LogEventMapper<T> {
         key, k -> AttributeKey.stringKey("log4j.map_message." + k));
   }
 
-  private static void setThrowable(
-      LogRecordBuilder builder, Throwable throwable) {
+  private static void setThrowable(LogRecordBuilder builder, Throwable throwable) {
     if (builder instanceof ExtendedLogRecordBuilder) {
       ((ExtendedLogRecordBuilder) builder).setException(throwable);
     } else {
