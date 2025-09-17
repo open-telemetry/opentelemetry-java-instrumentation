@@ -15,6 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -36,23 +37,33 @@ public class LettuceConnectInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConnectAdvice {
 
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public void end(Throwable throwable, RedisURI redisUri) {
+        scope.close();
+        connectInstrumenter().end(context, redisUri, null, throwable);
+      }
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) RedisURI redisUri,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context = connectInstrumenter().start(currentContext(), redisUri);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(1) RedisURI redisUri) {
+      Context context = connectInstrumenter().start(currentContext(), redisUri);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Argument(1) RedisURI redisUri,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-      connectInstrumenter().end(context, redisUri, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable, redisUri);
     }
   }
 }

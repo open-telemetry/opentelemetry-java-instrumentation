@@ -68,7 +68,7 @@ or use the helper script that will run only the currently supported tests (recom
 
 ## Instrumentation Hierarchy
 
-An "InstrumentationModule" represents a module that that targets specific code in a
+An "InstrumentationModule" represents a module that targets specific code in a
 framework/library/technology. Each module will have a name, a namespace, and a group.
 
 Using these structures as examples:
@@ -114,6 +114,29 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
+* semantic_conventions
+  * The semantic conventions that the instrumentation module adheres to
+  * Options are:
+    * HTTP_CLIENT_SPANS
+    * HTTP_CLIENT_METRICS
+    * HTTP_SERVER_SPANS
+    * HTTP_SERVER_METRICS
+    * RPC_CLIENT_SPANS
+    * RPC_CLIENT_METRICS
+    * RPC_SERVER_SPANS
+    * RPC_SERVER_METRICS
+    * MESSAGING_SPANS
+    * DATABASE_CLIENT_SPANS
+    * DATABASE_CLIENT_METRICS
+    * DATABASE_POOL_METRICS
+    * JVM_RUNTIME_METRICS
+    * GRAPHQL_SERVER_SPANS
+    * FAAS_SERVER_SPANS
+    * GENAI_CLIENT_SPANS
+    * GENAI_CLIENT_METRIC
+* library_link
+  * URL to the library or framework's main website or documentation, or if those don't exist, the
+  GitHub repository.
 * source_path
   * Path to the source code of the instrumentation module
 * minimum_java_version
@@ -125,7 +148,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * List of supported versions by the module, broken down by `library` or `javaagent` support
 * scope
   * Name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
-* configurations settings
+* configuration settings
   * List of settings that are available for the instrumentation module
   * Each setting has a name, description, type, and default value
 * metrics
@@ -145,9 +168,14 @@ additional information about the instrumentation module.
 As of now, the following fields are supported, all of which are optional:
 
 ```yaml
-description: "Instruments..."   # Description of the instrumentation module
-disabled_by_default: true       # Defaults to `false`
-classification: internal        # instrumentation classification: library | internal | custom
+description: "This instrumentation enables..."    # Description of the instrumentation module
+semantic_conventions:                             # List of semantic conventions the instrumentation adheres to
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - JVM_RUNTIME_METRICS
+disabled_by_default: true                         # Defaults to `false`
+classification: internal                          # instrumentation classification: library | internal | custom
+library_link: https://...                         # URL to the library or framework's main website or documentation
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.

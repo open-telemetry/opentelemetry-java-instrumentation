@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.vertx.core.Future;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,9 +33,10 @@ public class ResourceManagerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WithResourceAsyncAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void wrapFuture(@Advice.Return(readOnly = false) Future<?> future) {
-      future = VertxClientSingletons.wrapFuture(future);
+    public static Future<?> wrapFuture(@Advice.Return Future<?> future) {
+      return VertxClientSingletons.wrapFuture(future);
     }
   }
 }

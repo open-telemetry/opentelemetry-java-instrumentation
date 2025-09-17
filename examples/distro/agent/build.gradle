@@ -41,8 +41,7 @@ CopySpec isolateClasses(Iterable<File> jars) {
       from(zipTree(it)) {
         into("inst")
         rename("^(.*)\\.class\$", "\$1.classdata")
-        // Rename LICENSE file since it clashes with license dir on non-case sensitive FSs (i.e. Mac)
-        rename("^LICENSE\$", "LICENSE.renamed")
+        exclude("^LICENSE\$")
         exclude("META-INF/INDEX.LIST")
         exclude("META-INF/*.DSA")
         exclude("META-INF/*.SF")
@@ -64,11 +63,14 @@ tasks {
   task relocateJavaagentLibs(type: ShadowJar) {
     configurations = [project.configurations.javaagentLibs]
 
-    duplicatesStrategy = DuplicatesStrategy.FAIL
-
     archiveFileName.set("javaagentLibs-relocated.jar")
 
+    duplicatesStrategy = DuplicatesStrategy.FAIL
     mergeServiceFiles()
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
+    }
     exclude("**/module-info.class")
     relocatePackages(it)
 
@@ -106,10 +108,12 @@ tasks {
     archiveClassifier.set("all")
 
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-
-    mergeServiceFiles {
-      include("inst/META-INF/services/*")
+    mergeServiceFiles("inst/META-INF/services")
+    // mergeServiceFiles requires that duplicate strategy is set to include
+    filesMatching("inst/META-INF/services/**") {
+      duplicatesStrategy = DuplicatesStrategy.INCLUDE
     }
+
     exclude("**/module-info.class")
     relocatePackages(it)
 

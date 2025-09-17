@@ -43,6 +43,7 @@ public class DocGeneratorApplication {
       writer.write("# The structure and contents are a work in progress and subject to change.\n");
       writer.write(
           "# For more information see: https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13468\n\n");
+      writer.write("file_format: 0.1\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
     }
 

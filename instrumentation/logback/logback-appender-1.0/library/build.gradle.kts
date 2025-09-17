@@ -57,6 +57,12 @@ graalvmNative {
   toolchainDetection.set(false)
 }
 
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata").configure {
+  enabled = false
+}
+
 // To be able to execute the tests as GraalVM native executables
 configurations.configureEach {
   exclude("org.apache.groovy", "groovy")
