@@ -16,6 +16,8 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.func.Action;
@@ -41,22 +43,31 @@ public class DefaultExecStarterInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class WrapActionAdvice {
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapAction(@Advice.Argument(value = 0, readOnly = false) Action<?> action) {
-      action = ActionWrapper.wrapIfNeeded(action);
+    public static Action<?> wrapAction(@Advice.Argument(0) Action<?> action) {
+      return ActionWrapper.wrapIfNeeded(action);
     }
   }
 
   @SuppressWarnings("unused")
   public static class StartAdvice {
+    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Scope enter(@Advice.Argument(value = 0, readOnly = false) Action<?> action) {
-      action = ActionWrapper.wrapIfNeeded(action);
-      return Java8BytecodeBridge.rootContext().makeCurrent();
+    public static Object[] enter(@Advice.Argument(0) Action<?> action) {
+
+      // wrapping method is relying on current context
+      // thus we must wrap first to avoid using the root context
+      Action<?> wrappedAction = ActionWrapper.wrapIfNeeded(action);
+
+      // root context scope must be made current after wrapping
+      Scope scope = Java8BytecodeBridge.rootContext().makeCurrent();
+      return new Object[] {scope, wrappedAction};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exit(@Advice.Enter Scope scope) {
+    public static void exit(@Advice.Enter Object[] enterResult) {
+      Scope scope = (Scope) enterResult[0];
       if (scope != null) {
         scope.close();
       }
