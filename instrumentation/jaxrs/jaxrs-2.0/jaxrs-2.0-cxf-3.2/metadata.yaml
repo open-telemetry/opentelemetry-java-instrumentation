@@ -1,8 +1,8 @@
-display_name: JAX-RS 2.x
+display_name: Apache CXF JAX-RS 2.x
 description: >
   This instrumentation enables spans for JAX-RS methods when using Apache CXF, and enriches
   existing HTTP server spans with route information.
-library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+library_link: https://cxf.apache.org/
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
     description: Enables the creation of experimental controller (INTERNAL) spans.
