@@ -24,14 +24,13 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.ToStringConsumer;
 
-public abstract class JavaSmokeTest {
+public abstract class JavaSmokeTest extends AbstractSmokeTest {
   private static final Pattern TRACE_ID_PATTERN =
       Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
-
   protected static final TestContainerManager containerManager = createContainerManager();
   private JavaTelemetryRetriever telemetryRetriever;
 
@@ -70,7 +69,7 @@ public abstract class JavaSmokeTest {
     return emptyList();
   }
 
-  @BeforeEach
+  @BeforeAll
   void setUp() {
     containerManager.startEnvironmentOnce();
     telemetryRetriever = new JavaTelemetryRetriever(containerManager.getBackendMappedPort());
@@ -169,5 +168,10 @@ public abstract class JavaSmokeTest {
     return TestContainerManager.useWindowsContainers()
         ? new WindowsTestContainerManager()
         : new LinuxTestContainerManager();
+  }
+
+  @Override
+  public void configureTelemetryRetriever(Consumer<JavaTelemetryRetriever> action) {
+    action.accept(telemetryRetriever);
   }
 }

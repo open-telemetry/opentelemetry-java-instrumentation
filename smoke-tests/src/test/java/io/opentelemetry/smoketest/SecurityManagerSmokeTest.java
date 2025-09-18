@@ -5,16 +5,20 @@
 
 package io.opentelemetry.smoketest;
 
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SecurityManagerSmokeTest extends JavaSmokeTest {
+  @RegisterExtension static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
+  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+
   @Override
   protected String getTargetImage(String jdk) {
     return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk"
@@ -30,12 +34,10 @@ class SecurityManagerSmokeTest extends JavaSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  void securityManagerSmokeTest(int jdk) throws Exception {
-    runTarget(
-        jdk,
-        output ->
-            assertThat(waitForTraces())
-                .hasTracesSatisfyingExactly(
-                    trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test"))));
+  void securityManagerSmokeTest(int jdk) {
+    startTarget(jdk);
+    autoCleanup.deferCleanup(this::stopTarget);
+
+    testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
   }
 }
