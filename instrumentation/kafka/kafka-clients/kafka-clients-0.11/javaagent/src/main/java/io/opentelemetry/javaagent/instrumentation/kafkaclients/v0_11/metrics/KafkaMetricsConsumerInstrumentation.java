@@ -45,7 +45,6 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Map<String, Object> onEnter(
         @Advice.Argument(0) Map<String, Object> originalConfig) {
-      Map<String, Object> config = originalConfig;
 
       // In versions of spring-kafka prior to 2.5.0.RC1, when the `ProducerPerThread`
       //  of DefaultKafkaProducerFactory is set to true, the `config` object entering
@@ -63,7 +62,7 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
       //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12538
 
       // ensure config is a mutable map and avoid concurrency conflicts
-      config = new HashMap<>(config);
+      HashMap<String, Object> config = new HashMap<>(originalConfig);
       enhanceConfig(config);
       return config;
     }
