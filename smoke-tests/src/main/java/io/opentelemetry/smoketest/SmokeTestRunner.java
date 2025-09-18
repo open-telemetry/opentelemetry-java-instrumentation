@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -26,12 +31,10 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
   }
 
   @Override
-  public void beforeTestClass() {
-  }
+  public void beforeTestClass() {}
 
   @Override
-  public void afterTestClass() {
-  }
+  public void afterTestClass() {}
 
   @Override
   public void clearAllExportedData() {

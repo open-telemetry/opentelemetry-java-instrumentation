@@ -33,16 +33,13 @@ public abstract class PropagationTest extends JavaSmokeTest {
 
   @Test
   public void shouldPropagate() throws Exception {
-    runTarget(
-        11,
-        output -> {
-          AggregatedHttpResponse response = client().get("/front").aggregate().join();
-          List<SpanData> traces = waitForTraces();
+    startTarget(11);
+    AggregatedHttpResponse response = client().get("/front").aggregate().join();
+    List<SpanData> traces = waitForTraces();
 
-          TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(trace -> {});
+    TracesAssert.assertThat(traces).hasTracesSatisfyingExactly(trace -> {});
 
-          var traceId = traces.get(0).getTraceId();
-          assertThat(response.contentUtf8()).isEqualTo(traceId + ";" + traceId);
-        });
+    var traceId = traces.get(0).getTraceId();
+    assertThat(response.contentUtf8()).isEqualTo(traceId + ";" + traceId);
   }
 }

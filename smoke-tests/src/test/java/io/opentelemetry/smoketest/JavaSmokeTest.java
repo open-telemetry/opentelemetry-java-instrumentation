@@ -79,16 +79,7 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
     telemetryRetriever = new RemoteTelemetryRetriever(containerManager.getBackendMappedPort());
   }
 
-  public void runTarget(int jdk, TargetRunner runner) throws Exception {
-    Consumer<OutputFrame> startTarget = startTarget(jdk);
-    try {
-      runner.runInTarget(startTarget);
-    } finally {
-      stopTarget();
-    }
-  }
-
-  protected Consumer<OutputFrame> startTarget(int jdk) {
+    protected Consumer<OutputFrame> startTarget(int jdk) {
     return startTarget(String.valueOf(jdk), null, false);
   }
 

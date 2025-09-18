@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.smoketest;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -23,10 +28,9 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension 
     }
 
     SmokeTestRunner smokeTestRunner = (SmokeTestRunner) getTestRunner();
-    ((AbstractRemoteTelemetryTest) testInstance).configureTelemetryRetriever(
-        smokeTestRunner::setTelemetryRetriever);
+    ((AbstractRemoteTelemetryTest) testInstance)
+        .configureTelemetryRetriever(smokeTestRunner::setTelemetryRetriever);
 
     super.beforeEach(extensionContext);
   }
 }
-

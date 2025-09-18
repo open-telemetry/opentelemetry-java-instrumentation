@@ -31,20 +31,17 @@ class SdkDisabledSmokeTest extends JavaSmokeTest {
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
   void noopSdkSmokeTest(int jdk) throws Exception {
-    runTarget(
-        jdk,
-        output -> {
-          String currentAgentVersion =
-              new JarFile(agentPath)
-                  .getManifest()
-                  .getMainAttributes()
-                  .get(Attributes.Name.IMPLEMENTATION_VERSION)
-                  .toString();
+    startTarget(jdk);
+    String currentAgentVersion =
+        new JarFile(agentPath)
+            .getManifest()
+            .getMainAttributes()
+            .get(Attributes.Name.IMPLEMENTATION_VERSION)
+            .toString();
 
-          assertThat(client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");
-          assertThat(waitForTraces()).isEmpty();
-          assertVersionLogged(output, currentAgentVersion);
-          assertThat(waitForTraces()).isEmpty();
-        });
+    assertThat(client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");
+    assertThat(waitForTraces()).isEmpty();
+    assertVersionLogged(output, currentAgentVersion);
+    assertThat(waitForTraces()).isEmpty();
   }
 }

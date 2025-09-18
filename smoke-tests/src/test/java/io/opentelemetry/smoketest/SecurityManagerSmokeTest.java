@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest;
 
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collections;
 import java.util.Map;
