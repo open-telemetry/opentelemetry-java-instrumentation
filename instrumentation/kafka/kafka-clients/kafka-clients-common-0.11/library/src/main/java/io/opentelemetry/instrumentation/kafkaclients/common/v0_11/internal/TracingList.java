@@ -137,16 +137,12 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator() {
-    // TODO: the API for ListIterator is not really good to instrument it in context of Kafka
-    // Consumer so we will not do that for now
-    return delegate.listIterator();
+    return TracingListIterator.wrap(delegate.listIterator(), instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator(int index) {
-    // TODO: the API for ListIterator is not really good to instrument it in context of Kafka
-    // Consumer so we will not do that for now
-    return delegate.listIterator(index);
+    return TracingListIterator.wrap(delegate.listIterator(index), instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
