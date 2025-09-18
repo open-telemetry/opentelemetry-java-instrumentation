@@ -14,7 +14,7 @@ import org.junit.jupiter.api.condition.DisabledIf;
 class AgentDebugLoggingTest extends JavaSmokeTest {
 
   public AgentDebugLoggingTest() {
-      super(
+    super(
         SmokeTestTarget.springBoot("20250915.17728045097")
             .waitStrategy(
                 new TargetWaitStrategy.Log(
