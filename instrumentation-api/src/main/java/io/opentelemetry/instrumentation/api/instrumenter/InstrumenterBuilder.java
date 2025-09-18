@@ -21,6 +21,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
@@ -60,6 +61,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      operationListenerAttributesExtractors = new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   private final List<OperationListener> operationListeners = new ArrayList<>();
   private final List<OperationMetrics> operationMetrics = new ArrayList<>();
@@ -72,6 +75,14 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
+
+  static {
+    Experimental.internalAddOperationListenerAttributesExtractor(
+        (builder, operationListenerAttributesExtractor) ->
+            builder.operationListenerAttributesExtractors.add(
+                requireNonNull(
+                    operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
+  }
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,

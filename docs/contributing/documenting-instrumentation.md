@@ -84,6 +84,10 @@ Example:
 
 ```yaml
 description: "This instrumentation enables..."
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - JVM_RUNTIME_METRICS
 disabled_by_default: true
 classification: library
 library_link: https://github.com/...
@@ -127,6 +131,32 @@ Some notes when writing descriptions:
   the description unless they are essential to understanding the purpose of the instrumentation.
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
+
+
+### Semantic Conventions
+
+If the instrumentation adheres to one or more specific semantic conventions, include a
+`semantic_conventions` field with a list of the relevant semantic convention categories.
+
+List of possible options:
+
+* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client)
+* [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
+* [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
+* [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
+* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes)
+* [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
+* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes)
+* [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
+* [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
+* [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
+* [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
+* [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
+* [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
+* [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
+* [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
 
 ### Library Link
 
@@ -190,8 +220,22 @@ within 24 hours.
 
 ## opentelemetry.io
 
-All of our instrumentation modules are listed on the opentelemetry.io website in the context of how
-to [suppress specific instrumentation](https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation).
+All of our instrumentation modules are listed on the opentelemetry.io website in two places:
+
+### Supported Libraries
+
+The [Supported Libraries](https://opentelemetry.io/docs/zero-code/java/agent/supported-libraries/)
+page lists all the library instrumentations that are included in the OpenTelemetry Java agent. It
+mostly mirrors the information from the [supported libraries](../supported-libraries.md) page in
+this repo, and should be updated when adding or removing library instrumentations.
+
+This page may be automatically generated in the future, but for now it is manually maintained.
+
+### Suppressing Instrumentation
+
+The [Suppressing instrumentation](https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation)
+page lists the instrumentations in the context of the keys needed for using
+the `otel.instrumentation.[name].enabled` configuration.
 
 All new instrumentations should be added to this list. There is a
 [Github action](../../.github/workflows/documentation-disable-list-audit.yml) that runs nightly to check
