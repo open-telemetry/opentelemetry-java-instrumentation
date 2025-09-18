@@ -17,10 +17,10 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.output.OutputFrame;
 
-public abstract class JavaSmokeTest {
+public abstract class JavaSmokeTest extends AbstractSmokeTest {
   protected static final TestContainerManager containerManager = createContainerManager();
   private JavaTelemetryRetriever telemetryRetriever;
 
@@ -59,7 +59,7 @@ public abstract class JavaSmokeTest {
     return emptyList();
   }
 
-  @BeforeEach
+  @BeforeAll
   void setUp() {
     containerManager.startEnvironmentOnce();
     telemetryRetriever = new JavaTelemetryRetriever(containerManager.getBackendMappedPort());
@@ -131,5 +131,10 @@ public abstract class JavaSmokeTest {
     return TestContainerManager.useWindowsContainers()
         ? new WindowsTestContainerManager()
         : new LinuxTestContainerManager();
+  }
+
+  @Override
+  public void configureTelemetryRetriever(Consumer<JavaTelemetryRetriever> action) {
+    action.accept(telemetryRetriever);
   }
 }
