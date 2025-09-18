@@ -26,7 +26,8 @@ public class TracingListIterator<K, V> implements ListIterator<ConsumerRecord<K,
       BooleanSupplier wrappingEnabled,
       KafkaConsumerContext consumerContext) {
     this.delegateListIterator = delegateListIterator;
-    this.tracingIterator = TracingIterator.wrap(delegateListIterator, instrumenter, wrappingEnabled, consumerContext);
+    this.tracingIterator =
+        TracingIterator.wrap(delegateListIterator, instrumenter, wrappingEnabled, consumerContext);
   }
 
   public static <K, V> ListIterator<ConsumerRecord<K, V>> wrap(

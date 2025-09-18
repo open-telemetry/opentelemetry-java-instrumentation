@@ -146,7 +146,10 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
       listIterator =
           TracingListIterator.wrap(
-              listIterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+              listIterator,
+              consumerProcessInstrumenter(),
+              wrappingEnabledSupplier(),
+              consumerContext);
     }
   }
 }

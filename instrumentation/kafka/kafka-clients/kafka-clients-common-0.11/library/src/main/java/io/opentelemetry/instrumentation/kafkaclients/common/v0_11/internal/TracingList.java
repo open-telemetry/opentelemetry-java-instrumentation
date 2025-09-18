@@ -137,12 +137,14 @@ public class TracingList<K, V> extends TracingIterable<K, V> implements List<Con
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator() {
-    return TracingListIterator.wrap(delegate.listIterator(), instrumenter, wrappingEnabled, consumerContext);
+    return TracingListIterator.wrap(
+        delegate.listIterator(), instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
   public ListIterator<ConsumerRecord<K, V>> listIterator(int index) {
-    return TracingListIterator.wrap(delegate.listIterator(index), instrumenter, wrappingEnabled, consumerContext);
+    return TracingListIterator.wrap(
+        delegate.listIterator(index), instrumenter, wrappingEnabled, consumerContext);
   }
 
   @Override
