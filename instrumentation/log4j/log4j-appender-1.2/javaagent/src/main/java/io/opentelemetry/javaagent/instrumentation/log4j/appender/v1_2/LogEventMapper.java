@@ -9,8 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
@@ -44,6 +42,8 @@ public final class LogEventMapper {
   private static final AttributeKey<Long> CODE_LINENO = AttributeKey.longKey("code.lineno");
   private static final AttributeKey<String> CODE_NAMESPACE =
       AttributeKey.stringKey("code.namespace");
+  // copied from EventIncubatingAttributes
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
   // copied from org.apache.log4j.Level because it was only introduced in 1.2.12
   private static final int TRACE_INT = 5000;
 
@@ -55,6 +55,10 @@ public final class LogEventMapper {
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
+
+  private final boolean captureEventName =
+      AgentInstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.log4j-appender.experimental.capture-event-name", false);
 
   private LogEventMapper() {
     List<String> captureMdcAttributes =
@@ -98,27 +102,25 @@ public final class LogEventMapper {
       builder.setSeverityText(level.toString());
     }
 
-    AttributesBuilder attributes = Attributes.builder();
-
     // throwable
     if (throwable != null) {
       if (builder instanceof ExtendedLogRecordBuilder) {
         ((ExtendedLogRecordBuilder) builder).setException(throwable);
       } else {
-        attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-        attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
+        builder.setAttribute(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
+        builder.setAttribute(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
         StringWriter writer = new StringWriter();
         throwable.printStackTrace(new PrintWriter(writer));
-        attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+        builder.setAttribute(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
       }
     }
 
-    captureMdcAttributes(attributes);
+    captureMdcAttributes(builder);
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
+      builder.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
+      builder.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
     }
 
     if (captureCodeAttributes) {
@@ -126,21 +128,21 @@ public final class LogEventMapper {
       String fileName = locationInfo.getFileName();
       if (fileName != null) {
         if (SemconvStability.isEmitStableCodeSemconv()) {
-          attributes.put(CodeAttributes.CODE_FILE_PATH, fileName);
+          builder.setAttribute(CodeAttributes.CODE_FILE_PATH, fileName);
         }
         if (SemconvStability.isEmitOldCodeSemconv()) {
-          attributes.put(CODE_FILEPATH, fileName);
+          builder.setAttribute(CODE_FILEPATH, fileName);
         }
       }
 
       if (SemconvStability.isEmitStableCodeSemconv()) {
-        attributes.put(
+        builder.setAttribute(
             CodeAttributes.CODE_FUNCTION_NAME,
             locationInfo.getClassName() + "." + locationInfo.getMethodName());
       }
       if (SemconvStability.isEmitOldCodeSemconv()) {
-        attributes.put(CODE_NAMESPACE, locationInfo.getClassName());
-        attributes.put(CODE_FUNCTION, locationInfo.getMethodName());
+        builder.setAttribute(CODE_NAMESPACE, locationInfo.getClassName());
+        builder.setAttribute(CODE_FUNCTION, locationInfo.getMethodName());
       }
 
       String lineNumber = locationInfo.getLineNumber();
@@ -154,15 +156,13 @@ public final class LogEventMapper {
       }
       if (codeLineNo >= 0) {
         if (SemconvStability.isEmitStableCodeSemconv()) {
-          attributes.put(CodeAttributes.CODE_LINE_NUMBER, codeLineNo);
+          builder.setAttribute(CodeAttributes.CODE_LINE_NUMBER, (long) codeLineNo);
         }
         if (SemconvStability.isEmitOldCodeSemconv()) {
-          attributes.put(CODE_LINENO, codeLineNo);
+          builder.setAttribute(CODE_LINENO, (long) codeLineNo);
         }
       }
     }
-
-    builder.setAllAttributes(attributes.build());
 
     // span context
     builder.setContext(Context.current());
@@ -171,15 +171,17 @@ public final class LogEventMapper {
     builder.emit();
   }
 
-  private void captureMdcAttributes(AttributesBuilder attributes) {
+  private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Hashtable<?, ?> context = MDC.getContext();
 
     if (captureAllMdcAttributes) {
       if (context != null) {
         for (Map.Entry<?, ?> entry : context.entrySet()) {
-          attributes.put(
-              getMdcAttributeKey(String.valueOf(entry.getKey())), String.valueOf(entry.getValue()));
+          setAttributeOrEventName(
+              builder,
+              getMdcAttributeKey(String.valueOf(entry.getKey())),
+              String.valueOf(entry.getValue()));
         }
       }
       return;
@@ -187,14 +189,23 @@ public final class LogEventMapper {
 
     for (Map.Entry<String, AttributeKey<String>> entry : captureMdcAttributes.entrySet()) {
       Object value = context.get(entry.getKey());
-      if (value != null) {
-        attributes.put(entry.getValue(), value.toString());
-      }
+      setAttributeOrEventName(builder, getMdcAttributeKey(entry.getKey()), value);
     }
   }
 
   private static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
+  }
+
+  private void setAttributeOrEventName(
+      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
+    if (value != null) {
+      if (captureEventName && key.equals(EVENT_NAME)) {
+        builder.setEventName(value.toString());
+      } else {
+        builder.setAttribute(key, value.toString());
+      }
+    }
   }
 
   private static Severity levelToSeverity(Priority level) {
