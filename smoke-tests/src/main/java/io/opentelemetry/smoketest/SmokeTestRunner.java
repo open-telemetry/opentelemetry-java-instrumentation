@@ -11,7 +11,7 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
 
   private static final SmokeTestRunner INSTANCE = new SmokeTestRunner();
 
-  private JavaTelemetryRetriever telemetryRetriever;
+  private RemoteTelemetryRetriever telemetryRetriever;
 
   public static SmokeTestRunner instance() {
     return INSTANCE;
@@ -21,7 +21,7 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
     super(OpenTelemetry.noop());
   }
 
-  void setTelemetryRetriever(JavaTelemetryRetriever telemetryRetriever) {
+  void setTelemetryRetriever(RemoteTelemetryRetriever telemetryRetriever) {
     this.telemetryRetriever = telemetryRetriever;
   }
 

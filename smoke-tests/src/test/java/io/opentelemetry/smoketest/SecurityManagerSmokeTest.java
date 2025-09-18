@@ -16,8 +16,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SecurityManagerSmokeTest extends JavaSmokeTest {
-  @RegisterExtension static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
-  @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
+  @RegisterExtension
+  static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
 
   @Override
   protected String getTargetImage(String jdk) {
@@ -36,8 +36,7 @@ class SecurityManagerSmokeTest extends JavaSmokeTest {
   @ValueSource(ints = {8, 11, 17, 21, 23})
   void securityManagerSmokeTest(int jdk) {
     startTarget(jdk);
-    autoCleanup.deferCleanup(this::stopTarget);
-
-    testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("test")));
   }
 }

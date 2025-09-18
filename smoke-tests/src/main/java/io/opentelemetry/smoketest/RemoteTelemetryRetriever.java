@@ -25,11 +25,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class JavaTelemetryRetriever {
+public class RemoteTelemetryRetriever {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final WebClient client;
 
-  public JavaTelemetryRetriever(int backendPort) {
+  public RemoteTelemetryRetriever(int backendPort) {
     client = WebClient.of("http://localhost:" + backendPort);
   }
 

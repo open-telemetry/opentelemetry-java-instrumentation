@@ -16,14 +16,14 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension 
   public void beforeEach(ExtensionContext extensionContext) {
     Object testInstance = extensionContext.getRequiredTestInstance();
 
-    if (!(testInstance instanceof AbstractSmokeTest)) {
+    if (!(testInstance instanceof AbstractRemoteTelemetryTest)) {
       throw new AssertionError(
           "SmokeTestInstrumentationExtension can only be applied to a subclass of "
               + "AbstractSmokeTest");
     }
 
     SmokeTestRunner smokeTestRunner = (SmokeTestRunner) getTestRunner();
-    ((AbstractSmokeTest) testInstance).configureTelemetryRetriever(
+    ((AbstractRemoteTelemetryTest) testInstance).configureTelemetryRetriever(
         smokeTestRunner::setTelemetryRetriever);
 
     super.beforeEach(extensionContext);
