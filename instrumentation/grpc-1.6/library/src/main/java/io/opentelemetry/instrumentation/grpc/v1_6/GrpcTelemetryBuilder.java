@@ -11,14 +11,15 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcMetricsHolder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcServerMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSizeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
@@ -176,7 +177,6 @@ public final class GrpcTelemetryBuilder {
     GrpcRpcAttributesGetter rpcAttributesGetter = GrpcRpcAttributesGetter.INSTANCE;
 
     clientInstrumenterBuilder
-        .addContextCustomizer((context, request, attributes) -> RpcMetricsHolder.init(context))
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(rpcAttributesGetter))
@@ -187,6 +187,8 @@ public final class GrpcTelemetryBuilder {
             new GrpcAttributesExtractor(
                 GrpcRpcAttributesGetter.INSTANCE, capturedClientRequestMetadata))
         .addOperationMetrics(RpcClientMetrics.get());
+    Experimental.addOperationListenerAttributesExtractor(
+        clientInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
     serverInstrumenterBuilder
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
@@ -198,6 +200,8 @@ public final class GrpcTelemetryBuilder {
                 GrpcRpcAttributesGetter.INSTANCE, capturedServerRequestMetadata))
         .addAttributesExtractors(additionalServerExtractors)
         .addOperationMetrics(RpcServerMetrics.get());
+    Experimental.addOperationListenerAttributesExtractor(
+        serverInstrumenterBuilder, RpcSizeAttributesExtractor.create(rpcAttributesGetter));
 
     if (peerService != null) {
       clientInstrumenterBuilder.addAttributesExtractor(

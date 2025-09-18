@@ -40,25 +40,5 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {
-    Long requestSize = getter.getRequestSize(request);
-    Long responseSize = getter.getResponseSize(request);
-    if (this instanceof RpcClientAttributesExtractor) {
-      if (requestSize != null) {
-        RpcMetricsHolder.setRequestBodySize(context, requestSize);
-      }
-      if (responseSize != null) {
-        RpcMetricsHolder.setResponseBodySize(context, responseSize);
-      }
-    }
-
-    if (this instanceof RpcServerAttributesExtractor) {
-      if (requestSize != null) {
-        RpcMetricsHolder.setRequestBodySize(context, requestSize);
-      }
-      if (responseSize != null) {
-        RpcMetricsHolder.setResponseBodySize(context, responseSize);
-      }
-    }
-  }
+      @Nullable Throwable error) {}
 }

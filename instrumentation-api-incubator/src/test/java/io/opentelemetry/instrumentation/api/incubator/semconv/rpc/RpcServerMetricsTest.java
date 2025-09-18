@@ -33,7 +33,15 @@ class RpcServerMetricsTest {
 
     OperationListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
 
-    Attributes requestAttributes =
+    Attributes requestAttributes1 =
+        Attributes.builder()
+            .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
+            .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
+            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
+            .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
+            .build();
+
+    Attributes requestAttributes2 =
         Attributes.builder()
             .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
             .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
@@ -47,6 +55,7 @@ class RpcServerMetricsTest {
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20)
             .build();
 
     Attributes responseAttributes2 =
@@ -66,17 +75,14 @@ class RpcServerMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 =
-        RpcMetricsHolder.init(listener.onStart(parent, requestAttributes, nanos(100)));
+    Context context1 = listener.onStart(parent, requestAttributes1, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
+    Context context2 = listener.onStart(Context.root(), requestAttributes2, nanos(150));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    RpcMetricsHolder.setRequestBodySize(context1, 10);
-    RpcMetricsHolder.setResponseBodySize(context1, 20);
     listener.onEnd(context1, responseAttributes1, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
