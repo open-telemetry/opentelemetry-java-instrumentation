@@ -53,37 +53,32 @@ class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {
     startTarget(jdk);
 
     client().get("/greeting").aggregate().join();
-    List<SpanData> traces = waitForTraces();
-    assertThat(traces).hasSize(1);
 
     // There is one span (io.opentelemetry.opentelemetry-instrumentation-annotations-1.16 is
     // not used,
     // because instrumentation_mode=none)
-    TracesAssert.assertThat(traces)
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasResourceSatisfying(
-                            resource ->
-                                resource
-                                    .hasAttribute(
-                                        ServiceAttributes.SERVICE_NAME,
-                                        "declarative-config-smoke-test")
-                                    .hasAttribute(
-                                        satisfies(
-                                            ContainerIncubatingAttributes.CONTAINER_ID,
-                                            v -> v.isNotBlank()))
-                                    .hasAttribute(
-                                        satisfies(
-                                            ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH,
-                                            v -> v.isNotBlank()))
-                                    .hasAttribute(
-                                        satisfies(
-                                            HostIncubatingAttributes.HOST_NAME,
-                                            v -> v.isNotBlank()))
-                                    .hasAttribute(
-                                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME,
-                                        "opentelemetry-javaagent"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasResourceSatisfying(
+                        resource ->
+                            resource
+                                .hasAttribute(
+                                    ServiceAttributes.SERVICE_NAME, "declarative-config-smoke-test")
+                                .hasAttribute(
+                                    satisfies(
+                                        ContainerIncubatingAttributes.CONTAINER_ID,
+                                        v -> v.isNotBlank()))
+                                .hasAttribute(
+                                    satisfies(
+                                        ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH,
+                                        v -> v.isNotBlank()))
+                                .hasAttribute(
+                                    satisfies(
+                                        HostIncubatingAttributes.HOST_NAME, v -> v.isNotBlank()))
+                                .hasAttribute(
+                                    TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME,
+                                    "opentelemetry-javaagent"))));
   }
 }

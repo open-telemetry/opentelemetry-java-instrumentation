@@ -15,8 +15,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SecurityManagerSmokeTest extends JavaSmokeTest {
-  @RegisterExtension
-  static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
 
   @Override
   protected String getTargetImage(String jdk) {

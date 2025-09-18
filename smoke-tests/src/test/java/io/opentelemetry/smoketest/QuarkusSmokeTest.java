@@ -50,19 +50,18 @@ class QuarkusSmokeTest extends JavaSmokeTest {
 
     client().get("/hello").aggregate().join();
 
-    assertThat(waitForTraces())
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET /hello")
-                            .hasResourceSatisfying(
-                                resource -> {
-                                  resource
-                                      .hasAttribute(
-                                          TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                          currentAgentVersion)
-                                      .hasAttribute(ServiceAttributes.SERVICE_NAME, "quarkus");
-                                })));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /hello")
+                        .hasResourceSatisfying(
+                            resource -> {
+                              resource
+                                  .hasAttribute(
+                                      TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
+                                      currentAgentVersion)
+                                  .hasAttribute(ServiceAttributes.SERVICE_NAME, "quarkus");
+                            })));
   }
 }

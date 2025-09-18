@@ -38,13 +38,7 @@ class OtTracePropagationTest extends JavaSmokeTest {
   public void shouldPropagate() {
     startTarget(11);
     AggregatedHttpResponse response = client().get("/front").aggregate().join();
-    List<SpanData> spanData = waitForTraces();
-
-    Set<String> ids =
-        spanData.stream().map(s -> s.getTraceId().substring(16)).collect(Collectors.toSet());
-    assertThat(ids).hasSize(1);
-
-    var traceId = ids.iterator().next();
+      var traceId = testing.waitForTraces(1).get(0).get(0).getTraceId();
 
     assertThat(response.contentUtf8()).matches("[0-9a-f]{16}" + traceId + ";[0]{16}" + traceId);
   }

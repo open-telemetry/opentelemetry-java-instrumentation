@@ -69,8 +69,8 @@ class SpringBootSmokeTest extends JavaSmokeTest {
     var response = client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
 
-    List<SpanData> traces = waitForTraces();
-    assertThat(traces)
+    List<SpanData> spans = testing.spans();
+    assertThat(spans)
         .hasTracesSatisfyingExactly(
             trace ->
                 trace.hasSpansSatisfyingExactly(
@@ -103,11 +103,11 @@ class SpringBootSmokeTest extends JavaSmokeTest {
 
     // Check trace IDs are logged via MDC instrumentation
     Set<String> loggedTraceIds = getLoggedTraceIds(output);
-    Set<String> spanTraceIds = traces.stream().map(t -> t.getTraceId()).collect(Collectors.toSet());
+    Set<String> spanTraceIds = spans.stream().map(t -> t.getTraceId()).collect(Collectors.toSet());
     assertThat(loggedTraceIds).isEqualTo(spanTraceIds);
 
     // Check JVM metrics are exported
-    waitAndAssertMetrics(
+      testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         metric -> metric.hasName("jvm.memory.used"),
         metric -> metric.hasName("jvm.memory.committed"),

@@ -5,32 +5,32 @@
 
 package io.opentelemetry.smoketest;
 
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.MetricsAssert;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.MetricAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
-import java.util.Collection;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.output.ToStringConsumer;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.containers.output.ToStringConsumer;
+
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
 
 public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
+
+  @RegisterExtension
+  public static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
+
   private static final Pattern TRACE_ID_PATTERN =
       Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
   protected static final TestContainerManager containerManager = createContainerManager();
@@ -79,13 +79,13 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
     telemetryRetriever = new RemoteTelemetryRetriever(containerManager.getBackendMappedPort());
   }
 
-    protected Consumer<OutputFrame> startTarget(int jdk) {
+  protected Consumer<OutputFrame> startTarget(int jdk) {
     return startTarget(String.valueOf(jdk), null, false);
   }
 
   protected Consumer<OutputFrame> startTarget(String jdk, String serverVersion, boolean windows) {
     String targetImage = getTargetImage(jdk, serverVersion, windows);
-    autoCleanup.deferCleanup(this::stopTarget);
+    autoCleanup.deferCleanup(() -> containerManager.stopTarget());
 
     return containerManager.startTarget(
         targetImage,
@@ -113,35 +113,7 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
     return null;
   }
 
-  public void cleanup() {
-    telemetryRetriever.clearTelemetry();
-  }
-
-  private void stopTarget() {
-    containerManager.stopTarget();
-    cleanup();
-  }
-
-  protected List<SpanData> waitForTraces() {
-    return telemetryRetriever.waitForTraces();
-  }
-
-  @SafeVarargs
-  @SuppressWarnings("varargs")
-  protected final void waitAndAssertMetrics(
-      String instrumentationName, Consumer<MetricAssert>... assertions) {
-    MetricsAssert.waitAndAssertMetrics(() -> waitForMetrics(), instrumentationName, assertions);
-  }
-
-  protected List<MetricData> waitForMetrics() {
-    return telemetryRetriever.waitForMetrics();
-  }
-
-  protected Collection<LogRecordData> waitForLogs() {
-    return telemetryRetriever.waitForLogs();
-  }
-
-  protected static void assertVersionLogged(Consumer<OutputFrame> output, String version) {
+    protected static void assertVersionLogged(Consumer<OutputFrame> output, String version) {
     assertThat(
             logLines(output)
                 .anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version)))

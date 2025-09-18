@@ -34,7 +34,7 @@ class LogsSmokeTest extends JavaSmokeTest {
   void shouldExportLogs(int jdk) {
     startTarget(jdk);
     client().get("/greeting").aggregate().join();
-    Collection<LogRecordData> logs = waitForLogs();
+    Collection<LogRecordData> logs = testing.logRecords();
 
     assertThat(logs).isNotEmpty();
   }
