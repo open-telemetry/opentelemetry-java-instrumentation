@@ -155,7 +155,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static WithSpanAdviceScope onEnter(@Advice.Origin Method originMethod) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
-      // to local variable so that there would be only one call to Class.getMethod.
+      // to advice scope so that there would be only one call to Class.getMethod.
       return WithSpanAdviceScope.start(originMethod);
     }
 
@@ -217,7 +217,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         @Advice.Origin Method originMethod,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
-      // to local variable so that there would be only one call to Class.getMethod.
+      // to advice scope so that there would be only one call to Class.getMethod.
       MethodRequest request = new MethodRequest(originMethod, args);
       return WithSpanAttributesAdviceScope.start(originMethod, request);
     }
