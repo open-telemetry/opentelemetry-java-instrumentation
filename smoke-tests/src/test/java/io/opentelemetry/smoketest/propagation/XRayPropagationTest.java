@@ -5,13 +5,14 @@
 
 package io.opentelemetry.smoketest.propagation;
 
-import java.util.Map;
+import io.opentelemetry.smoketest.SmokeTestTarget;
 import org.junit.jupiter.api.condition.DisabledIf;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class XRayPropagationTest extends PropagationTest {
+
   @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("otel.propagators", "xray");
+  protected SmokeTestTarget.Builder customize(SmokeTestTarget.Builder builder) {
+    return builder.env("otel.propagators", "xray");
   }
 }

@@ -21,27 +21,22 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20241021.11448062567";
+
+  public DeclarativeConfigurationSmokeTest() {
+    super(
+        SmokeTestTarget.builder(
+                jdk ->
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
+                        + jdk
+                        + "-20241021.11448062567")
+                .waitStrategy(new TargetWaitStrategy.Log(
+                        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*"))
+            .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml"));
   }
 
   @Override
   protected List<ResourceMapping> getExtraResources() {
     return List.of(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"));
-  }
-
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml");
-  }
-
-  @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(
-        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*");
   }
 
   @ParameterizedTest

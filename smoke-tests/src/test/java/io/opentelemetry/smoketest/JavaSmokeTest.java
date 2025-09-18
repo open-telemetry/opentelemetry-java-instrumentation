@@ -33,6 +33,8 @@ public abstract class JavaSmokeTest implements TelemetryRetrieverProvider {
   private static final Pattern TRACE_ID_PATTERN =
       Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
   protected static final TestContainerManager containerManager = createContainerManager();
+
+  private final SmokeTestTarget target;
   private static TelemetryRetriever telemetryRetriever;
 
   protected String agentPath =
@@ -40,36 +42,16 @@ public abstract class JavaSmokeTest implements TelemetryRetrieverProvider {
 
   @RegisterExtension static final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
-  protected WebClient client() {
+  public JavaSmokeTest(SmokeTestTarget.Builder builder) {
+    this.target = customize(builder).build();
+  }
+
+  protected SmokeTestTarget.Builder customize(SmokeTestTarget.Builder builder) {
+    return builder;
+  }
+
+  public WebClient client() {
     return WebClient.of("h1c://localhost:" + containerManager.getTargetMappedPort(8080));
-  }
-
-  /** Subclasses can override this method to pass jvm arguments in another environment variable */
-  protected String getJvmArgsEnvVarName() {
-    return "JAVA_TOOL_OPTIONS";
-  }
-
-  /** Subclasses can override this method to customise target application's environment */
-  protected Map<String, String> getExtraEnv() {
-    return emptyMap();
-  }
-
-  /** Subclasses can override this method to disable setting default service name */
-  protected boolean getSetServiceName() {
-    return true;
-  }
-
-  /** Subclasses can override this method to provide additional files to copy to target container */
-  protected List<ResourceMapping> getExtraResources() {
-    return emptyList();
-  }
-
-  /**
-   * Subclasses can override this method to provide additional ports that should be exposed from the
-   * target container
-   */
-  protected List<Integer> getExtraPorts() {
-    return emptyList();
   }
 
   @BeforeAll
@@ -83,33 +65,19 @@ public abstract class JavaSmokeTest implements TelemetryRetrieverProvider {
   }
 
   protected Consumer<OutputFrame> startTarget(String jdk, String serverVersion, boolean windows) {
-    String targetImage = getTargetImage(jdk, serverVersion, windows);
+    String targetImage = target.getGetTargetImage(jdk, serverVersion, windows);
     autoCleanup.deferCleanup(() -> containerManager.stopTarget());
 
     return containerManager.startTarget(
         targetImage,
         agentPath,
-        getJvmArgsEnvVarName(),
-        getExtraEnv(),
-        getSetServiceName(),
-        getExtraResources(),
-        getExtraPorts(),
-        getWaitStrategy(),
-        getCommand());
-  }
-
-  protected abstract String getTargetImage(String jdk);
-
-  protected String getTargetImage(String jdk, String serverVersion, boolean windows) {
-    return getTargetImage(jdk);
-  }
-
-  protected TargetWaitStrategy getWaitStrategy() {
-    return null;
-  }
-
-  protected String[] getCommand() {
-    return null;
+        target.getJvmArgsEnvVarName(),
+        target.getExtraEnv(),
+        target.getSetServiceName(),
+        target.getExtraResources(),
+        target.getExtraPorts(),
+        target.getWaitStrategy(),
+        target.getCommand());
   }
 
   protected static void assertVersionLogged(Consumer<OutputFrame> output, String version) {
