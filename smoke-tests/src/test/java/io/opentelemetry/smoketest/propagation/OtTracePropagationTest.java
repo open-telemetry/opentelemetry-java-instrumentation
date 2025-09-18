@@ -5,31 +5,19 @@
 
 package io.opentelemetry.smoketest.propagation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.smoketest.JavaSmokeTest;
 import io.opentelemetry.smoketest.SmokeTestTarget;
-import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
-
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class OtTracePropagationTest extends JavaSmokeTest {
 
   public OtTracePropagationTest() {
-    super(
-        SmokeTestTarget.builder(
-                jdk ->
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-                        + jdk
-                        + "-20211213.1570880324")
-            .waitStrategy(
-                new TargetWaitStrategy.Log(
-                    Duration.ofMinutes(1), ".*Started SpringbootApplication in.*"))
-            .env("otel.propagators", "ottrace"));
+    super(SmokeTestTarget.springBoot().env("otel.propagators", "ottrace"));
   }
 
   @Test

@@ -7,7 +7,6 @@ package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import java.util.Map;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
@@ -18,16 +17,9 @@ import org.testcontainers.containers.output.OutputFrame;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SdkDisabledSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20211213.1570880324";
-  }
 
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_SDK_DISABLED", "true");
+  public SdkDisabledSmokeTest() {
+    super(SmokeTestTarget.springBoot().env("OTEL_SDK_DISABLED", "true"));
   }
 
   @ParameterizedTest

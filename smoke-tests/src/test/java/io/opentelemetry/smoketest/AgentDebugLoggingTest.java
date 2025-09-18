@@ -15,11 +15,7 @@ class AgentDebugLoggingTest extends JavaSmokeTest {
 
   public AgentDebugLoggingTest() {
     super(
-        SmokeTestTarget.builder(
-                jdk ->
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-                        + jdk
-                        + "-20250915.17728045097")
+        SmokeTestTarget.springBoot()
             .waitStrategy(
                 new TargetWaitStrategy.Log(
                     Duration.ofMinutes(1),

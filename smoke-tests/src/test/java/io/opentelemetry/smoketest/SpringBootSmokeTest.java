@@ -14,9 +14,7 @@ import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.jar.Attributes;
@@ -29,27 +27,13 @@ import org.testcontainers.containers.output.OutputFrame;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SpringBootSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20241021.11448062567";
-  }
 
-  @Override
-  protected boolean getSetServiceName() {
-    return false;
-  }
-
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_METRICS_EXPORTER", "otlp", "OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
-  }
-
-  @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(
-        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*");
+  public SpringBootSmokeTest() {
+    super(
+        SmokeTestTarget.springBoot()
+            .setServiceName(false)
+            .env("OTEL_METRICS_EXPORTER", "otlp")
+            .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar"));
   }
 
   @ParameterizedTest

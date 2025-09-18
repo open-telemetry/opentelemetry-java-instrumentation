@@ -9,23 +9,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.smoketest.JavaSmokeTest;
 import io.opentelemetry.smoketest.SmokeTestTarget;
-import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import java.time.Duration;
 import org.junit.jupiter.api.Test;
 
 public abstract class PropagationTest extends JavaSmokeTest {
 
   public PropagationTest() {
-    super(
-        SmokeTestTarget.builder(
-                jdk ->
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-                        + jdk
-                        + "-20211213.1570880324")
-            .waitStrategy(
-                new TargetWaitStrategy.Log(
-                    Duration.ofMinutes(1), ".*Started SpringbootApplication in.*")));
+    super(SmokeTestTarget.springBoot());
   }
 
   @Test

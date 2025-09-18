@@ -5,8 +5,6 @@
 
 package io.opentelemetry.smoketest;
 
-import java.util.Collections;
-import java.util.Map;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -14,17 +12,14 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SecurityManagerSmokeTest extends JavaSmokeTest {
 
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk"
-        + jdk
-        + "-20250915.17728045123";
-  }
-
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Collections.singletonMap(
-        "OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true");
+  public SecurityManagerSmokeTest() {
+    super(
+        SmokeTestTarget.builder(
+                jdk ->
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk"
+                        + jdk
+                        + "-20250915.17728045123")
+            .env("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true"));
   }
 
   @ParameterizedTest

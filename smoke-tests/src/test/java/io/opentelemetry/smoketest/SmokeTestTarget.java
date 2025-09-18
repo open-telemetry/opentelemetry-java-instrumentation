@@ -6,16 +6,16 @@
 package io.opentelemetry.smoketest;
 
 import java.time.Duration;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
-
-import static java.util.Collections.emptyMap;
+import javax.annotation.Nullable;
 
 public class SmokeTestTarget {
 
   @FunctionalInterface
-  interface GetTargetImage {
+  public interface GetTargetImage {
     String getTargetImage(String jdk, String serverVersion, boolean windows);
   }
 
@@ -48,11 +48,11 @@ public class SmokeTestTarget {
     this.extraPorts = extraPorts;
   }
 
-    public GetTargetImage getGetTargetImage() {
-        return getTargetImage;
-    }
+  public String getTargetImage(String jdk, String serverVersion, boolean windows) {
+    return getTargetImage.getTargetImage(jdk, serverVersion, windows);
+  }
 
-    public String[] getCommand() {
+  public String[] getCommand() {
     return command;
   }
 
@@ -101,7 +101,7 @@ public class SmokeTestTarget {
             jdk ->
                 "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
                     + jdk
-                    + "-20211213.1570880324")
+                    + "-20250915.17728045097")
         .waitStrategy(
             new TargetWaitStrategy.Log(
                 Duration.ofMinutes(1), ".*Started SpringbootApplication in.*"));
@@ -112,14 +112,13 @@ public class SmokeTestTarget {
     private String[] command;
     private String jvmArgsEnvVarName = "JAVA_TOOL_OPTIONS";
     private boolean setServiceName = true;
-    private Map<String, String> extraEnv;
-    private List<ResourceMapping> extraResources;
+    private final Map<String, String> extraEnv = new HashMap<>();
+    private List<ResourceMapping> extraResources = List.of();
     private TargetWaitStrategy waitStrategy;
-    private List<Integer> extraPorts;
+    private List<Integer> extraPorts = List.of();
 
     private Builder(GetTargetImage getTargetImage) {
       this.getTargetImage = getTargetImage;
-      this.extraEnv = emptyMap();
     }
 
     public Builder command(String... command) {
@@ -147,7 +146,7 @@ public class SmokeTestTarget {
       return this;
     }
 
-    public Builder waitStrategy(TargetWaitStrategy waitStrategy) {
+    public Builder waitStrategy(@Nullable TargetWaitStrategy waitStrategy) {
       this.waitStrategy = waitStrategy;
       return this;
     }

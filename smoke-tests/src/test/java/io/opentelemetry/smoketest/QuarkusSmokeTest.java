@@ -16,21 +16,16 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class QuarkusSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk"
-        + jdk
-        + "-20250915.17728045126";
-  }
 
-  @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*");
-  }
-
-  @Override
-  protected boolean getSetServiceName() {
-    return false;
+  public QuarkusSmokeTest() {
+    super(
+        SmokeTestTarget.builder(
+                jdk ->
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk"
+                        + jdk
+                        + "-20250915.17728045126")
+            .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
+            .setServiceName(false));
   }
 
   @ParameterizedTest

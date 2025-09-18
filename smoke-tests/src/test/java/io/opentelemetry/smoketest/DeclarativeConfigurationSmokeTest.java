@@ -12,9 +12,6 @@ import io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -24,19 +21,10 @@ class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {
 
   public DeclarativeConfigurationSmokeTest() {
     super(
-        SmokeTestTarget.builder(
-                jdk ->
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-                        + jdk
-                        + "-20241021.11448062567")
-                .waitStrategy(new TargetWaitStrategy.Log(
-                        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*"))
-            .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml"));
-  }
-
-  @Override
-  protected List<ResourceMapping> getExtraResources() {
-    return List.of(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"));
+        SmokeTestTarget.springBoot()
+            .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
+            .extraResources(
+                ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml")));
   }
 
   @ParameterizedTest
