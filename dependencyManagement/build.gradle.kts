@@ -28,7 +28,7 @@ val DEPENDENCY_BOMS = listOf(
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
   "com.fasterxml.jackson:jackson-bom:2.20.0",
-  "com.google.guava:guava-bom:33.4.8-jre",
+  "com.google.guava:guava-bom:33.5.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
