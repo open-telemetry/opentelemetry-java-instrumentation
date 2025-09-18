@@ -1300,6 +1300,130 @@ class JdbcConnectionUrlParserTest {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 
+  private static Stream<Arguments> openTracingArguments() {
+    return args(
+        // https://github.com/opentracing-contrib/java-jdbc
+        arg("jdbc:tracing:mysql://example.com:50000")
+            .setShortUrl("mysql://example.com:50000")
+            .setSystem("mysql")
+            .setHost("example.com")
+            .setPort(50000)
+            .build(),
+        arg("jdbc:tracing:postgresql://example.com:50000/dbname")
+            .setShortUrl("postgresql://example.com:50000")
+            .setSystem("postgresql")
+            .setHost("example.com")
+            .setPort(50000)
+            .setDb("dbname")
+            .build(),
+        arg("jdbc:tracing:oracle:thin:@example.com:50000/ORCL")
+            .setShortUrl("oracle:thin://example.com:50000")
+            .setSystem("oracle")
+            .setSubtype("thin")
+            .setHost("example.com")
+            .setPort(50000)
+            .setName("orcl")
+            .build(),
+        arg("jdbc:tracing:sqlserver://example.com:50000")
+            .setShortUrl("sqlserver://example.com:50000")
+            .setSystem("mssql")
+            .setHost("example.com")
+            .setPort(50000)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("openTracingArguments")
+  void testOpenTracingParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> oceanbaseArguments() {
+    return args(
+        // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_jdbc.html
+        arg("jdbc:oceanbase://host:3306/test")
+            .setShortUrl("oceanbase://host:3306")
+            .setSystem("oceanbase")
+            .setHost("host")
+            .setPort(3306)
+            .setDb("test")
+            .build(),
+        arg("jdbc:oceanbase:oracle://host:1521")
+            .setShortUrl("oceanbase:oracle://host:1521")
+            .setSystem("oracle")
+            .setSubtype("oracle")
+            .setHost("host")
+            .setPort(1521)
+            .build()
+    );
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("oceanbaseArguments")
+  void testOceasbaseParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> lindormArguments() {
+    return args(
+        // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_jdbc.html
+        arg("jdbc:lindorm:table:url=http://host:30060/test")
+            .setShortUrl("lindorm:table://host:30060")
+            .setSystem("lindorm")
+            .setSubtype("table")
+            .setHost("host")
+            .setDb("test")
+            .setPort(30060)
+            .build(),
+        arg("jdbc:lindorm:tsdb:url=http://host:8242/test")
+            .setShortUrl("lindorm:tsdb://host:8242")
+            .setSystem("lindorm")
+            .setSubtype("tsdb")
+            .setHost("host")
+            .setDb("test")
+            .setPort(8242)
+            .setDb("test")
+            .build(),
+        arg("jdbc:lindorm:search:url=http://host:30070/test")
+            .setShortUrl("lindorm:search://host:30070")
+            .setSystem("lindorm")
+            .setSubtype("search")
+            .setHost("host")
+            .setDb("test")
+            .setPort(30070)
+            .build()
+    );
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("lindormArguments")
+  void testLindormManagerParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> polardbArguments() {
+    return args(
+        arg("jdbc:polardb://example.com:1901")
+            .setShortUrl("polardb://example.com:1901")
+            .setSystem("polardb")
+            .setHost("example.com")
+            .setPort(1901)
+            .build(),
+        arg("jdbc:polardb://example.com")
+            .setShortUrl("polardb://example.com:1521")
+            .setSystem("polardb")
+            .setHost("example.com")
+            .setPort(1521)
+            .build()
+        );
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("polardbArguments")
+  void testPolardbParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {
     DbInfo info = parse(argument.url, argument.properties);
     DbInfo expected = argument.dbInfo;
