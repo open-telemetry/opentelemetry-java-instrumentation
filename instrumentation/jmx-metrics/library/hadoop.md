@@ -11,6 +11,6 @@ Here is the list of metrics based on MBeans exposed by Hadoop.
 | hadoop.dfs.block.corrupt        | UpDownCounter | {block}      | hadoop.node.name  | Current number of blocks with corrupt replicas.        |
 | hadoop.dfs.volume.failure.count | Counter       | {failure}    | hadoop.node.name  | Total number of volume failures across all data nodes. |
 | hadoop.dfs.file.count           | UpDownCounter | {file}       | hadoop.node.name  | Current number of files and directories.               |
-| hadoop.dfs.connection.count     | UpDownCounter | {connection} | hadoop.node.name  | Current number of connection.                          |
+| hadoop.dfs.connection.count     | UpDownCounter | {connection} | hadoop.node.name  | Current number of connections.                         |
 | hadoop.dfs.data_node.live       | UpDownCounter | {node}       | hadoop.node.name  | Number of data nodes which are currently live.         |
 | hadoop.dfs.data_node.dead       | UpDownCounter | {node}       | hadoop.node.name  | Number of data nodes which are currently dead.         |
