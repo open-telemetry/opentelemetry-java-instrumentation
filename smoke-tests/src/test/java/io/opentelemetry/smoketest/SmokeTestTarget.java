@@ -96,12 +96,12 @@ public class SmokeTestTarget {
     return new Builder(getTargetImage);
   }
 
-  public static Builder springBoot() {
+  public static Builder springBoot(String imageTag) {
     return builder(
             jdk ->
-                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-                    + jdk
-                    + "-20250915.17728045097")
+                String.format(
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk%s-%s",
+                    jdk, imageTag))
         .waitStrategy(
             new TargetWaitStrategy.Log(
                 Duration.ofMinutes(1), ".*Started SpringbootApplication in.*"));

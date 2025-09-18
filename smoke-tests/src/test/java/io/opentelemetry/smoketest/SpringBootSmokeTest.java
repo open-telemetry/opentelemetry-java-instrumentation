@@ -30,7 +30,7 @@ class SpringBootSmokeTest extends JavaSmokeTest {
 
   public SpringBootSmokeTest() {
     super(
-        SmokeTestTarget.springBoot()
+        SmokeTestTarget.springBoot("20241021.11448062567")
             .setServiceName(false)
             .env("OTEL_METRICS_EXPORTER", "otlp")
             .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar"));

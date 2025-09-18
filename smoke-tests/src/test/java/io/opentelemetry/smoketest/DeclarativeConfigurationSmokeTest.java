@@ -21,7 +21,7 @@ class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {
 
   public DeclarativeConfigurationSmokeTest() {
     super(
-        SmokeTestTarget.springBoot()
+        SmokeTestTarget.springBoot("20241021.11448062567")
             .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
             .extraResources(
                 ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml")));

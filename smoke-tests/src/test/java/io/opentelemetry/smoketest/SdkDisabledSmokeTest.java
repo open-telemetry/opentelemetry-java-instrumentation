@@ -19,7 +19,7 @@ import org.testcontainers.containers.output.OutputFrame;
 class SdkDisabledSmokeTest extends JavaSmokeTest {
 
   public SdkDisabledSmokeTest() {
-    super(SmokeTestTarget.springBoot().env("OTEL_SDK_DISABLED", "true"));
+    super(SmokeTestTarget.springBoot("20211213.1570880324").env("OTEL_SDK_DISABLED", "true"));
   }
 
   @ParameterizedTest

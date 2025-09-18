@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 public abstract class PropagationTest extends JavaSmokeTest {
 
   public PropagationTest() {
-    super(SmokeTestTarget.springBoot());
+    super(SmokeTestTarget.springBoot("20211213.1570880324"));
   }
 
   @Test

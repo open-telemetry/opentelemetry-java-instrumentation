@@ -17,7 +17,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class LogsSmokeTest extends JavaSmokeTest {
 
   public LogsSmokeTest() {
-    super(SmokeTestTarget.springBoot());
+    super(SmokeTestTarget.springBoot("20211213.1570880324"));
   }
 
   @ParameterizedTest

@@ -17,7 +17,7 @@ import org.junit.jupiter.api.condition.DisabledIf;
 class OtTracePropagationTest extends JavaSmokeTest {
 
   public OtTracePropagationTest() {
-    super(SmokeTestTarget.springBoot().env("otel.propagators", "ottrace"));
+    super(SmokeTestTarget.springBoot("20211213.1570880324").env("otel.propagators", "ottrace"));
   }
 
   @Test
