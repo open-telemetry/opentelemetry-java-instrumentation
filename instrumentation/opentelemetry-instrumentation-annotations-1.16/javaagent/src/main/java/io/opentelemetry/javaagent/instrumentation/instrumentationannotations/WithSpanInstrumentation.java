@@ -185,8 +185,8 @@ class WithSpanInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static Object stopSpan(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) @Nullable Object returnValue,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter WithSpanAttributesAdviceScope adviceScope) {
       if (adviceScope != null) {
         return adviceScope.end(returnValue, throwable);
