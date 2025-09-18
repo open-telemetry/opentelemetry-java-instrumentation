@@ -45,7 +45,7 @@ public final class ContextPropagationDebug {
   private final Context sourceContext;
   private final List<Propagation> locations;
   // context after adding debug locations
-  private Context wrappedContext;
+  @Nullable private Context wrappedContext;
 
   private ContextPropagationDebug(Context sourceContext) {
     this.sourceContext = sourceContext;

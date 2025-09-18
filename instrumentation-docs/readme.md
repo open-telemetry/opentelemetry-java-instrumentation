@@ -114,6 +114,26 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
 * name
   * Identifier for instrumentation module, used to enable/disable
   * Configured in `InstrumentationModule` code for each module
+* semantic_conventions
+  * The semantic conventions that the instrumentation module adheres to
+  * Options are:
+    * HTTP_CLIENT_SPANS
+    * HTTP_CLIENT_METRICS
+    * HTTP_SERVER_SPANS
+    * HTTP_SERVER_METRICS
+    * RPC_CLIENT_SPANS
+    * RPC_CLIENT_METRICS
+    * RPC_SERVER_SPANS
+    * RPC_SERVER_METRICS
+    * MESSAGING_SPANS
+    * DATABASE_CLIENT_SPANS
+    * DATABASE_CLIENT_METRICS
+    * DATABASE_POOL_METRICS
+    * JVM_RUNTIME_METRICS
+    * GRAPHQL_SERVER_SPANS
+    * FAAS_SERVER_SPANS
+    * GENAI_CLIENT_SPANS
+    * GENAI_CLIENT_METRIC
 * library_link
   * URL to the library or framework's main website or documentation, or if those don't exist, the
   GitHub repository.
@@ -149,6 +169,10 @@ As of now, the following fields are supported, all of which are optional:
 
 ```yaml
 description: "This instrumentation enables..."    # Description of the instrumentation module
+semantic_conventions:                             # List of semantic conventions the instrumentation adheres to
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - JVM_RUNTIME_METRICS
 disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation
