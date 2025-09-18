@@ -51,7 +51,6 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static CoroutineContext enter(@Advice.Argument(0) Context applicationContext) {
-
       if (applicationContext != null) {
         io.opentelemetry.context.Context agentContext =
             AgentContextStorage.getAgentContext(applicationContext);
@@ -80,15 +79,12 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
     public static CoroutineContext enter(
         @Advice.Argument(0)
             application.io.opentelemetry.context.ImplicitContextKeyed implicitContextKeyed) {
-
       if (implicitContextKeyed != null) {
         Context applicationContext = Context.current().with(implicitContextKeyed);
         io.opentelemetry.context.Context agentContext =
             AgentContextStorage.getAgentContext(applicationContext);
-
         return ContextExtensionsKt.asContextElement(agentContext);
       }
-
       return null;
     }
 
@@ -110,7 +106,6 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Context enter(@Advice.Argument(0) CoroutineContext coroutineContext) {
-
       if (coroutineContext != null) {
         io.opentelemetry.context.Context agentContext =
             ContextExtensionsKt.getOpenTelemetryContext(coroutineContext);

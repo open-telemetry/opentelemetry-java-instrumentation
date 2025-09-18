@@ -142,7 +142,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public WithSpanAttributesAdviceScope(
+      private WithSpanAttributesAdviceScope(
           Method method, MethodRequest request, Context context, Scope scope) {
         this.method = method;
         this.request = request;
