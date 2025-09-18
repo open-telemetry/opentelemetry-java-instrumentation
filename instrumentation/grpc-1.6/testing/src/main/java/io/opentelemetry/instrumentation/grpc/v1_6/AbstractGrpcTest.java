@@ -1591,7 +1591,7 @@ public abstract class AbstractGrpcTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfyingExactly(
+                                            point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, server.getPort()),
                                                 equalTo(RPC_METHOD, "SayHello"),
@@ -1614,7 +1614,7 @@ public abstract class AbstractGrpcTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfyingExactly(
+                                            point.hasAttributesSatisfying(
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 equalTo(SERVER_PORT, server.getPort()),
                                                 equalTo(RPC_METHOD, "SayHello"),
@@ -1637,7 +1637,7 @@ public abstract class AbstractGrpcTest {
                                   histogram ->
                                       histogram.hasPointsSatisfying(
                                           point ->
-                                              point.hasAttributesSatisfyingExactly(
+                                              point.hasAttributesSatisfying(
                                                   equalTo(SERVER_ADDRESS, "localhost"),
                                                   equalTo(SERVER_PORT, server.getPort()),
                                                   equalTo(RPC_METHOD, "SayHello"),
