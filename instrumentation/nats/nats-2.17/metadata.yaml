@@ -1,0 +1,7 @@
+disabled_by_default: false
+description: This instrumentation provides messaging spans for NATS
+configurations:
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: Allows configuring headers to capture as span attributes.
+    type: list
+    default: ''
