@@ -3046,6 +3046,38 @@ libraries:
       description: Whether to instrument all classes that implement the Executor interface.
       type: boolean
       default: false
+  failsafe:
+  - name: failsafe-3.0
+    description: This standalone instrumentation enables metrics for Failsafe circuit
+      breakers.
+    library_link: https://failsafe.dev
+    source_path: instrumentation/failsafe-3.0
+    scope:
+      name: io.opentelemetry.failsafe-3.0
+    target_versions:
+      library:
+      - dev.failsafe:failsafe:3.0.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: failsafe.circuit_breaker.execution.count
+        description: Count of circuit breaker executions.
+        type: LONG_SUM
+        unit: execution
+        attributes:
+        - name: failsafe.circuit_breaker.name
+          type: STRING
+        - name: failsafe.circuit_breaker.outcome
+          type: STRING
+      - name: failsafe.circuit_breaker.state_changes.count
+        description: Count of circuit breaker state changes.
+        type: LONG_SUM
+        unit: execution
+        attributes:
+        - name: failsafe.circuit_breaker.name
+          type: STRING
+        - name: failsafe.circuit_breaker.state
+          type: STRING
   finagle:
   - name: finagle-http-23.11
     description: |
