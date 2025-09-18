@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -13,8 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -72,8 +71,7 @@ public class RestClientHttpClientInstrumentation implements TypeInstrumentation 
       if (endpointId.startsWith("es/") && endpointId.length() > 3) {
         endpointId = endpointId.substring(3);
       }
-      VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class)
-          .set(request, ElasticsearchEndpointMap.get(endpointId));
+      ENDPOINT_DEFINITION.set(request, ElasticsearchEndpointMap.get(endpointId));
     }
   }
 }
