@@ -5,11 +5,9 @@
 
 package io.opentelemetry.smoketest;
 
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.Collections;
 import java.util.Map;
 import org.junit.jupiter.api.condition.DisabledIf;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 

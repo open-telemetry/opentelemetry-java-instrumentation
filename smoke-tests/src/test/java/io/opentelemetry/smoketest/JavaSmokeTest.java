@@ -5,26 +5,25 @@
 
 package io.opentelemetry.smoketest;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static java.util.stream.Collectors.toSet;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
-import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.containers.output.OutputFrame;
-import org.testcontainers.containers.output.ToStringConsumer;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-
-import static java.util.Collections.emptyList;
-import static java.util.Collections.emptyMap;
-import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.testcontainers.containers.output.OutputFrame;
+import org.testcontainers.containers.output.ToStringConsumer;
 
 public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
 
@@ -113,7 +112,7 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
     return null;
   }
 
-    protected static void assertVersionLogged(Consumer<OutputFrame> output, String version) {
+  protected static void assertVersionLogged(Consumer<OutputFrame> output, String version) {
     assertThat(
             logLines(output)
                 .anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version)))

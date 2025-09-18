@@ -7,15 +7,11 @@ package io.opentelemetry.smoketest.propagation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.smoketest.JavaSmokeTest;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.time.Duration;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 
@@ -38,7 +34,7 @@ class OtTracePropagationTest extends JavaSmokeTest {
   public void shouldPropagate() {
     startTarget(11);
     AggregatedHttpResponse response = client().get("/front").aggregate().join();
-      var traceId = testing.waitForTraces(1).get(0).get(0).getTraceId();
+    var traceId = testing.waitForTraces(1).get(0).get(0).getTraceId();
 
     assertThat(response.contentUtf8()).matches("[0-9a-f]{16}" + traceId + ";[0]{16}" + traceId);
   }

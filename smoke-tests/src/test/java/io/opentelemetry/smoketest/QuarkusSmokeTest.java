@@ -5,8 +5,6 @@
 
 package io.opentelemetry.smoketest;
 
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-
 import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import java.time.Duration;

@@ -5,14 +5,13 @@
 
 package io.opentelemetry.smoketest.propagation;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import io.opentelemetry.smoketest.JavaSmokeTest;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
-import org.junit.jupiter.api.Test;
-
 import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 public abstract class PropagationTest extends JavaSmokeTest {
 

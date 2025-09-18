@@ -107,7 +107,7 @@ class SpringBootSmokeTest extends JavaSmokeTest {
     assertThat(loggedTraceIds).isEqualTo(spanTraceIds);
 
     // Check JVM metrics are exported
-      testing.waitAndAssertMetrics(
+    testing.waitAndAssertMetrics(
         "io.opentelemetry.runtime-telemetry-java8",
         metric -> metric.hasName("jvm.memory.used"),
         metric -> metric.hasName("jvm.memory.committed"),
