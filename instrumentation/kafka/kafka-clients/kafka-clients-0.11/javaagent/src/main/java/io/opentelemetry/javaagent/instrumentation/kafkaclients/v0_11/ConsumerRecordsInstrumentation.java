@@ -19,10 +19,12 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterable;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterator;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingListIterator;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -59,6 +61,13 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
             .and(takesArguments(0))
             .and(returns(Iterator.class)),
         ConsumerRecordsInstrumentation.class.getName() + "$IteratorAdvice");
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isPublic())
+            .and(named("listIterator"))
+            .and(takesArguments(0))
+            .and(returns(ListIterator.class)),
+        ConsumerRecordsInstrumentation.class.getName() + "$ListIteratorAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -118,6 +127,26 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
       iterator =
           TracingIterator.wrap(
               iterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ListIteratorAdvice {
+
+    @SuppressWarnings("unchecked")
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static <K, V> void wrap(
+        @Advice.This ConsumerRecords<?, ?> records,
+        @Advice.Return(readOnly = false) ListIterator<ConsumerRecord<K, V>> listIterator) {
+
+      // it's important not to suppress consumer span creation here because this instrumentation can
+      // leak the context and so there may be a leaked consumer span in the context, in which
+      // case it's important to overwrite the leaked span instead of suppressing the correct span
+      // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
+      KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
+      listIterator =
+          TracingListIterator.wrap(
+              listIterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 }
