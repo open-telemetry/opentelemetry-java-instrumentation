@@ -67,7 +67,7 @@ final class FailsafeTelemetryTest {
         "io.opentelemetry.failsafe-3.0",
         metricAssert ->
             metricAssert
-                .hasName("failsafe.circuit_breaker.state_changes.count")
+                .hasName("failsafe.circuit_breaker.state_change.count")
                 .hasLongSumSatisfying(
                     sum ->
                         sum.isMonotonic()

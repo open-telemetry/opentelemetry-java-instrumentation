@@ -57,7 +57,7 @@ public final class FailsafeTelemetry {
             .build();
     LongCounter stateChangesCounter =
         meter
-            .counterBuilder("failsafe.circuit_breaker.state_changes.count")
+            .counterBuilder("failsafe.circuit_breaker.state_change.count")
             .setDescription("Count of circuit breaker state changes.")
             .setUnit("{execution}")
             .build();
