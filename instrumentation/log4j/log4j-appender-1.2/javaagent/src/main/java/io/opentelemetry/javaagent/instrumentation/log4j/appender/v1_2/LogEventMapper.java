@@ -179,9 +179,7 @@ public final class LogEventMapper {
       if (context != null) {
         for (Map.Entry<?, ?> entry : context.entrySet()) {
           setAttributeOrEventName(
-              builder,
-              getMdcAttributeKey(String.valueOf(entry.getKey())),
-              String.valueOf(entry.getValue()));
+              builder, getMdcAttributeKey(String.valueOf(entry.getKey())), entry.getValue());
         }
       }
       return;
