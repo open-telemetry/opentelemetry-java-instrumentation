@@ -99,7 +99,7 @@ class HadoopTest extends TargetSystemTest {
     return MetricsVerifier.create()
         .disableStrictMode()
         .add(
-            "hadoop.dfs.capacity",
+            "hadoop.dfs.capacity.limit",
             metric ->
                 metric
                     .hasDescription("Current raw capacity of DataNodes.")
@@ -163,7 +163,7 @@ class HadoopTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(nodeNameAttribute))
         .add(
-            "hadoop.dfs.data_node.live",
+            "hadoop.datanode.live",
             metric ->
                 metric
                     .hasDescription("Number of data nodes which are currently live.")
@@ -171,7 +171,7 @@ class HadoopTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDataPointsWithOneAttribute(nodeNameAttribute))
         .add(
-            "hadoop.dfs.data_node.dead",
+            "hadoop.datanode.dead",
             metric ->
                 metric
                     .hasDescription("Number of data nodes which are currently dead.")
