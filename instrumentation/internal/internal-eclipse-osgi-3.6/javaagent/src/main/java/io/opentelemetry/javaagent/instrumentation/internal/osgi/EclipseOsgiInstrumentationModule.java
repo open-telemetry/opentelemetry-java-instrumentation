@@ -10,11 +10,13 @@ import static java.util.Collections.singletonList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class EclipseOsgiInstrumentationModule extends InstrumentationModule {
+public class EclipseOsgiInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public EclipseOsgiInstrumentationModule() {
     super("internal-eclipse-osgi", "internal-eclipse-osgi-3.6");
   }
@@ -28,5 +30,10 @@ public class EclipseOsgiInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new EclipseOsgiInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
