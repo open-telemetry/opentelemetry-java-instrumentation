@@ -10,15 +10,16 @@ import static io.opentelemetry.javaagent.instrumentation.jdbc.JdbcSingletons.dat
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -41,52 +42,64 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetConnectionAdvice {
 
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(CallDepth callDepth, Context context, Scope scope) {
+        this.callDepth = callDepth;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      public static AdviceScope start(CallDepth callDepth, DataSource ds) {
+        Context parentContext = Context.current();
+        if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
+          // this instrumentation is already very noisy, and calls to getConnection outside of an
+          // existing trace do not tend to be very interesting
+          return new AdviceScope(callDepth, null, null);
+        }
+
+        if (!dataSourceInstrumenter().shouldStart(parentContext, ds)) {
+          return new AdviceScope(callDepth, null, null);
+        }
+
+        Context context = dataSourceInstrumenter().start(parentContext, ds);
+
+        return new AdviceScope(callDepth, context, context.makeCurrent());
+      }
+
+      public void end(
+          DataSource ds, @Nullable Connection connection, @Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+        if (scope == null) {
+          return;
+        }
+        scope.close();
+        DbInfo dbInfo = null;
+        Connection realConnection = JdbcUtils.unwrapConnection(connection);
+        if (realConnection != null) {
+          dbInfo = JdbcUtils.extractDbInfo(realConnection);
+        }
+        dataSourceInstrumenter().end(context, ds, dbInfo, throwable);
+      }
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void start(
-        @Advice.This DataSource ds,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(DataSource.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!Java8BytecodeBridge.spanFromContext(parentContext).getSpanContext().isValid()) {
-        // this instrumentation is already very noisy, and calls to getConnection outside of an
-        // existing trace do not tend to be very interesting
-        return;
-      }
-
-      if (dataSourceInstrumenter().shouldStart(parentContext, ds)) {
-        context = dataSourceInstrumenter().start(parentContext, ds);
-        scope = context.makeCurrent();
-      }
+    public static AdviceScope start(@Advice.This DataSource ds) {
+      return AdviceScope.start(CallDepth.forClass(DataSource.class), ds);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This DataSource ds,
-        @Advice.Return Connection connection,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-      DbInfo dbInfo = null;
-      Connection realConnection = JdbcUtils.unwrapConnection(connection);
-      if (realConnection != null) {
-        dbInfo = JdbcUtils.extractDbInfo(realConnection);
-      }
-      dataSourceInstrumenter().end(context, ds, dbInfo, throwable);
+        @Advice.Return @Nullable Connection connection,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(ds, connection, throwable);
     }
   }
 }
