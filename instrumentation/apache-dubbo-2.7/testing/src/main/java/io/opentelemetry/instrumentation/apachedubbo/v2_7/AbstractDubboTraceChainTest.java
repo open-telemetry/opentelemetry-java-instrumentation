@@ -196,13 +196,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6")))),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
@@ -217,14 +211,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
                                 equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6")))),
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class))),
                     span ->
                         span.hasName("org.apache.dubbo.rpc.service.GenericService/$invoke")
                             .hasKind(SpanKind.CLIENT)
@@ -249,13 +236,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6")))),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -270,14 +251,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
                                 equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6"))))));
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
     testing()
         .waitAndAssertMetrics(
@@ -339,14 +313,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                                 satisfies(
                                                     NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6")))),
+                                                    AbstractDubboTest::assertNetworkType)),
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 equalTo(
@@ -362,14 +329,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                                 satisfies(
                                                     NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6"))))))));
+                                                    AbstractDubboTest::assertNetworkType))))));
   }
 
   @Test
@@ -455,13 +415,7 @@ public abstract class AbstractDubboTraceChainTest {
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6")))),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello")
@@ -477,13 +431,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6"))))));
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType))));
 
     testing()
         .waitAndAssertMetrics(
@@ -535,13 +483,6 @@ public abstract class AbstractDubboTraceChainTest {
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                                 satisfies(
                                                     NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6"))))))));
+                                                    AbstractDubboTest::assertNetworkType))))));
   }
 }

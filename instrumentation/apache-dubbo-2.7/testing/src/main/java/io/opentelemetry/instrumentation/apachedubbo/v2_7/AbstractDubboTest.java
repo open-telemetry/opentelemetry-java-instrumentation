@@ -38,6 +38,7 @@ import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -153,13 +154,7 @@ public abstract class AbstractDubboTest {
                                         k.satisfiesAnyOf(
                                             val -> assertThat(val).isNull(),
                                             val -> assertThat(val).isInstanceOf(Long.class))),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6")))),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -227,14 +222,7 @@ public abstract class AbstractDubboTest {
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                                 satisfies(
                                                     NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6"))))))));
+                                                    AbstractDubboTest::assertNetworkType))))));
   }
 
   @Test
@@ -384,13 +372,15 @@ public abstract class AbstractDubboTest {
                                                     SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                                 satisfies(
                                                     NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6"))))))));
+                                                    AbstractDubboTest::assertNetworkType))))));
+  }
+
+  static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
+    if (Boolean.getBoolean("testLatestDeps")) {
+      stringAssert.satisfiesAnyOf(
+          val -> assertThat(val).isEqualTo("ipv4"), val -> assertThat(val).isEqualTo("ipv6"));
+    } else {
+      stringAssert.isNull();
+    }
   }
 }
