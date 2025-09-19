@@ -24,6 +24,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
 import java.util.List;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -64,60 +65,57 @@ public class ConsumerRecordsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class IterableAdvice {
 
-    @SuppressWarnings("unchecked")
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void wrap(
+    public static <K, V> Iterable<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
-        @Advice.Return(readOnly = false) Iterable<ConsumerRecord<K, V>> iterable) {
+        @Advice.Return Iterable<ConsumerRecord<K, V>> iterable) {
 
       // it's important not to suppress consumer span creation here because this instrumentation can
       // leak the context and so there may be a leaked consumer span in the context, in which
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      iterable =
-          TracingIterable.wrap(
-              iterable, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+      return TracingIterable.wrap(
+          iterable, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ListAdvice {
 
-    @SuppressWarnings("unchecked")
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void wrap(
+    public static <K, V> List<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
-        @Advice.Return(readOnly = false) List<ConsumerRecord<K, V>> list) {
+        @Advice.Return List<ConsumerRecord<K, V>> list) {
 
       // it's important not to suppress consumer span creation here because this instrumentation can
       // leak the context and so there may be a leaked consumer span in the context, in which
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      list =
-          TracingList.wrap(
-              list, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+      return TracingList.wrap(
+          list, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 
   @SuppressWarnings("unused")
   public static class IteratorAdvice {
 
-    @SuppressWarnings("unchecked")
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static <K, V> void wrap(
+    public static <K, V> Iterator<ConsumerRecord<K, V>> wrap(
         @Advice.This ConsumerRecords<?, ?> records,
-        @Advice.Return(readOnly = false) Iterator<ConsumerRecord<K, V>> iterator) {
+        @Advice.Return Iterator<ConsumerRecord<K, V>> iterator) {
 
       // it's important not to suppress consumer span creation here because this instrumentation can
       // leak the context and so there may be a leaked consumer span in the context, in which
       // case it's important to overwrite the leaked span instead of suppressing the correct span
       // (https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1947)
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(records);
-      iterator =
-          TracingIterator.wrap(
-              iterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
+      return TracingIterator.wrap(
+          iterator, consumerProcessInstrumenter(), wrappingEnabledSupplier(), consumerContext);
     }
   }
 }
