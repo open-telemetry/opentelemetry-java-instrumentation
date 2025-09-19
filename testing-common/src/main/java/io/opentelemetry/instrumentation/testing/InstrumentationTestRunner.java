@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.junit.MetricsAssert;
 import io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
@@ -28,6 +27,7 @@ import java.io.IOException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -35,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.assertj.core.api.ListAssert;
 import org.awaitility.core.ConditionFactory;
@@ -185,7 +186,17 @@ public abstract class InstrumentationTestRunner {
   public final void waitAndAssertMetrics(
       String instrumentationName, Consumer<MetricAssert>... assertions) {
     awaitUntilAsserted(
-        () -> MetricsAssert.assertMetrics(getExportedMetrics(), instrumentationName, assertions));
+        () -> {
+          Collection<MetricData> metrics = instrumentationMetrics(instrumentationName);
+          assertThat(metrics).isNotEmpty();
+          for (int i = 0; i < assertions.length; i++) {
+            int index = i;
+            assertThat(metrics)
+                .describedAs(
+                    "Metrics for instrumentation %s and assertion %d", instrumentationName, index)
+                .anySatisfy(metric -> assertions[index].accept(assertThat(metric)));
+          }
+        });
 
     if (Boolean.getBoolean("collectMetadata")) {
       collectEmittedMetrics(getExportedMetrics());
@@ -233,6 +244,12 @@ public abstract class InstrumentationTestRunner {
         () -> assertThat(getExportedLogRecords().size()).isEqualTo(numberOfLogRecords),
         await().timeout(Duration.ofSeconds(20)));
     return getExportedLogRecords();
+  }
+
+  private List<MetricData> instrumentationMetrics(String instrumentationName) {
+    return getExportedMetrics().stream()
+        .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
+        .collect(Collectors.toList());
   }
 
   /**

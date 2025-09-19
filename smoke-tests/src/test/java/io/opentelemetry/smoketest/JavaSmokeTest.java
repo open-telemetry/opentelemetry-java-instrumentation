@@ -25,7 +25,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.ToStringConsumer;
 
-public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
+public abstract class JavaSmokeTest implements TelemetryRetrieverProvider {
 
   @RegisterExtension
   public static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
@@ -33,7 +33,7 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
   private static final Pattern TRACE_ID_PATTERN =
       Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
   protected static final TestContainerManager containerManager = createContainerManager();
-  private RemoteTelemetryRetriever telemetryRetriever;
+  private static TelemetryRetriever telemetryRetriever;
 
   protected String agentPath =
       System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
@@ -73,9 +73,9 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
   }
 
   @BeforeAll
-  void setUp() {
+  static void setUp() {
     containerManager.startEnvironmentOnce();
-    telemetryRetriever = new RemoteTelemetryRetriever(containerManager.getBackendMappedPort());
+    telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort());
   }
 
   protected Consumer<OutputFrame> startTarget(int jdk) {
@@ -124,7 +124,7 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
   }
 
   protected static Set<String> getLoggedTraceIds(Consumer<OutputFrame> output) {
-    return logLines(output).flatMap(l -> findTraceId(l)).collect(toSet());
+    return logLines(output).flatMap(JavaSmokeTest::findTraceId).collect(toSet());
   }
 
   private static Stream<String> findTraceId(String log) {
@@ -139,7 +139,7 @@ public abstract class JavaSmokeTest extends AbstractRemoteTelemetryTest {
   }
 
   @Override
-  public void configureTelemetryRetriever(Consumer<RemoteTelemetryRetriever> action) {
-    action.accept(telemetryRetriever);
+  public TelemetryRetriever getTelemetryRetriever() {
+    return telemetryRetriever;
   }
 }

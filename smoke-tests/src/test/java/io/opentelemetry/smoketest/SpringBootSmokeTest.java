@@ -7,7 +7,6 @@ package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -69,41 +68,39 @@ class SpringBootSmokeTest extends JavaSmokeTest {
     var response = client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
 
-    List<SpanData> spans = testing.spans();
-    assertThat(spans)
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET /greeting")
-                            .hasAttribute(
-                                satisfies(ThreadIncubatingAttributes.THREAD_ID, a -> a.isNotNull()))
-                            .hasAttribute(
-                                satisfies(
-                                    ThreadIncubatingAttributes.THREAD_NAME, a -> a.isNotBlank()))
-                            .hasResourceSatisfying(
-                                resource ->
-                                    resource
-                                        .hasAttribute(
-                                            TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                            currentAgentVersion)
-                                        .hasAttribute(
-                                            satisfies(
-                                                OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
-                                        .hasAttribute(AttributeKey.stringKey("foo"), "bar")
-                                        .hasAttribute(
-                                            ServiceAttributes.SERVICE_NAME, "otel-spring-test-app")
-                                        .hasAttribute(
-                                            ServiceAttributes.SERVICE_VERSION,
-                                            "2.10.0-alpha-SNAPSHOT")),
-                    span -> span.hasName("WebController.withSpan")));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /greeting")
+                        .hasAttribute(
+                            satisfies(ThreadIncubatingAttributes.THREAD_ID, a -> a.isNotNull()))
+                        .hasAttribute(
+                            satisfies(ThreadIncubatingAttributes.THREAD_NAME, a -> a.isNotBlank()))
+                        .hasResourceSatisfying(
+                            resource ->
+                                resource
+                                    .hasAttribute(
+                                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
+                                        currentAgentVersion)
+                                    .hasAttribute(
+                                        satisfies(
+                                            OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
+                                    .hasAttribute(AttributeKey.stringKey("foo"), "bar")
+                                    .hasAttribute(
+                                        ServiceAttributes.SERVICE_NAME, "otel-spring-test-app")
+                                    .hasAttribute(
+                                        ServiceAttributes.SERVICE_VERSION,
+                                        "2.10.0-alpha-SNAPSHOT")),
+                span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
     assertVersionLogged(output, currentAgentVersion);
 
     // Check trace IDs are logged via MDC instrumentation
     Set<String> loggedTraceIds = getLoggedTraceIds(output);
-    Set<String> spanTraceIds = spans.stream().map(t -> t.getTraceId()).collect(Collectors.toSet());
+    List<SpanData> spans = testing.spans();
+    Set<String> spanTraceIds = spans.stream().map(SpanData::getTraceId).collect(Collectors.toSet());
     assertThat(loggedTraceIds).isEqualTo(spanTraceIds);
 
     // Check JVM metrics are exported

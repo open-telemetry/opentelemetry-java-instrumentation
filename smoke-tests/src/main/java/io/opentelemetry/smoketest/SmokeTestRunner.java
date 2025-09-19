@@ -12,11 +12,15 @@ import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 
+/**
+ * An implementation of {@link InstrumentationTestRunner} that uses {@link TelemetryRetriever} to
+ * fetch traces, metrics and logs from the fake backend.
+ */
 public class SmokeTestRunner extends InstrumentationTestRunner {
 
   private static final SmokeTestRunner INSTANCE = new SmokeTestRunner();
 
-  private RemoteTelemetryRetriever telemetryRetriever;
+  private TelemetryRetriever telemetryRetriever;
 
   public static SmokeTestRunner instance() {
     return INSTANCE;
@@ -26,7 +30,7 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
     super(OpenTelemetry.noop());
   }
 
-  void setTelemetryRetriever(RemoteTelemetryRetriever telemetryRetriever) {
+  void setTelemetryRetriever(TelemetryRetriever telemetryRetriever) {
     this.telemetryRetriever = telemetryRetriever;
   }
 
