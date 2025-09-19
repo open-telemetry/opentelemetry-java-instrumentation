@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+### 🛠️ Bug fixes
+
+- Backport: Update the OpenTelemetry SDK version to 1.54.1
+  ([#14720](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14720))
+
 ## Version 2.20.0 (2025-09-13)
 
 ### Migration notes
