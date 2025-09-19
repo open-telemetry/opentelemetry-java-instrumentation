@@ -336,7 +336,17 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class))),
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    k ->
+                                                        k.satisfiesAnyOf(
+                                                            val -> assertThat(val).isNull(),
+                                                            val ->
+                                                                assertThat(val).isEqualTo("ipv4"),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isEqualTo("ipv6")))),
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 equalTo(
@@ -349,8 +359,17 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
-                                                    SERVER_PORT,
-                                                    k -> k.isInstanceOf(Long.class)))))));
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    k ->
+                                                        k.satisfiesAnyOf(
+                                                            val -> assertThat(val).isNull(),
+                                                            val ->
+                                                                assertThat(val).isEqualTo("ipv4"),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isEqualTo("ipv6"))))))));
   }
 
   @Test
@@ -513,7 +532,16 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
-                                                    SERVER_PORT,
-                                                    k -> k.isInstanceOf(Long.class)))))));
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                satisfies(
+                                                    NETWORK_TYPE,
+                                                    k ->
+                                                        k.satisfiesAnyOf(
+                                                            val -> assertThat(val).isNull(),
+                                                            val ->
+                                                                assertThat(val).isEqualTo("ipv4"),
+                                                            val ->
+                                                                assertThat(val)
+                                                                    .isEqualTo("ipv6"))))))));
   }
 }
