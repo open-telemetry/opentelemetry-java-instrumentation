@@ -46,9 +46,7 @@ public class RxJavaExample {
     // All RxJava operations will now be automatically instrumented
     Observable<String> observable = Observable.just("Hello", "World");
     Flowable<String> flowable = Flowable.just("Hello", "World");
-
-    observable.subscribe(System.out::println);
-    flowable.subscribe(System.out::println);
+    ...
   }
 }
 ```

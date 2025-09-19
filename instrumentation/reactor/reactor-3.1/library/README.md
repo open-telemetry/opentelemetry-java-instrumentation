@@ -42,9 +42,7 @@ public class ReactorExample {
 
     Mono<String> mono = Mono.just("Hello, World!");
     Flux<String> flux = Flux.just("Hello", "World");
-
-    mono.subscribe(System.out::println);
-    flux.subscribe(System.out::println);
+    ...
   }
 }
 ```

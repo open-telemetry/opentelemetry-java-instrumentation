@@ -1,7 +1,7 @@
 # Library Instrumentation for Ratpack version 1.7 and higher
 
-Provides OpenTelemetry instrumentation for [Ratpack](https://ratpack.io/), enabling HTTP client and server spans and
-metrics.
+Provides OpenTelemetry instrumentation for [Ratpack](https://ratpack.io/), enabling HTTP client and
+server spans and metrics.
 
 ## Quickstart
 
@@ -29,6 +29,9 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-ratpack-1.7:OPENT
 
 ### Usage
 
+The instrumentation library provides implementations for both server and client instrumentation
+that wrap Ratpack components.
+
 ```java
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackServerTelemetry;
@@ -36,23 +39,28 @@ import io.opentelemetry.instrumentation.ratpack.v1_7.RatpackClientTelemetry;
 import ratpack.server.RatpackServer;
 import ratpack.http.client.HttpClient;
 
-public class RatpackExample {
-  public static void main(String[] args) throws Exception {
-    // Get an OpenTelemetry instance
-    OpenTelemetry openTelemetry = ...;
+public class RatpackConfiguration {
 
-    // Server instrumentation
+  // Create a server with OpenTelemetry instrumentation
+  public RatpackServer createTracedServer(OpenTelemetry openTelemetry) throws Exception {
     RatpackServerTelemetry serverTelemetry = RatpackServerTelemetry.create(openTelemetry);
-    RatpackServer.start(server -> {
+    return RatpackServer.start(server -> {
       server.registryOf(serverTelemetry::configureRegistry);
       server.handlers(chain ->
         chain.get(ctx -> ctx.render("Hello, World!"))
       );
     });
+  }
 
-    // Client instrumentation
+  // Create an instrumented HttpClient
+  public HttpClient createTracedClient(OpenTelemetry openTelemetry) {
     RatpackClientTelemetry clientTelemetry = RatpackClientTelemetry.create(openTelemetry);
-    HttpClient instrumentedHttpClient = clientTelemetry.instrument(HttpClient.of(spec -> {}));
+    return clientTelemetry.instrument(createClient());
+  }
+
+  // Configuration of the HttpClient goes here
+  private HttpClient createClient() {
+    return HttpClient.of(spec -> {});
   }
 }
 ```
