@@ -336,33 +336,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                satisfies(
-                                                    NETWORK_PEER_ADDRESS,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isInstanceOf(String.class))),
-                                                satisfies(
-                                                    NETWORK_PEER_PORT,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isInstanceOf(Long.class))),
-                                                satisfies(
-                                                    NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6")))),
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class))),
                                         point ->
                                             point.hasAttributesSatisfyingExactly(
                                                 equalTo(
@@ -375,33 +349,8 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                satisfies(
-                                                    NETWORK_PEER_ADDRESS,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isInstanceOf(String.class))),
-                                                satisfies(
-                                                    NETWORK_PEER_PORT,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isInstanceOf(Long.class))),
-                                                satisfies(
-                                                    NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6"))))))));
+                                                    SERVER_PORT,
+                                                    k -> k.isInstanceOf(Long.class)))))));
   }
 
   @Test
@@ -564,32 +513,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                 equalTo(RPC_METHOD, "$invoke"),
                                                 equalTo(SERVER_ADDRESS, "localhost"),
                                                 satisfies(
-                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
-                                                satisfies(
-                                                    NETWORK_PEER_ADDRESS,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isInstanceOf(String.class))),
-                                                satisfies(
-                                                    NETWORK_PEER_PORT,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isInstanceOf(Long.class))),
-                                                satisfies(
-                                                    NETWORK_TYPE,
-                                                    k ->
-                                                        k.satisfiesAnyOf(
-                                                            val -> assertThat(val).isNull(),
-                                                            val ->
-                                                                assertThat(val).isEqualTo("ipv4"),
-                                                            val ->
-                                                                assertThat(val)
-                                                                    .isEqualTo("ipv6"))))))));
+                                                    SERVER_PORT,
+                                                    k -> k.isInstanceOf(Long.class)))))));
   }
 }
