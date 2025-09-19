@@ -62,7 +62,7 @@ public class KafkaMetricsConsumerInstrumentation implements TypeInstrumentation 
       //  https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/12538
 
       // ensure config is a mutable map and avoid concurrency conflicts
-      HashMap<String, Object> config = new HashMap<>(originalConfig);
+      Map<String, Object> config = new HashMap<>(originalConfig);
       enhanceConfig(config);
       return config;
     }
