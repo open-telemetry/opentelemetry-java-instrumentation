@@ -14,7 +14,6 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -43,41 +42,35 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
   public static class GetConnectionAdvice {
 
     public static class AdviceScope {
-      private final CallDepth callDepth;
       private final Context context;
       private final Scope scope;
 
-      private AdviceScope(CallDepth callDepth, Context context, Scope scope) {
-        this.callDepth = callDepth;
+      private AdviceScope(Context context, Scope scope) {
         this.context = context;
         this.scope = scope;
       }
 
-      public static AdviceScope start(CallDepth callDepth, DataSource ds) {
+      @Nullable
+      public static AdviceScope start(DataSource ds) {
         Context parentContext = Context.current();
         if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
           // this instrumentation is already very noisy, and calls to getConnection outside of an
           // existing trace do not tend to be very interesting
-          return new AdviceScope(callDepth, null, null);
+          return null;
         }
 
         if (!dataSourceInstrumenter().shouldStart(parentContext, ds)) {
-          return new AdviceScope(callDepth, null, null);
+          return null;
         }
 
         Context context = dataSourceInstrumenter().start(parentContext, ds);
 
-        return new AdviceScope(callDepth, context, context.makeCurrent());
+        return new AdviceScope(context, context.makeCurrent());
       }
 
       public void end(
           DataSource ds, @Nullable Connection connection, @Nullable Throwable throwable) {
-        if (callDepth.decrementAndGet() > 0) {
-          return;
-        }
-        if (scope == null) {
-          return;
-        }
+
         scope.close();
         DbInfo dbInfo = null;
         Connection realConnection = JdbcUtils.unwrapConnection(connection);
@@ -88,9 +81,10 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope start(@Advice.This DataSource ds) {
-      return AdviceScope.start(CallDepth.forClass(DataSource.class), ds);
+      return AdviceScope.start(ds);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -98,8 +92,10 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         @Advice.This DataSource ds,
         @Advice.Return @Nullable Connection connection,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
-      adviceScope.end(ds, connection, throwable);
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(ds, connection, throwable);
+      }
     }
   }
 }
