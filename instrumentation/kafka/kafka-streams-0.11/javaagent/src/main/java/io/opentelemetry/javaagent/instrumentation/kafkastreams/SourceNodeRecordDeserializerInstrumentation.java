@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -42,12 +43,13 @@ public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrume
   @SuppressWarnings("unused")
   public static class SaveHeadersAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void saveHeaders(
+    public static ConsumerRecord<?, ?> saveHeaders(
         @Advice.Argument(0) ConsumerRecord<?, ?> incoming,
-        @Advice.Return(readOnly = false) ConsumerRecord<?, ?> result) {
+        @Advice.Return ConsumerRecord<?, ?> result) {
       if (result == null) {
-        return;
+        return null;
       }
 
       // copy headers from incoming to result
@@ -57,6 +59,7 @@ public class SourceNodeRecordDeserializerInstrumentation implements TypeInstrume
 
       // copy the receive CONSUMER span association
       KafkaConsumerContextUtil.set(result, KafkaConsumerContextUtil.get(incoming));
+      return result;
     }
   }
 }
