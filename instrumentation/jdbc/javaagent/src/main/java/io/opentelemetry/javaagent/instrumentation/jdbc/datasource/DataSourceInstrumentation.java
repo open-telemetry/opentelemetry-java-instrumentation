@@ -14,6 +14,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcUtils;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -42,34 +43,42 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
   public static class GetConnectionAdvice {
 
     public static class AdviceScope {
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+      private final CallDepth callDepth;
 
-      private AdviceScope(Context context, Scope scope) {
+      private AdviceScope(CallDepth callDepth, @Nullable Context context, @Nullable Scope scope) {
         this.context = context;
         this.scope = scope;
+        this.callDepth = callDepth;
       }
 
       @Nullable
-      public static AdviceScope start(DataSource ds) {
+      public static AdviceScope start(CallDepth callDepth, DataSource ds) {
+        if (callDepth.getAndIncrement() < 0) {
+          return new AdviceScope(callDepth, null, null);
+        }
+
         Context parentContext = Context.current();
         if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
           // this instrumentation is already very noisy, and calls to getConnection outside of an
           // existing trace do not tend to be very interesting
-          return null;
+          return new AdviceScope(callDepth, null, null);
         }
 
         if (!dataSourceInstrumenter().shouldStart(parentContext, ds)) {
-          return null;
+          return new AdviceScope(callDepth, null, null);
         }
 
         Context context = dataSourceInstrumenter().start(parentContext, ds);
-
-        return new AdviceScope(context, context.makeCurrent());
+        return new AdviceScope(callDepth, context, context.makeCurrent());
       }
 
       public void end(
           DataSource ds, @Nullable Connection connection, @Nullable Throwable throwable) {
+        if(callDepth.decrementAndGet() > 0||scope == null) {
+          return;
+        }
 
         scope.close();
         DbInfo dbInfo = null;
@@ -81,10 +90,9 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope start(@Advice.This DataSource ds) {
-      return AdviceScope.start(ds);
+      return AdviceScope.start(CallDepth.forClass(DataSource.class),ds);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -92,10 +100,8 @@ public class DataSourceInstrumentation implements TypeInstrumentation {
         @Advice.This DataSource ds,
         @Advice.Return @Nullable Connection connection,
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope != null) {
+        @Advice.Enter  AdviceScope adviceScope) {
         adviceScope.end(ds, connection, throwable);
-      }
     }
   }
 }
