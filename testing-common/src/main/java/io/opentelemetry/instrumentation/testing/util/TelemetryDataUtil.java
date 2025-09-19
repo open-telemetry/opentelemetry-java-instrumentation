@@ -93,7 +93,7 @@ public final class TelemetryDataUtil {
     for (List<SpanData> trace : traces) {
       for (SpanData span : trace) {
         InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
-        if (!scopeInfo.getName().equals("test")) {
+        if (!scopeInfo.getName().startsWith("test")) {
           assertThat(scopeInfo.getVersion())
               .as(
                   "Instrumentation version of module %s was empty; make sure that the "
