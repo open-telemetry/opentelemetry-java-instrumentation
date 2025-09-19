@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import kotlin.coroutines.CoroutineContext;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -58,13 +59,16 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) CoroutineContext result,
+    public static CoroutineContext onExit(
+        @Advice.Return CoroutineContext originalResult,
         @Advice.Enter CoroutineContext coroutineContext) {
+      CoroutineContext result = originalResult;
       if (coroutineContext != null) {
         result = coroutineContext;
       }
+      return result;
     }
   }
 
@@ -84,13 +88,16 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) CoroutineContext result,
+    public static CoroutineContext onExit(
+        @Advice.Return CoroutineContext originalResult,
         @Advice.Enter CoroutineContext coroutineContext) {
+      CoroutineContext result = originalResult;
       if (coroutineContext != null) {
         result = coroutineContext;
       }
+      return result;
     }
   }
 
@@ -107,12 +114,15 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Context result, @Advice.Enter Context context) {
+    public static Context onExit(
+        @Advice.Return Context originalResult, @Advice.Enter Context context) {
+      Context result = originalResult;
       if (context != null) {
         result = context;
       }
+      return result;
     }
   }
 }

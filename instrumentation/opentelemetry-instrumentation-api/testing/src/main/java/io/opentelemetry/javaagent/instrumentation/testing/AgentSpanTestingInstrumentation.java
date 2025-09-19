@@ -11,6 +11,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -30,25 +31,38 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
         named("runWithAllSpanKeys"), this.getClass().getName() + "$RunWithAllSpanKeysAdvice");
   }
 
+  public static class AdviceScope {
+    private final Context context;
+    private final Scope scope;
+
+    public AdviceScope(Context context, Scope scope) {
+      this.context = context;
+      this.scope = scope;
+    }
+
+    public Context getContext() {
+      return context;
+    }
+
+    public void end() {
+      scope.close();
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class RunWithHttpServerSpanAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) String spanName,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context = AgentSpanTestingInstrumenter.startHttpServerSpan(spanName);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(0) String spanName) {
+      Context context = AgentSpanTestingInstrumenter.startHttpServerSpan(spanName);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-      AgentSpanTestingInstrumenter.endHttpServer(context, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end();
+      AgentSpanTestingInstrumenter.endHttpServer(adviceScope.getContext(), throwable);
     }
   }
 
@@ -56,21 +70,16 @@ public class AgentSpanTestingInstrumentation implements TypeInstrumentation {
   public static class RunWithAllSpanKeysAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) String spanName,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      context = AgentSpanTestingInstrumenter.startSpanWithAllKeys(spanName);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(0) String spanName) {
+      Context context = AgentSpanTestingInstrumenter.startSpanWithAllKeys(spanName);
+      return new AdviceScope(context, context.makeCurrent());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      scope.close();
-      AgentSpanTestingInstrumenter.end(context, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end();
+      AgentSpanTestingInstrumenter.end(adviceScope.getContext(), throwable);
     }
   }
 }
