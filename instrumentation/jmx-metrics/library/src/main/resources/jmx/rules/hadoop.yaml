@@ -7,7 +7,7 @@ rules:
     mapping:
       # hadoop.dfs.capacity
       CapacityTotal:
-        metric: capacity
+        metric: capacity.limit
         type: updowncounter
         unit: By
         desc: Current raw capacity of DataNodes.
