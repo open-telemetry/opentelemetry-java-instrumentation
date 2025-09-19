@@ -292,7 +292,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -302,7 +302,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
                                                 equalTo(RPC_METHOD, "hello")),
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -325,7 +325,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -364,7 +364,7 @@ public abstract class AbstractDubboTraceChainTest {
                                                                 assertThat(val)
                                                                     .isEqualTo("ipv6")))),
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -530,7 +530,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -553,7 +553,7 @@ public abstract class AbstractDubboTraceChainTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes

@@ -190,7 +190,7 @@ public abstract class AbstractDubboTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -213,7 +213,7 @@ public abstract class AbstractDubboTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -363,7 +363,7 @@ public abstract class AbstractDubboTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
@@ -386,7 +386,7 @@ public abstract class AbstractDubboTest {
                                 histogram ->
                                     histogram.hasPointsSatisfying(
                                         point ->
-                                            point.hasAttributesSatisfying(
+                                            point.hasAttributesSatisfyingExactly(
                                                 equalTo(
                                                     RPC_SYSTEM,
                                                     RpcIncubatingAttributes
