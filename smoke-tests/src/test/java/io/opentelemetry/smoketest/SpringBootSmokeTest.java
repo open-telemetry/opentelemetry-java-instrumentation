@@ -5,25 +5,24 @@
 
 package io.opentelemetry.smoketest;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.util.List;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.containers.output.OutputFrame;
+
+import java.util.List;
+import java.util.Set;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SpringBootSmokeTest extends JavaSmokeTest {
@@ -39,7 +38,7 @@ class SpringBootSmokeTest extends JavaSmokeTest {
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
   void springBootSmokeTest(int jdk) throws Exception {
-    Consumer<OutputFrame> output = startTarget(jdk);
+    SmokeTestOutput output = startTarget(jdk);
     String currentAgentVersion;
     try (JarFile agentJar = new JarFile(agentPath)) {
       currentAgentVersion =
@@ -79,10 +78,10 @@ class SpringBootSmokeTest extends JavaSmokeTest {
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
-    assertVersionLogged(output, currentAgentVersion);
+    output.assertVersionLogged(currentAgentVersion);
 
     // Check trace IDs are logged via MDC instrumentation
-    Set<String> loggedTraceIds = getLoggedTraceIds(output);
+    Set<String> loggedTraceIds = output.getLoggedTraceIds();
     List<SpanData> spans = testing.spans();
     Set<String> spanTraceIds = spans.stream().map(SpanData::getTraceId).collect(Collectors.toSet());
     assertThat(loggedTraceIds).isEqualTo(spanTraceIds);
