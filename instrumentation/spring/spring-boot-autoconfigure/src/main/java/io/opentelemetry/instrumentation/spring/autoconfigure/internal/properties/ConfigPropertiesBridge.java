@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
@@ -24,9 +27,16 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
+  @Nullable private final ConfigProvider configProvider;
 
   public ConfigPropertiesBridge(ConfigProperties configProperties) {
+    this(configProperties, null);
+  }
+
+  public ConfigPropertiesBridge(
+      ConfigProperties configProperties, @Nullable ConfigProvider configProvider) {
     this.configProperties = configProperties;
+    this.configProvider = configProvider;
   }
 
   @Nullable
@@ -113,19 +123,25 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   @Override
   public boolean isDeclarative() {
-    return false;
+    return configProvider != null;
   }
 
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
-    throw new IllegalStateException(
-        "Declarative configuration is not supported in spring boot autoconfigure yet");
+    DeclarativeConfigProperties config =
+        InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
+    if (config == null) {
+      // there is no declarative config for this node
+      // this needs to be a different value than null to avoid confusion with
+      // the case when declarative config is not supported at all
+      return empty();
+    }
+    return config;
   }
 
   @Nullable
   @Override
   public ConfigProvider getConfigProvider() {
-    // declarative config support will be added in the future
-    return null;
+    return configProvider;
   }
 }
