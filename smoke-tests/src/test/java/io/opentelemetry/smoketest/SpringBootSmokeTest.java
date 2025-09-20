@@ -14,58 +14,31 @@ import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.time.Duration;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.containers.output.OutputFrame;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class SpringBootSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20241021.11448062567";
-  }
+class SpringBootSmokeTest {
 
-  @Override
-  protected boolean getSetServiceName() {
-    return false;
-  }
-
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_METRICS_EXPORTER", "otlp", "OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
-  }
-
-  @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(
-        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*");
-  }
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      SmokeTestInstrumentationExtension.springBoot("20241021.11448062567")
+          .setServiceName(false)
+          .env("OTEL_METRICS_EXPORTER", "otlp")
+          .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar")
+          .build();
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  void springBootSmokeTest(int jdk) throws Exception {
-    Consumer<OutputFrame> output = startTarget(jdk);
-    String currentAgentVersion;
-    try (JarFile agentJar = new JarFile(agentPath)) {
-      currentAgentVersion =
-          agentJar
-              .getManifest()
-              .getMainAttributes()
-              .getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-    }
+  void springBootSmokeTest(int jdk) {
+    SmokeTestOutput output = testing.start(jdk);
 
-    var response = client().get("/greeting").aggregate().join();
+    var response = testing.client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
 
     testing.waitAndAssertTraces(
@@ -82,7 +55,7 @@ class SpringBootSmokeTest extends JavaSmokeTest {
                                 resource
                                     .hasAttribute(
                                         TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                        currentAgentVersion)
+                                        testing.getAgentImplementationVersion())
                                     .hasAttribute(
                                         satisfies(
                                             OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
@@ -95,10 +68,10 @@ class SpringBootSmokeTest extends JavaSmokeTest {
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
-    assertVersionLogged(output, currentAgentVersion);
+    output.assertAgentVersionLogged();
 
     // Check trace IDs are logged via MDC instrumentation
-    Set<String> loggedTraceIds = getLoggedTraceIds(output);
+    Set<String> loggedTraceIds = output.getLoggedTraceIds();
     List<SpanData> spans = testing.spans();
     Set<String> spanTraceIds = spans.stream().map(SpanData::getTraceId).collect(Collectors.toSet());
     assertThat(loggedTraceIds).isEqualTo(spanTraceIds);

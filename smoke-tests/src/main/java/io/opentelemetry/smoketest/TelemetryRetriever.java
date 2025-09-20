@@ -18,6 +18,7 @@ import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceSer
 import io.opentelemetry.testing.internal.protobuf.GeneratedMessage;
 import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
 import io.opentelemetry.testing.internal.protobuf.util.JsonFormat;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -28,9 +29,11 @@ import java.util.stream.Collectors;
 public class TelemetryRetriever {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final WebClient client;
+  private final Duration telemetryTimeout;
 
-  public TelemetryRetriever(int backendPort) {
+  public TelemetryRetriever(int backendPort, Duration telemetryTimeout) {
     client = WebClient.of("http://localhost:" + backendPort);
+    this.telemetryTimeout = telemetryTimeout;
   }
 
   public void clearTelemetry() {
@@ -91,7 +94,7 @@ public class TelemetryRetriever {
   @SuppressWarnings("SystemOut")
   private String waitForContent(String path) throws InterruptedException {
     long previousSize = 0;
-    long deadline = System.currentTimeMillis() + TimeUnit.SECONDS.toMillis(30);
+    long deadline = System.currentTimeMillis() + telemetryTimeout.toMillis();
     String content = "[]";
     while (System.currentTimeMillis() < deadline) {
       content = client.get(path).aggregate().join().contentUtf8();

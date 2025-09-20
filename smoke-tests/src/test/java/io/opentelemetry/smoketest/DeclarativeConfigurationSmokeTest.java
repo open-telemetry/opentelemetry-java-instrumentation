@@ -12,44 +12,27 @@ import io.opentelemetry.semconv.incubating.ContainerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20241021.11448062567";
-  }
+class DeclarativeConfigurationSmokeTest {
 
-  @Override
-  protected List<ResourceMapping> getExtraResources() {
-    return List.of(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"));
-  }
-
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml");
-  }
-
-  @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(
-        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*");
-  }
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      SmokeTestInstrumentationExtension.springBoot("20241021.11448062567")
+          .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
+          .extraResources(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"))
+          .build();
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
   void springBootSmokeTest(int jdk) {
-    startTarget(jdk);
+    testing.start(jdk);
 
-    client().get("/greeting").aggregate().join();
+    testing.client().get("/greeting").aggregate().join();
 
     // There is one span (io.opentelemetry.opentelemetry-instrumentation-annotations-1.16 is
     // not used, because instrumentation_mode=none)

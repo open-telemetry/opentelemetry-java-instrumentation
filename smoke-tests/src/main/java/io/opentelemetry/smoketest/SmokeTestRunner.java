@@ -18,15 +18,9 @@ import java.util.List;
  */
 public class SmokeTestRunner extends InstrumentationTestRunner {
 
-  private static final SmokeTestRunner INSTANCE = new SmokeTestRunner();
-
   private TelemetryRetriever telemetryRetriever;
 
-  public static SmokeTestRunner instance() {
-    return INSTANCE;
-  }
-
-  private SmokeTestRunner() {
+  SmokeTestRunner() {
     super(OpenTelemetry.noop());
   }
 
