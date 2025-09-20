@@ -24,9 +24,9 @@ jobs:
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
 
-#      - name: Copy results from gh-pages branch
-#        run: |
-#          rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
+      - name: Copy results from gh-pages branch
+        run: |
+          rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
