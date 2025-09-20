@@ -26,7 +26,18 @@ jobs:
 
       - name: Copy results from gh-pages branch
         run: |
-          rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
+          mkdir -p benchmark-overhead/results
+          if [ -d "gh-pages/benchmark-overhead/results/" ]; then
+            rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
+          else
+            echo "No existing results directory found, starting fresh"
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@8df1039502a15bceb9433410b1a100fbe190c53b # v4.5.0
+        with:
+          distribution: 'temurin'
+          java-version: '21'
 
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
