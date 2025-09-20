@@ -202,11 +202,13 @@ class JbossLogmanagerTest {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
+    MDC.put("event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
+      MDC.remove("event.name");
     }
 
     testing.waitAndAssertLogRecords(
@@ -216,6 +218,7 @@ class JbossLogmanagerTest {
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")
+                .hasEventName("MyEventName")
                 .hasAttributesSatisfyingExactly(
                     equalTo(AttributeKey.stringKey("key1"), "val1"),
                     equalTo(AttributeKey.stringKey("key2"), "val2"),

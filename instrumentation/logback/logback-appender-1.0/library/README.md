@@ -103,6 +103,7 @@ The available settings are:
 | `captureArguments`                 | Boolean | `false` | Enable the capture of Logback logger arguments.                                                                                                                                                                                                   |
 | `captureLogstashAttributes`        | Boolean | `false` | Enable the capture of Logstash attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.                                                        |
 | `captureMdcAttributes`             | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                                                                                      |
+| `captureEventName`                 | Boolean | `false` | Enable moving the `event.name` attribute (captured by one of the other mechanisms of capturing attributes) to the log event name.                                                                                                                 |
 | `numLogsCapturedBeforeOtelInstall` | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured. |
 
 

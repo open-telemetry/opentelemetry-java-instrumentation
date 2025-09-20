@@ -16,6 +16,7 @@
     <captureLoggerContext>true</captureLoggerContext>
     <captureMdcAttributes>*</captureMdcAttributes>
     <numLogsCapturedBeforeOtelInstall>1</numLogsCapturedBeforeOtelInstall>
+    <captureEventName>true</captureEventName>
   </appender>
 
   <root level="INFO">
