@@ -44,9 +44,6 @@ import org.junit.jupiter.api.extension.ExtensionContext;
 public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     implements TelemetryRetrieverProvider {
 
-  // todo timeout configuration
-  // todo move builder docs to builder methods
-
   private final TestContainerManager containerManager = createContainerManager();
 
   private TelemetryRetriever telemetryRetriever;
@@ -70,6 +67,7 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   private final List<ResourceMapping> extraResources;
   private final TargetWaitStrategy waitStrategy;
   private final List<Integer> extraPorts;
+  private final Duration telemetryTimeout;
 
   private SmokeTestInstrumentationExtension(
       GetTargetImage getTargetImage,
@@ -79,7 +77,8 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
       Map<String, String> extraEnv,
       List<ResourceMapping> extraResources,
       TargetWaitStrategy waitStrategy,
-      List<Integer> extraPorts) {
+      List<Integer> extraPorts,
+      Duration telemetryTimeout) {
     super(new SmokeTestRunner());
     this.getTargetImage = getTargetImage;
     this.command = command;
@@ -89,6 +88,7 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     this.extraResources = extraResources;
     this.waitStrategy = waitStrategy;
     this.extraPorts = extraPorts;
+    this.telemetryTimeout = telemetryTimeout;
   }
 
   public WebClient client() {
@@ -98,7 +98,8 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   @Override
   public void beforeAll(ExtensionContext context) throws Exception {
     containerManager.startEnvironmentOnce();
-    telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort());
+    telemetryRetriever =
+        new TelemetryRetriever(containerManager.getBackendMappedPort(), telemetryTimeout);
     super.beforeAll(context);
   }
 
@@ -124,65 +125,24 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   }
 
   public SmokeTestOutput start(String jdk, String serverVersion, boolean windows) {
-    String targetImage = getTargetImage(jdk, serverVersion, windows);
     autoCleanup.deferCleanup(() -> containerManager.stopTarget());
 
     return new SmokeTestOutput(
         containerManager.startTarget(
-            targetImage,
+            getTargetImage.getTargetImage(jdk, serverVersion, windows),
             agentPath,
-            getJvmArgsEnvVarName(),
-            getExtraEnv(),
-            getSetServiceName(),
-            getExtraResources(),
-            getExtraPorts(),
-            getWaitStrategy(),
-            getCommand()));
+            jvmArgsEnvVarName,
+            extraEnv,
+            setServiceName,
+            extraResources,
+            extraPorts,
+            waitStrategy,
+            command));
   }
 
   @Override
   public TelemetryRetriever getTelemetryRetriever() {
     return telemetryRetriever;
-  }
-
-  public String getTargetImage(String jdk, String serverVersion, boolean windows) {
-    return getTargetImage.getTargetImage(jdk, serverVersion, windows);
-  }
-
-  public String[] getCommand() {
-    return command;
-  }
-
-  /** Subclasses can override this method to pass jvm arguments in another environment variable */
-  public String getJvmArgsEnvVarName() {
-    return jvmArgsEnvVarName;
-  }
-
-  /** Subclasses can override this method to customise target application's environment */
-  public Map<String, String> getExtraEnv() {
-    return extraEnv;
-  }
-
-  /** Subclasses can override this method to disable setting default service name */
-  public boolean getSetServiceName() {
-    return setServiceName;
-  }
-
-  /** Subclasses can override this method to provide additional files to copy to target container */
-  public List<ResourceMapping> getExtraResources() {
-    return extraResources;
-  }
-
-  /**
-   * Subclasses can override this method to provide additional ports that should be exposed from the
-   * target container
-   */
-  public List<Integer> getExtraPorts() {
-    return extraPorts;
-  }
-
-  public TargetWaitStrategy getWaitStrategy() {
-    return waitStrategy;
   }
 
   public static Builder builder(Function<String, String> getTargetImage) {
@@ -219,50 +179,65 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     private List<ResourceMapping> extraResources = List.of();
     private TargetWaitStrategy waitStrategy;
     private List<Integer> extraPorts = List.of();
+    private Duration telemetryTimeout = Duration.ofSeconds(30);
 
     private Builder(GetTargetImage getTargetImage) {
       this.getTargetImage = getTargetImage;
     }
 
+    /** Sets the command to run in the target container. */
     @CanIgnoreReturnValue
     public Builder command(String... command) {
       this.command = command;
       return this;
     }
 
+    /** Sets the environment variable name used to pass JVM arguments to the target application. */
     @CanIgnoreReturnValue
     public Builder jvmArgsEnvVarName(String jvmArgsEnvVarName) {
       this.jvmArgsEnvVarName = jvmArgsEnvVarName;
       return this;
     }
 
+    /** Enables or disables setting the default service name for the target application. */
     @CanIgnoreReturnValue
     public Builder setServiceName(boolean setServiceName) {
       this.setServiceName = setServiceName;
       return this;
     }
 
+    /** Adds an environment variable to the target application's environment. */
     @CanIgnoreReturnValue
     public Builder env(String key, String value) {
       this.extraEnv.put(key, value);
       return this;
     }
 
+    /** Specifies additional files to copy to the target container. */
     @CanIgnoreReturnValue
     public Builder extraResources(ResourceMapping... resources) {
       this.extraResources = List.of(resources);
       return this;
     }
 
+    /** Sets the wait strategy for the target container startup. */
     @CanIgnoreReturnValue
     public Builder waitStrategy(@Nullable TargetWaitStrategy waitStrategy) {
       this.waitStrategy = waitStrategy;
       return this;
     }
 
+    /** Specifies additional ports to expose from the target container. */
     @CanIgnoreReturnValue
     public Builder extraPorts(Integer... ports) {
       this.extraPorts = List.of(ports);
+      return this;
+    }
+
+    /** Sets the timeout duration for retrieving telemetry data. */
+    @CanIgnoreReturnValue
+    public Builder telemetryTimeout(Duration telemetryTimeout) {
+      this.telemetryTimeout = telemetryTimeout;
       return this;
     }
 
@@ -275,7 +250,8 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
           extraEnv,
           extraResources,
           waitStrategy,
-          extraPorts);
+          extraPorts,
+          telemetryTimeout);
     }
   }
 }

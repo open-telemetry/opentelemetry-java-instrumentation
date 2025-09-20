@@ -42,7 +42,8 @@ public abstract class JavaSmokeTest implements TelemetryRetrieverProvider {
   @BeforeAll
   static void setUp() {
     containerManager.startEnvironmentOnce();
-    telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort());
+    telemetryRetriever =
+        new TelemetryRetriever(containerManager.getBackendMappedPort(), telemetryTimeout);
   }
 
   protected SmokeTestOutput startTarget(int jdk) {
