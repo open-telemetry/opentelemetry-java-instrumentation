@@ -148,197 +148,52 @@ public abstract class AppServerTest {
   @Test
   void testStaticFileFound() {
     var response = testing().client().get("/app/hello.txt").aggregate().join();
-    List<SpanData> spans = testing().spans();
-    Set<String> traceIds = testing().getSpanTraceIds();
-    String responseBody = response.contentUtf8();
+    assertThat(response.contentUtf8()).contains("Hello");
 
-    // There is one trace
-    assertThat(traceIds).hasSize(1);
-
-    // Response contains Hello
-    assertThat(responseBody).contains("Hello");
-
-    // There is one server span
-    long serverSpanCount =
-        spans.stream()
-            .filter(span -> span.getKind() == io.opentelemetry.api.trace.SpanKind.SERVER)
-            .count();
-    assertThat(serverSpanCount).isOne();
-
-    // Expected span names
-    long spanNameCount =
-        spans.stream().filter(span -> getSpanName("/app/hello.txt").equals(span.getName())).count();
-    assertThat(spanNameCount).isOne();
-
-    // The span for the initial web request
-    long urlPathCount =
-        spans.stream()
-            .filter(
-                span -> "/app/hello.txt".equals(span.getAttributes().get(UrlAttributes.URL_PATH)))
-            .count();
-    assertThat(urlPathCount).isOne();
-
-    // Number of spans tagged with current otel library version
-    long versionCount =
-        spans.stream()
-            .filter(
-                span ->
-                    testing()
-                        .getAgentVersion()
-                        .equals(
-                            span.getResource()
-                                .getAttributes()
-                                .get(
-                                    io.opentelemetry.api.common.AttributeKey.stringKey(
-                                        TELEMETRY_DISTRO_VERSION))))
-            .count();
-    assertThat(versionCount).isOne();
-
-    // Number of spans tagged with expected OS type
-    String expectedOsType = isWindows ? WINDOWS : LINUX;
-    long osTypeCount =
-        spans.stream()
-            .filter(span -> expectedOsType.equals(span.getResource().getAttributes().get(OS_TYPE)))
-            .count();
-    assertThat(osTypeCount).isOne();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName(getSpanName("/app/hello.txt")).hasKind(SpanKind.SERVER)));
   }
 
   @Test
-  void testStaticFileNotFound() throws Exception {
+  void testStaticFileNotFound() {
     var response = testing().client().get("/app/file-that-does-not-exist").aggregate().join();
-    List<SpanData> traces = testing().spans();
-    Set<String> traceIds = testing().getSpanTraceIds();
 
-    // There is one trace
-    assertThat(traceIds).hasSize(1);
-
-    // Response code is 404
     assertThat(response.status().code()).isEqualTo(404);
 
-    // There is one server span
-    long serverSpanCount =
-        traces.stream()
-            .filter(span -> span.getKind() == io.opentelemetry.api.trace.SpanKind.SERVER)
-            .count();
-    assertThat(serverSpanCount).isOne();
-
-    // Expected span names
-    long spanNameCount =
-        traces.stream()
-            .filter(span -> getSpanName("/app/file-that-does-not-exist").equals(span.getName()))
-            .count();
-    assertThat(spanNameCount).isOne();
-
-    // The span for the initial web request
-    long urlPathCount =
-        traces.stream()
-            .filter(
-                span ->
-                    "/app/file-that-does-not-exist"
-                        .equals(span.getAttributes().get(UrlAttributes.URL_PATH)))
-            .count();
-    assertThat(urlPathCount).isOne();
-
-    // Number of spans tagged with current otel library version
-    long versionCount =
-        traces.stream()
-            .filter(
-                span ->
-                    testing()
-                        .getAgentVersion()
-                        .equals(
-                            span.getResource()
-                                .getAttributes()
-                                .get(
-                                    io.opentelemetry.api.common.AttributeKey.stringKey(
-                                        TELEMETRY_DISTRO_VERSION))))
-            .count();
-    assertThat(versionCount).isEqualTo(traces.size());
-
-    // Number of spans tagged with expected OS type
-    String expectedOsType = isWindows ? WINDOWS : LINUX;
-    long osTypeCount =
-        traces.stream()
-            .filter(span -> expectedOsType.equals(span.getResource().getAttributes().get(OS_TYPE)))
-            .count();
-    assertThat(osTypeCount).isEqualTo(traces.size());
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(getSpanName("/app/file-that-does-not-exist"))
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(
+                                UrlAttributes.URL_PATH, "/app/file-that-does-not-exist")));
   }
 
   @Test
-  void testRequestForWebInfWebXml() throws Exception {
+  void testRequestForWebInfWebXml() {
     assumeTrue(testRequestWebInfWebXml());
 
     var response = testing().client().get("/app/WEB-INF/web.xml").aggregate().join();
     List<SpanData> traces = testing().spans();
     Set<String> traceIds = testing().getSpanTraceIds();
 
-    // There is one trace
-    assertThat(traceIds).hasSize(1);
-
-    // Response code is 404
-    assertThat(response.status().code()).isEqualTo(404);
-
-    // There is one server span
-    long serverSpanCount =
-        traces.stream()
-            .filter(span -> span.getKind() == io.opentelemetry.api.trace.SpanKind.SERVER)
-            .count();
-    assertThat(serverSpanCount).isOne();
-
-    // Expected span names
-    long spanNameCount =
-        traces.stream()
-            .filter(span -> getSpanName("/app/WEB-INF/web.xml").equals(span.getName()))
-            .count();
-    assertThat(spanNameCount).isOne();
-
-    // The span for the initial web request
-    long urlPathCount =
-        traces.stream()
-            .filter(
-                span ->
-                    "/app/WEB-INF/web.xml".equals(span.getAttributes().get(UrlAttributes.URL_PATH)))
-            .count();
-    assertThat(urlPathCount).isOne();
-
-    // Number of spans with http protocol version
-    long protocolVersionCount =
-        traces.stream()
-            .filter(
-                span ->
-                    "1.1"
-                        .equals(
-                            span.getAttributes().get(NetworkAttributes.NETWORK_PROTOCOL_VERSION)))
-            .count();
-    assertThat(protocolVersionCount).isOne();
-
-    // Number of spans tagged with current otel library version
-    long versionCount =
-        traces.stream()
-            .filter(
-                span ->
-                    testing()
-                        .getAgentVersion()
-                        .equals(
-                            span.getResource()
-                                .getAttributes()
-                                .get(
-                                    io.opentelemetry.api.common.AttributeKey.stringKey(
-                                        TELEMETRY_DISTRO_VERSION))))
-            .count();
-    assertThat(versionCount).isEqualTo(traces.size());
-
-    // Number of spans tagged with expected OS type
-    String expectedOsType = isWindows ? WINDOWS : LINUX;
-    long osTypeCount =
-        traces.stream()
-            .filter(span -> expectedOsType.equals(span.getResource().getAttributes().get(OS_TYPE)))
-            .count();
-    assertThat(osTypeCount).isEqualTo(traces.size());
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(getSpanName("/app/WEB-INF/web.xml"))
+                            .hasKind(SpanKind.SERVER)
+                            .hasAttribute(UrlAttributes.URL_PATH, "/app/WEB-INF/web.xml")));
   }
 
   @Test
-  void testRequestWithError() throws Exception {
+  void testRequestWithError() {
     assumeTrue(testException());
 
     var response = testing().client().get("/app/exception").aggregate().join();
@@ -423,7 +278,7 @@ public abstract class AppServerTest {
   }
 
   @Test
-  void testRequestOutsideDeployedApplication() throws Exception {
+  void testRequestOutsideDeployedApplication() {
     assumeTrue(testRequestOutsideDeployedApp());
 
     var response =
