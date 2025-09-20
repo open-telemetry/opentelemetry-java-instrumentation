@@ -15,12 +15,15 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  * <p>Example usage:
  *
  * <pre>
- *   class MySmokeTest implements TelemetryRetrieverProvider {
+ *   class MySmokeTest {
  *     {@literal @}RegisterExtension
- *     static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
+ *     static final SmokeTestTarget target = SmokeTestTarget.springBoot("version").build();
+ *     static final InstrumentationExtension testing = target.testing();
  *
- *     {@literal @}Test
- *     void test() {
+ *     {@literal @}ParameterizedTest
+ *     {@literal @}ValueSource(ints = {8, 11, 17})
+ *     void test(int jdk) throws Exception {
+ *     SmokeTestOutput output = target.start(jdk);
  *       // test code ...
  *
  *       var spans = testing.spans();
