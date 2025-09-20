@@ -7,7 +7,7 @@ package io.opentelemetry.smoketest
 
 import java.time.Duration
 
-abstract class WildflySmokeTest extends AppServerTest {
+abstract class WildflySmokeTest extends GroovyAppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-wildfly"

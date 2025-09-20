@@ -23,7 +23,7 @@ import static io.opentelemetry.semconv.incubating.OsIncubatingAttributes.OsTypeI
 import static org.junit.Assume.assumeFalse
 import static org.junit.Assume.assumeTrue
 
-abstract class AppServerTest extends SmokeTest {
+abstract class GroovyAppServerTest extends SmokeTest {
   @Shared
   String jdk
   @Shared

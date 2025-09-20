@@ -7,7 +7,7 @@ package io.opentelemetry.smoketest
 
 import java.time.Duration
 
-abstract class WebsphereSmokeTest extends AppServerTest {
+abstract class WebsphereSmokeTest extends GroovyAppServerTest {
 
   protected String getTargetImagePrefix() {
     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-websphere"
