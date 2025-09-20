@@ -29,16 +29,9 @@ class SdkDisabledSmokeTest {
   @ValueSource(ints = {8, 11, 17})
   void noopSdkSmokeTest(int jdk) throws Exception {
     SmokeTestOutput output = testing.start(jdk);
-    String currentAgentVersion =
-        new JarFile(testing.getAgentPath())
-            .getManifest()
-            .getMainAttributes()
-            .get(Attributes.Name.IMPLEMENTATION_VERSION)
-            .toString();
-
     assertThat(testing.client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");
     assertThat(testing.spans()).isEmpty();
-    output.assertVersionLogged(currentAgentVersion);
+    output.assertVersionLogged(testing.getAgentImplementationVersion());
     assertThat(testing.spans()).isEmpty();
   }
 }

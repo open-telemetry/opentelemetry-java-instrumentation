@@ -36,10 +36,10 @@ class SpringBootSmokeTest {
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
   void springBootSmokeTest(int jdk) throws Exception {
-    SmokeTestOutput output = testing.startTarget(jdk);
+    SmokeTestOutput output = testing.start(jdk);
     String currentAgentVersion = testing.getAgentImplementationVersion();
 
-    var response = client().get("/greeting").aggregate().join();
+    var response = testing.client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
 
     testing.waitAndAssertTraces(
