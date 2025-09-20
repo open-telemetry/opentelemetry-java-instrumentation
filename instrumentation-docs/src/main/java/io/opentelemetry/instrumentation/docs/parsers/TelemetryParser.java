@@ -19,7 +19,17 @@ class TelemetryParser {
           "io.opentelemetry.couchbase-2.6", Set.of("io.opentelemetry.couchbase-2.0"),
           // elasticsearch-rest-7.0 extends elasticsearch-api-client-7.16 with more attributes.
           "io.opentelemetry.elasticsearch-api-client-7.16",
-              Set.of("io.opentelemetry.elasticsearch-rest-7.0"));
+              Set.of("io.opentelemetry.elasticsearch-rest-7.0"),
+          // jaxrs instrumentations add attributes to the jaxrs-2.0-annotations scope.
+          "io.opentelemetry.jaxrs-2.0-cxf-3.2", Set.of("io.opentelemetry.jaxrs-2.0-annotations"),
+          "io.opentelemetry.jaxrs-2.0-jersey-2.0", Set.of("io.opentelemetry.jaxrs-2.0-annotations"),
+          "io.opentelemetry.jaxrs-2.0-resteasy-3.0",
+              Set.of("io.opentelemetry.jaxrs-2.0-annotations"),
+          "io.opentelemetry.jaxrs-2.0-resteasy-3.1",
+              Set.of("io.opentelemetry.jaxrs-2.0-annotations"),
+          "io.opentelemetry.jaxrs-3.0-jersey-3.0", Set.of("io.opentelemetry.jaxrs-3.0-annotations"),
+          "io.opentelemetry.jaxrs-3.0-resteasy-6.0",
+              Set.of("io.opentelemetry.jaxrs-3.0-annotations"));
 
   /**
    * Checks if the given telemetry scope is valid for the specified module scope.

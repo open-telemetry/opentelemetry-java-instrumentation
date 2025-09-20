@@ -28,7 +28,7 @@ abstract class SmokeTest extends Specification {
   protected static final TestContainerManager containerManager = createContainerManager()
 
   @Shared
-  private TelemetryRetriever telemetryRetriever
+  private GroovyTestTelemetryRetriever telemetryRetriever
 
   @Shared
   protected String agentPath = System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")
@@ -75,7 +75,7 @@ abstract class SmokeTest extends Specification {
 
   def setupSpec() {
     containerManager.startEnvironmentOnce()
-    telemetryRetriever = new TelemetryRetriever(containerManager.getBackendMappedPort())
+    telemetryRetriever = new GroovyTestTelemetryRetriever(containerManager.getBackendMappedPort())
   }
 
   def startTarget(int jdk) {

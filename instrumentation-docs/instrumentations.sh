@@ -158,6 +158,22 @@ readonly INSTRUMENTATIONS=(
   "influxdb-2.4:javaagent:test"
   "influxdb-2.4:javaagent:testStableSemconv"
   "java-http-server:javaagent:test"
+  "failsafe-3.0:library:test"
+  "jaxrs:jaxrs-1.0:javaagent:test"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent:test"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent:test"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent:testExperimental"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent:test"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent:testExperimental"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent:test"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.0:javaagent:testExperimental"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent:test"
+  "jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent:testExperimental"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent:test"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent:test"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent:testExperimental"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent:test"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent:testExperimental"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64

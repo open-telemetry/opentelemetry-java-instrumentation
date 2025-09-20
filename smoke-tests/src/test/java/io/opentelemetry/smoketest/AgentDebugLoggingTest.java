@@ -27,7 +27,7 @@ class AgentDebugLoggingTest extends JavaSmokeTest {
 
   @DisplayName("verifies that debug logging is working by checking for a debug log on startup")
   @Test
-  void verifyLogging() throws Exception {
-    withTarget(8, () -> {});
+  void verifyLogging() {
+    startTarget(8);
   }
 }
