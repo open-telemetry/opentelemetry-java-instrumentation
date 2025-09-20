@@ -31,28 +31,17 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  */
 public class SmokeTestInstrumentationExtension extends InstrumentationExtension {
 
-  private SmokeTestInstrumentationExtension() {
-    super(SmokeTestRunner.instance());
-  }
+  private final TelemetryRetrieverProvider telemetryRetrieverProvider;
 
-  public static SmokeTestInstrumentationExtension create() {
-    return new SmokeTestInstrumentationExtension();
+  SmokeTestInstrumentationExtension(TelemetryRetrieverProvider telemetryRetrieverProvider) {
+    super(new SmokeTestRunner());
+    this.telemetryRetrieverProvider = telemetryRetrieverProvider;
   }
 
   @Override
   public void beforeEach(ExtensionContext extensionContext) {
-    Object testInstance = extensionContext.getRequiredTestInstance();
-
-    if (!(testInstance instanceof TelemetryRetrieverProvider)) {
-      throw new AssertionError(
-          "SmokeTestInstrumentationExtension can only be applied to a subclass of "
-              + "TelemetryRetrieverProvider");
-    }
-
     SmokeTestRunner smokeTestRunner = (SmokeTestRunner) getTestRunner();
-    smokeTestRunner.setTelemetryRetriever(
-        ((TelemetryRetrieverProvider) testInstance).getTelemetryRetriever());
-
+    smokeTestRunner.setTelemetryRetriever(telemetryRetrieverProvider.getTelemetryRetriever());
     super.beforeEach(extensionContext);
   }
 }
