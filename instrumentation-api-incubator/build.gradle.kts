@@ -6,6 +6,7 @@ plugins {
   id("otel.jacoco-conventions")
   id("otel.japicmp-conventions")
   id("otel.publish-conventions")
+  id("otel.nullaway-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
