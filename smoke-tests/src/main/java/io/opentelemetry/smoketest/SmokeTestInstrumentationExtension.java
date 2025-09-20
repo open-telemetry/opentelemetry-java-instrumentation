@@ -97,6 +97,10 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     this.telemetryTimeout = telemetryTimeout;
   }
 
+  public WebClient client() {
+    return WebClient.of("h1c://localhost:" + containerManager.getTargetMappedPort(8080));
+  }
+
   @Override
   public void beforeAll(ExtensionContext context) throws Exception {
     containerManager.startEnvironmentOnce();
@@ -118,10 +122,6 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     super.afterEach(context);
   }
 
-  public WebClient client() {
-    return WebClient.of("h1c://localhost:" + containerManager.getTargetMappedPort(8080));
-  }
-
   public String getAgentVersion() {
     try (JarFile agentJar = new JarFile(agentPath)) {
       return agentJar
@@ -138,9 +138,7 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   }
 
   public Set<String> getSpanTraceIds() {
-    Set<String> spanTraceIds =
-        spans().stream().map(SpanData::getTraceId).collect(Collectors.toSet());
-    return spanTraceIds;
+    return spans().stream().map(SpanData::getTraceId).collect(Collectors.toSet());
   }
 
   public SmokeTestOutput start(int jdk) {

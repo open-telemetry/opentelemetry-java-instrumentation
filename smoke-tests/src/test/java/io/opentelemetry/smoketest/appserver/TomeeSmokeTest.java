@@ -2,21 +2,26 @@
  * Copyright The OpenTelemetry Authors
  * SPDX-License-Identifier: Apache-2.0
  */
+
 package io.opentelemetry.smoketest.appserver;
 
+import io.opentelemetry.smoketest.AppServer;
+import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
-
 import java.time.Duration;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class TomeeSmokeTest extends JavaAppServerTest {
-  @Override
-  protected String getTargetImagePrefix() {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-tomee";
-  }
+public abstract class TomeeSmokeTest extends AppServerTest {
+
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      builder("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-tomee")
+          .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*Server startup in.*"))
+          .build();
 
   @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*Server startup in.*");
+  protected SmokeTestInstrumentationExtension testing() {
+    return testing;
   }
 
   @Override
