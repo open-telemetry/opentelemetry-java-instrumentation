@@ -8,8 +8,6 @@ package io.opentelemetry.smoketest;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import java.time.Duration;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +29,7 @@ class SdkDisabledSmokeTest {
     SmokeTestOutput output = testing.start(jdk);
     assertThat(testing.client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");
     assertThat(testing.spans()).isEmpty();
-    output.assertVersionLogged(testing.getAgentImplementationVersion());
+    output.assertAgentVersionLogged();
     assertThat(testing.spans()).isEmpty();
   }
 }

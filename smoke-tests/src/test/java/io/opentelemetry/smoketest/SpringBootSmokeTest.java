@@ -35,9 +35,8 @@ class SpringBootSmokeTest {
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  void springBootSmokeTest(int jdk) throws Exception {
+  void springBootSmokeTest(int jdk) {
     SmokeTestOutput output = testing.start(jdk);
-    String currentAgentVersion = testing.getAgentImplementationVersion();
 
     var response = testing.client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
@@ -56,7 +55,7 @@ class SpringBootSmokeTest {
                                 resource
                                     .hasAttribute(
                                         TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                        currentAgentVersion)
+                                        testing.getAgentImplementationVersion())
                                     .hasAttribute(
                                         satisfies(
                                             OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
@@ -69,7 +68,7 @@ class SpringBootSmokeTest {
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
-    output.assertVersionLogged(currentAgentVersion);
+    output.assertAgentVersionLogged();
 
     // Check trace IDs are logged via MDC instrumentation
     Set<String> loggedTraceIds = output.getLoggedTraceIds();

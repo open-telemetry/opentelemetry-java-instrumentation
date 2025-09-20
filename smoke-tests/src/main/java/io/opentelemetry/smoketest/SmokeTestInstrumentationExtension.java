@@ -138,6 +138,7 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     autoCleanup.deferCleanup(() -> containerManager.stopTarget());
 
     return new SmokeTestOutput(
+        this,
         containerManager.startTarget(
             getTargetImage.getTargetImage(jdk, serverVersion, windows),
             agentPath,

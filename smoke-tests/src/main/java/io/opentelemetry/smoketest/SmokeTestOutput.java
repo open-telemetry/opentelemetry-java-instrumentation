@@ -19,9 +19,12 @@ public class SmokeTestOutput {
 
   private static final Pattern TRACE_ID_PATTERN =
       Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
+  private final SmokeTestInstrumentationExtension extension;
   private final Consumer<OutputFrame> output;
 
-  public SmokeTestOutput(Consumer<OutputFrame> output) {
+  public SmokeTestOutput(
+      SmokeTestInstrumentationExtension extension, Consumer<OutputFrame> output) {
+    this.extension = extension;
     this.output = output;
   }
 
@@ -30,7 +33,8 @@ public class SmokeTestOutput {
     return m.matches() ? Stream.of(m.group("traceId")) : Stream.empty();
   }
 
-  public void assertVersionLogged(String version) {
+  public void assertAgentVersionLogged() {
+    String version = extension.getAgentImplementationVersion();
     assertThat(
             logLines().anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version)))
         .isTrue();
