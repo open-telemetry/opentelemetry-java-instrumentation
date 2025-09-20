@@ -1,5 +1,5 @@
-description: This instrumentation enables HTTP client spans and HTTP client metrics for version 2 of the AsyncHttpClient (AHC) HTTP client.
-library_link: https://github.com/AsyncHttpClient/async-http-client
+description: This instrumentation enables HTTP client spans and HTTP client metrics for Netty 3.8.
+library_link: https://netty.io/
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >
