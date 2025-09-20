@@ -7,6 +7,7 @@ package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
+import java.time.Duration;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import org.junit.jupiter.api.condition.DisabledIf;
@@ -21,6 +22,7 @@ class SdkDisabledSmokeTest {
   static final SmokeTestInstrumentationExtension testing =
       SmokeTestInstrumentationExtension.springBoot("20211213.1570880324")
           .env("OTEL_SDK_DISABLED", "true")
+          .telemetryTimeout(Duration.ofSeconds(5))
           .build();
 
   @ParameterizedTest
