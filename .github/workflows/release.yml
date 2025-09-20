@@ -257,7 +257,7 @@ jobs:
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           message="Post-release updates for $VERSION"
-          body="Post-release updates for `$VERSION`."
+          body="Post-release updates for \`$VERSION\`."
           branch="otelbot/update-apidiff-baseline-to-released-version-${VERSION}"
 
           git checkout -b $branch
