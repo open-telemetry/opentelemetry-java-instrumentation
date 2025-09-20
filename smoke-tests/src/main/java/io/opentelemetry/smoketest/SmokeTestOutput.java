@@ -34,7 +34,7 @@ public class SmokeTestOutput {
   }
 
   public void assertAgentVersionLogged() {
-    String version = extension.getAgentImplementationVersion();
+    String version = extension.getAgentVersion();
     assertThat(
             logLines().anyMatch(l -> l.contains("opentelemetry-javaagent - version: " + version)))
         .isTrue();

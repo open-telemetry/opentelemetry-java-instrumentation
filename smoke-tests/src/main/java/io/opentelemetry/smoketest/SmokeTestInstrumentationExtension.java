@@ -8,6 +8,7 @@ package io.opentelemetry.smoketest;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import java.io.IOException;
@@ -15,9 +16,11 @@ import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.jar.Attributes;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -94,10 +97,6 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     this.telemetryTimeout = telemetryTimeout;
   }
 
-  public WebClient client() {
-    return WebClient.of("h1c://localhost:" + containerManager.getTargetMappedPort(8080));
-  }
-
   @Override
   public void beforeAll(ExtensionContext context) throws Exception {
     containerManager.startEnvironmentOnce();
@@ -119,7 +118,11 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     super.afterEach(context);
   }
 
-  public String getAgentImplementationVersion() {
+  public WebClient client() {
+    return WebClient.of("h1c://localhost:" + containerManager.getTargetMappedPort(8080));
+  }
+
+  public String getAgentVersion() {
     try (JarFile agentJar = new JarFile(agentPath)) {
       return agentJar
           .getManifest()
@@ -128,6 +131,16 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     } catch (IOException e) {
       throw new IllegalStateException(e);
     }
+  }
+
+  public int getTargetMappedPort(int originalPort) {
+    return containerManager.getTargetMappedPort(originalPort);
+  }
+
+  public Set<String> getSpanTraceIds() {
+    Set<String> spanTraceIds =
+        spans().stream().map(SpanData::getTraceId).collect(Collectors.toSet());
+    return spanTraceIds;
   }
 
   public SmokeTestOutput start(int jdk) {

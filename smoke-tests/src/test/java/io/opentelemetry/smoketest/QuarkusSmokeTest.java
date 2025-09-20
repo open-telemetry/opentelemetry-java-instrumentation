@@ -44,7 +44,7 @@ class QuarkusSmokeTest {
                               resource
                                   .hasAttribute(
                                       TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                      testing.getAgentImplementationVersion())
+                                      testing.getAgentVersion())
                                   .hasAttribute(ServiceAttributes.SERVICE_NAME, "quarkus");
                             })));
   }

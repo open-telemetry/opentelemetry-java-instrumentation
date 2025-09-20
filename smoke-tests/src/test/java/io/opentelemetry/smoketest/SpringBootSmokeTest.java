@@ -55,7 +55,7 @@ class SpringBootSmokeTest {
                                 resource
                                     .hasAttribute(
                                         TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                        testing.getAgentImplementationVersion())
+                                        testing.getAgentVersion())
                                     .hasAttribute(
                                         satisfies(
                                             OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
@@ -71,10 +71,7 @@ class SpringBootSmokeTest {
     output.assertAgentVersionLogged();
 
     // Check trace IDs are logged via MDC instrumentation
-    Set<String> loggedTraceIds = output.getLoggedTraceIds();
-    List<SpanData> spans = testing.spans();
-    Set<String> spanTraceIds = spans.stream().map(SpanData::getTraceId).collect(Collectors.toSet());
-    assertThat(loggedTraceIds).isEqualTo(spanTraceIds);
+    assertThat(output.getLoggedTraceIds()).isEqualTo(testing.getSpanTraceIds());
 
     // Check JVM metrics are exported
     testing.waitAndAssertMetrics(
