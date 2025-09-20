@@ -16,36 +16,28 @@ import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.List;
 import java.util.Set;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class SpringBootSmokeTest extends JavaSmokeTest {
+class SpringBootSmokeTest {
 
-  public SpringBootSmokeTest() {
-    super(
-        SmokeTestTarget.springBoot("20241021.11448062567")
-            .setServiceName(false)
-            .env("OTEL_METRICS_EXPORTER", "otlp")
-            .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar"));
-  }
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      SmokeTestInstrumentationExtension.springBoot("20241021.11448062567")
+          .setServiceName(false)
+          .env("OTEL_METRICS_EXPORTER", "otlp")
+          .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar")
+          .build();
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
   void springBootSmokeTest(int jdk) throws Exception {
-    SmokeTestOutput output = startTarget(jdk);
-    String currentAgentVersion;
-    try (JarFile agentJar = new JarFile(agentPath)) {
-      currentAgentVersion =
-          agentJar
-              .getManifest()
-              .getMainAttributes()
-              .getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-    }
+    SmokeTestOutput output = testing.startTarget(jdk);
+    String currentAgentVersion = testing.getAgentImplementationVersion();
 
     var response = client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");

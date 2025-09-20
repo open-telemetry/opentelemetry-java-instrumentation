@@ -10,11 +10,14 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.smoketest.windows.WindowsTestContainerManager;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import java.io.IOException;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.jar.Attributes;
+import java.util.jar.JarFile;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
@@ -116,8 +119,15 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     super.afterEach(context);
   }
 
-  public String getAgentPath() {
-    return agentPath;
+  public String getAgentImplementationVersion() {
+    try (JarFile agentJar = new JarFile(agentPath)) {
+      return agentJar
+          .getManifest()
+          .getMainAttributes()
+          .getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+    } catch (IOException e) {
+      throw new IllegalStateException(e);
+    }
   }
 
   public SmokeTestOutput start(int jdk) {

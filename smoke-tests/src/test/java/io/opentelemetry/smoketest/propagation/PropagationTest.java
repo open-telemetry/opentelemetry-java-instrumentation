@@ -7,23 +7,24 @@ package io.opentelemetry.smoketest.propagation;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.smoketest.JavaSmokeTest;
-import io.opentelemetry.smoketest.SmokeTestTarget;
+import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.Test;
 
-public abstract class PropagationTest extends JavaSmokeTest {
+public abstract class PropagationTest {
 
-  public PropagationTest() {
-    super(SmokeTestTarget.springBoot("20211213.1570880324"));
+  protected static SmokeTestInstrumentationExtension.Builder builder() {
+    return SmokeTestInstrumentationExtension.springBoot("20211213.1570880324");
   }
+
+  protected abstract SmokeTestInstrumentationExtension testing();
 
   @Test
   public void shouldPropagate() {
-    startTarget(11);
-    AggregatedHttpResponse response = client().get("/front").aggregate().join();
+    testing().start(11);
+    AggregatedHttpResponse response = testing().client().get("/front").aggregate().join();
 
-    var traceId = testing.waitForTraces(1).get(0).get(0).getTraceId();
+    var traceId = testing().waitForTraces(1).get(0).get(0).getTraceId();
     assertThat(response.contentUtf8()).isEqualTo(traceId + ";" + traceId);
   }
 }

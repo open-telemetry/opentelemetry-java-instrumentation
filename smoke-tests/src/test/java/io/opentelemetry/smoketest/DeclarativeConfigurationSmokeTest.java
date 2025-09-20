@@ -13,26 +13,26 @@ import io.opentelemetry.semconv.incubating.HostIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class DeclarativeConfigurationSmokeTest extends JavaSmokeTest {
+class DeclarativeConfigurationSmokeTest {
 
-  public DeclarativeConfigurationSmokeTest() {
-    super(
-        SmokeTestTarget.springBoot("20241021.11448062567")
-            .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
-            .extraResources(
-                ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml")));
-  }
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      SmokeTestInstrumentationExtension.springBoot("20241021.11448062567")
+          .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
+          .extraResources(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"))
+          .build();
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
   void springBootSmokeTest(int jdk) {
-    startTarget(jdk);
+    testing.start(jdk);
 
-    client().get("/greeting").aggregate().join();
+    testing.client().get("/greeting").aggregate().join();
 
     // There is one span (io.opentelemetry.opentelemetry-instrumentation-annotations-1.16 is
     // not used, because instrumentation_mode=none)

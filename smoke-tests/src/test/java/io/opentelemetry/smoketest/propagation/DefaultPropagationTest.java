@@ -5,7 +5,16 @@
 
 package io.opentelemetry.smoketest.propagation;
 
+import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class DefaultPropagationTest extends PropagationTest {}
+class DefaultPropagationTest extends PropagationTest {
+  @RegisterExtension static final SmokeTestInstrumentationExtension testing = builder().build();
+
+  @Override
+  protected SmokeTestInstrumentationExtension testing() {
+    return testing;
+  }
+}

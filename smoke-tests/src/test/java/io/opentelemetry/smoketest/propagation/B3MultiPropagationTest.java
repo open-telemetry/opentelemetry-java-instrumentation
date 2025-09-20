@@ -5,14 +5,18 @@
 
 package io.opentelemetry.smoketest.propagation;
 
-import io.opentelemetry.smoketest.SmokeTestTarget;
+import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class B3MultiPropagationTest extends PropagationTest {
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      builder().env("otel.propagators", "b3multi").build();
 
   @Override
-  protected SmokeTestTarget.Builder customize(SmokeTestTarget.Builder builder) {
-    return builder.env("otel.propagators", "b3multi");
+  protected SmokeTestInstrumentationExtension testing() {
+    return testing;
   }
 }

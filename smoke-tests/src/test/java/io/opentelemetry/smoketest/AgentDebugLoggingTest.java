@@ -9,22 +9,23 @@ import java.time.Duration;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class AgentDebugLoggingTest extends JavaSmokeTest {
+class AgentDebugLoggingTest {
 
-  public AgentDebugLoggingTest() {
-    super(
-        SmokeTestTarget.springBoot("20250915.17728045097")
-            .waitStrategy(
-                new TargetWaitStrategy.Log(
-                    Duration.ofMinutes(1),
-                    ".*DEBUG io.opentelemetry.javaagent.tooling.VersionLogger.*")));
-  }
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension testing =
+      SmokeTestInstrumentationExtension.springBoot("20250915.17728045097")
+          .waitStrategy(
+              new TargetWaitStrategy.Log(
+                  Duration.ofMinutes(1),
+                  ".*DEBUG io.opentelemetry.javaagent.tooling.VersionLogger.*"))
+          .build();
 
   @DisplayName("verifies that debug logging is working by checking for a debug log on startup")
   @Test
   void verifyLogging() {
-    startTarget(8);
+    testing.start(8);
   }
 }
