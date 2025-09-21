@@ -26,15 +26,22 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
+
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public abstract class AppServerTest {
   protected boolean isWindows;
   protected String serverVersion;
+  private static SmokeTestInstrumentationExtension<AppServerImage> started;
 
   @BeforeEach
   void setUp() {
+    if (started != null) {
+      return;
+    }
+
     var appServer = getClass().getAnnotation(AppServer.class);
     if (appServer == null) {
       throw new IllegalStateException(
@@ -49,7 +56,17 @@ public abstract class AppServerTest {
     assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
     serverVersion = appServer.version();
-    testing().start(new AppServerImage(jdk, serverVersion, isWindows));
+    testing().startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
+
+    started = testing();
+  }
+
+  @AfterAll
+  static void afterAll() {
+    if (started != null) {
+      started.stop();
+      started = null;
+    }
   }
 
   protected abstract SmokeTestInstrumentationExtension<AppServerImage> testing();
@@ -136,7 +153,9 @@ public abstract class AppServerTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> assertServerSpan(span, path),
-                    span -> span.hasName("HttpServletResponseWrapper.sendError").hasKind(SpanKind.INTERNAL)));
+                    span ->
+                        span.hasName("HttpServletResponseWrapper.sendError")
+                            .hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -148,9 +167,7 @@ public abstract class AppServerTest {
 
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, path)));
+            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
   }
 
   @Test
@@ -184,9 +201,7 @@ public abstract class AppServerTest {
 
     testing()
         .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, path)));
+            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
   }
 
   @Test

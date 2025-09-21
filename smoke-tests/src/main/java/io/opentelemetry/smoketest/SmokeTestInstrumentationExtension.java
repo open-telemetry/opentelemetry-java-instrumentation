@@ -142,8 +142,15 @@ public class SmokeTestInstrumentationExtension<T> extends InstrumentationExtensi
   }
 
   public SmokeTestOutput start(T arg) {
-    autoCleanup.deferCleanup(() -> containerManager.stopTarget());
+    autoCleanup.deferCleanup(() -> stop());
+    return startWithoutCleanup(arg);
+  }
 
+  public void stop() {
+    containerManager.stopTarget();
+  }
+
+  public SmokeTestOutput startWithoutCleanup(T arg) {
     return new SmokeTestOutput(
         this,
         containerManager.startTarget(
