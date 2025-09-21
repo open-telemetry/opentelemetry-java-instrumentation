@@ -36,6 +36,9 @@ dependencies {
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")
+  // snake yaml is already used by "spring-boot-resources"
+  // and less likely to cause problems compared to jackson
+  implementation("org.snakeyaml:snakeyaml-engine")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
@@ -66,7 +69,9 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
@@ -81,6 +86,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
+
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testRuntimeOnly("com.h2database:h2:1.4.197")
@@ -172,6 +178,17 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-test:3.2.4") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
+      }
+    }
+
+    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
       }
     }
   }

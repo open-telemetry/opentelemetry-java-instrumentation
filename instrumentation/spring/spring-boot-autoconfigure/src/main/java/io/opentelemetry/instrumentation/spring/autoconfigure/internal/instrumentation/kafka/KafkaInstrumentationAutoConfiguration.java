@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -42,10 +42,10 @@ public class KafkaInstrumentationAutoConfiguration {
   @Bean
   static SpringKafkaTelemetry getTelemetry(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<InstrumentationConfig> configProvider) {
     return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
         .setCaptureExperimentalSpanAttributes(
-            configPropertiesProvider
+            configProvider
                 .getObject()
                 .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
         .build();
@@ -60,8 +60,8 @@ public class KafkaInstrumentationAutoConfiguration {
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider,
-          ObjectProvider<ConfigProperties> configPropertiesProvider) {
+          ObjectProvider<InstrumentationConfig> configProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
-        () -> getTelemetry(openTelemetryProvider, configPropertiesProvider));
+        () -> getTelemetry(openTelemetryProvider, configProvider));
   }
 }
