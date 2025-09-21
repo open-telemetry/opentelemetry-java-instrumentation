@@ -95,13 +95,15 @@ public abstract class AppServerTest {
                     span -> assertServerSpan(span, path),
                     span ->
                         assertSpan(span)
-                            .hasName("GET " + path)
+                            .hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
                             .hasAttribute(
                                 AttributeKey.stringArrayKey("http.request.header.x-test-request"),
                                 List.of("test")),
-                    span -> assertServerSpan(span, "/app/headers")));
+                    span ->
+                        assertServerSpan(span, "/app/headers")
+                            .hasAttribute(UrlAttributes.URL_FULL, "http://localhost:8080" + path)));
 
     // trace id is present in the HTTP headers as reported by the called endpoint
     assertThat(responseBody).contains(testing().getSpanTraceIds().iterator().next());
@@ -131,7 +133,10 @@ public abstract class AppServerTest {
 
     testing()
         .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertServerSpan(span, path),
+                    span -> span.hasName("Response.sendError").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -143,7 +148,10 @@ public abstract class AppServerTest {
 
     testing()
         .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertServerSpan(span, path),
+                    span -> span.hasName("Response.sendError").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -161,7 +169,7 @@ public abstract class AppServerTest {
                         assertServerSpan(span, path)
                             .hasEventsSatisfyingExactly(
                                 event ->
-                                    event.hasAttributesSatisfyingExactly(
+                                    event.hasAttributesSatisfying(
                                         equalTo(
                                             AttributeKey.stringKey("exception.message"),
                                             "This is expected")))));
@@ -177,7 +185,12 @@ public abstract class AppServerTest {
 
     testing()
         .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertServerSpan(span, path),
+                    span ->
+                        span.hasName("HttpServletResponseWrapper.sendError")
+                            .hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -201,7 +214,10 @@ public abstract class AppServerTest {
     if (expectServerSpan()) {
       testing()
           .waitAndAssertTraces(
-              trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, "/app/jsp")));
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("GET /app/jsp").hasKind(SpanKind.SERVER),
+                      span -> span.hasName("Compile /test.jsp").hasKind(SpanKind.INTERNAL)));
     }
   }
 
@@ -239,7 +255,6 @@ public abstract class AppServerTest {
     return assertSpan(span)
         .hasName(getSpanName(path))
         .hasKind(SpanKind.SERVER)
-        .hasAttribute(UrlAttributes.URL_PATH, path)
-        .hasAttribute(UrlAttributes.URL_FULL, "http://localhost:8080" + path);
+        .hasAttribute(UrlAttributes.URL_PATH, path);
   }
 }
