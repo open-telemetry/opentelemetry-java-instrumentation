@@ -32,6 +32,7 @@ import org.junit.jupiter.api.Test;
 
 public abstract class AppServerTest {
   protected boolean isWindows;
+  protected String serverVersion;
 
   @BeforeEach
   void setUp() {
@@ -48,7 +49,8 @@ public abstract class AppServerTest {
     // adoptopenjdk is deprecated and doesn't publish Windows 2022 images
     assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
-    testing().start(jdk, appServer.version(), isWindows);
+    serverVersion = appServer.version();
+    testing().start(jdk, serverVersion, isWindows);
   }
 
   protected abstract SmokeTestInstrumentationExtension testing();
