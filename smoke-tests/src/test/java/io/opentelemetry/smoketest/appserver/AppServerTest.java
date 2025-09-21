@@ -44,6 +44,7 @@ public abstract class AppServerTest {
     if (started != null) {
       return;
     }
+    started = testing();
 
     var appServer = getClass().getAnnotation(AppServer.class);
     if (appServer == null) {
@@ -60,8 +61,6 @@ public abstract class AppServerTest {
 
     serverVersion = appServer.version();
     testing().startWithoutCleanup(new AppServerImage(jdk, serverVersion, isWindows));
-
-    started = testing();
   }
 
   @AfterAll
