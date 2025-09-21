@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest.appserver;
 
-import io.opentelemetry.smoketest.AppServer;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;

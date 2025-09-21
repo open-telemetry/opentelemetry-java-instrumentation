@@ -20,7 +20,6 @@ import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
-import io.opentelemetry.smoketest.AppServer;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TestContainerManager;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;

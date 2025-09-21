@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest.appserver;
 
-import io.opentelemetry.smoketest.AppServer;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import java.time.Duration;

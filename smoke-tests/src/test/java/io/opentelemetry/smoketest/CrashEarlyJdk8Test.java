@@ -64,6 +64,7 @@ class CrashEarlyJdk8Test {
   }
 
   @AfterEach
+  @SuppressWarnings("SystemOut")
   void tearDown() {
     if (result != null) {
       System.err.println(result);

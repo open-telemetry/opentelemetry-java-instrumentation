@@ -11,6 +11,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SpringBootWithSamplingSmokeTest {
 
@@ -36,7 +38,7 @@ class SpringBootWithSamplingSmokeTest {
     long actualCount =
         testing.spans().stream().filter(span -> span.getName().endsWith("GET /greeting")).count();
     int expectedCount = (int) (SAMPLER_PROBABILITY * NUM_TRIES);
-    Assertions.assertThat(Math.abs(actualCount - expectedCount))
+    assertThat(Math.abs(actualCount - expectedCount))
         .isLessThanOrEqualTo(ALLOWED_DEVIATION);
   }
 }

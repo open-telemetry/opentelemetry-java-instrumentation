@@ -9,7 +9,8 @@ import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import java.time.Duration;
-import org.assertj.core.api.Assertions;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -82,7 +83,7 @@ class IbmHttpsUrlConnectionTest {
   @Test
   void testHttpsUrlConnection() throws Exception {
     result = target.execInContainer("/bin/sh", "-c", "/test.sh");
-    Assertions.assertThat(result.getExitCode()).isZero();
+    assertThat(result.getExitCode()).isZero();
 
     assertThat(telemetryRetriever.waitForTraces())
         .hasTracesSatisfyingExactly(
@@ -92,6 +93,7 @@ class IbmHttpsUrlConnectionTest {
   }
 
   @AfterEach
+  @SuppressWarnings("SystemOut")
   void tearDown() {
     if (result != null) {
       System.err.println(result);
