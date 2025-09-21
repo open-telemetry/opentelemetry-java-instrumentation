@@ -59,7 +59,7 @@ dependencies {
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.1.0")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
   implementation("com.gradle.develocity:com.gradle.develocity.gradle.plugin:4.2")
-  implementation("org.owasp:dependency-check-gradle:12.1.3")
+  implementation("org.owasp:dependency-check-gradle:12.1.5")
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.9.0")
   // When updating, also update dependencyManagement/build.gradle.kts
