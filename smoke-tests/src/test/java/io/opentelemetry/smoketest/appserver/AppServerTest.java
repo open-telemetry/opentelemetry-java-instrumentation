@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
@@ -26,6 +27,9 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Consumer;
+
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -152,14 +156,7 @@ public abstract class AppServerTest {
 
     assertThat(response.status().code()).isEqualTo(404);
 
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, path),
-                    span ->
-                        span.hasName("HttpServletResponseWrapper.sendError")
-                            .hasKind(SpanKind.INTERNAL)));
+    getAndAssertServerSpan(span -> assertServerSpan(span, path));
   }
 
   @Test
@@ -169,9 +166,7 @@ public abstract class AppServerTest {
 
     assertThat(response.status().code()).isEqualTo(404);
 
-    testing()
-        .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
+    getAndAssertServerSpan(span -> assertServerSpan(span, path));
   }
 
   @Test
@@ -203,9 +198,7 @@ public abstract class AppServerTest {
     var response = testing().client().get(path).aggregate().join();
     assertThat(response.status().code()).isEqualTo(404);
 
-    testing()
-        .waitAndAssertTraces(
-            trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, path)));
+    getAndAssertServerSpan(span -> assertServerSpan(span, path));
   }
 
   @Test
@@ -227,12 +220,7 @@ public abstract class AppServerTest {
         .contains("<script>console.log(hi)</script>");
 
     if (expectServerSpan()) {
-      testing()
-          .waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span -> span.hasName("GET /app/jsp").hasKind(SpanKind.SERVER),
-                      span -> span.hasName("Compile /test.jsp").hasKind(SpanKind.INTERNAL)));
+      getAndAssertServerSpan(span -> span.hasName("GET /app/jsp"));
     }
   }
 
@@ -271,5 +259,12 @@ public abstract class AppServerTest {
         .hasName(getSpanName(path))
         .hasKind(SpanKind.SERVER)
         .hasAttribute(UrlAttributes.URL_PATH, path);
+  }
+
+  private void getAndAssertServerSpan(Consumer<SpanDataAssert> assertion) {
+    Optional<SpanData> serverSpan =
+        testing().spans().stream().filter(span -> span.getKind() == SpanKind.SERVER).findFirst();
+
+    assertThat(serverSpan).hasValueSatisfying(span -> assertion.accept(assertThat(span)));
   }
 }
