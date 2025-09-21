@@ -26,6 +26,11 @@ public abstract class LibertyServletOnlySmokeTest extends AppServerTest {
   }
 
   @Override
+  protected boolean testJsp() {
+    return false;
+  }
+
+  @Override
   protected String getSpanName(String path) {
     if ("/app/hello.txt".equals(path) || "/app/file-that-does-not-exist".equals(path)) {
       return "GET";

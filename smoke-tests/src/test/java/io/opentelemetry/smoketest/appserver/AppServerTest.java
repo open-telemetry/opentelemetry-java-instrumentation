@@ -208,10 +208,10 @@ public abstract class AppServerTest {
 
     var response = testing().client().get("/app/jsp").aggregate().join();
 
-    assertThat(response.status().isSuccess()).isTrue();
     assertThat(response.contentUtf8())
         .contains("Successful JSP test")
         .contains("<script>console.log(hi)</script>");
+    assertThat(response.status().isSuccess()).isTrue();
 
     if (expectServerSpan()) {
       getAndAssertServerSpan(span -> span.hasName("GET /app/jsp"));
