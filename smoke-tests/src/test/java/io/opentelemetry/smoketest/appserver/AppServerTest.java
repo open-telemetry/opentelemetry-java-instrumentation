@@ -176,18 +176,14 @@ public abstract class AppServerTest {
 
     assertThat(response.status().code()).isEqualTo(500);
 
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertServerSpan(span, path)
-                            .hasEventsSatisfyingExactly(
-                                event ->
-                                    event.hasAttributesSatisfying(
-                                        equalTo(
-                                            AttributeKey.stringKey("exception.message"),
-                                            "This is expected")))));
+    getAndAssertServerSpan(
+        span ->
+            assertServerSpan(span, path)
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event.hasAttributesSatisfying(
+                            equalTo(
+                                AttributeKey.stringKey("exception.message"), "This is expected"))));
   }
 
   @Test
