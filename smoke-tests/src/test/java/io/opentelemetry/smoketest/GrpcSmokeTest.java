@@ -25,9 +25,9 @@ class GrpcSmokeTest {
   static final SmokeTestInstrumentationExtension testing =
       SmokeTestInstrumentationExtension.builder(
               jdk ->
-                  "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk"
-                      + jdk
-                      + "-20241021.11448062549")
+                  String.format(
+                      "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20241021.11448062549",
+                      jdk))
           .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server started.*"))
           .build();
 

@@ -17,9 +17,9 @@ class SecurityManagerSmokeTest {
   static final SmokeTestInstrumentationExtension testing =
       SmokeTestInstrumentationExtension.builder(
               jdk ->
-                  "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk"
-                      + jdk
-                      + "-20250915.17728045123")
+                  String.format(
+                      "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk%s-20250915.17728045123",
+                      jdk))
           .env("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true")
           .build();
 
