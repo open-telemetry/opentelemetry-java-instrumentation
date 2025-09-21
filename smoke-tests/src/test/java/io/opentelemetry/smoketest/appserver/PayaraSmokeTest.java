@@ -9,8 +9,6 @@ import io.opentelemetry.smoketest.AppServer;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class PayaraSmokeTest extends AppServerTest {
@@ -18,10 +16,13 @@ public abstract class PayaraSmokeTest extends AppServerTest {
   @RegisterExtension
   static final SmokeTestInstrumentationExtension testing =
       builder("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-payara")
-          .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*(app was successfully deployed|deployed with name app).*"))
-              .jvmArgsEnvVarName("JVM_ARGS")
-              .env("HZ_PHONE_HOME_ENABLED", "false")
-              .build();
+          .waitStrategy(
+              new TargetWaitStrategy.Log(
+                  Duration.ofMinutes(3),
+                  ".*(app was successfully deployed|deployed with name app).*"))
+          .jvmArgsEnvVarName("JVM_ARGS")
+          .env("HZ_PHONE_HOME_ENABLED", "false")
+          .build();
 
   @Override
   protected SmokeTestInstrumentationExtension testing() {
@@ -75,4 +76,3 @@ public abstract class PayaraSmokeTest extends AppServerTest {
   @AppServer(version = "6.2023.12", jdk = "21-openj9")
   public static class Payara6Jdk21Openj9 extends PayaraSmokeTest {}
 }
-
