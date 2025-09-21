@@ -5,6 +5,9 @@
 
 package io.opentelemetry.smoketest;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import java.time.Duration;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -17,10 +20,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
-
-import java.time.Duration;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 // Hotspot versions before 8u40 crash in jit compiled lambdas when javaagent initializes
 // java.lang.invoke.CallSite

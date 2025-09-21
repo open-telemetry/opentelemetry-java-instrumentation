@@ -5,15 +5,11 @@
 
 package io.opentelemetry.smoketest;
 
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import java.time.Duration;
-import java.util.Collection;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class SpringBootWithSamplingSmokeTest {

@@ -20,7 +20,9 @@ class QuarkusSmokeTest {
   static final SmokeTestInstrumentationExtension testing =
       SmokeTestInstrumentationExtension.builder(
               jdk ->
-                      String.format("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-20250915.17728045126", jdk))
+                  String.format(
+                      "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-20250915.17728045126",
+                      jdk))
           .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
           .setServiceName(false)
           .build();
