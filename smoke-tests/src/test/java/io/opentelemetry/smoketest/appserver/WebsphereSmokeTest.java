@@ -15,8 +15,11 @@ public abstract class WebsphereSmokeTest extends AppServerTest {
 
   @RegisterExtension
   static final SmokeTestInstrumentationExtension testing =
-      builder("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-websphere")
-          .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*Server server1 open for e-business.*"))
+      builder(
+              "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-websphere")
+          .waitStrategy(
+              new TargetWaitStrategy.Log(
+                  Duration.ofMinutes(3), ".*Server server1 open for e-business.*"))
           .build();
 
   @Override
@@ -43,4 +46,3 @@ public abstract class WebsphereSmokeTest extends AppServerTest {
   @AppServer(version = "9.0.5.14", jdk = "8-openj9")
   public static class Websphere9Jdk8Openj9 extends WebsphereSmokeTest {}
 }
-
