@@ -6,11 +6,10 @@
 package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import java.time.Duration;
-import static org.assertj.core.api.Assertions.assertThat;
-
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;

@@ -226,10 +226,13 @@ public abstract class AppServerTest {
 
   private SpanDataAssert assertSpan(SpanDataAssert span) {
     return span.hasResourceSatisfying(
-            resource -> resource.hasAttribute(OS_TYPE, getExpectedOsType()))
-        .hasAttribute(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1")
-        .hasAttribute(
-            TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION, testing().getAgentVersion());
+            resource ->
+                resource
+                    .hasAttribute(OS_TYPE, getExpectedOsType())
+                    .hasAttribute(
+                        TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
+                        testing().getAgentVersion()))
+        .hasAttribute(NetworkAttributes.NETWORK_PROTOCOL_VERSION, "1.1");
   }
 
   private SpanDataAssert assertServerSpan(SpanDataAssert span, String path) {
