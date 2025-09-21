@@ -37,4 +37,9 @@ public class RatpackInstrumentationModule extends InstrumentationModule
         new ServerErrorHandlerInstrumentation(),
         new ServerRegistryInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

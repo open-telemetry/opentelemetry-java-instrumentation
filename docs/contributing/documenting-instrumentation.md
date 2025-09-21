@@ -80,40 +80,88 @@ Each instrumentation should have a `metadata.yaml` file in the root of the instr
 (`instrumentation/{some instrumentation}/metadata.yaml`) that contains structured metadata about the
 instrumentation.
 
+Example:
+
+```yaml
+description: "This instrumentation enables..."
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - DATABASE_CLIENT_SPANS
+  - JVM_RUNTIME_METRICS
+disabled_by_default: true
+classification: library
+library_link: https://github.com/...
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true
+```
+
 ### Description (required)
 
 At a minimum, every instrumentation metadata file should include a `description`.
 
 Some example descriptions:
 
-* This instrumentation enables SERVER spans and metrics for the ActiveJ HTTP server.
+* This instrumentation enables HTTP server spans and HTTP server metrics for the ActiveJ HTTP server.
 * This instrumentation provides context propagation for Akka actors, it does not emit any telemetry
   on its own.
 * The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
-* The Apache Dubbo instrumentation provides CLIENT and SERVER spans
-  for Apache Dubbo RPC calls. Each call produces a span named after the Dubbo
-  method, enriched with standard RPC attributes (system, service, method), network
-  attributes, and error details if an exception occurs.
+* The Apache Dubbo instrumentation provides RPC client spans and RPC server spans for Apache Dubbo
+  RPC calls. Each call produces a span named after the Dubbo method, enriched with standard RPC
+  attributes (system, service, method), network attributes, and error details if an exception
+  occurs.
 
 Some notes when writing descriptions:
 
 * You don't always need to explicitly name the instrumentation, and you can start with "This
   instrumentation..."
 * Prefer the convention of using the word "enables" when describing what the instrumentation does,
-  "This instrumentation enables SERVER spans and metrics for the ActiveJ" instead of something like
-  "This instrumentation provides SERVER spans and metrics for the ActiveJ".
+  "This instrumentation **enables** HTTP server spans and HTTP server metrics for the ActiveJ" instead
+  of something like "This instrumentation **provides** HTTP server spans and HTTP server metrics for the ActiveJ".
 * Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
   * If it doesn't generate new telemetry, clearly explain what it's purpose is, for example whether it
     augments or enriches existing telemetry produced by other instrumentations (e.g., by adding
     attributes or ensuring context propagation).
+* When describing the functionality of the instrumentation and the telemetry, specify using
+  [semantic convention categories](https://opentelemetry.io/docs/specs/semconv/) when possible
+  (e.g., "database client spans", "RPC server metrics", "consumer messaging spans").
 * Do not include specific method names, class names, or other low-level implementation details in
   the description unless they are essential to understanding the purpose of the instrumentation.
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
-* When an instrumentation generates spans, be specific about the SpanKind (e.g., SERVER, CLIENT,
-  PRODUCER, CONSUMER, INTERNAL).
-  * Capitalize SpanKind values (e.g., SERVER, CLIENT) when used in descriptions.
 
+
+### Semantic Conventions
+
+If the instrumentation adheres to one or more specific semantic conventions, include a
+`semantic_conventions` field with a list of the relevant semantic convention categories.
+
+List of possible options:
+
+* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client)
+* [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
+* [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
+* [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
+* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes)
+* [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
+* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes)
+* [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
+* [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
+* [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
+* [DATABASE_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [DATABASE_POOL_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-metrics.md)
+* [JVM_RUNTIME_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/runtime/jvm-metrics.md)
+* [GRAPHQL_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/graphql/graphql-spans.md)
+* [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
+* [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
+* [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+
+### Library Link
+
+For library instrumentations, include a `library_link` field with a URL to the library or framework's
+main website or documentation, or if those don't exist, the GitHub repository.
 
 ### Configurations
 
@@ -172,9 +220,25 @@ within 24 hours.
 
 ## opentelemetry.io
 
-All of our instrumentation modules are listed on the opentelemetry.io website in the context of how
-to [suppress specific instrumentation](https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation).
+All of our instrumentation modules are listed on the opentelemetry.io website in two places:
+
+### Supported Libraries
+
+The [Supported Libraries](https://opentelemetry.io/docs/zero-code/java/agent/supported-libraries/)
+page lists all the library instrumentations that are included in the OpenTelemetry Java agent. It
+mostly mirrors the information from the [supported libraries](../supported-libraries.md) page in
+this repo, and should be updated when adding or removing library instrumentations. There is a
+[Github action](../../.github/workflows/documentation-synchronization-audit.yml) that runs nightly
+to check for any missing instrumentations, and will open an issue if any are found.
+
+This page may be automatically generated in the future, but for now it is manually maintained.
+
+### Suppressing Instrumentation
+
+The [Suppressing instrumentation](https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation)
+page lists the instrumentations in the context of the keys needed for using
+the `otel.instrumentation.[name].enabled` configuration.
 
 All new instrumentations should be added to this list. There is a
-[Github action](../../.github/workflows/documentation-disable-list-audit.yml) that runs nightly to check
+[Github action](../../.github/workflows/documentation-synchronization-audit.yml) that runs nightly to check
 for any missing instrumentations, and will open an issue if any are found.
