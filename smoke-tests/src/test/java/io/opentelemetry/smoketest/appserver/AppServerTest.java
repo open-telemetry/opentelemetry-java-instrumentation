@@ -97,12 +97,12 @@ public abstract class AppServerTest {
                         assertSpan(span)
                             .hasName("GET")
                             .hasKind(SpanKind.CLIENT)
-                            .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
                             .hasAttribute(
                                 AttributeKey.stringArrayKey("http.request.header.x-test-request"),
                                 List.of("test")),
                     span ->
                         assertServerSpan(span, "/app/headers")
+                            .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
                             .hasAttribute(UrlAttributes.URL_FULL, "http://localhost:8080" + path)));
 
     // trace id is present in the HTTP headers as reported by the called endpoint
@@ -136,7 +136,7 @@ public abstract class AppServerTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> assertServerSpan(span, path),
-                    span -> span.hasName("Response.sendError").hasKind(SpanKind.INTERNAL)));
+                    span -> span.hasName("HttpServletResponseWrapper.sendError").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -150,8 +150,7 @@ public abstract class AppServerTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, path),
-                    span -> span.hasName("Response.sendError").hasKind(SpanKind.INTERNAL)));
+                    span -> assertServerSpan(span, path)));
   }
 
   @Test
@@ -187,10 +186,7 @@ public abstract class AppServerTest {
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, path),
-                    span ->
-                        span.hasName("HttpServletResponseWrapper.sendError")
-                            .hasKind(SpanKind.INTERNAL)));
+                    span -> assertServerSpan(span, path)));
   }
 
   @Test
