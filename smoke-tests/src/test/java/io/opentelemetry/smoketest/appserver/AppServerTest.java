@@ -26,7 +26,6 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -101,26 +100,31 @@ public abstract class AppServerTest {
             .aggregate()
             .join();
 
-    assertFullTrace(path, response.contentUtf8());
+    assertFullTrace(path, response.contentUtf8(), true);
   }
 
-  private void assertFullTrace(String path, String responseBody) {
+  private void assertFullTrace(String path, String responseBody, boolean captureHeader) {
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, path),
+                    span -> {
+                      assertServerSpan(span, path);
+                      if (captureHeader) {
+                        span.hasAttribute(
+                            AttributeKey.stringArrayKey("http.request.header.x-test-request"),
+                            List.of("test"));
+                      }
+                    },
                     span ->
                         assertSpan(span)
                             .hasName("GET")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttribute(
-                                AttributeKey.stringArrayKey("http.request.header.x-test-request"),
-                                List.of("test")),
+                                UrlAttributes.URL_FULL, "http://localhost:8080/app/headers"),
                     span ->
                         assertServerSpan(span, "/app/headers")
-                            .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")
-                            .hasAttribute(UrlAttributes.URL_FULL, "http://localhost:8080" + path)));
+                            .hasAttribute(ClientAttributes.CLIENT_ADDRESS, "127.0.0.1")));
 
     // trace id is present in the HTTP headers as reported by the called endpoint
     assertThat(responseBody).contains(testing().getSpanTraceIds().iterator().next());
@@ -208,7 +212,7 @@ public abstract class AppServerTest {
   void asyncSmokeTest() {
     String path = "/app/asyncgreeting";
     var response = testing().client().get(path).aggregate().join();
-    assertFullTrace(path, response.contentUtf8());
+    assertFullTrace(path, response.contentUtf8(), false);
   }
 
   @Test
