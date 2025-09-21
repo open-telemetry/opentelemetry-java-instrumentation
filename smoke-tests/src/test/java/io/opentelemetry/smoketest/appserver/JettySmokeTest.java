@@ -15,15 +15,15 @@ public abstract class JettySmokeTest extends AppServerTest {
 
   @RegisterExtension static final SmokeTestInstrumentationExtension testing = builder().build();
 
+  @Override
+  protected SmokeTestInstrumentationExtension testing() {
+    return testing;
+  }
+
   static SmokeTestInstrumentationExtension.Builder builder() {
     return builder(
             "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-jetty")
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started Server.*"));
-  }
-
-  @Override
-  protected SmokeTestInstrumentationExtension testing() {
-    return testing;
   }
 
   @AppServer(version = "9.4.53", jdk = "8")
