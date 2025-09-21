@@ -57,6 +57,8 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   private final String agentPath =
       System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path");
 
+  private final String agentVersion = readAgentVersion();
+
   private final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
   @FunctionalInterface
@@ -65,7 +67,6 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   }
 
   private final GetTargetImage getTargetImage;
-
   private final String[] command;
   private final String jvmArgsEnvVarName;
   private final boolean setServiceName;
@@ -123,6 +124,10 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   }
 
   public String getAgentVersion() {
+    return agentVersion;
+  }
+
+  private String readAgentVersion() {
     try (JarFile agentJar = new JarFile(agentPath)) {
       return agentJar
           .getManifest()
