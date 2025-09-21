@@ -29,7 +29,6 @@ import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
