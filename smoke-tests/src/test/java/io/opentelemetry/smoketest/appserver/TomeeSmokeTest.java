@@ -14,13 +14,13 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class TomeeSmokeTest extends AppServerTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<AppServerImage> testing =
       builder("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-tomee")
           .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(3), ".*Server startup in.*"))
           .build();
 
   @Override
-  protected SmokeTestInstrumentationExtension testing() {
+  protected SmokeTestInstrumentationExtension<AppServerImage> testing() {
     return testing;
   }
 

@@ -19,11 +19,11 @@ public class SmokeTestOutput {
 
   private static final Pattern TRACE_ID_PATTERN =
       Pattern.compile(".*trace_id=(?<traceId>[a-zA-Z0-9]+).*");
-  private final SmokeTestInstrumentationExtension extension;
+  private final SmokeTestInstrumentationExtension<?> extension;
   private final Consumer<OutputFrame> output;
 
   public SmokeTestOutput(
-      SmokeTestInstrumentationExtension extension, Consumer<OutputFrame> output) {
+      SmokeTestInstrumentationExtension<?> extension, Consumer<OutputFrame> output) {
     this.extension = extension;
     this.output = output;
   }

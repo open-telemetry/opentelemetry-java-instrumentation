@@ -13,14 +13,15 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class LibertySmokeTest extends AppServerTest {
 
-  @RegisterExtension static final SmokeTestInstrumentationExtension testing = builder().build();
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension<AppServerImage> testing = builder().build();
 
   @Override
-  protected SmokeTestInstrumentationExtension testing() {
+  protected SmokeTestInstrumentationExtension<AppServerImage> testing() {
     return testing;
   }
 
-  static SmokeTestInstrumentationExtension.Builder builder() {
+  static SmokeTestInstrumentationExtension.Builder<AppServerImage> builder() {
     return builder(
             "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-liberty")
         .waitStrategy(

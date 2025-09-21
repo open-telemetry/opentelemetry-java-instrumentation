@@ -12,14 +12,14 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class JettyJpmsSmokeTest extends AppServerTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<AppServerImage> testing =
       JettySmokeTest.builder()
           // --jpms flag enables using java module system
           .command("java", "-jar", "/server/start.jar", "--jpms")
           .build();
 
   @Override
-  protected SmokeTestInstrumentationExtension testing() {
+  protected SmokeTestInstrumentationExtension<AppServerImage> testing() {
     return testing;
   }
 

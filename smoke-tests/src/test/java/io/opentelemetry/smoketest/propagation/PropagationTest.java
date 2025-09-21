@@ -13,11 +13,11 @@ import org.junit.jupiter.api.Test;
 
 public abstract class PropagationTest {
 
-  protected static SmokeTestInstrumentationExtension.Builder builder() {
+  protected static SmokeTestInstrumentationExtension.Builder<Integer> builder() {
     return SmokeTestInstrumentationExtension.springBoot("20211213.1570880324");
   }
 
-  protected abstract SmokeTestInstrumentationExtension testing();
+  protected abstract SmokeTestInstrumentationExtension<Integer> testing();
 
   @Test
   public void shouldPropagate() {

@@ -47,7 +47,7 @@ import org.junit.jupiter.api.extension.ExtensionContext;
  *   }
  * </pre>
  */
-public class SmokeTestInstrumentationExtension extends InstrumentationExtension
+public class SmokeTestInstrumentationExtension<T> extends InstrumentationExtension
     implements TelemetryRetrieverProvider {
 
   private final TestContainerManager containerManager = createContainerManager();
@@ -61,12 +61,7 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
 
   private final AutoCleanupExtension autoCleanup = AutoCleanupExtension.create();
 
-  @FunctionalInterface
-  public interface GetTargetImage {
-    String getTargetImage(String jdk, String serverVersion, boolean windows);
-  }
-
-  private final GetTargetImage getTargetImage;
+  private final Function<T, String> getTargetImage;
   private final String[] command;
   private final String jvmArgsEnvVarName;
   private final boolean setServiceName;
@@ -77,7 +72,7 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
   private final Duration telemetryTimeout;
 
   private SmokeTestInstrumentationExtension(
-      GetTargetImage getTargetImage,
+      Function<T, String> getTargetImage,
       String[] command,
       String jvmArgsEnvVarName,
       boolean setServiceName,
@@ -146,17 +141,13 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     return spans().stream().map(SpanData::getTraceId).collect(Collectors.toSet());
   }
 
-  public SmokeTestOutput start(int jdk) {
-    return start(String.valueOf(jdk), null, false);
-  }
-
-  public SmokeTestOutput start(String jdk, String serverVersion, boolean windows) {
+  public SmokeTestOutput start(T arg) {
     autoCleanup.deferCleanup(() -> containerManager.stopTarget());
 
     return new SmokeTestOutput(
         this,
         containerManager.startTarget(
-            getTargetImage.getTargetImage(jdk, serverVersion, windows),
+            getTargetImage.apply(arg),
             agentPath,
             jvmArgsEnvVarName,
             extraEnv,
@@ -172,16 +163,12 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     return telemetryRetriever;
   }
 
-  public static Builder builder(Function<String, String> getTargetImage) {
-    return builder((jdk, serverVersion, windows) -> getTargetImage.apply(jdk));
+  public static <T> Builder<T> builder(Function<T, String> getTargetImage) {
+    return new Builder<T>(getTargetImage);
   }
 
-  public static Builder builder(GetTargetImage getTargetImage) {
-    return new Builder(getTargetImage);
-  }
-
-  public static Builder springBoot(String imageTag) {
-    return builder(
+  public static Builder<Integer> springBoot(String imageTag) {
+    return new Builder<Integer>(
             jdk ->
                 String.format(
                     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk%s-%s",
@@ -197,8 +184,8 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
         : new LinuxTestContainerManager();
   }
 
-  public static class Builder {
-    private final GetTargetImage getTargetImage;
+  public static class Builder<T> {
+    private final Function<T, String> getTargetImage;
     private String[] command;
     private String jvmArgsEnvVarName = "JAVA_TOOL_OPTIONS";
     private boolean setServiceName = true;
@@ -208,68 +195,68 @@ public class SmokeTestInstrumentationExtension extends InstrumentationExtension
     private List<Integer> extraPorts = List.of();
     private Duration telemetryTimeout = Duration.ofSeconds(30);
 
-    private Builder(GetTargetImage getTargetImage) {
+    private Builder(Function<T, String> getTargetImage) {
       this.getTargetImage = getTargetImage;
     }
 
     /** Sets the command to run in the target container. */
     @CanIgnoreReturnValue
-    public Builder command(String... command) {
+    public Builder<T> command(String... command) {
       this.command = command;
       return this;
     }
 
     /** Sets the environment variable name used to pass JVM arguments to the target application. */
     @CanIgnoreReturnValue
-    public Builder jvmArgsEnvVarName(String jvmArgsEnvVarName) {
+    public Builder<T> jvmArgsEnvVarName(String jvmArgsEnvVarName) {
       this.jvmArgsEnvVarName = jvmArgsEnvVarName;
       return this;
     }
 
     /** Enables or disables setting the default service name for the target application. */
     @CanIgnoreReturnValue
-    public Builder setServiceName(boolean setServiceName) {
+    public Builder<T> setServiceName(boolean setServiceName) {
       this.setServiceName = setServiceName;
       return this;
     }
 
     /** Adds an environment variable to the target application's environment. */
     @CanIgnoreReturnValue
-    public Builder env(String key, String value) {
+    public Builder<T> env(String key, String value) {
       this.extraEnv.put(key, value);
       return this;
     }
 
     /** Specifies additional files to copy to the target container. */
     @CanIgnoreReturnValue
-    public Builder extraResources(ResourceMapping... resources) {
+    public Builder<T> extraResources(ResourceMapping... resources) {
       this.extraResources = List.of(resources);
       return this;
     }
 
     /** Sets the wait strategy for the target container startup. */
     @CanIgnoreReturnValue
-    public Builder waitStrategy(@Nullable TargetWaitStrategy waitStrategy) {
+    public Builder<T> waitStrategy(@Nullable TargetWaitStrategy waitStrategy) {
       this.waitStrategy = waitStrategy;
       return this;
     }
 
     /** Specifies additional ports to expose from the target container. */
     @CanIgnoreReturnValue
-    public Builder extraPorts(Integer... ports) {
+    public Builder<T> extraPorts(Integer... ports) {
       this.extraPorts = List.of(ports);
       return this;
     }
 
     /** Sets the timeout duration for retrieving telemetry data. */
     @CanIgnoreReturnValue
-    public Builder telemetryTimeout(Duration telemetryTimeout) {
+    public Builder<T> telemetryTimeout(Duration telemetryTimeout) {
       this.telemetryTimeout = telemetryTimeout;
       return this;
     }
 
-    public SmokeTestInstrumentationExtension build() {
-      return new SmokeTestInstrumentationExtension(
+    public SmokeTestInstrumentationExtension<T> build() {
+      return new SmokeTestInstrumentationExtension<T>(
           getTargetImage,
           command,
           jvmArgsEnvVarName,

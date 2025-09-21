@@ -18,7 +18,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class LogsSmokeTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<Integer> testing =
       SmokeTestInstrumentationExtension.springBoot("20211213.1570880324").build();
 
   @ParameterizedTest

@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class AgentDebugLoggingTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<Integer> testing =
       SmokeTestInstrumentationExtension.springBoot("20250915.17728045097")
           .waitStrategy(
               new TargetWaitStrategy.Log(

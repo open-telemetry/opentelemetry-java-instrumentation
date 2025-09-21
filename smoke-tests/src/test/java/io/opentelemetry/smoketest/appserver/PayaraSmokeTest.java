@@ -14,7 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class PayaraSmokeTest extends AppServerTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<AppServerImage> testing =
       builder("ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-payara")
           .waitStrategy(
               new TargetWaitStrategy.Log(
@@ -25,7 +25,7 @@ public abstract class PayaraSmokeTest extends AppServerTest {
           .build();
 
   @Override
-  protected SmokeTestInstrumentationExtension testing() {
+  protected SmokeTestInstrumentationExtension<AppServerImage> testing() {
     return testing;
   }
 

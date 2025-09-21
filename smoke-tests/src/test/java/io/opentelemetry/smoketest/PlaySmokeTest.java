@@ -18,8 +18,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class PlaySmokeTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
-      SmokeTestInstrumentationExtension.builder(
+  static final SmokeTestInstrumentationExtension<Integer> testing =
+      SmokeTestInstrumentationExtension.<Integer>builder(
               jdk ->
                   String.format(
                       "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-20241022.11450623960",

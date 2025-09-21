@@ -19,7 +19,7 @@ class PrometheusSmokeTest {
   private static final int PROMETHEUS_PORT = 9090;
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<Integer> testing =
       SmokeTestInstrumentationExtension.springBoot("20211213.1570880324")
           .env("OTEL_METRICS_EXPORTER", "prometheus")
           .env("OTEL_EXPORTER_PROMETHEUS_PORT", String.valueOf(PROMETHEUS_PORT))

@@ -50,17 +50,19 @@ public abstract class AppServerTest {
     assumeFalse(isWindows && jdk.endsWith("-openj9"));
 
     serverVersion = appServer.version();
-    testing().start(jdk, serverVersion, isWindows);
+    testing().start(new AppServerImage(jdk, serverVersion, isWindows));
   }
 
-  protected abstract SmokeTestInstrumentationExtension testing();
+  protected abstract SmokeTestInstrumentationExtension<AppServerImage> testing();
 
-  protected static SmokeTestInstrumentationExtension.Builder builder(String targetImagePrefix) {
+  protected static SmokeTestInstrumentationExtension.Builder<AppServerImage> builder(
+      String targetImagePrefix) {
     return SmokeTestInstrumentationExtension.builder(
-        (jdk, serverVersion, windows) -> {
-          String platformSuffix = windows ? "-windows" : "";
+        a -> {
+          String platformSuffix = a.isWindows() ? "-windows" : "";
           String extraTag = "-20241014.11321808438";
-          String fullSuffix = serverVersion + "-jdk" + jdk + platformSuffix + extraTag;
+          String fullSuffix =
+              a.getServerVersion() + "-jdk" + a.getJdk() + platformSuffix + extraTag;
           return targetImagePrefix + ":" + fullSuffix;
         });
   }

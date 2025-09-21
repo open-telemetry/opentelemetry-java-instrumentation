@@ -19,7 +19,7 @@ class SpringBootWithSamplingSmokeTest {
   private static final int ALLOWED_DEVIATION = (int) (0.1 * NUM_TRIES);
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<Integer> testing =
       SmokeTestInstrumentationExtension.springBoot("20211213.1570880324")
           .env("OTEL_TRACES_SAMPLER", "parentbased_traceidratio")
           .env("OTEL_TRACES_SAMPLER_ARG", String.valueOf(SAMPLER_PROBABILITY))

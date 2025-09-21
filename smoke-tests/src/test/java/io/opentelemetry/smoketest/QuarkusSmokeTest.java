@@ -17,8 +17,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class QuarkusSmokeTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
-      SmokeTestInstrumentationExtension.builder(
+  static final SmokeTestInstrumentationExtension<Integer> testing =
+      SmokeTestInstrumentationExtension.<Integer>builder(
               jdk ->
                   String.format(
                       "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-20250915.17728045126",

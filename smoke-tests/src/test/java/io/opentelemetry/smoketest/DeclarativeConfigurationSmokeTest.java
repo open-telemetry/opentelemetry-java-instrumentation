@@ -21,7 +21,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class DeclarativeConfigurationSmokeTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<Integer> testing =
       SmokeTestInstrumentationExtension.springBoot("20241021.11448062567")
           .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
           .extraResources(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"))

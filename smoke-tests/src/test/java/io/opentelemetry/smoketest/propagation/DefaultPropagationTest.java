@@ -11,10 +11,11 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class DefaultPropagationTest extends PropagationTest {
-  @RegisterExtension static final SmokeTestInstrumentationExtension testing = builder().build();
+  @RegisterExtension
+  static final SmokeTestInstrumentationExtension<Integer> testing = builder().build();
 
   @Override
-  protected SmokeTestInstrumentationExtension testing() {
+  protected SmokeTestInstrumentationExtension<Integer> testing() {
     return testing;
   }
 }

@@ -22,7 +22,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 class SpringBootSmokeTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<Integer> testing =
       SmokeTestInstrumentationExtension.springBoot("20241021.11448062567")
           .setServiceName(false)
           .env("OTEL_METRICS_EXPORTER", "otlp")

@@ -13,7 +13,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 public abstract class LibertyServletOnlySmokeTest extends AppServerTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
+  static final SmokeTestInstrumentationExtension<AppServerImage> testing =
       LibertySmokeTest.builder()
           .extraResources(
               ResourceMapping.of("liberty-servlet.xml", "/config/server.xml"),
@@ -22,7 +22,7 @@ public abstract class LibertyServletOnlySmokeTest extends AppServerTest {
           .build();
 
   @Override
-  protected SmokeTestInstrumentationExtension testing() {
+  protected SmokeTestInstrumentationExtension<AppServerImage> testing() {
     return testing;
   }
 

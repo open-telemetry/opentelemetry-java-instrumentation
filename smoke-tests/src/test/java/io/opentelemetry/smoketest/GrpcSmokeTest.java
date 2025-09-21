@@ -22,8 +22,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 class GrpcSmokeTest {
 
   @RegisterExtension
-  static final SmokeTestInstrumentationExtension testing =
-      SmokeTestInstrumentationExtension.builder(
+  static final SmokeTestInstrumentationExtension<Integer> testing =
+      SmokeTestInstrumentationExtension.<Integer>builder(
               jdk ->
                   String.format(
                       "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20241021.11448062549",
