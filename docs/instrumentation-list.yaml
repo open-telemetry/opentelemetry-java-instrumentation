@@ -3069,7 +3069,7 @@ libraries:
           type: STRING
         - name: failsafe.circuit_breaker.outcome
           type: STRING
-      - name: failsafe.circuit_breaker.state_changes.count
+      - name: failsafe.circuit_breaker.state_change.count
         description: Count of circuit breaker state changes.
         type: LONG_SUM
         unit: execution
