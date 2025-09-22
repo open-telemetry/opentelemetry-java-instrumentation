@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -134,6 +135,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                   HttpRequest.newBuilder()
                       .uri(uri)
                       .method(method, HttpRequest.BodyPublishers.noBody())
+                      .header("delay", String.valueOf(TimeUnit.SECONDS.toMillis(10)))
                       .build();
               return client
                   .sendAsync(request, HttpResponse.BodyHandlers.ofString())
