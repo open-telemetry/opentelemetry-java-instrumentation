@@ -68,11 +68,11 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       group = "Help"
       description = "List test tasks in given partition"
 
-      // total of 4 partitions (see modulo 4 below)
+      // total of 6 partitions (see modulo 6 below)
       var testPartition = (project.findProperty("testPartition") as String?)?.toInt()
       if (testPartition == null) {
         throw GradleException("Test partition must be specified")
-      } else if (testPartition < 0 || testPartition >= 4) {
+      } else if (testPartition < 0 || testPartition >= 6) {
         throw GradleException("Invalid test partition")
       }
 
@@ -82,7 +82,7 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
         // relying on predictable ordering of subprojects
         // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
         // since we are splitting these tasks across different github action jobs
-        val enabled = testPartitionCounter++ % 4 == testPartition
+        val enabled = testPartitionCounter++ % 6 == testPartition
         if (enabled) {
           tasks.withType<Test>().configureEach {
             partitionTasks.add(this)
