@@ -375,7 +375,7 @@ public abstract class AbstractDubboTraceChainTest {
   @Test
   @DisplayName("test ignore injvm calls")
   void testDubboChainInJvm() throws ReflectiveOperationException {
-    int port = PortUtils.findOpenPorts(2);
+    int port = PortUtils.findOpenPort();
 
     // setup middle service provider with HelloService provider and consumer in same bootstrap for
     // injvm
