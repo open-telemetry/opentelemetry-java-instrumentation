@@ -377,7 +377,8 @@ public abstract class AbstractDubboTraceChainTest {
   void testDubboChainInJvm() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPorts(2);
 
-    // setup middle service provider with HelloService provider and consumer in same bootstrap for injvm
+    // setup middle service provider with HelloService provider and consumer in same bootstrap for
+    // injvm
     ProtocolConfig middleProtocolConfig = new ProtocolConfig();
     middleProtocolConfig.setPort(port);
 
@@ -386,9 +387,9 @@ public abstract class AbstractDubboTraceChainTest {
     cleanup.deferCleanup(middleBootstrap::destroy);
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
-        .service(configureServer())  // HelloService provider in same bootstrap
-        .reference(clientReference)  // HelloService consumer using injvm
-        .service(configureMiddleServer(clientReference))  // MiddleService provider
+        .service(configureServer()) // HelloService provider in same bootstrap
+        .reference(clientReference) // HelloService consumer using injvm
+        .service(configureMiddleServer(clientReference)) // MiddleService provider
         .protocol(middleProtocolConfig)
         .start();
 
