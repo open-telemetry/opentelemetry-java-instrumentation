@@ -155,7 +155,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
             });
 
     // sleep a bit to let the request start
-    Thread.sleep(100);
+    Thread.sleep(1_000);
     future.cancel(true);
     assertThatThrownBy(future::get).isInstanceOf(CancellationException.class);
 
