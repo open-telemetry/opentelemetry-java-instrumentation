@@ -51,6 +51,8 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
 
   @Override
   public boolean isIndyReady() {
+    // This module uses inlined advices to prevent recursion issues with invokedynamic, which is
+    // forced by using 'applyInlineAdvice' in 'transform' method of instrumentations.
     return true;
   }
 }
