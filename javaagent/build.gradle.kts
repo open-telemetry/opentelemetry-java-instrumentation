@@ -161,10 +161,6 @@ tasks {
     excludeBootstrapClasses()
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
-    // TODO: remove after updating contrib to 1.50.0
-    filesMatching("io/opentelemetry/contrib/gcp/resource/version.properties") {
-      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
     exclude("META-INF/LICENSE")
     exclude("META-INF/NOTICE")
     exclude("META-INF/maven/**")
@@ -190,10 +186,6 @@ tasks {
     exclude("okhttp3/internal/publicsuffix/PublicSuffixDatabase.list")
 
     duplicatesStrategy = DuplicatesStrategy.FAIL
-    // TODO: remove after updating contrib to 1.50.0
-    filesMatching("io/opentelemetry/contrib/gcp/resource/version.properties") {
-      duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    }
     filesMatching("META-INF/io/opentelemetry/instrumentation/**") {
       duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     }
