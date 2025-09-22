@@ -376,30 +376,19 @@ public abstract class AbstractDubboTraceChainTest {
   @DisplayName("test ignore injvm calls")
   void testDubboChainInJvm() throws ReflectiveOperationException {
     int port = PortUtils.findOpenPorts(2);
-    int middlePort = port + 1;
 
-    // setup hello service provider
-    ProtocolConfig protocolConfig = new ProtocolConfig();
-    protocolConfig.setPort(port);
-
-    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
-    cleanup.deferCleanup(bootstrap::destroy);
-    bootstrap
-        .application(new ApplicationConfig("dubbo-test-provider"))
-        .service(configureServer())
-        .protocol(protocolConfig)
-        .start();
-
-    // setup middle service provider, hello service consumer
+    // setup middle service provider with HelloService provider and consumer in same bootstrap for injvm
     ProtocolConfig middleProtocolConfig = new ProtocolConfig();
-    middleProtocolConfig.setPort(middlePort);
+    middleProtocolConfig.setPort(port);
 
     ReferenceConfig<HelloService> clientReference = configureLocalClient(port);
     DubboBootstrap middleBootstrap = DubboTestUtil.newDubboBootstrap();
     cleanup.deferCleanup(middleBootstrap::destroy);
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
-        .service(configureMiddleServer(clientReference))
+        .service(configureServer())  // HelloService provider in same bootstrap
+        .reference(clientReference)  // HelloService consumer using injvm
+        .service(configureMiddleServer(clientReference))  // MiddleService provider
         .protocol(middleProtocolConfig)
         .start();
 
@@ -407,7 +396,7 @@ public abstract class AbstractDubboTraceChainTest {
     ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
     consumerProtocolConfig.setRegister(false);
 
-    ReferenceConfig<MiddleService> middleReference = configureMiddleClient(middlePort);
+    ReferenceConfig<MiddleService> middleReference = configureMiddleClient(port);
     DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
     cleanup.deferCleanup(consumerBootstrap::destroy);
     consumerBootstrap
