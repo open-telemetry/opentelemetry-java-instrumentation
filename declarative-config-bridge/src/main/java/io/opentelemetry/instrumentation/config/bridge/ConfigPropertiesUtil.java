@@ -13,7 +13,7 @@ public final class ConfigPropertiesUtil {
   }
 
   static String yamlPath(String property) {
-    String[] segments = DeclarativeConfigPropertiesBridge.getSegments(property);
+    String[] segments = SimpleDeclarativeConfigPropertiesBridge.getSegments(property);
     if (segments.length == 0) {
       throw new IllegalArgumentException("Invalid property: " + property);
     }

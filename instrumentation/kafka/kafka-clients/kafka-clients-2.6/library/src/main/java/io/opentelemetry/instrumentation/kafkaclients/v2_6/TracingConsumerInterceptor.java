@@ -9,8 +9,9 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -32,15 +33,20 @@ import org.apache.kafka.common.TopicPartition;
 @Deprecated
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setMessagingReceiveInstrumentationEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
+  private static final KafkaTelemetry telemetry = buildTelemetry();
+
+  private static KafkaTelemetry buildTelemetry() {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    ConfigPropertiesSimpleBridge bridge = new ConfigPropertiesSimpleBridge(openTelemetry);
+    return KafkaTelemetry.builder(openTelemetry)
+        .setMessagingReceiveInstrumentationEnabled(
+            bridge.getBoolean(
+                "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
+        .setCapturedHeaders(
+            bridge.getList(
+                "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+        .build();
+  }
 
   private String consumerGroup;
   private String clientId;
