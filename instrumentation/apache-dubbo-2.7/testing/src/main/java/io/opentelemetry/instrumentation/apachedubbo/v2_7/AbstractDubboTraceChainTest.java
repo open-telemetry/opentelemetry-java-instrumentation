@@ -388,7 +388,7 @@ public abstract class AbstractDubboTraceChainTest {
     middleBootstrap
         .application(new ApplicationConfig("dubbo-demo-middle"))
         .service(configureServer()) // HelloService provider in same bootstrap
-        .reference(clientReference) // HelloService consumer using injvm
+        .reference(clientReference) // HelloService consumer using in-JVM calls
         .service(configureMiddleServer(clientReference)) // MiddleService provider
         .protocol(middleProtocolConfig)
         .start();
