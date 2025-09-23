@@ -16,7 +16,7 @@ public final class TracingHolder {
   private static final boolean CAPTURE_COMMAND_ENCODING_EVENTS =
       AgentInstrumentationConfig.get()
           .getBoolean(
-              "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled", true);
+              "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled", false);
 
   public static final Tracing TRACING =
       LettuceTelemetry.builder(GlobalOpenTelemetry.get())

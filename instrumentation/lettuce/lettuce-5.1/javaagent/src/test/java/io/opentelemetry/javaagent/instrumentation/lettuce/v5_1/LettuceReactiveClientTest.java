@@ -53,37 +53,35 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
-                    span ->
-                        span.hasName("SET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")),
-                    span ->
-                        span.hasName("GET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                    span -> {
+                      span.hasName("SET")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_TYPE, "ipv4"),
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                  equalTo(maybeStable(DB_STATEMENT), "SET a ?")));
+                      assertCommandEncodeEvents(span);
+                    },
+                    span -> {
+                      span.hasName("GET")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_TYPE, "ipv4"),
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port),
+                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                  equalTo(maybeStable(DB_STATEMENT), "GET a")));
+                      assertCommandEncodeEvents(span);
+                    }));
   }
 }
