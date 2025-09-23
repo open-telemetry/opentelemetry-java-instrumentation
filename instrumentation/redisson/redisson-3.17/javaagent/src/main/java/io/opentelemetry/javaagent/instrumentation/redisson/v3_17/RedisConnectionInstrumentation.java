@@ -18,11 +18,11 @@ import io.opentelemetry.javaagent.instrumentation.redisson.EndOperationListener;
 import io.opentelemetry.javaagent.instrumentation.redisson.PromiseWrapper;
 import io.opentelemetry.javaagent.instrumentation.redisson.RedissonRequest;
 import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.redisson.client.RedisConnection;
-import javax.annotation.Nullable;
 
 public class RedisConnectionInstrumentation implements TypeInstrumentation {
   @Override
@@ -53,8 +53,8 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(RedisConnection connection, Object arg) {
         Context parentContext = currentContext();
-        InetSocketAddress remoteAddress = (InetSocketAddress) connection.getChannel()
-            .remoteAddress();
+        InetSocketAddress remoteAddress =
+            (InetSocketAddress) connection.getChannel().remoteAddress();
         RedissonRequest request = RedissonRequest.create(remoteAddress, arg);
         PromiseWrapper<?> promise = request.getPromiseWrapper();
         if (promise == null) {
@@ -84,10 +84,8 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
-        @Advice.This RedisConnection connection,
-        @Advice.Argument(0) Object arg) {
+        @Advice.This RedisConnection connection, @Advice.Argument(0) Object arg) {
       return AdviceScope.start(connection, arg);
-
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
