@@ -67,7 +67,7 @@ subprojects {
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom:${versions.opentelemetryJavaagent}"))
     implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:${versions.opentelemetryJavaagentAlpha}"))
 
-    testImplementation("org.mockito:mockito-core:5.19.0")
+    testImplementation("org.mockito:mockito-core:5.20.0")
 
     testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
     testImplementation("org.junit.jupiter:junit-jupiter-api")

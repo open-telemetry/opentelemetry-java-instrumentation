@@ -31,7 +31,7 @@ No targets are enabled by default. The supported target environments are listed 
 - [kafka-broker](javaagent/kafka-broker.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
-- [hadoop](javaagent/hadoop.md)
+- [hadoop](library/hadoop.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
