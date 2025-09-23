@@ -41,8 +41,6 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # Enable configuration cache support
-          cache-configuration: true
 
       - name: Spotless
         run: ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
@@ -65,8 +63,6 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # Enable configuration cache support
-          cache-configuration: true
 
       - name: Generate license report
         # with the build cache enabled occasionally produces outdated results
@@ -106,8 +102,6 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # Enable configuration cache support
-          cache-configuration: true
 
       - name: Generate FOSSA configuration
         run: ./gradlew generateFossaConfiguration
@@ -196,8 +190,6 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # Enable configuration cache support
-          cache-configuration: true
 
       - name: Build
         run: ./gradlew check javadoc sourcesJar spdxSbom -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
@@ -312,8 +304,6 @@ jobs:
         with:
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
-          # Enable configuration cache support
-          cache-configuration: true
 
       - name: List tests
         # "check" is needed to activate all tests for listing purposes
@@ -496,8 +486,6 @@ jobs:
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
-          # Enable configuration cache support
-          cache-configuration: true
 
       - name: Build
         run: ./gradlew build ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
