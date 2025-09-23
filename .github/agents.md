@@ -45,7 +45,7 @@ The following are critical commands and patterns for working with this repositor
 ### Repository Structure
 Key directories:
 - `instrumentation/` - Contains all instrumentation modules (~500+ modules for different libraries)
-- `javaagent/` - Core Java agent implementation  
+- `javaagent/` - Core Java agent implementation
 - `docs/` - Documentation including supported libraries list
 - `smoke-tests/` - End-to-end integration tests
 - `examples/` - Example extensions and distributions
