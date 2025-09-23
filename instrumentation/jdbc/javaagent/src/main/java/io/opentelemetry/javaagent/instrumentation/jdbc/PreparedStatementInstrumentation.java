@@ -118,6 +118,10 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         return;
       }
 
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        return;
+      }
+
       // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
       // this happens before the DB CLIENT span is started (and put in the current context), so this
       // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
@@ -165,6 +169,10 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addBatch(@Advice.This PreparedStatement statement) {
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return;
+      }
+
       JdbcData.addPreparedStatementBatch(statement);
     }
   }
@@ -177,6 +185,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value) {
       if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
@@ -211,6 +222,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        return;
+      }
 
       String str = null;
 
@@ -241,6 +255,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Object value,
         @Advice.Argument(2) Calendar calendar) {
       if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 

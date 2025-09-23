@@ -72,6 +72,10 @@ public class StatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return;
+      }
+
       // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
       // this happens before the DB CLIENT span is started (and put in the current context), so this
       // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
@@ -102,7 +106,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth == null || callDepth.decrementAndGet() > 0) {
         return;
       }
 
@@ -121,6 +125,10 @@ public class StatementInstrumentation implements TypeInstrumentation {
       if (statement instanceof PreparedStatement) {
         return;
       }
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return;
+      }
+
       JdbcData.addStatementBatch(statement, sql);
     }
   }
@@ -144,6 +152,10 @@ public class StatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return;
+      }
+
       // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
       // this happens before the DB CLIENT span is started (and put in the current context), so this
       // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
@@ -190,7 +202,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelRequest") DbRequest request,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
-      if (callDepth.decrementAndGet() > 0) {
+      if (callDepth == null || callDepth.decrementAndGet() > 0) {
         return;
       }
 

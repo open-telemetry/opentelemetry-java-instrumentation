@@ -61,6 +61,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        return;
+      }
+
       JdbcData.preparedStatement.set(statement, sql);
     }
   }
@@ -74,6 +78,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
         @Advice.Origin("#m") String methodName,
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
+      if (JdbcSingletons.isWrapper(connection, Connection.class)) {
+        return;
+      }
+
       Context parentContext = currentContext();
       DbRequest request =
           DbRequest.createTransaction(connection, methodName.toUpperCase(Locale.ROOT));
