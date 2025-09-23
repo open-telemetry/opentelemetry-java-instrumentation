@@ -173,7 +173,9 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     assertThat(recordsInPartition.size()).isEqualTo(1);
 
     if (testListIterator) {
-      for (ListIterator<? extends ConsumerRecord<?, ?>> iterator = recordsInPartition.listIterator(); iterator.hasNext(); ) {
+      for (ListIterator<? extends ConsumerRecord<?, ?>> iterator =
+              recordsInPartition.listIterator();
+          iterator.hasNext(); ) {
         ConsumerRecord<?, ?> record = iterator.next();
         assertThat(record.value()).isEqualTo(greeting);
         assertThat(record.key()).isNull();
