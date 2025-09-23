@@ -390,6 +390,33 @@ libraries:
       default: ''
     telemetry:
     - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -581,45 +608,6 @@ libraries:
     target_versions:
       library:
       - org.apache.httpcomponents:httpclient:[4.3,4.+)
-    telemetry:
-    - when: default
-      metrics:
-      - name: http.client.request.duration
-        description: Duration of HTTP client requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: error.type
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.request.method_original
-          type: STRING
-        - name: http.request.resend_count
-          type: LONG
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: apache-httpclient-5.0
     display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -685,45 +673,6 @@ libraries:
     target_versions:
       library:
       - org.apache.httpcomponents.client5:httpclient5:5.2.1
-    telemetry:
-    - when: default
-      metrics:
-      - name: http.client.request.duration
-        description: Duration of HTTP client requests.
-        type: HISTOGRAM
-        unit: s
-        attributes:
-        - name: http.request.method
-          type: STRING
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-      spans:
-      - span_kind: CLIENT
-        attributes:
-        - name: error.type
-          type: STRING
-        - name: http.request.method
-          type: STRING
-        - name: http.request.method_original
-          type: STRING
-        - name: http.request.resend_count
-          type: LONG
-        - name: http.response.status_code
-          type: LONG
-        - name: network.protocol.version
-          type: STRING
-        - name: server.address
-          type: STRING
-        - name: server.port
-          type: LONG
-        - name: url.full
-          type: STRING
   - name: apache-shenyu-2.4
     description: |
       This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
