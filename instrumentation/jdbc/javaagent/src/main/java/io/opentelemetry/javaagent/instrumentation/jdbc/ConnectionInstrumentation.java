@@ -112,7 +112,9 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope != null) adviceScope.end(throwable);
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
     }
   }
 }
