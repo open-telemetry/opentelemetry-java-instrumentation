@@ -1,0 +1,10 @@
+display_name: Apache Axis2 1.6 JAX-WS 2.x
+description: >
+  This instrumentation enables controller spans for Apache Axis2 JAX-WS web services, and enriches
+  HTTP server spans and metrics with route information.
+library_link: https://axis.apache.org/axis2/java/core/
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller (INTERNAL) spans.
+    type: boolean
+    default: false

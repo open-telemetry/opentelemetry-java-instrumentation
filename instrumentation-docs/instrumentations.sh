@@ -174,6 +174,8 @@ readonly INSTRUMENTATIONS=(
   "jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent:testExperimental"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent:test"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent:testExperimental"
+  "jaxws:jaxws-2.0:javaagent:test"
+  "jaxws:jaxws-2.0-axis2-1.6:javaagent:test"
 )
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
