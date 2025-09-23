@@ -13,15 +13,15 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class TracingHolder {
 
-  private static final boolean CAPTURE_ENCODING_SPAN_EVENTS =
+  private static final boolean CAPTURE_COMMAND_ENCODING_EVENTS =
       AgentInstrumentationConfig.get()
           .getBoolean(
-              "otel.instrumentation.lettuce.experimental.encoding-span-events.enabled", true);
+              "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled", true);
 
   public static final Tracing TRACING =
       LettuceTelemetry.builder(GlobalOpenTelemetry.get())
           .setStatementSanitizationEnabled(AgentCommonConfig.get().isStatementSanitizationEnabled())
-          .setEncodingSpanEventsEnabled(CAPTURE_ENCODING_SPAN_EVENTS)
+          .setEncodingSpanEventsEnabled(CAPTURE_COMMAND_ENCODING_EVENTS)
           .build()
           .newTracing();
 
