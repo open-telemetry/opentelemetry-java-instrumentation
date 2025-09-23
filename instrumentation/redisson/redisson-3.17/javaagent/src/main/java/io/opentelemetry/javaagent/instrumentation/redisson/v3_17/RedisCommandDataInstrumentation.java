@@ -16,6 +16,8 @@ import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 
 public class RedisCommandDataInstrumentation implements TypeInstrumentation {
 
@@ -35,10 +37,11 @@ public class RedisCommandDataInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapCompletableFutureAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) CompletableFuture<?> completableFuture) {
-      completableFuture = CompletableFutureWrapper.wrap(completableFuture);
+    public static CompletableFuture<?> onEnter(
+        @Advice.Argument(0) CompletableFuture<?> completableFuture) {
+      return CompletableFutureWrapper.wrap(completableFuture);
     }
   }
 }
