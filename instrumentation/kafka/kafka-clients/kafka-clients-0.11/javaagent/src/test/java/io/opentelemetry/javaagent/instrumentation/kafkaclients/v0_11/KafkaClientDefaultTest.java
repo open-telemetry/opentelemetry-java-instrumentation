@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -155,8 +156,8 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
   }
 
   @DisplayName("test records(TopicPartition) kafka consume")
-  @Test
-  void testRecordsWithTopicPartitionKafkaConsume()
+  @ValueSource(booleans = {true, false})
+  void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
     producer
@@ -171,10 +172,18 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
     assertThat(recordsInPartition.size()).isEqualTo(1);
 
-    // iterate over records to generate spans
-    for (ConsumerRecord<?, ?> record : recordsInPartition) {
-      assertThat(record.value()).isEqualTo(greeting);
-      assertThat(record.key()).isNull();
+    if (testListIterator) {
+      for (ListIterator<? extends ConsumerRecord<?, ?>> iterator = recordsInPartition.listIterator(); iterator.hasNext(); ) {
+        ConsumerRecord<?, ?> record = iterator.next();
+        assertThat(record.value()).isEqualTo(greeting);
+        assertThat(record.key()).isNull();
+      }
+    } else {
+      // iterate over records to generate spans
+      for (ConsumerRecord<?, ?> record : recordsInPartition) {
+        assertThat(record.value()).isEqualTo(greeting);
+        assertThat(record.key()).isNull();
+      }
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();
