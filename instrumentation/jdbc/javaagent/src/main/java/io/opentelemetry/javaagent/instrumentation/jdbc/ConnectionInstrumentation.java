@@ -26,6 +26,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.Locale;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -68,35 +69,50 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TransactionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Connection connection,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      DbRequest request =
-          DbRequest.createTransaction(connection, methodName.toUpperCase(Locale.ROOT));
+    public static final class AdviceScope {
+      private final DbRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      if (request == null || !transactionInstrumenter().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(DbRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = transactionInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Connection connection, String methodName) {
+        DbRequest request =
+            DbRequest.createTransaction(connection, methodName.toUpperCase(Locale.ROOT));
+        if (request == null) {
+          return null;
+        }
+        Context parentContext = currentContext();
+        if (!transactionInstrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = transactionInstrumenter().start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        transactionInstrumenter().end(context, request, null, throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.This Connection connection, @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(connection, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") DbRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-      transactionInstrumenter().end(context, request, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) adviceScope.end(throwable);
     }
   }
 }
