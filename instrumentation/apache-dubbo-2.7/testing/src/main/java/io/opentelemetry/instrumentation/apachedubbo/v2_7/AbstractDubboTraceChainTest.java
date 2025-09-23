@@ -378,7 +378,7 @@ public abstract class AbstractDubboTraceChainTest {
     int port = PortUtils.findOpenPort();
 
     // setup middle service provider with HelloService provider and consumer in same bootstrap for
-    // injvm
+    // in-JVM calls
     ProtocolConfig middleProtocolConfig = new ProtocolConfig();
     middleProtocolConfig.setPort(port);
 
