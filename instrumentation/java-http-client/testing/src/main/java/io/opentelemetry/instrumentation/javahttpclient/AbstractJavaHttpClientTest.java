@@ -124,6 +124,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
   @SuppressWarnings("Interruption") // test calls CompletableFuture.cancel with true
   @Test
   void cancelRequest() throws InterruptedException {
+    boolean isJdk11 = "11".equals(System.getProperty("java.specification.version"));
     String method = "GET";
     URI uri = resolveAddress("/long-request");
 
@@ -135,7 +136,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                   HttpRequest.newBuilder()
                       .uri(uri)
                       .method(method, HttpRequest.BodyPublishers.noBody())
-                      .header("delay", String.valueOf(TimeUnit.SECONDS.toMillis(10)))
+                      .header("delay", String.valueOf(TimeUnit.SECONDS.toMillis(5)))
                       .build();
               return client
                   .sendAsync(request, HttpResponse.BodyHandlers.ofString())
@@ -181,7 +182,9 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
                         .hasParent(trace.getSpan(1))
-                        .hasStatus(StatusData.error()),
+                        // jdk 11 does not cancel the request on the server side so the request
+                        // succeeds
+                        .hasStatus(isJdk11 ? StatusData.unset() : StatusData.error()),
                 span ->
                     span.hasName("child")
                         .hasParent(trace.getSpan(0))
