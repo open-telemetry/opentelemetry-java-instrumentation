@@ -102,7 +102,6 @@ abstract class AbstractLettuceClientTest {
 
   protected static void assertCommandEncodeEvents(SpanDataAssert span) {
     if (COMMAND_ENCODING_EVENTS_ENABLED) {
-      // these are no longer recorded since Lettuce 6.1.6
       span.hasEventsSatisfyingExactly(
           event -> event.hasName("redis.encode.start"), event -> event.hasName("redis.encode.end"));
     }
