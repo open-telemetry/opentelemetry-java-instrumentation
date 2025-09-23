@@ -58,7 +58,7 @@ Key directories:
 - Structure: `<library>/<version>/<javaagent|library>/` (e.g., `instrumentation/spring/spring-boot-autoconfigure/`)
 - Test structure: Each instrumentation has separate test modules
 - Documentation generator: `./gradlew :instrumentation-docs:runAnalysis` updates `docs/instrumentation-list.yaml`
-- Telemetry collection: `./instrumentation-docs/collect.sh` runs tests to generate telemetry metadata
+- Telemetry collection: `./instrumentation-docs/ci-collect.sh` runs tests to generate telemetry metadata
 
 ### Build Performance Tips
 - Configuration phase takes 60-90 seconds due to large number of modules (~500+) - this is NORMAL
