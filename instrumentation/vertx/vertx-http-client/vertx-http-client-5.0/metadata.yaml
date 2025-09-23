@@ -1,5 +1,5 @@
-description: This instrumentation enables HTTP client spans and HTTP client metrics for Play WS HTTP client.
-library_link: https://github.com/playframework/play-ws
+description: This instrumentation enables HTTP client spans and HTTP client metrics for Vert.x HTTP client version 5.0.
+library_link: https://vertx.io/docs/vertx-web-client/java/
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >
