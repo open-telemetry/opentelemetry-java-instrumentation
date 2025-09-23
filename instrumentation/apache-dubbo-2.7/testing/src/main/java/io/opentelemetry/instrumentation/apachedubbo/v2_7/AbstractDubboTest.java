@@ -29,6 +29,7 @@ import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Consumer;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ProtocolConfig;
@@ -144,16 +145,10 @@ public abstract class AbstractDubboTest {
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(String.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(Long.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
@@ -169,8 +164,7 @@ public abstract class AbstractDubboTest {
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService"),
                                 equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(NETWORK_TYPE, AbstractAssert::isNull))));
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
     testing()
         .waitAndAssertMetrics(
@@ -282,23 +276,11 @@ public abstract class AbstractDubboTest {
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(String.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(Long.class))),
-                                satisfies(
-                                    NETWORK_TYPE,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6")))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
+                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
@@ -314,13 +296,18 @@ public abstract class AbstractDubboTest {
                                 equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
                                 satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
+                                // this attribute is not filled reliably, it is either null or
+                                // "ipv4"/"ipv6"
                                 satisfies(
                                     NETWORK_TYPE,
                                     k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isEqualTo("ipv4"),
-                                            val -> assertThat(val).isEqualTo("ipv6"))))));
+                                        assertLatestDeps(
+                                            k,
+                                            a ->
+                                                a.satisfiesAnyOf(
+                                                    val -> assertThat(val).isNull(),
+                                                    val -> assertThat(val).isEqualTo("ipv4"),
+                                                    val -> assertThat(val).isEqualTo("ipv6")))))));
 
     testing()
         .waitAndAssertMetrics(
@@ -376,11 +363,20 @@ public abstract class AbstractDubboTest {
   }
 
   static void assertNetworkType(AbstractStringAssert<?> stringAssert) {
+    assertLatestDeps(
+        stringAssert,
+        a ->
+            a.satisfiesAnyOf(
+                val -> assertThat(val).isEqualTo("ipv4"),
+                val -> assertThat(val).isEqualTo("ipv6")));
+  }
+
+  static void assertLatestDeps(
+      AbstractAssert<?, ?> assertion, Consumer<AbstractAssert<?, ?>> action) {
     if (Boolean.getBoolean("testLatestDeps")) {
-      stringAssert.satisfiesAnyOf(
-          val -> assertThat(val).isEqualTo("ipv4"), val -> assertThat(val).isEqualTo("ipv6"));
+      action.accept(assertion);
     } else {
-      stringAssert.isNull();
+      assertion.isNull();
     }
   }
 }

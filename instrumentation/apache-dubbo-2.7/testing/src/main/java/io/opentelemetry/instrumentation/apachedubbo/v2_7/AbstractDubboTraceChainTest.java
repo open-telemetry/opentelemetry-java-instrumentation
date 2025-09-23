@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
+import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -186,16 +187,10 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(String.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(Long.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
@@ -226,16 +221,10 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(String.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(Long.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
@@ -395,16 +384,10 @@ public abstract class AbstractDubboTraceChainTest {
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
                                     NETWORK_PEER_ADDRESS,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(String.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(String.class))),
                                 satisfies(
                                     NETWORK_PEER_PORT,
-                                    k ->
-                                        k.satisfiesAnyOf(
-                                            val -> assertThat(val).isNull(),
-                                            val -> assertThat(val).isInstanceOf(Long.class))),
+                                    k -> assertLatestDeps(k, a -> a.isInstanceOf(Long.class))),
                                 satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType)),
                     span ->
                         span.hasName(
@@ -420,8 +403,7 @@ public abstract class AbstractDubboTraceChainTest {
                                     "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService"),
                                 equalTo(RPC_METHOD, "hello"),
                                 satisfies(NETWORK_PEER_ADDRESS, k -> k.isInstanceOf(String.class)),
-                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)),
-                                satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType))));
+                                satisfies(NETWORK_PEER_PORT, k -> k.isInstanceOf(Long.class)))));
 
     testing()
         .waitAndAssertMetrics(
