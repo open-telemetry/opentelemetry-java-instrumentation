@@ -153,6 +153,20 @@ jobs:
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/CHANGELOG_SECTION.md
 
+          # Extract and highlight breaking changes for the release notes
+          if grep -q "### ⚠️ Breaking Changes" /tmp/CHANGELOG_SECTION.md; then
+            echo "" >> /tmp/release-notes.txt
+            echo "## 🚨 IMPORTANT: Breaking Changes" >> /tmp/release-notes.txt
+            echo "" >> /tmp/release-notes.txt
+            echo "This release contains breaking changes. Please review the migration notes below:" >> /tmp/release-notes.txt
+            echo "" >> /tmp/release-notes.txt
+            # Extract just the breaking changes section
+            sed -n '/### ⚠️ Breaking Changes/,/^### /p' /tmp/CHANGELOG_SECTION.md | sed '$d' | perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' >> /tmp/release-notes.txt
+            echo "" >> /tmp/release-notes.txt
+            echo "---" >> /tmp/release-notes.txt
+            echo "" >> /tmp/release-notes.txt
+          fi
+
           # the complex perl regex is needed because markdown docs render newlines as soft wraps
           # while release notes render them as line breaks
           perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' /tmp/CHANGELOG_SECTION.md \

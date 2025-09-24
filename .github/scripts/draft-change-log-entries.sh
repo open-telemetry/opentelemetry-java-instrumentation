@@ -28,6 +28,17 @@ echo
 echo "### Migration notes"
 echo
 echo
+
+# Add breaking changes section
+if [[ -z $range ]]; then
+  breaking_range="HEAD"
+else
+  breaking_range="$range"
+fi
+
+"$(dirname "$0")/extract-breaking-changes.sh" "$breaking_range"
+echo
+
 echo "### 🌟 New javaagent instrumentation"
 echo
 echo
