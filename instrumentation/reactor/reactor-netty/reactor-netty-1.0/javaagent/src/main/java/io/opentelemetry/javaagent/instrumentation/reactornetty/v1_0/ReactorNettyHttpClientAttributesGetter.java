@@ -40,6 +40,7 @@ final class ReactorNettyHttpClientAttributesGetter
     }
   }
 
+  @Nullable
   @Override
   public Integer getHttpResponseStatusCode(
       HttpClientRequest request, HttpClientResponse response, @Nullable Throwable error) {
