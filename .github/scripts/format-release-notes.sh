@@ -16,12 +16,11 @@ if [[ ! -f "$changelog_section" ]]; then
   exit 1
 fi
 
-# Create temporary file to collect all output
-temp_file=$(mktemp)
-
-# Add breaking changes section if it exists
-if grep -q "### ⚠️ Breaking Changes" "$changelog_section"; then
-  cat << 'EOF' >> "$temp_file"
+# Generate all output and redirect to file at once
+{
+  # Add breaking changes section if it exists
+  if grep -q "### ⚠️ Breaking Changes" "$changelog_section"; then
+    cat << 'EOF'
 
 ## 🚨 IMPORTANT: Breaking Changes
 
@@ -29,16 +28,14 @@ This release contains breaking changes. Please review the changes below:
 
 EOF
 
-  # Extract breaking changes section, format for release notes
-  sed -n '/### ⚠️ Breaking Changes/,/^### /p' "$changelog_section" | sed '$d' | \
-    perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' >> "$temp_file"
+    # Extract breaking changes section, format for release notes
+    sed -n '/### ⚠️ Breaking Changes/,/^### /p' "$changelog_section" | sed '$d' | \
+      perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g'
 
-  echo -e "\n---\n" >> "$temp_file"
-fi
+    echo -e "\n---\n"
+  fi
 
-# the complex perl regex is needed because markdown docs render newlines as soft wraps
-# while release notes render them as line breaks
-perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' "$changelog_section" >> "$temp_file"
-
-# Move temp file to final output
-mv "$temp_file" "$output_file"
+  # the complex perl regex is needed because markdown docs render newlines as soft wraps
+  # while release notes render them as line breaks
+  perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' "$changelog_section"
+} > "$output_file"
