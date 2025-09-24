@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
 import java.util.Map;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class JdbcAdviceScope {
@@ -32,24 +33,22 @@ public class JdbcAdviceScope {
   }
 
   public static JdbcAdviceScope startBatch(CallDepth callDepth, Statement statement) {
-    return start(callDepth, null, statement, null);
+    return start(callDepth, () -> createBatchRequest(statement));
   }
 
   public static JdbcAdviceScope startStatement(
       CallDepth callDepth, String sql, Statement statement) {
-    return start(callDepth, sql, statement, null);
+    return start(callDepth, () -> DbRequest.create(statement, sql));
   }
 
   public static JdbcAdviceScope startPreparedStatement(
       CallDepth callDepth, PreparedStatement preparedStatement) {
-    return start(callDepth, null, null, preparedStatement);
+    return start(
+        callDepth,
+        () -> DbRequest.create(preparedStatement, JdbcData.getParameters(preparedStatement)));
   }
 
-  private static JdbcAdviceScope start(
-      CallDepth callDepth,
-      @Nullable String sql,
-      @Nullable Statement statement,
-      @Nullable PreparedStatement preparedStatement) {
+  private static JdbcAdviceScope start(CallDepth callDepth, Supplier<DbRequest> requestSupplier) {
     // Connection#getMetaData() may execute a Statement or PreparedStatement to retrieve DB info
     // this happens before the DB CLIENT span is started (and put in the current context), so this
     // instrumentation runs again and the shouldStartSpan() check always returns true - and so on
@@ -62,18 +61,7 @@ public class JdbcAdviceScope {
     }
 
     Context parentContext = currentContext();
-
-    DbRequest request;
-    if (sql != null) {
-      request = DbRequest.create(statement, sql);
-    } else if (preparedStatement != null) {
-      Map<String, String> parameters = JdbcData.getParameters(preparedStatement);
-      request = DbRequest.create(preparedStatement, parameters);
-    } else {
-      // batch
-      request = createBatchRequest(statement);
-    }
-
+    DbRequest request = requestSupplier.get();
     if (request == null || !statementInstrumenter().shouldStart(parentContext, request)) {
       return new JdbcAdviceScope(callDepth, null, null, null);
     }
