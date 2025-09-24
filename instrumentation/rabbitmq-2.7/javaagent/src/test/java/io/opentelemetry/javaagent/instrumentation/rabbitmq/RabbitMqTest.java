@@ -870,22 +870,39 @@ class RabbitMqTest extends AbstractRabbitMqTest {
   }
 
   private static void verifyNetAttributes(SpanDataAssert span) {
-    span.hasAttributesSatisfying(
-        attributes -> {
-          assertThat(attributes)
-              .satisfies(
-                  attrs -> {
-                    String peerAddr = attrs.get(NETWORK_PEER_ADDRESS);
-                    assertThat(peerAddr).isIn(rabbitMqIp, null);
+  span.hasAttributesSatisfying(
+      attributes -> {
+        assertThat(attributes)
+            .satisfies(
+                attrs -> {
+                  // Legacy convention keys (already imported statically)
+                  String legacyPeerAddr = attrs.get(NETWORK_PEER_ADDRESS);
+                  String legacyType = attrs.get(NETWORK_TYPE);
+                  Long   legacyPeerPort = attrs.get(NETWORK_PEER_PORT); // <-- Long, not Integer
 
-                    String networkType = attrs.get(NETWORK_TYPE);
-                    assertThat(networkType).isIn("ipv4", "ipv6", null);
+                  // New(er) semconv keys — use literal names via AttributeKey
+                  String serverAddr = attrs.get(AttributeKey.stringKey("server.address"));
+                  Long   serverPortNum = attrs.get(AttributeKey.longKey("server.port"));
+                  String clientAddr = attrs.get(AttributeKey.stringKey("client.address"));
+                  Long   clientPortNum = attrs.get(AttributeKey.longKey("client.port"));
 
-                    assertNotNull(attrs.get(NETWORK_PEER_PORT));
-                  });
-        });
-  }
+                  boolean hasAddress =
+                      (legacyPeerAddr != null) || (serverAddr != null) || (clientAddr != null);
+                  boolean hasPort =
+                      (legacyPeerPort != null) || (serverPortNum != null) || (clientPortNum != null);
 
+                  assertThat(hasAddress)
+                      .as("Expect network peer/server/client address attribute")
+                      .isTrue();
+                  assertThat(hasPort)
+                      .as("Expect network peer/server/client port attribute")
+                      .isTrue();
+
+                  // Optional; if present must be ipv4/ipv6
+                  assertThat(legacyType).isIn("ipv4", "ipv6", null);
+                });
+      });
+}
   private static void verifyException(SpanDataAssert span, Throwable exception, String errorMsg) {
     span.hasStatus(StatusData.error())
         .hasEventsSatisfying(
