@@ -57,13 +57,13 @@ tasks {
 
   withType<JavaCompile>().configureEach {
     with(options) {
-      release.set(11)
+      release.set(17)
     }
   }
 
   withType(KotlinJvmCompile::class).configureEach {
     compilerOptions {
-      jvmTarget = JvmTarget.JVM_11
+      jvmTarget = JvmTarget.JVM_17
     }
   }
 }
@@ -87,7 +87,7 @@ gradlePlugin {
 
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
+    languageVersion.set(JavaLanguageVersion.of(17))
   }
   withJavadocJar()
   withSourcesJar()
