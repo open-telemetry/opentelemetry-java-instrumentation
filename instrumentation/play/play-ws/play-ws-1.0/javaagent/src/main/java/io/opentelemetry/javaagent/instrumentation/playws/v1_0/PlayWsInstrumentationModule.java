@@ -20,7 +20,6 @@ import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrum
 import java.util.List;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import play.shaded.ahc.org.asynchttpclient.AsyncHandler;
 import play.shaded.ahc.org.asynchttpclient.Request;
@@ -56,13 +55,14 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
       private final Request request;
       private final Scope scope;
 
-      public AdviceScope(Context parentContext, Request request, Context context, Scope scope) {
+      private AdviceScope(Context parentContext, Request request, Context context, Scope scope) {
         this.parentContext = parentContext;
         this.request = request;
-        this.context = parentContext;
+        this.context = context;
         this.scope = scope;
       }
 
+      @Nullable
       public static AdviceScope start(Request request) {
         Context parentContext = currentContext();
         if (!instrumenter().shouldStart(parentContext, request)) {
@@ -91,15 +91,18 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
       }
     }
 
-    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
+    @Advice.AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(
-        @Advice.Argument(0) Request request, @Advice.Argument(1) AsyncHandler<?> asyncHandler) {
+        @Advice.Argument(0) Request request,
+        @Advice.Argument(1) AsyncHandler<?> originalAsyncHandler) {
+      // intermediate variable required for inlined advice
+      AsyncHandler<?> asyncHandler = originalAsyncHandler;
       AdviceScope adviceScope = AdviceScope.start(request);
-      if (adviceScope == null) {
-        return new Object[] {null, asyncHandler};
+      if (adviceScope != null) {
+        asyncHandler = adviceScope.wrap(asyncHandler);
       }
-      return new Object[] {adviceScope, adviceScope.wrap(asyncHandler)};
+      return new Object[] {adviceScope, asyncHandler};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
