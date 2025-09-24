@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 import io.opentelemetry.context.Context;
 
 public final class FiberContext {
-
   private Context context;
 
   private FiberContext(Context context) {
