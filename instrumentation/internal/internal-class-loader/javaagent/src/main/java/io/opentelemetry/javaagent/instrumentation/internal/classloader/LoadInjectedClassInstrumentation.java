@@ -60,22 +60,14 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(
         @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
-      Class<?> helperClass = InjectedClassHelper.loadHelperClass(classLoader, name);
-      if (helperClass != null) {
-        return helperClass;
-      }
-      return null;
+      return InjectedClassHelper.loadHelperClass(classLoader, name);
     }
 
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static Class<?> onExit(
         @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
-      Class<?> result = originalResult;
-      if (loadedClass != null) {
-        result = loadedClass;
-      }
-      return result;
+      return loadedClass != null ? loadedClass : originalResult;
     }
   }
 }
