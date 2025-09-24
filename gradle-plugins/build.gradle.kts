@@ -40,7 +40,7 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.1.0")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.2.0")
 
   testImplementation("org.assertj:assertj-core:3.27.6")
 
@@ -57,13 +57,13 @@ tasks {
 
   withType<JavaCompile>().configureEach {
     with(options) {
-      release.set(11)
+      release.set(17)
     }
   }
 
   withType(KotlinJvmCompile::class).configureEach {
     compilerOptions {
-      jvmTarget = JvmTarget.JVM_11
+      jvmTarget = JvmTarget.JVM_17
     }
   }
 }
@@ -87,7 +87,7 @@ gradlePlugin {
 
 java {
   toolchain {
-    languageVersion.set(JavaLanguageVersion.of(11))
+    languageVersion.set(JavaLanguageVersion.of(17))
   }
   withJavadocJar()
   withSourcesJar()
