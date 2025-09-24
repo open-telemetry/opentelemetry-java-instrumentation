@@ -28,7 +28,6 @@ while IFS= read -r line; do
   # Extract PR number from commit message
   if [[ $line =~ \(#([0-9]+)\)$ ]]; then
     pr_number="${BASH_REMATCH[1]}"
-    commit_hash=$(echo "$line" | cut -d' ' -f1)
     commit_subject=$(echo "$line" | cut -d' ' -f2- | sed 's/ (#[0-9]*)$//')
 
     # Check if this PR has the breaking change label using GitHub CLI
