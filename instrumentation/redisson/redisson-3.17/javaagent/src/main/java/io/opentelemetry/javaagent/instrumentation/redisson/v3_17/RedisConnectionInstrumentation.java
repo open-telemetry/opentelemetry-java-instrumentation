@@ -44,7 +44,7 @@ public class RedisConnectionInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(RedissonRequest request, Context context, Scope scope) {
+      private AdviceScope(RedissonRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
