@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.zio.v2_0.FiberContext.RUNTIME_FIBER_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.zio.v2_0.TracingSupervisor.RUNTIME_FIBER_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 

@@ -6,13 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import zio.Fiber;
 
 public final class FiberContext {
-  @SuppressWarnings("rawtypes")
-  public static final VirtualField<Fiber.Runtime, FiberContext> RUNTIME_FIBER_CONTEXT =
-      VirtualField.find(Fiber.Runtime.class, FiberContext.class);
 
   private Context context;
 
