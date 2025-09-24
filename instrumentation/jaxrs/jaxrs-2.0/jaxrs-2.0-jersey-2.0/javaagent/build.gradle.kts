@@ -44,7 +44,6 @@ dependencies {
 
   latestDepTestLibrary("org.glassfish.jersey.core:jersey-server:2.+") // see jaxrs-3.0-jersey-3.0 module
   latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+") // see jaxrs-3.0-jersey-3.0 module
-  latestDepTestLibrary("org.glassfish.jersey.containers:jersey-container-servlet:2.+") // see jaxrs-3.0-jersey-3.0 module
   latestDepTestLibrary("org.glassfish.jersey.inject:jersey-hk2:2.+") // see jaxrs-3.0-jersey-3.0 module
 }
 
