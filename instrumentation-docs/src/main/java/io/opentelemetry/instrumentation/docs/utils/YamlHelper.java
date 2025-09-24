@@ -201,6 +201,14 @@ public class YamlHelper {
       if (module.getMetadata().getDescription() != null) {
         moduleMap.put("description", module.getMetadata().getDescription());
       }
+      if (module.getMetadata().getSemanticConventions() != null
+          && !module.getMetadata().getSemanticConventions().isEmpty()) {
+        List<String> conventionNames =
+            module.getMetadata().getSemanticConventions().stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+        moduleMap.put("semantic_conventions", conventionNames);
+      }
       if (module.getMetadata().getLibraryLink() != null) {
         moduleMap.put("library_link", module.getMetadata().getLibraryLink());
       }

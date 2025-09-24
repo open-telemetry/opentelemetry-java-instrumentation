@@ -31,15 +31,10 @@ jobs:
       - name: create working branch
         run: git checkout -b otelbot/cloudfoundry-${{ github.run_number }}-${{ github.run_attempt }}
 
-      - name: install xq (which is part of yq)
-        run: |
-          sudo apt-get install jq python3-pip
-          pip install yq==3.4.3
-
       - name: update index.yml
         run: |
           wget https://repo1.maven.org/maven2/io/opentelemetry/javaagent/opentelemetry-javaagent/maven-metadata.xml
-          xq -r .metadata.versioning.versions.version[] maven-metadata.xml | sed -E 's/(.*)/\1: https:\/\/repo1.maven.org\/maven2\/io\/opentelemetry\/javaagent\/opentelemetry-javaagent\/\1\/opentelemetry-javaagent-\1.jar/' > index.yml
+          grep -oP '(?<=<version>)[^<]+' maven-metadata.xml | sed -E 's/(.*)/\1: https:\/\/repo1.maven.org\/maven2\/io\/opentelemetry\/javaagent\/opentelemetry-javaagent\/\1\/opentelemetry-javaagent-\1.jar/' > index.yml
 
       - name: display changes
         run: git diff

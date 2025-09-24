@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_METRICS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_SPANS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -44,6 +46,7 @@ class YamlHelperTest {
             .displayName("Spring Web")
             .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(true)
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .build();
 
     modules.add(
@@ -84,6 +87,9 @@ class YamlHelperTest {
               - name: spring-web-6.0
                 display_name: Spring Web
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
                 disabled_by_default: true
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11

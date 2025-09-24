@@ -5,8 +5,6 @@
 
 package io.opentelemetry.smoketest;
 
-import static io.opentelemetry.sdk.testing.assertj.TracesAssert.assertThat;
-
 import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import java.time.Duration;
@@ -38,36 +36,30 @@ class QuarkusSmokeTest extends JavaSmokeTest {
   @ParameterizedTest
   @ValueSource(ints = {17, 21, 23}) // Quarkus 3.7+ requires Java 17+
   void quarkusSmokeTest(int jdk) throws Exception {
-    withTarget(
-        jdk,
-        () -> {
-          String currentAgentVersion;
-          try (JarFile agentJar = new JarFile(agentPath)) {
-            currentAgentVersion =
-                agentJar
-                    .getManifest()
-                    .getMainAttributes()
-                    .getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-          }
+    startTarget(jdk);
+    String currentAgentVersion;
+    try (JarFile agentJar = new JarFile(agentPath)) {
+      currentAgentVersion =
+          agentJar
+              .getManifest()
+              .getMainAttributes()
+              .getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+    }
 
-          client().get("/hello").aggregate().join();
+    client().get("/hello").aggregate().join();
 
-          assertThat(waitForTraces())
-              .hasTracesSatisfyingExactly(
-                  trace ->
-                      trace.hasSpansSatisfyingExactly(
-                          span ->
-                              span.hasName("GET /hello")
-                                  .hasResourceSatisfying(
-                                      resource -> {
-                                        resource
-                                            .hasAttribute(
-                                                TelemetryIncubatingAttributes
-                                                    .TELEMETRY_DISTRO_VERSION,
-                                                currentAgentVersion)
-                                            .hasAttribute(
-                                                ServiceAttributes.SERVICE_NAME, "quarkus");
-                                      })));
-        });
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /hello")
+                        .hasResourceSatisfying(
+                            resource -> {
+                              resource
+                                  .hasAttribute(
+                                      TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
+                                      currentAgentVersion)
+                                  .hasAttribute(ServiceAttributes.SERVICE_NAME, "quarkus");
+                            })));
   }
 }
