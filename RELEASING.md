@@ -92,7 +92,7 @@ When your PR introduces a breaking change:
 ### For Maintainers
 
 During PR review, ensure:
-- Migration notes are clear and comprehensive
+- Migration notes are clear
 - The breaking change is properly categorized
 - The impact is well understood
 
