@@ -10,7 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.ManualTelemetryEntry;
+import io.opentelemetry.instrumentation.docs.internal.SemanticConvention;
+import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.utils.YamlHelper;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ManualTelemetryTest {
@@ -51,36 +54,45 @@ class ManualTelemetryTest {
               type: STRING
         """;
 
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(yamlContent);
+    InstrumentationMetadata actualMetadata = YamlHelper.metaDataParser(yamlContent);
+    ManualTelemetryEntry defaultEntry =
+        new ManualTelemetryEntry(
+            "default",
+            List.of(
+                new ManualTelemetryEntry.ManualMetric(
+                    "system.disk.io",
+                    "System disk IO",
+                    "LONG_SUM",
+                    "By",
+                    List.of(
+                        new TelemetryAttribute("device", "STRING"),
+                        new TelemetryAttribute("direction", "STRING")))),
+            List.of(
+                new ManualTelemetryEntry.ManualSpan(
+                    "CLIENT", List.of(new TelemetryAttribute("custom.operation", "STRING")))));
 
-    assertThat(metadata).isNotNull();
-    assertThat(metadata.getDescription())
-        .isEqualTo("Example instrumentation with manual telemetry documentation");
-    assertThat(metadata.getLibraryLink()).isEqualTo("https://example.com/library");
-    assertThat(metadata.getOverrideTelemetry()).isFalse();
+    ManualTelemetryEntry experimentalEntry =
+        new ManualTelemetryEntry(
+            "experimental",
+            List.of(
+                new ManualTelemetryEntry.ManualMetric(
+                    "experimental.feature.usage",
+                    "Usage of experimental features",
+                    "HISTOGRAM",
+                    "s",
+                    List.of(new TelemetryAttribute("feature.name", "STRING")))),
+            List.of());
 
-    assertThat(metadata.getAdditionalTelemetry()).hasSize(2);
+    InstrumentationMetadata expectedMetadata =
+        new InstrumentationMetadata.Builder()
+            .description("Example instrumentation with manual telemetry documentation")
+            .libraryLink("https://example.com/library")
+            .semanticConventions(List.of(SemanticConvention.HTTP_CLIENT_SPANS))
+            .additionalTelemetry(List.of(defaultEntry, experimentalEntry))
+            .overrideTelemetry(false)
+            .build();
 
-    ManualTelemetryEntry defaultEntry = metadata.getAdditionalTelemetry().get(0);
-    assertThat(defaultEntry.getWhen()).isEqualTo("default");
-    assertThat(defaultEntry.getMetrics()).hasSize(1);
-    assertThat(defaultEntry.getSpans()).hasSize(1);
-
-    ManualTelemetryEntry.ManualMetric metric = defaultEntry.getMetrics().get(0);
-    assertThat(metric.getName()).isEqualTo("system.disk.io");
-    assertThat(metric.getDescription()).isEqualTo("System disk IO");
-    assertThat(metric.getType()).isEqualTo("LONG_SUM");
-    assertThat(metric.getUnit()).isEqualTo("By");
-    assertThat(metric.getAttributes()).hasSize(2);
-
-    ManualTelemetryEntry.ManualSpan span = defaultEntry.getSpans().get(0);
-    assertThat(span.getSpanKind()).isEqualTo("CLIENT");
-    assertThat(span.getAttributes()).hasSize(1);
-
-    ManualTelemetryEntry experimentalEntry = metadata.getAdditionalTelemetry().get(1);
-    assertThat(experimentalEntry.getWhen()).isEqualTo("experimental");
-    assertThat(experimentalEntry.getMetrics()).hasSize(1);
-    assertThat(experimentalEntry.getSpans()).isEmpty();
+    assertThat(actualMetadata).usingRecursiveComparison().isEqualTo(expectedMetadata);
   }
 
   @Test
@@ -99,11 +111,24 @@ class ManualTelemetryTest {
             attributes: []
         """;
 
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(yamlContent);
+    InstrumentationMetadata actualMetadata = YamlHelper.metaDataParser(yamlContent);
 
-    assertThat(metadata).isNotNull();
-    assertThat(metadata.getOverrideTelemetry()).isTrue();
-    assertThat(metadata.getAdditionalTelemetry()).hasSize(1);
+    ManualTelemetryEntry defaultEntry =
+        new ManualTelemetryEntry(
+            "default",
+            List.of(
+                new ManualTelemetryEntry.ManualMetric(
+                    "manual.metric", "Manual metric only", "COUNTER", "1", List.of())),
+            List.of());
+
+    InstrumentationMetadata expectedMetadata =
+        new InstrumentationMetadata.Builder()
+            .description("Example with override")
+            .overrideTelemetry(true)
+            .additionalTelemetry(List.of(defaultEntry))
+            .build();
+
+    assertThat(actualMetadata).usingRecursiveComparison().isEqualTo(expectedMetadata);
   }
 
   @Test
@@ -115,10 +140,45 @@ class ManualTelemetryTest {
           - HTTP_CLIENT_SPANS
         """;
 
-    InstrumentationMetadata metadata = YamlHelper.metaDataParser(yamlContent);
+    InstrumentationMetadata actualMetadata = YamlHelper.metaDataParser(yamlContent);
 
-    assertThat(metadata).isNotNull();
-    assertThat(metadata.getOverrideTelemetry()).isFalse();
-    assertThat(metadata.getAdditionalTelemetry()).isEmpty();
+    ManualTelemetryEntry defaultEntry =
+        new ManualTelemetryEntry(
+            "default",
+            List.of(
+                new ManualTelemetryEntry.ManualMetric(
+                    "system.disk.io",
+                    "System disk IO",
+                    "LONG_SUM",
+                    "By",
+                    List.of(
+                        new TelemetryAttribute("device", "STRING"),
+                        new TelemetryAttribute("direction", "STRING")))),
+            List.of(
+                new ManualTelemetryEntry.ManualSpan(
+                    "CLIENT", List.of(new TelemetryAttribute("custom.operation", "STRING")))));
+
+    ManualTelemetryEntry experimentalEntry =
+        new ManualTelemetryEntry(
+            "experimental",
+            List.of(
+                new ManualTelemetryEntry.ManualMetric(
+                    "experimental.feature.usage",
+                    "Usage of experimental features",
+                    "HISTOGRAM",
+                    "s",
+                    List.of(new TelemetryAttribute("feature.name", "STRING")))),
+            List.of());
+
+    InstrumentationMetadata expectedMetadata =
+        new InstrumentationMetadata.Builder()
+            .description("Example instrumentation with manual telemetry documentation")
+            .libraryLink("https://example.com/library")
+            .semanticConventions(List.of(SemanticConvention.HTTP_CLIENT_SPANS))
+            .additionalTelemetry(List.of(defaultEntry, experimentalEntry))
+            .overrideTelemetry(false)
+            .build();
+
+    assertThat(actualMetadata).usingRecursiveComparison().isEqualTo(expectedMetadata);
   }
 }
