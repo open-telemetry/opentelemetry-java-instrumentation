@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.instrumentation.playws.AbstractBootstrapInstru
 import io.opentelemetry.javaagent.instrumentation.playws.AsyncHttpClientInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.playws.HandlerPublisherInstrumentation;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
@@ -76,7 +77,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.Argument(0) Request request,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
       Context context = (Context) enterResult[0];
       if (context != null && throwable != null) {

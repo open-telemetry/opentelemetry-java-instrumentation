@@ -60,6 +60,7 @@ public class PlayWsInstrumentationModule extends InstrumentationModule
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {null, asyncHandler};
       }
+
       Context context = instrumenter().start(parentContext, request);
 
       if (asyncHandler instanceof StreamedAsyncHandler) {
