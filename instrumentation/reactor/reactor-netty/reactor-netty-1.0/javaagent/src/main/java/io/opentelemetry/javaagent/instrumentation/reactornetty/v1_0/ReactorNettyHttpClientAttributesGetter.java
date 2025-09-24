@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
-import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import reactor.netty.Connection;
