@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -59,20 +60,14 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(
         @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
-      Class<?> helperClass = InjectedClassHelper.loadHelperClass(classLoader, name);
-      if (helperClass != null) {
-        return helperClass;
-      }
-
-      return null;
+      return InjectedClassHelper.loadHelperClass(classLoader, name);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result, @Advice.Enter Class<?> loadedClass) {
-      if (loadedClass != null) {
-        result = loadedClass;
-      }
+    public static Class<?> onExit(
+        @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
+      return loadedClass != null ? loadedClass : originalResult;
     }
   }
 }
