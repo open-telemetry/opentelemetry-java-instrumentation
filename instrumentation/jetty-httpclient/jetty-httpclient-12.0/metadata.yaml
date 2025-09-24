@@ -1,5 +1,5 @@
-description: This instrumentation enables HTTP client spans and HTTP client metrics for version 2 of the AsyncHttpClient (AHC) HTTP client.
-library_link: https://github.com/AsyncHttpClient/async-http-client
+description: This instrumentation enables HTTP client spans and HTTP client metrics for Jetty HTTP Client 12.0.
+library_link: https://www.eclipse.org/jetty/documentation/current/http-client.html
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >

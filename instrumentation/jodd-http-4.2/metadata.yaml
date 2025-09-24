@@ -1,5 +1,5 @@
-description: This instrumentation enables HTTP client spans and HTTP client metrics for version 2 of the AsyncHttpClient (AHC) HTTP client.
-library_link: https://github.com/AsyncHttpClient/async-http-client
+description: This instrumentation enables HTTP client spans and HTTP client metrics for Jodd HTTP client.
+library_link: https://jodd.org/http/
 configurations:
   - name: otel.instrumentation.http.known-methods
     description: >
