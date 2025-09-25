@@ -37,7 +37,7 @@ instrumentation/development:
 - `class`: The fully qualified name of the class containing the method to be traced.
 - `methods`: A list of method configurations for the specified class.
   - `name`: The name of the method to trace.
-  - `span_kind`: The kind of span to create (e.g., SERVER, CLIENT).
+  - `span_kind`: The kind of span to create (e.g., `SERVER`, `CLIENT`, default is `INTERNAL`).
 
 This configuration will instruct the OpenTelemetry Java agent to create a span around the `call`
 method of the specified class, with the span kind set to SERVER.
