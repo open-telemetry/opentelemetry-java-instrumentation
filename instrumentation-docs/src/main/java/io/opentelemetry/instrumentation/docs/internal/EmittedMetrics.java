@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.docs.internal;
 import static java.util.Collections.emptyList;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -156,6 +157,56 @@ public class EmittedMetrics {
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
       this.attributes = attributes;
+    }
+
+    /**
+     * Builder for creating EmittedMetrics.Metric instances. This class is internal and is hence not
+     * for public use. Its APIs are unstable and can change at any time.
+     */
+    public static class Builder {
+      private String name = "";
+      private String description = "";
+      private String type = "";
+      private String unit = "";
+      private List<TelemetryAttribute> attributes = new ArrayList<>();
+
+      @CanIgnoreReturnValue
+      public Builder name(String name) {
+        this.name = name;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      public Builder description(String description) {
+        this.description = description;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      public Builder type(String type) {
+        this.type = type;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      public Builder unit(String unit) {
+        this.unit = unit;
+        return this;
+      }
+
+      @CanIgnoreReturnValue
+      public Builder attributes(List<TelemetryAttribute> attributes) {
+        this.attributes = attributes != null ? attributes : new ArrayList<>();
+        return this;
+      }
+
+      public Metric build() {
+        return new Metric(name, description, type, unit, attributes);
+      }
+    }
+
+    public static Builder builder() {
+      return new Builder();
     }
   }
 }

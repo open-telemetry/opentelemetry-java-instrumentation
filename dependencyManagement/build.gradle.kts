@@ -37,7 +37,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.41.0"
+val errorProneVersion = "2.42.0"
 val byteBuddyVersion = "1.17.7"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
@@ -110,7 +110,7 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.8.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.5",
+  "org.assertj:assertj-core:3.27.6",
   "org.awaitility:awaitility:4.3.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
@@ -121,7 +121,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.14"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
 )
 
 javaPlatform {
