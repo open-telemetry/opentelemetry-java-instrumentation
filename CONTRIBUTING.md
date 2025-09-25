@@ -6,9 +6,34 @@ Before submitting new features or changes to current functionality, it is recomm
 [open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
 and discuss your ideas or propose the changes you wish to make.
 
-**Breaking Changes**: If your PR introduces a breaking change, please add the `breaking change` label.
-This will trigger automation to help you document the change properly.
-See [Breaking Changes Automation](RELEASING.md#breaking-changes-and-deprecations-automation) for more details.
+
+## Breaking Changes
+
+When your PR introduces a breaking change:
+
+* Add the `breaking change` label to your PR
+* Provide migration notes in the PR description:
+  - What is changing and why
+  - How users should update their code/configuration
+  - Code examples showing before/after usage (if applicable)
+
+**When to Use:**
+
+* API changes that break backward compatibility
+* Configuration changes that require user action
+* Behavioral changes that might affect existing users
+* Removal of deprecated features
+
+## Deprecations
+
+When your PR deprecates functionality:
+
+* Add the `deprecation` label to your PR
+* Provide deprecation details in the PR description:
+  - What is being deprecated and why
+  - What should be used instead (if applicable)
+  - Timeline for removal (if known)
+  - Any migration guidance
 
 ## Building
 
