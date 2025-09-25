@@ -24,16 +24,12 @@ jobs:
           only-labels: "needs author feedback"
           stale-issue-label: stale
           stale-issue-message: >
-            This has been automatically marked as stale because it has been marked
-            as needing author feedback and has not had any activity for 7 days.
-            It will be closed automatically if there is no response from the author
-            within 7 additional days from this comment.
+            This issue has been labeled as stale due to lack of activity and needing author feedback.
+            It will be automatically closed if there is no further activity over the next 7 days.
           stale-pr-label: stale
           stale-pr-message: >
-            This has been automatically marked as stale because it has been marked
-            as needing author feedback and has not had any activity for 7 days.
-            It will be closed automatically if there is no response from the author
-            within 7 additional days from this comment.
+            This PR has been labeled as stale due to lack of activity and needing author feedback.
+            It will be automatically closed if there is no further activity over the next 7 days.
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
@@ -41,28 +37,16 @@ jobs:
           days-before-close: -1 # the stale tag workflow will take care of actually closing this
           stale-issue-label: "stale"
           stale-issue-message: >
-            This issue has had no activity for over a year.
-            Please update if this is still relevant.
+            We would welcome a contribution for this enhancement, but since there has been no activity on it for the past year we are closing it to help maintain our backlog.
+            Anyone who would like to work on it is still welcome to do so, and we can re-open it at that time.
           only-labels: "enhancement,contribution welcome"
-
-      - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
-        with:
-          days-before-stale: 30
-          days-before-close: -1  # the "needs author feedback" stale workflow above will take care of closing this
-          stale-issue-label: "needs author feedback"
-          stale-issue-message: >
-            This issue is still marked as "needs repro" and has had no activity for a month.
-            Please provide additional details.
-          only-labels: "needs repro"
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           days-before-pr-stale: 365
           days-before-pr-close: 14
-          stale-pr-label: "stale"
+          stale-pr-label: stale
           stale-pr-message: >
-            This pull request has had no activity for over a year.
-            If it's still active, please push an update or leave a comment.
-            It will be closed automatically if there is no response from the author
-            within 14 additional days from this comment.
+            This PR has been labeled as stale due to lack of activity.
+            It will be automatically closed if there is no further activity over the next 14 days.
           exempt-draft-pr: false
