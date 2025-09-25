@@ -146,12 +146,13 @@ public class MetricParser {
         List<EmittedMetrics.Metric> metrics = result.computeIfAbsent(when, k -> new ArrayList<>());
         for (AggregatedMetricInfo aggInfo : entry.getValue().values()) {
           metrics.add(
-              new EmittedMetrics.Metric(
-                  aggInfo.name,
-                  aggInfo.description,
-                  aggInfo.type,
-                  aggInfo.unit,
-                  new ArrayList<>(aggInfo.attributes)));
+              EmittedMetrics.Metric.builder()
+                  .name(aggInfo.name)
+                  .description(aggInfo.description)
+                  .type(aggInfo.type)
+                  .unit(aggInfo.unit)
+                  .attributes(new ArrayList<>(aggInfo.attributes))
+                  .build());
         }
       }
       return result;
