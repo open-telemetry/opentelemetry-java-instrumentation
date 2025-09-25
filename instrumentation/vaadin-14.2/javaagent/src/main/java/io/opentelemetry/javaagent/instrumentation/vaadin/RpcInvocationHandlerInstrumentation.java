@@ -15,7 +15,6 @@ import com.vaadin.flow.server.communication.rpc.RpcInvocationHandler;
 import elemental.json.JsonObject;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -63,7 +62,7 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
       @Nullable
       public static HandleAdviceScope start(
           RpcInvocationHandler handler, String methodName, JsonObject jsonObject) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         VaadinRpcRequest request = VaadinRpcRequest.create(handler, methodName, jsonObject);
         if (!rpcInstrumenter().shouldStart(parentContext, request)) {
           return null;

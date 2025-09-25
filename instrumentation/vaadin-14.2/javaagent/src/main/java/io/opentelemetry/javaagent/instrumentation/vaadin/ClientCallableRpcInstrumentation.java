@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -56,7 +55,7 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static InvokeMethodAdviceScope start(Class<?> componentClass, String methodName) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         VaadinClientCallableRequest request =
             VaadinClientCallableRequest.create(componentClass, methodName);
         if (!clientCallableInstrumenter().shouldStart(parentContext, request)) {
