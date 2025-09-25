@@ -7,43 +7,29 @@ package io.opentelemetry.smoketest;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
-import java.util.Map;
-import java.util.function.Consumer;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
+import java.time.Duration;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.containers.output.OutputFrame;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class SdkDisabledSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20211213.1570880324";
-  }
+class SdkDisabledSmokeTest extends AbstractSmokeTest<Integer> {
 
   @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_SDK_DISABLED", "true");
+  protected void configure(SmokeTestOptions<Integer> options) {
+    options
+        .springBoot("20211213.1570880324")
+        .env("OTEL_SDK_DISABLED", "true")
+        .telemetryTimeout(Duration.ofSeconds(5));
   }
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17})
-  void noopSdkSmokeTest(int jdk) throws Exception {
-    Consumer<OutputFrame> output = startTarget(jdk);
-    String currentAgentVersion =
-        new JarFile(agentPath)
-            .getManifest()
-            .getMainAttributes()
-            .get(Attributes.Name.IMPLEMENTATION_VERSION)
-            .toString();
-
+  void noopSdkSmokeTest(int jdk) {
+    SmokeTestOutput output = start(jdk);
     assertThat(client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");
     assertThat(testing.spans()).isEmpty();
-    assertVersionLogged(output, currentAgentVersion);
+    output.assertAgentVersionLogged();
     assertThat(testing.spans()).isEmpty();
   }
 }
