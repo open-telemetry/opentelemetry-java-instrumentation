@@ -44,6 +44,10 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     return false;
   }
 
+  protected boolean testExperimental() {
+    return false;
+  }
+
   protected boolean shouldTestCompletableStageAsync() {
     return Boolean.getBoolean("testLatestDeps");
   }
@@ -192,7 +196,7 @@ public abstract class AbstractJaxRsHttpServerTest<SERVER> extends AbstractHttpSe
     List<AttributeAssertion> attributeAssertions =
         codeFunctionSuffixAssertions("test.JaxRsTestResource", "asyncOp");
 
-    if (testKind == AsyncResponseTestKind.CANCELED) {
+    if (testKind == AsyncResponseTestKind.CANCELED && testExperimental()) {
       attributeAssertions.add(equalTo(AttributeKey.booleanKey("jaxrs.canceled"), true));
     }
 

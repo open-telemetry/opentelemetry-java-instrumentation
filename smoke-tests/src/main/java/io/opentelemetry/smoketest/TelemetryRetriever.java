@@ -5,65 +5,85 @@
 
 package io.opentelemetry.smoketest;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.protobuf.GeneratedMessage;
-import com.google.protobuf.util.JsonFormat;
-import io.opentelemetry.proto.collector.logs.v1.ExportLogsServiceRequest;
-import io.opentelemetry.proto.collector.metrics.v1.ExportMetricsServiceRequest;
-import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.instrumentation.testing.internal.TelemetryConverter;
+import io.opentelemetry.sdk.logs.data.LogRecordData;
+import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
+import io.opentelemetry.testing.internal.jackson.core.JsonProcessingException;
+import io.opentelemetry.testing.internal.jackson.databind.ObjectMapper;
+import io.opentelemetry.testing.internal.proto.collector.logs.v1.ExportLogsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.metrics.v1.ExportMetricsServiceRequest;
+import io.opentelemetry.testing.internal.proto.collector.trace.v1.ExportTraceServiceRequest;
+import io.opentelemetry.testing.internal.protobuf.GeneratedMessage;
+import io.opentelemetry.testing.internal.protobuf.InvalidProtocolBufferException;
+import io.opentelemetry.testing.internal.protobuf.util.JsonFormat;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public class TelemetryRetriever {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  private final WebClient client;
 
-  final WebClient client;
-
-  TelemetryRetriever(int backendPort) {
+  public TelemetryRetriever(int backendPort) {
     client = WebClient.of("http://localhost:" + backendPort);
   }
 
-  void clearTelemetry() {
+  public void clearTelemetry() {
     client.get("/clear").aggregate().join();
   }
 
-  Collection<ExportTraceServiceRequest> waitForTraces() {
-    return waitForTelemetry("get-traces", ExportTraceServiceRequest::newBuilder);
+  public List<SpanData> waitForTraces() {
+    Collection<ExportTraceServiceRequest> requests =
+        waitForTelemetry("get-traces", ExportTraceServiceRequest::newBuilder);
+    return TelemetryConverter.getSpanData(
+        convert(requests, ExportTraceServiceRequest::getResourceSpansList));
   }
 
-  Collection<ExportMetricsServiceRequest> waitForMetrics() {
-    return waitForTelemetry("get-metrics", ExportMetricsServiceRequest::newBuilder);
+  public List<MetricData> waitForMetrics() {
+    Collection<ExportMetricsServiceRequest> requests =
+        waitForTelemetry("get-metrics", ExportMetricsServiceRequest::newBuilder);
+    return TelemetryConverter.getMetricsData(
+        convert(requests, ExportMetricsServiceRequest::getResourceMetricsList));
   }
 
-  Collection<ExportLogsServiceRequest> waitForLogs() {
-    return waitForTelemetry("get-logs", ExportLogsServiceRequest::newBuilder);
+  public List<LogRecordData> waitForLogs() {
+    Collection<ExportLogsServiceRequest> requests =
+        waitForTelemetry("get-logs", ExportLogsServiceRequest::newBuilder);
+    return TelemetryConverter.getLogRecordData(
+        convert(requests, ExportLogsServiceRequest::getResourceLogsList));
   }
 
-  @SuppressWarnings({"unchecked", "InterruptedExceptionSwallowed"})
-  private <T extends GeneratedMessage, B extends GeneratedMessage.Builder<?>>
+  private static <R, T> List<T> convert(Collection<R> items, Function<R, List<T>> converter) {
+    return items.stream()
+        .flatMap(item -> converter.apply(item).stream())
+        .collect(Collectors.toList());
+  }
+
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  private <T extends GeneratedMessage, B extends GeneratedMessage.Builder>
       Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {
     try {
-      String content = waitForContent(path);
-
-      return StreamSupport.stream(OBJECT_MAPPER.readTree(content).spliterator(), false)
+      return OBJECT_MAPPER
+          .readTree(waitForContent(path))
+          .valueStream()
           .map(
               jsonNode -> {
                 B builder = builderConstructor.get();
                 // TODO: Register parser into object mapper to avoid de -> re -> deserialize.
                 try {
-                  String json = OBJECT_MAPPER.writeValueAsString(jsonNode);
-                  JsonFormat.parser().merge(json, builder);
-                } catch (Exception e) {
+                  JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(jsonNode), builder);
+                  return (T) builder.build();
+                } catch (InvalidProtocolBufferException | JsonProcessingException e) {
                   throw new IllegalStateException(e);
                 }
-                return (T) builder.build();
               })
           .collect(Collectors.toList());
-    } catch (Exception e) {
+    } catch (InterruptedException | JsonProcessingException e) {
       throw new IllegalStateException(e);
     }
   }
@@ -78,11 +98,20 @@ public class TelemetryRetriever {
       if (content.length() > 2 && content.length() == previousSize) {
         break;
       }
+
       previousSize = content.length();
-      System.out.println("Current content size $previousSize");
+      System.out.println("Current content size " + previousSize);
       TimeUnit.MILLISECONDS.sleep(500);
     }
 
+    if ("true".equals(System.getenv("debug"))) {
+      System.out.println(content);
+    }
+
     return content;
+  }
+
+  public final WebClient getClient() {
+    return client;
   }
 }

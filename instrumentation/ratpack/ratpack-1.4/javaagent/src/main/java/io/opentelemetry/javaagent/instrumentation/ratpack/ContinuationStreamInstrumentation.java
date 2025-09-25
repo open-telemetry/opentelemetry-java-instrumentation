@@ -14,6 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import ratpack.func.Block;
@@ -40,9 +42,10 @@ public class ContinuationStreamInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapBlockAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrap(@Advice.Argument(value = 0, readOnly = false) Block block) {
-      block = BlockWrapper.wrapIfNeeded(block);
+    public static Block wrap(@Advice.Argument(0) Block block) {
+      return BlockWrapper.wrapIfNeeded(block);
     }
   }
 }

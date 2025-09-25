@@ -22,4 +22,9 @@ class CxfJettyHttpServerTest extends JaxRsJettyHttpServerTest {
     options.setResponseCodeOnNonStandardHttpMethod(
         Boolean.getBoolean("testLatestDeps") ? 500 : 405);
   }
+
+  @Override
+  protected boolean testExperimental() {
+    return Boolean.getBoolean("otel.instrumentation.jaxrs.experimental-span-attributes");
+  }
 }

@@ -47,7 +47,7 @@ class IbmHttpsUrlConnectionTest extends Specification {
             .withLogConsumer(new Slf4jLogConsumer(logger))
     backend.start()
 
-    def telemetryRetriever = new TelemetryRetriever(backend.getMappedPort(BACKEND_PORT))
+    def telemetryRetriever = new GroovyTestTelemetryRetriever(backend.getMappedPort(BACKEND_PORT))
 
     GenericContainer target =
       new GenericContainer<>(DockerImageName.parse("ibmjava:8-sdk"))

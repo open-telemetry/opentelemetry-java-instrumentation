@@ -13,7 +13,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
-  testImplementation("org.assertj:assertj-core:3.27.4")
+  testImplementation("org.assertj:assertj-core:3.27.6")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }

@@ -14,6 +14,7 @@ import com.datastax.driver.core.Session;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -42,13 +43,14 @@ public class CassandraManagerInstrumentation implements TypeInstrumentation {
      *
      * @param session The fresh session to patch. This session is replaced with new session
      */
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void injectTracingSession(@Advice.Return(readOnly = false) Session session) {
+    public static Session injectTracingSession(@Advice.Return Session session) {
       // This should cover ours and OT's TracingSession
       if (session.getClass().getName().endsWith("cassandra.TracingSession")) {
-        return;
+        return session;
       }
-      session = new TracingSession(session);
+      return new TracingSession(session);
     }
   }
 }
