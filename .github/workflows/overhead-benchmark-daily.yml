@@ -42,17 +42,23 @@ jobs:
       - name: Copy results back to gh-pages branch
         run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
 
-      - name: Commit updated results
-        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        id: otelbot-token
         with:
-          add: "benchmark-overhead/results"
-          cwd: "./gh-pages"
-          branch: "gh-pages"
-          message: "update test result data"
-          author_name: otelbot
-          author_email: 197425009+otelbot@users.noreply.github.com
-          committer_name: otelbot
-          committer_email: 197425009+otelbot@users.noreply.github.com
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Commit updated results
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        working-directory: ./gh-pages
+        run: |
+          git add benchmark-overhead/results
+          git commit -m "update test result data"
+          git push
 
   workflow-notification:
     permissions:
