@@ -60,10 +60,12 @@ jobs:
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           days-before-pr-stale: 365
-          days-before-pr-close: -1
+          days-before-pr-close: 7
           stale-pr-label: "stale"
           stale-pr-message: >
             This pull request has had no activity for over a year.
             If it's still active, please push an update or leave a comment.
+            It will be closed automatically if there is no response from the author
+            within 7 additional days from this comment.
           exempt-pr-labels: "stale"
           exempt-draft-pr: false
