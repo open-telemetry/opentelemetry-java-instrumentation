@@ -16,7 +16,6 @@ if [[ ! -f "$changelog_section" ]]; then
   exit 1
 fi
 
-# Generate all output and redirect to file at once
 {
   # Add breaking changes section if it exists
   if grep -q "### ⚠️ Breaking Changes" "$changelog_section"; then
@@ -30,6 +29,23 @@ EOF
 
     # Extract breaking changes section, format for release notes
     sed -n '/### ⚠️ Breaking Changes/,/^### /p' "$changelog_section" | sed '$d' | \
+      perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g'
+
+    echo -e "\n---\n"
+  fi
+
+  # Add deprecations section if it exists
+  if grep -q "### 🚫 Deprecations" "$changelog_section"; then
+    cat << 'EOF'
+
+## 🚫 Deprecations
+
+This release includes deprecations. Please review the changes below and plan for future updates:
+
+EOF
+
+    # Extract deprecations section, format for release notes
+    sed -n '/### 🚫 Deprecations/,/^### /p' "$changelog_section" | sed '$d' | \
       perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g'
 
     echo -e "\n---\n"

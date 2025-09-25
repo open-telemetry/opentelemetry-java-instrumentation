@@ -30,6 +30,7 @@ the second Monday of the month (roughly a few days after the monthly minor relea
   - The heading for the unreleased entries should be `## Unreleased`.
   - Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change log.
   - The script will automatically include a "Breaking Changes" section for PRs labeled with `breaking change`.
+  - The script will automatically include a "Deprecations" section for PRs labeled with `deprecation`.
 - Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
   - Press the "Run workflow" button, and leave the default branch `main` selected.
   - Review and merge the two pull requests that it creates
@@ -73,12 +74,13 @@ and deadlocks.
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
 
-## Breaking Changes Automation
+## Breaking Changes and Deprecations Automation
 
-This project includes automation to help track and communicate breaking changes to users.
+This project includes automation to help track and communicate breaking changes and deprecations to users.
 
 ### For Contributors
 
+#### Breaking Changes
 When your PR introduces a breaking change:
 
 1. **Apply the Label**: Add the `breaking change` label to your PR
@@ -86,8 +88,18 @@ When your PR introduces a breaking change:
 3. **Provide Migration Notes**: Add detailed migration notes to your PR description or as a comment, including:
    - What is changing and why
    - How users should update their code/configuration
-   - Code examples showing before/after usage
-   - Any alternative approaches if applicable
+   - Code examples showing before/after usage (if applicable)
+
+#### Deprecations
+When your PR deprecates functionality:
+
+1. **Apply the Label**: Add the `deprecation` label to your PR
+2. **Respond to Automation**: A bot will comment with guidance on documenting the deprecation
+3. **Provide Deprecation Details**: Add details to your PR description or as a comment, including:
+   - What is being deprecated and why
+   - What should be used instead (if applicable)
+   - Timeline for removal (if known)
+   - Any migration guidance
 
 ### For Maintainers
 

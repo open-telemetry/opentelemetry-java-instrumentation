@@ -76,12 +76,12 @@ jobs:
             // Check if we've already commented about deprecation
             const botComment = comments.find(comment => 
               comment.user.login === 'github-actions[bot]' && 
-              comment.body.includes('🚫 Deprecation Notice')
+              comment.body.includes('📋 Deprecation Notice')
             );
 
             if (!botComment) {
               const commentBody = [
-                "## 🚫 Deprecation Notice",
+                "## 📋 Deprecation Notice",
                 "",
                 "This PR has been labeled as a **deprecation**. Please ensure you provide the following information:",
                 "",

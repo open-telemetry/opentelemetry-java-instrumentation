@@ -29,14 +29,14 @@ echo "### Migration notes"
 echo
 echo
 
-# Add breaking changes section
+# Add breaking changes and deprecations sections
 if [[ -z $range ]]; then
-  breaking_range="HEAD"
+  labeled_range="HEAD"
 else
-  breaking_range="$range"
+  labeled_range="$range"
 fi
 
-"$(dirname "$0")/extract-breaking-changes.sh" "$breaking_range"
+"$(dirname "$0")/extract-labeled-prs.sh" "$labeled_range"
 echo
 
 echo "### 🌟 New javaagent instrumentation"
