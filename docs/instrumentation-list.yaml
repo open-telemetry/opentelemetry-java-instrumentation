@@ -390,6 +390,33 @@ libraries:
       default: ''
     telemetry:
     - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -6399,13 +6426,6 @@ libraries:
     scope:
       name: io.opentelemetry.runtime-telemetry-java8
   rxjava:
-  - name: rxjava-1.0
-    source_path: instrumentation/rxjava/rxjava-1.0
-    scope:
-      name: io.opentelemetry.rxjava-1.0
-    target_versions:
-      library:
-      - io.reactivex:rxjava:1.0.7
   - name: rxjava-2.0
     source_path: instrumentation/rxjava/rxjava-2.0
     scope:
@@ -7977,6 +7997,13 @@ internal:
   source_path: instrumentation/internal/internal-lambda
   scope:
     name: io.opentelemetry.internal-lambda
+- name: rxjava-1.0
+  source_path: instrumentation/rxjava/rxjava-1.0
+  scope:
+    name: io.opentelemetry.rxjava-1.0
+  target_versions:
+    library:
+    - io.reactivex:rxjava:1.0.7
 - name: internal-eclipse-osgi-3.6
   source_path: instrumentation/internal/internal-eclipse-osgi-3.6
   scope:
