@@ -11,6 +11,8 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.reactivestreams.Subscriber;
@@ -31,10 +33,10 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapSubscriberAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void enter(
-        @Advice.Argument(value = 0, readOnly = false) Subscriber<?> subscriber) {
-      subscriber = new SubscriberWrapper<>(subscriber, Java8BytecodeBridge.currentContext());
+    public static Subscriber<?> enter(@Advice.Argument(0) Subscriber<?> subscriber) {
+      return new SubscriberWrapper<>(subscriber, Java8BytecodeBridge.currentContext());
     }
   }
 }
