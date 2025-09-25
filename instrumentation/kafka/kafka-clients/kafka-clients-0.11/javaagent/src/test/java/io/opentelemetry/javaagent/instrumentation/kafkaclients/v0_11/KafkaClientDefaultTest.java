@@ -172,6 +172,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         consumerRecords.records(KafkaClientBaseTest.topicPartition);
     assertThat(recordsInPartition.size()).isEqualTo(1);
 
+    // iterate over records to generate spans
     if (testListIterator) {
       for (ListIterator<? extends ConsumerRecord<?, ?>> iterator =
               recordsInPartition.listIterator();
@@ -181,7 +182,6 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
         assertThat(record.key()).isNull();
       }
     } else {
-      // iterate over records to generate spans
       for (ConsumerRecord<?, ?> record : recordsInPartition) {
         assertThat(record.value()).isEqualTo(greeting);
         assertThat(record.key()).isNull();
