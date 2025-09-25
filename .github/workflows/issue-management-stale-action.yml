@@ -39,33 +39,30 @@ jobs:
         with:
           days-before-stale: 365
           days-before-close: -1 # the stale tag workflow will take care of actually closing this
-          stale-issue-label: "needs author feedback"
+          stale-issue-label: "stale"
           stale-issue-message: >
             This issue has had no activity for over a year.
             Please update if this is still relevant.
           only-labels: "enhancement,contribution welcome"
-          exempt-issue-labels: "needs author feedback"
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           days-before-stale: 30
-          days-before-close: -1  # the stale tag workflow will take care of actually closing this
+          days-before-close: -1  # the "needs author feedback" stale workflow above will take care of closing this
           stale-issue-label: "needs author feedback"
           stale-issue-message: >
             This issue is still marked as "needs repro" and has had no activity for a month.
             Please provide additional details.
           only-labels: "needs repro"
-          exempt-issue-labels: "needs author feedback"
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           days-before-pr-stale: 365
-          days-before-pr-close: 7
+          days-before-pr-close: 14
           stale-pr-label: "stale"
           stale-pr-message: >
             This pull request has had no activity for over a year.
             If it's still active, please push an update or leave a comment.
             It will be closed automatically if there is no response from the author
-            within 7 additional days from this comment.
-          exempt-pr-labels: "stale"
+            within 14 additional days from this comment.
           exempt-draft-pr: false
