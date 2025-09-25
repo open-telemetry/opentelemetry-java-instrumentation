@@ -16,7 +16,7 @@ occurrences. The resulting data is automatically translated into OpenTelemetry t
 In addition to configuring method instrumentation via system properties, you can use declarative
 configuration files to specify which methods to trace. This approach allows for more flexible and
 maintainable instrumentation settings.
-      
+
 Below is an example of a declarative configuration YAML file that enables tracing for a specific
 method:
 
