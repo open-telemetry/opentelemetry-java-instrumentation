@@ -27,6 +27,7 @@ public final class ContextPropagatingRunnable implements Runnable {
   public static Runnable propagateContext(Runnable task, Context context) {
     return new ContextPropagatingRunnable(task, context);
   }
+
   private static final double NANOS_PER_S = TimeUnit.SECONDS.toNanos(1);
   private final Runnable delegate;
   private final Context context;
@@ -39,8 +40,7 @@ public final class ContextPropagatingRunnable implements Runnable {
     this.startObservation = System.nanoTime();
 
     this.pendingTimeHistogram =
-        GlobalOpenTelemetry
-            .getMeter("thread.pending.duration")
+        GlobalOpenTelemetry.getMeter("thread.pending.duration")
             .histogramBuilder("thread.pending.duration")
             .setUnit("s")
             .setDescription("Duration of HTTP client requests.")
@@ -50,13 +50,9 @@ public final class ContextPropagatingRunnable implements Runnable {
   @Override
   public void run() {
     try (Scope ignored = context.makeCurrent()) {
-      pendingTimeHistogram
-          .record(System.nanoTime() - startObservation / NANOS_PER_S,
-              Attributes.of(
-                  AttributeKey.stringKey("thread"),
-                  Thread.currentThread().getName()
-              )
-          );
+      pendingTimeHistogram.record(
+          System.nanoTime() - startObservation / NANOS_PER_S,
+          Attributes.of(AttributeKey.stringKey("thread"), Thread.currentThread().getName()));
       delegate.run();
     }
   }
