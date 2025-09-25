@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -55,7 +54,7 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Object source, Request request, Response response) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         if (!helper().shouldStart(parentContext, request)) {
           return null;
         }
@@ -67,15 +66,15 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
       }
 
       public void end(Request request, Response response, @Nullable Throwable throwable) {
-        if (scope != null) {
-          scope.close();
+        scope.close();
+        if (throwable != null) {
           helper().end(context, request, response, throwable);
         }
       }
     }
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
     @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
         @Advice.This Object source,
         @Advice.Argument(0) Request request,

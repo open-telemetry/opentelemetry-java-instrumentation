@@ -79,7 +79,5 @@ public class Jetty11HandlerAdvice {
     if (adviceScope != null) {
       adviceScope.end(throwable, request, response);
     }
-
   }
-
 }
