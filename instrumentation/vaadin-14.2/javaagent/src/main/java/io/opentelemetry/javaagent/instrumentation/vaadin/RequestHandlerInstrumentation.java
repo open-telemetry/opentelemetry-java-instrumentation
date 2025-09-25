@@ -16,6 +16,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,35 +46,52 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
+    public static class HandleRequestAdviceScope {
+      private final VaadinHandlerRequest request;
+      private final Context context;
+      private final Scope scope;
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This RequestHandler requestHandler,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelRequest") VaadinHandlerRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      request = VaadinHandlerRequest.create(requestHandler.getClass(), methodName);
-      context = helper().startRequestHandlerSpan(request);
-      if (context != null) {
-        scope = context.makeCurrent();
+      private HandleRequestAdviceScope(VaadinHandlerRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
+
+      @Nullable
+      public static HandleRequestAdviceScope start(Class<?> handlerClass, String methodName) {
+        VaadinHandlerRequest request = VaadinHandlerRequest.create(handlerClass, methodName);
+        Context context = helper().startRequestHandlerSpan(request);
+        if (context == null) {
+          return null;
+        }
+        Scope scope = context.makeCurrent();
+        return new HandleRequestAdviceScope(request, context, scope);
+      }
+
+      public void end(@Nullable Throwable throwable, boolean handled) {
+        scope.close();
+
+        helper().endRequestHandlerSpan(context, request, throwable, handled);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static HandleRequestAdviceScope onEnter(
+        @Advice.This RequestHandler requestHandler, @Advice.Origin("#m") String methodName) {
+
+      return HandleRequestAdviceScope.start(requestHandler.getClass(), methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Return boolean handled,
-        @Advice.Local("otelRequest") VaadinHandlerRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+        @Advice.Enter @Nullable HandleRequestAdviceScope adviceScope) {
+      if (adviceScope == null) {
         return;
       }
-      scope.close();
-
-      helper().endRequestHandlerSpan(context, request, throwable, handled);
+      adviceScope.end(throwable, handled);
     }
   }
 }

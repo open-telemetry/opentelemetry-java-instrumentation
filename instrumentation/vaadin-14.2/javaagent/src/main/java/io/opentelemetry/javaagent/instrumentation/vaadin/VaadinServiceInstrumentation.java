@@ -68,6 +68,7 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static HandleRequestAdviceScope onEnter(
         @Advice.This VaadinService vaadinService, @Advice.Origin("#m") String methodName) {
