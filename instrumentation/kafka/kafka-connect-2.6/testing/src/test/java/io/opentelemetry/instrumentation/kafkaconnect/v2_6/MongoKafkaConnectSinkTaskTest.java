@@ -417,7 +417,7 @@ class MongoKafkaConnectSinkTaskTest {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
-    
+
     // Setup Kafka Connect MongoDB Sink connector with multiple topics
     setupMongoSinkConnectorMultiTopic(topicName1, topicName2, topicName3);
 
@@ -437,9 +437,15 @@ class MongoKafkaConnectSinkTaskTest {
 
     try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
       // Send messages to different topics
-      producer.send(new ProducerRecord<>(topicName1, "key1", "{\"id\":1,\"name\":\"User1\",\"source\":\"topic1\"}"));
-      producer.send(new ProducerRecord<>(topicName2, "key2", "{\"id\":2,\"name\":\"User2\",\"source\":\"topic2\"}"));
-      producer.send(new ProducerRecord<>(topicName3, "key3", "{\"id\":3,\"name\":\"User3\",\"source\":\"topic3\"}"));
+      producer.send(
+          new ProducerRecord<>(
+              topicName1, "key1", "{\"id\":1,\"name\":\"User1\",\"source\":\"topic1\"}"));
+      producer.send(
+          new ProducerRecord<>(
+              topicName2, "key2", "{\"id\":2,\"name\":\"User2\",\"source\":\"topic2\"}"));
+      producer.send(
+          new ProducerRecord<>(
+              topicName3, "key3", "{\"id\":3,\"name\":\"User3\",\"source\":\"topic3\"}"));
       producer.flush();
     }
 
@@ -474,8 +480,11 @@ class MongoKafkaConnectSinkTaskTest {
 
     // Write resourceSpans to desktop file for inspection
     try {
-      java.nio.file.Path desktopPath = java.nio.file.Paths.get(System.getProperty("user.home"), "Desktop", "kafka-connect-multi-topic-spans.json");
-      java.nio.file.Files.write(desktopPath, tracesJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      java.nio.file.Path desktopPath =
+          java.nio.file.Paths.get(
+              System.getProperty("user.home"), "Desktop", "kafka-connect-multi-topic-spans.json");
+      java.nio.file.Files.write(
+          desktopPath, tracesJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
       System.out.println("✅ Wrote resourceSpans to: " + desktopPath.toString());
     } catch (Exception e) {
       System.err.println("❌ Failed to write spans to desktop: " + e.getMessage());
@@ -484,7 +493,8 @@ class MongoKafkaConnectSinkTaskTest {
     // Extract spans and verify multi-topic span naming
     MultiTopicTracingData tracingData;
     try {
-      tracingData = deserializeAndExtractMultiTopicSpans(tracesJson, topicName1, topicName2, topicName3);
+      tracingData =
+          deserializeAndExtractMultiTopicSpans(tracesJson, topicName1, topicName2, topicName3);
     } catch (Exception e) {
       logger.error("Failed to deserialize and extract spans: {}", e.getMessage(), e);
       throw new AssertionError("Span deserialization failed", e);
@@ -495,7 +505,7 @@ class MongoKafkaConnectSinkTaskTest {
     assertThat(tracingData.kafkaConnectConsumerSpan)
         .as("Kafka Connect Consumer span should be found for multi-topic processing")
         .isNotNull();
-    
+
     // Assertion 2: Verify span name contains all topics in bracket format (order may vary)
     assertThat(tracingData.kafkaConnectConsumerSpan.name)
         .as("Span name should contain all topics in bracket format")
@@ -578,7 +588,8 @@ class MongoKafkaConnectSinkTaskTest {
         "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
 
     String payload =
-        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
+        MAPPER.writeValueAsString(
+            ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
         .headers()
@@ -816,8 +827,8 @@ class MongoKafkaConnectSinkTaskTest {
   }
 
   /** Deserialize traces JSON and extract span information for multi-topic scenarios */
-  private static MultiTopicTracingData deserializeAndExtractMultiTopicSpans(String tracesJson, String... expectedTopicNames)
-      throws IOException {
+  private static MultiTopicTracingData deserializeAndExtractMultiTopicSpans(
+      String tracesJson, String... expectedTopicNames) throws IOException {
     ObjectMapper objectMapper = new ObjectMapper();
     JsonNode rootNode = objectMapper.readTree(tracesJson);
 
@@ -875,7 +886,7 @@ class MongoKafkaConnectSinkTaskTest {
                   break;
                 }
               }
-              
+
               if (containsExpectedTopics) {
                 kafkaConnectConsumerSpan =
                     new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
@@ -912,9 +923,7 @@ class MongoKafkaConnectSinkTaskTest {
     final SpanLinkInfo extractedSpanLink;
 
     MultiTopicTracingData(
-        SpanInfo kafkaConnectConsumerSpan,
-        SpanInfo databaseSpan,
-        SpanLinkInfo extractedSpanLink) {
+        SpanInfo kafkaConnectConsumerSpan, SpanInfo databaseSpan, SpanLinkInfo extractedSpanLink) {
       this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
       this.databaseSpan = databaseSpan;
       this.extractedSpanLink = extractedSpanLink;
