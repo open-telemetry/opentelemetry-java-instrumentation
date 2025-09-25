@@ -6,7 +6,9 @@ Before submitting new features or changes to current functionality, it is recomm
 [open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
 and discuss your ideas or propose the changes you wish to make.
 
-**Breaking Changes**: If your PR introduces a breaking change, please add the `breaking change` label. This will trigger automation to help you document the change properly. See [Breaking Changes Automation](RELEASING.md#breaking-changes-automation) for more details.
+**Breaking Changes**: If your PR introduces a breaking change, please add the `breaking change` label.
+This will trigger automation to help you document the change properly.
+See [Breaking Changes Automation](RELEASING.md#breaking-changes-and-deprecations-automation) for more details.
 
 ## Building
 
