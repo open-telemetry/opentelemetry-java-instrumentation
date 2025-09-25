@@ -14,6 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -41,36 +42,54 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(1) Class<?> componentClass,
-        @Advice.Argument(2) String methodName,
-        @Advice.Local("otelRequest") VaadinClientCallableRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class InvokeMethodAdviceScope {
+      private final VaadinClientCallableRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = VaadinClientCallableRequest.create(componentClass, methodName);
-      if (!clientCallableInstrumenter().shouldStart(parentContext, request)) {
-        return;
+      private InvokeMethodAdviceScope(
+          VaadinClientCallableRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = clientCallableInstrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static InvokeMethodAdviceScope start(Class<?> componentClass, String methodName) {
+        Context parentContext = Java8BytecodeBridge.currentContext();
+        VaadinClientCallableRequest request =
+            VaadinClientCallableRequest.create(componentClass, methodName);
+        if (!clientCallableInstrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+
+        Context context = clientCallableInstrumenter().start(parentContext, request);
+        Scope scope = context.makeCurrent();
+        return new InvokeMethodAdviceScope(request, context, scope);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+
+        clientCallableInstrumenter().end(context, request, null, throwable);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static InvokeMethodAdviceScope onEnter(
+        @Advice.Argument(1) Class<?> componentClass, @Advice.Argument(2) String methodName) {
+      return InvokeMethodAdviceScope.start(componentClass, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") VaadinClientCallableRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable InvokeMethodAdviceScope adviceScope) {
+      if (adviceScope == null) {
         return;
       }
-      scope.close();
-
-      clientCallableInstrumenter().end(context, request, null, throwable);
+      adviceScope.end(throwable);
     }
   }
 }
