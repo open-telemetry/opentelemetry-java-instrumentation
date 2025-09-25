@@ -59,15 +59,15 @@ public class Jetty11HandlerAdvice {
         @Nullable Throwable throwable, HttpServletRequest request, HttpServletResponse response) {
       helper().end(requestContext, request, response, throwable, context, scope);
     }
+  }
 
-    @Nullable
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(
-        @Advice.This Object source,
-        @Advice.Argument(2) HttpServletRequest request,
-        @Advice.Argument(3) HttpServletResponse response) {
-      return AdviceScope.start(source, request, response);
-    }
+  @Nullable
+  @Advice.OnMethodEnter(suppress = Throwable.class)
+  public static AdviceScope onEnter(
+      @Advice.This Object source,
+      @Advice.Argument(2) HttpServletRequest request,
+      @Advice.Argument(3) HttpServletResponse response) {
+    return AdviceScope.start(source, request, response);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -79,5 +79,7 @@ public class Jetty11HandlerAdvice {
     if (adviceScope != null) {
       adviceScope.end(throwable, request, response);
     }
+
   }
+
 }
