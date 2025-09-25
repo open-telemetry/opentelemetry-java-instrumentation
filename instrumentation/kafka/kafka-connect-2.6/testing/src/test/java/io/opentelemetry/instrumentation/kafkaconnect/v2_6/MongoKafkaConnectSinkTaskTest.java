@@ -95,6 +95,7 @@ class MongoKafkaConnectSinkTaskTest {
       new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
   private static final String CONNECTOR_NAME = "test-mongo-connector";
   private static final String TOPIC_NAME = "test-mongo-topic";
+  private static final String KAFKA_CONNECT_SCOPE = "kafka-connect";
 
   // Docker network / containers
   private static Network network;
@@ -126,12 +127,6 @@ class MongoKafkaConnectSinkTaskTest {
 
   @BeforeAll
   public static void setup() throws IOException {
-
-    // Create log directory on desktop
-    File logDir = new File(System.getProperty("user.home") + "/Desktop/kafka-connect-logs");
-    if (!logDir.exists()) {
-      logDir.mkdirs();
-    }
 
     network = Network.newNetwork();
 
@@ -317,8 +312,8 @@ class MongoKafkaConnectSinkTaskTest {
   @Test
   public void testKafkaConnectMongoSinkTaskInstrumentation()
       throws IOException, InterruptedException {
-    // Create unique topic name
-    String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
+    // Use base topic name for consistent span naming
+    String uniqueTopicName = TOPIC_NAME;
 
     // Setup Kafka Connect MongoDB Sink connector
     setupMongoSinkConnector(uniqueTopicName);
@@ -415,6 +410,125 @@ class MongoKafkaConnectSinkTaskTest {
         .isEqualTo(tracingData.kafkaConnectConsumerSpan.spanId);
   }
 
+  @Test
+  public void testKafkaConnectMongoSinkTaskMultiTopicInstrumentation()
+      throws IOException, InterruptedException {
+    // Create multiple topic names for consistent span naming
+    String topicName1 = TOPIC_NAME + "-1";
+    String topicName2 = TOPIC_NAME + "-2";
+    String topicName3 = TOPIC_NAME + "-3";
+    
+    // Setup Kafka Connect MongoDB Sink connector with multiple topics
+    setupMongoSinkConnectorMultiTopic(topicName1, topicName2, topicName3);
+
+    // Create all topics and wait for availability
+    createTopic(topicName1);
+    createTopic(topicName2);
+    createTopic(topicName3);
+    awaitForTopicCreation(topicName1);
+    awaitForTopicCreation(topicName2);
+    awaitForTopicCreation(topicName3);
+
+    // Produce test messages to different topics
+    Properties props = new Properties();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+
+    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+      // Send messages to different topics
+      producer.send(new ProducerRecord<>(topicName1, "key1", "{\"id\":1,\"name\":\"User1\",\"source\":\"topic1\"}"));
+      producer.send(new ProducerRecord<>(topicName2, "key2", "{\"id\":2,\"name\":\"User2\",\"source\":\"topic2\"}"));
+      producer.send(new ProducerRecord<>(topicName3, "key3", "{\"id\":3,\"name\":\"User3\",\"source\":\"topic3\"}"));
+      producer.flush();
+    }
+
+    // Wait for message processing (increased timeout for ARM64 Docker emulation)
+    await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 3);
+
+    // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
+    String backendUrl = getBackendUrl();
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .until(
+            () -> {
+              try {
+                String traces =
+                    given()
+                        .when()
+                        .get(backendUrl + "/get-traces")
+                        .then()
+                        .statusCode(200)
+                        .extract()
+                        .asString();
+
+                return !traces.equals("[]");
+              } catch (RuntimeException e) {
+                return false;
+              }
+            });
+
+    // Retrieve and verify spans using clean protobuf approach
+    String tracesJson =
+        given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
+
+    // Write resourceSpans to desktop file for inspection
+    try {
+      java.nio.file.Path desktopPath = java.nio.file.Paths.get(System.getProperty("user.home"), "Desktop", "kafka-connect-multi-topic-spans.json");
+      java.nio.file.Files.write(desktopPath, tracesJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      System.out.println("✅ Wrote resourceSpans to: " + desktopPath.toString());
+    } catch (Exception e) {
+      System.err.println("❌ Failed to write spans to desktop: " + e.getMessage());
+    }
+
+    // Extract spans and verify multi-topic span naming
+    MultiTopicTracingData tracingData;
+    try {
+      tracingData = deserializeAndExtractMultiTopicSpans(tracesJson, topicName1, topicName2, topicName3);
+    } catch (Exception e) {
+      logger.error("Failed to deserialize and extract spans: {}", e.getMessage(), e);
+      throw new AssertionError("Span deserialization failed", e);
+    }
+
+    // Perform multi-topic distributed tracing assertions
+    // Assertion 1: Verify Kafka Connect Consumer span exists and has correct multi-topic naming
+    assertThat(tracingData.kafkaConnectConsumerSpan)
+        .as("Kafka Connect Consumer span should be found for multi-topic processing")
+        .isNotNull();
+    
+    // Assertion 2: Verify span name contains all topics in bracket format (order may vary)
+    assertThat(tracingData.kafkaConnectConsumerSpan.name)
+        .as("Span name should contain all topics in bracket format")
+        .contains(topicName1)
+        .contains(topicName2)
+        .contains(topicName3)
+        .startsWith("[")
+        .endsWith("] process");
+
+    // Assertion 3: Verify database span exists
+    assertThat(tracingData.databaseSpan).as("Database span should be found").isNotNull();
+
+    // Assertion 4: Verify span links exist
+    assertThat(tracingData.extractedSpanLink)
+        .as("Kafka Connect Consumer span should have span links")
+        .isNotNull();
+
+    // Assertion 5: Check span kind is consumer
+    assertThat(tracingData.kafkaConnectConsumerSpan.kind)
+        .as("Kafka Connect span should have CONSUMER span kind")
+        .isEqualTo("SPAN_KIND_CONSUMER");
+
+    // Assertion 6: Check if Kafka Connect traceId and database span traceId are similar
+    assertThat(tracingData.kafkaConnectConsumerSpan.traceId)
+        .as("Kafka Connect Consumer and Database spans should share the same trace ID")
+        .isEqualTo(tracingData.databaseSpan.traceId);
+    assertThat(tracingData.databaseSpan.parentSpanId)
+        .as("Database span must have a parent span ID")
+        .isNotNull()
+        .as("Database span parent should be Kafka Connect Consumer span")
+        .isEqualTo(tracingData.kafkaConnectConsumerSpan.spanId);
+  }
+
   // Private methods
   private static void setupMongoSinkConnector(String topicName) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
@@ -433,6 +547,38 @@ class MongoKafkaConnectSinkTaskTest {
 
     String payload =
         MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+    given()
+        .log()
+        .headers()
+        .contentType(ContentType.JSON)
+        .accept(ContentType.JSON)
+        .body(payload)
+        .when()
+        .post(getKafkaConnectUrl() + "/connectors")
+        .andReturn()
+        .then()
+        .log()
+        .all();
+  }
+
+  private static void setupMongoSinkConnectorMultiTopic(String... topicNames) throws IOException {
+    Map<String, Object> configMap = new HashMap<>();
+    configMap.put("connector.class", "com.mongodb.kafka.connect.MongoSinkConnector");
+    configMap.put("tasks.max", "1");
+    configMap.put("connection.uri", format(Locale.ROOT, "mongodb://%s:27017", MONGO_NETWORK_ALIAS));
+    configMap.put("database", DB_NAME);
+    configMap.put("collection", COLLECTION_NAME);
+    // Configure multiple topics separated by commas
+    configMap.put("topics", String.join(",", topicNames));
+    configMap.put("key.converter", "org.apache.kafka.connect.storage.StringConverter");
+    configMap.put("value.converter", "org.apache.kafka.connect.json.JsonConverter");
+    configMap.put("value.converter.schemas.enable", "false");
+    configMap.put(
+        "document.id.strategy",
+        "com.mongodb.kafka.connect.sink.processor.id.strategy.BsonOidStrategy");
+
+    String payload =
+        MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
         .headers()
@@ -638,7 +784,7 @@ class MongoKafkaConnectSinkTaskTest {
                 && spanKind.equals("SPAN_KIND_PRODUCER")) {
               kafkaProducerSpan =
                   new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
-            } else if (scopeName.contains("kafka-connect")
+            } else if (scopeName.contains(KAFKA_CONNECT_SCOPE)
                 && spanName.contains(expectedTopicName)
                 && spanKind.equals("SPAN_KIND_CONSUMER")) {
               kafkaConnectConsumerSpan =
@@ -667,6 +813,112 @@ class MongoKafkaConnectSinkTaskTest {
 
     return new TracingData(
         kafkaProducerSpan, kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+  }
+
+  /** Deserialize traces JSON and extract span information for multi-topic scenarios */
+  private static MultiTopicTracingData deserializeAndExtractMultiTopicSpans(String tracesJson, String... expectedTopicNames)
+      throws IOException {
+    ObjectMapper objectMapper = new ObjectMapper();
+    JsonNode rootNode = objectMapper.readTree(tracesJson);
+
+    assertThat(rootNode.isArray()).as("Traces JSON should be an array").isTrue();
+
+    // Extract all spans and organize by type
+    SpanInfo kafkaConnectConsumerSpan = null;
+    SpanInfo databaseSpan = null;
+    SpanLinkInfo extractedSpanLink = null;
+
+    // Process each trace request in the JSON array
+    for (JsonNode traceRequestNode : rootNode) {
+      JsonNode resourceSpansArray = traceRequestNode.get("resourceSpans");
+      if (resourceSpansArray == null || !resourceSpansArray.isArray()) {
+        continue;
+      }
+
+      for (JsonNode resourceSpansNode : resourceSpansArray) {
+        JsonNode scopeSpansArray = resourceSpansNode.get("scopeSpans");
+        if (scopeSpansArray == null || !scopeSpansArray.isArray()) {
+          continue;
+        }
+
+        for (JsonNode scopeSpansNode : scopeSpansArray) {
+          JsonNode scopeNode = scopeSpansNode.get("scope");
+          String scopeName =
+              scopeNode != null && scopeNode.get("name") != null
+                  ? scopeNode.get("name").asText()
+                  : "";
+
+          JsonNode spansArray = scopeSpansNode.get("spans");
+          if (spansArray == null || !spansArray.isArray()) {
+            continue;
+          }
+
+          for (JsonNode spanNode : spansArray) {
+            String spanName = spanNode.get("name") != null ? spanNode.get("name").asText() : "";
+            String traceId =
+                spanNode.get("traceId") != null ? spanNode.get("traceId").asText() : "";
+            String spanId = spanNode.get("spanId") != null ? spanNode.get("spanId").asText() : "";
+            String parentSpanId =
+                spanNode.get("parentSpanId") != null
+                        && !spanNode.get("parentSpanId").asText().isEmpty()
+                    ? spanNode.get("parentSpanId").asText()
+                    : null;
+            String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
+
+            // Identify spans in our multi-topic flow
+            if (scopeName.contains(KAFKA_CONNECT_SCOPE) && spanKind.equals("SPAN_KIND_CONSUMER")) {
+              // Check if span name contains any of the expected topics or the multi-topic format
+              boolean containsExpectedTopics = false;
+              for (String topicName : expectedTopicNames) {
+                if (spanName.contains(topicName)) {
+                  containsExpectedTopics = true;
+                  break;
+                }
+              }
+              
+              if (containsExpectedTopics) {
+                kafkaConnectConsumerSpan =
+                    new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+
+                // Extract span link information for verification
+                JsonNode linksArray = spanNode.get("links");
+                if (linksArray != null && linksArray.isArray() && linksArray.size() > 0) {
+                  JsonNode firstLink = linksArray.get(0);
+                  String linkedTraceId =
+                      firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
+                  String linkedSpanId =
+                      firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
+                  int flags = firstLink.get("flags") != null ? firstLink.get("flags").asInt() : 0;
+
+                  extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId, flags);
+                }
+              }
+            } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
+              databaseSpan =
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+            }
+          }
+        }
+      }
+    }
+
+    return new MultiTopicTracingData(kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+  }
+
+  /** Helper class to hold all extracted multi-topic tracing data */
+  private static class MultiTopicTracingData {
+    final SpanInfo kafkaConnectConsumerSpan;
+    final SpanInfo databaseSpan;
+    final SpanLinkInfo extractedSpanLink;
+
+    MultiTopicTracingData(
+        SpanInfo kafkaConnectConsumerSpan,
+        SpanInfo databaseSpan,
+        SpanLinkInfo extractedSpanLink) {
+      this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
+      this.databaseSpan = databaseSpan;
+      this.extractedSpanLink = extractedSpanLink;
+    }
   }
 
   /** Helper class to hold all extracted tracing data */

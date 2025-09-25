@@ -12,16 +12,5 @@ muzzle {
 
 dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-
   library("org.apache.kafka:connect-api:2.6.0")
-
-  testImplementation("org.apache.kafka:connect-runtime:2.6.0")
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-  }
 }

@@ -47,7 +47,4 @@ tasks.withType<Test>().configureEach {
     "-Dotel.logs.exporter=none",
     "-Dotel.service.name=kafka-connect-test-producer"
   )
-
-  // Pass backend endpoint as system property (will be set dynamically in test)
-  systemProperty("otel.exporter.otlp.traces.endpoint", System.getProperty("otel.exporter.otlp.traces.endpoint", "http://localhost:4318/v1/traces"))
 }

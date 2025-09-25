@@ -26,8 +26,7 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
   @Override
   @Nullable
   public String getDestination(KafkaConnectTask request) {
-    SinkRecord firstRecord = request.getFirstRecord();
-    return firstRecord != null ? firstRecord.topic() : null;
+    return request.getDestinationName();
   }
 
   @Nullable
