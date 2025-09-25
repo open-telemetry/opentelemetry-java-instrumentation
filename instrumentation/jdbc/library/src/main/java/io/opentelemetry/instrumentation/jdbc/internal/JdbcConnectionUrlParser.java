@@ -1146,12 +1146,6 @@ public enum JdbcConnectionUrlParser {
     }
   }
 
-  public static void main(String[] args) {
-    DbInfo dbInfo = JdbcConnectionUrlParser.parse(
-        "jdbc:tracing:mysql://rm-bp17j28j2y7pm-proxy-lindorm-pub.aliyuncs.com", new Properties());
-    System.out.println(dbInfo);
-  }
-
   // see
   // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md
   private static String toDbSystem(String type) {
