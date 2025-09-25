@@ -5,13 +5,15 @@
 
 package io.opentelemetry.smoketest.propagation;
 
-import java.util.Map;
+import io.opentelemetry.smoketest.SmokeTestOptions;
 import org.junit.jupiter.api.condition.DisabledIf;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 class B3MultiPropagationTest extends PropagationTest {
+
   @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("otel.propagators", "b3multi");
+  protected void configure(SmokeTestOptions<Integer> options) {
+    super.configure(options);
+    options.env("otel.propagators", "b3multi");
   }
 }
