@@ -80,10 +80,9 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope == null) {
-        return;
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      adviceScope.end(throwable);
     }
   }
 }

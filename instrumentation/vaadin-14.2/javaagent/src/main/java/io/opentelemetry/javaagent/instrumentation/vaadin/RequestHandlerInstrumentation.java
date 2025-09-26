@@ -88,10 +88,9 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Return boolean handled,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope == null) {
-        return;
+      if (adviceScope != null) {
+        adviceScope.end(throwable, handled);
       }
-      adviceScope.end(throwable, handled);
     }
   }
 }
