@@ -126,7 +126,7 @@ class YamlHelperTest {
             .functions(
                 List.of(
                     InstrumentationFunction.HTTP_ROUTE_ENRICHER,
-                    InstrumentationFunction.CONTEXT_PROPAGATOR))
+                    InstrumentationFunction.CONTEXT_PROPAGATION))
             .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .configurations(
                 List.of(
@@ -199,8 +199,8 @@ class YamlHelperTest {
                 - DATABASE_CLIENT_METRICS
                 - DATABASE_CLIENT_SPANS
                 functions:
-                - http-route-enricher
-                - context-propagator
+                - HTTP_ROUTE_ENRICHER
+                - CONTEXT_PROPAGATION
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
                 scope:
@@ -240,8 +240,8 @@ class YamlHelperTest {
             disabled_by_default: true
             library_link: https://example.com/test-library
             functions:
-              - http-route-enricher
-              - library-domain-enricher
+              - HTTP_ROUTE_ENRICHER
+              - LIBRARY_DOMAIN_ENRICHER
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -340,7 +340,7 @@ class YamlHelperTest {
     String input =
         """
             functions:
-              - http-route-enricher
+              - HTTP_ROUTE_ENRICHER
         """;
     InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
 

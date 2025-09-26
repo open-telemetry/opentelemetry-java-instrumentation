@@ -218,7 +218,7 @@ public class YamlHelper {
       if (!module.getMetadata().getFunctions().isEmpty()) {
         List<String> functionNames =
             module.getMetadata().getFunctions().stream()
-                .map(function -> function.getName())
+                .map(Enum::name)
                 .collect(Collectors.toList());
         moduleMap.put("functions", functionNames);
       }

@@ -9,4 +9,4 @@ semantic_conventions:
   - HTTP_SERVER_SPANS
   - HTTP_SERVER_METRICS
 functions:
-  - http-route-enricher
+  - HTTP_ROUTE_ENRICHER
