@@ -118,9 +118,7 @@ class PortAllocator {
     }
 
     boolean canBind(int port) {
-      try {
-        ServerSocket socket = new ServerSocket(port);
-        socket.close();
+      try (ServerSocket socket = new ServerSocket(port)) {
         return true;
       } catch (IOException exception) {
         return false;

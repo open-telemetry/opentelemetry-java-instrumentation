@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -32,21 +33,21 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TestAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This Runnable test, @Advice.Return(readOnly = false) String result) {
+    public static String methodExit(@Advice.This Runnable test) {
       VirtualField.find(Runnable.class, String.class).set(test, "instrumented");
-      result = "instrumented";
+      return "instrumented";
     }
   }
 
   @SuppressWarnings("unused")
   public static class Test2Advice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This Runnable test, @Advice.Return(readOnly = false) String result) {
-      result = VirtualField.find(Runnable.class, String.class).get(test);
+    public static String methodExit(@Advice.This Runnable test) {
+      return VirtualField.find(Runnable.class, String.class).get(test);
     }
   }
 }
