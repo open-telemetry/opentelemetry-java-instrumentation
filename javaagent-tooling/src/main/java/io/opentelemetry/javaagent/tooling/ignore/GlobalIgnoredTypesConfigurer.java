@@ -156,6 +156,7 @@ public class GlobalIgnoredTypesConfigurer implements IgnoredTypesConfigurer {
     // TODO Workaround for
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/787
     builder.ignoreTaskClass("org.apache.tomcat.util.net.NioEndpoint$SocketProcessor");
+    builder.ignoreTaskClass("org.apache.tomcat.util.net.JIoEndpoint$SocketProcessor");
 
     // HttpConnection implements Runnable. When async request is completed HttpConnection
     // may be sent to process next request while context from previous request hasn't been

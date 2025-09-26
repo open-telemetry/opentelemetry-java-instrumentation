@@ -19,6 +19,10 @@ import zio.ZIO$;
 public final class TracingSupervisor extends Supervisor<Object> {
 
   @SuppressWarnings("rawtypes")
+  public static final VirtualField<Fiber.Runtime, FiberContext> RUNTIME_FIBER_CONTEXT =
+      VirtualField.find(Fiber.Runtime.class, FiberContext.class);
+
+  @SuppressWarnings("rawtypes")
   private final VirtualField<Fiber.Runtime, FiberContext> virtualField;
 
   @SuppressWarnings("rawtypes")
