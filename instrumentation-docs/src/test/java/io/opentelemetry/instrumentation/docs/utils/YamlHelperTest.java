@@ -123,6 +123,11 @@ class YamlHelperTest {
             .description("Spring Web 6.0 instrumentation")
             .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
+            .functions(
+                List.of(
+                    InstrumentationFunction.HTTP_ROUTE_ENRICHER,
+                    InstrumentationFunction.CONTEXT_PROPAGATOR))
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .configurations(
                 List.of(
                     new ConfigurationOption(
@@ -190,6 +195,12 @@ class YamlHelperTest {
               spring:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
+                functions:
+                - http-route-enricher
+                - context-propagator
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
                 scope:
@@ -228,6 +239,9 @@ class YamlHelperTest {
             classification: internal
             disabled_by_default: true
             library_link: https://example.com/test-library
+            functions:
+              - http-route-enricher
+              - library-domain-enricher
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -243,6 +257,11 @@ class YamlHelperTest {
     assertThat(config.description())
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
+
+    assertThat(metadata.getFunctions())
+        .containsExactly(
+            InstrumentationFunction.HTTP_ROUTE_ENRICHER,
+            InstrumentationFunction.LIBRARY_DOMAIN_ENRICHER);
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");

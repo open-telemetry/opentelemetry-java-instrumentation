@@ -23,21 +23,21 @@ public enum InstrumentationFunction {
   VIEW_SPANS("view-spans"),
   SYSTEM_METRICS("system-metrics");
 
-  private final String yamlName;
+  private final String name;
 
-  InstrumentationFunction(String yamlName) {
-    this.yamlName = yamlName;
+  InstrumentationFunction(String name) {
+    this.name = name;
   }
 
   @JsonValue
-  public String getYamlName() {
-    return yamlName;
+  public String getName() {
+    return name;
   }
 
   @JsonCreator
   public static InstrumentationFunction fromYamlName(String yamlName) {
     for (InstrumentationFunction function : values()) {
-      if (function.yamlName.equals(yamlName)) {
+      if (function.name.equals(yamlName)) {
         return function;
       }
     }
