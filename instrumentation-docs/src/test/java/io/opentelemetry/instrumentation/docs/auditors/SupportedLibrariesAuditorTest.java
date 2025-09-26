@@ -73,7 +73,8 @@ class SupportedLibrariesAuditorTest {
   }
 
   private static String createLocalSupportedLibrariesContent() {
-    return """
+    return
+"""
 # Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
@@ -105,7 +106,8 @@ These are the application servers that the smoke tests are run against:
   }
 
   private static String createRemoteSupportedLibrariesContent() {
-    return """
+    return
+"""
 # Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,
@@ -137,7 +139,8 @@ These are the application servers that the smoke tests are run against:
   }
 
   private static String createRemoteSupportedLibrariesContentMissing() {
-    return """
+    return
+"""
 # Supported libraries, frameworks, application servers, and JVMs
 
 We automatically instrument and support a huge number of libraries, frameworks,

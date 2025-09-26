@@ -81,7 +81,7 @@ class SuppressionListAuditorTest {
   @Test
   void testParseDocumentationDisabledList() {
     String testFile =
-        """
+"""
 ## Enable manual instrumentation only
 
 You can suppress all auto instrumentations but have support for manual
@@ -116,7 +116,7 @@ corresponding instrumentation name: {{% /config_option %}}
   @Test
   void testParseInstrumentationList() {
     String testList =
-        """
+"""
 libraries:
   activej:
   - name: activej-http-6.0
@@ -191,7 +191,8 @@ libraries:
   }
 
   private static String createDisableListContent() {
-    return """
+    return
+"""
 ## Enable manual instrumentation only
 
 You can suppress all auto instrumentations but have support for manual
@@ -216,7 +217,8 @@ corresponding instrumentation name: {{% /config_option %}}
   }
 
   private static String createDisableListContentMissing() {
-    return """
+    return
+"""
 ## Enable manual instrumentation only
 
 You can suppress all auto instrumentations but have support for manual
@@ -240,7 +242,8 @@ corresponding instrumentation name: {{% /config_option %}}
   }
 
   private static String createInstrumentationListContent() {
-    return """
+    return
+"""
 libraries:
   activej:
   - name: activej-http-6.0

@@ -1330,7 +1330,7 @@ class JdbcInstrumentationTest {
     cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
 
-    Statement proxyStatement = ProxyStatementFactory.proxyStatement(statement);
+    Statement proxyStatement = ProxyStatementFactory.proxyStatementWithCustomClassLoader(statement);
     ResultSet resultSet =
         testing.runWithSpan("parent", () -> proxyStatement.executeQuery("SELECT 3"));
 
@@ -1736,5 +1736,101 @@ class JdbcInstrumentationTest {
             "derby:memory:"),
         Arguments.of(
             "hsqldb", new JDBCDriver().connect(jdbcUrls.get("hsqldb"), null), "SA", "hsqldb:mem:"));
+  }
+
+  private static PreparedStatement wrapPreparedStatement(PreparedStatement statement) {
+    return ProxyStatementFactory.proxyPreparedStatement(
+        (proxy, method, args) -> {
+          if ("isWrapperFor".equals(method.getName())
+              && args.length == 1
+              && args[0] == PreparedStatement.class) {
+            return true;
+          }
+          if ("unwrap".equals(method.getName())
+              && args.length == 1
+              && args[0] == PreparedStatement.class) {
+            return statement;
+          }
+          return testing.runWithSpan("wrapper", () -> method.invoke(statement, args));
+        });
+  }
+
+  // test that tracing does not start from a wrapper
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14733
+  @Test
+  void testPreparedStatementWrapper() throws SQLException {
+    Connection connection = new org.h2.Driver().connect(jdbcUrls.get("h2"), null);
+    Connection proxyConnection =
+        ProxyStatementFactory.proxy(
+            Connection.class,
+            (proxy, method, args) -> {
+              // we don't implement unwrapping here as that would also cause the executeQuery
+              // instrumentation to get skipped for the prepared statement wrapper
+              if ("prepareStatement".equals(method.getName())) {
+                return wrapPreparedStatement((PreparedStatement) method.invoke(connection, args));
+              }
+              return method.invoke(connection, args);
+            });
+    PreparedStatement statement = proxyConnection.prepareStatement("SELECT 3");
+    cleanup.deferCleanup(statement);
+    cleanup.deferCleanup(connection);
+
+    ResultSet resultSet = testing.runWithSpan("parent", () -> statement.executeQuery());
+
+    resultSet.next();
+    assertThat(resultSet.getInt(1)).isEqualTo(3);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("wrapper").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("SELECT " + dbNameLower)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))));
+  }
+
+  // test that tracing does not start from a wrapper
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14733
+  @Test
+  void testStatementWrapper() throws SQLException {
+    Connection connection = new org.h2.Driver().connect(jdbcUrls.get("h2"), null);
+    Statement statement = connection.createStatement();
+    cleanup.deferCleanup(statement);
+    cleanup.deferCleanup(connection);
+
+    Statement proxyStatement =
+        ProxyStatementFactory.proxyStatement(
+            (proxy, method, args) -> {
+              if ("isWrapperFor".equals(method.getName())
+                  && args.length == 1
+                  && args[0] == Statement.class) {
+                return true;
+              }
+              if ("unwrap".equals(method.getName())
+                  && args.length == 1
+                  && args[0] == Statement.class) {
+                return statement;
+              }
+              return testing.runWithSpan("wrapper", () -> method.invoke(statement, args));
+            });
+    ResultSet resultSet =
+        testing.runWithSpan("parent", () -> proxyStatement.executeQuery("SELECT 3"));
+
+    resultSet.next();
+    assertThat(resultSet.getInt(1)).isEqualTo(3);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("wrapper").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("SELECT " + dbNameLower)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))));
   }
 }
