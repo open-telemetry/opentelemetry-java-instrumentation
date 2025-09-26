@@ -4,6 +4,7 @@ on:
   schedule:
     # hourly at minute 23
     - cron: "23 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
