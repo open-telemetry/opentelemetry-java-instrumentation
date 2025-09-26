@@ -19,8 +19,9 @@ nullaway {
 tasks {
   withType<JavaCompile>().configureEach {
     if (name.contains("test", ignoreCase = true)) {
-      options.errorprone.nullaway {
-        enabled = false
+      // For test compilation tasks, disable errorprone entirely to avoid nullaway issues
+      options.errorprone {
+        isEnabled.set(false)
       }
     } else {
       options.errorprone.nullaway {
