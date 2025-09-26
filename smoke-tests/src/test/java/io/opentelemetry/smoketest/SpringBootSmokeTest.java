@@ -9,61 +9,30 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.semconv.ServiceAttributes;
 import io.opentelemetry.semconv.incubating.OsIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.time.Duration;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Consumer;
-import java.util.jar.Attributes;
-import java.util.jar.JarFile;
-import java.util.stream.Collectors;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.testcontainers.containers.output.OutputFrame;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class SpringBootSmokeTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20241021.11448062567";
-  }
+class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
 
   @Override
-  protected boolean getSetServiceName() {
-    return false;
-  }
-
-  @Override
-  protected Map<String, String> getExtraEnv() {
-    return Map.of("OTEL_METRICS_EXPORTER", "otlp", "OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
-  }
-
-  @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(
-        Duration.ofMinutes(1), ".*Started SpringbootApplication in.*");
+  protected void configure(SmokeTestOptions<Integer> options) {
+    options
+        .springBoot("20241021.11448062567")
+        .setServiceName(false)
+        .env("OTEL_METRICS_EXPORTER", "otlp")
+        .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
   }
 
   @ParameterizedTest
   @ValueSource(ints = {8, 11, 17, 21, 23})
-  void springBootSmokeTest(int jdk) throws Exception {
-    Consumer<OutputFrame> output = startTarget(jdk);
-    String currentAgentVersion;
-    try (JarFile agentJar = new JarFile(agentPath)) {
-      currentAgentVersion =
-          agentJar
-              .getManifest()
-              .getMainAttributes()
-              .getValue(Attributes.Name.IMPLEMENTATION_VERSION);
-    }
+  void springBootSmokeTest(int jdk) {
+    SmokeTestOutput output = start(jdk);
 
     var response = client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
@@ -82,7 +51,7 @@ class SpringBootSmokeTest extends JavaSmokeTest {
                                 resource
                                     .hasAttribute(
                                         TelemetryIncubatingAttributes.TELEMETRY_DISTRO_VERSION,
-                                        currentAgentVersion)
+                                        getAgentVersion())
                                     .hasAttribute(
                                         satisfies(
                                             OsIncubatingAttributes.OS_TYPE, a -> a.isNotNull()))
@@ -95,13 +64,10 @@ class SpringBootSmokeTest extends JavaSmokeTest {
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
-    assertVersionLogged(output, currentAgentVersion);
+    output.assertAgentVersionLogged();
 
     // Check trace IDs are logged via MDC instrumentation
-    Set<String> loggedTraceIds = getLoggedTraceIds(output);
-    List<SpanData> spans = testing.spans();
-    Set<String> spanTraceIds = spans.stream().map(SpanData::getTraceId).collect(Collectors.toSet());
-    assertThat(loggedTraceIds).isEqualTo(spanTraceIds);
+    assertThat(output.getLoggedTraceIds()).isEqualTo(getSpanTraceIds());
 
     // Check JVM metrics are exported
     testing.waitAndAssertMetrics(

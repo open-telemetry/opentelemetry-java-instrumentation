@@ -181,6 +181,22 @@ configurations:
     description: Enables statement sanitization for database queries.
     type: boolean               # boolean | string | list | map
     default: true
+override_telemetry: false                         # Set to true to ignore auto-generated .telemetry files
+additional_telemetry:                             # Manually document telemetry metadata
+  - when: "default"
+    metrics:
+      - name: "metric.name"
+        description: "Metric description"
+        type: "COUNTER"
+        unit: "1"
+        attributes:
+          - name: "attribute.name"
+            type: "STRING"
+    spans:
+      - span_kind: "CLIENT"
+        attributes:
+          - name: "span.attribute"
+            type: "STRING"
 ```
 
 ### Gradle File Derived Information
@@ -213,6 +229,50 @@ data will be excluded from git and just generated on demand.
 
 Each file has a `when` value along with the list of metrics that indicates whether the telemetry is
 emitted by default or via a configuration option.
+
+#### Manual Telemetry Documentation
+
+In addition to auto-generated telemetry data from test runs, you can manually document telemetry
+metadata directly in the `metadata.yaml` file. This is useful for:
+
+- Documenting telemetry that may not be captured during test runs
+- Overriding auto-generated telemetry data when it's incomplete or incorrect
+- Adding additional telemetry documentation that complements the auto-generated data
+
+You can add manual telemetry documentation using the `additional_telemetry` field:
+
+```yaml
+additional_telemetry:
+  - when: "default"  # or any configuration condition
+    metrics:
+      - name: "my.custom.metric"
+        description: "Description of the metric"
+        type: "COUNTER"
+        unit: "1"
+        attributes:
+          - name: "attribute.name"
+            type: "STRING"
+    spans:
+      - span_kind: "CLIENT"
+        attributes:
+          - name: "span.attribute"
+            type: "STRING"
+```
+
+To completely replace auto-generated telemetry data (ignoring `.telemetry` files), set `override_telemetry: true`:
+
+```yaml
+override_telemetry: true
+additional_telemetry:
+  - when: "default"
+    metrics:
+      - name: "documented.metric"
+        description: "This replaces all auto-generated metrics"
+        type: "GAUGE"
+        unit: "ms"
+```
+
+When both manual and auto-generated telemetry exist for the same `when` condition, they are merged with manual entries taking precedence in case of conflicts (same metric name or span kind).
 
 ## Doc Synchronization
 
