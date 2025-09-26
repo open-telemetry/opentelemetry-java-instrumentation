@@ -59,8 +59,10 @@ final class OpenTelemetryTracing implements Tracing {
   OpenTelemetryTracing(
       io.opentelemetry.api.trace.Tracer tracer,
       RedisCommandSanitizer sanitizer,
-      OperationListener metrics) {
-    this.tracerProvider = new OpenTelemetryTracerProvider(tracer, sanitizer, metrics);
+      OperationListener metrics,
+      boolean encodingEventsEnabled) {
+    this.tracerProvider =
+        new OpenTelemetryTracerProvider(tracer, sanitizer, metrics, encodingEventsEnabled);
   }
 
   @Override
@@ -100,8 +102,10 @@ final class OpenTelemetryTracing implements Tracing {
     OpenTelemetryTracerProvider(
         io.opentelemetry.api.trace.Tracer tracer,
         RedisCommandSanitizer sanitizer,
-        OperationListener metrics) {
-      openTelemetryTracer = new OpenTelemetryTracer(tracer, sanitizer, metrics);
+        OperationListener metrics,
+        boolean encodingEventsEnabled) {
+      openTelemetryTracer =
+          new OpenTelemetryTracer(tracer, sanitizer, metrics, encodingEventsEnabled);
     }
 
     @Override
@@ -143,14 +147,17 @@ final class OpenTelemetryTracing implements Tracing {
     private final io.opentelemetry.api.trace.Tracer tracer;
     private final RedisCommandSanitizer sanitizer;
     private final OperationListener metrics;
+    private final boolean encodingEventsEnabled;
 
     OpenTelemetryTracer(
         io.opentelemetry.api.trace.Tracer tracer,
         RedisCommandSanitizer sanitizer,
-        OperationListener metrics) {
+        OperationListener metrics,
+        boolean encodingEventsEnabled) {
       this.tracer = tracer;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
+      this.encodingEventsEnabled = encodingEventsEnabled;
     }
 
     @Override
@@ -179,7 +186,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (SemconvStability.emitOldDatabaseSemconv()) {
         spanBuilder.setAttribute(DB_SYSTEM, REDIS);
       }
-      return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics);
+      return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics, encodingEventsEnabled);
     }
   }
 
@@ -193,6 +200,7 @@ final class OpenTelemetryTracing implements Tracing {
     private final SpanBuilder spanBuilder;
     private final RedisCommandSanitizer sanitizer;
     private final OperationListener metrics;
+    private final boolean encodingEventsEnabled;
 
     @Nullable private String name;
     @Nullable private List<Object> events;
@@ -207,12 +215,14 @@ final class OpenTelemetryTracing implements Tracing {
         Context context,
         SpanBuilder spanBuilder,
         RedisCommandSanitizer sanitizer,
-        OperationListener metrics) {
+        OperationListener metrics,
+        boolean encodingEventsEnabled) {
       this.context = context;
       this.spanBuilder = spanBuilder;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
       this.attributesBuilder = Attributes.builder();
+      this.encodingEventsEnabled = encodingEventsEnabled;
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributesBuilder.put(DB_SYSTEM_NAME, REDIS);
       }
@@ -326,6 +336,11 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span annotate(String value) {
+      if (!encodingEventsEnabled && value.startsWith("redis.encode.")) {
+        // skip noisy encode events produced by io.lettuce.core.protocol.TracedCommand
+        return this;
+      }
+
       if (span != null) {
         span.addEvent(value);
       } else {

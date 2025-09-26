@@ -116,9 +116,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
-                              .hasEventsSatisfyingExactly(
-                                  event -> event.hasName("redis.encode.start"),
-                                  event -> event.hasName("redis.encode.end"))));
+                              .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
     } else {
       testing()
@@ -137,9 +135,7 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(SERVER_PORT, port),
                                       equalTo(maybeStable(DB_SYSTEM), "redis"),
                                       equalTo(maybeStable(DB_STATEMENT), "AUTH ?")))
-                              .hasEventsSatisfyingExactly(
-                                  event -> event.hasName("redis.encode.start"),
-                                  event -> event.hasName("redis.encode.end"))));
+                              .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
   }
 }
