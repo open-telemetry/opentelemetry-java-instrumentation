@@ -11,14 +11,15 @@ Always reference these instructions first and fallback to search or bash command
   - `./gradlew assemble` -- builds the complete Java agent. NEVER CANCEL. Build takes 20-45 minutes. Set timeout to 60+ minutes.
   - `./gradlew check javadoc sourcesJar -x spotlessCheck -PskipTests=true` -- builds with checks but skips tests for faster iteration
   - The Java agent artifact will be at: `javaagent/build/libs/opentelemetry-javaagent-<version>.jar`
-- For faster local development, add `removeJarVersionNumbers=true` to `~/.gradle/gradle.properties` to keep consistent jar names
+
 - Run tests:
-  - `./gradlew test` -- runs all tests. NEVER CANCEL. Takes 60-120 minutes across multiple Java versions. Set timeout to 180+ minutes.
+  - `./gradlew test` -- runs tests. NEVER CANCEL. Takes 60-120 minutes across multiple Java versions. Set timeout to 180+ minutes.
+  - `./gradlew check` -- runs all tests and checks. NEVER CANCEL. Takes 60-120 minutes across multiple Java versions. Set timeout to 180+ minutes.
   - `./gradlew :instrumentation:test` -- runs instrumentation tests only
   - `./gradlew :smoke-tests:test` -- runs smoke tests (separate from main test suite)
   - `./gradlew test -PtestJavaVersion=<version>` -- test on specific Java version (8, 11, 17, 21, 23, 24, 25-ea)
   - `./gradlew test -PtestLatestDeps=true` -- test against latest dependency versions
-  - `./gradlew test -Ddev=true -x spotlessCheck -x checkstyleMain` -- ignore warnings during development
+
 - Code quality:
   - `./gradlew spotlessCheck` -- NEVER CANCEL. Takes 10-20 minutes with ~500 modules. Set timeout to 30+ minutes.
   - `./gradlew spotlessApply` -- auto-fix formatting issues
@@ -29,7 +30,7 @@ Always reference these instructions first and fallback to search or bash command
 - Build validation scenario: After successful build, verify the Java agent jar exists at `javaagent/build/libs/opentelemetry-javaagent-*.jar`
 - Test validation scenarios:
   - Run specific instrumentation tests: `./gradlew :instrumentation:<INSTRUMENTATION_NAME>:test --tests <TEST_CLASS>`
-  - Always test with `./gradlew test -Ddev=true -x spotlessCheck -x checkstyleMain` to ignore warnings during development
+  - Always test with `./gradlew test -x spotlessCheck -x checkstyleMain`
 - Use build scans for debugging failures - check `build-scan.txt` after failed builds
 - ALWAYS manually test instrumentation changes by running the affected instrumentation's test suite
 
@@ -70,6 +71,7 @@ Key directories:
 - IntelliJ users: Use module unloading to reduce resource consumption with 500+ modules
 
 ### Testing Patterns
+- Tests use AssertJ for assertions and JUnit 5 as the testing framework
 - Tests use multiple JVM versions: 8, 11, 17, 21, 23, 24, 25-ea
 - Tests run on both HotSpot and OpenJ9 VMs
 - Matrix testing: 4 test partitions × multiple Java versions × 2 VMs
@@ -125,4 +127,4 @@ Key directories:
 - `TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE` - Docker socket location
 - `TESTCONTAINERS_HOST_OVERRIDE` - Container-to-container communication host
 - `USE_LINUX_CONTAINERS=1` - Force Linux containers on Windows
-- Set `-Ddev=true` for development to ignore warnings in tests
+- Set `-Ddev=true` for development to ignore warnings in tests - only when necessary
