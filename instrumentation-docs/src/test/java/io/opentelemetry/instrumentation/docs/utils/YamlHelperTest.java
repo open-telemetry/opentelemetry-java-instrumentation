@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationFunction;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -313,6 +314,22 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
+  }
+
+  @Test
+  void testMetadataParserWithOnlyFunctions() throws JsonProcessingException {
+    String input =
+        """
+            functions:
+              - http-route-enricher
+        """;
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+    assertThat(metadata.getFunctions())
+        .containsExactly(InstrumentationFunction.HTTP_ROUTE_ENRICHER);
   }
 
   @Test

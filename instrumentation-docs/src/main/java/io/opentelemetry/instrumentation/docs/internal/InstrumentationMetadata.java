@@ -47,6 +47,8 @@ public class InstrumentationMetadata {
   @Nullable
   private Boolean overrideTelemetry;
 
+  private List<InstrumentationFunction> functions = emptyList();
+
   public InstrumentationMetadata() {
     this.classification = InstrumentationClassification.LIBRARY.name();
   }
@@ -147,6 +149,14 @@ public class InstrumentationMetadata {
     this.overrideTelemetry = overrideTelemetry;
   }
 
+  public List<InstrumentationFunction> getFunctions() {
+    return functions;
+  }
+
+  public void setFunctions(@Nullable List<InstrumentationFunction> functions) {
+    this.functions = Objects.requireNonNullElse(functions, emptyList());
+  }
+
   /**
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
@@ -162,6 +172,7 @@ public class InstrumentationMetadata {
     private List<SemanticConvention> semanticConventions = emptyList();
     private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
     @Nullable private Boolean overrideTelemetry;
+    private List<InstrumentationFunction> functions = emptyList();
 
     @CanIgnoreReturnValue
     public Builder description(@Nullable String description) {
@@ -217,6 +228,12 @@ public class InstrumentationMetadata {
       return this;
     }
 
+    @CanIgnoreReturnValue
+    public Builder functions(@Nullable List<InstrumentationFunction> functions) {
+      this.functions = Objects.requireNonNullElse(functions, emptyList());
+      return this;
+    }
+
     public InstrumentationMetadata build() {
       InstrumentationMetadata metadata =
           new InstrumentationMetadata(
@@ -231,6 +248,7 @@ public class InstrumentationMetadata {
               configurations);
       metadata.setAdditionalTelemetry(additionalTelemetry);
       metadata.setOverrideTelemetry(overrideTelemetry);
+      metadata.setFunctions(functions);
       return metadata;
     }
   }
