@@ -108,6 +108,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       if (JdbcData.preparedStatement.get(statement) == null) {
         return null;
       }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        return null;
+      }
 
       return JdbcAdviceScope.startPreparedStatement(CallDepth.forClass(Statement.class), statement);
     }
@@ -127,6 +130,10 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addBatch(@Advice.This PreparedStatement statement) {
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return;
+      }
+
       JdbcData.addPreparedStatementBatch(statement);
     }
   }
@@ -139,6 +146,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) int index,
         @Advice.Argument(1) Object value) {
       if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
@@ -173,6 +183,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       if (!CAPTURE_QUERY_PARAMETERS) {
         return;
       }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        return;
+      }
 
       String str = null;
 
@@ -203,6 +216,9 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Object value,
         @Advice.Argument(2) Calendar calendar) {
       if (!CAPTURE_QUERY_PARAMETERS) {
+        return;
+      }
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 

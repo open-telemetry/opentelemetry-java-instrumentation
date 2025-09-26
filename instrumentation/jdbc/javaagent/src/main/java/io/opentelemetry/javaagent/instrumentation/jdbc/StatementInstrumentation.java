@@ -59,16 +59,24 @@ public class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StatementAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static JdbcAdviceScope onEnter(
         @Advice.Argument(0) String sql, @Advice.This Statement statement) {
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return null;
+      }
+
       return JdbcAdviceScope.startStatement(CallDepth.forClass(Statement.class), sql, statement);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter JdbcAdviceScope adviceScope) {
-      adviceScope.end(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
     }
   }
 
@@ -80,6 +88,10 @@ public class StatementInstrumentation implements TypeInstrumentation {
       if (statement instanceof PreparedStatement) {
         return;
       }
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return;
+      }
+
       JdbcData.addStatementBatch(statement, sql);
     }
   }
@@ -96,15 +108,23 @@ public class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteBatchAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static JdbcAdviceScope onEnter(@Advice.This Statement statement) {
+      if (JdbcSingletons.isWrapper(statement, Statement.class)) {
+        return null;
+      }
+
       return JdbcAdviceScope.startBatch(CallDepth.forClass(Statement.class), statement);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter JdbcAdviceScope adviceScope) {
-      adviceScope.end(throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
     }
   }
 

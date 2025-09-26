@@ -15,10 +15,28 @@ See [Running the tests](./docs/contributing/running-tests.md) for more details.
 
 ### Snapshot builds
 
-For developers testing code changes before a release is complete, there are
-snapshot builds of the `main` branch. They are available from
-the Sonatype snapshot repository at `https://central.sonatype.com/repository/maven-snapshots/`
-([browse](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/)).
+For developers testing code changes before a release is complete, snapshot builds of the `main`
+branch are available from the Sonatype snapshot repository at `https://central.sonatype.com/repository/maven-snapshots/`.
+
+To find the latest snapshot, check the maven metadata (replace `{LATEST_VERSION}` with the current
+stable release):
+
+```
+https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent/{LATEST_VERSION}-SNAPSHOT/maven-metadata.xml
+```
+
+Look for the `<timestamp>` and `<buildNumber>` in the XML response, then construct the download URL:
+
+```
+https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent/{VERSION}-SNAPSHOT/opentelemetry-javaagent-{VERSION}-{TIMESTAMP}-{BUILD_NUMBER}.jar
+```
+
+For example, if the metadata shows timestamp `20250925.160708` and build number `56` for version
+`2.21.0`, the snapshot JAR URL would be:
+
+```
+https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent/2.21.0-SNAPSHOT/opentelemetry-javaagent-2.21.0-20250925.160708-56.jar
+```
 
 ### Building from source
 
