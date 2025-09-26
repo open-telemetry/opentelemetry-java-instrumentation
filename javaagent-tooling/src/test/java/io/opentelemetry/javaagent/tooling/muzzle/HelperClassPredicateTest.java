@@ -1,0 +1,59 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.tooling.muzzle;
+
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.stream.Stream;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class HelperClassPredicateTest {
+
+  @ParameterizedTest(name = "should collect references for {0}")
+  @MethodSource("shouldCollectReferencesProvider")
+  void shouldCollectReferences(String description, String className) {
+    HelperClassPredicate predicate =
+        new HelperClassPredicate(it -> it.startsWith("com.example.instrumentation.library"));
+
+    assertTrue(predicate.isHelperClass(className));
+  }
+
+  @ParameterizedTest(name = "should not collect references for {0}")
+  @MethodSource("shouldNotCollectReferencesProvider")
+  void shouldNotCollectReferences(String description, String className) {
+    HelperClassPredicate predicate = new HelperClassPredicate(it -> false);
+
+    assertFalse(predicate.isHelperClass(className));
+  }
+
+  private static Stream<Arguments> shouldCollectReferencesProvider() {
+    return Stream.of(
+        Arguments.of(
+            "javaagent instrumentation class",
+            "io.opentelemetry.javaagent.instrumentation.some_instrumentation.Advice"),
+        Arguments.of(
+            "library instrumentation class", "io.opentelemetry.instrumentation.LibraryClass"),
+        Arguments.of(
+            "additional library instrumentation class",
+            "com.example.instrumentation.library.ThirdPartyExternalInstrumentation"));
+  }
+
+  private static Stream<Arguments> shouldNotCollectReferencesProvider() {
+    return Stream.of(
+        Arguments.of("Java SDK class", "java.util.ArrayList"),
+        Arguments.of(
+            "javaagent-tooling class", "io.opentelemetry.javaagent.tooling.Constants"),
+        Arguments.of(
+            "instrumentation-api class",
+            "io.opentelemetry.instrumentation.api.InstrumentationVersion"),
+        Arguments.of(
+            "bootstrap class",
+            "io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge"));
+  }
+}
