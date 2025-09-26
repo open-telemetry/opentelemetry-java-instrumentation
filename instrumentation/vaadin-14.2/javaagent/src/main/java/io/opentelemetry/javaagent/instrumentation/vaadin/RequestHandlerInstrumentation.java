@@ -46,26 +46,26 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
-    public static class HandleRequestAdviceScope {
+    public static class AdviceScope {
       private final VaadinHandlerRequest request;
       private final Context context;
       private final Scope scope;
 
-      private HandleRequestAdviceScope(VaadinHandlerRequest request, Context context, Scope scope) {
+      private AdviceScope(VaadinHandlerRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
       }
 
       @Nullable
-      public static HandleRequestAdviceScope start(Class<?> handlerClass, String methodName) {
+      public static AdviceScope start(Class<?> handlerClass, String methodName) {
         VaadinHandlerRequest request = VaadinHandlerRequest.create(handlerClass, methodName);
         Context context = helper().startRequestHandlerSpan(request);
         if (context == null) {
           return null;
         }
         Scope scope = context.makeCurrent();
-        return new HandleRequestAdviceScope(request, context, scope);
+        return new AdviceScope(request, context, scope);
       }
 
       public void end(@Nullable Throwable throwable, boolean handled) {
@@ -77,17 +77,17 @@ public class RequestHandlerInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HandleRequestAdviceScope onEnter(
+    public static AdviceScope onEnter(
         @Advice.This RequestHandler requestHandler, @Advice.Origin("#m") String methodName) {
 
-      return HandleRequestAdviceScope.start(requestHandler.getClass(), methodName);
+      return AdviceScope.start(requestHandler.getClass(), methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown Throwable throwable,
         @Advice.Return boolean handled,
-        @Advice.Enter @Nullable HandleRequestAdviceScope adviceScope) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope == null) {
         return;
       }

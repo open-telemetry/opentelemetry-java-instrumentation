@@ -41,20 +41,19 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class InvokeMethodAdvice {
 
-    public static class InvokeMethodAdviceScope {
+    public static class AdviceScope {
       private final VaadinClientCallableRequest request;
       private final Context context;
       private final Scope scope;
 
-      private InvokeMethodAdviceScope(
-          VaadinClientCallableRequest request, Context context, Scope scope) {
+      private AdviceScope(VaadinClientCallableRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
       }
 
       @Nullable
-      public static InvokeMethodAdviceScope start(Class<?> componentClass, String methodName) {
+      public static AdviceScope start(Class<?> componentClass, String methodName) {
         Context parentContext = Context.current();
         VaadinClientCallableRequest request =
             VaadinClientCallableRequest.create(componentClass, methodName);
@@ -64,7 +63,7 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
         Context context = clientCallableInstrumenter().start(parentContext, request);
         Scope scope = context.makeCurrent();
-        return new InvokeMethodAdviceScope(request, context, scope);
+        return new AdviceScope(request, context, scope);
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -76,15 +75,15 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static InvokeMethodAdviceScope onEnter(
+    public static AdviceScope onEnter(
         @Advice.Argument(1) Class<?> componentClass, @Advice.Argument(2) String methodName) {
-      return InvokeMethodAdviceScope.start(componentClass, methodName);
+      return AdviceScope.start(componentClass, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable InvokeMethodAdviceScope adviceScope) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope == null) {
         return;
       }

@@ -48,19 +48,19 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class HandleAdvice {
 
-    public static class HandleAdviceScope {
+    public static class AdviceScope {
       private final VaadinRpcRequest request;
       private final Context context;
       private final Scope scope;
 
-      private HandleAdviceScope(VaadinRpcRequest request, Context context, Scope scope) {
+      private AdviceScope(VaadinRpcRequest request, Context context, Scope scope) {
         this.request = request;
         this.context = context;
         this.scope = scope;
       }
 
       @Nullable
-      public static HandleAdviceScope start(
+      public static AdviceScope start(
           RpcInvocationHandler handler, String methodName, JsonObject jsonObject) {
         Context parentContext = Context.current();
         VaadinRpcRequest request = VaadinRpcRequest.create(handler, methodName, jsonObject);
@@ -70,7 +70,7 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
 
         Context context = rpcInstrumenter().start(parentContext, request);
         Scope scope = context.makeCurrent();
-        return new HandleAdviceScope(request, context, scope);
+        return new AdviceScope(request, context, scope);
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -82,17 +82,17 @@ public class RpcInvocationHandlerInstrumentation implements TypeInstrumentation 
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HandleAdviceScope onEnter(
+    public static AdviceScope onEnter(
         @Advice.This RpcInvocationHandler rpcInvocationHandler,
         @Advice.Origin("#m") String methodName,
         @Advice.Argument(1) JsonObject jsonObject) {
-      return HandleAdviceScope.start(rpcInvocationHandler, methodName, jsonObject);
+      return AdviceScope.start(rpcInvocationHandler, methodName, jsonObject);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable HandleAdviceScope adviceScope) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope == null) {
         return;
       }
