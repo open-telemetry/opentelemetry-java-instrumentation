@@ -10,10 +10,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class MyFacesInstrumentationModule extends InstrumentationModule {
+public class MyFacesInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public MyFacesInstrumentationModule() {
     super("jsf-myfaces", "jsf-myfaces-3.0");
   }
@@ -22,5 +24,10 @@ public class MyFacesInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ActionListenerImplInstrumentation(), new RestoreViewExecutorInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
