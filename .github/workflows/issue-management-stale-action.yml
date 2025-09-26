@@ -33,8 +33,8 @@ jobs:
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
-          days-before-stale: -1
-          days-before-close: 365
+          days-before-stale: 365
+          days-before-close: 0
           close-issue-label: stale
           close-issue-message: >
             We would welcome a contribution for this enhancement, but since there has been no activity on it for the past year we are closing it to help maintain our backlog.
@@ -42,6 +42,7 @@ jobs:
           days-before-pr-stale: -1
           days-before-pr-close: -1
           only-labels: "enhancement,contribution welcome"
+          exempt-issue-labels: "stale" # so that it won't close issues labeled as stale by "needs author feedback"
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
