@@ -190,7 +190,8 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static WithSpanAttributesAdviceScope start(Method method, MethodRequest request) {
+      public static WithSpanAttributesAdviceScope start(Method method, Object[] args) {
+        MethodRequest request = new MethodRequest(method, args);
         Instrumenter<MethodRequest, Object> instrumenter =
             WithSpanSingletons.instrumenterWithAttributes();
         Context current = Context.current();
@@ -218,8 +219,7 @@ public class WithSpanInstrumentation implements TypeInstrumentation {
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
       // Every usage of @Advice.Origin Method is replaced with a call to Class.getMethod, copy it
       // to advice scope so that there would be only one call to Class.getMethod.
-      MethodRequest request = new MethodRequest(originMethod, args);
-      return WithSpanAttributesAdviceScope.start(originMethod, request);
+      return WithSpanAttributesAdviceScope.start(originMethod, args);
     }
 
     @AssignReturned.ToReturned

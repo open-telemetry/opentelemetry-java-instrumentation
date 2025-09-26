@@ -13,6 +13,7 @@ import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
+import javax.annotation.Nullable;
 import kotlin.coroutines.CoroutineContext;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -49,6 +50,7 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ContextAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static CoroutineContext enter(@Advice.Argument(0) Context applicationContext) {
       if (applicationContext != null) {
@@ -63,18 +65,15 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static CoroutineContext onExit(
         @Advice.Return CoroutineContext originalResult,
-        @Advice.Enter CoroutineContext coroutineContext) {
-      CoroutineContext result = originalResult;
-      if (coroutineContext != null) {
-        result = coroutineContext;
-      }
-      return result;
+        @Advice.Enter @Nullable CoroutineContext coroutineContext) {
+      return coroutineContext != null ? coroutineContext : originalResult;
     }
   }
 
   @SuppressWarnings("unused")
   public static class ImplicitContextKeyedAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static CoroutineContext enter(
         @Advice.Argument(0)
@@ -92,18 +91,15 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static CoroutineContext onExit(
         @Advice.Return CoroutineContext originalResult,
-        @Advice.Enter CoroutineContext coroutineContext) {
-      CoroutineContext result = originalResult;
-      if (coroutineContext != null) {
-        result = coroutineContext;
-      }
-      return result;
+        @Advice.Enter @Nullable CoroutineContext coroutineContext) {
+      return coroutineContext != null ? coroutineContext : originalResult;
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetOpenTelemetryContextAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Context enter(@Advice.Argument(0) CoroutineContext coroutineContext) {
       if (coroutineContext != null) {
@@ -114,15 +110,12 @@ public class ContextExtensionInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @Nullable
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class)
     public static Context onExit(
-        @Advice.Return Context originalResult, @Advice.Enter Context context) {
-      Context result = originalResult;
-      if (context != null) {
-        result = context;
-      }
-      return result;
+        @Advice.Return Context originalResult, @Advice.Enter @Nullable Context context) {
+      return context != null ? context : originalResult;
     }
   }
 }
