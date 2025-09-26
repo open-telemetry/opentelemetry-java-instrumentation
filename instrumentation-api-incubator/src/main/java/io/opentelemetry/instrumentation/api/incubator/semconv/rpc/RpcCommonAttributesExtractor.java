@@ -40,5 +40,7 @@ abstract class RpcCommonAttributesExtractor<REQUEST, RESPONSE>
       Context context,
       REQUEST request,
       @Nullable RESPONSE response,
-      @Nullable Throwable error) {}
+      @Nullable Throwable error) {
+    // No response attributes
+  }
 }
