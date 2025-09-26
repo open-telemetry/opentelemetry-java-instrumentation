@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -31,11 +30,7 @@ class LoggingFailSafeMatcherTest {
 
     boolean result = matcher.matches(testObject);
 
-    if (match) {
-      assertTrue(result);
-    } else {
-      assertFalse(result);
-    }
+    assertThat(result).isEqualTo(match);
   }
 
   @Test
@@ -50,6 +45,6 @@ class LoggingFailSafeMatcherTest {
     boolean result = matcher.matches(testObject);
 
     // Should default to false when exception occurs
-    assertFalse(result);
+    assertThat(result).isFalse();
   }
 }

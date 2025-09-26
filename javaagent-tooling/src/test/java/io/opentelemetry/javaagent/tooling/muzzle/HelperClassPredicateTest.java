@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,7 +20,7 @@ class HelperClassPredicateTest {
     HelperClassPredicate predicate =
         new HelperClassPredicate(it -> it.startsWith("com.example.instrumentation.library"));
 
-    assertTrue(predicate.isHelperClass(className));
+    assertThat(predicate.isHelperClass(className)).isTrue();
   }
 
   @ParameterizedTest(name = "should not collect references for {0}")
@@ -29,7 +28,7 @@ class HelperClassPredicateTest {
   void shouldNotCollectReferences(String description, String className) {
     HelperClassPredicate predicate = new HelperClassPredicate(it -> false);
 
-    assertFalse(predicate.isHelperClass(className));
+    assertThat(predicate.isHelperClass(className)).isFalse();
   }
 
   private static Stream<Arguments> shouldCollectReferencesProvider() {

@@ -5,13 +5,12 @@
 
 package io.opentelemetry.javaagent.muzzle;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.javaagent.IntegrationTestUtils;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
 import org.junit.jupiter.api.Test;
@@ -60,8 +59,8 @@ class MuzzleBytecodeTransformTest {
       }
     }
 
-    assertEquals(Collections.emptyList(), unMuzzledClasses);
-    assertEquals(Collections.emptyList(), nonLazyFields);
-    assertEquals(Collections.emptyList(), unInitFields);
+    assertThat(unMuzzledClasses).isEmpty();
+    assertThat(nonLazyFields).isEmpty();
+    assertThat(unInitFields).isEmpty();
   }
 }

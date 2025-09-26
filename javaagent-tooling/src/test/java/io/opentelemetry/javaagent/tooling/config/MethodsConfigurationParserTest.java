@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,7 +24,7 @@ class MethodsConfigurationParserTest {
   @ParameterizedTest(name = "{0}")
   @MethodSource("testConfigurationProvider")
   void testConfiguration(String testName, String value, Map<String, Set<String>> expected) {
-    assertEquals(expected, MethodsConfigurationParser.parse(value));
+    assertThat(MethodsConfigurationParser.parse(value)).isEqualTo(expected);
   }
 
   private static Stream<Arguments> testConfigurationProvider() {
