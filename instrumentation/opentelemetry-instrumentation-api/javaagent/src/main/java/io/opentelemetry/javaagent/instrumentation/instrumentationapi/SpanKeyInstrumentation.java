@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -42,6 +43,8 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StoreInContextAdvice {
+
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Context onEnter(
         @Advice.This SpanKey applicationSpanKey,
@@ -74,18 +77,16 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static Context onExit(
-        @Advice.Return Context originalResult, @Advice.Enter Context newApplicationContext) {
-      Context result = originalResult;
-
-      if (newApplicationContext != null) {
-        result = newApplicationContext;
-      }
-      return result;
+        @Advice.Return Context originalResult,
+        @Advice.Enter @Nullable Context newApplicationContext) {
+      return newApplicationContext != null ? newApplicationContext : originalResult;
     }
   }
 
   @SuppressWarnings("unused")
   public static class FromContextOrNullAdvice {
+
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Span onEnter(
         @Advice.This SpanKey applicationSpanKey, @Advice.Argument(0) Context applicationContext) {
@@ -112,13 +113,8 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static Span onExit(
-        @Advice.Return Span originalResult, @Advice.Enter Span applicationSpan) {
-      Span result = originalResult;
-
-      if (applicationSpan != null) {
-        result = applicationSpan;
-      }
-      return result;
+        @Advice.Return Span originalResult, @Advice.Enter @Nullable Span applicationSpan) {
+      return applicationSpan != null ? applicationSpan : originalResult;
     }
   }
 }
