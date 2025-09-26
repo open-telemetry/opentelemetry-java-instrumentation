@@ -8,3 +8,5 @@ semantic_conventions:
   - HTTP_CLIENT_METRICS
   - HTTP_SERVER_SPANS
   - HTTP_SERVER_METRICS
+functions:
+  - http-route-enricher
