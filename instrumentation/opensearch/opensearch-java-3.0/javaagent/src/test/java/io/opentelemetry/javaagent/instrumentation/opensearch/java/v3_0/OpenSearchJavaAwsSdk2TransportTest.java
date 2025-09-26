@@ -42,8 +42,7 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.utils.AttributeMap;
 
-@SuppressWarnings(
-    "deprecation") // AwsSdk2Transport is the correct way for OpenSearch Java 3.0 with AWS SDK 2
+@SuppressWarnings("deprecation")
 public class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTest {
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
