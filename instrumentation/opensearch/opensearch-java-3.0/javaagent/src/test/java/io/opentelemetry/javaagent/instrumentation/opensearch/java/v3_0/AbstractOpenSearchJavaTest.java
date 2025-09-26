@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -107,11 +108,30 @@ public abstract class AbstractOpenSearchJavaTest {
   void shouldGetStatusAsyncWithTraces() throws Exception {
     AtomicReference<CompletableFuture<HealthResponse>> responseCompletableFuture =
         new AtomicReference<>();
+    CountDownLatch countDownLatch = new CountDownLatch(1);
 
     getTesting()
         .runWithSpan(
             "client",
-            () -> responseCompletableFuture.set(openSearchAsyncClient.cluster().health()));
+            () -> {
+              CompletableFuture<HealthResponse> future = openSearchAsyncClient.cluster().health();
+              responseCompletableFuture.set(future);
+
+              future.whenComplete(
+                  (response, throwable) -> {
+                    getTesting()
+                        .runWithSpan(
+                            "callback",
+                            () -> {
+                              if (throwable != null) {
+                                throw new RuntimeException(throwable);
+                              }
+                              countDownLatch.countDown();
+                            });
+                  });
+            });
+
+    countDownLatch.await();
     HealthResponse healthResponse = responseCompletableFuture.get().get();
     assertThat(healthResponse).isNotNull();
 
@@ -138,6 +158,10 @@ public abstract class AbstractOpenSearchJavaTest {
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))));
   }
 }

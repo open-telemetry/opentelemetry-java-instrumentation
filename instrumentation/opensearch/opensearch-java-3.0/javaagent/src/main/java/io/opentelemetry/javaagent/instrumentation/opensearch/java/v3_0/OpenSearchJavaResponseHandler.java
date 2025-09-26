@@ -1,0 +1,24 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+
+import io.opentelemetry.context.Context;
+import java.util.function.BiConsumer;
+
+public final class OpenSearchJavaResponseHandler implements BiConsumer<Object, Throwable> {
+  private final Context context;
+  private final OpenSearchJavaRequest otelRequest;
+
+  public OpenSearchJavaResponseHandler(Context context, OpenSearchJavaRequest otelRequest) {
+    this.context = context;
+    this.otelRequest = otelRequest;
+  }
+
+  @Override
+  public void accept(Object response, Throwable error) {
+    OpenSearchJavaSingletons.instrumenter().end(context, otelRequest, null, error);
+  }
+}

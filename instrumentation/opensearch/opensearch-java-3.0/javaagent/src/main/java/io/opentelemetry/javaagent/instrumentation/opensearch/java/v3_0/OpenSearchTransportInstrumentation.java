@@ -45,7 +45,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
             .and(named("performRequestAsync"))
             .and(takesArgument(0, Object.class))
             .and(takesArgument(1, named("org.opensearch.client.transport.Endpoint"))),
-        this.getClass().getName() + "$PerformRequestAdvice");
+        this.getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -125,12 +125,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         instrumenter().end(context, otelRequest, null, throwable);
       }
 
-      future.whenComplete(
-          (response, error) -> {
-            instrumenter().end(context, otelRequest, (OpenSearchJavaResponse) response, error);
-          });
-
-      future = CompletableFutureWrapper.wrap(future, context);
+      future.whenComplete(new OpenSearchJavaResponseHandler(context, otelRequest));
     }
   }
 }
