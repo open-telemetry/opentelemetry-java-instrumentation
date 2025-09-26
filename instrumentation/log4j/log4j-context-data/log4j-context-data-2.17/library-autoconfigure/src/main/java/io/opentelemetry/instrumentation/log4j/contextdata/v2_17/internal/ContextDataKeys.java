@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata.v2_17.internal;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -14,14 +15,18 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
  */
 public final class ContextDataKeys {
   public static final String TRACE_ID_KEY =
-      ConfigPropertiesUtil.getString(
-          "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID);
+      new ConfigPropertiesSimpleBridge(GlobalOpenTelemetry.get())
+          .getString(
+              "otel.instrumentation.common.logging.trace-id", LoggingContextConstants.TRACE_ID);
   public static final String SPAN_ID_KEY =
-      ConfigPropertiesUtil.getString(
-          "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID);
+      new ConfigPropertiesSimpleBridge(GlobalOpenTelemetry.get())
+          .getString(
+              "otel.instrumentation.common.logging.span-id", LoggingContextConstants.SPAN_ID);
   public static final String TRACE_FLAGS_KEY =
-      ConfigPropertiesUtil.getString(
-          "otel.instrumentation.common.logging.trace-flags", LoggingContextConstants.TRACE_FLAGS);
+      new ConfigPropertiesSimpleBridge(GlobalOpenTelemetry.get())
+          .getString(
+              "otel.instrumentation.common.logging.trace-flags",
+              LoggingContextConstants.TRACE_FLAGS);
 
   private ContextDataKeys() {}
 }

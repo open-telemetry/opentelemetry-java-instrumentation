@@ -7,7 +7,8 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import java.util.List;
@@ -22,21 +23,24 @@ public final class AwsSdkSingletons {
 
   private static class AwsSdkTelemetryFactory extends AbstractAwsSdkTelemetryFactory {
 
+    private ConfigPropertiesSimpleBridge bridge =
+        new ConfigPropertiesSimpleBridge(GlobalOpenTelemetry.get());
+
     @Override
     protected List<String> getCapturedHeaders() {
-      return ConfigPropertiesUtil.getList(
+      return bridge.getList(
           "otel.instrumentation.messaging.experimental.capture-headers", emptyList());
     }
 
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
-      return ConfigPropertiesUtil.getBoolean(
+      return bridge.getBoolean(
           "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
     }
 
     @Override
     protected boolean getBoolean(String name, boolean defaultValue) {
-      return ConfigPropertiesUtil.getBoolean(name, defaultValue);
+      return bridge.getBoolean(name, defaultValue);
     }
   }
 

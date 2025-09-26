@@ -90,6 +90,12 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
         node == null ? empty() : node, mappings, overrideValues);
   }
 
+  public SimpleDeclarativeConfigPropertiesBridge buildSimple(
+      @Nullable DeclarativeConfigProperties node) {
+    return new SimpleDeclarativeConfigPropertiesBridge(
+        node == null ? empty() : node, mappings, overrideValues);
+  }
+
   /**
    * Build {@link ConfigProperties} from the {@link DeclarativeConfigProperties} provided by the
    * instrumentation configuration.
@@ -103,6 +109,12 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
   public ConfigProperties buildFromInstrumentationConfig(
       @Nullable DeclarativeConfigProperties instrumentationConfig) {
     return build(
+        instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
+  }
+
+  public SimpleDeclarativeConfigPropertiesBridge buildSimpleFromInstrumentationConfig(
+      @Nullable DeclarativeConfigProperties instrumentationConfig) {
+    return buildSimple(
         instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
   }
 }
