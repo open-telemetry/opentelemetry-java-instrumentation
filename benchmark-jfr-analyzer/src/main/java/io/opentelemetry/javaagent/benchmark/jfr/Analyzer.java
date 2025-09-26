@@ -65,11 +65,11 @@ public class Analyzer {
   @Nullable
   private static String getAgentCaller(RecordedStackTrace stackTrace) {
     List<RecordedFrame> frames = stackTrace.getFrames();
-    for (int i = frames.size() - 1; i >= 0; i--) {
+    for (int i = frames.size() - 1; i >= 1; i--) {
       RecordedFrame frame = frames.get(i);
       RecordedMethod method = frame.getMethod();
       if (isAgentMethod(method)) {
-        RecordedFrame callerFrame = frames.get(i + 1);
+        RecordedFrame callerFrame = frames.get(i - 1);
         RecordedMethod callerMethod = callerFrame.getMethod();
         return getStackTraceElement(callerMethod, callerFrame);
       }
