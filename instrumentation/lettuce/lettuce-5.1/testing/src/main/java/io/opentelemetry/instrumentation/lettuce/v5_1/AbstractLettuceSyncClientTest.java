@@ -126,20 +126,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("SET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("SET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
     List<AttributeKey<?>> expected =
         new ArrayList<>(
@@ -169,20 +168,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -194,20 +192,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -219,20 +216,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("RANDOMKEY")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("RANDOMKEY")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -254,20 +250,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("LPUSH")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, containerConnection.port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("LPUSH")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, containerConnection.port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "LPUSH TESTLIST ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -279,22 +274,21 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("HMSET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(
-                                      maybeStable(DB_STATEMENT),
-                                      "HMSET user firstname ? lastname ? age ?")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("HMSET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "HMSET user firstname ? lastname ? age ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -306,20 +300,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("HGETALL")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("HGETALL")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -338,22 +331,21 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("EVAL")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(
-                                      maybeStable(DB_STATEMENT),
-                                      "EVAL " + b64Script + " 1 TESTLIST ? ?")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("EVAL")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(
+                                        maybeStable(DB_STATEMENT),
+                                        "EVAL " + b64Script + " 1 TESTLIST ? ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -366,20 +358,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("MSET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "MSET key1 ? key2 ?")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("MSET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "MSET key1 ? key2 ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -445,20 +436,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
           .waitAndAssertTraces(
               trace ->
                   trace.hasSpansSatisfyingExactly(
-                      span -> {
-                        span.hasName("DEBUG")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, containerConnection.port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")));
-                        assertCommandEncodeEvents(span);
-                      }));
+                      span ->
+                          span.hasName("DEBUG")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, containerConnection.port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT")))
+                              .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
     }
   }
 
@@ -478,24 +468,7 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     testing()
         .waitAndAssertTraces(
-            trace -> {
-              if (Boolean.getBoolean("testLatestDeps")) {
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("SHUTDOWN")
-                            .hasKind(SpanKind.CLIENT)
-                            // Seems to only be treated as an error with Lettuce 6+
-                            .hasException(new RedisException("Connection disconnected"))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_TYPE, "ipv4"),
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, containerConnection.port),
-                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                    equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"))));
-              } else {
+            trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
                       span.hasName("SHUTDOWN")
@@ -503,17 +476,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                           .hasAttributesSatisfyingExactly(
                               addExtraAttributes(
                                   equalTo(
-                                      AttributeKey.stringKey("error"), "Connection disconnected"),
+                                      AttributeKey.stringKey("error"),
+                                      Boolean.getBoolean("testLatestDeps")
+                                          ? null
+                                          : "Connection disconnected"),
                                   equalTo(NETWORK_TYPE, "ipv4"),
                                   equalTo(NETWORK_PEER_ADDRESS, ip),
                                   equalTo(NETWORK_PEER_PORT, containerConnection.port),
                                   equalTo(SERVER_ADDRESS, host),
                                   equalTo(SERVER_PORT, containerConnection.port),
                                   equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")));
-                      assertCommandEncodeEvents(span);
-                    });
-              }
-            });
+                                  equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE")))
+                          .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents);
+                      if (Boolean.getBoolean("testLatestDeps")) {
+                        // Seems to only be treated as an error with Lettuce 6+
+                        span.hasException(new RedisException("Connection disconnected"));
+                      }
+                    }));
   }
 }

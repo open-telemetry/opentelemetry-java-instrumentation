@@ -17,8 +17,7 @@ public final class LettuceTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
 
   private boolean statementSanitizationEnabled = true;
-
-  private boolean encodingEventsEnabled = true;
+  private boolean encodingEventsEnabled = false;
 
   LettuceTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -38,7 +37,7 @@ public final class LettuceTelemetryBuilder {
 
   /**
    * Sets whether the {@code redis.encode.start} and {@code redis.encode.end} span events should be
-   * emitted by the constructed {@link LettuceTelemetry}. Enabled by default.
+   * emitted by the constructed {@link LettuceTelemetry}. Disabled by default.
    */
   @CanIgnoreReturnValue
   public LettuceTelemetryBuilder setEncodingSpanEventsEnabled(boolean encodingEventsEnabled) {

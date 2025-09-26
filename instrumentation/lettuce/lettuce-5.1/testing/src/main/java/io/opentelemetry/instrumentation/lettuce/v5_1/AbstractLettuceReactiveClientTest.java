@@ -93,22 +93,20 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> {
-                      span.hasName("SET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")));
-
-                      assertCommandEncodeEvents(span);
-                    },
+                    span ->
+                        span.hasName("SET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -133,20 +131,19 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -181,21 +178,20 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> {
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")));
-                      assertCommandEncodeEvents(span);
-                    },
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -219,21 +215,19 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("RANDOMKEY")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")));
-
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("RANDOMKEY")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -244,21 +238,19 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName("COMMAND")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "COMMAND")));
-
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("COMMAND")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "COMMAND")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -289,36 +281,34 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
-                    span -> {
-                      span.hasName("SET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SET a ?")));
-                      assertCommandEncodeEvents(span);
-                    },
-                    span -> {
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "GET a")));
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("SET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -333,36 +323,33 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("test-parent").hasAttributes(Attributes.empty()),
-                    span -> {
-                      span.hasName("SET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "SET a ?")));
-                      assertCommandEncodeEvents(span);
-                    },
-                    span -> {
-                      span.hasName("GET")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_TYPE, "ipv4"),
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, port),
-                                  equalTo(maybeStable(DB_SYSTEM), "redis"),
-                                  equalTo(maybeStable(DB_STATEMENT), "GET a")));
-
-                      assertCommandEncodeEvents(span);
-                    }));
+                    span ->
+                        span.hasName("SET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                addExtraAttributes(
+                                    equalTo(NETWORK_TYPE, "ipv4"),
+                                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                                    equalTo(NETWORK_PEER_PORT, port),
+                                    equalTo(SERVER_ADDRESS, host),
+                                    equalTo(SERVER_PORT, port),
+                                    equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                    equalTo(maybeStable(DB_STATEMENT), "GET a")))
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }
