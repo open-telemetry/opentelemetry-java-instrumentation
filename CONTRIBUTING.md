@@ -12,6 +12,8 @@ and discuss your ideas or propose the changes you wish to make.
 When your PR introduces a breaking change:
 
 * Add the `breaking change` label to your PR
+  - If you can't add labels directly, post a comment containing only `/breaking-change` and the label will be added automatically
+  - To remove the label, post a comment containing only `/remove-breaking-change`
 * Provide migration notes in the PR description:
   - What is changing and why
   - How users should update their code/configuration
@@ -29,6 +31,8 @@ When your PR introduces a breaking change:
 When your PR deprecates functionality:
 
 * Add the `deprecation` label to your PR
+  - If you can't add labels directly, post a comment containing only `/deprecation` and the label will be added automatically
+  - To remove the label, post a comment containing only `/remove-deprecation`
 * Provide deprecation details in the PR description:
   - What is being deprecated and why
   - What should be used instead (if applicable)
