@@ -33,7 +33,15 @@ class RpcServerMetricsTest {
 
     OperationListener listener = RpcServerMetrics.get().create(meterProvider.get("test"));
 
-    Attributes requestAttributes =
+    Attributes requestAttributes1 =
+        Attributes.builder()
+            .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
+            .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
+            .put(RpcIncubatingAttributes.RPC_METHOD, "exampleMethod")
+            .put(RpcSizeAttributesExtractor.RPC_REQUEST_SIZE, 10)
+            .build();
+
+    Attributes requestAttributes2 =
         Attributes.builder()
             .put(RpcIncubatingAttributes.RPC_SYSTEM, "grpc")
             .put(RpcIncubatingAttributes.RPC_SERVICE, "myservice.EchoService")
@@ -47,6 +55,7 @@ class RpcServerMetricsTest {
             .put(NetworkAttributes.NETWORK_LOCAL_ADDRESS, "127.0.0.1")
             .put(NetworkAttributes.NETWORK_TRANSPORT, "tcp")
             .put(NetworkAttributes.NETWORK_TYPE, "ipv4")
+            .put(RpcSizeAttributesExtractor.RPC_RESPONSE_SIZE, 20)
             .build();
 
     Attributes responseAttributes2 =
@@ -66,11 +75,11 @@ class RpcServerMetricsTest {
                         TraceFlags.getSampled(),
                         TraceState.getDefault())));
 
-    Context context1 = listener.onStart(parent, requestAttributes, nanos(100));
+    Context context1 = listener.onStart(parent, requestAttributes1, nanos(100));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
-    Context context2 = listener.onStart(Context.root(), requestAttributes, nanos(150));
+    Context context2 = listener.onStart(Context.root(), requestAttributes2, nanos(150));
 
     assertThat(metricReader.collectAllMetrics()).isEmpty();
 
@@ -88,7 +97,7 @@ class RpcServerMetricsTest {
                                 point ->
                                     point
                                         .hasSum(150 /* millis */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
@@ -97,6 +106,63 @@ class RpcServerMetricsTest {
                                                 RpcIncubatingAttributes.RPC_METHOD,
                                                 "exampleMethod"),
                                             equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
+                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))),
+            metric ->
+                assertThat(metric)
+                    .hasName("rpc.server.response.size")
+                    .hasUnit("By")
+                    .hasDescription("Measures the size of RPC response messages (uncompressed).")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(20 /* bytes */)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(
+                                                RpcIncubatingAttributes.RPC_SERVICE,
+                                                "myservice.EchoService"),
+                                            equalTo(
+                                                RpcIncubatingAttributes.RPC_METHOD,
+                                                "exampleMethod"),
+                                            equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
+                                            equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
+                                            equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
+                                        .hasExemplarsSatisfying(
+                                            exemplar ->
+                                                exemplar
+                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                                    .hasSpanId("090a0b0c0d0e0f00")))),
+            metric ->
+                assertThat(metric)
+                    .hasName("rpc.server.request.size")
+                    .hasUnit("By")
+                    .hasDescription("Measures the size of RPC request messages (uncompressed).")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(10 /* bytes */)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
+                                            equalTo(
+                                                RpcIncubatingAttributes.RPC_SERVICE,
+                                                "myservice.EchoService"),
+                                            equalTo(
+                                                RpcIncubatingAttributes.RPC_METHOD,
+                                                "exampleMethod"),
+                                            equalTo(ServerAttributes.SERVER_ADDRESS, "example.com"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp"),
                                             equalTo(NetworkAttributes.NETWORK_TYPE, "ipv4"))
                                         .hasExemplarsSatisfying(
@@ -119,7 +185,7 @@ class RpcServerMetricsTest {
                                 point ->
                                     point
                                         .hasSum(150 /* millis */)
-                                        .hasAttributesSatisfying(
+                                        .hasAttributesSatisfyingExactly(
                                             equalTo(RpcIncubatingAttributes.RPC_SYSTEM, "grpc"),
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_SERVICE,
@@ -127,6 +193,7 @@ class RpcServerMetricsTest {
                                             equalTo(
                                                 RpcIncubatingAttributes.RPC_METHOD,
                                                 "exampleMethod"),
+                                            equalTo(ServerAttributes.SERVER_PORT, 8080),
                                             equalTo(NetworkAttributes.NETWORK_TRANSPORT, "tcp")))));
   }
 
