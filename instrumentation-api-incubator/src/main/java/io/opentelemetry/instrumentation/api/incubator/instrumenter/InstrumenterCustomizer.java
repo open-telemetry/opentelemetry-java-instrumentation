@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /**
  * Provides customizations for instrumentation, including operation metrics, attributes extraction,
@@ -77,7 +76,6 @@ public interface InstrumenterCustomizer {
    * @param spanNameExtractorTransformer function that transforms the original span name extractor
    * @return this InstrumenterCustomizer for method chaining
    */
-  @Nullable
   InstrumenterCustomizer setSpanNameExtractor(
       Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer);
 }
