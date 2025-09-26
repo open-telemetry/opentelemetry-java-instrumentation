@@ -57,8 +57,7 @@ public class VaadinServiceInstrumentation implements TypeInstrumentation {
         if (context == null) {
           return null;
         }
-        Scope scope = context.makeCurrent();
-        return new AdviceScope(request, context, scope);
+        return new AdviceScope(request, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
