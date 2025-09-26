@@ -52,6 +52,9 @@ public final class Log4jHelper {
     List<String> captureContextDataAttributes =
         config.getList(
             "otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes", emptyList());
+    boolean captureEventName =
+        config.getBoolean(
+            "otel.instrumentation.log4j-appender.experimental.capture-event-name", false);
 
     mapper =
         new LogEventMapper<>(
@@ -60,7 +63,8 @@ public final class Log4jHelper {
             captureCodeAttributes,
             captureMapMessageAttributes,
             captureMarkerAttribute,
-            captureContextDataAttributes);
+            captureContextDataAttributes,
+            captureEventName);
   }
 
   public static void capture(

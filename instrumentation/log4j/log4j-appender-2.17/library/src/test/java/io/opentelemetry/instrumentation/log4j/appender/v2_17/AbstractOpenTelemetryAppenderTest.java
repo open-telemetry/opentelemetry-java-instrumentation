@@ -155,6 +155,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
   void logContextData() {
     ThreadContext.put("key1", "val1");
     ThreadContext.put("key2", "val2");
+    ThreadContext.put("event.name", "MyEventName");
     try {
       logger.info("log message 1");
     } finally {
@@ -170,6 +171,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasResource(resource)
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
+                    .hasEventName("MyEventName")
                     .hasAttributesSatisfyingExactly(
                         addLocationAttributes(
                             "logContextData",
