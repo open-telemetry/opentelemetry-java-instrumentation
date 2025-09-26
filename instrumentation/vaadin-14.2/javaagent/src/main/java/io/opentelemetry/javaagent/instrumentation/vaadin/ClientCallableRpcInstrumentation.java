@@ -62,8 +62,7 @@ public class ClientCallableRpcInstrumentation implements TypeInstrumentation {
         }
 
         Context context = clientCallableInstrumenter().start(parentContext, request);
-        Scope scope = context.makeCurrent();
-        return new AdviceScope(request, context, scope);
+        return new AdviceScope(request, context, context.makeCurrent());
       }
 
       public void end(@Nullable Throwable throwable) {
