@@ -62,6 +62,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addDbInfo(
         @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
+      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        return;
+      }
+
       JdbcData.preparedStatement.set(statement, sql);
     }
   }
@@ -105,6 +109,10 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
         @Advice.This Connection connection, @Advice.Origin("#m") String methodName) {
+      if (JdbcSingletons.isWrapper(connection, Connection.class)) {
+        return null;
+      }
+
       return AdviceScope.start(connection, methodName);
     }
 
