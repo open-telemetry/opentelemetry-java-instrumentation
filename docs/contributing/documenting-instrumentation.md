@@ -96,6 +96,22 @@ configurations:
     description: Enables statement sanitization for database queries.
     type: boolean
     default: true
+override_telemetry: false
+additional_telemetry:
+  - when: "default"
+    metrics:
+      - name: "metric.name"
+        description: "Metric description"
+        type: "COUNTER"
+        unit: "1"
+        attributes:
+          - name: "attribute.name"
+            type: "STRING"
+    spans:
+      - span_kind: "CLIENT"
+        attributes:
+          - name: "span.attribute"
+            type: "STRING"
 ```
 
 ### Description (required)
@@ -205,6 +221,82 @@ If an instrumentation is disabled by default, set `disabled_by_default: true`. T
 the instrumentation will not be active unless explicitly enabled by the user. If this field is omitted,
 it defaults to `false`, meaning the instrumentation is enabled by default.
 
+### Manual Telemetry Documentation (optional)
+
+You can manually document telemetry metadata (metrics and spans) directly in the `metadata.yaml` file
+using the `additional_telemetry` field. This is useful for:
+
+- Documenting telemetry that may not be captured during automated test runs
+- Adding telemetry documentation when `.telemetry` files are not available
+- Providing additional context or details about emitted telemetry
+
+#### additional_telemetry
+
+The `additional_telemetry` field allows you to specify telemetry metadata organized by configuration
+conditions (`when` field):
+
+```yaml
+additional_telemetry:
+  - when: "default"  # Telemetry emitted by default
+    metrics:
+      - name: "http.server.request.duration"
+        description: "Duration of HTTP server requests"
+        type: "HISTOGRAM"
+        unit: "ms"
+        attributes:
+          - name: "http.method"
+            type: "STRING"
+          - name: "http.status_code"
+            type: "LONG"
+    spans:
+      - span_kind: "SERVER"
+        attributes:
+          - name: "http.method"
+            type: "STRING"
+          - name: "http.url"
+            type: "STRING"
+  - when: "otel.instrumentation.example.experimental-metrics.enabled"  # Telemetry enabled by configuration
+    metrics:
+      - name: "example.experimental.metric"
+        description: "Experimental metric enabled by configuration"
+        type: "COUNTER"
+        unit: "1"
+```
+
+Each telemetry entry includes:
+
+- `when`: The configuration condition under which this telemetry is emitted. Use `"default"` for telemetry
+  emitted by default, or specify the configuration option name for conditional telemetry.
+- `metrics`: List of metrics with their name, description, type, unit, and attributes
+- `spans`: List of span configurations with their span_kind and attributes
+
+For metrics, supported `type` values include: `COUNTER`, `GAUGE`, `HISTOGRAM`, `EXPONENTIAL_HISTOGRAM`.
+
+For spans, supported `span_kind` values include: `CLIENT`, `SERVER`, `PRODUCER`, `CONSUMER`, `INTERNAL`.
+
+For attributes, supported `type` values include: `STRING`, `LONG`, `DOUBLE`, `BOOLEAN`.
+
+#### override_telemetry
+
+Set `override_telemetry: true` to completely replace any auto-generated telemetry data from `.telemetry`
+files. When this is enabled, only the manually documented telemetry in `additional_telemetry` will be
+used, and any `.telemetry` files will be ignored.
+
+```yaml
+override_telemetry: true
+additional_telemetry:
+  - when: "default"
+    metrics:
+      - name: "manually.documented.metric"
+        description: "This completely replaces auto-generated telemetry"
+        type: "GAUGE"
+        unit: "bytes"
+```
+
+If `override_telemetry` is `false` or omitted (default behavior), manual telemetry will be merged with
+auto-generated telemetry, with manual entries taking precedence in case of conflicts (same metric name
+or span kind within the same `when` condition).
+
 ## Instrumentation List (docs/instrumentation-list.md)
 
 The contents of the `metadata.yaml` files are combined with other information about the instrumentation
@@ -227,7 +319,9 @@ All of our instrumentation modules are listed on the opentelemetry.io website in
 The [Supported Libraries](https://opentelemetry.io/docs/zero-code/java/agent/supported-libraries/)
 page lists all the library instrumentations that are included in the OpenTelemetry Java agent. It
 mostly mirrors the information from the [supported libraries](../supported-libraries.md) page in
-this repo, and should be updated when adding or removing library instrumentations.
+this repo, and should be updated when adding or removing library instrumentations. There is a
+[Github action](../../.github/workflows/documentation-synchronization-audit.yml) that runs nightly
+to check for any missing instrumentations, and will open an issue if any are found.
 
 This page may be automatically generated in the future, but for now it is manually maintained.
 
@@ -238,5 +332,5 @@ page lists the instrumentations in the context of the keys needed for using
 the `otel.instrumentation.[name].enabled` configuration.
 
 All new instrumentations should be added to this list. There is a
-[Github action](../../.github/workflows/documentation-disable-list-audit.yml) that runs nightly to check
+[Github action](../../.github/workflows/documentation-synchronization-audit.yml) that runs nightly to check
 for any missing instrumentations, and will open an issue if any are found.

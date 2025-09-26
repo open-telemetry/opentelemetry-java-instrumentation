@@ -1,0 +1,14 @@
+display_name: Eclipse Jersey JAX-RS 2.x
+description: >
+  This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches
+  existing HTTP server spans with route information.
+library_link: https://eclipse-ee4j.github.io/jersey/
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller (INTERNAL) spans.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.jaxrs.experimental-span-attributes
+    type: boolean
+    description: Enables the experimental `jaxrs.canceled` span attribute.
+    default: false
