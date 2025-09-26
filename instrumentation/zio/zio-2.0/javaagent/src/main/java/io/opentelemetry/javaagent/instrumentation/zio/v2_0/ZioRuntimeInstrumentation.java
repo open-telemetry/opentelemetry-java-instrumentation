@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.zio.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.zio.v2_0.TracingSupervisor.RUNTIME_FIBER_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -37,7 +36,7 @@ public class ZioRuntimeInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class)
     @Advice.AssignReturned.ToReturned
     public static Object onExit(@Advice.Return Supervisor<?> supervisor) {
-      return supervisor.$plus$plus(new TracingSupervisor(RUNTIME_FIBER_CONTEXT));
+      return supervisor.$plus$plus(TracingSupervisor.INSTANCE);
     }
   }
 }
