@@ -18,20 +18,16 @@ nullaway {
 
 tasks {
   withType<JavaCompile>().configureEach {
-    if (name.contains("test", ignoreCase = true)) {
-      // For test compilation tasks, disable errorprone entirely to avoid nullaway issues
-      options.errorprone {
-        isEnabled.set(false)
-      }
-    } else {
-      options.errorprone.nullaway {
-        severity.set(CheckSeverity.ERROR)
-      }
-    }
     options.errorprone.nullaway {
+      if (name.contains("test", ignoreCase = true)) {
+        disable()
+      } else {
+        error()
+      }
       customInitializerAnnotations.add("org.openjdk.jmh.annotations.Setup")
       excludedFieldAnnotations.add("org.mockito.Mock")
       excludedFieldAnnotations.add("org.mockito.InjectMocks")
     }
   }
 }
+
