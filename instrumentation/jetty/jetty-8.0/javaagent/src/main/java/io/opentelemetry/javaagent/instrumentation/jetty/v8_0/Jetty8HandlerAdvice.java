@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Single
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.annotation.Nullable;
@@ -40,7 +39,7 @@ public class Jetty8HandlerAdvice {
         // We are inside nested handler, don't create new span
         return null;
       }
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       ServletRequestContext<HttpServletRequest> requestContext =
           new ServletRequestContext<>(request);
       if (!helper().shouldStart(parentContext, requestContext)) {
