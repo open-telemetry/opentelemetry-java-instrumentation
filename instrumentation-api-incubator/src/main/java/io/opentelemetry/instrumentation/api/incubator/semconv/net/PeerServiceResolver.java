@@ -14,8 +14,7 @@ public interface PeerServiceResolver {
   public boolean isEmpty();
 
   @Nullable
-  public String resolveService(
-      String host, @Nullable Integer port, Supplier<String> pathSupplier);
+  public String resolveService(String host, @Nullable Integer port, Supplier<String> pathSupplier);
 
   static PeerServiceResolver create(Map<String, String> mapping) {
     return new PeerServiceResolverImpl(mapping);
