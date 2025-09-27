@@ -28,6 +28,17 @@ echo
 echo "### Migration notes"
 echo
 echo
+
+# Add breaking changes and deprecations sections
+if [[ -z $range ]]; then
+  labeled_range="HEAD"
+else
+  labeled_range="$range"
+fi
+
+"$(dirname "$0")/extract-labeled-prs.sh" "$labeled_range"
+echo
+
 echo "### 🌟 New javaagent instrumentation"
 echo
 echo
