@@ -72,6 +72,6 @@ public final class PeerServiceAttributesExtractor<REQUEST, RESPONSE>
     if (host == null) {
       return null;
     }
-    return peerServiceResolver.resolveService(host, port, null);
+    return peerServiceResolver.resolveService(host, port, () ->null);
   }
 }
