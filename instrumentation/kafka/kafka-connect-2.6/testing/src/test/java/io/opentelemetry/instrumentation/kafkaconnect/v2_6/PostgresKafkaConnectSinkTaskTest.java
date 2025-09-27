@@ -61,7 +61,7 @@ import org.testcontainers.utility.MountableFile;
 
 @Testcontainers
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
-@SuppressWarnings({"deprecation", "unused"})
+@SuppressWarnings({"deprecation"})
 class PostgresKafkaConnectSinkTaskTest {
 
   private static final Logger logger =
@@ -230,7 +230,6 @@ class PostgresKafkaConnectSinkTaskTest {
       throw new IllegalStateException(
           "Agent path not found. Make sure the shadowJar task is configured correctly.");
     }
-    File agentFile = new File(agentPath);
 
     kafkaConnect =
         new GenericContainer<>("confluentinc/cp-kafka-connect:" + CONFLUENT_VERSION)
@@ -616,7 +615,6 @@ class PostgresKafkaConnectSinkTaskTest {
     assertThat(rootNode.isArray()).as("Traces JSON should be an array").isTrue();
 
     // Extract all spans and organize by type
-    SpanInfo kafkaProducerSpan = null;
     SpanInfo kafkaConnectConsumerSpan = null;
     SpanInfo databaseSpan = null;
     SpanLinkInfo extractedSpanLink = null;
@@ -659,16 +657,11 @@ class PostgresKafkaConnectSinkTaskTest {
             String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
 
             // Identify spans in our end-to-end flow
-            if (scopeName.contains("kafka-clients")
-                && spanName.contains(expectedTopicName)
-                && spanKind.equals("SPAN_KIND_PRODUCER")) {
-              kafkaProducerSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
-            } else if (scopeName.contains("kafka-connect")
+            if (scopeName.contains("kafka-connect")
                 && spanName.contains(expectedTopicName)
                 && spanKind.equals("SPAN_KIND_CONSUMER")) {
               kafkaConnectConsumerSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
 
               // Extract span link information for verification
               JsonNode linksArray = spanNode.get("links");
@@ -678,9 +671,8 @@ class PostgresKafkaConnectSinkTaskTest {
                     firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
                 String linkedSpanId =
                     firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
-                int flags = firstLink.get("flags") != null ? firstLink.get("flags").asInt() : 0;
 
-                extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId, flags);
+                extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId);
               }
             } else if (scopeName.contains("jdbc")
                 && (spanName.contains("INSERT")
@@ -689,7 +681,7 @@ class PostgresKafkaConnectSinkTaskTest {
                     || spanName.contains("SELECT")
                     || spanName.contains(DB_TABLE_PERSON))) {
               databaseSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
@@ -697,22 +689,19 @@ class PostgresKafkaConnectSinkTaskTest {
     }
 
     return new TracingData(
-        kafkaProducerSpan, kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+        kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
   }
 
   // Helper class to hold all tracing data
   private static class TracingData {
-    final SpanInfo kafkaProducerSpan;
     final SpanInfo kafkaConnectConsumerSpan;
     final SpanInfo databaseSpan;
     final SpanLinkInfo extractedSpanLink;
 
     TracingData(
-        SpanInfo kafkaProducerSpan,
         SpanInfo kafkaConnectConsumerSpan,
         SpanInfo databaseSpan,
         SpanLinkInfo extractedSpanLink) {
-      this.kafkaProducerSpan = kafkaProducerSpan;
       this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
       this.databaseSpan = databaseSpan;
       this.extractedSpanLink = extractedSpanLink;
@@ -721,26 +710,21 @@ class PostgresKafkaConnectSinkTaskTest {
 
   // Helper class to hold span information
   private static class SpanInfo {
-    final String name;
     final String traceId;
     final String spanId;
     final String parentSpanId;
     final String kind;
-    final String scope;
 
     SpanInfo(
         String name,
         String traceId,
         String spanId,
         String parentSpanId,
-        String kind,
-        String scope) {
-      this.name = name;
+        String kind) {
       this.traceId = traceId;
       this.spanId = spanId;
       this.parentSpanId = parentSpanId;
       this.kind = kind;
-      this.scope = scope;
     }
   }
 
@@ -748,12 +732,10 @@ class PostgresKafkaConnectSinkTaskTest {
   private static class SpanLinkInfo {
     final String linkedTraceId;
     final String linkedSpanId;
-    final int flags;
 
-    SpanLinkInfo(String linkedTraceId, String linkedSpanId, int flags) {
+    SpanLinkInfo(String linkedTraceId, String linkedSpanId) {
       this.linkedTraceId = linkedTraceId;
       this.linkedSpanId = linkedSpanId;
-      this.flags = flags;
     }
   }
 }

@@ -19,7 +19,6 @@ import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import io.restassured.http.ContentType;
-import java.io.File;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.time.Duration;
@@ -61,7 +60,7 @@ import org.testcontainers.utility.MountableFile;
 
 @Testcontainers
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
-@SuppressWarnings({"rawtypes", "unchecked", "deprecation", "unused"})
+@SuppressWarnings({"deprecation"})
 class MongoKafkaConnectSinkTaskTest {
 
   private static final Logger logger = LoggerFactory.getLogger(MongoKafkaConnectSinkTaskTest.class);
@@ -105,7 +104,6 @@ class MongoKafkaConnectSinkTaskTest {
   private static MongoDBContainer mongoDB;
   private static int kafkaExposedPort;
 
-  private static AdminClient adminClient;
 
   // Static methods
 
@@ -209,7 +207,6 @@ class MongoKafkaConnectSinkTaskTest {
       throw new IllegalStateException(
           "Agent path not found. Make sure the shadowJar task is configured correctly.");
     }
-    File agentFile = new File(agentPath);
 
     kafkaConnect =
         new GenericContainer<>("confluentinc/cp-kafka-connect:" + CONFLUENT_VERSION)
@@ -679,14 +676,7 @@ class MongoKafkaConnectSinkTaskTest {
 
   @AfterAll
   public static void cleanup() {
-    // Close AdminClient first to release Kafka connections
-    if (adminClient != null) {
-      try {
-        adminClient.close();
-      } catch (RuntimeException e) {
-        logger.error("Error closing AdminClient: " + e.getMessage());
-      }
-    }
+    // AdminClient connections are managed locally in methods
 
     // Stop all containers in reverse order of startup to ensure clean shutdown
     if (kafkaConnect != null) {
@@ -747,7 +737,6 @@ class MongoKafkaConnectSinkTaskTest {
     assertThat(rootNode.isArray()).as("Traces JSON should be an array").isTrue();
 
     // Extract all spans and organize by type
-    SpanInfo kafkaProducerSpan = null;
     SpanInfo kafkaConnectConsumerSpan = null;
     SpanInfo databaseSpan = null;
     SpanLinkInfo extractedSpanLink = null;
@@ -790,16 +779,11 @@ class MongoKafkaConnectSinkTaskTest {
             String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
 
             // Identify spans in our end-to-end flow
-            if (scopeName.contains("kafka-clients")
-                && spanName.contains(expectedTopicName)
-                && spanKind.equals("SPAN_KIND_PRODUCER")) {
-              kafkaProducerSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
-            } else if (scopeName.contains(KAFKA_CONNECT_SCOPE)
+            if (scopeName.contains(KAFKA_CONNECT_SCOPE)
                 && spanName.contains(expectedTopicName)
                 && spanKind.equals("SPAN_KIND_CONSUMER")) {
               kafkaConnectConsumerSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
 
               // Extract span link information for verification
               JsonNode linksArray = spanNode.get("links");
@@ -809,13 +793,12 @@ class MongoKafkaConnectSinkTaskTest {
                     firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
                 String linkedSpanId =
                     firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
-                int flags = firstLink.get("flags") != null ? firstLink.get("flags").asInt() : 0;
 
-                extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId, flags);
+                extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId);
               }
             } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
               databaseSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
@@ -823,7 +806,7 @@ class MongoKafkaConnectSinkTaskTest {
     }
 
     return new TracingData(
-        kafkaProducerSpan, kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+        kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
   }
 
   /** Deserialize traces JSON and extract span information for multi-topic scenarios */
@@ -889,7 +872,7 @@ class MongoKafkaConnectSinkTaskTest {
 
               if (containsExpectedTopics) {
                 kafkaConnectConsumerSpan =
-                    new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+                    new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
 
                 // Extract span link information for verification
                 JsonNode linksArray = spanNode.get("links");
@@ -899,14 +882,13 @@ class MongoKafkaConnectSinkTaskTest {
                       firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
                   String linkedSpanId =
                       firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
-                  int flags = firstLink.get("flags") != null ? firstLink.get("flags").asInt() : 0;
 
-                  extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId, flags);
+                  extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId);
                 }
               }
             } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
               databaseSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind, scopeName);
+                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
@@ -932,17 +914,14 @@ class MongoKafkaConnectSinkTaskTest {
 
   /** Helper class to hold all extracted tracing data */
   private static class TracingData {
-    final SpanInfo kafkaProducerSpan;
     final SpanInfo kafkaConnectConsumerSpan;
     final SpanInfo databaseSpan;
     final SpanLinkInfo extractedSpanLink;
 
     TracingData(
-        SpanInfo kafkaProducerSpan,
         SpanInfo kafkaConnectConsumerSpan,
         SpanInfo databaseSpan,
         SpanLinkInfo extractedSpanLink) {
-      this.kafkaProducerSpan = kafkaProducerSpan;
       this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
       this.databaseSpan = databaseSpan;
       this.extractedSpanLink = extractedSpanLink;
@@ -953,12 +932,10 @@ class MongoKafkaConnectSinkTaskTest {
   private static class SpanLinkInfo {
     final String linkedTraceId;
     final String linkedSpanId;
-    final int flags;
 
-    SpanLinkInfo(String linkedTraceId, String linkedSpanId, int flags) {
+    SpanLinkInfo(String linkedTraceId, String linkedSpanId) {
       this.linkedTraceId = linkedTraceId;
       this.linkedSpanId = linkedSpanId;
-      this.flags = flags;
     }
   }
 
@@ -969,21 +946,18 @@ class MongoKafkaConnectSinkTaskTest {
     final String spanId;
     final String parentSpanId;
     final String kind;
-    final String scope;
 
     SpanInfo(
         String name,
         String traceId,
         String spanId,
         String parentSpanId,
-        String kind,
-        String scope) {
+        String kind) {
       this.name = name;
       this.traceId = traceId;
       this.spanId = spanId;
       this.parentSpanId = parentSpanId;
       this.kind = kind;
-      this.scope = scope;
     }
   }
 }
