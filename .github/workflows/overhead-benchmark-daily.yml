@@ -51,12 +51,11 @@ jobs:
       - name: Copy results back to gh-pages branch
         run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
 
-      - name: Use CLA approved bot
-        run: .github/scripts/use-cla-approved-bot.sh
-
       - name: Commit updated results
         working-directory: ./gh-pages
         run: |
+          git config user.name otelbot
+          git config user.email 197425009+otelbot@users.noreply.github.com
           git add benchmark-overhead/results
           git commit -m "update test result data"
           git push
