@@ -14,11 +14,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
 public final class OpenSearchJavaInstrumenterFactory {
 
-  public static Instrumenter<OpenSearchJavaRequest, OpenSearchJavaResponse> create(
-      String instrumentationName) {
+  public static Instrumenter<OpenSearchJavaRequest, Void> create(String instrumentationName) {
     OpenSearchJavaAttributesGetter dbClientAttributesGetter = new OpenSearchJavaAttributesGetter();
 
-    return Instrumenter.<OpenSearchJavaRequest, OpenSearchJavaResponse>builder(
+    return Instrumenter.<OpenSearchJavaRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))

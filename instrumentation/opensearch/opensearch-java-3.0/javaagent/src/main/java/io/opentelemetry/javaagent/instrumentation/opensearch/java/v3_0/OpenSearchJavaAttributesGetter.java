@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbResponseStatusUtil.dbResponseStatusCode;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class OpenSearchJavaAttributesGetter
-    implements DbClientAttributesGetter<OpenSearchJavaRequest, OpenSearchJavaResponse> {
+    implements DbClientAttributesGetter<OpenSearchJavaRequest, Void> {
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
@@ -54,8 +52,7 @@ final class OpenSearchJavaAttributesGetter
 
   @Nullable
   @Override
-  public String getResponseStatus(
-      @Nullable OpenSearchJavaResponse response, @Nullable Throwable error) {
-    return response != null ? dbResponseStatusCode(response.getStatusCode()) : null;
+  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+    return null; // Response status is handled by HTTP instrumentation
   }
 }
