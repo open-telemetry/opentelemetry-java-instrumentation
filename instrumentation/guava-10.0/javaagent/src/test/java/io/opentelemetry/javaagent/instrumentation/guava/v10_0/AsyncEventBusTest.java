@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,9 +33,11 @@ public class AsyncEventBusTest {
 
       @Subscribe
       public void onEvent(String event) {
-        testing.runWithSpan("listener", () -> {
-          receivedTraceId = Span.current().getSpanContext().getTraceId();
-        });
+        testing.runWithSpan(
+            "listener",
+            () -> {
+              receivedTraceId = Span.current().getSpanContext().getTraceId();
+            });
       }
     }
 
@@ -38,17 +45,17 @@ public class AsyncEventBusTest {
     asyncEventBus.register(listener);
 
     String[] parentTraceId = new String[1];
-    testing.runWithSpan("parent", () -> {
-      parentTraceId[0] = Span.current().getSpanContext().getTraceId();
-      asyncEventBus.post("test");
-    });
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          parentTraceId[0] = Span.current().getSpanContext().getTraceId();
+          asyncEventBus.post("test");
+        });
 
     testing.waitAndAssertTraces(
-        trace
-            -> trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-            span -> span.hasName("listener")
-        ));
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent"), span -> span.hasName("listener")));
 
     assertThat(listener.receivedTraceId)
         .isNotNull()
