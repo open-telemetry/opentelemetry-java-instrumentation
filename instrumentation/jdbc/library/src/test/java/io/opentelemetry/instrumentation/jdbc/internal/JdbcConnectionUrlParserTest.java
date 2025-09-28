@@ -1354,8 +1354,7 @@ class JdbcConnectionUrlParserTest {
             .setSubtype("oracle")
             .setHost("host")
             .setPort(1521)
-            .build()
-    );
+            .build());
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -1391,8 +1390,7 @@ class JdbcConnectionUrlParserTest {
             .setHost("host")
             .setDb("test")
             .setPort(30070)
-            .build()
-    );
+            .build());
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -1414,8 +1412,7 @@ class JdbcConnectionUrlParserTest {
             .setSystem("polardb")
             .setHost("example.com")
             .setPort(1521)
-            .build()
-        );
+            .build());
   }
 
   @ParameterizedTest(name = "{index}: {0}")

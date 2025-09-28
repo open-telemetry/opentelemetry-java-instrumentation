@@ -912,10 +912,7 @@ public enum JdbcConnectionUrlParser {
       return GENERIC_URL_LIKE.doParse(clickhouseUrl, builder);
     }
   },
-  /**
-   * jdbc:oceanbase://host:port/dbname
-   * jdbc:oceanbase:oracle://host:port/dbname
-   */
+  /** jdbc:oceanbase://host:port/dbname jdbc:oceanbase:oracle://host:port/dbname */
   OCEANBASE("oceanbase") {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
@@ -931,17 +928,14 @@ public enum JdbcConnectionUrlParser {
       } else {
         return GENERIC_URL_LIKE.doParse(jdbcUrl, builder);
       }
-
     }
   },
   /**
    * <a
-   * href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints">Driver
-   * configuration doc</a>
-   * jdbc:lindorm:table:url=http//server_name:30060/test
+   * href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints?spm=a2c63.p38356.help-menu-172543.d_2_0_1.7a1e41feMntzyJ">Driver
+   * configuration doc</a> jdbc:lindorm:table:url=http//server_name:30060/test
    * jdbc:lindorm:tsdb:url=http://server_name:8242/test
    * jabc:lindorm:search:url=http://server_name:30070/test
-   *
    */
   LINDORM("lindorm") {
     private static final String DEFAULT_HOST = "localhost";
@@ -967,9 +961,7 @@ public enum JdbcConnectionUrlParser {
       return GENERIC_URL_LIKE.doParse(realUrl, builder);
     }
   },
-  /**
-   * jdbc:polardb://server_name:1901/dbname
-   */
+  /** jdbc:polardb://server_name:1901/dbname */
   POLARDB("polardb") {
     private static final int DEFAULT_PORT = 1521;
     private static final String DEFAULT_HOST = "localhost";
@@ -1018,7 +1010,7 @@ public enum JdbcConnectionUrlParser {
 
     String jdbcUrl;
     if (connectionUrl.startsWith("jdbc:tracing:")) {
-      //see https://github.com/opentracing-contrib/java-jdbc
+      // see https://github.com/opentracing-contrib/java-jdbc
       jdbcUrl = connectionUrl.substring("jdbc:tracing:".length());
     } else if (connectionUrl.startsWith("jdbc:")) {
       jdbcUrl = connectionUrl.substring("jdbc:".length());
@@ -1208,7 +1200,6 @@ public enum JdbcConnectionUrlParser {
     static final String OCEANBASE = "oceanbase";
     static final String POLARDB = "polardb";
     static final String LINDORM = "lindorm";
-
 
     private DbSystemValues() {}
   }
