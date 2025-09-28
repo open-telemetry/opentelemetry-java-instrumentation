@@ -48,7 +48,8 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
 
       // For batch processing from multiple traces, use root context instead of extracting
       // from first record to avoid creating incorrect parent-child relationships.
-      // Relationships are maintained through span links (see KafkaConnectBatchProcessSpanLinksExtractor)
+      // Relationships are maintained through span links (see
+      // KafkaConnectBatchProcessSpanLinksExtractor)
       Context parentContext = Java8BytecodeBridge.currentContext();
 
       task = new KafkaConnectTask(records);

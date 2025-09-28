@@ -446,7 +446,8 @@ class PostgresKafkaConnectSinkTaskTest {
 
     // Assertion 5: Verify Kafka Connect Consumer span has no parent (batch processing pattern)
     assertThat(tracingData.kafkaConnectConsumerSpan.parentSpanId)
-        .as("Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
+        .as(
+            "Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
         .isNull();
   }
 
@@ -677,8 +678,7 @@ class PostgresKafkaConnectSinkTaskTest {
             if (scopeName.contains("kafka-connect")
                 && spanName.contains(expectedTopicName)
                 && spanKind.equals("SPAN_KIND_CONSUMER")) {
-              kafkaConnectConsumerSpan =
-                  new SpanInfo(traceId, spanId, parentSpanId, spanKind);
+              kafkaConnectConsumerSpan = new SpanInfo(traceId, spanId, parentSpanId, spanKind);
 
               // Extract span link information for verification
               JsonNode linksArray = spanNode.get("links");

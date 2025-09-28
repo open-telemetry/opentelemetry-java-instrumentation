@@ -419,7 +419,8 @@ class MongoKafkaConnectSinkTaskTest {
 
     // Assertion 5: Verify Kafka Connect Consumer span has no parent (batch processing pattern)
     assertThat(tracingData.kafkaConnectConsumerSpan.parentSpanId)
-        .as("Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
+        .as(
+            "Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
         .isNull();
   }
 
@@ -553,7 +554,8 @@ class MongoKafkaConnectSinkTaskTest {
 
     // Assertion 7: Verify Kafka Connect Consumer span has no parent (batch processing pattern)
     assertThat(tracingData.kafkaConnectConsumerSpan.parentSpanId)
-        .as("Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
+        .as(
+            "Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
         .isNull();
   }
 
