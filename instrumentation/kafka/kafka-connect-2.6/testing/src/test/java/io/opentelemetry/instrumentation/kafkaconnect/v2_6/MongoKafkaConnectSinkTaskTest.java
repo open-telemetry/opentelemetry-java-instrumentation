@@ -177,19 +177,18 @@ class MongoKafkaConnectSinkTaskTest implements TelemetryRetrieverProvider {
     backend.start();
 
     // Initialize TelemetryRetriever after backend starts with custom error handling
-    telemetryRetriever = new TelemetryRetriever(
-        backend.getMappedPort(BACKEND_PORT), 
-        Duration.ofMinutes(2)) {
-      @Override
-      public void clearTelemetry() {
-        try {
-          super.clearTelemetry();
-        } catch (RuntimeException e) {
-          // Ignore cleanup errors - backend might already be stopped
-          logger.debug("Failed to clear telemetry: {}", e.getMessage());
-        }
-      }
-    };
+    telemetryRetriever =
+        new TelemetryRetriever(backend.getMappedPort(BACKEND_PORT), Duration.ofMinutes(2)) {
+          @Override
+          public void clearTelemetry() {
+            try {
+              super.clearTelemetry();
+            } catch (RuntimeException e) {
+              // Ignore cleanup errors - backend might already be stopped
+              logger.debug("Failed to clear telemetry: {}", e.getMessage());
+            }
+          }
+        };
 
     zookeeper =
         new GenericContainer<>("confluentinc/cp-zookeeper:" + CONFLUENT_VERSION)
@@ -327,7 +326,6 @@ class MongoKafkaConnectSinkTaskTest implements TelemetryRetrieverProvider {
     clearTelemetryGracefully();
   }
 
-
   @Test
   public void testKafkaConnectMongoSinkTaskInstrumentation()
       throws IOException, InterruptedException {
@@ -358,48 +356,70 @@ class MongoKafkaConnectSinkTaskTest implements TelemetryRetrieverProvider {
 
     // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
     // Wait for traces and then find the specific trace we want
-    await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
-      List<List<SpanData>> traces = testing.waitForTraces(1);
-      
-      // Find the trace that contains our Kafka Connect Consumer span and database INSERT span
-      List<SpanData> targetTrace = traces.stream()
-          .filter(trace -> {
-            boolean hasKafkaConnectSpan = trace.stream()
-                .anyMatch(span -> span.getName().contains(uniqueTopicName) && 
-                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
-            
-            boolean hasInsertSpan = trace.stream()
-                .anyMatch(span -> span.getName().contains("update") && 
-                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT);
-            
-            return hasKafkaConnectSpan && hasInsertSpan;
-          })
-          .findFirst()
-          .orElse(null);
-      
-      // Assert that we found the target trace
-      assertThat(targetTrace).isNotNull();
-      
-      // Assert on the spans in the target trace (should have at least 2 spans: Kafka Connect Consumer + database operations)
-      assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
-      
-      // Find and assert the Kafka Connect Consumer span
-      SpanData kafkaConnectSpan = targetTrace.stream()
-          .filter(span -> span.getName().contains(uniqueTopicName) && 
-                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
-          .findFirst()
-          .orElse(null);
-      assertThat(kafkaConnectSpan).isNotNull();
-      assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
-      
-      // Find and assert the database UPDATE span
-      SpanData insertSpan = targetTrace.stream()
-          .filter(span -> span.getName().contains("update") && 
-                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
-          .findFirst()
-          .orElse(null);
-      assertThat(insertSpan).isNotNull();
-    });
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<List<SpanData>> traces = testing.waitForTraces(1);
+
+              // Find the trace that contains our Kafka Connect Consumer span and database INSERT
+              // span
+              List<SpanData> targetTrace =
+                  traces.stream()
+                      .filter(
+                          trace -> {
+                            boolean hasKafkaConnectSpan =
+                                trace.stream()
+                                    .anyMatch(
+                                        span ->
+                                            span.getName().contains(uniqueTopicName)
+                                                && span.getKind()
+                                                    == io.opentelemetry.api.trace.SpanKind
+                                                        .CONSUMER);
+
+                            boolean hasInsertSpan =
+                                trace.stream()
+                                    .anyMatch(
+                                        span ->
+                                            span.getName().contains("update")
+                                                && span.getKind()
+                                                    == io.opentelemetry.api.trace.SpanKind.CLIENT);
+
+                            return hasKafkaConnectSpan && hasInsertSpan;
+                          })
+                      .findFirst()
+                      .orElse(null);
+
+              // Assert that we found the target trace
+              assertThat(targetTrace).isNotNull();
+
+              // Assert on the spans in the target trace (should have at least 2 spans: Kafka
+              // Connect Consumer + database operations)
+              assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
+
+              // Find and assert the Kafka Connect Consumer span
+              SpanData kafkaConnectSpan =
+                  targetTrace.stream()
+                      .filter(
+                          span ->
+                              span.getName().contains(uniqueTopicName)
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                      .findFirst()
+                      .orElse(null);
+              assertThat(kafkaConnectSpan).isNotNull();
+              assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
+
+              // Find and assert the database UPDATE span
+              SpanData insertSpan =
+                  targetTrace.stream()
+                      .filter(
+                          span ->
+                              span.getName().contains("update")
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+                      .findFirst()
+                      .orElse(null);
+              assertThat(insertSpan).isNotNull();
+            });
   }
 
   @Test
@@ -446,52 +466,74 @@ class MongoKafkaConnectSinkTaskTest implements TelemetryRetrieverProvider {
 
     // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
     // Wait for traces and then find the specific trace we want
-    await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
-      List<List<SpanData>> traces = testing.waitForTraces(1);
-      
-      // Find the trace that contains our Kafka Connect Consumer span and database INSERT span
-      List<SpanData> targetTrace = traces.stream()
-          .filter(trace -> {
-            boolean hasKafkaConnectSpan = trace.stream()
-                .anyMatch(span -> (span.getName().contains(topicName1) || 
-                                  span.getName().contains(topicName2) || 
-                                  span.getName().contains(topicName3)) && 
-                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
-            
-            boolean hasInsertSpan = trace.stream()
-                .anyMatch(span -> span.getName().contains("update") && 
-                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT);
-            
-            return hasKafkaConnectSpan && hasInsertSpan;
-          })
-          .findFirst()
-          .orElse(null);
-      
-      // Assert that we found the target trace
-      assertThat(targetTrace).isNotNull();
-      
-      // Assert on the spans in the target trace (should have at least 2 spans: Kafka Connect Consumer + database operations)
-      assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
-      
-      // Find and assert the Kafka Connect Consumer span (multi-topic span)
-      SpanData kafkaConnectSpan = targetTrace.stream()
-          .filter(span -> (span.getName().contains(topicName1) || 
-                          span.getName().contains(topicName2) || 
-                          span.getName().contains(topicName3)) && 
-                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
-          .findFirst()
-          .orElse(null);
-      assertThat(kafkaConnectSpan).isNotNull();
-      assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
-      
-      // Find and assert the database UPDATE span
-      SpanData insertSpan = targetTrace.stream()
-          .filter(span -> span.getName().contains("update") && 
-                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
-          .findFirst()
-          .orElse(null);
-      assertThat(insertSpan).isNotNull();
-    });
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              List<List<SpanData>> traces = testing.waitForTraces(1);
+
+              // Find the trace that contains our Kafka Connect Consumer span and database INSERT
+              // span
+              List<SpanData> targetTrace =
+                  traces.stream()
+                      .filter(
+                          trace -> {
+                            boolean hasKafkaConnectSpan =
+                                trace.stream()
+                                    .anyMatch(
+                                        span ->
+                                            (span.getName().contains(topicName1)
+                                                    || span.getName().contains(topicName2)
+                                                    || span.getName().contains(topicName3))
+                                                && span.getKind()
+                                                    == io.opentelemetry.api.trace.SpanKind
+                                                        .CONSUMER);
+
+                            boolean hasInsertSpan =
+                                trace.stream()
+                                    .anyMatch(
+                                        span ->
+                                            span.getName().contains("update")
+                                                && span.getKind()
+                                                    == io.opentelemetry.api.trace.SpanKind.CLIENT);
+
+                            return hasKafkaConnectSpan && hasInsertSpan;
+                          })
+                      .findFirst()
+                      .orElse(null);
+
+              // Assert that we found the target trace
+              assertThat(targetTrace).isNotNull();
+
+              // Assert on the spans in the target trace (should have at least 2 spans: Kafka
+              // Connect Consumer + database operations)
+              assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
+
+              // Find and assert the Kafka Connect Consumer span (multi-topic span)
+              SpanData kafkaConnectSpan =
+                  targetTrace.stream()
+                      .filter(
+                          span ->
+                              (span.getName().contains(topicName1)
+                                      || span.getName().contains(topicName2)
+                                      || span.getName().contains(topicName3))
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                      .findFirst()
+                      .orElse(null);
+              assertThat(kafkaConnectSpan).isNotNull();
+              assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
+
+              // Find and assert the database UPDATE span
+              SpanData insertSpan =
+                  targetTrace.stream()
+                      .filter(
+                          span ->
+                              span.getName().contains("update")
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+                      .findFirst()
+                      .orElse(null);
+              assertThat(insertSpan).isNotNull();
+            });
   }
 
   // Private methods
@@ -695,6 +737,4 @@ class MongoKafkaConnectSinkTaskTest implements TelemetryRetrieverProvider {
       }
     }
   }
-
-
 }
