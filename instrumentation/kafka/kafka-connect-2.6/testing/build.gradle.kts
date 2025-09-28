@@ -8,6 +8,8 @@ plugins {
 val agentShadowJar = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
 
 dependencies {
+  // Add smoke-tests dependency for SmokeTestInstrumentationExtension
+  testImplementation(project(":smoke-tests"))
   // Add testing-common manually since we removed otel.javaagent-testing plugin
   testImplementation(project(":testing-common"))
   // Add SDK testing assertions for structured trace verification

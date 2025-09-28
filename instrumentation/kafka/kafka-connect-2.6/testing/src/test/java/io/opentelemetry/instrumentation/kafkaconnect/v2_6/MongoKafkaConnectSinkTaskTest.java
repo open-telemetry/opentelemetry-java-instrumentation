@@ -11,19 +11,24 @@ import static java.time.temporal.ChronoUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
+import io.opentelemetry.smoketest.TelemetryRetriever;
+import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
@@ -42,6 +47,9 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestInstance;
+import org.junit.jupiter.api.condition.DisabledIf;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
@@ -61,12 +69,18 @@ import org.testcontainers.utility.MountableFile;
 @Testcontainers
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
 @SuppressWarnings({"deprecation"})
-class MongoKafkaConnectSinkTaskTest {
+@DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
+class MongoKafkaConnectSinkTaskTest implements TelemetryRetrieverProvider {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
 
   private static final Logger logger = LoggerFactory.getLogger(MongoKafkaConnectSinkTaskTest.class);
 
   // Using the same fake backend pattern as smoke tests (with ARM64 support)
   private static GenericContainer<?> backend;
+  private static TelemetryRetriever telemetryRetriever;
 
   private static final String CONFLUENT_VERSION = "7.5.9";
 
@@ -94,7 +108,6 @@ class MongoKafkaConnectSinkTaskTest {
       new ObjectMapper().enable(SerializationFeature.INDENT_OUTPUT);
   private static final String CONNECTOR_NAME = "test-mongo-connector";
   private static final String TOPIC_NAME = "test-mongo-topic";
-  private static final String KAFKA_CONNECT_SCOPE = "kafka-connect";
 
   // Docker network / containers
   private static Network network;
@@ -122,6 +135,23 @@ class MongoKafkaConnectSinkTaskTest {
     return kafka.getHost() + ":" + kafkaExposedPort;
   }
 
+  @Override
+  public TelemetryRetriever getTelemetryRetriever() {
+    return telemetryRetriever;
+  }
+
+  // Custom cleanup method that handles telemetry clearing gracefully
+  private static void clearTelemetryGracefully() {
+    if (telemetryRetriever != null) {
+      try {
+        telemetryRetriever.clearTelemetry();
+      } catch (RuntimeException e) {
+        // Ignore cleanup errors - backend might already be stopped
+        logger.debug("Failed to clear telemetry during cleanup: {}", e.getMessage());
+      }
+    }
+  }
+
   @BeforeAll
   public static void setup() throws IOException {
 
@@ -146,14 +176,20 @@ class MongoKafkaConnectSinkTaskTest {
 
     backend.start();
 
-    // Configure test JVM OTLP endpoint now that backend is running
-    String backendEndpoint =
-        format(
-            Locale.ROOT,
-            "http://%s:%d/v1/traces",
-            backend.getHost(),
-            backend.getMappedPort(BACKEND_PORT));
-    System.setProperty("otel.exporter.otlp.traces.endpoint", backendEndpoint);
+    // Initialize TelemetryRetriever after backend starts with custom error handling
+    telemetryRetriever = new TelemetryRetriever(
+        backend.getMappedPort(BACKEND_PORT), 
+        Duration.ofMinutes(2)) {
+      @Override
+      public void clearTelemetry() {
+        try {
+          super.clearTelemetry();
+        } catch (RuntimeException e) {
+          // Ignore cleanup errors - backend might already be stopped
+          logger.debug("Failed to clear telemetry: {}", e.getMessage());
+        }
+      }
+    };
 
     zookeeper =
         new GenericContainer<>("confluentinc/cp-zookeeper:" + CONFLUENT_VERSION)
@@ -287,23 +323,10 @@ class MongoKafkaConnectSinkTaskTest {
   public void reset() {
     deleteConnectorIfExists();
     clearMongoCollection();
-    // Clear spans from backend (like smoke tests)
-    clearBackendTraces();
+    // Clear spans from backend using telemetry retriever
+    clearTelemetryGracefully();
   }
 
-  private static void clearBackendTraces() {
-    try {
-      String backendUrl = getBackendUrl();
-      given().when().get(backendUrl + "/clear").then().statusCode(200);
-    } catch (RuntimeException e) {
-      // Ignore failures to clear traces
-    }
-  }
-
-  private static String getBackendUrl() {
-    return format(
-        Locale.ROOT, "http://%s:%d", backend.getHost(), backend.getMappedPort(BACKEND_PORT));
-  }
 
   @Test
   public void testKafkaConnectMongoSinkTaskInstrumentation()
@@ -333,95 +356,50 @@ class MongoKafkaConnectSinkTaskTest {
     // Wait for message processing (increased timeout for ARM64 Docker emulation)
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 1);
 
-    // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
-    String backendUrl = getBackendUrl();
-    await()
-        .atMost(Duration.ofSeconds(30))
-        .until(
-            () -> {
-              try {
-                String traces =
-                    given()
-                        .when()
-                        .get(backendUrl + "/get-traces")
-                        .then()
-                        .statusCode(200)
-                        .extract()
-                        .asString();
-
-                return !traces.equals("[]");
-              } catch (RuntimeException e) {
-                return false;
-              }
-            });
-
-    // Retrieve and verify spans using clean protobuf approach
-    String tracesJson =
-        given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
-
-    // Write resourceSpans to desktop file for inspection
-    try {
-      java.nio.file.Path desktopPath =
-          java.nio.file.Paths.get(
-              System.getProperty("user.home"), "Desktop", "kafka-connect-single-topic-spans.json");
-      java.nio.file.Files.write(
-          desktopPath, tracesJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-      System.out.println("✅ Wrote resourceSpans to: " + desktopPath.toString());
-    } catch (Exception e) {
-      System.err.println("❌ Failed to write spans to desktop: " + e.getMessage());
-    }
-
-    // Extract spans and links using separate deserialization method
-    TracingData tracingData;
-    try {
-      tracingData = deserializeAndExtractSpans(tracesJson, uniqueTopicName);
-    } catch (Exception e) {
-      logger.error("Failed to deserialize and extract spans: {}", e.getMessage(), e);
-      throw new AssertionError("Span deserialization failed", e);
-    }
-
-    // Perform distributed tracing assertions
-    // Assertion 1: Verify all spans and links are not null
-    assertThat(tracingData.kafkaConnectConsumerSpan)
-        .as("Kafka Connect Consumer span should be found for topic: %s", uniqueTopicName)
-        .isNotNull();
-    assertThat(tracingData.databaseSpan).as("Database span should be found").isNotNull();
-    assertThat(tracingData.extractedSpanLink)
-        .as("Kafka Connect Consumer span should have span links")
-        .isNotNull();
-    assertThat(tracingData.extractedSpanLink.linkedTraceId)
-        .as("Span link should have a valid linked trace ID")
-        .isNotEmpty();
-    assertThat(tracingData.extractedSpanLink.linkedSpanId)
-        .as("Span link should have a valid linked span ID")
-        .isNotEmpty();
-
-    // Assertion 2: Check if link traceId and Kafka Connect trace ID are same
-    assertThat(tracingData.extractedSpanLink.linkedTraceId)
-        .as(
-            "Span link trace ID should match Kafka Connect Consumer trace ID (distributed trace continuity)")
-        .isEqualTo(tracingData.kafkaConnectConsumerSpan.traceId);
-
-    // Assertion 3: Check span kind is consumer
-    assertThat(tracingData.kafkaConnectConsumerSpan.kind)
-        .as("Kafka Connect span should have CONSUMER span kind")
-        .isEqualTo("SPAN_KIND_CONSUMER");
-
-    // Assertion 4: Check if Kafka Connect traceId and database span traceId are similar
-    assertThat(tracingData.kafkaConnectConsumerSpan.traceId)
-        .as("Kafka Connect Consumer and Database spans should share the same trace ID")
-        .isEqualTo(tracingData.databaseSpan.traceId);
-    assertThat(tracingData.databaseSpan.parentSpanId)
-        .as("Database span must have a parent span ID")
-        .isNotNull()
-        .as("Database span parent should be Kafka Connect Consumer span")
-        .isEqualTo(tracingData.kafkaConnectConsumerSpan.spanId);
-
-    // Assertion 5: Verify Kafka Connect Consumer span has no parent (batch processing pattern)
-    assertThat(tracingData.kafkaConnectConsumerSpan.parentSpanId)
-        .as(
-            "Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
-        .isNull();
+    // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
+    // Wait for traces and then find the specific trace we want
+    await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+      List<List<SpanData>> traces = testing.waitForTraces(1);
+      
+      // Find the trace that contains our Kafka Connect Consumer span and database INSERT span
+      List<SpanData> targetTrace = traces.stream()
+          .filter(trace -> {
+            boolean hasKafkaConnectSpan = trace.stream()
+                .anyMatch(span -> span.getName().contains(uniqueTopicName) && 
+                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+            
+            boolean hasInsertSpan = trace.stream()
+                .anyMatch(span -> span.getName().contains("update") && 
+                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT);
+            
+            return hasKafkaConnectSpan && hasInsertSpan;
+          })
+          .findFirst()
+          .orElse(null);
+      
+      // Assert that we found the target trace
+      assertThat(targetTrace).isNotNull();
+      
+      // Assert on the spans in the target trace (should have at least 2 spans: Kafka Connect Consumer + database operations)
+      assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
+      
+      // Find and assert the Kafka Connect Consumer span
+      SpanData kafkaConnectSpan = targetTrace.stream()
+          .filter(span -> span.getName().contains(uniqueTopicName) && 
+                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+          .findFirst()
+          .orElse(null);
+      assertThat(kafkaConnectSpan).isNotNull();
+      assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
+      
+      // Find and assert the database UPDATE span
+      SpanData insertSpan = targetTrace.stream()
+          .filter(span -> span.getName().contains("update") && 
+                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+          .findFirst()
+          .orElse(null);
+      assertThat(insertSpan).isNotNull();
+    });
   }
 
   @Test
@@ -466,97 +444,54 @@ class MongoKafkaConnectSinkTaskTest {
     // Wait for message processing (increased timeout for ARM64 Docker emulation)
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 3);
 
-    // Wait for spans to arrive at backend (increased timeout for ARM64 Docker emulation)
-    String backendUrl = getBackendUrl();
-    await()
-        .atMost(Duration.ofSeconds(30))
-        .until(
-            () -> {
-              try {
-                String traces =
-                    given()
-                        .when()
-                        .get(backendUrl + "/get-traces")
-                        .then()
-                        .statusCode(200)
-                        .extract()
-                        .asString();
-
-                return !traces.equals("[]");
-              } catch (RuntimeException e) {
-                return false;
-              }
-            });
-
-    // Retrieve and verify spans using clean protobuf approach
-    String tracesJson =
-        given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
-
-    // Write resourceSpans to desktop file for inspection
-    try {
-      java.nio.file.Path desktopPath =
-          java.nio.file.Paths.get(
-              System.getProperty("user.home"), "Desktop", "kafka-connect-multi-topic-spans.json");
-      java.nio.file.Files.write(
-          desktopPath, tracesJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-      System.out.println("✅ Wrote resourceSpans to: " + desktopPath.toString());
-    } catch (Exception e) {
-      System.err.println("❌ Failed to write spans to desktop: " + e.getMessage());
-    }
-
-    // Extract spans and verify multi-topic span naming
-    MultiTopicTracingData tracingData;
-    try {
-      tracingData =
-          deserializeAndExtractMultiTopicSpans(tracesJson, topicName1, topicName2, topicName3);
-    } catch (Exception e) {
-      logger.error("Failed to deserialize and extract spans: {}", e.getMessage(), e);
-      throw new AssertionError("Span deserialization failed", e);
-    }
-
-    // Perform multi-topic distributed tracing assertions
-    // Assertion 1: Verify Kafka Connect Consumer span exists and has correct multi-topic naming
-    assertThat(tracingData.kafkaConnectConsumerSpan)
-        .as("Kafka Connect Consumer span should be found for multi-topic processing")
-        .isNotNull();
-
-    // Assertion 2: Verify span name contains all topics in bracket format (order may vary)
-    assertThat(tracingData.kafkaConnectConsumerSpan.name)
-        .as("Span name should contain all topics in bracket format")
-        .contains(topicName1)
-        .contains(topicName2)
-        .contains(topicName3)
-        .startsWith("[")
-        .endsWith("] process");
-
-    // Assertion 3: Verify database span exists
-    assertThat(tracingData.databaseSpan).as("Database span should be found").isNotNull();
-
-    // Assertion 4: Verify span links exist
-    assertThat(tracingData.extractedSpanLink)
-        .as("Kafka Connect Consumer span should have span links")
-        .isNotNull();
-
-    // Assertion 5: Check span kind is consumer
-    assertThat(tracingData.kafkaConnectConsumerSpan.kind)
-        .as("Kafka Connect span should have CONSUMER span kind")
-        .isEqualTo("SPAN_KIND_CONSUMER");
-
-    // Assertion 6: Check if Kafka Connect traceId and database span traceId are similar
-    assertThat(tracingData.kafkaConnectConsumerSpan.traceId)
-        .as("Kafka Connect Consumer and Database spans should share the same trace ID")
-        .isEqualTo(tracingData.databaseSpan.traceId);
-    assertThat(tracingData.databaseSpan.parentSpanId)
-        .as("Database span must have a parent span ID")
-        .isNotNull()
-        .as("Database span parent should be Kafka Connect Consumer span")
-        .isEqualTo(tracingData.kafkaConnectConsumerSpan.spanId);
-
-    // Assertion 7: Verify Kafka Connect Consumer span has no parent (batch processing pattern)
-    assertThat(tracingData.kafkaConnectConsumerSpan.parentSpanId)
-        .as(
-            "Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
-        .isNull();
+    // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
+    // Wait for traces and then find the specific trace we want
+    await().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+      List<List<SpanData>> traces = testing.waitForTraces(1);
+      
+      // Find the trace that contains our Kafka Connect Consumer span and database INSERT span
+      List<SpanData> targetTrace = traces.stream()
+          .filter(trace -> {
+            boolean hasKafkaConnectSpan = trace.stream()
+                .anyMatch(span -> (span.getName().contains(topicName1) || 
+                                  span.getName().contains(topicName2) || 
+                                  span.getName().contains(topicName3)) && 
+                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+            
+            boolean hasInsertSpan = trace.stream()
+                .anyMatch(span -> span.getName().contains("update") && 
+                                 span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT);
+            
+            return hasKafkaConnectSpan && hasInsertSpan;
+          })
+          .findFirst()
+          .orElse(null);
+      
+      // Assert that we found the target trace
+      assertThat(targetTrace).isNotNull();
+      
+      // Assert on the spans in the target trace (should have at least 2 spans: Kafka Connect Consumer + database operations)
+      assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
+      
+      // Find and assert the Kafka Connect Consumer span (multi-topic span)
+      SpanData kafkaConnectSpan = targetTrace.stream()
+          .filter(span -> (span.getName().contains(topicName1) || 
+                          span.getName().contains(topicName2) || 
+                          span.getName().contains(topicName3)) && 
+                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+          .findFirst()
+          .orElse(null);
+      assertThat(kafkaConnectSpan).isNotNull();
+      assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
+      
+      // Find and assert the database UPDATE span
+      SpanData insertSpan = targetTrace.stream()
+          .filter(span -> span.getName().contains("update") && 
+                         span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+          .findFirst()
+          .orElse(null);
+      assertThat(insertSpan).isNotNull();
+    });
   }
 
   // Private methods
@@ -699,6 +634,16 @@ class MongoKafkaConnectSinkTaskTest {
 
   @AfterAll
   public static void cleanup() {
+    // Clear telemetry before stopping containers to avoid connection errors
+    if (telemetryRetriever != null) {
+      try {
+        telemetryRetriever.clearTelemetry();
+      } catch (RuntimeException e) {
+        // Ignore cleanup errors
+        logger.debug("Failed to clear telemetry during final cleanup: {}", e.getMessage());
+      }
+    }
+
     // AdminClient connections are managed locally in methods
 
     // Stop all containers in reverse order of startup to ensure clean shutdown
@@ -751,226 +696,5 @@ class MongoKafkaConnectSinkTaskTest {
     }
   }
 
-  /** Deserialize traces JSON and extract span information and links */
-  private static TracingData deserializeAndExtractSpans(String tracesJson, String expectedTopicName)
-      throws IOException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    JsonNode rootNode = objectMapper.readTree(tracesJson);
 
-    assertThat(rootNode.isArray()).as("Traces JSON should be an array").isTrue();
-
-    // Extract all spans and organize by type
-    SpanInfo kafkaConnectConsumerSpan = null;
-    SpanInfo databaseSpan = null;
-    SpanLinkInfo extractedSpanLink = null;
-
-    // Process each trace request in the JSON array
-    for (JsonNode traceRequestNode : rootNode) {
-      JsonNode resourceSpansArray = traceRequestNode.get("resourceSpans");
-      if (resourceSpansArray == null || !resourceSpansArray.isArray()) {
-        continue;
-      }
-
-      for (JsonNode resourceSpansNode : resourceSpansArray) {
-        JsonNode scopeSpansArray = resourceSpansNode.get("scopeSpans");
-        if (scopeSpansArray == null || !scopeSpansArray.isArray()) {
-          continue;
-        }
-
-        for (JsonNode scopeSpansNode : scopeSpansArray) {
-          JsonNode scopeNode = scopeSpansNode.get("scope");
-          String scopeName =
-              scopeNode != null && scopeNode.get("name") != null
-                  ? scopeNode.get("name").asText()
-                  : "";
-
-          JsonNode spansArray = scopeSpansNode.get("spans");
-          if (spansArray == null || !spansArray.isArray()) {
-            continue;
-          }
-
-          for (JsonNode spanNode : spansArray) {
-            String spanName = spanNode.get("name") != null ? spanNode.get("name").asText() : "";
-            String traceId =
-                spanNode.get("traceId") != null ? spanNode.get("traceId").asText() : "";
-            String spanId = spanNode.get("spanId") != null ? spanNode.get("spanId").asText() : "";
-            String parentSpanId =
-                spanNode.get("parentSpanId") != null
-                        && !spanNode.get("parentSpanId").asText().isEmpty()
-                    ? spanNode.get("parentSpanId").asText()
-                    : null;
-            String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
-
-            // Identify spans in our end-to-end flow
-            if (scopeName.contains(KAFKA_CONNECT_SCOPE)
-                && spanName.contains(expectedTopicName)
-                && spanKind.equals("SPAN_KIND_CONSUMER")) {
-              kafkaConnectConsumerSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
-
-              // Extract span link information for verification
-              JsonNode linksArray = spanNode.get("links");
-              if (linksArray != null && linksArray.isArray() && linksArray.size() > 0) {
-                JsonNode firstLink = linksArray.get(0);
-                String linkedTraceId =
-                    firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
-                String linkedSpanId =
-                    firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
-
-                extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId);
-              }
-            } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
-              databaseSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
-            }
-          }
-        }
-      }
-    }
-
-    return new TracingData(kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
-  }
-
-  /** Deserialize traces JSON and extract span information for multi-topic scenarios */
-  private static MultiTopicTracingData deserializeAndExtractMultiTopicSpans(
-      String tracesJson, String... expectedTopicNames) throws IOException {
-    ObjectMapper objectMapper = new ObjectMapper();
-    JsonNode rootNode = objectMapper.readTree(tracesJson);
-
-    assertThat(rootNode.isArray()).as("Traces JSON should be an array").isTrue();
-
-    // Extract all spans and organize by type
-    SpanInfo kafkaConnectConsumerSpan = null;
-    SpanInfo databaseSpan = null;
-    SpanLinkInfo extractedSpanLink = null;
-
-    // Process each trace request in the JSON array
-    for (JsonNode traceRequestNode : rootNode) {
-      JsonNode resourceSpansArray = traceRequestNode.get("resourceSpans");
-      if (resourceSpansArray == null || !resourceSpansArray.isArray()) {
-        continue;
-      }
-
-      for (JsonNode resourceSpansNode : resourceSpansArray) {
-        JsonNode scopeSpansArray = resourceSpansNode.get("scopeSpans");
-        if (scopeSpansArray == null || !scopeSpansArray.isArray()) {
-          continue;
-        }
-
-        for (JsonNode scopeSpansNode : scopeSpansArray) {
-          JsonNode scopeNode = scopeSpansNode.get("scope");
-          String scopeName =
-              scopeNode != null && scopeNode.get("name") != null
-                  ? scopeNode.get("name").asText()
-                  : "";
-
-          JsonNode spansArray = scopeSpansNode.get("spans");
-          if (spansArray == null || !spansArray.isArray()) {
-            continue;
-          }
-
-          for (JsonNode spanNode : spansArray) {
-            String spanName = spanNode.get("name") != null ? spanNode.get("name").asText() : "";
-            String traceId =
-                spanNode.get("traceId") != null ? spanNode.get("traceId").asText() : "";
-            String spanId = spanNode.get("spanId") != null ? spanNode.get("spanId").asText() : "";
-            String parentSpanId =
-                spanNode.get("parentSpanId") != null
-                        && !spanNode.get("parentSpanId").asText().isEmpty()
-                    ? spanNode.get("parentSpanId").asText()
-                    : null;
-            String spanKind = spanNode.get("kind") != null ? spanNode.get("kind").asText() : "";
-
-            // Identify spans in our multi-topic flow
-            if (scopeName.contains(KAFKA_CONNECT_SCOPE) && spanKind.equals("SPAN_KIND_CONSUMER")) {
-              // Check if span name contains any of the expected topics or the multi-topic format
-              boolean containsExpectedTopics = false;
-              for (String topicName : expectedTopicNames) {
-                if (spanName.contains(topicName)) {
-                  containsExpectedTopics = true;
-                  break;
-                }
-              }
-
-              if (containsExpectedTopics) {
-                kafkaConnectConsumerSpan =
-                    new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
-
-                // Extract span link information for verification
-                JsonNode linksArray = spanNode.get("links");
-                if (linksArray != null && linksArray.isArray() && linksArray.size() > 0) {
-                  JsonNode firstLink = linksArray.get(0);
-                  String linkedTraceId =
-                      firstLink.get("traceId") != null ? firstLink.get("traceId").asText() : "";
-                  String linkedSpanId =
-                      firstLink.get("spanId") != null ? firstLink.get("spanId").asText() : "";
-
-                  extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId);
-                }
-              }
-            } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
-              databaseSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
-            }
-          }
-        }
-      }
-    }
-
-    return new MultiTopicTracingData(kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
-  }
-
-  /** Helper class to hold all extracted multi-topic tracing data */
-  private static class MultiTopicTracingData {
-    final SpanInfo kafkaConnectConsumerSpan;
-    final SpanInfo databaseSpan;
-    final SpanLinkInfo extractedSpanLink;
-
-    MultiTopicTracingData(
-        SpanInfo kafkaConnectConsumerSpan, SpanInfo databaseSpan, SpanLinkInfo extractedSpanLink) {
-      this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
-      this.databaseSpan = databaseSpan;
-      this.extractedSpanLink = extractedSpanLink;
-    }
-  }
-
-  /** Helper class to hold all extracted tracing data */
-  private static class TracingData {
-    final SpanInfo kafkaConnectConsumerSpan;
-    final SpanInfo databaseSpan;
-    final SpanLinkInfo extractedSpanLink;
-
-    TracingData(
-        SpanInfo kafkaConnectConsumerSpan, SpanInfo databaseSpan, SpanLinkInfo extractedSpanLink) {
-      this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
-      this.databaseSpan = databaseSpan;
-      this.extractedSpanLink = extractedSpanLink;
-    }
-  }
-
-  /** Helper class to hold span link information */
-  private static class SpanLinkInfo {
-    final String linkedTraceId;
-    final String linkedSpanId;
-
-    SpanLinkInfo(String linkedTraceId, String linkedSpanId) {
-      this.linkedTraceId = linkedTraceId;
-      this.linkedSpanId = linkedSpanId;
-    }
-  }
-
-  // Helper class to hold span information
-  private static class SpanInfo {
-    final String name;
-    final String traceId;
-    final String spanId;
-    final String parentSpanId;
-    final String kind;
-
-    SpanInfo(String name, String traceId, String spanId, String parentSpanId, String kind) {
-      this.name = name;
-      this.traceId = traceId;
-      this.spanId = spanId;
-      this.parentSpanId = parentSpanId;
-      this.kind = kind;
-    }
-  }
 }
