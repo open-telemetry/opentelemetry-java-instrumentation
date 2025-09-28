@@ -1340,7 +1340,7 @@ class JdbcConnectionUrlParserTest {
 
   private static Stream<Arguments> oceanbaseArguments() {
     return args(
-        // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_jdbc.html
+        // https://en.oceanbase.com/
         arg("jdbc:oceanbase://host:3306/test")
             .setShortUrl("oceanbase://host:3306")
             .setSystem("oceanbase")
@@ -1366,7 +1366,7 @@ class JdbcConnectionUrlParserTest {
 
   private static Stream<Arguments> lindormArguments() {
     return args(
-        // https://docs.aws.amazon.com/secretsmanager/latest/userguide/retrieving-secrets_jdbc.html
+        // https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints
         arg("jdbc:lindorm:table:url=http://host:30060/test")
             .setShortUrl("lindorm:table://host:30060")
             .setSystem("lindorm")
