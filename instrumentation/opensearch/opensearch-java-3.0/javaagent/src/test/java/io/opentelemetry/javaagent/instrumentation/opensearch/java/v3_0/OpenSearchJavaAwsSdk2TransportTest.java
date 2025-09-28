@@ -7,6 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -19,8 +27,8 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -42,7 +50,7 @@ import software.amazon.awssdk.http.nio.netty.NettyNioAsyncHttpClient;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.utils.AttributeMap;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings("deprecation") // using deprecated semconv
 public class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTest {
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
@@ -60,6 +68,7 @@ public class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTe
     server.start();
     openSearchClient = buildOpenSearchClient();
     openSearchAsyncClient = buildOpenSearchAsyncClient();
+    httpHost = server.httpsUri();
   }
 
   @AfterAll
@@ -142,33 +151,33 @@ public class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTe
 
   @Test
   @Override
-  void shouldGetStatusWithTraces() throws IOException {
-    HealthResponse healthResponse = openSearchClient.cluster().health();
-    assertThat(healthResponse).isNotNull();
-
-    getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), "opensearch"),
-                                equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"))));
-  }
-
-  @Test
-  @Override
   void shouldGetStatusAsyncWithTraces() throws Exception {
     AtomicReference<CompletableFuture<HealthResponse>> responseCompletableFuture =
         new AtomicReference<>();
+    CountDownLatch countDownLatch = new CountDownLatch(1);
 
     getTesting()
         .runWithSpan(
             "client",
-            () -> responseCompletableFuture.set(openSearchAsyncClient.cluster().health()));
+            () -> {
+              CompletableFuture<HealthResponse> future = openSearchAsyncClient.cluster().health();
+              responseCompletableFuture.set(future);
+
+              future.whenComplete(
+                  (response, throwable) -> {
+                    getTesting()
+                        .runWithSpan(
+                            "callback",
+                            () -> {
+                              if (throwable != null) {
+                                throw new RuntimeException(throwable);
+                              }
+                              countDownLatch.countDown();
+                            });
+                  });
+            });
+
+    countDownLatch.await();
     HealthResponse healthResponse = responseCompletableFuture.get().get();
     assertThat(healthResponse).isNotNull();
 
@@ -184,6 +193,29 @@ public class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTe
                             .hasAttributesSatisfyingExactly(
                                 equalTo(maybeStable(DB_SYSTEM), "opensearch"),
                                 equalTo(maybeStable(DB_OPERATION), "GET"),
-                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health"))));
+                                equalTo(maybeStable(DB_STATEMENT), "GET /_cluster/health")),
+                    span ->
+                        span.hasName("GET")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                                equalTo(SERVER_PORT, httpHost.getPort()),
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(URL_FULL, httpHost + "/_cluster/health"),
+                                equalTo(
+                                    NETWORK_PEER_ADDRESS,
+                                    httpHost.getHost()), // Netty 4.1 Instrumentation collects
+                                // NETWORK_PEER_ADDRESS
+                                equalTo(
+                                    NETWORK_PEER_PORT,
+                                    httpHost.getPort()), // Netty 4.1 Instrumentation collects
+                                // NETWORK_PEER_PORT
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))));
   }
 }

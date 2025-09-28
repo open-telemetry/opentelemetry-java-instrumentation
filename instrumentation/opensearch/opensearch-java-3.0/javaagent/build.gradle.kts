@@ -23,6 +23,9 @@ dependencies {
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common:testing"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-5.0:javaagent"))
 
+  // For testing AwsSdk2Transport
+  testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testImplementation("software.amazon.awssdk:auth:2.22.0")
   testImplementation("software.amazon.awssdk:identity-spi:2.22.0")
   testImplementation("software.amazon.awssdk:apache-client:2.22.0")
