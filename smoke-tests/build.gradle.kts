@@ -20,7 +20,6 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
   implementation(platform("io.grpc:grpc-bom:1.75.0"))

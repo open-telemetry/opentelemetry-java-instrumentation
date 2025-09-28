@@ -156,13 +156,13 @@ If the instrumentation adheres to one or more specific semantic conventions, inc
 
 List of possible options:
 
-* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client)
+* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client-span)
 * [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
 * [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
 * [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
-* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes)
+* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-client-span)
 * [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
-* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes)
+* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-server-span)
 * [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
 * [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
 * [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
