@@ -46,17 +46,10 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
 
+      // For batch processing from multiple traces, use root context instead of extracting
+      // from first record to avoid creating incorrect parent-child relationships.
+      // Relationships are maintained through span links (see KafkaConnectBatchProcessSpanLinksExtractor)
       Context parentContext = Java8BytecodeBridge.currentContext();
-
-      // Extract context from first record if available
-      if (!records.isEmpty()) {
-        SinkRecord firstRecord = records.iterator().next();
-        Context extractedContext =
-            KafkaConnectSingletons.propagator()
-                .extract(
-                    parentContext, firstRecord, KafkaConnectSingletons.sinkRecordHeaderGetter());
-        parentContext = extractedContext;
-      }
 
       task = new KafkaConnectTask(records);
       if (!instrumenter().shouldStart(parentContext, task)) {

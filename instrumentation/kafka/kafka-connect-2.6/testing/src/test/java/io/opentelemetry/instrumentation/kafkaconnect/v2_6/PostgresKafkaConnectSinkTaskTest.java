@@ -386,6 +386,18 @@ class PostgresKafkaConnectSinkTaskTest {
     String tracesJson =
         given().when().get(backendUrl + "/get-traces").then().statusCode(200).extract().asString();
 
+    // Write resourceSpans to desktop file for inspection
+    try {
+      java.nio.file.Path desktopPath =
+          java.nio.file.Paths.get(
+              System.getProperty("user.home"), "Desktop", "kafka-connect-postgres-spans.json");
+      java.nio.file.Files.write(
+          desktopPath, tracesJson.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+      System.out.println("✅ Wrote resourceSpans to: " + desktopPath.toString());
+    } catch (Exception e) {
+      System.err.println("❌ Failed to write spans to desktop: " + e.getMessage());
+    }
+
     // Extract spans and links using separate deserialization method
     TracingData tracingData;
     try {
@@ -431,6 +443,11 @@ class PostgresKafkaConnectSinkTaskTest {
         .isNotNull()
         .as("Database span parent should be Kafka Connect Consumer span")
         .isEqualTo(tracingData.kafkaConnectConsumerSpan.spanId);
+
+    // Assertion 5: Verify Kafka Connect Consumer span has no parent (batch processing pattern)
+    assertThat(tracingData.kafkaConnectConsumerSpan.parentSpanId)
+        .as("Kafka Connect Consumer span should have no parent for batch processing from multiple traces")
+        .isNull();
   }
 
   @AfterAll
@@ -661,7 +678,7 @@ class PostgresKafkaConnectSinkTaskTest {
                 && spanName.contains(expectedTopicName)
                 && spanKind.equals("SPAN_KIND_CONSUMER")) {
               kafkaConnectConsumerSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
+                  new SpanInfo(traceId, spanId, parentSpanId, spanKind);
 
               // Extract span link information for verification
               JsonNode linksArray = spanNode.get("links");
@@ -681,7 +698,7 @@ class PostgresKafkaConnectSinkTaskTest {
                     || spanName.contains("SELECT")
                     || spanName.contains(DB_TABLE_PERSON))) {
               databaseSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
+                  new SpanInfo(traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
@@ -716,7 +733,6 @@ class PostgresKafkaConnectSinkTaskTest {
     final String kind;
 
     SpanInfo(
-        String name,
         String traceId,
         String spanId,
         String parentSpanId,
