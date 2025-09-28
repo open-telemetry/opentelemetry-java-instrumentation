@@ -156,7 +156,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
       }
 
       public CompletableFuture<HttpResponse<?>> end(
-          @Nullable Throwable throwable, @Nullable CompletableFuture<HttpResponse<?>> future) {
+          @Nullable Throwable throwable, CompletableFuture<HttpResponse<?>> future) {
         if (callDepth.decrementAndGet() > 0 || scope == null) {
           // async end nested call
           return future;
@@ -167,8 +167,8 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
           instrumenter().end(context, request, null, throwable);
           return future;
         }
-        future = future.whenComplete(new ResponseConsumer(instrumenter(), context, request));
-        return CompletableFutureWrapper.wrap(future, parentContext);
+        return CompletableFutureWrapper.wrap(future, parentContext)
+            .whenComplete(new ResponseConsumer(instrumenter(), context, request));
       }
     }
 
@@ -182,7 +182,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static CompletableFuture<HttpResponse<?>> methodExit(
-        @Advice.Return @Nullable CompletableFuture<HttpResponse<?>> future,
+        @Advice.Return CompletableFuture<HttpResponse<?>> future,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AsyncAdviceScope scope) {
       return scope == null ? future : scope.end(throwable, future);

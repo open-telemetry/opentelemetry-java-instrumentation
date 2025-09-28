@@ -59,6 +59,6 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   public InstrumenterCustomizer setSpanNameExtractor(
       Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
     customizer.setSpanNameExtractor(spanNameExtractorTransformer);
-    return null;
+    return this;
   }
 }

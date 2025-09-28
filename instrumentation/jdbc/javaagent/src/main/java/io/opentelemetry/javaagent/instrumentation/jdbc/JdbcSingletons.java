@@ -11,12 +11,15 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetworkAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
+import java.sql.SQLException;
+import java.sql.Wrapper;
 import java.util.Collections;
 import javax.sql.DataSource;
 
@@ -66,6 +69,32 @@ public final class JdbcSingletons {
 
   public static Instrumenter<DataSource, DbInfo> dataSourceInstrumenter() {
     return DATASOURCE_INSTRUMENTER;
+  }
+
+  private static final Cache<Class<?>, Boolean> wrapperClassCache = Cache.weak();
+
+  /**
+   * Returns true if the given object is a wrapper and shouldn't be instrumented. We'll instrument
+   * the underlying object called by the wrapper instead.
+   */
+  public static <T extends Wrapper> boolean isWrapper(T object, Class<T> clazz) {
+    return wrapperClassCache.computeIfAbsent(
+        object.getClass(), key -> isWrapperInternal(object, clazz));
+  }
+
+  private static <T extends Wrapper> boolean isWrapperInternal(T object, Class<T> clazz) {
+    try {
+      // we are dealing with a wrapper when the object unwraps to a different instance
+      if (object.isWrapperFor(clazz)) {
+        T unwrapped = object.unwrap(clazz);
+        if (object != unwrapped) {
+          return true;
+        }
+      }
+    } catch (SQLException | AbstractMethodError e) {
+      // ignore
+    }
+    return false;
   }
 
   private JdbcSingletons() {}
