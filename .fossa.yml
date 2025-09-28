@@ -747,6 +747,9 @@ targets:
       target: ':instrumentation:openai:openai-java-1.1:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:opensearch:opensearch-java-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:opensearch:opensearch-rest-1.0:javaagent'
     - type: gradle
       path: ./
