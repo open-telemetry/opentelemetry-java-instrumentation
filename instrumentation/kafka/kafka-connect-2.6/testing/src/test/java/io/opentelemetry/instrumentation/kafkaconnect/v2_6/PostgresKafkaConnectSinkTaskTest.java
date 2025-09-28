@@ -697,16 +697,14 @@ class PostgresKafkaConnectSinkTaskTest {
                     || spanName.contains("DELETE")
                     || spanName.contains("SELECT")
                     || spanName.contains(DB_TABLE_PERSON))) {
-              databaseSpan =
-                  new SpanInfo(traceId, spanId, parentSpanId, spanKind);
+              databaseSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
       }
     }
 
-    return new TracingData(
-        kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+    return new TracingData(kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
   }
 
   // Helper class to hold all tracing data
@@ -716,9 +714,7 @@ class PostgresKafkaConnectSinkTaskTest {
     final SpanLinkInfo extractedSpanLink;
 
     TracingData(
-        SpanInfo kafkaConnectConsumerSpan,
-        SpanInfo databaseSpan,
-        SpanLinkInfo extractedSpanLink) {
+        SpanInfo kafkaConnectConsumerSpan, SpanInfo databaseSpan, SpanLinkInfo extractedSpanLink) {
       this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
       this.databaseSpan = databaseSpan;
       this.extractedSpanLink = extractedSpanLink;
@@ -732,11 +728,7 @@ class PostgresKafkaConnectSinkTaskTest {
     final String parentSpanId;
     final String kind;
 
-    SpanInfo(
-        String traceId,
-        String spanId,
-        String parentSpanId,
-        String kind) {
+    SpanInfo(String name, String traceId, String spanId, String parentSpanId, String kind) {
       this.traceId = traceId;
       this.spanId = spanId;
       this.parentSpanId = parentSpanId;

@@ -104,7 +104,6 @@ class MongoKafkaConnectSinkTaskTest {
   private static MongoDBContainer mongoDB;
   private static int kafkaExposedPort;
 
-
   // Static methods
 
   private static String getKafkaConnectUrl() {
@@ -819,16 +818,14 @@ class MongoKafkaConnectSinkTaskTest {
                 extractedSpanLink = new SpanLinkInfo(linkedTraceId, linkedSpanId);
               }
             } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
-              databaseSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
+              databaseSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
       }
     }
 
-    return new TracingData(
-        kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
+    return new TracingData(kafkaConnectConsumerSpan, databaseSpan, extractedSpanLink);
   }
 
   /** Deserialize traces JSON and extract span information for multi-topic scenarios */
@@ -909,8 +906,7 @@ class MongoKafkaConnectSinkTaskTest {
                 }
               }
             } else if (scopeName.contains("mongo") && spanName.contains("testdb.person")) {
-              databaseSpan =
-                  new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
+              databaseSpan = new SpanInfo(spanName, traceId, spanId, parentSpanId, spanKind);
             }
           }
         }
@@ -941,9 +937,7 @@ class MongoKafkaConnectSinkTaskTest {
     final SpanLinkInfo extractedSpanLink;
 
     TracingData(
-        SpanInfo kafkaConnectConsumerSpan,
-        SpanInfo databaseSpan,
-        SpanLinkInfo extractedSpanLink) {
+        SpanInfo kafkaConnectConsumerSpan, SpanInfo databaseSpan, SpanLinkInfo extractedSpanLink) {
       this.kafkaConnectConsumerSpan = kafkaConnectConsumerSpan;
       this.databaseSpan = databaseSpan;
       this.extractedSpanLink = extractedSpanLink;
@@ -969,12 +963,7 @@ class MongoKafkaConnectSinkTaskTest {
     final String parentSpanId;
     final String kind;
 
-    SpanInfo(
-        String name,
-        String traceId,
-        String spanId,
-        String parentSpanId,
-        String kind) {
+    SpanInfo(String name, String traceId, String spanId, String parentSpanId, String kind) {
       this.name = name;
       this.traceId = traceId;
       this.spanId = spanId;
