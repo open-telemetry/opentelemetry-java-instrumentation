@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.executors.ExecutorMatch
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
+import io.opentelemetry.javaagent.bootstrap.executors.WrappedRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -39,8 +39,9 @@ public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 1, readOnly = false) Runnable runnable) {
-      if (runnable instanceof ContextPropagatingRunnable) {
-        runnable = ((ContextPropagatingRunnable) runnable).unwrap();
+      if (runnable instanceof WrappedRunnable) {
+        System.out.println("Before: I'm present in BeforeExecuteAdvice");
+        runnable = ((WrappedRunnable) runnable).unwrap();
       }
     }
   }
@@ -50,8 +51,9 @@ public class ThreadPoolExtendingExecutorInstrumentation implements TypeInstrumen
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) Runnable runnable) {
-      if (runnable instanceof ContextPropagatingRunnable) {
-        runnable = ((ContextPropagatingRunnable) runnable).unwrap();
+      if (runnable instanceof WrappedRunnable) {
+        System.out.println("After: I'm present in AfterExecuteAdvice");
+        runnable = ((WrappedRunnable) runnable).unwrap();
       }
     }
   }

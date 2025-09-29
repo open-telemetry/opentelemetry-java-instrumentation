@@ -14,6 +14,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.bootstrap.executors.TaskAdviceHelper;
+import io.opentelemetry.javaagent.bootstrap.executors.WrappedRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -39,6 +40,19 @@ public class RunnableInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Scope enter(@Advice.This Runnable thiz) {
+
+      System.out.println("Execute runnableAdvice dla: " + thiz.getClass().getName());
+
+      if (thiz instanceof WrappedRunnable) {
+        System.out.println("Don't have wrapped");
+      }
+
+      Long startTime = VirtualField.find(Runnable.class, Long.class).get(thiz);
+      if (startTime != null) {
+        PendingTaskMetrics.recordTime(startTime);
+        System.out.println("RunnableAdvice: Got time :)");
+      }
+
       VirtualField<Runnable, PropagatedContext> virtualField =
           VirtualField.find(Runnable.class, PropagatedContext.class);
       return TaskAdviceHelper.makePropagatedContextCurrent(virtualField, thiz);

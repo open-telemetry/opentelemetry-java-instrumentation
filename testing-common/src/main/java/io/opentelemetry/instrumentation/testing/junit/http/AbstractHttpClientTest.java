@@ -723,6 +723,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
+  // here are metrics for http client
   @Test
   void httpClientMetrics() throws Exception {
     assumeTrue(options.getHasSendRequest());
