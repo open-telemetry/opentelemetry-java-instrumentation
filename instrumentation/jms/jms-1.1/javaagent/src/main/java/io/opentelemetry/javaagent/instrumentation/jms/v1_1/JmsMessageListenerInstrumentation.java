@@ -58,7 +58,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      private static AdviceScope start(Message message) {
+      public static AdviceScope start(Message message) {
         Context parentContext = Context.current();
         MessageWithDestination messageWithDestination =
             MessageWithDestination.create(JavaxMessageAdapter.create(message), null);

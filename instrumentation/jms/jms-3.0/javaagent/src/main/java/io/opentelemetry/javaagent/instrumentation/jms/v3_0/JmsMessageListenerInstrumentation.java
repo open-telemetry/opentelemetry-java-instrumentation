@@ -50,7 +50,7 @@ public class JmsMessageListenerInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(
+      private AdviceScope(
           MessageWithDestination messageWithDestination, Context context, Scope scope) {
         this.scope = scope;
         this.context = context;
