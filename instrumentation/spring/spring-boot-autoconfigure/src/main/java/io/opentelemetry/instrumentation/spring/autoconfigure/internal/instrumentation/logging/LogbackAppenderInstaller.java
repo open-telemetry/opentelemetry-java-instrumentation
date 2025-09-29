@@ -233,7 +233,7 @@ class LogbackAppenderInstaller {
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent, String property) {
     ConfigurableEnvironment environment = applicationEnvironmentPreparedEvent.getEnvironment();
     return environment.getProperty(
-        EarlyConfig.translatePropertyName(environment, property, null), Boolean.class);
+        EarlyConfig.translatePropertyName(environment, property), Boolean.class);
   }
 
   private static <T> Optional<T> findAppender(Class<T> appenderClass) {
