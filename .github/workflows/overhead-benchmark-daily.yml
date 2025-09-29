@@ -52,14 +52,12 @@ jobs:
         run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
 
       - name: Use CLA approved bot
-        run: .github/scripts/use-cla-approved-bot.sh
+        working-directory: ./gh-pages
+        run: ../.github/scripts/use-cla-approved-bot.sh
 
       - name: Commit updated results
         working-directory: ./gh-pages
-        # The git config from use-cla-approved-bot.sh is lost when switching working-directory
         run: |
-          git config user.name otelbot
-          git config user.email 197425009+otelbot@users.noreply.github.com
           git add benchmark-overhead/results
           git commit -m "update test result data"
           git push
