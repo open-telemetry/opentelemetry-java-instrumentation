@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jsf.javax.JsfRequest;
@@ -50,7 +49,7 @@ public class ActionListenerImplInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(@Advice.Argument(0) ActionEvent event) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         JsfRequest request = new JsfRequest(event);
         if (!request.shouldStartSpan() || !instrumenter().shouldStart(parentContext, request)) {
           return null;
