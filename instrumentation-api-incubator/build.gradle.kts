@@ -17,6 +17,7 @@ dependencies {
   api("io.opentelemetry:opentelemetry-api-incubator")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("com.fasterxml.jackson.core:jackson-databind")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":testing-common"))
