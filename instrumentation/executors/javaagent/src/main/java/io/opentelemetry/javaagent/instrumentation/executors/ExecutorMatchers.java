@@ -24,9 +24,9 @@ import java.util.logging.Logger;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class ExecutorMatchers {
+final class BBBBBExecutorMatchers {
 
-  private static final Logger logger = Logger.getLogger(ExecutorMatchers.class.getName());
+  private static final Logger logger = Logger.getLogger(BBBBBExecutorMatchers.class.getName());
 
   /**
    * Only apply executor instrumentation to allowed executors. To apply to all executors, use
@@ -145,5 +145,5 @@ final class ExecutorMatchers {
     return extendsClass(named(ThreadPoolExecutor.class.getName()));
   }
 
-  private ExecutorMatchers() {}
+  private BBBBBExecutorMatchers() {}
 }
