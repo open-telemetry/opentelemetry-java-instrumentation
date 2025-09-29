@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -99,13 +100,15 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
       return null;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) Class<?> result,
-        @Advice.Enter Class<?> resultFromBootstrapLoader) {
+    public static Class<?> onExit(
+        @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> resultFromBootstrapLoader) {
+      Class<?> result = originalResult;
       if (resultFromBootstrapLoader != null) {
         result = resultFromBootstrapLoader;
       }
+      return result;
     }
   }
 }

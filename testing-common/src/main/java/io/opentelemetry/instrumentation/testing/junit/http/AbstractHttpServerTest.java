@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -16,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -899,14 +901,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           if (endpoint == CAPTURE_HEADERS) {
             assertThat(attrs)
-                .containsEntry("http.request.header.x-test-request", new String[] {"test"});
+                .containsEntry(
+                    stringArrayKey("http.request.header.x-test-request"), singletonList("test"));
             assertThat(attrs)
-                .containsEntry("http.response.header.x-test-response", new String[] {"test"});
+                .containsEntry(
+                    stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
           }
           if (endpoint == CAPTURE_PARAMETERS) {
             assertThat(attrs)
                 .containsEntry(
-                    "servlet.request.parameter.test-parameter", new String[] {"test value õäöü"});
+                    stringArrayKey("servlet.request.parameter.test-parameter"),
+                    singletonList("test value õäöü"));
           }
         });
 

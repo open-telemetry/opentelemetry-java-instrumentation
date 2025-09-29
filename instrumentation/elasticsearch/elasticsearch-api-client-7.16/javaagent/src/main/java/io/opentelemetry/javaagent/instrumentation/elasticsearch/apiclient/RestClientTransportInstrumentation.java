@@ -5,14 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient;
 
+import static io.opentelemetry.javaagent.instrumentation.elasticsearch.apiclient.ElasticsearchApiClientSingletons.ENDPOINT_DEFINITION;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import co.elastic.clients.transport.Endpoint;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.ElasticsearchEndpointDefinition;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -44,13 +43,11 @@ public class RestClientTransportInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onPrepareLowLevelRequest(
         @Advice.Argument(1) Endpoint<?, ?, ?> endpoint, @Advice.Return Request request) {
-      VirtualField<Request, ElasticsearchEndpointDefinition> virtualField =
-          VirtualField.find(Request.class, ElasticsearchEndpointDefinition.class);
       String endpointId = endpoint.id();
       if (endpointId.startsWith("es/") && endpointId.length() > 3) {
         endpointId = endpointId.substring(3);
       }
-      virtualField.set(request, ElasticsearchEndpointMap.get(endpointId));
+      ENDPOINT_DEFINITION.set(request, ElasticsearchEndpointMap.get(endpointId));
     }
   }
 }

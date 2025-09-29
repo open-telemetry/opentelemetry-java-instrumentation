@@ -28,8 +28,17 @@ jobs:
         run: |
           rsync -avv gh-pages/benchmark-overhead/results/ benchmark-overhead/results/
 
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+
+      - name: Build Latest Snapshot JAR
+        run: ./gradlew assemble -x javadoc
 
       - name: Run tests
         working-directory: benchmark-overhead
@@ -42,17 +51,15 @@ jobs:
       - name: Copy results back to gh-pages branch
         run: rsync -avv benchmark-overhead/results/ gh-pages/benchmark-overhead/results/ && rm -rf benchmark-overhead/results
 
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
+
       - name: Commit updated results
-        uses: EndBug/add-and-commit@a94899bca583c204427a224a7af87c02f9b325d5 # v9.1.4
-        with:
-          add: "benchmark-overhead/results"
-          cwd: "./gh-pages"
-          branch: "gh-pages"
-          message: "update test result data"
-          author_name: otelbot
-          author_email: 197425009+otelbot@users.noreply.github.com
-          committer_name: otelbot
-          committer_email: 197425009+otelbot@users.noreply.github.com
+        working-directory: ./gh-pages
+        run: |
+          git add benchmark-overhead/results
+          git commit -m "update test result data"
+          git push
 
   workflow-notification:
     permissions:

@@ -126,7 +126,6 @@ evaluationDependsOn(":dependencyManagement")
 val dependencyManagementConf = configurations.create("dependencyManagement") {
   isCanBeConsumed = false
   isCanBeResolved = false
-  isVisible = false
 }
 afterEvaluate {
   configurations.configureEach {
@@ -439,7 +438,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "11.0.1"
+  toolVersion = "11.1.0"
   maxWarnings = 0
 }
 

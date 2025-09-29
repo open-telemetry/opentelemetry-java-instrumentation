@@ -1,3 +1,4 @@
+display_name: Apache DBCP
 description: >
   This instrumentation enables database connection pools metrics for Apache DBCP.
 
@@ -6,3 +7,5 @@ description: >
   this happens automatically as all Spring beans that support JMX registration are automatically
   registered by default.
 library_link: https://commons.apache.org/proper/commons-dbcp/
+semantic_conventions:
+  - DATABASE_POOL_METRICS
