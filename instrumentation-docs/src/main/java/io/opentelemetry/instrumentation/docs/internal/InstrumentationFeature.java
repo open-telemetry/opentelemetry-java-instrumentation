@@ -9,14 +9,11 @@ package io.opentelemetry.instrumentation.docs.internal;
  * Represents functionality of instrumentations. This class is internal and is hence not for public
  * use. Its APIs are unstable and can change at any time.
  */
-public enum InstrumentationFunction {
-  HTTP_ROUTE_ENRICHER,
-  LIBRARY_DOMAIN_ENRICHER,
+public enum InstrumentationFeature {
+  HTTP_ROUTE,
   EXPERIMENTAL_ONLY,
   CONTEXT_PROPAGATION,
-  UPSTREAM_ADAPTER,
-  CONFIGURATION,
+  AUTO_INSTRUMENTATION_SHIM,
   CONTROLLER_SPANS,
   VIEW_SPANS,
-  SYSTEM_METRICS
 }

@@ -215,12 +215,12 @@ public class YamlHelper {
       if (module.getMetadata().getDisabledByDefault()) {
         moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
       }
-      if (!module.getMetadata().getFunctions().isEmpty()) {
+      if (!module.getMetadata().getFeatures().isEmpty()) {
         List<String> functionNames =
-            module.getMetadata().getFunctions().stream()
+            module.getMetadata().getFeatures().stream()
                 .map(Enum::name)
                 .collect(Collectors.toList());
-        moduleMap.put("functions", functionNames);
+        moduleMap.put("features", functionNames);
       }
     }
   }

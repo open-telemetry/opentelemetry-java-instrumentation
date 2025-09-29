@@ -70,7 +70,7 @@ libraries:
     description: This instrumentation provides context propagation for Akka actors,
       it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
-    functions:
+    features:
     - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-actor-2.3
     scope:
@@ -85,7 +85,7 @@ libraries:
     description: This instrumentation provides context propagation for the Akka Fork-Join
       Pool, it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
-    functions:
+    features:
     - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
     scope:
@@ -105,8 +105,8 @@ libraries:
     - HTTP_SERVER_SPANS
     - HTTP_SERVER_METRICS
     library_link: https://doc.akka.io/docs/akka-http/current/index.html
-    functions:
-    - HTTP_ROUTE_ENRICHER
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/akka/akka-http-10.0
     scope:
       name: io.opentelemetry.akka-http-10.0

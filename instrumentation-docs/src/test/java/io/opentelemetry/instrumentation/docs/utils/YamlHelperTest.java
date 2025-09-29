@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationFunction;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationFeature;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -123,10 +123,9 @@ class YamlHelperTest {
             .description("Spring Web 6.0 instrumentation")
             .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
-            .functions(
+            .features(
                 List.of(
-                    InstrumentationFunction.HTTP_ROUTE_ENRICHER,
-                    InstrumentationFunction.CONTEXT_PROPAGATION))
+                    InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTEXT_PROPAGATION))
             .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .configurations(
                 List.of(
@@ -198,8 +197,8 @@ class YamlHelperTest {
                 semantic_conventions:
                 - DATABASE_CLIENT_METRICS
                 - DATABASE_CLIENT_SPANS
-                functions:
-                - HTTP_ROUTE_ENRICHER
+                features:
+                - HTTP_ROUTE
                 - CONTEXT_PROPAGATION
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
@@ -239,9 +238,9 @@ class YamlHelperTest {
             classification: internal
             disabled_by_default: true
             library_link: https://example.com/test-library
-            functions:
-              - HTTP_ROUTE_ENRICHER
-              - LIBRARY_DOMAIN_ENRICHER
+            features:
+              - HTTP_ROUTE
+              - CONTROLLER_SPANS
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -258,10 +257,9 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
 
-    assertThat(metadata.getFunctions())
+    assertThat(metadata.getFeatures())
         .containsExactly(
-            InstrumentationFunction.HTTP_ROUTE_ENRICHER,
-            InstrumentationFunction.LIBRARY_DOMAIN_ENRICHER);
+            InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTROLLER_SPANS);
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");
@@ -336,19 +334,18 @@ class YamlHelperTest {
   }
 
   @Test
-  void testMetadataParserWithOnlyFunctions() throws JsonProcessingException {
+  void testMetadataParserWithOnlyFeatures() throws JsonProcessingException {
     String input =
         """
-            functions:
-              - HTTP_ROUTE_ENRICHER
+            features:
+              - HTTP_ROUTE
         """;
     InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDescription()).isNull();
     assertThat(metadata.getDisabledByDefault()).isFalse();
-    assertThat(metadata.getFunctions())
-        .containsExactly(InstrumentationFunction.HTTP_ROUTE_ENRICHER);
+    assertThat(metadata.getFeatures()).containsExactly(InstrumentationFeature.HTTP_ROUTE);
   }
 
   @Test

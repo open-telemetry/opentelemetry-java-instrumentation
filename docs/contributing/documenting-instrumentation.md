@@ -88,8 +88,8 @@ semantic_conventions:
   - HTTP_CLIENT_SPANS
   - DATABASE_CLIENT_SPANS
   - JVM_RUNTIME_METRICS
-functions:
-  - HTTP_ROUTE_ENRICHER
+features:
+  - HTTP_ROUTE
   - CONTEXT_PROPAGATION
 disabled_by_default: true
 classification: library
@@ -177,22 +177,19 @@ List of possible options:
 * [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
 * [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
 
-### Functions (optional)
+### Features (optional)
 
-As a way to help further categorize instrumentations, you can add a `functions` field with a list of
+As a way to help further categorize instrumentations, you can add a `features` field with a list of
 the relevant functionality descriptions.
 
 List of possible options:
 
-* `HTTP_ROUTE_ENRICHER`: Instrumentation that enriches HTTP spans with route information
-* `LIBRARY_DOMAIN_ENRICHER`: Instrumentation that enriches spans with library-specific domain information
+* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
 * `EXPERIMENTAL_ONLY`: Instrumentation that is experimental and may not be stable
 * `CONTEXT_PROPAGATION`: Instrumentation that provides context propagation capabilities
-* `UPSTREAM_ADAPTER`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
-* `CONFIGURATION`: Instrumentation that provides configuration-related functionality
+* `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
 * `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans
 * `VIEW_SPANS`: Instrumentation that generates view-level spans
-* `SYSTEM_METRICS`: Instrumentation that generates system-level metrics
 
 ### Library Link
 

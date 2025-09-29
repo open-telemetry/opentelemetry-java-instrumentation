@@ -47,7 +47,7 @@ public class InstrumentationMetadata {
   @Nullable
   private Boolean overrideTelemetry;
 
-  private List<InstrumentationFunction> functions = emptyList();
+  private List<InstrumentationFeature> features = emptyList();
 
   public InstrumentationMetadata() {
     this.classification = InstrumentationClassification.LIBRARY.name();
@@ -149,12 +149,12 @@ public class InstrumentationMetadata {
     this.overrideTelemetry = overrideTelemetry;
   }
 
-  public List<InstrumentationFunction> getFunctions() {
-    return functions;
+  public List<InstrumentationFeature> getFeatures() {
+    return features;
   }
 
-  public void setFunctions(@Nullable List<InstrumentationFunction> functions) {
-    this.functions = Objects.requireNonNullElse(functions, emptyList());
+  public void setFeatures(@Nullable List<InstrumentationFeature> features) {
+    this.features = Objects.requireNonNullElse(features, emptyList());
   }
 
   /**
@@ -172,7 +172,7 @@ public class InstrumentationMetadata {
     private List<SemanticConvention> semanticConventions = emptyList();
     private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
     @Nullable private Boolean overrideTelemetry;
-    private List<InstrumentationFunction> functions = emptyList();
+    private List<InstrumentationFeature> features = emptyList();
 
     @CanIgnoreReturnValue
     public Builder description(@Nullable String description) {
@@ -229,8 +229,8 @@ public class InstrumentationMetadata {
     }
 
     @CanIgnoreReturnValue
-    public Builder functions(@Nullable List<InstrumentationFunction> functions) {
-      this.functions = Objects.requireNonNullElse(functions, emptyList());
+    public Builder features(@Nullable List<InstrumentationFeature> features) {
+      this.features = Objects.requireNonNullElse(features, emptyList());
       return this;
     }
 
@@ -248,7 +248,7 @@ public class InstrumentationMetadata {
               configurations);
       metadata.setAdditionalTelemetry(additionalTelemetry);
       metadata.setOverrideTelemetry(overrideTelemetry);
-      metadata.setFunctions(functions);
+      metadata.setFeatures(features);
       return metadata;
     }
   }
