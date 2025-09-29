@@ -16,7 +16,7 @@ otelJava {
 }
 
 dependencies {
-  library("io.helidon.webserver:helidon-webserver:4.3.0-M1")
+  library("io.helidon.webserver:helidon-webserver:4.3.0")
   implementation(project(":instrumentation:helidon:helidon-4.3.0:library"))
   testImplementation(project(":instrumentation:helidon:helidon-4.3.0:testing"))
 }
