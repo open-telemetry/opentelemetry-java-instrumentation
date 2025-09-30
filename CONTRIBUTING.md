@@ -64,21 +64,15 @@ removeJarVersionNumbers=true
 
 ## Working with fork repositories
 
-If you forked this repository, some GitHub Actions workflows may fail due to missing secrets or permissions. To avoid unnecessary notifications:
+If you forked this repository, some GitHub Actions workflows may fail due to missing secrets or permissions. To avoid unnecessary workflow failure notifications:
 
 ### Disabling GitHub Actions in your fork
 
-#### Option 1: Disable all workflows
+**Option 1: Disable all workflows** - Go to Settings > Actions > General, select "Disable actions", and save
 
-1. Go to your fork's "Actions" tab
-2. Click "Disable Actions"
+**Option 2: Disable specific workflows** - Go to Actions tab, click a workflow, click "..." menu, and select "Disable workflow"
 
-#### Option 2: Disable specific workflows
-
-1. Go to your fork's "Actions" tab  
-2. Use workflow-specific controls to disable problematic ones
-
-Both approaches allow normal contribution via pull requests to the main repository.
+Either option still allows you to contribute via pull requests to the main repository.
 
 ## IntelliJ setup and troubleshooting
 
