@@ -42,7 +42,9 @@ jobs:
           days-before-pr-stale: -1
           days-before-pr-close: -1
           only-labels: "enhancement"
-          exempt-issue-labels: "stale" # so that it won't close issues labeled as stale by "needs author feedback"
+          # "stale" exemption: so that it won't close issues labeled as stale by "needs author feedback"
+          # "needs author feedback" exemption: so that it won't remove the stale label added by the first action
+          exempt-issue-labels: "stale,needs author feedback"
 
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
