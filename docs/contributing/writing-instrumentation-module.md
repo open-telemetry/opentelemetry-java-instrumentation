@@ -359,7 +359,7 @@ For example:
 @Advice.Origin("#m") String methodName
 ```
 
-[suppress]: https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#suppressing-specific-auto-instrumentation
+[suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 
 ## Use non-inlined advice code with `invokedynamic`
 

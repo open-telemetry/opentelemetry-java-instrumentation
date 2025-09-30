@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,9 +42,10 @@ public class ContextInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class WrapRootAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void methodExit(@Advice.Return(readOnly = false) Context root) {
-      root = AgentContextStorage.wrapRootContext(root);
+    public static Context methodExit(@Advice.Return Context root) {
+      return AgentContextStorage.wrapRootContext(root);
     }
   }
 }
