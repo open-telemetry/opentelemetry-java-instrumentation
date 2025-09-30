@@ -62,6 +62,18 @@ the file name to stay consistent across versions. To do so, add the following to
 removeJarVersionNumbers=true
 ```
 
+## Working with fork repositories
+
+If you forked this repository, some GitHub Actions workflows may fail due to missing secrets or permissions. To avoid unnecessary workflow failure notifications:
+
+### Disabling GitHub Actions in your fork
+
+**Option 1: Disable all workflows** - Go to Settings > Actions > General, select "Disable actions", and save
+
+**Option 2: Disable specific workflows** - Go to Actions tab, click a workflow, click "..." menu, and select "Disable workflow"
+
+Either option still allows you to contribute via pull requests to the main repository.
+
 ## IntelliJ setup and troubleshooting
 
 See [IntelliJ setup and troubleshooting](docs/contributing/intellij-setup-and-troubleshooting.md)
@@ -99,7 +111,7 @@ See [Understanding Muzzle](docs/contributing/muzzle.md)
 The build logs are very long and there is a lot of parallelization, so the logs can be hard to
 decipher, but if you expand the "Build scan" step, you should see something like:
 
-```
+```text
 Run cat build-scan.txt
 https://gradle.com/s/ila4qwp5lcf5s
 ```

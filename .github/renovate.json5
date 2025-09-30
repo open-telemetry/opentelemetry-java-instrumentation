@@ -113,6 +113,16 @@
       ],
     },
     {
+      // junit 6+ requires Java 17+
+      matchPackageNames: [
+        'org.junit:**',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+    },
+    {
       // junit-pioneer 2+ requires Java 11+
       matchPackageNames: [
         'org.junit-pioneer:junit-pioneer',
