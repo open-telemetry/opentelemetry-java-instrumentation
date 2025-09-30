@@ -14,8 +14,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class Log4j2Test extends AbstractLog4j2Test {
 
   @RegisterExtension
-  static final LibraryInstrumentationExtension testing =
-      LibraryInstrumentationExtension.create();
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @BeforeEach
   void setup() {

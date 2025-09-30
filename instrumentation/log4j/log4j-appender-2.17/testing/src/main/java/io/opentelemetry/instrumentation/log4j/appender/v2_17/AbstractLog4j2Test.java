@@ -223,8 +223,7 @@ public abstract class AbstractLog4j2Test {
     message.put("key2", "val2");
     logger.info(message);
 
-    List<AttributeAssertion> assertions =
-        addCodeLocationAttributes("testStructuredDataMapMessage");
+    List<AttributeAssertion> assertions = addCodeLocationAttributes("testStructuredDataMapMessage");
     assertions.addAll(threadAttributesAssertions());
     assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
     assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
