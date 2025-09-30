@@ -17,12 +17,10 @@ public final class HelidonSingletons {
   public static final List<Filter> FILTERS;
 
   static {
-    var config = AgentCommonConfig.get();
-
     var serverBuilder = HelidonTelemetry.builder(GlobalOpenTelemetry.get());
     HelidonInstrumenterBuilderUtil.getServerBuilderExtractor()
         .apply(serverBuilder)
-        .configure(config);
+        .configure(AgentCommonConfig.get());
     var serverTelemetry = serverBuilder.build();
 
     FILTERS = List.of(serverTelemetry.createFilter(), new ResponseCustomizingFilter());
