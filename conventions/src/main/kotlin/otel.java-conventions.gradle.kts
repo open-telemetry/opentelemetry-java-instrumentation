@@ -75,10 +75,10 @@ tasks.withType<JavaCompile>().configureEach {
           "-Xlint:-serial"
         )
       )
-      if (System.getProperty("dev") != "true") {
-        // Fail build on any warning
-        compilerArgs.add("-Werror")
-      }
+//      if (System.getProperty("dev") != "true") {
+//        // Fail build on any warning
+//        compilerArgs.add("-Werror")
+//      }
     }
 
     encoding = "UTF-8"

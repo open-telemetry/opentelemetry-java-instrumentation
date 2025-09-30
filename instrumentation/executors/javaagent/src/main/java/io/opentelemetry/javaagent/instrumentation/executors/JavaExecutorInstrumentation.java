@@ -19,9 +19,9 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
+import io.opentelemetry.javaagent.bootstrap.executors.WrappedRunnable;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
@@ -101,8 +101,11 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       if (!ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return null;
       }
-      if (ContextPropagatingRunnable.shouldDecorateRunnable(task)) {
-        task = ContextPropagatingRunnable.propagateContext(task, context);
+
+      VirtualField.find(Runnable.class, Long.class).set(task, System.nanoTime());
+
+      if (WrappedRunnable.shouldDecorateRunnable(task)) {
+        task = WrappedRunnable.decorate(task, context);
         return null;
       }
       VirtualField<Runnable, PropagatedContext> virtualField =
@@ -130,6 +133,9 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) ForkJoinTask<?> task) {
+
+      VirtualField.find(ForkJoinTask.class, Long.class).set(task, System.nanoTime());
+
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
@@ -162,6 +168,8 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }
+      VirtualField.find(Runnable.class, Long.class).set(task, System.nanoTime());
+
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Runnable, PropagatedContext> virtualField =
@@ -204,6 +212,8 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
       if (callDepth.getAndIncrement() > 0) {
         return null;
       }
+      VirtualField.find(Callable.class, Long.class).set(task, System.nanoTime());
+
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<Callable<?>, PropagatedContext> virtualField =
@@ -253,6 +263,8 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
       Context context = Java8BytecodeBridge.currentContext();
       for (Callable<?> task : tasks) {
+        VirtualField.find(Callable.class, Long.class).set(task, System.nanoTime());
+
         if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
           VirtualField<Callable<?>, PropagatedContext> virtualField =
               VirtualField.find(Callable.class, PropagatedContext.class);

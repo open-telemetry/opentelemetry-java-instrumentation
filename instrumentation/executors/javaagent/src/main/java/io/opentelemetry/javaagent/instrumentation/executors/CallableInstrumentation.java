@@ -42,6 +42,13 @@ public class CallableInstrumentation implements TypeInstrumentation {
     public static Scope enter(@Advice.This Callable<?> task) {
       VirtualField<Callable<?>, PropagatedContext> virtualField =
           VirtualField.find(Callable.class, PropagatedContext.class);
+
+      Long startTime = VirtualField.find(Callable.class, Long.class).get(task);
+      if (startTime != null) {
+        PendingTaskMetrics.recordTime(startTime);
+        System.out.println("CallableAdvice: Got time :)");
+      }
+
       return TaskAdviceHelper.makePropagatedContextCurrent(virtualField, task);
     }
 

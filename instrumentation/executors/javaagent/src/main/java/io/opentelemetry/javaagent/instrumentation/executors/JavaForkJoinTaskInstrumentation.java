@@ -106,6 +106,12 @@ public class JavaForkJoinTaskInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterFork(@Advice.This ForkJoinTask<?> task) {
+      Long startTime = VirtualField.find(ForkJoinTask.class, Long.class).get(task);
+      if (startTime != null) {
+        PendingTaskMetrics.recordTime(startTime);
+        System.out.println("ForkAdvice: Got time :)");
+      }
+
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         VirtualField<ForkJoinTask<?>, PropagatedContext> virtualField =
