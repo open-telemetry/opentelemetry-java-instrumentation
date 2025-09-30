@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.client;
 
+import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientSingletons.KNOWN_CONNECTION;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -12,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -77,10 +77,7 @@ public class RmiClientContextInstrumentation implements TypeInstrumentation {
       }
 
       // caching if a connection can support enhanced format
-      VirtualField<Connection, Boolean> knownConnections =
-          VirtualField.find(Connection.class, Boolean.class);
-
-      PROPAGATOR.attemptToPropagateContext(knownConnections, c, currentContext);
+      PROPAGATOR.attemptToPropagateContext(KNOWN_CONNECTION, c, currentContext);
     }
   }
 }

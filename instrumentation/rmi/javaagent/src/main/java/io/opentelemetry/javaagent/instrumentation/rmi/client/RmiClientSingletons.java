@@ -10,11 +10,16 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcClientAttri
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Method;
+import sun.rmi.transport.Connection;
 
 public final class RmiClientSingletons {
 
   private static final Instrumenter<Method, Void> INSTRUMENTER;
+
+  public static final VirtualField<Connection, Boolean> KNOWN_CONNECTION =
+      VirtualField.find(Connection.class, Boolean.class);
 
   static {
     RmiClientAttributesGetter rpcAttributesGetter = RmiClientAttributesGetter.INSTANCE;
