@@ -12,11 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
+public class OpenSearchRestInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
   public OpenSearchRestInstrumentationModule() {
     super("opensearch-rest", "opensearch-rest-1.0", "opensearch");
   }
@@ -32,5 +34,10 @@ public class OpenSearchRestInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return singletonList(new RestClientInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

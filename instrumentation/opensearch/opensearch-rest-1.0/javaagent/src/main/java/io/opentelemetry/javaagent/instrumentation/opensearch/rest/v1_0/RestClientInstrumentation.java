@@ -19,7 +19,10 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.OpenSearchRestRequest;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.RestResponseListener;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.opensearch.client.Request;
@@ -49,89 +52,96 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$PerformRequestAsyncAdvice");
   }
 
+  public static class AdviceScope {
+    private final OpenSearchRestRequest otelRequest;
+    private final Context parentContext;
+    private final Context context;
+    private final Scope scope;
+
+    private AdviceScope(
+        OpenSearchRestRequest otelRequest, Context parentContext, Context context, Scope scope) {
+      this.otelRequest = otelRequest;
+      this.parentContext = parentContext;
+      this.context = context;
+      this.scope = scope;
+    }
+
+    @Nullable
+    public static AdviceScope start(Request request) {
+      Context parentContext = currentContext();
+      OpenSearchRestRequest otelRequest =
+          OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
+      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
+        return null;
+      }
+      Context context = instrumenter().start(parentContext, otelRequest);
+      return new AdviceScope(otelRequest, parentContext, context, context.makeCurrent());
+    }
+
+    public ResponseListener wrapListener(ResponseListener responseListener) {
+      return new RestResponseListener(
+          responseListener,
+          parentContext,
+          instrumenter(),
+          context,
+          otelRequest,
+          OpenSearchRestSingletons::convertResponse);
+    }
+
+    public void endSync(@Nullable Response response, @Nullable Throwable throwable) {
+      scope.close();
+      instrumenter().end(context, otelRequest, convertResponse(response), throwable);
+    }
+
+    public void endAsync(@Nullable Throwable throwable) {
+      if (throwable != null) {
+        instrumenter().end(context, otelRequest, null, throwable);
+      }
+      // span ended in RestResponseListener
+    }
+  }
+
   @SuppressWarnings("unused")
   public static class PerformRequestAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Request request,
-        @Advice.Local("otelRequest") OpenSearchRestRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      Context parentContext = currentContext();
-      otelRequest = OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-        return;
-      }
-
-      context = instrumenter().start(parentContext, otelRequest);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(@Advice.Argument(0) Request request) {
+      return AdviceScope.start(request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return Response response,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") OpenSearchRestRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
+        @Advice.Return @Nullable Response response,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.endSync(response, throwable);
       }
-      scope.close();
-
-      instrumenter().end(context, otelRequest, convertResponse(response), throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class PerformRequestAsyncAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(value = 1, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
+    public static Object[] onEnter(
         @Advice.Argument(0) Request request,
-        @Advice.Argument(value = 1, readOnly = false) ResponseListener responseListener,
-        @Advice.Local("otelRequest") OpenSearchRestRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      Context parentContext = currentContext();
-      otelRequest = OpenSearchRestRequest.create(request.getMethod(), request.getEndpoint());
-      if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-        return;
+        @Advice.Argument(1) ResponseListener originalResponseListener) {
+      AdviceScope adviceScope = AdviceScope.start(request);
+      if (adviceScope == null) {
+        return new Object[] {null, originalResponseListener};
       }
-
-      context = instrumenter().start(parentContext, otelRequest);
-      scope = context.makeCurrent();
-
-      responseListener =
-          new RestResponseListener(
-              responseListener,
-              parentContext,
-              instrumenter(),
-              context,
-              otelRequest,
-              OpenSearchRestSingletons::convertResponse);
+      return new Object[] {adviceScope, adviceScope.wrapListener(originalResponseListener)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") OpenSearchRestRequest otelRequest,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
+      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+      if (adviceScope != null) {
+        adviceScope.endAsync(throwable);
       }
-      scope.close();
-
-      if (throwable != null) {
-        instrumenter().end(context, otelRequest, null, throwable);
-      }
-      // span ended in RestResponseListener
     }
   }
 }
