@@ -69,13 +69,10 @@ public class EarlyConfig {
   public static boolean isInstrumentationEnabled(
       Environment environment, String name, boolean defaultValue) {
     String property =
-        environment.getProperty(
-            String.format(
-                getPropertyName(
-                    environment,
-                    "otel.instrumentation.%s.enabled",
-                    "otel.instrumentation/development.java.%s.enabled")),
-            name);
+        getPropertyName(
+            environment,
+            String.format("otel.instrumentation.%s.enabled", name),
+            String.format("otel.instrumentation/development.java.%s.enabled", name));
     Boolean explicit = environment.getProperty(property, Boolean.class);
     if (explicit != null) {
       return explicit;
