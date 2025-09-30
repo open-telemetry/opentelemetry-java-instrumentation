@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi.context.client;
 
-import static io.opentelemetry.javaagent.instrumentation.rmi.client.RmiClientSingletons.KNOWN_CONNECTION;
 import static io.opentelemetry.javaagent.instrumentation.rmi.context.ContextPropagator.PROPAGATOR;
+import static io.opentelemetry.javaagent.instrumentation.rmi.context.client.VirtualFieldHelper.KNOWN_CONNECTION;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
