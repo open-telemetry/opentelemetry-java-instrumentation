@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import java.util.Collection;
+import javax.annotation.Nullable;
 
 public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtractor<REQUEST> {
 
@@ -42,7 +43,8 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
   private DbClientSpanNameExtractor() {}
 
-  protected String computeSpanName(String dbName, String operation, String mainIdentifier) {
+  protected String computeSpanName(
+      @Nullable String dbName, @Nullable String operation, @Nullable String mainIdentifier) {
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;
     }

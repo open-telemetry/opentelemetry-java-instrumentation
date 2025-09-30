@@ -11,23 +11,21 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledIf;
 
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
-class AgentDebugLoggingTest extends JavaSmokeTest {
-  @Override
-  protected String getTargetImage(String jdk) {
-    return "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-spring-boot:jdk"
-        + jdk
-        + "-20250915.17728045097";
-  }
+class AgentDebugLoggingTest extends AbstractSmokeTest<Integer> {
 
   @Override
-  protected TargetWaitStrategy getWaitStrategy() {
-    return new TargetWaitStrategy.Log(
-        Duration.ofMinutes(1), ".*DEBUG io.opentelemetry.javaagent.tooling.VersionLogger.*");
+  protected void configure(SmokeTestOptions<Integer> options) {
+    options
+        .springBoot("20250915.17728045097")
+        .waitStrategy(
+            new TargetWaitStrategy.Log(
+                Duration.ofMinutes(1),
+                ".*DEBUG io.opentelemetry.javaagent.tooling.VersionLogger.*"));
   }
 
   @DisplayName("verifies that debug logging is working by checking for a debug log on startup")
   @Test
   void verifyLogging() {
-    startTarget(8);
+    start(8);
   }
 }

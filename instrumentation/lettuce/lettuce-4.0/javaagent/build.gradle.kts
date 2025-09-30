@@ -19,9 +19,10 @@ dependencies {
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
+    // TODO run tests both with and without experimental span attributes and span events
     jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
