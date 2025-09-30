@@ -33,10 +33,12 @@ public final class LettuceTelemetry {
   private final Tracer tracer;
   private final RedisCommandSanitizer sanitizer;
   private final OperationListener metrics;
+  private final boolean encodingEventsEnabled;
 
   LettuceTelemetry(
       OpenTelemetry openTelemetry,
       boolean statementSanitizationEnabled,
+      boolean encodingEventsEnabled,
       OperationListener metrics) {
     this.metrics = metrics;
     TracerBuilder tracerBuilder = openTelemetry.tracerBuilder(INSTRUMENTATION_NAME);
@@ -46,6 +48,7 @@ public final class LettuceTelemetry {
     }
     tracer = tracerBuilder.build();
     sanitizer = RedisCommandSanitizer.create(statementSanitizationEnabled);
+    this.encodingEventsEnabled = encodingEventsEnabled;
   }
 
   /**
@@ -53,6 +56,6 @@ public final class LettuceTelemetry {
    * io.lettuce.core.resource.ClientResources.Builder#tracing(Tracing)}.
    */
   public Tracing newTracing() {
-    return new OpenTelemetryTracing(tracer, sanitizer, metrics);
+    return new OpenTelemetryTracing(tracer, sanitizer, metrics, encodingEventsEnabled);
   }
 }

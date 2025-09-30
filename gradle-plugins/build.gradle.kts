@@ -40,11 +40,11 @@ dependencies {
   implementation("org.eclipse.aether:aether-transport-http:${aetherVersion}")
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
-  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.2.1")
+  implementation("com.gradleup.shadow:shadow-gradle-plugin:9.2.2")
 
   testImplementation("org.assertj:assertj-core:3.27.6")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.0"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
