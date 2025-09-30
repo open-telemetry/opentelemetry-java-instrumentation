@@ -46,9 +46,9 @@ public class RemoteServerInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final ClassAndMethod classAndMethod;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final ClassAndMethod classAndMethod;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
           CallDepth callDepth,
