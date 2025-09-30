@@ -94,6 +94,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     }
 
     public void endWithListener(@Nullable Throwable throwable) {
+      scope.close();
       if (throwable != null) {
         instrumenter().end(context, otelRequest, null, throwable);
       }
