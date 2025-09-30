@@ -18,7 +18,7 @@ public final class UndertowSingletons {
 
   private static final Instrumenter<HttpServerExchange, HttpServerExchange> INSTRUMENTER;
 
-  public static final VirtualField<Runnable, PropagatedContext> RUNNABLE_PROPAGATED_CONTEXT =
+  public static final VirtualField<Runnable, PropagatedContext> PROPAGATED_CONTEXT =
       VirtualField.find(Runnable.class, PropagatedContext.class);
 
   static {

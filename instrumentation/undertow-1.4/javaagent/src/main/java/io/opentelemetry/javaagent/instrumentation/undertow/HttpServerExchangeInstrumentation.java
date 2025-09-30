@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.undertow;
 
-import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowSingletons.RUNNABLE_PROPAGATED_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.undertow.UndertowSingletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -41,7 +41,7 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
     public static PropagatedContext enterJobSubmit(@Advice.Argument(1) Runnable task) {
       Context context = Java8BytecodeBridge.currentContext();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        return ExecutorAdviceHelper.attachContextToTask(context, RUNNABLE_PROPAGATED_CONTEXT, task);
+        return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, task);
       }
       return null;
     }
@@ -52,7 +52,7 @@ public class HttpServerExchangeInstrumentation implements TypeInstrumentation {
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable) {
       ExecutorAdviceHelper.cleanUpAfterSubmit(
-          propagatedContext, throwable, RUNNABLE_PROPAGATED_CONTEXT, task);
+          propagatedContext, throwable, PROPAGATED_CONTEXT, task);
     }
   }
 }
