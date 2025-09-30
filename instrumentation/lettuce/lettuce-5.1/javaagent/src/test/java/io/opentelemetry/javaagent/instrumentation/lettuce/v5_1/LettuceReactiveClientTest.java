@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 import io.lettuce.core.RedisClient;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceClientTest;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceReactiveClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -66,9 +67,7 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -82,8 +81,6 @@ class LettuceReactiveClientTest extends AbstractLettuceReactiveClientTest {
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }

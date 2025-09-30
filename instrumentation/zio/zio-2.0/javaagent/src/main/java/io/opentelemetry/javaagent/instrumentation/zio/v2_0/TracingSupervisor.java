@@ -18,13 +18,11 @@ import zio.ZIO$;
 @SuppressWarnings("unchecked")
 public final class TracingSupervisor extends Supervisor<Object> {
 
-  @SuppressWarnings("rawtypes")
-  private final VirtualField<Fiber.Runtime, FiberContext> virtualField;
+  public static final TracingSupervisor INSTANCE = new TracingSupervisor();
+  private static final VirtualField<Fiber.Runtime<?, ?>, FiberContext> RUNTIME_FIBER_CONTEXT =
+      VirtualField.find(Fiber.Runtime.class, FiberContext.class);
 
-  @SuppressWarnings("rawtypes")
-  public TracingSupervisor(VirtualField<Fiber.Runtime, FiberContext> virtualField) {
-    this.virtualField = virtualField;
-  }
+  private TracingSupervisor() {}
 
   @Override
   @SuppressWarnings("rawtypes")
@@ -40,7 +38,7 @@ public final class TracingSupervisor extends Supervisor<Object> {
       Fiber.Runtime<E, A1> fiber,
       Unsafe unsafe) {
     FiberContext context = FiberContext.create();
-    virtualField.set(fiber, context);
+    RUNTIME_FIBER_CONTEXT.set(fiber, context);
   }
 
   @Override
@@ -48,7 +46,7 @@ public final class TracingSupervisor extends Supervisor<Object> {
 
   @Override
   public <E, A1> void onSuspend(Fiber.Runtime<E, A1> fiber, Unsafe unsafe) {
-    FiberContext context = virtualField.get(fiber);
+    FiberContext context = RUNTIME_FIBER_CONTEXT.get(fiber);
     if (context != null) {
       context.onSuspend();
     }
@@ -56,7 +54,7 @@ public final class TracingSupervisor extends Supervisor<Object> {
 
   @Override
   public <E, A1> void onResume(Fiber.Runtime<E, A1> fiber, Unsafe unsafe) {
-    FiberContext context = virtualField.get(fiber);
+    FiberContext context = RUNTIME_FIBER_CONTEXT.get(fiber);
     if (context != null) {
       context.onResume();
     }

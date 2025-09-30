@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.54.1"
-val otelContribVersion = "1.49.0-alpha"
+val otelContribVersion = "1.50.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -37,7 +37,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.41.0"
+val errorProneVersion = "2.42.0"
 val byteBuddyVersion = "1.17.7"
 val asmVersion = "9.8"
 val jmhVersion = "1.37"
@@ -80,7 +80,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.13.4",
+  "org.junit.jupiter:junit-jupiter-api:5.14.0",
   "org.spockframework:spock-core:2.4-M6-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
@@ -121,7 +121,7 @@ val DEPENDENCIES = listOf(
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.14"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
 )
 
 javaPlatform {
