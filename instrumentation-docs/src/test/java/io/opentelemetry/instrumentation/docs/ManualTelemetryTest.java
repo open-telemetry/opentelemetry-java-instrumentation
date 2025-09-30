@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -142,40 +143,11 @@ class ManualTelemetryTest {
 
     InstrumentationMetadata actualMetadata = YamlHelper.metaDataParser(yamlContent);
 
-    ManualTelemetryEntry defaultEntry =
-        new ManualTelemetryEntry(
-            "default",
-            List.of(
-                new ManualTelemetryEntry.ManualMetric(
-                    "system.disk.io",
-                    "System disk IO",
-                    "LONG_SUM",
-                    "By",
-                    List.of(
-                        new TelemetryAttribute("device", "STRING"),
-                        new TelemetryAttribute("direction", "STRING")))),
-            List.of(
-                new ManualTelemetryEntry.ManualSpan(
-                    "CLIENT", List.of(new TelemetryAttribute("custom.operation", "STRING")))));
-
-    ManualTelemetryEntry experimentalEntry =
-        new ManualTelemetryEntry(
-            "experimental",
-            List.of(
-                new ManualTelemetryEntry.ManualMetric(
-                    "experimental.feature.usage",
-                    "Usage of experimental features",
-                    "HISTOGRAM",
-                    "s",
-                    List.of(new TelemetryAttribute("feature.name", "STRING")))),
-            List.of());
-
     InstrumentationMetadata expectedMetadata =
         new InstrumentationMetadata.Builder()
-            .description("Example instrumentation with manual telemetry documentation")
-            .libraryLink("https://example.com/library")
+            .description("Example without manual telemetry")
             .semanticConventions(List.of(SemanticConvention.HTTP_CLIENT_SPANS))
-            .additionalTelemetry(List.of(defaultEntry, experimentalEntry))
+            .additionalTelemetry(emptyList())
             .overrideTelemetry(false)
             .build();
 

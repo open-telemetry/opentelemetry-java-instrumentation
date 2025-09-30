@@ -15,7 +15,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,6 +43,8 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class StoreInContextAdvice {
+
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Context onEnter(
         @Advice.This SpanKey applicationSpanKey,
@@ -70,19 +74,19 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
       return AgentContextStorage.toApplicationContext(newAgentContext);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Enter Context newApplicationContext,
-        @Advice.Return(readOnly = false) Context result) {
-
-      if (newApplicationContext != null) {
-        result = newApplicationContext;
-      }
+    public static Context onExit(
+        @Advice.Return Context originalResult,
+        @Advice.Enter @Nullable Context newApplicationContext) {
+      return newApplicationContext != null ? newApplicationContext : originalResult;
     }
   }
 
   @SuppressWarnings("unused")
   public static class FromContextOrNullAdvice {
+
+    @Nullable
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Span onEnter(
         @Advice.This SpanKey applicationSpanKey, @Advice.Argument(0) Context applicationContext) {
@@ -106,13 +110,11 @@ final class SpanKeyInstrumentation implements TypeInstrumentation {
       return Bridging.toApplication(agentSpan);
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Enter Span applicationSpan, @Advice.Return(readOnly = false) Span result) {
-
-      if (applicationSpan != null) {
-        result = applicationSpan;
-      }
+    public static Span onExit(
+        @Advice.Return Span originalResult, @Advice.Enter @Nullable Span applicationSpan) {
+      return applicationSpan != null ? applicationSpan : originalResult;
     }
   }
 }
