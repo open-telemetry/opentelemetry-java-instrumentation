@@ -53,10 +53,10 @@ public class EarlyConfig {
   public static String translatePropertyName(Environment environment, String name) {
     if (isDeclarativeConfig(environment)) {
       if (name.startsWith("otel.instrumentation.")) {
-        return String.format(
+        return toSnakeCase(
+            String.format(
                 "otel.instrumentation/development.java.%s",
-                name.substring("otel.instrumentation.".length()))
-            .replace('-', '_');
+                name.substring("otel.instrumentation.".length())));
       }
 
       throw new IllegalStateException(
@@ -66,13 +66,17 @@ public class EarlyConfig {
     }
   }
 
+  private static String toSnakeCase(String string) {
+    return string.replace('-', '_');
+  }
+
   public static boolean isInstrumentationEnabled(
       Environment environment, String name, boolean defaultValue) {
     String property =
         getPropertyName(
             environment,
             String.format("otel.instrumentation.%s.enabled", name),
-            String.format("otel.instrumentation/development.java.%s.enabled", name));
+            String.format("otel.instrumentation/development.java.%s.enabled", toSnakeCase(name)));
     Boolean explicit = environment.getProperty(property, Boolean.class);
     if (explicit != null) {
       return explicit;
