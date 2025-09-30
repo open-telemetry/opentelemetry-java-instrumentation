@@ -88,12 +88,12 @@ public class RestClientInstrumentation implements TypeInstrumentation {
           OpenSearchRestSingletons::convertResponse);
     }
 
-    public void endSync(@Nullable Response response, @Nullable Throwable throwable) {
+    public void endWithResponse(@Nullable Response response, @Nullable Throwable throwable) {
       scope.close();
       instrumenter().end(context, otelRequest, convertResponse(response), throwable);
     }
 
-    public void endAsync(@Nullable Throwable throwable) {
+    public void endWithListener(@Nullable Throwable throwable) {
       if (throwable != null) {
         instrumenter().end(context, otelRequest, null, throwable);
       }
@@ -115,7 +115,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.endSync(response, throwable);
+        adviceScope.endWithResponse(response, throwable);
       }
     }
   }
@@ -128,11 +128,13 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     public static Object[] onEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) ResponseListener originalResponseListener) {
+      ResponseListener responseListener = originalResponseListener;
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, originalResponseListener};
       }
-      return new Object[] {adviceScope, adviceScope.wrapListener(originalResponseListener)};
+      responseListener = adviceScope.wrapListener(responseListener);
+      return new Object[] {adviceScope, responseListener};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -140,7 +142,7 @@ public class RestClientInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {
-        adviceScope.endAsync(throwable);
+        adviceScope.endWithListener(throwable);
       }
     }
   }
