@@ -118,15 +118,12 @@ public abstract class AbstractLog4j2Test {
                             ? testing().spans().get(0).getSpanContext()
                             : SpanContext.getInvalid());
 
-                List<AttributeAssertion> attributeAsserts =
-                    new ArrayList<>(
-                        Arrays.asList(
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId())));
-
+                List<AttributeAssertion> attributeAsserts = new ArrayList<>();
                 attributeAsserts.addAll(
-                    codeFunctionAssertions(AbstractLog4j2Test.class, "performLogging"));
-                attributeAsserts.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
+                    addCodeLocationAttributes(
+                        "performLogging",
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId())));
 
                 if (logException) {
                   attributeAsserts.addAll(
@@ -161,11 +158,12 @@ public abstract class AbstractLog4j2Test {
     }
 
     List<AttributeAssertion> assertions =
-        codeFunctionAssertions(AbstractLog4j2Test.class, "testContextData");
-    assertions.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
-    assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("key2"), "val2"));
+        addCodeLocationAttributes(
+            "testContextData",
+            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(THREAD_ID, Thread.currentThread().getId()),
+            equalTo(AttributeKey.stringKey("key1"), "val1"),
+            equalTo(AttributeKey.stringKey("key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -186,11 +184,12 @@ public abstract class AbstractLog4j2Test {
     logger.info(message);
 
     List<AttributeAssertion> assertions =
-        codeFunctionAssertions(AbstractLog4j2Test.class, "testStringMapMessage");
-    assertions.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
-    assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
+        addCodeLocationAttributes(
+            "testStringMapMessage",
+            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(THREAD_ID, Thread.currentThread().getId()),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -211,10 +210,11 @@ public abstract class AbstractLog4j2Test {
     logger.info(message);
 
     List<AttributeAssertion> assertions =
-        codeFunctionAssertions(AbstractLog4j2Test.class, "testStringMapMessageWithSpecialAttribute");
-    assertions.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
-    assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
+        addCodeLocationAttributes(
+            "testStringMapMessageWithSpecialAttribute",
+            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(THREAD_ID, Thread.currentThread().getId()),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -235,11 +235,12 @@ public abstract class AbstractLog4j2Test {
     logger.info(message);
 
     List<AttributeAssertion> assertions =
-        codeFunctionAssertions(AbstractLog4j2Test.class, "testStructuredDataMapMessage");
-    assertions.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
-    assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"));
-    assertions.add(equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
+        addCodeLocationAttributes(
+            "testStructuredDataMapMessage",
+            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(THREAD_ID, Thread.currentThread().getId()),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key1"), "val1"),
+            equalTo(AttributeKey.stringKey("log4j.map_message.key2"), "val2"));
 
     testing()
         .waitAndAssertLogRecords(
@@ -260,10 +261,11 @@ public abstract class AbstractLog4j2Test {
     logger.info(marker, "Message");
 
     List<AttributeAssertion> assertions =
-        codeFunctionAssertions(AbstractLog4j2Test.class, "testMarker");
-    assertions.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
-    assertions.addAll(threadAttributesAssertions());
-    assertions.add(equalTo(stringKey("log4j.marker"), markerName));
+        addCodeLocationAttributes(
+            "testMarker",
+            equalTo(THREAD_NAME, Thread.currentThread().getName()),
+            equalTo(THREAD_ID, Thread.currentThread().getId()),
+            equalTo(stringKey("log4j.marker"), markerName));
 
     testing()
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
@@ -278,6 +280,21 @@ public abstract class AbstractLog4j2Test {
     } else {
       oneArgLoggerMethod.call(logger, "xyz: {}", 123);
     }
+  }
+
+  protected static List<AttributeAssertion> addCodeLocationAttributes(
+      String methodName, AttributeAssertion... assertions) {
+    String selector = System.getProperty("Log4j2.contextSelector");
+    boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
+    if (async && !Boolean.getBoolean("testLatestDeps")) {
+      // source info is not available by default when async logger is used in non latest dep tests
+      return Arrays.asList(assertions);
+    }
+
+    List<AttributeAssertion> result = new ArrayList<>(Arrays.asList(assertions));
+    result.addAll(codeFunctionAssertions(AbstractLog4j2Test.class, methodName));
+    result.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
+    return result;
   }
 
   @FunctionalInterface

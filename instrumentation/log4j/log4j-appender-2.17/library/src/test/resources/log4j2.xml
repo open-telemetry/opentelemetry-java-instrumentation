@@ -13,6 +13,10 @@
       <AppenderRef ref="OpenTelemetryAppender"/>
       <AppenderRef ref="Console"/>
     </Logger>
+    <Logger name="abc" level="info">
+      <AppenderRef ref="OpenTelemetryAppender"/>
+      <AppenderRef ref="Console"/>
+    </Logger>
     <Root level="All">
       <AppenderRef ref="Console"/>
     </Root>
