@@ -57,7 +57,8 @@ import org.testcontainers.utility.MountableFile;
 public abstract class KafkaConnectSinkTaskTestBase implements TelemetryRetrieverProvider {
 
   @RegisterExtension
-  protected static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing =
+      SmokeTestInstrumentationExtension.create();
 
   protected static final Logger logger = LoggerFactory.getLogger(KafkaConnectSinkTaskTestBase.class);
 
@@ -94,11 +95,17 @@ public abstract class KafkaConnectSinkTaskTestBase implements TelemetryRetriever
 
   // Abstract methods for database-specific setup
   protected abstract void setupDatabaseContainer();
+
   protected abstract void startDatabaseContainer();
+
   protected abstract void stopDatabaseContainer();
+
   protected abstract void clearDatabaseData();
+
   protected abstract String getConnectorInstallCommand();
+
   protected abstract String getConnectorName();
+
   protected abstract String getTopicName();
 
   // Static methods
