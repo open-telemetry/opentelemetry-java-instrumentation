@@ -63,9 +63,6 @@ public final class VertxRedisClientSingletons {
   public static <T> Future<T> wrapEndSpan(//todo: this method is not used?
       Future<T> future, Context context, VertxRedisClientRequest request) {
     // For 3.9, we just end the span immediately since the async handling is more complex
-//    System.out.println("[" + System.currentTimeMillis() + "] [VERTX-REDIS-CLIENT-SINGLETONS] Thread: " + Thread.currentThread().getName() +
-//                      " (ID: " + Thread.currentThread().getId() + ", State: " + Thread.currentThread().getState() + ")" +
-//                      " - Context in wrapEndSpan: " + context);
     instrumenter().end(context, request, null, null);
     return future;
   }

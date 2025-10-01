@@ -15,10 +15,10 @@ dependencies {
   implementation(project(":javaagent-tooling"))
   
   // === VERTX DEPENDENCIES ===
-  implementation("io.vertx:vertx-core:3.9.2")
-  implementation("io.vertx:vertx-codegen:3.9.2")
-  implementation("io.vertx:vertx-web:3.9.2")
-  implementation("io.vertx:vertx-redis-client:3.9.2")
+  implementation("io.vertx:vertx-core:3.9.0")
+  implementation("io.vertx:vertx-codegen:3.9.0")
+  implementation("io.vertx:vertx-web:3.9.0")
+  implementation("io.vertx:vertx-redis-client:3.9.0")
 }
 
 tasks.test {

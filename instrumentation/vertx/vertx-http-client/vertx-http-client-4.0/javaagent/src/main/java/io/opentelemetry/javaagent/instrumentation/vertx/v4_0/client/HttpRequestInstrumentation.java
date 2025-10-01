@@ -102,18 +102,11 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         Context parentContext = Context.current();
         if (parentContext == null || parentContext == Context.root()) {
           io.vertx.core.Context vertxContext = Vertx.currentContext();
-//          System.out.println("[VHCV4-1] Vertx Context: " + vertxContext);
           if (vertxContext != null && (vertxContext.get("otel.context")!=null&&vertxContext.get("otel.context")!=Context.root())) {
             Context storedOtelContext =
-//                null;
                 vertxContext.get("otel.context");
-//            System.out.println(
-//                "[VHCV4-2] Retrieved stored OTel context: " + storedOtelContext);
             parentContext = storedOtelContext;
           }
-        }
-        else {
-//          System.out.println("[VHCV4-3] Parent context is not null: " + parentContext);
         }
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;

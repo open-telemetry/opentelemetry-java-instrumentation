@@ -23,8 +23,6 @@ import io.vertx.core.Vertx;
  * <p>Used across all Vertx components (server and clients) to ensure proper context propagation.
  */
 public final class UniversalContextPreservingHandler<T> implements Handler<T> {
-  //  private static final Logger logger =
-  //      Logger.getLogger(UniversalContextPreservingHandler.class.getName());
 
   private final Handler<T> delegate;
   private final Context capturedContext;
@@ -39,29 +37,6 @@ public final class UniversalContextPreservingHandler<T> implements Handler<T> {
         ((currentOtelContext!=null&&currentOtelContext!=Context.root())||storedContext == null)
             ?currentOtelContext
             : storedContext;
-//                (storedContext != null) ? storedContext : Context.current();
-
-//    Span currentSpan = Span.fromContext(capturedContext);
-//    System.out.println(
-//        "UNIVERSAL-HANDLER-CREATED: Handler "
-//            + delegate.getClass().getSimpleName()
-//            + ", captured span: "
-//            + currentSpan.getSpanContext().getSpanId()
-//            + ", traceId: "
-//            + currentSpan.getSpanContext().getTraceId()
-//            + ", source: "
-//            + (storedContext != null ? "VERTX-STORED" : "CURRENT")
-//            + ", thread: "
-//            + Thread.currentThread().getName());
-
-    //    if (logger.isLoggable(Level.FINE)) {
-    //      logger.fine(
-    //          String.format(
-    //              "UNIVERSAL-WRAP: Handler %s, captured context span: %s, traceId: %s",
-    //              delegate.getClass().getSimpleName(),
-    //              currentSpan.getSpanContext().getSpanId(),
-    //              currentSpan.getSpanContext().getTraceId()));
-    //    }
   }
 
   private static Context getStoredVertxContext() {
@@ -69,48 +44,15 @@ public final class UniversalContextPreservingHandler<T> implements Handler<T> {
       io.vertx.core.Context vertxContext = Vertx.currentContext();
       if (vertxContext != null) {
         return vertxContext.get("otel.context");
-        // String currentKey = vertxContext.get("otel.current.context.key");
-        // if (currentKey != null) {
-        //     Context storedContext = vertxContext.get(currentKey);
-        //     if (storedContext != null) {
-        //         return storedContext;
-        //     }
-        // }
-//        System.out.println(
-//            "[CONTEXT-RETRIEVAL] Vertx context available but no stored OTel context found");
-      } else {
-//        System.out.println("[CONTEXT-RETRIEVAL] No Vertx context available");
       }
     } catch (RuntimeException e) {
-//      System.out.println(
-//          "[CONTEXT-RETRIEVAL-ERROR] Failed to get stored context: " + e.getMessage());
+//      commenting to trink compiler to not give a warning
     }
     return null;
   }
 
   @Override
   public void handle(T result) {
-//    Span currentSpan = Span.fromContext(capturedContext);
-//    System.out.println(
-//        "UNIVERSAL-HANDLER-EXECUTE: Handler "
-//            + delegate.getClass().getSimpleName()
-//            + ", restoring span: "
-//            + currentSpan.getSpanContext().getSpanId()
-//            + ", traceId: "
-//            + currentSpan.getSpanContext().getTraceId()
-//            + ", thread: "
-//            + Thread.currentThread().getName());
-
-    //    if (logger.isLoggable(Level.FINE)) {
-    //      logger.fine(
-    //          String.format(
-    //              "UNIVERSAL-EXECUTE: Handler %s, restoring context span: %s, traceId: %s, thread:
-    // %s",
-    //              delegate.getClass().getSimpleName(),
-    //              currentSpan.getSpanContext().getSpanId(),
-    //              currentSpan.getSpanContext().getTraceId(),
-    //              Thread.currentThread().getName()));
-    //    }
 
     try (Scope scope = capturedContext.makeCurrent()) {
       if (Vertx.currentContext() != null) {
@@ -133,18 +75,11 @@ public final class UniversalContextPreservingHandler<T> implements Handler<T> {
    */
   public static <T> Handler<T> wrap(Handler<T> handler) {
     if (handler == null) {
-//      System.out.println("UNIVERSAL-WRAP: Handler is null, returning null");
       return handler;
     }
     if (handler instanceof UniversalContextPreservingHandler) {
-//      System.out.println(
-//          "UNIVERSAL-WRAP: Handler "
-//              + handler.getClass().getSimpleName()
-//              + " already wrapped, returning original");
       return handler;
     }
-//    System.out.println(
-//        "UNIVERSAL-WRAP: Creating wrapper for handler " + handler.getClass().getSimpleName());
     return new UniversalContextPreservingHandler<>(handler);
   }
 }

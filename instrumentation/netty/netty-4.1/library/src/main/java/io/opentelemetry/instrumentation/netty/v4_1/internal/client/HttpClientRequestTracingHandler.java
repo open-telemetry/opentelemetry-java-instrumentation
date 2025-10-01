@@ -45,25 +45,15 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     Context parentContext = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get();
     if (parentContext == null||parentContext==Context.root()) {
       parentContext = Context.current();
-//      System.out.println("[HTTP-CLIENT-CONTEXT1] Using Context.current() as parent: " + parentContext);
     }
     if (parentContext == null||parentContext==Context.root()) {
       io.vertx.core.Context vertxContext = Vertx.currentContext();
-//      System.out.println("[HTTP-CLIENT-VERTX2] Vertx Context: " + vertxContext);
       if (vertxContext != null) {
         Context storedOtelContext =
-//            null;
             vertxContext.get("otel.context");
-//        System.out.println("[HTTP-CLIENT-VERTX3] Retrieved stored OTel context: " + storedOtelContext);
-
         if (storedOtelContext != null && storedOtelContext!=Context.root()) {
           parentContext = storedOtelContext;
-//          System.out.println("[HTTP-CLIENT-CONTEXT4] Using stored Vertx context as parent: " + parentContext);
-        } else {
-//          System.out.println("[HTTP-CLIENT-CONTEXT5] No OTel context stored in Vertx context");
         }
-      } else {
-//        System.out.println("[HTTP-CLIENT-CONTEXT6] No Vertx context available");
       }
     }
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());

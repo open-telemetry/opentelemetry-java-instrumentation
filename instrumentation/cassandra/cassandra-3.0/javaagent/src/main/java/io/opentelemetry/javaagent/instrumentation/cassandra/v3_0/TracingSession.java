@@ -50,14 +50,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     ResultSet resultSet;
@@ -74,14 +70,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(String query, Object... values) {
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     ResultSet resultSet;
@@ -98,14 +90,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSet execute(String query, Map<String, Object> values) {
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     ResultSet resultSet;
@@ -123,14 +111,10 @@ public class TracingSession implements Session {
   public ResultSet execute(Statement statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     ResultSet resultSet;
@@ -147,14 +131,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(String query) {
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
@@ -167,14 +147,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(String query, Object... values) {
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
@@ -187,14 +163,10 @@ public class TracingSession implements Session {
   @Override
   public ResultSetFuture executeAsync(String query, Map<String, Object> values) {
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {
@@ -208,14 +180,10 @@ public class TracingSession implements Session {
   public ResultSetFuture executeAsync(Statement statement) {
     String query = getQuery(statement);
     CassandraRequest request = CassandraRequest.create(session, query);
-//    System.out.println("hereherehehe");
-    Context parentContext=Context.current();
-//    System.out.println("hereherehehe-current context:"+parentContext);
+    Context parentContext=Context.current();;
     io.vertx.core.Context storedContext = Vertx.currentContext();
-//    System.out.println("hereherehehe-vertx context:"+storedContext);
     if((parentContext==null||parentContext==Context.root())&&storedContext!=null&&storedContext.get("otel.context")!=null&&storedContext.get("otel.context")!=Context.root()){
       parentContext=storedContext.get("otel.context");
-//      System.out.println("hereherehehe-set/stored context:"+parentContext);
     }
     Context context = instrumenter().start(parentContext, request);
     try (Scope ignored = context.makeCurrent()) {

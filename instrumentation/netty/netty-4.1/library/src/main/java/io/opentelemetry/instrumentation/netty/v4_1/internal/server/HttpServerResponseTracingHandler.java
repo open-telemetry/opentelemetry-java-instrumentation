@@ -25,7 +25,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import javax.annotation.Nullable;
 import io.vertx.core.Vertx;
-//import io.vertx.core.impl.EventLoopContext;
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
@@ -143,52 +142,18 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       @Nullable HttpResponse response,
       @Nullable Throwable error) {
 
-    // DEBUG: Log HTTP span end information
     io.opentelemetry.api.trace.Span currentSpan = io.opentelemetry.api.trace.Span.fromContext(context);
     String currentTraceId = currentSpan.getSpanContext().getTraceId();
-//    String currentSpanId = currentSpan.getSpanContext().getSpanId();
-//    String status = response != null ? response.status().toString() : "null";
-//    long timestamp = System.currentTimeMillis();
-//    Thread currentThread = Thread.currentThread();
-//    System.out.println("[" + timestamp + "] [HTTP-END] Thread: " + currentThread.getName() +
-//        " (ID: " + currentThread.getId() + ", State: " + currentThread.getState() + ")" +
-//        ", TraceId: " + currentTraceId +
-//        ", SpanId: " + currentSpanId +
-//        ", Status: " + status +
-//        ", Error: " + (error != null ? error.getMessage() : "none") +
-//        ", Context: " + context);
 
     error = NettyErrorHolder.getOrDefault(context, error);
     instrumenter.end(context, request, response, error);
 
     io.vertx.core.Context vertxContext = Vertx.currentContext();
 
-//    EventLoopContext eventLoopContext = (EventLoopContext)Vertx.currentContext();
     if (vertxContext != null) {
       // Store the current OpenTelemetry context in Vertx context for downstream operations
       vertxContext.remove("otel.context." + currentTraceId);
       vertxContext.remove("otel.context");
-//      System.out.println("["+Thread.currentThread().getName()+"][SUPERMANU] vertx context count: " + eventLoopContext.contextData().keySet().size()+ " \n keys:::"+eventLoopContext.contextData().keySet());
-      // Verify storage
-//      Context retrievedContext =
-//      null;
-//          vertxContext.get("otel.context");
-//      System.out.println("[CONTEXT-VERIFICATION] Retrieved context from Vertx: " + retrievedContext);
     }
-
-
-//    long timestamp2 = System.currentTimeMillis();
-//    Thread currentThread2 = Thread.currentThread();
-//    System.out.println("[" + timestamp2 + "] [HTTP-END] Thread: " + currentThread2.getName() +
-//        " (ID: " + currentThread2.getId() + ", State: " + currentThread2.getState() + ")" +
-//        " - HTTP Span ended for TraceId: " + currentTraceId);
-
-    // DEBUG: Print Context static method results at HTTP end
-//    System.out.println("[" + timestamp2 + "] [HTTP-END-CONTEXT-STATIC] Thread: " + currentThread2.getName() + " - Context.current(): " + Context.current());
-//    System.out.println("[" + timestamp2 + "] [HTTP-END-CONTEXT-STATIC] Thread: " + currentThread2.getName() + " - Context.root(): " + Context.root());
-//    System.out.println("[" + timestamp2 + "] [HTTP-END-CONTEXT-STATIC] Thread: " + currentThread2.getName() + " - context == Context.current(): " + (context == Context.current()));
-//    System.out.println("[" + timestamp2 + "] [HTTP-END-CONTEXT-STATIC] Thread: " + currentThread2.getName() + " - context.equals(Context.current()): " + context.equals(Context.current()));
-//    System.out.println("[" + timestamp2 + "] [HTTP-END-CONTEXT-STATIC] Thread: " + currentThread2.getName() + " - context == Context.root(): " + (context == Context.root()));
-//    System.out.println("[" + timestamp2 + "] [HTTP-END-CONTEXT-STATIC] Thread: " + currentThread2.getName() + " - context.equals(Context.root()): " + context.equals(Context.root()));
   }
 }

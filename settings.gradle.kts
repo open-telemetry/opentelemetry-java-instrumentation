@@ -630,7 +630,6 @@ include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-3.9:javaagent"
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-4.0:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-5.0:javaagent")
 include(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common:javaagent")
-include(":instrumentation:vertx:vertx-common:javaagent")
 include(":instrumentation:vertx:vertx-universal-context-persistence:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:javaagent")
 include(":instrumentation:vertx:vertx-web-3.0:testing")

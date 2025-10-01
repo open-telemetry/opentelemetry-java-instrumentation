@@ -52,24 +52,12 @@ public enum VertxRedisClientAttributesGetter
   @Override
   public String getDbQueryText(VertxRedisClientRequest request) {
     // Direct pass-through of byte arrays (efficient approach matching 4.0)
-    try{
-//      System.out.println("manooo: getDbQueryText: "+ request.getCommand() + " " + request.getArgs());
-//      System.out.println("manooo: getDbQueryText: "+ sanitizer.sanitize(request.getCommand(), request.getArgs()));
-    }catch(RuntimeException e){
-//      System.out.println("manooo: getDbQueryTextEx: "+ e);
-    }
     return sanitizer.sanitize(request.getCommand(), request.getArgs());
   }
 
   @Nullable
   @Override
   public String getDbOperationName(VertxRedisClientRequest request) {
-    try{
-//      System.out.println("manooo: operation: "+ request.getCommand() + " " + request.getArgs());
-//      System.out.println("manooo: operation: "+ sanitizer.sanitize(request.getCommand(), request.getArgs()));
-    }catch(RuntimeException e){
-//      System.out.println("manooo: operationEx: "+ e);
-    }
     return request.getCommand();
   }
 }

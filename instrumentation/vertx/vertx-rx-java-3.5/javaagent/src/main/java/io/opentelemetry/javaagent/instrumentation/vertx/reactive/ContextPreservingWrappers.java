@@ -6,6 +6,7 @@ import io.reactivex.Observer;
 import io.reactivex.SingleObserver;
 import io.reactivex.CompletableObserver;
 import io.reactivex.disposables.Disposable;
+import io.vertx.core.Vertx;
 
 public final class ContextPreservingWrappers {
 
@@ -38,6 +39,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onSubscribe(Disposable d) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onSubscribe(d);
       }
     }
@@ -45,6 +49,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onNext(T t) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onNext(t);
       }
     }
@@ -52,6 +59,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onError(Throwable e) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onError(e);
       }
     }
@@ -59,6 +69,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onComplete() {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onComplete();
       }
     }
@@ -76,6 +89,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onSubscribe(Disposable d) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onSubscribe(d);
       }
     }
@@ -83,6 +99,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onSuccess(T t) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onSuccess(t);
       }
     }
@@ -90,6 +109,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onError(Throwable e) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onError(e);
       }
     }
@@ -107,6 +129,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onSubscribe(Disposable d) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onSubscribe(d);
       }
     }
@@ -114,6 +139,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onComplete() {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onComplete();
       }
     }
@@ -121,6 +149,9 @@ public final class ContextPreservingWrappers {
     @Override
     public void onError(Throwable e) {
       try (Scope s = context.makeCurrent()) {
+        if(Vertx.currentContext()!=null){
+          Vertx.currentContext().put("otel.context", context);
+        }
         delegate.onError(e);
       }
     }

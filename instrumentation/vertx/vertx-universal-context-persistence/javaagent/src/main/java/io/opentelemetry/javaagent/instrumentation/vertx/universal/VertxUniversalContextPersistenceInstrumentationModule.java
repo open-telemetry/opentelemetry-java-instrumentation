@@ -42,8 +42,8 @@ public class VertxUniversalContextPersistenceInstrumentationModule extends Instr
 //              "io.vertx.core.http.impl", "Http1xServerConnection", "handleMessage", 1, -1, ClassType.CONCRETE, false),
           
           // HttpServerRequest.pause() - Inject custom header when request is paused
-          new InstrumentationTarget(
-              "io.vertx.core.http", "HttpServerRequest", "pause", 0, -1, ClassType.INTERFACE, false),
+//          new InstrumentationTarget(
+//              "io.vertx.core.http", "HttpServerRequest", "pause", 0, -1, ClassType.INTERFACE, false),
           
           // === VERTX CONTEXT EXECUTION (EVENT LOOP SWITCHING) ===
           // ContextImpl.runOnContext() - Handler wrapping for context switching
@@ -154,12 +154,10 @@ public class VertxUniversalContextPersistenceInstrumentationModule extends Instr
   public List<TypeInstrumentation> typeInstrumentations() {
     List<TypeInstrumentation> instrumentations = new ArrayList<>();
 
-    // Add the context storage instrumentation (like SQL did)
-    instrumentations.add(new VertxContextStorageInstrumentation());
+//    // Add the context storage instrumentation (like SQL did)
+//    instrumentations.add(new VertxContextStorageInstrumentation());
 
     // Add all the handler wrapping instrumentations
-//    System.out.println(
-//        "UNIVERSAL-MODULE: Adding " + TARGETS.size() + " universal handler instrumentations");
     instrumentations.addAll(
         TARGETS.stream().map(UniversalHandlerInstrumentation::new).collect(Collectors.toList()));
 

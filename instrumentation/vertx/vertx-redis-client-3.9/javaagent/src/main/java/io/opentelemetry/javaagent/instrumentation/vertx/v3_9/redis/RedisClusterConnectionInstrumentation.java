@@ -64,8 +64,6 @@ public class RedisClusterConnectionInstrumentation implements TypeInstrumentatio
 
       // Extract command arguments using RequestUtil39 (efficient approach matching 4.0)
       List<byte[]> args = RequestUtil39.getArgs(request);
-//      System.out.println("manooo: here first - extracted " + args.size() + " arguments");
-//      System.out.println("manooo: raw byte args: " + args);
 
 
       String connectionInfo = VertxRedisClientSingletons.getConnectionInfo(connection);
@@ -80,17 +78,11 @@ public class RedisClusterConnectionInstrumentation implements TypeInstrumentatio
       
       // Try to retrieve stored OpenTelemetry context from Vertx context
       Context storedOtelContext =
-//          null;
           vertxContext != null ? vertxContext.get("otel.context") : null;
-//      System.out.println("[VERTX-CONTEXT-RETRIEVAL] Vertx Context: " + vertxContext +
-//                        ", Current OTel Context: " + parentContext +
-//                        ", Stored OTel Context: " + storedOtelContext);
-      
+
       // Use stored context if current context is root and we have a stored one
       if ((parentContext == Context.root()||parentContext==null) && (storedOtelContext != null&&storedOtelContext!=Context.root())) {
-//      if(storedOtelContext!=null&&storedOtelContext!=Context.root()){
         parentContext = storedOtelContext;
-//        System.out.println("[CONTEXT-RESOLUTION] Using stored Vertx context as parent: " + parentContext);
       }
 
       // ========================================
@@ -102,24 +94,8 @@ public class RedisClusterConnectionInstrumentation implements TypeInstrumentatio
       long timestamp = System.currentTimeMillis();
       Thread currentThread = Thread.currentThread();
       
-//      System.out.println("[" + timestamp + "] [REDIS-SPAN-START] Thread: " + currentThread.getName() +
-//                        " (ID: " + currentThread.getId() + ", State: " + currentThread.getState() + ")" +
-//                        ", Command: " + commandName +
-//                        ", Parent TraceId: " + parentTraceId +
-//                        ", Parent SpanId: " + parentSpanId);
-      
-      // ========================================
-      // CONTEXT STATE ANALYSIS
-      // ========================================
-//      System.out.println("[CONTEXT-ANALYSIS] Thread: " + currentThread.getName() + " - Context.current(): " + Context.current());
-//      System.out.println("[CONTEXT-ANALYSIS] Thread: " + currentThread.getName() + " - Context.root(): " + Context.root());
-//      System.out.println("[CONTEXT-ANALYSIS] Thread: " + currentThread.getName() + " - parentContext == Context.current(): " + (parentContext == Context.current()));
-//      System.out.println("[CONTEXT-ANALYSIS] Thread: " + currentThread.getName() + " - parentContext.equals(Context.current()): " + parentContext.equals(Context.current()));
-//      System.out.println("[CONTEXT-ANALYSIS] Thread: " + currentThread.getName() + " - parentContext == Context.root(): " + (parentContext == Context.root()));
-//      System.out.println("[CONTEXT-ANALYSIS] Thread: " + currentThread.getName() + " - parentContext.equals(Context.root()): " + parentContext.equals(Context.root()));
-      
+
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
-//        System.out.println("[REDIS-INSTRUMENTATION] Instrumenter shouldStart returned false - skipping Redis command: " + commandName);
         return null;
       }
 
@@ -133,12 +109,7 @@ public class RedisClusterConnectionInstrumentation implements TypeInstrumentatio
       String newSpanId = newSpan.getSpanContext().getSpanId();
       long timestamp2 = System.currentTimeMillis();
       Thread currentThread2 = Thread.currentThread();
-      
-//      System.out.println("[" + timestamp2 + "] [REDIS-SPAN-CREATED] Thread: " + currentThread2.getName() +
-//                        " (ID: " + currentThread2.getId() + ", State: " + currentThread2.getState() + ")" +
-//                        " - New Redis Span - TraceId: " + newTraceId +
-//                        ", SpanId: " + newSpanId +
-//                        ", Context: " + context);
+
       
       // Replace the handler with our context-preserving wrapper
       if (handler != null) {

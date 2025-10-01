@@ -99,19 +99,6 @@ public final class VertxRedisClientUtil {
     @Override
     public void handle(AsyncResult<Response> result) {
       // DEBUG: Log context information at Redis end
-//      io.opentelemetry.api.trace.Span currentSpan = io.opentelemetry.api.trace.Span.fromContext(context);
-//      io.opentelemetry.api.trace.Span parentSpan = io.opentelemetry.api.trace.Span.fromContext(parentContext);
-//      long timestamp = System.currentTimeMillis();
-//      Thread currentThread = Thread.currentThread();
-//      System.out.println("[" + timestamp + "] [REDIS-END] Thread: " + currentThread.getName() +
-//                        " (ID: " + currentThread.getId() + ", State: " + currentThread.getState() + ")" +
-//                        ", Command: " + request.getCommand() +
-//                        ", Current TraceId: " + currentSpan.getSpanContext().getTraceId() +
-//                        ", Current SpanId: " + currentSpan.getSpanContext().getSpanId() +
-//                        ", Parent TraceId: " + (parentSpan.getSpanContext().isValid() ? parentSpan.getSpanContext().getTraceId() : "INVALID") +
-//                        ", Parent SpanId: " + (parentSpan.getSpanContext().isValid() ? parentSpan.getSpanContext().getSpanId() : "INVALID") +
-//                        ", Success: " + result.succeeded());
-      
       // End the span first
       Instrumenter<VertxRedisClientRequest, Void> instrumenter = VertxRedisClientSingletons.instrumenter();
       
@@ -121,28 +108,8 @@ public final class VertxRedisClientUtil {
       }
       
       instrumenter.end(context, request, null, throwable);
-//      long timestamp2 = System.currentTimeMillis();
-//      Thread currentThread2 = Thread.currentThread();
-//      System.out.println("[" + timestamp2 + "] [REDIS-END] Thread: " + currentThread2.getName() +
-//                        " (ID: " + currentThread2.getId() + ", State: " + currentThread2.getState() + ")" +
-//                        " - Span ended for TraceId: " + currentSpan.getSpanContext().getTraceId());
-
       // Then call the original handler with the parent context
       try (Scope scope = parentContext.makeCurrent()) {
-//        long timestamp3 = System.currentTimeMillis();
-//        Thread currentThread3 = Thread.currentThread();
-//      System.out.println("[" + timestamp3 + "] [REDIS-END] Thread: " + currentThread3.getName() +
-//                        " (ID: " + currentThread3.getId() + ", State: " + currentThread3.getState() + ")" +
-//                        " - Calling original handler with parent context: " + parentContext);
-      
-      // DEBUG: Print Context static method results at Redis end
-//      System.out.println("[" + timestamp3 + "] [REDIS-END-CONTEXT-STATIC] Thread: " + currentThread3.getName() + " - Context.current(): " + Context.current());
-//      System.out.println("[" + timestamp3 + "] [REDIS-END-CONTEXT-STATIC] Thread: " + currentThread3.getName() + " - Context.root(): " + Context.root());
-//      System.out.println("[" + timestamp3 + "] [REDIS-END-CONTEXT-STATIC] Thread: " + currentThread3.getName() + " - parentContext == Context.current(): " + (parentContext == Context.current()));
-//      System.out.println("[" + timestamp3 + "] [REDIS-END-CONTEXT-STATIC] Thread: " + currentThread3.getName() + " - parentContext.equals(Context.current()): " + parentContext.equals(Context.current()));
-//      System.out.println("[" + timestamp3 + "] [REDIS-END-CONTEXT-STATIC] Thread: " + currentThread3.getName() + " - parentContext == Context.root(): " + (parentContext == Context.root()));
-//      System.out.println("[" + timestamp3 + "] [REDIS-END-CONTEXT-STATIC] Thread: " + currentThread3.getName() + " - parentContext.equals(Context.root()): " + parentContext.equals(Context.root()));
-      
       delegate.handle(result);
       }
     }
