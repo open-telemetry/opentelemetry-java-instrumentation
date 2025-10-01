@@ -41,14 +41,9 @@ final class ConsumeServiceInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static MessageListener onEnter(
-        @Advice.Argument(1) MessageListener originalMessageListener) {
-      MessageListener messageListener = originalMessageListener;
+    public static MessageListener onEnter(@Advice.Argument(1) MessageListener messageListener) {
       // Replace messageListener by wrapper.
-      if (!(messageListener instanceof MessageListenerWrapper)) {
-        messageListener = new MessageListenerWrapper(messageListener);
-      }
-      return messageListener;
+      return MessageListenerWrapper.wrapIfNeeded(messageListener);
     }
   }
 }
