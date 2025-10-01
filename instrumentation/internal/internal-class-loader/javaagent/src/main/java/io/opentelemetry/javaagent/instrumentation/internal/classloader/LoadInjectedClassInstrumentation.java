@@ -17,8 +17,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
+import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassLoader;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.invoke.MethodHandles;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.method.MethodDescription;
@@ -59,8 +61,12 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(
-        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
-      return InjectedClassHelper.loadHelperClass(classLoader, name);
+        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) throws Throwable {
+      HelperClassLoader helperClassLoader =
+          InjectedClassHelper.getHelperClassLoader(classLoader, name);
+      return helperClassLoader != null
+          ? helperClassLoader.loadHelperClass(MethodHandles.lookup())
+          : null;
     }
 
     @AssignReturned.ToReturned

@@ -131,6 +131,16 @@ public class AgentInstaller {
     // https://bugs.openjdk.org/browse/JDK-8164165
     ThreadLocalRandom.current();
 
+    // AgentBuilder.Default constructor triggers sun.misc.Unsafe::objectFieldOffset called warning
+    // AgentBuilder$Default.<init>
+    // -> NexusAccessor.<clinit>
+    // -> ClassInjector$UsingReflection.<clinit>
+    // -> ClassInjector$UsingUnsafe.<clinit>
+    // -> WARNING: sun.misc.Unsafe::objectFieldOffset called by
+    // net.bytebuddy.dynamic.loading.ClassInjector$UsingUnsafe$Dispatcher$CreationAction
+    // we don't use byte-buddy nexus so we disable it and later restore the original value for the
+    // system property
+    String originalNexusDisabled = System.setProperty("net.bytebuddy.nexus.disabled", "true");
     AgentBuilder agentBuilder =
         new AgentBuilder.Default(
                 // default method graph compiler inspects the class hierarchy, we don't need it, so
@@ -147,6 +157,13 @@ public class AgentInstaller {
             .with(AgentTooling.poolStrategy())
             .with(AgentTooling.transformListener())
             .with(AgentTooling.locationStrategy());
+    // restore the original value for the nexus disabled property
+    if (originalNexusDisabled != null) {
+      System.setProperty("net.bytebuddy.nexus.disabled", originalNexusDisabled);
+    } else {
+      System.clearProperty("net.bytebuddy.nexus.disabled");
+    }
+
     if (JavaModule.isSupported()) {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }

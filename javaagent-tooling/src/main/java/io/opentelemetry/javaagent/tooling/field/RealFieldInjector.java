@@ -10,7 +10,7 @@ import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldName
 import static io.opentelemetry.javaagent.tooling.field.GeneratedVirtualFieldNames.getRealSetterName;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.Utils;
 import java.util.Arrays;

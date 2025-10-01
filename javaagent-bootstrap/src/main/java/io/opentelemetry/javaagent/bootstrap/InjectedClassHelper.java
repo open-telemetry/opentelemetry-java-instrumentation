@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
+import java.lang.invoke.MethodHandles;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -37,10 +38,10 @@ public final class InjectedClassHelper {
     return helperClassDetector.test(classLoader, className);
   }
 
-  private static volatile BiFunction<ClassLoader, String, Class<?>> helperClassLoader;
+  private static volatile BiFunction<ClassLoader, String, HelperClassLoader> helperClassLoader;
 
   public static void internalSetHelperClassLoader(
-      BiFunction<ClassLoader, String, Class<?>> helperClassLoader) {
+      BiFunction<ClassLoader, String, HelperClassLoader> helperClassLoader) {
     if (InjectedClassHelper.helperClassLoader != null) {
       // Only possible by misuse of this API, just ignore.
       return;
@@ -48,10 +49,14 @@ public final class InjectedClassHelper {
     InjectedClassHelper.helperClassLoader = helperClassLoader;
   }
 
-  public static Class<?> loadHelperClass(ClassLoader classLoader, String className) {
+  public static HelperClassLoader getHelperClassLoader(ClassLoader classLoader, String className) {
     if (helperClassLoader == null) {
       return null;
     }
     return helperClassLoader.apply(classLoader, className);
+  }
+
+  public interface HelperClassLoader {
+    Class<?> loadHelperClass(MethodHandles.Lookup lookup) throws Throwable;
   }
 }
