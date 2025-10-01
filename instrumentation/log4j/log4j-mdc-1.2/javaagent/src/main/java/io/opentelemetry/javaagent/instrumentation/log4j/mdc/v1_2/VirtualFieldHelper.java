@@ -9,7 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.apache.log4j.spi.LoggingEvent;
 
-public class VirtualFieldHelper {
+public final class VirtualFieldHelper {
 
   public static final VirtualField<LoggingEvent, Context> CONTEXT =
       VirtualField.find(LoggingEvent.class, Context.class);
