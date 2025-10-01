@@ -129,13 +129,11 @@ public class RestClientInstrumentation implements TypeInstrumentation {
     public static Object[] onEnter(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) ResponseListener originalResponseListener) {
-      ResponseListener responseListener = originalResponseListener;
       AdviceScope adviceScope = AdviceScope.start(request);
       if (adviceScope == null) {
         return new Object[] {null, originalResponseListener};
       }
-      responseListener = adviceScope.wrapListener(responseListener);
-      return new Object[] {adviceScope, responseListener};
+      return new Object[] {adviceScope, adviceScope.wrapListener(originalResponseListener)};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
