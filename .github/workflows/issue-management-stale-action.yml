@@ -17,11 +17,14 @@ jobs:
       pull-requests: write  # for actions/stale to close stale PRs
     runs-on: ubuntu-latest
     steps:
+      # Action #1: Handle issues/PRs awaiting author feedback
+      # - After 7 days inactive: Adds "stale" label + warning comment
+      # - After 7 more days inactive: Closes
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
+          only-labels: "needs author feedback"
           days-before-stale: 7
           days-before-close: 7
-          only-labels: "needs author feedback"
           stale-issue-label: stale
           stale-issue-message: >
             This issue has been labeled as stale due to lack of activity and needing author feedback.
@@ -31,21 +34,27 @@ jobs:
             This PR has been labeled as stale due to lack of activity and needing author feedback.
             It will be automatically closed if there is no further activity over the next 7 days.
 
+      # Action #2: Close old enhancement requests
+      # - Targets: Issues with "enhancement" label (but NOT "needs author feedback")
+      # - After 365 days inactive: Adds "stale" label + closes immediately (no warning period)
+      # - Skips: Issues with "needs author feedback" to avoid conflicts with Action #1
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
+          only-labels: "enhancement"
+          # Skip issues that need author feedback (handled by the first action with 7+7 day policy)
+          exempt-issue-labels: "needs author feedback"
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
           days-before-stale: 365
           days-before-close: 0
           close-issue-label: stale
           close-issue-message: >
             Since there has been no activity on this enhancement for the past year we are closing it to help maintain our backlog.
             Anyone who would like to work on it is still welcome to do so, and we can re-open it at that time.
-          days-before-pr-stale: -1
-          days-before-pr-close: -1
-          only-labels: "enhancement"
-          # "stale" exemption: so that it won't close issues labeled as stale by "needs author feedback"
-          # "needs author feedback" exemption: so that it won't remove the stale label added by the first action
-          exempt-issue-labels: "stale,needs author feedback"
 
+      # Action #3: Handle stale PRs
+      # - After 180 days inactive: Adds "stale" label + warning comment
+      # - After 14 more days inactive: Closes
       - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
         with:
           days-before-issue-stale: -1
