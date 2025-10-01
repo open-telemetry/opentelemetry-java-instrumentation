@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.test
 
-
+import groovy.transform.CompileStatic
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
@@ -16,6 +16,7 @@ import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
 import spock.lang.Specification
 
+import java.lang.invoke.MethodHandles
 import java.lang.ref.WeakReference
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
@@ -25,6 +26,17 @@ import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 class HelperInjectionTest extends Specification {
 
+  @CompileStatic
+  class EmptyLoader extends URLClassLoader {
+    EmptyLoader() {
+      super(new URL[0], (ClassLoader) null)
+    }
+
+    def lookup() {
+      MethodHandles.lookup()
+    }
+  }
+
   def "helpers injected to non-delegating classloader"() {
     setup:
     URL[] helpersSourceUrls = new URL[1]
@@ -33,7 +45,7 @@ class HelperInjectionTest extends Specification {
 
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
     HelperInjector injector = new HelperInjector("test", [helperClassName], [], helpersSourceLoader, null)
-    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
+    AtomicReference<EmptyLoader> emptyLoader = new AtomicReference<>(new EmptyLoader())
 
     when:
     emptyLoader.get().loadClass(helperClassName)
@@ -42,7 +54,7 @@ class HelperInjectionTest extends Specification {
 
     when:
     injector.transform(null, null, emptyLoader.get(), null, null)
-    HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName)
+    HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName).loadHelperClass(emptyLoader.get().lookup())
     emptyLoader.get().loadClass(helperClassName)
     then:
     isClassLoaded(helperClassName, emptyLoader.get())
