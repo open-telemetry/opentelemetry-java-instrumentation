@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -25,7 +25,7 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 
-class OpenSearchJavaApacheHttpClient5TransportTest extends AbstractOpenSearchJavaTest {
+class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchJavaTest {
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();

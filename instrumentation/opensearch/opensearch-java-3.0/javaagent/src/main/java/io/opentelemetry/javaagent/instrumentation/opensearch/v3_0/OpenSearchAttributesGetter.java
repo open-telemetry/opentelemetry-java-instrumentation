@@ -3,50 +3,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
-final class OpenSearchJavaAttributesGetter
-    implements DbClientAttributesGetter<OpenSearchJavaRequest, Void> {
+final class OpenSearchAttributesGetter
+    implements DbClientAttributesGetter<OpenSearchRequest, Void> {
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(OpenSearchJavaRequest request) {
+  public String getDbSystem(OpenSearchRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
   }
 
-  @Deprecated
   @Override
   @Nullable
-  public String getUser(OpenSearchJavaRequest request) {
+  public String getDbNamespace(OpenSearchRequest request) {
     return null;
   }
 
   @Override
   @Nullable
-  public String getDbNamespace(OpenSearchJavaRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(OpenSearchJavaRequest request) {
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public String getDbQueryText(OpenSearchJavaRequest request) {
+  public String getDbQueryText(OpenSearchRequest request) {
     return request.getMethod() + " " + request.getOperation();
   }
 
   @Override
   @Nullable
-  public String getDbOperationName(OpenSearchJavaRequest request) {
+  public String getDbOperationName(OpenSearchRequest request) {
     return request.getMethod();
   }
 

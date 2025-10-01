@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
@@ -12,12 +12,12 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNam
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 
-public final class OpenSearchJavaInstrumenterFactory {
+public final class OpenSearchInstrumenterFactory {
 
-  public static Instrumenter<OpenSearchJavaRequest, Void> create(String instrumentationName) {
-    OpenSearchJavaAttributesGetter dbClientAttributesGetter = new OpenSearchJavaAttributesGetter();
+  public static Instrumenter<OpenSearchRequest, Void> create(String instrumentationName) {
+    OpenSearchAttributesGetter dbClientAttributesGetter = new OpenSearchAttributesGetter();
 
-    return Instrumenter.<OpenSearchJavaRequest, Void>builder(
+    return Instrumenter.<OpenSearchRequest, Void>builder(
             GlobalOpenTelemetry.get(),
             instrumentationName,
             DbClientSpanNameExtractor.create(dbClientAttributesGetter))
@@ -26,5 +26,5 @@ public final class OpenSearchJavaInstrumenterFactory {
         .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
-  private OpenSearchJavaInstrumenterFactory() {}
+  private OpenSearchInstrumenterFactory() {}
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -30,7 +30,7 @@ import org.opensearch.client.transport.rest_client.RestClientTransport;
 @SuppressWarnings(
     "deprecation") // RestClientTransport is deprecated but still the correct way for OpenSearch
 // Java 3.0
-class OpenSearchJavaRestClientTransportTest extends AbstractOpenSearchJavaTest {
+class OpenSearchRestClientTransportTest extends AbstractOpenSearchJavaTest {
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();

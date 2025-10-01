@@ -3,16 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.context.Context;
 import java.util.function.BiConsumer;
 
-public final class OpenSearchJavaResponseHandler implements BiConsumer<Object, Throwable> {
+public final class OpenSearchResponseHandler implements BiConsumer<Object, Throwable> {
   private final Context context;
-  private final OpenSearchJavaRequest otelRequest;
+  private final OpenSearchRequest otelRequest;
 
-  public OpenSearchJavaResponseHandler(Context context, OpenSearchJavaRequest otelRequest) {
+  public OpenSearchResponseHandler(Context context, OpenSearchRequest otelRequest) {
     this.context = context;
     this.otelRequest = otelRequest;
   }
@@ -20,6 +20,6 @@ public final class OpenSearchJavaResponseHandler implements BiConsumer<Object, T
   @Override
   public void accept(Object response, Throwable error) {
     // OpenSearch responses don't provide response information, so the span is closed with null.
-    OpenSearchJavaSingletons.instrumenter().end(context, otelRequest, null, error);
+    OpenSearchSingletons.instrumenter().end(context, otelRequest, null, error);
   }
 }

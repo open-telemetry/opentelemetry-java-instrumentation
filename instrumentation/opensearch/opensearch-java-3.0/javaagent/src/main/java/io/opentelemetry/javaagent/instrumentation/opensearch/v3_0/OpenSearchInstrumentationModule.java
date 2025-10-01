@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.opensearch.java.v3_0;
+package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static java.util.Collections.singletonList;
 
@@ -13,8 +13,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OpenSearchJavaInstrumentationModule extends InstrumentationModule {
-  public OpenSearchJavaInstrumentationModule() {
+public class OpenSearchInstrumentationModule extends InstrumentationModule {
+  public OpenSearchInstrumentationModule() {
     super("opensearch-java", "opensearch-java-3.0", "opensearch");
   }
 
