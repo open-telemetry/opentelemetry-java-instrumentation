@@ -212,42 +212,54 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
             () -> {
               // Wait for at least 1 trace (could be 1 batch trace or multiple individual traces)
               List<List<SpanData>> traces = testing.waitForTraces(1);
-              
-              // Count total Kafka Connect consumer spans and database update spans across all traces
-              long totalKafkaConnectSpans = traces.stream()
-                  .flatMap(trace -> trace.stream())
-                  .filter(span -> 
-                      (span.getName().contains(topicName1) || 
-                       span.getName().contains(topicName2) || 
-                       span.getName().contains(topicName3))
-                      && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
-                  .count();
-              
-              long totalUpdateSpans = traces.stream()
-                  .flatMap(trace -> trace.stream())
-                  .filter(span -> 
-                      span.getName().contains("update")
-                      && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
-                  .count();
-              
+
+              // Count total Kafka Connect consumer spans and database update spans across all
+              // traces
+              long totalKafkaConnectSpans =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .filter(
+                          span ->
+                              (span.getName().contains(topicName1)
+                                      || span.getName().contains(topicName2)
+                                      || span.getName().contains(topicName3))
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                      .count();
+
+              long totalUpdateSpans =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .filter(
+                          span ->
+                              span.getName().contains("update")
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+                      .count();
+
               assertThat(totalKafkaConnectSpans).isGreaterThanOrEqualTo(1);
               assertThat(totalUpdateSpans).isGreaterThanOrEqualTo(3);
-            
-              boolean hasMultiTopicSpan = traces.stream()
-                  .flatMap(trace -> trace.stream())
-                  .anyMatch(span -> 
-                      span.getName().contains("[") && span.getName().contains("]") && 
-                      span.getName().contains("process") &&
-                      span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
-              
-              boolean hasIndividualSpans = traces.stream()
-                  .flatMap(trace -> trace.stream())
-                  .anyMatch(span -> 
-                      (span.getName().contains(topicName1) || 
-                       span.getName().contains(topicName2) || 
-                       span.getName().contains(topicName3)) &&
-                      !span.getName().contains("[") &&
-                      span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+
+              boolean hasMultiTopicSpan =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .anyMatch(
+                          span ->
+                              span.getName().contains("[")
+                                  && span.getName().contains("]")
+                                  && span.getName().contains("process")
+                                  && span.getKind()
+                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+
+              boolean hasIndividualSpans =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .anyMatch(
+                          span ->
+                              (span.getName().contains(topicName1)
+                                      || span.getName().contains(topicName2)
+                                      || span.getName().contains(topicName3))
+                                  && !span.getName().contains("[")
+                                  && span.getKind()
+                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
 
               assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
             });

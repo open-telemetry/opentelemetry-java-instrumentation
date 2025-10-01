@@ -272,7 +272,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
                               span.getName().contains("[")
                                   && span.getName().contains("]")
                                   && span.getName().contains("process")
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+                                  && span.getKind()
+                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
 
               boolean hasIndividualSpans =
                   traces.stream()
@@ -283,7 +284,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
                                       || span.getName().contains(topicName2)
                                       || span.getName().contains(topicName3))
                                   && !span.getName().contains("[")
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+                                  && span.getKind()
+                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
 
               assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
             });
