@@ -12,10 +12,6 @@ import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 
-/**
- * Extracts trace context from Kafka Connect SinkRecord headers for distributed tracing. This
- * enables proper trace propagation from the original producer through Kafka Connect processing.
- */
 enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
   INSTANCE;
 
@@ -42,7 +38,6 @@ enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
       return null;
     }
 
-    // Convert header value to string
     Object value = header.value();
     if (value instanceof byte[]) {
       return new String((byte[]) value, StandardCharsets.UTF_8);

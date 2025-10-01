@@ -59,7 +59,7 @@ public abstract class KafkaConnectSinkTaskTestBase implements TelemetryRetriever
   @RegisterExtension
   protected static final InstrumentationExtension testing = SmokeTestInstrumentationExtension.create();
 
-  private static final Logger logger = LoggerFactory.getLogger(KafkaConnectSinkTaskTestBase.class);
+  protected static final Logger logger = LoggerFactory.getLogger(KafkaConnectSinkTaskTestBase.class);
 
   // Using the same fake backend pattern as smoke tests (with ARM64 support)
   protected static GenericContainer<?> backend;

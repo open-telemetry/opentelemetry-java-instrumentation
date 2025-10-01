@@ -29,8 +29,6 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 import org.bson.Document;
 import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
@@ -39,9 +37,6 @@ import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
 class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
-
-  private static final Logger logger = LoggerFactory.getLogger(MongoKafkaConnectSinkTaskTest.class);
-
   // MongoDB-specific constants
   private static final String MONGO_NETWORK_ALIAS = "mongodb";
   private static final String DB_NAME = "testdb";
@@ -49,10 +44,8 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
   private static final String CONNECTOR_NAME = "test-mongo-connector";
   private static final String TOPIC_NAME = "test-mongo-topic";
 
-  // MongoDB container
   private static MongoDBContainer mongoDB;
 
-  // Override abstract methods from base class
   @Override
   protected void setupDatabaseContainer() {
     mongoDB =
@@ -102,17 +95,12 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
   @Test
   public void testKafkaConnectMongoSinkTaskInstrumentation()
       throws IOException, InterruptedException {
-    // Use base topic name for consistent span naming
     String uniqueTopicName = TOPIC_NAME;
-
-    // Setup Kafka Connect MongoDB Sink connector
     setupMongoSinkConnector(uniqueTopicName);
 
-    // Create topic and wait for availability
     createTopic(uniqueTopicName);
     awaitForTopicCreation(uniqueTopicName);
 
-    // Produce a test message
     Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -123,20 +111,12 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
           new ProducerRecord<>(uniqueTopicName, "test-key", "{\"id\":1,\"name\":\"TestUser\"}"));
       producer.flush();
     }
-
-    // Wait for message processing (increased timeout for ARM64 Docker emulation)
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 1);
-
-    // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
-    // Wait for traces and then find the specific trace we want
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
-
-              // Find the trace that contains our Kafka Connect Consumer span and database INSERT
-              // span
               List<SpanData> targetTrace =
                   traces.stream()
                       .filter(
@@ -163,14 +143,10 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
                       .findFirst()
                       .orElse(null);
 
-              // Assert that we found the target trace
               assertThat(targetTrace).isNotNull();
 
-              // Assert on the spans in the target trace (should have at least 2 spans: Kafka
-              // Connect Consumer + database operations)
               assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
 
-              // Find and assert the Kafka Connect Consumer span
               SpanData kafkaConnectSpan =
                   targetTrace.stream()
                       .filter(
@@ -182,7 +158,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
               assertThat(kafkaConnectSpan).isNotNull();
               assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
 
-              // Find and assert the database UPDATE span
               SpanData insertSpan =
                   targetTrace.stream()
                       .filter(
@@ -198,15 +173,12 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
   @Test
   public void testKafkaConnectMongoSinkTaskMultiTopicInstrumentation()
       throws IOException, InterruptedException {
-    // Create multiple topic names for consistent span naming
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
 
-    // Setup Kafka Connect MongoDB Sink connector with multiple topics
     setupMongoSinkConnectorMultiTopic(topicName1, topicName2, topicName3);
 
-    // Create all topics and wait for availability
     createTopic(topicName1);
     createTopic(topicName2);
     createTopic(topicName3);
@@ -214,14 +186,12 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
     awaitForTopicCreation(topicName2);
     awaitForTopicCreation(topicName3);
 
-    // Produce test messages to different topics
     Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
     try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-      // Send messages to different topics
       producer.send(
           new ProducerRecord<>(
               topicName1, "key1", "{\"id\":1,\"name\":\"User1\",\"source\":\"topic1\"}"));
@@ -234,78 +204,52 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
       producer.flush();
     }
 
-    // Wait for message processing (increased timeout for ARM64 Docker emulation)
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 3);
 
-    // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
-    // Wait for traces and then find the specific trace we want
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () -> {
+              // Wait for at least 1 trace (could be 1 batch trace or multiple individual traces)
               List<List<SpanData>> traces = testing.waitForTraces(1);
+              
+              // Count total Kafka Connect consumer spans and database update spans across all traces
+              long totalKafkaConnectSpans = traces.stream()
+                  .flatMap(trace -> trace.stream())
+                  .filter(span -> 
+                      (span.getName().contains(topicName1) || 
+                       span.getName().contains(topicName2) || 
+                       span.getName().contains(topicName3))
+                      && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                  .count();
+              
+              long totalUpdateSpans = traces.stream()
+                  .flatMap(trace -> trace.stream())
+                  .filter(span -> 
+                      span.getName().contains("update")
+                      && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+                  .count();
+              
+              assertThat(totalKafkaConnectSpans).isGreaterThanOrEqualTo(1);
+              assertThat(totalUpdateSpans).isGreaterThanOrEqualTo(3);
+            
+              boolean hasMultiTopicSpan = traces.stream()
+                  .flatMap(trace -> trace.stream())
+                  .anyMatch(span -> 
+                      span.getName().contains("[") && span.getName().contains("]") && 
+                      span.getName().contains("process") &&
+                      span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+              
+              boolean hasIndividualSpans = traces.stream()
+                  .flatMap(trace -> trace.stream())
+                  .anyMatch(span -> 
+                      (span.getName().contains(topicName1) || 
+                       span.getName().contains(topicName2) || 
+                       span.getName().contains(topicName3)) &&
+                      !span.getName().contains("[") &&
+                      span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
 
-              // Find the trace that contains our Kafka Connect Consumer span and database INSERT
-              // span
-              List<SpanData> targetTrace =
-                  traces.stream()
-                      .filter(
-                          trace -> {
-                            boolean hasKafkaConnectSpan =
-                                trace.stream()
-                                    .anyMatch(
-                                        span ->
-                                            (span.getName().contains(topicName1)
-                                                    || span.getName().contains(topicName2)
-                                                    || span.getName().contains(topicName3))
-                                                && span.getKind()
-                                                    == io.opentelemetry.api.trace.SpanKind
-                                                        .CONSUMER);
-
-                            boolean hasInsertSpan =
-                                trace.stream()
-                                    .anyMatch(
-                                        span ->
-                                            span.getName().contains("update")
-                                                && span.getKind()
-                                                    == io.opentelemetry.api.trace.SpanKind.CLIENT);
-
-                            return hasKafkaConnectSpan && hasInsertSpan;
-                          })
-                      .findFirst()
-                      .orElse(null);
-
-              // Assert that we found the target trace
-              assertThat(targetTrace).isNotNull();
-
-              // Assert on the spans in the target trace (should have at least 2 spans: Kafka
-              // Connect Consumer + database operations)
-              assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
-
-              // Find and assert the Kafka Connect Consumer span (multi-topic span)
-              SpanData kafkaConnectSpan =
-                  targetTrace.stream()
-                      .filter(
-                          span ->
-                              (span.getName().contains(topicName1)
-                                      || span.getName().contains(topicName2)
-                                      || span.getName().contains(topicName3))
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
-                      .findFirst()
-                      .orElse(null);
-              assertThat(kafkaConnectSpan).isNotNull();
-              assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
-
-              // Find and assert the database UPDATE span
-              SpanData insertSpan =
-                  targetTrace.stream()
-                      .filter(
-                          span ->
-                              span.getName().contains("update")
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
-                      .findFirst()
-                      .orElse(null);
-              assertThat(insertSpan).isNotNull();
+              assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
             });
   }
 

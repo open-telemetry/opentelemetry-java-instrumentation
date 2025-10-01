@@ -4,15 +4,11 @@ plugins {
   id("otel.java-conventions")
 }
 
-// Smoke test pattern - get the agent jar
 val agentShadowJar = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
 
 dependencies {
-  // Add smoke-tests dependency for SmokeTestInstrumentationExtension
   testImplementation(project(":smoke-tests"))
-  // Add testing-common manually since we removed otel.javaagent-testing plugin
   testImplementation(project(":testing-common"))
-  // Add SDK testing assertions for structured trace verification
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.apache.kafka:kafka-clients:3.6.1")
 
@@ -35,18 +31,7 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
-// Configure test tasks to have access to agent jar
 tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
-
-  // Make agent jar path available to tests
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
-  // Configure test JVM with agent for end-to-end tracing
-  jvmArgs(
-    "-javaagent:${agentShadowJar.get().archiveFile.get()}",
-    "-Dotel.traces.exporter=otlp",
-    "-Dotel.metrics.exporter=none",
-    "-Dotel.logs.exporter=none",
-    "-Dotel.service.name=kafka-connect-test-producer"
-  )
 }

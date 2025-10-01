@@ -43,7 +43,6 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
   private static final Logger logger =
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);
 
-  // PostgreSQL-specific constants
   private static final String POSTGRES_NETWORK_ALIAS = "postgres";
   private static final String DB_NAME = "test";
   private static final String DB_USERNAME = "postgres";
@@ -52,10 +51,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
   private static final String CONNECTOR_NAME = "test-postgres-connector";
   private static final String TOPIC_NAME = "test-postgres-topic";
 
-  // PostgreSQL container
   private static PostgreSQLContainer<?> postgreSql;
 
-  // Override abstract methods from base class
   @Override
   protected void setupDatabaseContainer() {
     postgreSql =
@@ -110,17 +107,12 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
   @Test
   public void testKafkaConnectPostgresSinkTaskInstrumentation()
       throws IOException, InterruptedException {
-    // Create unique topic name
     String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
-
-    // Setup Kafka Connect JDBC Sink connector
     setupPostgresSinkConnector(uniqueTopicName);
 
-    // Create topic and wait for availability
     createTopic(uniqueTopicName);
     awaitForTopicCreation(uniqueTopicName);
 
-    // Produce a test message
     Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
@@ -135,19 +127,14 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
       producer.flush();
     }
 
-    // Wait for message processing (increased timeout for ARM64 Docker emulation)
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 1);
 
-    // Use SmokeTestInstrumentationExtension's testing framework to wait for and assert traces
-    // Wait for traces and then find the specific trace we want
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () -> {
               List<List<SpanData>> traces = testing.waitForTraces(1);
 
-              // Find the trace that contains our Kafka Connect Consumer span and database INSERT
-              // span
               List<SpanData> targetTrace =
                   traces.stream()
                       .filter(
@@ -174,14 +161,10 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
                       .findFirst()
                       .orElse(null);
 
-              // Assert that we found the target trace
               assertThat(targetTrace).isNotNull();
 
-              // Assert on the spans in the target trace (should have at least 2 spans: Kafka
-              // Connect Consumer + database operations)
               assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
 
-              // Find and assert the Kafka Connect Consumer span
               SpanData kafkaConnectSpan =
                   targetTrace.stream()
                       .filter(
@@ -191,9 +174,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
                       .findFirst()
                       .orElse(null);
               assertThat(kafkaConnectSpan).isNotNull();
-              assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
+              assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse();
 
-              // Find and assert the database INSERT span
               SpanData insertSpan =
                   targetTrace.stream()
                       .filter(
@@ -206,7 +188,107 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
             });
   }
 
-  // PostgreSQL-specific helper methods
+  @Test
+  public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation()
+      throws IOException, InterruptedException {
+    String topicName1 = TOPIC_NAME + "-1";
+    String topicName2 = TOPIC_NAME + "-2";
+    String topicName3 = TOPIC_NAME + "-3";
+
+    setupPostgresSinkConnectorMultiTopic(topicName1, topicName2, topicName3);
+
+    createTopic(topicName1);
+    createTopic(topicName2);
+    createTopic(topicName3);
+    awaitForTopicCreation(topicName1);
+    awaitForTopicCreation(topicName2);
+    awaitForTopicCreation(topicName3);
+
+    Properties props = new Properties();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+
+    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+      producer.send(
+          new ProducerRecord<>(
+              topicName1,
+              "key1",
+              "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":1,\"name\":\"User1\"}}"));
+      producer.send(
+          new ProducerRecord<>(
+              topicName2,
+              "key2",
+              "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":2,\"name\":\"User2\"}}"));
+      producer.send(
+          new ProducerRecord<>(
+              topicName3,
+              "key3",
+              "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":3,\"name\":\"User3\"}}"));
+      producer.flush();
+    }
+
+    await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 3);
+
+    await()
+        .atMost(Duration.ofSeconds(30))
+        .untilAsserted(
+            () -> {
+              // Wait for at least 1 trace (could be 1 batch trace or multiple individual traces)
+              List<List<SpanData>> traces = testing.waitForTraces(1);
+
+              // Count total Kafka Connect consumer spans and database INSERT spans across all
+              // traces
+              long totalKafkaConnectSpans =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .filter(
+                          span ->
+                              (span.getName().contains(topicName1)
+                                      || span.getName().contains(topicName2)
+                                      || span.getName().contains(topicName3))
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                      .count();
+
+              long totalInsertSpans =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .filter(
+                          span ->
+                              span.getName().equals("INSERT test." + DB_TABLE_PERSON)
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+                      .count();
+
+              // PostgreSQL JDBC batches INSERT operations, so we expect at least 1 INSERT span
+              // (unlike MongoDB which creates separate spans for each update)
+              assertThat(totalKafkaConnectSpans).isGreaterThanOrEqualTo(1);
+              assertThat(totalInsertSpans).isGreaterThanOrEqualTo(1);
+
+              boolean hasMultiTopicSpan =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .anyMatch(
+                          span ->
+                              span.getName().contains("[")
+                                  && span.getName().contains("]")
+                                  && span.getName().contains("process")
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+
+              boolean hasIndividualSpans =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .anyMatch(
+                          span ->
+                              (span.getName().contains(topicName1)
+                                      || span.getName().contains(topicName2)
+                                      || span.getName().contains(topicName3))
+                                  && !span.getName().contains("[")
+                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+
+              assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
+            });
+  }
+
   private static void setupPostgresSinkConnector(String topicName) throws IOException {
     Map<String, Object> configMap = new HashMap<>();
     configMap.put("connector.class", "io.confluent.connect.jdbc.JdbcSinkConnector");
@@ -233,6 +315,49 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
 
     String payload =
         MAPPER.writeValueAsString(ImmutableMap.of("name", CONNECTOR_NAME, "config", configMap));
+    given()
+        .log()
+        .headers()
+        .contentType(ContentType.JSON)
+        .accept(ContentType.JSON)
+        .body(payload)
+        .when()
+        .post(getKafkaConnectUrl() + "/connectors")
+        .andReturn()
+        .then()
+        .log()
+        .all();
+  }
+
+  private static void setupPostgresSinkConnectorMultiTopic(String... topicNames)
+      throws IOException {
+    Map<String, Object> configMap = new HashMap<>();
+    configMap.put("connector.class", "io.confluent.connect.jdbc.JdbcSinkConnector");
+    configMap.put("tasks.max", "1");
+    configMap.put(
+        "connection.url",
+        format(
+            Locale.ROOT,
+            "jdbc:postgresql://%s:5432/%s?loggerLevel=OFF",
+            POSTGRES_NETWORK_ALIAS,
+            DB_NAME));
+    configMap.put("connection.user", DB_USERNAME);
+    configMap.put("connection.password", DB_PASSWORD);
+    // Configure multiple topics separated by commas
+    configMap.put("topics", String.join(",", topicNames));
+    configMap.put("auto.create", "false");
+    configMap.put("auto.evolve", "false");
+    configMap.put("insert.mode", "insert");
+    configMap.put("delete.enabled", "false");
+    configMap.put("key.converter", "org.apache.kafka.connect.storage.StringConverter");
+    configMap.put("value.converter", "org.apache.kafka.connect.json.JsonConverter");
+    configMap.put("value.converter.schemas.enable", "true");
+    configMap.put("table.name.format", DB_TABLE_PERSON);
+    configMap.put("pk.mode", "none");
+
+    String payload =
+        MAPPER.writeValueAsString(
+            ImmutableMap.of("name", CONNECTOR_NAME + "-multi", "config", configMap));
     given()
         .log()
         .headers()

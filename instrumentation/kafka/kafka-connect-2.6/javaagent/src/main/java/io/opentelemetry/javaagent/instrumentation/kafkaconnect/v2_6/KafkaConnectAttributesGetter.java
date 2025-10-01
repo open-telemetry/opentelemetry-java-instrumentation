@@ -54,9 +54,6 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
   @Nullable
   @Override
   public Long getMessageBodySize(KafkaConnectTask request) {
-    // SinkRecord doesn't expose serialized size information
-    // This would need to be calculated from the actual value, but that's expensive
-    // and not typically done in messaging instrumentations for batch processing
     return null;
   }
 
