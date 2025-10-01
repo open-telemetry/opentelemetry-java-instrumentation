@@ -276,7 +276,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (command.getArgs() != null) {
         argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
       }
-      
+
       start();
       long startNanos = System.nanoTime();
 
@@ -315,7 +315,8 @@ final class OpenTelemetryTracing implements Tracing {
     public synchronized Tracer.Span start() {
       // Set db.statement on SpanBuilder before starting span so it's available to samplers
       if (name != null) {
-        String statement = sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
+        String statement =
+            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
         if (statement != null) {
           if (SemconvStability.emitStableDatabaseSemconv()) {
             spanBuilder.setAttribute(DB_QUERY_TEXT, statement);
@@ -330,8 +331,10 @@ final class OpenTelemetryTracing implements Tracing {
 
       span = spanBuilder.startSpan();
       spanStartNanos = System.nanoTime();
-      // Note: Span name cannot be set on SpanBuilder because it's set during tracer.spanBuilder(name)
-      // call in nextSpan(), and we don't know the actual command name at that point. We have to update
+      // Note: Span name cannot be set on SpanBuilder because it's set during
+      // tracer.spanBuilder(name)
+      // call in nextSpan(), and we don't know the actual command name at that point. We have to
+      // update
       // the name after the span starts.
       if (name != null) {
         span.updateName(name);
