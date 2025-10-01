@@ -39,7 +39,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class AbstractOpenSearchJavaTest {
+abstract class AbstractOpenSearchJavaTest {
 
   protected OpenSearchClient openSearchClient;
   protected OpenSearchAsyncClient openSearchAsyncClient;

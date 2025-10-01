@@ -51,7 +51,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.utils.AttributeMap;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-public class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTest {
+class OpenSearchJavaAwsSdk2TransportTest extends AbstractOpenSearchJavaTest {
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
 

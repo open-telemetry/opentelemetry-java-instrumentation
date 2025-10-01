@@ -25,7 +25,7 @@ import org.opensearch.client.opensearch.OpenSearchClient;
 import org.opensearch.client.transport.OpenSearchTransport;
 import org.opensearch.client.transport.httpclient5.ApacheHttpClient5TransportBuilder;
 
-public class OpenSearchJavaApacheHttpClient5TransportTest extends AbstractOpenSearchJavaTest {
+class OpenSearchJavaApacheHttpClient5TransportTest extends AbstractOpenSearchJavaTest {
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();

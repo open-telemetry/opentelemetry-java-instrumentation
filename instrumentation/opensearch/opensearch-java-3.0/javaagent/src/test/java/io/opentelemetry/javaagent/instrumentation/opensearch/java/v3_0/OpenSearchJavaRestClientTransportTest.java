@@ -30,7 +30,7 @@ import org.opensearch.client.transport.rest_client.RestClientTransport;
 @SuppressWarnings(
     "deprecation") // RestClientTransport is deprecated but still the correct way for OpenSearch
 // Java 3.0
-public class OpenSearchJavaRestClientTransportTest extends AbstractOpenSearchJavaTest {
+class OpenSearchJavaRestClientTransportTest extends AbstractOpenSearchJavaTest {
 
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
