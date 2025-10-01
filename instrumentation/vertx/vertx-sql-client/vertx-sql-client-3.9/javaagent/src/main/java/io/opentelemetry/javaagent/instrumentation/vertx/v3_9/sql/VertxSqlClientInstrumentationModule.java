@@ -21,6 +21,6 @@ public class VertxSqlClientInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new SqlClientInstrumentation(), new SqlQueryInstrumentation(), new ContextStorageInstrumentation());
+    return asList(new SqlClientInstrumentation(), new SqlQueryInstrumentation(), new ContextStorageInstrumentation(), new SqlConnectionBaseInstrumentation());
   }
 }
