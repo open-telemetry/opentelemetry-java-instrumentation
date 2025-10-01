@@ -36,7 +36,7 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
-class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
+class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   // MongoDB-specific constants
   private static final String MONGO_NETWORK_ALIAS = "mongodb";
   private static final String DB_NAME = "testdb";

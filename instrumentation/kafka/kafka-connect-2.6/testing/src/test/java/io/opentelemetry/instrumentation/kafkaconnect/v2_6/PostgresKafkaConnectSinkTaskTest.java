@@ -38,7 +38,7 @@ import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
 @Testcontainers
-class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskTestBase {
+class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   private static final Logger logger =
       LoggerFactory.getLogger(PostgresKafkaConnectSinkTaskTest.class);

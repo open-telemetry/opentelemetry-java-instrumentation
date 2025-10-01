@@ -43,25 +43,23 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
-import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.base.VerifyException;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
-@Testcontainers
 // Suppressing warnings for test dependencies and deprecated Testcontainers API
 @SuppressWarnings({"deprecation"})
 @DisabledIf("io.opentelemetry.smoketest.TestContainerManager#useWindowsContainers")
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public abstract class KafkaConnectSinkTaskTestBase implements TelemetryRetrieverProvider {
+public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetrieverProvider {
 
   @RegisterExtension
   protected static final InstrumentationExtension testing =
       SmokeTestInstrumentationExtension.create();
 
   protected static final Logger logger =
-      LoggerFactory.getLogger(KafkaConnectSinkTaskTestBase.class);
+      LoggerFactory.getLogger(KafkaConnectSinkTaskBaseTest.class);
 
   // Using the same fake backend pattern as smoke tests (with ARM64 support)
   protected static GenericContainer<?> backend;
