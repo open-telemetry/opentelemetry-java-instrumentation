@@ -17,6 +17,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -80,7 +81,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
       }
 
       try {
-        for (String prefix : BootstrapPackagesHelper.bootstrapPackagesPrefixes) {
+        for (String prefix : BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes()) {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);
