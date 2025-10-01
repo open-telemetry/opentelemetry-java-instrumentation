@@ -47,6 +47,11 @@ abstract class AbstractAwsSdkInstrumentationModule extends InstrumentationModule
     return singletonList(new ResourceInjectingTypeInstrumentation());
   }
 
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
+
   abstract void doTransform(TypeTransformer transformer);
 
   // A type instrumentation is needed to trigger resource injection.

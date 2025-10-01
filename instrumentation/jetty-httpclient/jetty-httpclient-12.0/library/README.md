@@ -1,6 +1,6 @@
 # Library Instrumentation for Jetty HttpClient version 12.0 and higher
 
-Provides OpenTelemetry instrumentation for the [Jetty HttpClient](https://www.eclipse.org/jetty/documentation/jetty-12/programming-guide/index.html#pg-client-http),
+Provides OpenTelemetry instrumentation for the [Jetty HttpClient](https://jetty.org/docs/jetty/12/programming-guide/client/http.html),
 enabling database client spans and metrics.
 
 ## Quickstart

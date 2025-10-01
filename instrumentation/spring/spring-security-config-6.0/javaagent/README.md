@@ -5,7 +5,7 @@ from Spring Security `Authentication` objects.
 
 ## Settings
 
-This module honors the [common `otel.instrumentation.common.enduser.*` properties](https://opentelemetry.io/docs/instrumentation/java/automatic/agent-config/#common-instrumentation-configuration)
+This module honors the [common `otel.instrumentation.common.enduser.*` properties](https://opentelemetry.io/docs/zero-code/java/agent/instrumentation/#capturing-enduser-attributes)
 and the following properties:
 
 | Property                                                                      | Type    | Default  | Description                                                                                             |

@@ -70,6 +70,8 @@ libraries:
     description: This instrumentation provides context propagation for Akka actors,
       it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-actor-2.3
     scope:
       name: io.opentelemetry.akka-actor-2.3
@@ -83,6 +85,8 @@ libraries:
     description: This instrumentation provides context propagation for the Akka Fork-Join
       Pool, it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
     scope:
       name: io.opentelemetry.akka-actor-fork-join-2.5
@@ -101,6 +105,8 @@ libraries:
     - HTTP_SERVER_SPANS
     - HTTP_SERVER_METRICS
     library_link: https://doc.akka.io/docs/akka-http/current/index.html
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/akka/akka-http-10.0
     scope:
       name: io.opentelemetry.akka-http-10.0
@@ -390,6 +396,33 @@ libraries:
       default: ''
     telemetry:
     - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -6399,13 +6432,6 @@ libraries:
     scope:
       name: io.opentelemetry.runtime-telemetry-java8
   rxjava:
-  - name: rxjava-1.0
-    source_path: instrumentation/rxjava/rxjava-1.0
-    scope:
-      name: io.opentelemetry.rxjava-1.0
-    target_versions:
-      library:
-      - io.reactivex:rxjava:1.0.7
   - name: rxjava-2.0
     source_path: instrumentation/rxjava/rxjava-2.0
     scope:
@@ -7977,6 +8003,13 @@ internal:
   source_path: instrumentation/internal/internal-lambda
   scope:
     name: io.opentelemetry.internal-lambda
+- name: rxjava-1.0
+  source_path: instrumentation/rxjava/rxjava-1.0
+  scope:
+    name: io.opentelemetry.rxjava-1.0
+  target_versions:
+    library:
+    - io.reactivex:rxjava:1.0.7
 - name: internal-eclipse-osgi-3.6
   source_path: instrumentation/internal/internal-eclipse-osgi-3.6
   scope:

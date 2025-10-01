@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationFeature;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
@@ -122,6 +123,10 @@ class YamlHelperTest {
             .description("Spring Web 6.0 instrumentation")
             .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
+            .features(
+                List.of(
+                    InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTEXT_PROPAGATION))
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .configurations(
                 List.of(
                     new ConfigurationOption(
@@ -189,6 +194,12 @@ class YamlHelperTest {
               spring:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
+                features:
+                - HTTP_ROUTE
+                - CONTEXT_PROPAGATION
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
                 scope:
@@ -227,6 +238,9 @@ class YamlHelperTest {
             classification: internal
             disabled_by_default: true
             library_link: https://example.com/test-library
+            features:
+              - HTTP_ROUTE
+              - CONTROLLER_SPANS
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -242,6 +256,10 @@ class YamlHelperTest {
     assertThat(config.description())
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
+
+    assertThat(metadata.getFeatures())
+        .containsExactly(
+            InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTROLLER_SPANS);
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");
@@ -313,6 +331,21 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
+  }
+
+  @Test
+  void testMetadataParserWithOnlyFeatures() throws JsonProcessingException {
+    String input =
+        """
+            features:
+              - HTTP_ROUTE
+        """;
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+    assertThat(metadata.getFeatures()).containsExactly(InstrumentationFeature.HTTP_ROUTE);
   }
 
   @Test

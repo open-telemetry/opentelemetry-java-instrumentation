@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## Version 2.20.1 (2025-09-22)
+
+### 🛠️ Bug fixes
+
+- Backport: Update the OpenTelemetry SDK version to 1.54.1
+  ([#14720](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14720))
+
 ## Version 2.20.0 (2025-09-13)
 
 ### Migration notes
@@ -362,7 +369,7 @@
 ### 🌟 New javaagent instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/tree/main/docs/gen-ai#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
    [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
    [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),
@@ -375,7 +382,7 @@
 ### 🌟 New library instrumentation
 
 - AWS Bedrock instrumentation, following
-  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/tree/main/docs/gen-ai#semantic-conventions-for-generative-ai-systems)
+  [Gen AI semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/README.md#semantic-conventions-for-generative-ai-systems)
   ([#13355](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13355),
    [#13408](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13408),
    [#13473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13473),

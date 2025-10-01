@@ -23,7 +23,6 @@ Those metrics are defined in the [JVM runtime metrics semantic conventions](http
 | [jvm.system.cpu.recent_utilization](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmcpurecent_utilization) | experimental     | Gauge         |                                       | Recent CPU utilization reported by JVM              |
 | [jvm.buffer.memory.used](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmbuffermemoryused)                 | experimental     | UpDownCounter | jvm.buffer.pool.name                  | Memory used by buffers                              |
 | [jvm.buffer.memory.limit](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmbuffermemorylimit)               | experimental     | UpDownCounter | jvm.buffer.pool.name                  | Maximum memory usage for buffers                    |
-| [jvm.buffer.memory.count](https://opentelemetry.io/docs/specs/semconv/runtime/jvm-metrics/#metric-jvmbuffermemorycount)               | experimental     | UpDownCounter | jvm.buffer.pool.name                  | Buffers count                                       |
 
 ## Limitations and unsupported metrics
 
