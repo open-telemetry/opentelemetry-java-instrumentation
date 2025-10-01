@@ -52,8 +52,13 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
                             .and(takesArgument(1, boolean.class))))
             .and(isPublic().or(isProtected()))
             .and(not(isStatic()));
+    boolean useLookup = Double.parseDouble(System.getProperty("java.specification.version")) >= 11;
     // Inline instrumentation to prevent problems with invokedynamic-recursion
-    applyInlineAdvice(transformer, methodMatcher, this.getClass().getName() + "$LoadClassAdvice");
+    applyInlineAdvice(
+        transformer,
+        methodMatcher,
+        this.getClass().getName()
+            + (useLookup ? "$LoadClassAdvice" : "$LoadClassWithoutLookupAdvice"));
   }
 
   @SuppressWarnings("unused")
@@ -67,6 +72,25 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
       return helperClassLoader != null
           ? helperClassLoader.loadHelperClass(MethodHandles.lookup())
           : null;
+    }
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(onThrowable = Throwable.class)
+    public static Class<?> onExit(
+        @Advice.Return Class<?> originalResult, @Advice.Enter Class<?> loadedClass) {
+      return loadedClass != null ? loadedClass : originalResult;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class LoadClassWithoutLookupAdvice {
+
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static Class<?> onEnter(
+        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) throws Throwable {
+      HelperClassLoader helperClassLoader =
+          InjectedClassHelper.getHelperClassLoader(classLoader, name);
+      return helperClassLoader != null ? helperClassLoader.loadHelperClass(null) : null;
     }
 
     @AssignReturned.ToReturned

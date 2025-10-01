@@ -25,6 +25,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.nio.file.Files;
+import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
@@ -505,6 +506,9 @@ public class HelperInjector implements Transformer {
     }
 
     return lookup -> {
+      if (lookup == null) {
+        return helperClassInjector.inject(classLoader, className);
+      }
       ClassLoaderAccess classLoaderAccess = classLoaderAccessClassValue.get(classLoader.getClass());
       classLoaderAccess.initialize(lookup);
       return helperClassInjector.inject(classLoader, className, classLoaderAccess);
@@ -521,6 +525,27 @@ public class HelperInjector implements Transformer {
     Class<?> inject(ClassLoader classLoader, String className, ClassLoaderAccess classLoaderAccess)
         throws Throwable {
       return classLoaderAccess.loadClass(classLoader, className, bytes.get());
+    }
+
+    Class<?> inject(ClassLoader classLoader, String className) {
+      // if security manager is present byte buddy calls
+      // checkPermission(new ReflectPermission("suppressAccessChecks")) so we must call class
+      // injection with AccessController.doPrivileged when security manager is enabled
+      Map<String, Class<?>> result =
+          execute(
+              () ->
+                  new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
+                      .injectRaw(Collections.singletonMap(className, bytes.get())));
+      return result.get(className);
+    }
+  }
+
+  @SuppressWarnings("removal") // AccessController is deprecated for removal
+  private static <T> T execute(PrivilegedAction<T> action) {
+    if (System.getSecurityManager() != null) {
+      return java.security.AccessController.doPrivileged(action);
+    } else {
+      return action.run();
     }
   }
 }
