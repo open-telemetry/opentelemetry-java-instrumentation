@@ -116,6 +116,7 @@
       // junit 6+ requires Java 17+
       matchPackageNames: [
         'org.junit:**',
+        'org.junit.jupiter:**',
       ],
       matchUpdateTypes: [
         'major',
