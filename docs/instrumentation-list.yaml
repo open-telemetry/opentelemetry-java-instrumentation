@@ -7618,6 +7618,211 @@ libraries:
     target_versions:
       javaagent:
       - io.vertx:vertx-kafka-client:[3.5.1,)
+  - name: vertx-redis-client-3.7
+    source_path: instrumentation/vertx/vertx-redis-client-3.7
+    scope:
+      name: io.opentelemetry.vertx-redis-client-3.7
+    target_versions:
+      javaagent:
+        - io.vertx:vertx-redis-client:[3.7.0,3.8.0)
+    telemetry:
+      - when: default
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: db.operation
+                type: STRING
+              - name: db.redis.database_index
+                type: LONG
+              - name: db.statement
+                type: STRING
+              - name: db.system
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+      - when: otel.semconv-stability.opt-in=database
+        metrics:
+          - name: db.client.operation.duration
+            description: Duration of database client operations.
+            type: HISTOGRAM
+            unit: s
+            attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.query.text
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+  - name: vertx-redis-client-3.8
+    source_path: instrumentation/vertx/vertx-redis-client-3.8
+    scope:
+      name: io.opentelemetry.vertx-redis-client-3.8
+    target_versions:
+      javaagent:
+        - io.vertx:vertx-redis-client:[3.8.0,3.9.0)
+    telemetry:
+      - when: default
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: db.operation
+                type: STRING
+              - name: db.redis.database_index
+                type: LONG
+              - name: db.statement
+                type: STRING
+              - name: db.system
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+      - when: otel.semconv-stability.opt-in=database
+        metrics:
+          - name: db.client.operation.duration
+            description: Duration of database client operations.
+            type: HISTOGRAM
+            unit: s
+            attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.query.text
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+  - name: vertx-redis-client-3.9
+    description: This instrumentation enables Redis client spans for Vert.x Redis client 3.9.x versions, supporting both standalone and cluster modes.
+    source_path: instrumentation/vertx/vertx-redis-client-3.9
+    scope:
+      name: io.opentelemetry.vertx-redis-client-3.9
+    target_versions:
+      javaagent:
+        - io.vertx:vertx-redis-client:[3.9.1,4.0.0)
+    telemetry:
+      - when: default
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: db.operation
+                type: STRING
+              - name: db.redis.database_index
+                type: LONG
+              - name: db.statement
+                type: STRING
+              - name: db.system
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+      - when: otel.semconv-stability.opt-in=database
+        metrics:
+          - name: db.client.operation.duration
+            description: Duration of database client operations.
+            type: HISTOGRAM
+            unit: s
+            attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: db.namespace
+                type: STRING
+              - name: db.operation.name
+                type: STRING
+              - name: db.query.text
+                type: STRING
+              - name: db.system.name
+                type: STRING
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
   - name: vertx-redis-client-4.0
     source_path: instrumentation/vertx/vertx-redis-client-4.0
     scope:

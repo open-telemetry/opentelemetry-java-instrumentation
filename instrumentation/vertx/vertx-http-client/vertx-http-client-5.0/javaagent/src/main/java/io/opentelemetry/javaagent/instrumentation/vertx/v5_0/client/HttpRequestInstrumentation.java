@@ -30,7 +30,7 @@ import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-
+import io.vertx.core.Vertx;
 /**
  * Two things happen in this instrumentation.
  *
@@ -99,6 +99,21 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope startAndAttachContext(HttpClientRequest request) {
         Context parentContext = Context.current();
+        if (parentContext == null || parentContext == Context.root()) {
+          io.vertx.core.Context vertxContext = Vertx.currentContext();
+//          System.out.println("[VHCV5-1] Vertx Context: " + vertxContext);
+          if (vertxContext != null && (vertxContext.get("otel.context")!=null&&vertxContext.get("otel.context")!=Context.root())) {
+            Context storedOtelContext =
+//                null;
+                vertxContext.get("otel.context");
+//            System.out.println(
+//                "[VHCV5-2] Retrieved stored OTel context: " + storedOtelContext);
+            parentContext = storedOtelContext;
+          }
+        }
+        else {
+//          System.out.println("[VHCV5-3] Parent context is not null: " + parentContext);
+        }
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
