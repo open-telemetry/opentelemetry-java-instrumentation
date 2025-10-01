@@ -320,10 +320,6 @@ public class HelperInjector implements Transformer {
 
   private static final String virtualFieldPackage =
       VirtualFieldAccessorMarker.class.getPackage().getName() + ".";
-  // because all generated virtual field classes are in the same package we can use lookup to define
-  // them
-  private static final ClassInjector.UsingLookup virtualFieldInjector =
-      ClassInjector.UsingLookup.of(VirtualFieldDetector.lookup());
 
   private void injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject) throws IOException {
 
@@ -333,6 +329,11 @@ public class HelperInjector implements Transformer {
     }
 
     if (ClassInjector.UsingLookup.isAvailable()) {
+      // because all generated virtual field classes are in the same package we can use lookup to
+      // define them
+      ClassInjector virtualFieldInjector =
+          ClassInjector.UsingLookup.of(VirtualFieldDetector.lookup());
+
       for (Iterator<Map.Entry<String, byte[]>> iterator = classnameToBytes.entrySet().iterator();
           iterator.hasNext(); ) {
         Map.Entry<String, byte[]> entry = iterator.next();
