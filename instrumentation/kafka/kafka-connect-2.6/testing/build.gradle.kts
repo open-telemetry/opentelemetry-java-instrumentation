@@ -4,6 +4,10 @@ plugins {
   id("otel.java-conventions")
 }
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+}
+
 val agentShadowJar = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
 
 dependencies {
