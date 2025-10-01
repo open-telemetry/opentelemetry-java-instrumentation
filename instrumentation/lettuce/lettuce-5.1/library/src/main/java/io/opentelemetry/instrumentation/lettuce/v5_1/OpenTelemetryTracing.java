@@ -332,10 +332,8 @@ final class OpenTelemetryTracing implements Tracing {
       span = spanBuilder.startSpan();
       spanStartNanos = System.nanoTime();
       // Note: Span name cannot be set on SpanBuilder because it's set during
-      // tracer.spanBuilder(name)
-      // call in nextSpan(), and we don't know the actual command name at that point. We have to
-      // update
-      // the name after the span starts.
+      // tracer.spanBuilder(name) call in nextSpan(), and we don't know the actual command name at
+      // that point. We have to update the name after the span starts.
       if (name != null) {
         span.updateName(name);
       }
