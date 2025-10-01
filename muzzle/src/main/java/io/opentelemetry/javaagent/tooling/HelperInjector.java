@@ -459,10 +459,10 @@ public class HelperInjector implements Transformer {
       }
     }
 
-    Class<?> loadClass(ClassLoader cLassLoader, String className, byte[] classBytes)
+    Class<?> loadClass(ClassLoader classLoader, String className, byte[] classBytes)
         throws Throwable {
       // first check whether the class is already defined
-      Class<?> clazz = (Class<?>) findLoadedClass.invoke(cLassLoader, className);
+      Class<?> clazz = (Class<?>) findLoadedClass.invoke(classLoader, className);
       if (clazz != null) {
         return clazz;
       }
@@ -473,14 +473,14 @@ public class HelperInjector implements Transformer {
       try {
         return (Class<?>)
             defineClass.invoke(
-                cLassLoader,
+                classLoader,
                 className,
                 classBytes,
                 0,
                 classBytes.length,
                 HelperInjector.PROTECTION_DOMAIN);
       } catch (Throwable throwable) {
-        clazz = (Class<?>) findLoadedClass.invoke(cLassLoader, className);
+        clazz = (Class<?>) findLoadedClass.invoke(classLoader, className);
         if (clazz != null) {
           return clazz;
         }
