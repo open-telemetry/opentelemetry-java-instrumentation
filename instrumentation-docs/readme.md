@@ -134,6 +134,15 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     * FAAS_SERVER_SPANS
     * GENAI_CLIENT_SPANS
     * GENAI_CLIENT_METRIC
+* features
+  * The specific functionality that the instrumentation provides
+  * Options are:
+    * HTTP_ROUTE
+    * EXPERIMENTAL_ONLY
+    * CONTEXT_PROPAGATION
+    * AUTO_INSTRUMENTATION_SHIM
+    * CONTROLLER_SPANS
+    * VIEW_SPANS
 * library_link
   * URL to the library or framework's main website or documentation, or if those don't exist, the
   GitHub repository.
@@ -173,6 +182,9 @@ semantic_conventions:                             # List of semantic conventions
   - HTTP_CLIENT_SPANS
   - DATABASE_CLIENT_SPANS
   - JVM_RUNTIME_METRICS
+features:                                        # List of features this instrumentation provides
+  - HTTP_ROUTE
+  - CONTEXT_PROPAGATION
 disabled_by_default: true                         # Defaults to `false`
 classification: internal                          # instrumentation classification: library | internal | custom
 library_link: https://...                         # URL to the library or framework's main website or documentation

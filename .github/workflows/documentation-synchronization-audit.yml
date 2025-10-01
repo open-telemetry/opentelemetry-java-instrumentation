@@ -1,8 +1,9 @@
 name: Documentation Synchronization Audit (opentelemetry.io)
 
 on:
-  schedule:
-    - cron: "30 1 * * 1" # every Monday at 1:30 UTC
+  push:
+    tags:
+      - 'v*' # run on release tags
   workflow_dispatch:
 
 permissions:
