@@ -490,6 +490,7 @@ public class HelperInjector implements Transformer {
     }
   }
 
+  // visible for testing
   static HelperClassLoader loadHelperClass(ClassLoader classLoader, String className) {
     if (classLoader == null) {
       throw new IllegalStateException("boot loader not supported");
