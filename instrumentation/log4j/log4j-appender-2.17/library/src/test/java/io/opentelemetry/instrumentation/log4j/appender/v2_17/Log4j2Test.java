@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.util.ArrayList;
-import java.util.List;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,19 +29,5 @@ class Log4j2Test extends AbstractLog4j2Test {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
-  }
-
-  @Override
-  protected List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
-    // Library test configuration doesn't have captureCodeAttributes="true"
-    // so code location attributes should not be captured
-    String selector = System.getProperty("Log4j2.contextSelector");
-    boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
-    if (async && !Boolean.getBoolean("testLatestDeps")) {
-      // source info is not available by default when async logger is used in non latest dep tests
-      return new ArrayList<>();
-    }
-    // For library tests without captureCodeAttributes, don't expect code location
-    return new ArrayList<>();
   }
 }
