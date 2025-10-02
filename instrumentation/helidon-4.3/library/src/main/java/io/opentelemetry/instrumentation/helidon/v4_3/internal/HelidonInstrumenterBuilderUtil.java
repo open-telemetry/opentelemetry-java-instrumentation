@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.helidon.internal;
+package io.opentelemetry.instrumentation.helidon.v4_3.internal;
 
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.helidon.HelidonTelemetryBuilder;
+import io.opentelemetry.instrumentation.helidon.v4_3.HelidonTelemetryBuilder;
 import java.util.function.Function;
 import javax.annotation.Nullable;
 

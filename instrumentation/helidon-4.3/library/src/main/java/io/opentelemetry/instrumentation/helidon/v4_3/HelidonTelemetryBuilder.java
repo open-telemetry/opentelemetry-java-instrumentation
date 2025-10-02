@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.helidon;
+package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.helidon.webserver.http.ServerRequest;
@@ -14,8 +14,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
-import io.opentelemetry.instrumentation.helidon.internal.Experimental;
-import io.opentelemetry.instrumentation.helidon.internal.HelidonInstrumenterBuilderUtil;
+import io.opentelemetry.instrumentation.helidon.v4_3.internal.Experimental;
+import io.opentelemetry.instrumentation.helidon.v4_3.internal.HelidonInstrumenterBuilderUtil;
 import java.util.Collection;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.helidon;
+package io.opentelemetry.javaagent.instrumentation.helidon.v4_3;
 
 import static java.util.Collections.singletonList;
 

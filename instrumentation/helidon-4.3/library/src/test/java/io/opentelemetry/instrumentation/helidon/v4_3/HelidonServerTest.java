@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.helidon;
+package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import io.helidon.webserver.http.HttpRouting;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;

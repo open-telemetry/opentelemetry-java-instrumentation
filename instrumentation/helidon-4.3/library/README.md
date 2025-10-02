@@ -38,6 +38,7 @@ import java.io.IOException;
 import io.helidon.webserver.WebServer;
 import io.helidon.webserver.http.HttpRouting;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.helidon.v4_3.HelidonTelemetry;
 
 public class Application {
 

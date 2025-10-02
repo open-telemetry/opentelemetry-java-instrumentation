@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.helidon;
+package io.opentelemetry.javaagent.instrumentation.helidon.v4_3;
 
 import io.helidon.webserver.http.Filter;
 import io.helidon.webserver.http.FilterChain;
