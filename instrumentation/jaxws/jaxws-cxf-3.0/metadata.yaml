@@ -1,8 +1,8 @@
-display_name: JWS API
+display_name: Apache CXF 3.x JAX-WS
 description: >
-  This instrumentation enables controller spans for methods annotated with the @WebService
-  annotation from the JWS API.
-library_link: https://github.com/jakartaee/jws-api
+  This instrumentation enables controller spans for Apache CXF JAX-WS web services, and enriches
+  HTTP server spans with route information.
+library_link: https://cxf.apache.org/
 features:
   - CONTROLLER_SPANS
   - CONTEXT_PROPAGATION
@@ -11,4 +11,3 @@ configurations:
     description: Enables the creation of experimental controller (INTERNAL) spans.
     type: boolean
     default: false
-disabled_by_default: true

@@ -16,6 +16,8 @@ muzzle {
   }
 }
 
+val axis2Version = "1.6.0"
+
 dependencies {
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
@@ -24,8 +26,6 @@ dependencies {
   compileOnly(project(":muzzle"))
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
-  // Test dependencies from the former testing module
-  val axis2Version = "1.6.0"
   testLibrary("org.apache.axis2:axis2-jaxws:$axis2Version")
   testLibrary("org.apache.axis2:axis2-transport-http:$axis2Version")
   testLibrary("org.apache.axis2:axis2-transport-local:$axis2Version")
