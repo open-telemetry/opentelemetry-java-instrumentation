@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.twilio;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.twilio.TwilioSingletons.instrumenter;
@@ -77,7 +76,7 @@ public class TwilioSyncInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(Object target, String methodName) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         String spanName = TwilioSingletons.spanName(target, methodName);
         if (!instrumenter().shouldStart(parentContext, spanName)
             || TwilioAsyncMarker.isMarkedAsync(parentContext)) {
