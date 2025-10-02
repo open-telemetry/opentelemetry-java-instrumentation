@@ -44,11 +44,12 @@ public class Tomcat10ServerHandlerAdvice {
       return new AdviceScope(context, scope);
     }
 
-    private void end(Request request, Response response, Throwable throwable) {
+    public void end(Request request, Response response, Throwable throwable) {
       helper().end(request, response, throwable, context, scope);
     }
   }
 
+  @Nullable
   @Advice.OnMethodEnter(suppress = Throwable.class)
   public static AdviceScope onEnter(
       @Advice.Argument(0) Request request, @Advice.Argument(1) Response response) {
