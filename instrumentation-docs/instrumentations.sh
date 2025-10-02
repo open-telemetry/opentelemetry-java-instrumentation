@@ -14,13 +14,12 @@ readonly INSTRUMENTATIONS=(
   "apache-dbcp-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:testStableSemconv"
   "apache-dubbo-2.7:javaagent:testDubbo"
-  "apache-dubbo-2.7:javaagent:testDubbo"
   "apache-httpasyncclient-4.1:javaagent:test"
   "apache-httpclient:apache-httpclient-2.0:javaagent:test"
   "apache-httpclient:apache-httpclient-4.0:javaagent:test"
-  #  "apache-httpclient:apache-httpclient-4.3:library:test"  # See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14771
+  "apache-httpclient:apache-httpclient-4.3:library:test"
   "apache-httpclient:apache-httpclient-5.0:javaagent:test"
-  #  "apache-httpclient:apache-httpclient-5.2:library:test"  # See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/14771
+  "apache-httpclient:apache-httpclient-5.2:library:test"
   "armeria:armeria-1.3:javaagent:test"
   "armeria:armeria-grpc-1.14:javaagent:test"
   "async-http-client:async-http-client-1.9:javaagent:test"

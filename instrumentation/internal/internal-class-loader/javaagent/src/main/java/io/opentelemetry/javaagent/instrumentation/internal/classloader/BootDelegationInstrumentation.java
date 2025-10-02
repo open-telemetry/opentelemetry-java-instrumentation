@@ -17,9 +17,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.javaagent.bootstrap.BootstrapPackagePrefixesHolder;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.List;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.method.MethodDescription;
@@ -68,7 +70,13 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
   public static class LoadClassAdvice {
 
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
-    public static Class<?> onEnter(@Advice.Argument(0) String name) {
+    public static Class<?> onEnter(
+        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
+      // must be read before call depth is incremented as setting the call depth prevents the class
+      // loader of the instrumented class from loading BootstrapPackagePrefixesHolder itself
+      List<String> bootstrapPackagePrefixes =
+          BootstrapPackagePrefixesHolder.getBootstrapPackagePrefixes();
+
       // need to use call depth here to prevent re-entry from call to Class.forName() below
       // because on some JVMs (e.g. IBM's, though IBM bootstrap loader is explicitly excluded above)
       // Class.forName() ends up calling loadClass() on the bootstrap loader which would then come
@@ -80,7 +88,7 @@ public class BootDelegationInstrumentation implements TypeInstrumentation {
       }
 
       try {
-        for (String prefix : BootstrapPackagesHelper.bootstrapPackagesPrefixes) {
+        for (String prefix : bootstrapPackagePrefixes) {
           if (name.startsWith(prefix)) {
             try {
               return Class.forName(name, false, null);

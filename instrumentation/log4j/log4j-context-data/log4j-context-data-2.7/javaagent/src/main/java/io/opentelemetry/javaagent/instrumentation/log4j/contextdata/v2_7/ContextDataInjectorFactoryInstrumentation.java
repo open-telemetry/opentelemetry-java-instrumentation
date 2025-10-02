@@ -14,8 +14,8 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.logging.log4j.core.ContextDataInjector;
 
@@ -39,11 +39,10 @@ public class ContextDataInjectorFactoryInstrumentation implements TypeInstrument
   @SuppressWarnings("unused")
   public static class CreateInjectorAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false)
-            ContextDataInjector injector) {
-      injector = new SpanDecoratingContextDataInjector(injector);
+    public static ContextDataInjector onExit(@Advice.Return ContextDataInjector injector) {
+      return new SpanDecoratingContextDataInjector(injector);
     }
   }
 }
