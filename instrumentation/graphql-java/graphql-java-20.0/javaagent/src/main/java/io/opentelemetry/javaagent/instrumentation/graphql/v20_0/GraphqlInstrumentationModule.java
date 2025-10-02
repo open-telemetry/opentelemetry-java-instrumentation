@@ -46,4 +46,9 @@ public class GraphqlInstrumentationModule extends InstrumentationModule
         .proxyBuilder("io.opentelemetry.javaagent.instrumentation.graphql.v20_0.GraphqlSingletons")
         .inject(InjectionMode.CLASS_ONLY);
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }
