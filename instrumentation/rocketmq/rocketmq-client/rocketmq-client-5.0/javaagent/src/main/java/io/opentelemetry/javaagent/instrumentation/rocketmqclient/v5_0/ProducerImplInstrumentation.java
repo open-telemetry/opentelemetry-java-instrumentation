@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
@@ -102,13 +103,11 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SendAsyncAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
-        @Advice.Return(readOnly = false) CompletableFuture<SendReceipt> future,
-        @Advice.Thrown Throwable throwable) {
-      if (throwable == null) {
-        future = CompletableFutureWrapper.wrap(future);
-      }
+    public static CompletableFuture<SendReceipt> onExit(
+        @Advice.Return CompletableFuture<SendReceipt> future, @Advice.Thrown Throwable throwable) {
+      return throwable == null ? CompletableFutureWrapper.wrap(future) : future;
     }
   }
 }
