@@ -265,7 +265,7 @@ public abstract class AbstractLog4j2Test {
     }
   }
 
-  protected static List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
+  protected List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
     String selector = System.getProperty("Log4j2.contextSelector");
     boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
     if (async && !Boolean.getBoolean("testLatestDeps")) {
