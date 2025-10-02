@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for [NATS Client](https://github.com/nats
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with the [latest
-release](https://search.maven.org/search?q=g:io.opentelemetry.instrumentation%20AND%20a:opentelemetry-nats-2.17).
+release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-nats-2.17).
 
 For Maven, add to your `pom.xml` dependencies:
 
