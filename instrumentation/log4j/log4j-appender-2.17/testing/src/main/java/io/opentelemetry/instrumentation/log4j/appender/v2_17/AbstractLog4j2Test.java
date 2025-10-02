@@ -266,11 +266,17 @@ public abstract class AbstractLog4j2Test {
   }
 
   protected static List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
-    // Code attributes are enabled in both javaagent and library test configurations
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.addAll(codeFunctionAssertions(AbstractLog4j2Test.class, methodName));
-    assertions.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
-    return assertions;
+    String selector = System.getProperty("Log4j2.contextSelector");
+    boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
+    if (async && !Boolean.getBoolean("testLatestDeps")) {
+      // source info is not available by default when async logger is used in non latest dep tests
+      return new ArrayList<>();
+    }
+
+    List<AttributeAssertion> result = new ArrayList<>();
+    result.addAll(codeFunctionAssertions(AbstractLog4j2Test.class, methodName));
+    result.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
+    return result;
   }
 
   @FunctionalInterface
