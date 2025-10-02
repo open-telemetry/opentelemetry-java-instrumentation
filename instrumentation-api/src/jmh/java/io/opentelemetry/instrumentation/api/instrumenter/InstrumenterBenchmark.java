@@ -33,8 +33,10 @@ import org.openjdk.jmh.annotations.Warmup;
 @State(Scope.Thread)
 public class InstrumenterBenchmark {
 
-  private static final Instrumenter<Void, Void> INSTRUMENTER =
-      Instrumenter.<Void, Void>builder(
+  private static final Object REQUEST = new Object();
+
+  private static final Instrumenter<Object, Void> INSTRUMENTER =
+      Instrumenter.<Object, Void>builder(
               OpenTelemetry.noop(),
               "benchmark",
               HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
@@ -44,34 +46,34 @@ public class InstrumenterBenchmark {
 
   @Benchmark
   public Context start() {
-    return INSTRUMENTER.start(Context.root(), null);
+    return INSTRUMENTER.start(Context.root(), REQUEST);
   }
 
   @Benchmark
   public Context startEnd() {
-    Context context = INSTRUMENTER.start(Context.root(), null);
-    INSTRUMENTER.end(context, null, null, null);
+    Context context = INSTRUMENTER.start(Context.root(), REQUEST);
+    INSTRUMENTER.end(context, REQUEST, null, null);
     return context;
   }
 
-  enum ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Void, Void> {
+  enum ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Object, Void> {
     INSTANCE;
 
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
 
     @Override
-    public String getUrlFull(Void unused) {
+    public String getUrlFull(Object unused) {
       return "https://opentelemetry.io/benchmark";
     }
 
     @Override
-    public String getHttpRequestMethod(Void unused) {
+    public String getHttpRequestMethod(Object unused) {
       return "GET";
     }
 
     @Override
-    public List<String> getHttpRequestHeader(Void unused, String name) {
+    public List<String> getHttpRequestHeader(Object unused, String name) {
       if (name.equalsIgnoreCase("user-agent")) {
         return Collections.singletonList("OpenTelemetryBot");
       }
@@ -79,40 +81,41 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public Integer getHttpResponseStatusCode(Void unused, Void unused2, @Nullable Throwable error) {
+    public Integer getHttpResponseStatusCode(
+        Object unused, Void unused2, @Nullable Throwable error) {
       return 200;
     }
 
     @Override
-    public List<String> getHttpResponseHeader(Void unused, Void unused2, String name) {
+    public List<String> getHttpResponseHeader(Object unused, Void unused2, String name) {
       return Collections.emptyList();
     }
 
     @Override
-    public String getNetworkProtocolName(Void unused, @Nullable Void unused2) {
+    public String getNetworkProtocolName(Object unused, @Nullable Void unused2) {
       return "http";
     }
 
     @Override
-    public String getNetworkProtocolVersion(Void unused, @Nullable Void unused2) {
+    public String getNetworkProtocolVersion(Object unused, @Nullable Void unused2) {
       return "2.0";
     }
 
     @Nullable
     @Override
-    public String getServerAddress(Void request) {
+    public String getServerAddress(Object request) {
       return null;
     }
 
     @Nullable
     @Override
-    public Integer getServerPort(Void request) {
+    public Integer getServerPort(Object request) {
       return null;
     }
 
     @Override
     public InetSocketAddress getNetworkPeerInetSocketAddress(
-        Void request, @Nullable Void response) {
+        Object request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }

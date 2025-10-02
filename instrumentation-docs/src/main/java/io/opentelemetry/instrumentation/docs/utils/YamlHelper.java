@@ -201,11 +201,26 @@ public class YamlHelper {
       if (module.getMetadata().getDescription() != null) {
         moduleMap.put("description", module.getMetadata().getDescription());
       }
+      if (module.getMetadata().getSemanticConventions() != null
+          && !module.getMetadata().getSemanticConventions().isEmpty()) {
+        List<String> conventionNames =
+            module.getMetadata().getSemanticConventions().stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+        moduleMap.put("semantic_conventions", conventionNames);
+      }
       if (module.getMetadata().getLibraryLink() != null) {
         moduleMap.put("library_link", module.getMetadata().getLibraryLink());
       }
       if (module.getMetadata().getDisabledByDefault()) {
         moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
+      }
+      if (!module.getMetadata().getFeatures().isEmpty()) {
+        List<String> functionNames =
+            module.getMetadata().getFeatures().stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+        moduleMap.put("features", functionNames);
       }
     }
   }

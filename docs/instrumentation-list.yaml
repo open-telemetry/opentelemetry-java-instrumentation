@@ -10,6 +10,9 @@ libraries:
     display_name: ActiveJ
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the ActiveJ HTTP server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://activej.io/
     source_path: instrumentation/activej-http-6.0
     minimum_java_version: 17
@@ -18,6 +21,25 @@ libraries:
     target_versions:
       javaagent:
       - io.activej:activej-http:[6.0,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       metrics:
@@ -67,6 +89,8 @@ libraries:
     description: This instrumentation provides context propagation for Akka actors,
       it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-actor-2.3
     scope:
       name: io.opentelemetry.akka-actor-2.3
@@ -80,6 +104,8 @@ libraries:
     description: This instrumentation provides context propagation for the Akka Fork-Join
       Pool, it does not emit any telemetry on its own.
     library_link: https://doc.akka.io/libraries/akka-core/current/typed/index.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-actor-fork-join-2.5
     scope:
       name: io.opentelemetry.akka-actor-fork-join-2.5
@@ -92,7 +118,15 @@ libraries:
     display_name: Akka HTTP
     description: |
       This instrumentation enables HTTP client spans and metrics for the Akka HTTP client, and HTTP server spans and metrics for the Akka HTTP server.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://doc.akka.io/docs/akka-http/current/index.html
+    features:
+    - HTTP_ROUTE
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/akka/akka-http-10.0
     scope:
       name: io.opentelemetry.akka-http-10.0
@@ -101,6 +135,47 @@ libraries:
       - com.typesafe.akka:akka-http_2.12:[10,)
       - com.typesafe.akka:akka-http_2.13:[10,)
       - com.typesafe.akka:akka-http_2.11:[10,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       metrics:
@@ -181,6 +256,8 @@ libraries:
   - name: alibaba-druid-1.0
     description: |
       The Alibaba Druid instrumentation generates database connection pool metrics for druid data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/alibaba/druid
     source_path: instrumentation/alibaba-druid-1.0
     scope:
@@ -190,6 +267,12 @@ libraries:
       - com.alibaba:druid:(,)
       library:
       - com.alibaba:druid:1.0.0
+    configurations:
+    - name: otel.semconv-stability.opt-in
+      description: |
+        Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
+      type: list
+      default: ''
     telemetry:
     - when: default
       metrics:
@@ -274,9 +357,12 @@ libraries:
           type: STRING
   apache:
   - name: apache-dbcp-2.0
+    display_name: Apache DBCP
     description: |
       This instrumentation enables database connection pools metrics for Apache DBCP.
       The instrumentation uses `MBeanRegistration` methods for lifecycle detection, therefore it only activates if the `BasicDataSource` is registered to an `MBeanServer`. If using Spring Boot, this happens automatically as all Spring beans that support JMX registration are automatically registered by default.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://commons.apache.org/proper/commons-dbcp/
     source_path: instrumentation/apache-dbcp-2.0
     scope:
@@ -286,6 +372,12 @@ libraries:
       - org.apache.commons:commons-dbcp2:[2,)
       library:
       - org.apache.commons:commons-dbcp2:2.0
+    configurations:
+    - name: otel.semconv-stability.opt-in
+      description: |
+        Opt-in to emit stable semantic conventions instead of the old experimental semantic conventions. Accepts a comma-separated list of semantic convention groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new conventions simultaneously. Stable semantic conventions will become the default in version 3.0 of the agent.
+      type: list
+      default: ''
     telemetry:
     - when: default
       metrics:
@@ -354,10 +446,14 @@ libraries:
         - name: db.client.connection.pool.name
           type: STRING
   - name: apache-dubbo-2.7
-    description: The Apache Dubbo instrumentation provides RPC client spans and RPC
-      server spans for Apache Dubbo RPC calls. Each call produces a span named after
-      the Dubbo method, enriched with standard RPC attributes (system, service, method),
-      network attributes, and error details if an exception occurs.
+    display_name: Apache Dubbo
+    description: |
+      The Apache Dubbo instrumentation provides RPC client spans and metrics, and RPC server spans and metrics for Apache Dubbo RPC calls.
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_CLIENT_METRICS
+    - RPC_SERVER_SPANS
+    - RPC_SERVER_METRICS
     library_link: https://github.com/apache/dubbo/
     source_path: instrumentation/apache-dubbo-2.7
     scope:
@@ -373,6 +469,33 @@ libraries:
       default: ''
     telemetry:
     - when: default
+      metrics:
+      - name: rpc.client.duration
+        description: The duration of an outbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.duration
+        description: The duration of an inbound RPC invocation.
+        type: HISTOGRAM
+        unit: ms
+        attributes:
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
       spans:
       - span_kind: CLIENT
         attributes:
@@ -399,8 +522,12 @@ libraries:
         - name: rpc.system
           type: STRING
   - name: apache-httpasyncclient-4.1
+    display_name: Apache HttpAsyncClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for the Apache HttpAsyncClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpasyncclient-4.1
     scope:
@@ -446,8 +573,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-2.0
+    display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for versions 2 and 3 of the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-2.0
     scope:
@@ -491,8 +622,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.0
+    display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for version 4 of the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.0
     scope:
@@ -539,8 +674,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-4.3
+    display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
       HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-4.3
     scope:
@@ -588,8 +727,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.0
+    display_name: Apache HttpClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for version 5 of the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.0
     scope:
@@ -635,8 +778,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: apache-httpclient-5.2
+    display_name: Apache HttpClient
     description: This instrumentation provides a library integration that enables
       HTTP client spans and HTTP client metrics for the Apache HttpClient.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://hc.apache.org/index.html
     source_path: instrumentation/apache-httpclient/apache-httpclient-5.2
     scope:
@@ -3005,6 +3152,38 @@ libraries:
       description: Whether to instrument all classes that implement the Executor interface.
       type: boolean
       default: false
+  failsafe:
+  - name: failsafe-3.0
+    description: This standalone instrumentation enables metrics for Failsafe circuit
+      breakers.
+    library_link: https://failsafe.dev
+    source_path: instrumentation/failsafe-3.0
+    scope:
+      name: io.opentelemetry.failsafe-3.0
+    target_versions:
+      library:
+      - dev.failsafe:failsafe:3.0.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: failsafe.circuit_breaker.execution.count
+        description: Count of circuit breaker executions.
+        type: LONG_SUM
+        unit: execution
+        attributes:
+        - name: failsafe.circuit_breaker.name
+          type: STRING
+        - name: failsafe.circuit_breaker.outcome
+          type: STRING
+      - name: failsafe.circuit_breaker.state_change.count
+        description: Count of circuit breaker state changes.
+        type: LONG_SUM
+        unit: execution
+        attributes:
+        - name: failsafe.circuit_breaker.name
+          type: STRING
+        - name: failsafe.circuit_breaker.state
+          type: STRING
   finagle:
   - name: finagle-http-23.11
     description: |
@@ -4178,21 +4357,64 @@ libraries:
       - io.javalin:javalin:[5.0.0,)
   jaxrs:
   - name: jaxrs-1.0
-    disabled_by_default: true
+    display_name: JAX-RS 1.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods, and enriches existing HTTP server spans with route information.
+    library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
     source_path: instrumentation/jaxrs/jaxrs-1.0
     scope:
       name: io.opentelemetry.jaxrs-1.0
     target_versions:
       javaagent:
       - javax.ws.rs:jsr311-api:[0.5,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxrs-2.0-annotations
+    display_name: JAX-RS 2.x
+    description: |
+      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+    library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-2.0-annotations
     target_versions:
       javaagent:
       - javax.ws.rs:javax.ws.rs-api:[,]
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxrs-2.0-cxf-3.2
+    display_name: Apache CXF JAX-RS 2.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods when using Apache CXF, and enriches existing HTTP server spans with route information.
+    library_link: https://cxf.apache.org/
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
     scope:
       name: io.opentelemetry.jaxrs-2.0-cxf-3.2
@@ -4200,7 +4422,39 @@ libraries:
       javaagent:
       - org.apache.tomee:openejb-cxf-rs:(8,)
       - org.apache.cxf:cxf-rt-frontend-jaxrs:[3.2,4)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: jaxrs.canceled
+          type: BOOLEAN
   - name: jaxrs-2.0-jersey-2.0
+    display_name: Eclipse Jersey JAX-RS 2.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+    library_link: https://eclipse-ee4j.github.io/jersey/
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-jersey-2.0
@@ -4208,7 +4462,39 @@ libraries:
       javaagent:
       - org.glassfish.jersey.core:jersey-server:[2.0,3.0.0)
       - org.glassfish.jersey.containers:jersey-container-servlet:[2.0,3.0.0)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: jaxrs.canceled
+          type: BOOLEAN
   - name: jaxrs-2.0-resteasy-3.0
+    display_name: JBoss RESTEasy JAX-RS 2.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+    library_link: https://resteasy.dev/
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.0
@@ -4216,7 +4502,39 @@ libraries:
       javaagent:
       - org.jboss.resteasy:resteasy-jaxrs:[3.0.0.Final,3.1.0.Final)
       - org.jboss.resteasy:resteasy-jaxrs:[3.5.0.Final,4)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: jaxrs.canceled
+          type: BOOLEAN
   - name: jaxrs-2.0-resteasy-3.1
+    display_name: JBoss RESTEasy JAX-RS 2.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+    library_link: https://resteasy.dev/
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.1
@@ -4224,14 +4542,68 @@ libraries:
       javaagent:
       - org.jboss.resteasy:resteasy-jaxrs:[3.1.0.Final,3.5.0.Final)
       - org.jboss.resteasy:resteasy-core:[4.0.0.Final,6)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: jaxrs.canceled
+          type: BOOLEAN
   - name: jaxrs-3.0-annotations
+    display_name: JAX-RS 3.x
+    description: |
+      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+    library_link: https://jakarta.ee/specifications/restful-ws/3.0/
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-3.0-annotations
     target_versions:
       javaagent:
       - jakarta.ws.rs:jakarta.ws.rs-api:[3.0.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxrs-3.0-jersey-3.0
+    display_name: Eclipse Jersey JAX-RS 3.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+    library_link: https://eclipse-ee4j.github.io/jersey/
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
     minimum_java_version: 11
     scope:
@@ -4239,7 +4611,39 @@ libraries:
     target_versions:
       javaagent:
       - org.glassfish.jersey.core:jersey-server:[3.0.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: jaxrs.canceled
+          type: BOOLEAN
   - name: jaxrs-3.0-resteasy-6.0
+    display_name: JBoss RESTEasy JAX-RS 3.x
+    description: |
+      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+    library_link: https://resteasy.dev/
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
     minimum_java_version: 11
     scope:
@@ -4247,6 +4651,34 @@ libraries:
     target_versions:
       javaagent:
       - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller (INTERNAL) spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jaxrs.experimental-span-attributes
+      description: Enables the experimental `jaxrs.canceled` span attribute.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.jaxrs.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: jaxrs.canceled
+          type: BOOLEAN
   jaxws:
   - name: jaxws-2.0
     source_path: instrumentation/jaxws/jaxws-2.0
@@ -6126,13 +6558,6 @@ libraries:
     scope:
       name: io.opentelemetry.runtime-telemetry-java8
   rxjava:
-  - name: rxjava-1.0
-    source_path: instrumentation/rxjava/rxjava-1.0
-    scope:
-      name: io.opentelemetry.rxjava-1.0
-    target_versions:
-      library:
-      - io.reactivex:rxjava:1.0.7
   - name: rxjava-2.0
     source_path: instrumentation/rxjava/rxjava-2.0
     scope:
@@ -7704,6 +8129,13 @@ internal:
   source_path: instrumentation/internal/internal-lambda
   scope:
     name: io.opentelemetry.internal-lambda
+- name: rxjava-1.0
+  source_path: instrumentation/rxjava/rxjava-1.0
+  scope:
+    name: io.opentelemetry.rxjava-1.0
+  target_versions:
+    library:
+    - io.reactivex:rxjava:1.0.7
 - name: internal-eclipse-osgi-3.6
   source_path: instrumentation/internal/internal-eclipse-osgi-3.6
   scope:

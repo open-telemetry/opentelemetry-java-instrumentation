@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * An interface for getting SQL database client attributes.
@@ -33,6 +34,7 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   Collection<String> getRawQueryTexts(REQUEST request);
 
   // TODO: make this required to implement
+  @Nullable
   default Long getBatchSize(REQUEST request) {
     return null;
   }

@@ -1,6 +1,6 @@
 plugins {
   id("java")
-  id("com.diffplug.spotless") version "7.2.1"
+  id("com.diffplug.spotless") version "8.0.0"
 }
 
 spotless {
@@ -16,7 +16,7 @@ repositories {
 }
 
 dependencies {
-  implementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
+  implementation(enforcedPlatform("org.junit:junit-bom:5.14.0"))
 
   testImplementation("org.testcontainers:testcontainers:1.21.3")
   testImplementation("org.testcontainers:postgresql:1.21.3")

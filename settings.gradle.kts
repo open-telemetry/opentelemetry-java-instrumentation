@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
-    id("org.graalvm.buildtools.native") version "0.11.0"
+    id("org.graalvm.buildtools.native") version "0.11.1"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
   }
@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.1.1"
+  id("com.gradle.develocity") version "4.2"
 }
 
 dependencyResolutionManagement {
@@ -102,9 +102,7 @@ include(":instrumentation-docs")
 include(":test-report")
 include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
-include(":testing:armeria-shaded-for-testing")
-include(":testing:proto-shaded-for-testing")
-include(":testing:wiremock-shaded-for-testing")
+include(":testing:dependencies-shaded-for-testing")
 include(":testing-common")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
@@ -230,6 +228,7 @@ include(":instrumentation:executors:jdk21-testing")
 include(":instrumentation:executors:testing")
 include(":instrumentation:external-annotations:javaagent")
 include(":instrumentation:external-annotations:javaagent-unit-tests")
+include(":instrumentation:failsafe-3.0:library")
 include(":instrumentation:finagle-http-23.11:javaagent")
 include(":instrumentation:finatra-2.9:javaagent")
 include(":instrumentation:geode-1.4:javaagent")

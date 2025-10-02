@@ -201,7 +201,7 @@ public class FlakyTestReporter {
           @Override
           public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
             String name = file.getFileName().toString();
-            if (name.startsWith("TEST-") && name.endsWith(".xml")) {
+            if (name.startsWith("TEST-") && name.endsWith(".xml") && file.toFile().length() > 0) {
               scanTestFile(file);
             }
 

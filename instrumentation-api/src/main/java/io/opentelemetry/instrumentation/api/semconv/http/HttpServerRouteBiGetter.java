@@ -21,5 +21,5 @@ public interface HttpServerRouteBiGetter<T, U> {
    * {@code arg2}; or {@code null} if it was not found.
    */
   @Nullable
-  String get(Context context, T arg1, U arg2);
+  String get(Context context, @Nullable T arg1, U arg2);
 }

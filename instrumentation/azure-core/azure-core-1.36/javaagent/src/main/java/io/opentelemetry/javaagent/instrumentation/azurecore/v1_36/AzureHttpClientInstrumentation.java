@@ -18,7 +18,9 @@ import com.azure.core.http.HttpResponse;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.core.publisher.Mono;
@@ -50,27 +52,26 @@ public class AzureHttpClientInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class SuppressNestedClientMonoAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void asyncSendExit(
+    public static Mono<HttpResponse> asyncSendExit(
         @Advice.Argument(1) com.azure.core.util.Context azContext,
-        @Advice.Return(readOnly = false) Mono<HttpResponse> mono) {
-      mono = disallowNestedClientSpanMono(mono, azContext);
+        @Advice.Return Mono<HttpResponse> mono) {
+      return disallowNestedClientSpanMono(mono, azContext);
     }
   }
 
   @SuppressWarnings("unused")
   public static class SuppressNestedClientSyncAdvice {
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void syncSendEnter(
-        @Advice.Argument(1) com.azure.core.util.Context azContext,
-        @Advice.Local("otelScope") Scope scope) {
-      scope = disallowNestedClientSpanSync(azContext);
+    public static Scope syncSendEnter(@Advice.Argument(1) com.azure.core.util.Context azContext) {
+      return disallowNestedClientSpanSync(azContext);
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void syncSendExit(
-        @Advice.Return HttpResponse response, @Advice.Local("otelScope") Scope scope) {
+    public static void syncSendExit(@Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

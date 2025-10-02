@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.flushTimeout;
+import static io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2.AwsLambdaSingletons.functionInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -25,6 +26,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
@@ -55,63 +57,90 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
-        @Advice.Argument(1) Context context,
-        @Advice.Local("otelInput") AwsLambdaRequest input,
-        @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
-        @Advice.Local("otelFunctionScope") Scope functionScope,
-        @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
-        @Advice.Local("otelMessageScope") Scope messageScope) {
-      Map<String, String> headers = Collections.emptyMap();
-      if (arg instanceof APIGatewayProxyRequestEvent) {
-        headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
+    public static class AdviceScope {
+      private final AwsLambdaRequest lambdaRequest;
+      private final Scope functionScope;
+      private final io.opentelemetry.context.Context functionContext;
+      private final Scope messageScope;
+      private final io.opentelemetry.context.Context messageContext;
+
+      private AdviceScope(
+          AwsLambdaRequest lambdaRequest,
+          io.opentelemetry.context.Context functionContext,
+          Scope functionScope,
+          io.opentelemetry.context.Context messageContext,
+          Scope messageScope) {
+        this.lambdaRequest = lambdaRequest;
+        this.functionContext = functionContext;
+        this.functionScope = functionScope;
+        this.messageContext = messageContext;
+        this.messageScope = messageScope;
       }
-      input = AwsLambdaRequest.create(context, arg, headers);
-      io.opentelemetry.context.Context parentContext =
-          AwsLambdaSingletons.functionInstrumenter().extract(input);
 
-      if (!AwsLambdaSingletons.functionInstrumenter().shouldStart(parentContext, input)) {
-        return;
-      }
+      @Nullable
+      public static AdviceScope start(Object arg, Context context) {
 
-      functionContext = AwsLambdaSingletons.functionInstrumenter().start(parentContext, input);
-      functionScope = functionContext.makeCurrent();
-
-      if (arg instanceof SQSEvent) {
-        if (AwsLambdaSingletons.messageInstrumenter()
-            .shouldStart(functionContext, (SQSEvent) arg)) {
-          messageContext =
-              AwsLambdaSingletons.messageInstrumenter().start(functionContext, (SQSEvent) arg);
-          messageScope = messageContext.makeCurrent();
+        Map<String, String> headers = Collections.emptyMap();
+        if (arg instanceof APIGatewayProxyRequestEvent) {
+          headers = MapUtils.lowercaseMap(((APIGatewayProxyRequestEvent) arg).getHeaders());
         }
+        AwsLambdaRequest lambdaRequest = AwsLambdaRequest.create(context, arg, headers);
+        io.opentelemetry.context.Context parentContext =
+            functionInstrumenter().extract(lambdaRequest);
+
+        if (!functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {
+          return null;
+        }
+
+        io.opentelemetry.context.Context functionContext =
+            functionInstrumenter().start(parentContext, lambdaRequest);
+        Scope functionScope = functionContext.makeCurrent();
+
+        io.opentelemetry.context.Context messageContext = null;
+        Scope messageScope = null;
+        if (arg instanceof SQSEvent) {
+          if (AwsLambdaSingletons.messageInstrumenter()
+              .shouldStart(functionContext, (SQSEvent) arg)) {
+            messageContext =
+                AwsLambdaSingletons.messageInstrumenter().start(functionContext, (SQSEvent) arg);
+            messageScope = messageContext.makeCurrent();
+          }
+        }
+        return new AdviceScope(
+            lambdaRequest, functionContext, functionScope, messageContext, messageScope);
       }
+
+      public void end(Object arg, @Nullable Object result, @Nullable Throwable throwable) {
+        if (messageScope != null) {
+          messageScope.close();
+          AwsLambdaSingletons.messageInstrumenter()
+              .end(messageContext, (SQSEvent) arg, null, throwable);
+        }
+        if (functionScope != null) {
+          functionScope.close();
+          functionInstrumenter().end(functionContext, lambdaRequest, result, throwable);
+        }
+        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
+        @Advice.Argument(1) Context context) {
+      return AdviceScope.start(arg, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
-        @Advice.Return Object result,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelInput") AwsLambdaRequest input,
-        @Advice.Local("otelFunctionContext") io.opentelemetry.context.Context functionContext,
-        @Advice.Local("otelFunctionScope") Scope functionScope,
-        @Advice.Local("otelMessageContext") io.opentelemetry.context.Context messageContext,
-        @Advice.Local("otelMessageScope") Scope messageScope) {
-
-      if (messageScope != null) {
-        messageScope.close();
-        AwsLambdaSingletons.messageInstrumenter()
-            .end(messageContext, (SQSEvent) arg, null, throwable);
+        @Advice.Return @Nullable Object result,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(arg, result, throwable);
       }
-
-      if (functionScope != null) {
-        functionScope.close();
-        AwsLambdaSingletons.functionInstrumenter().end(functionContext, input, result, throwable);
-      }
-
-      OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
     }
   }
 }

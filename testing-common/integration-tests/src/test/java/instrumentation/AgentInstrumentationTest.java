@@ -39,7 +39,7 @@ class AgentInstrumentationTest {
 
   private static final ClassLoader BOOTSTRAP_CLASSLOADER = null;
   private static final List<String> BOOTSTRAP_PACKAGE_PREFIXES =
-      BootstrapPackagePrefixesHolder.getBoostrapPackagePrefixes();
+      BootstrapPackagePrefixesHolder.getBootstrapPackagePrefixes();
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
