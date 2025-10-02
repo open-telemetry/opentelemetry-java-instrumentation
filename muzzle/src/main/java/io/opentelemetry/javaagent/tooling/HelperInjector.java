@@ -506,6 +506,8 @@ public class HelperInjector implements Transformer {
     }
 
     return lookup -> {
+      // if lookup is not specified fall back to using ClassInjector.UsingReflection
+      // this is used on jdk8
       if (lookup == null) {
         return helperClassInjector.inject(classLoader, className);
       }

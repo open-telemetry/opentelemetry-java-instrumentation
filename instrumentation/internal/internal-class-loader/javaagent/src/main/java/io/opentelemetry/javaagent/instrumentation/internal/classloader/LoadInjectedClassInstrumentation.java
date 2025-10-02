@@ -90,6 +90,9 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
         @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) throws Throwable {
       HelperClassLoader helperClassLoader =
           InjectedClassHelper.getHelperClassLoader(classLoader, name);
+      // on jdk8 we can't use MethodHandles.lookup() because it fails when called from
+      // java.lang.ClassLoader with java.lang.IllegalArgumentException: illegal lookupClass: class
+      // java.lang.ClassLoader
       return helperClassLoader != null ? helperClassLoader.loadHelperClass(null) : null;
     }
 
