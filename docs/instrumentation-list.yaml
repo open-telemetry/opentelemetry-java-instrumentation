@@ -4611,11 +4611,11 @@ libraries:
     display_name: JAX-WS
     description: This instrumentation enables controller spans for JAX-WS Provider
       implementations.
-    library_link: https://jakarta.ee/specifications/xml-web-services/2.3/apidocs/javax/xml/ws/package-summary.html
-    disabled_by_default: true
+    library_link: https://github.com/jakartaee/jax-ws-api
     features:
     - CONTROLLER_SPANS
     - CONTEXT_PROPAGATION
+    - EXPERIMENTAL_ONLY
     source_path: instrumentation/jaxws/jaxws-2.0
     scope:
       name: io.opentelemetry.jaxws-2.0
@@ -4628,7 +4628,7 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: default
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
         attributes:
@@ -4645,6 +4645,7 @@ libraries:
     - CONTROLLER_SPANS
     - CONTEXT_PROPAGATION
     - HTTP_ROUTE
+    - EXPERIMENTAL_ONLY
     source_path: instrumentation/jaxws/jaxws-2.0-axis2-1.6
     scope:
       name: io.opentelemetry.jaxws-2.0-axis2-1.6
@@ -4657,7 +4658,7 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: default
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
         attributes: []
@@ -4669,6 +4670,8 @@ libraries:
     features:
     - CONTROLLER_SPANS
     - CONTEXT_PROPAGATION
+    - HTTP_ROUTE
+    - EXPERIMENTAL_ONLY
     source_path: instrumentation/jaxws/jaxws-cxf-3.0
     scope:
       name: io.opentelemetry.jaxws-cxf-3.0
@@ -4681,7 +4684,7 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: default
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
         attributes: []
@@ -4706,7 +4709,7 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: default
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
         attributes:

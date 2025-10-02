@@ -7,6 +7,7 @@ features:
   - CONTROLLER_SPANS
   - CONTEXT_PROPAGATION
   - HTTP_ROUTE
+  - EXPERIMENTAL_ONLY
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
     description: Enables the creation of experimental controller (INTERNAL) spans.
