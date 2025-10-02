@@ -4609,13 +4609,11 @@ libraries:
   jaxws:
   - name: jaxws-2.0
     display_name: JAX-WS
-    description: This instrumentation enables controller spans for JAX-WS Provider
-      implementations.
+    description: |
+      This instrumentation enables controller spans for JAX-WS Provider implementations (controller spans are disabled by default).
     library_link: https://github.com/jakartaee/jax-ws-api
     features:
     - CONTROLLER_SPANS
-    - CONTEXT_PROPAGATION
-    - EXPERIMENTAL_ONLY
     source_path: instrumentation/jaxws/jaxws-2.0
     scope:
       name: io.opentelemetry.jaxws-2.0
@@ -4627,25 +4625,14 @@ libraries:
       description: Enables the creation of experimental controller (INTERNAL) spans.
       type: boolean
       default: false
-    telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
   - name: jaxws-2.0-axis2-1.6
     display_name: Apache Axis2 1.6 JAX-WS 2.x
     description: |
-      This instrumentation enables controller spans for Apache Axis2 JAX-WS web services, and enriches HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache Axis2 JAX-WS web services (controller spans are disabled by default).
     library_link: https://axis.apache.org/axis2/java/core/
     features:
-    - CONTROLLER_SPANS
-    - CONTEXT_PROPAGATION
     - HTTP_ROUTE
-    - EXPERIMENTAL_ONLY
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-2.0-axis2-1.6
     scope:
       name: io.opentelemetry.jaxws-2.0-axis2-1.6
@@ -4657,21 +4644,14 @@ libraries:
       description: Enables the creation of experimental controller (INTERNAL) spans.
       type: boolean
       default: false
-    telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes: []
   - name: jaxws-cxf-3.0
     display_name: Apache CXF 3.x JAX-WS
     description: |
-      This instrumentation enables controller spans for Apache CXF JAX-WS web services, and enriches HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default).
     library_link: https://cxf.apache.org/
     features:
-    - CONTROLLER_SPANS
-    - CONTEXT_PROPAGATION
     - HTTP_ROUTE
-    - EXPERIMENTAL_ONLY
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-cxf-3.0
     scope:
       name: io.opentelemetry.jaxws-cxf-3.0
@@ -4683,20 +4663,14 @@ libraries:
       description: Enables the creation of experimental controller (INTERNAL) spans.
       type: boolean
       default: false
-    telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes: []
   - name: jaxws-jws-api-1.1
     display_name: JWS API
     description: |
-      This instrumentation enables controller spans for methods annotated with the @WebService annotation from the JWS API.
+      This instrumentation enables controller spans for methods annotated with the @WebService annotation from the JWS API (controller spans are disabled by default).
     library_link: https://github.com/jakartaee/jws-api
     disabled_by_default: true
     features:
     - CONTROLLER_SPANS
-    - CONTEXT_PROPAGATION
     source_path: instrumentation/jaxws/jaxws-jws-api-1.1
     scope:
       name: io.opentelemetry.jaxws-jws-api-1.1
@@ -4708,15 +4682,6 @@ libraries:
       description: Enables the creation of experimental controller (INTERNAL) spans.
       type: boolean
       default: false
-    telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
   - name: jaxws-metro-2.2
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:

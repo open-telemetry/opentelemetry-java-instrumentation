@@ -1,11 +1,10 @@
 display_name: JWS API
 description: >
   This instrumentation enables controller spans for methods annotated with the @WebService
-  annotation from the JWS API.
+  annotation from the JWS API (controller spans are disabled by default).
 library_link: https://github.com/jakartaee/jws-api
 features:
   - CONTROLLER_SPANS
-  - CONTEXT_PROPAGATION
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
     description: Enables the creation of experimental controller (INTERNAL) spans.
