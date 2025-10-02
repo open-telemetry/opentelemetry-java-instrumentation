@@ -61,7 +61,7 @@ public class Tomcat10ServerHandlerAdvice {
       @Advice.Argument(0) Request request,
       @Advice.Argument(1) Response response,
       @Advice.Thrown @Nullable Throwable throwable,
-      @Advice.Enter AdviceScope adviceScope) {
+      @Advice.Enter @Nullable AdviceScope adviceScope) {
     if (adviceScope != null) {
       adviceScope.end(request, response, throwable);
     }
