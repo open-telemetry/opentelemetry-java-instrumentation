@@ -8,22 +8,34 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.handling.Context;
+import ratpack.handling.Handler;
 
 public final class RatpackSingletons {
 
-  private static final Instrumenter<String, Void> INSTRUMENTER =
-      Instrumenter.<String, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", s -> s)
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-          .buildInstrumenter();
+  private static final Instrumenter<Handler, Void> INSTRUMENTER;
 
-  public static Instrumenter<String, Void> instrumenter() {
+  static {
+    RatpackCodeAttributesGetter codeAttributesGetter = new RatpackCodeAttributesGetter();
+
+    INSTRUMENTER =
+        Instrumenter.<Handler, Void>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.ratpack-1.4",
+                CodeSpanNameExtractor.create(codeAttributesGetter))
+            .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .buildInstrumenter();
+  }
+
+  public static Instrumenter<Handler, Void> instrumenter() {
     return INSTRUMENTER;
   }
 
