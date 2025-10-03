@@ -2,7 +2,11 @@ description: >
   The JDBC instrumentation provides database client spans and metrics. Each call produces a span
   named after the SQL verb, enriched with standard DB client attributes (system, database,
   operation, sanitized statement, peer address) and error details if an exception occurs.
-  
+
+  The instrumentation unwraps pooled connections to cache database metadata. If your connection pool
+  doesn't support unwrapping (java.sql.Wrapper), metadata extraction will occur on every operation,
+  causing higher CPU usage.
+
   There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
   but is disabled by default due to the volume of telemetry produced.
 library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
