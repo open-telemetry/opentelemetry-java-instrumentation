@@ -34,7 +34,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
 
   @Override
   public void handle(RoutingContext context) {
-//    try (Scope scope = parentContext.makeCurrent()) {
+    try (Scope scope = parentContext.makeCurrent()) {
       // restore any route information stored previously
       RoutingContextUtil.setRoute(context, RouteHolder.get(parentContext));
       String route = getRoute(parentContext, context);
@@ -42,7 +42,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
         route = route.substring(0, route.length() - 1);
       }
       HttpServerRoute.update(parentContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
-    try (Scope ignore = RouteHolder.init(parentContext, route).makeCurrent()) {
+//    try (Scope ignore = RouteHolder.init(parentContext, route).makeCurrent()) {
       handler.handle(context);
 
     } catch (Throwable throwable) {
