@@ -20,6 +20,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
@@ -78,7 +79,7 @@ class KafkaTelemetryInterceptorTest {
               Map<String, Object> producerConfig = producerConfig();
               producerConfig.put(
                   TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
-                  (java.util.function.Supplier<?>) () -> "not a KafkaTelemetry");
+                  (Supplier<?>) () -> "not a KafkaTelemetry");
               new KafkaProducer<>(producerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
@@ -108,7 +109,7 @@ class KafkaTelemetryInterceptorTest {
               Map<String, Object> consumerConfig = consumerConfig();
               consumerConfig.put(
                   TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
-                  (java.util.function.Supplier<?>) () -> "not a KafkaTelemetry");
+                  (Supplier<?>) () -> "not a KafkaTelemetry");
               new KafkaConsumer<>(consumerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
