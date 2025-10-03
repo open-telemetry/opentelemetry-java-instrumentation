@@ -17,23 +17,36 @@ for file in $(find instrumentation -name "*Module.java"); do
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
-    # TODO these need some work still
+    # TODO: JAX-RS modules use "jaxrs" as the main instrumentation name instead of the module name,
+    # providing multiple alternative names (jaxrs, jaxrs-X.Y, framework-name) for flexibility.
+    # This allows users to disable all JAX-RS instrumentation with a single key.
+    # Future work: evaluate if this pattern should be standardized or changed.
     continue
   fi
   if [[ "$simple_module_name" == *jaxws* ]]; then
-    # TODO these need some work still
+    # TODO: JAX-WS modules use "jaxws" as the main instrumentation name instead of the module name,
+    # similar to JAX-RS. Future work: align with the standard pattern or document the exception.
     continue
   fi
   if [[ "$simple_module_name" == jdbc ]]; then
-    # TODO split jdbc-datasource out into separate instrumentation?
+    # TODO: The jdbc directory contains two separate InstrumentationModules:
+    # - JdbcInstrumentationModule with super("jdbc") 
+    # - DataSourceInstrumentationModule with super("jdbc-datasource")
+    # Consider splitting jdbc-datasource into a separate instrumentation directory to follow
+    # the standard pattern where each directory contains only one InstrumentationModule.
     continue
   fi
   if [[ "$simple_module_name" == kafka-clients ]]; then
-    # TODO split kafka client metrics out into separate instrumentation?
+    # TODO: The kafka-clients-X.Y directory contains two InstrumentationModules:
+    # - KafkaClientsInstrumentationModule with super("kafka-clients", "kafka-clients-X.Y", "kafka")
+    # - KafkaMetricsInstrumentationModule with super("kafka-clients-metrics", ...)
+    # Consider splitting kafka-clients-metrics into a separate instrumentation directory.
     continue
   fi
   if [[ "$simple_module_name" == quarkus-resteasy-reactive ]]; then
-    # TODO module is missing a base version
+    # TODO: quarkus-resteasy-reactive should be versioned in the directory name
+    # (e.g., quarkus-resteasy-reactive-3.0) to follow the standard pattern where
+    # the directory name matches the versioned instrumentation name.
     continue
   fi
 
