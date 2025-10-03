@@ -35,6 +35,49 @@ The Kafka clients API provides a way to "intercept" messages before they are sen
 The OpenTelemetry instrumented Kafka library provides two interceptors to be configured to add tracing information automatically.
 The interceptor class has to be set in the properties bag used to create the Kafka client.
 
+##### Recommended approach: Configuring interceptors with KafkaTelemetry
+
+The recommended way to use interceptors is to configure them with a `KafkaTelemetry` instance.
+This gives you full control over the configuration, including which `OpenTelemetry` instance to use,
+whether to enable receive telemetry, and which headers to capture.
+
+For the producer, configure the interceptor with the KafkaTelemetry instance:
+
+```java
+KafkaTelemetry telemetry = KafkaTelemetry.builder(openTelemetry)
+    .setCapturedHeaders(Arrays.asList("custom-header"))
+    .build();
+
+Map<String, Object> props = new HashMap<>();
+props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+props.putAll(telemetry.producerInterceptorConfigProperties());
+
+Producer<String, String> producer = new KafkaProducer<>(props);
+```
+
+For the consumer, configure the interceptor with the KafkaTelemetry instance:
+
+```java
+KafkaTelemetry telemetry = KafkaTelemetry.builder(openTelemetry)
+    .setMessagingReceiveInstrumentationEnabled(true)
+    .setCapturedHeaders(Arrays.asList("custom-header"))
+    .build();
+
+Map<String, Object> props = new HashMap<>();
+props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-group");
+props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+props.putAll(telemetry.consumerInterceptorConfigProperties());
+
+Consumer<String, String> consumer = new KafkaConsumer<>(props);
+```
+
+##### Alternative: Using interceptors with global OpenTelemetry
+
+If you don't explicitly configure the interceptors with a `KafkaTelemetry` instance, they will fall back to using
+`GlobalOpenTelemetry.get()` and system properties for configuration.
+
 Use the `TracingProducerInterceptor` for the producer in order to create a "send" span automatically, each time a message is sent.
 
 ```java
@@ -46,6 +89,10 @@ Use the `TracingConsumerInterceptor` for the consumer in order to create a "rece
 ```java
 props.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
 ```
+
+The interceptors will use the following system properties for configuration:
+- `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` - Enable receive telemetry (default: false)
+- `otel.instrumentation.messaging.experimental.capture-headers` - List of headers to capture as span attributes
 
 #### Wrapping clients
 
