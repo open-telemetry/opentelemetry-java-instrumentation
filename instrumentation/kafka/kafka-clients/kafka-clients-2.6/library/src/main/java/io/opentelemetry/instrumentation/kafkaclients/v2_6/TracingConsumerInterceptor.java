@@ -31,6 +31,9 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
+  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
+      "opentelemetry.experimental.kafka-telemetry.supplier";
+
   @Nullable private KafkaTelemetry telemetry;
   private String consumerGroup;
   private String clientId;
@@ -63,7 +66,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 
-    Object telemetrySupplier = configs.get(KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+    Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
       this.telemetry =
@@ -82,7 +85,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     if (!(telemetrySupplier instanceof Supplier)) {
       throw new IllegalStateException(
           "Configuration property "
-              + KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
               + " is not instance of Supplier");
     }
 
@@ -90,7 +93,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     if (!(kafkaTelemetry instanceof KafkaTelemetry)) {
       throw new IllegalStateException(
           "Configuration property "
-              + KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
               + " supplier does not return KafkaTelemetry instance");
     }
 

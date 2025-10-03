@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
@@ -205,61 +204,6 @@ public final class KafkaTelemetry {
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
-    return Collections.unmodifiableMap(config);
-  }
-
-  /**
-   * Returns a config property key that can be used to pass this {@link KafkaTelemetry} instance to
-   * interceptors.
-   *
-   * <p>This is an internal config key used by the library instrumentation interceptors.
-   */
-  static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
-      "opentelemetry.experimental.kafka-telemetry.supplier";
-
-  /**
-   * Produces a set of kafka producer config properties to configure tracing in {@code
-   * TracingProducerInterceptor}. Add these resulting properties to the configuration map used to
-   * initialize a {@link KafkaProducer}.
-   *
-   * <p>Example usage:
-   *
-   * <pre>{@code
-   * //    Map<String, Object> config = new HashMap<>();
-   * //    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
-   * //    config.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
-   * //    config.putAll(kafkaTelemetry.producerInterceptorConfigProperties());
-   * //    try (KafkaProducer<?, ?> producer = new KafkaProducer<>(config)) { ... }
-   * }</pre>
-   *
-   * @return the kafka producer interceptor config properties
-   */
-  public Map<String, ?> producerInterceptorConfigProperties() {
-    Map<String, Object> config = new HashMap<>();
-    config.put(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, new KafkaTelemetrySupplier(this));
-    return Collections.unmodifiableMap(config);
-  }
-
-  /**
-   * Produces a set of kafka consumer config properties to configure tracing in {@code
-   * TracingConsumerInterceptor}. Add these resulting properties to the configuration map used to
-   * initialize a {@link KafkaConsumer}.
-   *
-   * <p>Example usage:
-   *
-   * <pre>{@code
-   * //    Map<String, Object> config = new HashMap<>();
-   * //    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
-   * //    config.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
-   * //    config.putAll(kafkaTelemetry.consumerInterceptorConfigProperties());
-   * //    try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(config)) { ... }
-   * }</pre>
-   *
-   * @return the kafka consumer interceptor config properties
-   */
-  public Map<String, ?> consumerInterceptorConfigProperties() {
-    Map<String, Object> config = new HashMap<>();
-    config.put(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, new KafkaTelemetrySupplier(this));
     return Collections.unmodifiableMap(config);
   }
 

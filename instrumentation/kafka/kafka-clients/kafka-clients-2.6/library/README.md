@@ -51,7 +51,8 @@ KafkaTelemetry telemetry = KafkaTelemetry.builder(openTelemetry)
 Map<String, Object> props = new HashMap<>();
 props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
-props.putAll(telemetry.producerInterceptorConfigProperties());
+props.put(TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+    new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier(telemetry));
 
 Producer<String, String> producer = new KafkaProducer<>(props);
 ```
@@ -68,7 +69,8 @@ Map<String, Object> props = new HashMap<>();
 props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-group");
 props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
-props.putAll(telemetry.consumerInterceptorConfigProperties());
+props.put(TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+    new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier(telemetry));
 
 Consumer<String, String> consumer = new KafkaConsumer<>(props);
 ```

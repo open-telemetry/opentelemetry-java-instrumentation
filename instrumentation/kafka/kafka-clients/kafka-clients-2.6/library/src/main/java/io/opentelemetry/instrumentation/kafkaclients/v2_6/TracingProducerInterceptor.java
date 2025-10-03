@@ -26,6 +26,9 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
+  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
+      "opentelemetry.experimental.kafka-telemetry.supplier";
+
   @Nullable private KafkaTelemetry telemetry;
   @Nullable private String clientId;
 
@@ -48,7 +51,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   public void configure(Map<String, ?> configs) {
     clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
 
-    Object telemetrySupplier = configs.get(KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+    Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
       this.telemetry =
@@ -63,7 +66,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
     if (!(telemetrySupplier instanceof Supplier)) {
       throw new IllegalStateException(
           "Configuration property "
-              + KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
               + " is not instance of Supplier");
     }
 
@@ -71,7 +74,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
     if (!(kafkaTelemetry instanceof KafkaTelemetry)) {
       throw new IllegalStateException(
           "Configuration property "
-              + KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
               + " supplier does not return KafkaTelemetry instance");
     }
 
