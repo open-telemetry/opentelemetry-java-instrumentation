@@ -266,8 +266,6 @@ public abstract class AbstractLog4j2Test {
   }
 
   protected List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
-    // Javaagent tests always capture code location (even with AsyncLogger)
-    // because the javaagent auto-instruments the appender
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(codeFunctionAssertions(AbstractLog4j2Test.class, methodName));
     result.addAll(codeFileAndLineAssertions("AbstractLog4j2Test.java"));
