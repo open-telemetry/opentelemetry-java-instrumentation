@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
@@ -38,12 +39,14 @@ import java.util.function.BiFunction;
 import java.util.logging.Logger;
 import org.apache.kafka.clients.CommonClientConfigs;
 import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.TopicPartition;
@@ -204,6 +207,60 @@ public final class KafkaTelemetry {
     config.put(
         OpenTelemetryMetricsReporter.CONFIG_KEY_OPENTELEMETRY_INSTRUMENTATION_NAME,
         KafkaTelemetryBuilder.INSTRUMENTATION_NAME);
+    return Collections.unmodifiableMap(config);
+  }
+
+  /**
+   * Returns configuration properties that can be used to enable tracing via {@code
+   * TracingProducerInterceptor}. Add these resulting properties to the configuration map used to
+   * initialize a {@link org.apache.kafka.clients.producer.KafkaProducer}.
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * //    KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+   * //    Map<String, Object> config = new HashMap<>();
+   * //    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
+   * //    config.putAll(telemetry.producerInterceptorConfigProperties());
+   * //    try (KafkaProducer<?, ?> producer = new KafkaProducer<>(config)) { ... }
+   * }</pre>
+   *
+   * @return the kafka producer interceptor config properties
+   */
+  public Map<String, ?> producerInterceptorConfigProperties() {
+    Map<String, Object> config = new HashMap<>();
+    config.put(
+        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+    config.put(
+        TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        new KafkaTelemetrySupplier(this));
+    return Collections.unmodifiableMap(config);
+  }
+
+  /**
+   * Returns configuration properties that can be used to enable tracing via {@code
+   * TracingConsumerInterceptor}. Add these resulting properties to the configuration map used to
+   * initialize a {@link org.apache.kafka.clients.consumer.KafkaConsumer}.
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * //    KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+   * //    Map<String, Object> config = new HashMap<>();
+   * //    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
+   * //    config.putAll(telemetry.consumerInterceptorConfigProperties());
+   * //    try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(config)) { ... }
+   * }</pre>
+   *
+   * @return the kafka consumer interceptor config properties
+   */
+  public Map<String, ?> consumerInterceptorConfigProperties() {
+    Map<String, Object> config = new HashMap<>();
+    config.put(
+        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+    config.put(
+        TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        new KafkaTelemetrySupplier(this));
     return Collections.unmodifiableMap(config);
   }
 

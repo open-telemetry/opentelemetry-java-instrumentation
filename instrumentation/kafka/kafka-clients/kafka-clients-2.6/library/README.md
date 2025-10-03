@@ -35,6 +35,41 @@ The Kafka clients API provides a way to "intercept" messages before they are sen
 The OpenTelemetry instrumented Kafka library provides two interceptors to be configured to add tracing information automatically.
 The interceptor class has to be set in the properties bag used to create the Kafka client.
 
+##### Recommended approach: Configuring interceptors with KafkaTelemetry
+
+The recommended way to use interceptors is to configure them with a `KafkaTelemetry` instance.
+Interceptors will use system properties for additional configuration like captured headers and receive telemetry settings.
+
+For the producer:
+
+```java
+KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+
+Map<String, Object> props = new HashMap<>();
+props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.putAll(telemetry.producerInterceptorConfigProperties());
+
+Producer<String, String> producer = new KafkaProducer<>(props);
+```
+
+For the consumer:
+
+```java
+KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+
+Map<String, Object> props = new HashMap<>();
+props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-group");
+props.putAll(telemetry.consumerInterceptorConfigProperties());
+
+Consumer<String, String> consumer = new KafkaConsumer<>(props);
+```
+
+##### Alternative: Using interceptors with global OpenTelemetry
+
+If you don't explicitly configure the interceptors with a `KafkaTelemetry` instance, they will fall back to using
+`GlobalOpenTelemetry.get()` and system properties for configuration.
+
 Use the `TracingProducerInterceptor` for the producer in order to create a "send" span automatically, each time a message is sent.
 
 ```java
@@ -46,6 +81,10 @@ Use the `TracingConsumerInterceptor` for the consumer in order to create a "rece
 ```java
 props.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
 ```
+
+The interceptors will use the following system properties for configuration:
+- `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` - Enable receive telemetry (default: false)
+- `otel.instrumentation.messaging.experimental.capture-headers` - List of headers to capture as span attributes
 
 #### Wrapping clients
 
