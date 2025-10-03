@@ -10,7 +10,6 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;

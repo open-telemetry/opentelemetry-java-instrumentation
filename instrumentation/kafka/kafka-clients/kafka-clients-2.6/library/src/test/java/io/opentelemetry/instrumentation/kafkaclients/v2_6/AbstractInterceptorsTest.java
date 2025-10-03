@@ -13,10 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;

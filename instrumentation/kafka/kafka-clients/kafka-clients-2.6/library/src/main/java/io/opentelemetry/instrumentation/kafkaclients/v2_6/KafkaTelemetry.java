@@ -230,8 +230,7 @@ public final class KafkaTelemetry {
   public Map<String, ?> producerInterceptorConfigProperties() {
     Map<String, Object> config = new HashMap<>();
     config.put(
-        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
-        TracingProducerInterceptor.class.getName());
+        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
     config.put(
         TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
         new KafkaTelemetrySupplier(this));
@@ -258,8 +257,7 @@ public final class KafkaTelemetry {
   public Map<String, ?> consumerInterceptorConfigProperties() {
     Map<String, Object> config = new HashMap<>();
     config.put(
-        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
-        TracingConsumerInterceptor.class.getName());
+        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
     config.put(
         TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
         new KafkaTelemetrySupplier(this));

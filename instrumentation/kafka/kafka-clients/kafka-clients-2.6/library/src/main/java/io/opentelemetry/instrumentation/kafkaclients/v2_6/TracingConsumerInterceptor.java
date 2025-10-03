@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;

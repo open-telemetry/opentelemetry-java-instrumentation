@@ -127,19 +127,21 @@ class KafkaTelemetryInterceptorTest {
   private static void testSerialize(Map<String, Object> map)
       throws IOException, ClassNotFoundException {
     // Check that producer config has the supplier
-    Object producerSupplier = map.get(TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
-    Object consumerSupplier = map.get(TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
-    
+    Object producerSupplier =
+        map.get(TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+    Object consumerSupplier =
+        map.get(TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+
     KafkaTelemetrySupplier supplier = null;
     if (producerSupplier instanceof KafkaTelemetrySupplier) {
       supplier = (KafkaTelemetrySupplier) producerSupplier;
     } else if (consumerSupplier instanceof KafkaTelemetrySupplier) {
       supplier = (KafkaTelemetrySupplier) consumerSupplier;
     }
-    
+
     assertThat(supplier).isNotNull();
     assertThat(supplier.get()).isNotNull();
-    
+
     ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
     try (ObjectOutputStream outputStream = new ObjectOutputStream(byteOutputStream)) {
       outputStream.writeObject(map);
