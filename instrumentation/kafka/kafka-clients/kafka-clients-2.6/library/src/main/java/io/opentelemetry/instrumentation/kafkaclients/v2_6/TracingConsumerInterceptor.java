@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -33,7 +30,7 @@ import org.apache.kafka.common.TopicPartition;
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
   public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
-      "opentelemetry.experimental.kafka-telemetry.supplier";
+      "opentelemetry.kafka-telemetry.supplier";
 
   @Nullable private KafkaTelemetry telemetry;
   private String consumerGroup;
@@ -70,16 +67,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
-      this.telemetry =
-          KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-              .setMessagingReceiveInstrumentationEnabled(
-                  ConfigPropertiesUtil.getBoolean(
-                      "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
-                      false))
-              .setCapturedHeaders(
-                  ConfigPropertiesUtil.getList(
-                      "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-              .build();
+      this.telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
       return;
     }
 
