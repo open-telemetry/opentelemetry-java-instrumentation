@@ -13,6 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassInfo;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
+import net.bytebuddy.ClassFileVersion;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -72,6 +73,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
 
   private static class ClassLoaderClassVisitor extends ClassVisitor implements Opcodes {
     private String internalClassName;
+    private boolean frames;
 
     ClassLoaderClassVisitor(ClassVisitor classVisitor) {
       super(AsmApi.VERSION, classVisitor);
@@ -87,160 +89,173 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
         String[] interfaces) {
       super.visit(version, access, name, signature, superName, interfaces);
       internalClassName = name;
+      frames = ClassFileVersion.ofMinorMajor(version).isAtLeast(ClassFileVersion.JAVA_V6);
     }
 
     @Override
     public MethodVisitor visitMethod(
         int access, String name, String descriptor, String signature, String[] exceptions) {
       MethodVisitor mv = super.visitMethod(access, name, descriptor, signature, exceptions);
-      if ("loadClass".equals(name)
-          && ("(Ljava/lang/String;)Ljava/lang/Class;".equals(descriptor)
-              || "(Ljava/lang/String;Z)Ljava/lang/Class;".equals(descriptor))) {
+      boolean loadClassMethod =
+          "loadClass".equals(name)
+              && ("(Ljava/lang/String;)Ljava/lang/Class;".equals(descriptor)
+                  || "(Ljava/lang/String;Z)Ljava/lang/Class;".equals(descriptor));
+      if (!loadClassMethod) {
+        return mv;
+      }
 
-        int argumentCount = Type.getArgumentTypes(descriptor).length;
-        return new MethodVisitor(api, mv) {
-          @Override
-          public void visitCode() {
-            super.visitCode();
+      int argumentCount = Type.getArgumentTypes(descriptor).length;
+      return new MethodVisitor(api, mv) {
+        @Override
+        public void visitCode() {
+          super.visitCode();
 
-            // inserts the following at the start of the loadClass method:
-            /*
-             InjectedClassHelper.HelperClassInfo helperClassInfo = InjectedClassHelper.getHelperClassInfo(this, name);
-             if (helperClassInfo != null) {
-                 Class<?> clazz = findLoadedClass(name);
-                 if (clazz != null) {
-                     return clazz;
-                 }
-                 try {
-                     byte[] bytes = helperClassInfo.getClassBytes();
-                     return defineClass(name, bytes, 0, bytes.length, helperClassInfo.getProtectionDomain());
-                 } catch (LinkageError error) {
-                     clazz = findLoadedClass(name);
-                     if (clazz != null) {
-                         return clazz;
-                     }
-                     throw error;
-                 }
-             }
-            */
+          // inserts the following at the start of the loadClass method:
+          /*
+           InjectedClassHelper.HelperClassInfo helperClassInfo = InjectedClassHelper.getHelperClassInfo(this, name);
+           if (helperClassInfo != null) {
+               Class<?> clazz = findLoadedClass(name);
+               if (clazz != null) {
+                   return clazz;
+               }
+               try {
+                   byte[] bytes = helperClassInfo.getClassBytes();
+                   return defineClass(name, bytes, 0, bytes.length, helperClassInfo.getProtectionDomain());
+               } catch (LinkageError error) {
+                   clazz = findLoadedClass(name);
+                   if (clazz != null) {
+                       return clazz;
+                   }
+                   throw error;
+               }
+           }
+          */
 
-            Label startTry = new Label();
-            Label endTry = new Label();
-            Label handler = new Label();
-            mv.visitTryCatchBlock(startTry, endTry, handler, "java/lang/LinkageError");
-            // InjectedClassHelper.HelperClassInfo helperClassInfo =
-            // InjectedClassHelper.getHelperClassInfo(this, name);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(
-                INVOKESTATIC,
-                Type.getInternalName(InjectedClassHelper.class),
-                "getHelperClassInfo",
-                "(Ljava/lang/ClassLoader;Ljava/lang/String;)"
-                    + Type.getDescriptor(HelperClassInfo.class),
-                false);
-            mv.visitVarInsn(ASTORE, argumentCount + 1); // store helperClassInfo
-            mv.visitVarInsn(ALOAD, argumentCount + 1);
-            Label notHelperClass = new Label();
-            mv.visitJumpInsn(IFNULL, notHelperClass);
+          Label startTry = new Label();
+          Label endTry = new Label();
+          Label handler = new Label();
+          mv.visitTryCatchBlock(startTry, endTry, handler, "java/lang/LinkageError");
+          // InjectedClassHelper.HelperClassInfo helperClassInfo = InjectedClassHelper
+          //   .getHelperClassInfo(this, name);
+          mv.visitVarInsn(ALOAD, 0);
+          mv.visitVarInsn(ALOAD, 1);
+          mv.visitMethodInsn(
+              INVOKESTATIC,
+              Type.getInternalName(InjectedClassHelper.class),
+              "getHelperClassInfo",
+              "(Ljava/lang/ClassLoader;Ljava/lang/String;)"
+                  + Type.getDescriptor(HelperClassInfo.class),
+              false);
+          mv.visitVarInsn(ASTORE, argumentCount + 1); // store helperClassInfo
+          mv.visitVarInsn(ALOAD, argumentCount + 1);
+          Label notHelperClass = new Label();
+          mv.visitJumpInsn(IFNULL, notHelperClass);
 
-            // getHelperClassInfo returned non-null
-            // Class<?> clazz = findLoadedClass(name);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(
-                INVOKEVIRTUAL,
-                internalClassName,
-                "findLoadedClass",
-                "(Ljava/lang/String;)Ljava/lang/Class;",
-                false);
-            mv.visitVarInsn(ASTORE, argumentCount + 2); // store clazz
-            mv.visitVarInsn(ALOAD, argumentCount + 2);
-            mv.visitJumpInsn(IFNULL, startTry);
+          // getHelperClassInfo returned non-null
+          // Class<?> clazz = findLoadedClass(name);
+          mv.visitVarInsn(ALOAD, 0);
+          mv.visitVarInsn(ALOAD, 1);
+          mv.visitMethodInsn(
+              INVOKEVIRTUAL,
+              internalClassName,
+              "findLoadedClass",
+              "(Ljava/lang/String;)Ljava/lang/Class;",
+              false);
+          mv.visitVarInsn(ASTORE, argumentCount + 2); // store clazz
+          mv.visitVarInsn(ALOAD, argumentCount + 2);
+          mv.visitJumpInsn(IFNULL, startTry);
 
-            // findLoadedClass returned non-null
-            // return clazz
-            mv.visitVarInsn(ALOAD, argumentCount + 2);
-            mv.visitInsn(ARETURN);
+          // findLoadedClass returned non-null
+          // return clazz
+          mv.visitVarInsn(ALOAD, argumentCount + 2);
+          mv.visitInsn(ARETURN);
 
-            mv.visitLabel(startTry);
+          mv.visitLabel(startTry);
+          if (frames) {
             mv.visitFrame(
                 Opcodes.F_APPEND,
                 2,
                 new Object[] {Type.getInternalName(HelperClassInfo.class), "java/lang/Class"},
                 0,
                 null);
-            // byte[] bytes = helperClassInfo.getClassBytes();
-            mv.visitVarInsn(ALOAD, argumentCount + 1);
-            mv.visitMethodInsn(
-                INVOKEINTERFACE,
-                Type.getInternalName(HelperClassInfo.class),
-                "getClassBytes",
-                "()[B",
-                true);
-            mv.visitVarInsn(ASTORE, argumentCount + 3); // store bytes
+          }
+          // byte[] bytes = helperClassInfo.getClassBytes();
+          mv.visitVarInsn(ALOAD, argumentCount + 1);
+          mv.visitMethodInsn(
+              INVOKEINTERFACE,
+              Type.getInternalName(HelperClassInfo.class),
+              "getClassBytes",
+              "()[B",
+              true);
+          mv.visitVarInsn(ASTORE, argumentCount + 3); // store bytes
 
-            // return defineClass(name, bytes, 0, bytes.length,
-            // helperClassInfo.getProtectionDomain());
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitVarInsn(ALOAD, argumentCount + 3);
-            mv.visitInsn(ICONST_0);
-            mv.visitVarInsn(ALOAD, argumentCount + 3);
-            mv.visitInsn(ARRAYLENGTH);
-            mv.visitVarInsn(ALOAD, argumentCount + 1);
-            mv.visitMethodInsn(
-                INVOKEINTERFACE,
-                Type.getInternalName(HelperClassInfo.class),
-                "getProtectionDomain",
-                "()Ljava/security/ProtectionDomain;",
-                true);
-            mv.visitMethodInsn(
-                INVOKEVIRTUAL,
-                internalClassName,
-                "defineClass",
-                "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;",
-                false);
-            mv.visitLabel(endTry);
-            mv.visitInsn(ARETURN);
+          // return defineClass(name, bytes, 0, bytes.length,
+          //   helperClassInfo.getProtectionDomain());
+          mv.visitVarInsn(ALOAD, 0);
+          mv.visitVarInsn(ALOAD, 1);
+          mv.visitVarInsn(ALOAD, argumentCount + 3);
+          mv.visitInsn(ICONST_0);
+          mv.visitVarInsn(ALOAD, argumentCount + 3);
+          mv.visitInsn(ARRAYLENGTH);
+          mv.visitVarInsn(ALOAD, argumentCount + 1);
+          mv.visitMethodInsn(
+              INVOKEINTERFACE,
+              Type.getInternalName(HelperClassInfo.class),
+              "getProtectionDomain",
+              "()Ljava/security/ProtectionDomain;",
+              true);
+          mv.visitMethodInsn(
+              INVOKEVIRTUAL,
+              internalClassName,
+              "defineClass",
+              "(Ljava/lang/String;[BIILjava/security/ProtectionDomain;)Ljava/lang/Class;",
+              false);
+          mv.visitLabel(endTry);
+          mv.visitInsn(ARETURN);
 
-            mv.visitLabel(handler);
+          mv.visitLabel(handler);
+          if (frames) {
             mv.visitFrame(Opcodes.F_SAME1, 0, null, 1, new Object[] {"java/lang/LinkageError"});
-            mv.visitVarInsn(ASTORE, argumentCount + 3); // store LinkageError
-            // clazz = findLoadedClass(name);
-            mv.visitVarInsn(ALOAD, 0);
-            mv.visitVarInsn(ALOAD, 1);
-            mv.visitMethodInsn(
-                INVOKEVIRTUAL,
-                internalClassName,
-                "findLoadedClass",
-                "(Ljava/lang/String;)Ljava/lang/Class;",
-                false);
-            mv.visitVarInsn(ASTORE, argumentCount + 2); // score clazz
-            mv.visitVarInsn(ALOAD, argumentCount + 2);
-            Label throwError = new Label();
-            mv.visitJumpInsn(IFNULL, throwError);
-            // return clazz
-            mv.visitVarInsn(ALOAD, argumentCount + 2);
-            mv.visitInsn(ARETURN);
-            mv.visitLabel(throwError);
+          }
+          mv.visitVarInsn(ASTORE, argumentCount + 3); // store LinkageError
+          // clazz = findLoadedClass(name);
+          mv.visitVarInsn(ALOAD, 0);
+          mv.visitVarInsn(ALOAD, 1);
+          mv.visitMethodInsn(
+              INVOKEVIRTUAL,
+              internalClassName,
+              "findLoadedClass",
+              "(Ljava/lang/String;)Ljava/lang/Class;",
+              false);
+          mv.visitVarInsn(ASTORE, argumentCount + 2); // score clazz
+          mv.visitVarInsn(ALOAD, argumentCount + 2);
+          Label throwError = new Label();
+          mv.visitJumpInsn(IFNULL, throwError);
+          // return clazz
+          mv.visitVarInsn(ALOAD, argumentCount + 2);
+          mv.visitInsn(ARETURN);
+          mv.visitLabel(throwError);
+          if (frames) {
             mv.visitFrame(Opcodes.F_APPEND, 1, new Object[] {"java/lang/LinkageError"}, 0, null);
-            // throw error
-            mv.visitVarInsn(ALOAD, argumentCount + 3);
-            mv.visitInsn(ATHROW);
+          }
+          // throw error
+          mv.visitVarInsn(ALOAD, argumentCount + 3);
+          mv.visitInsn(ATHROW);
 
-            mv.visitLabel(notHelperClass);
+          mv.visitLabel(notHelperClass);
+          if (frames) {
             mv.visitFrame(Opcodes.F_CHOP, 3, null, 0, null);
+            // ensure there aren't two frames at the same location
+            mv.visitInsn(NOP);
           }
+        }
 
-          @Override
-          public void visitMaxs(int maxStack, int maxLocals) {
-            // minimally we have argumentCount parameters + this + 3 locals added by us
-            super.visitMaxs(maxStack, Math.max(maxLocals, argumentCount + 1 + 3));
-          }
-        };
-      }
-      return mv;
+        @Override
+        public void visitMaxs(int maxStack, int maxLocals) {
+          // minimally we have argumentCount parameters + this + 3 locals added by us
+          super.visitMaxs(maxStack, Math.max(maxLocals, argumentCount + 1 + 3));
+        }
+      };
     }
   }
 }
