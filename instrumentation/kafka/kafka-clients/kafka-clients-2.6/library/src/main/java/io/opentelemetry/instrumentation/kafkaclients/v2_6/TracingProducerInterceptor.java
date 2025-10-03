@@ -9,11 +9,11 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
@@ -27,7 +27,8 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  public static final String CONFIG_KEY_OPENTELEMETRY_SUPPLIER = "opentelemetry.supplier";
+  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
+      "opentelemetry.experimental.kafka-telemetry.supplier";
 
   @Nullable private KafkaTelemetry telemetry;
   @Nullable private String clientId;
@@ -51,26 +52,33 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   public void configure(Map<String, ?> configs) {
     clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
 
-    OpenTelemetry openTelemetry;
-    Object openTelemetrySupplier = configs.get(CONFIG_KEY_OPENTELEMETRY_SUPPLIER);
-    if (openTelemetrySupplier == null) {
+    Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+    if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
-      openTelemetry = GlobalOpenTelemetry.get();
-    } else {
-      if (!(openTelemetrySupplier instanceof OpenTelemetrySupplier)) {
-        throw new IllegalStateException(
-            "Configuration property "
-                + CONFIG_KEY_OPENTELEMETRY_SUPPLIER
-                + " is not instance of OpenTelemetrySupplier");
-      }
-      openTelemetry = ((OpenTelemetrySupplier) openTelemetrySupplier).get();
+      this.telemetry =
+          KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+              .setCapturedHeaders(
+                  ConfigPropertiesUtil.getList(
+                      "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+              .build();
+      return;
     }
 
-    this.telemetry =
-        KafkaTelemetry.builder(openTelemetry)
-            .setCapturedHeaders(
-                ConfigPropertiesUtil.getList(
-                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-            .build();
+    if (!(telemetrySupplier instanceof Supplier)) {
+      throw new IllegalStateException(
+          "Configuration property "
+              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + " is not instance of Supplier");
+    }
+
+    Object kafkaTelemetry = ((Supplier<?>) telemetrySupplier).get();
+    if (!(kafkaTelemetry instanceof KafkaTelemetry)) {
+      throw new IllegalStateException(
+          "Configuration property "
+              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + " supplier does not return KafkaTelemetry instance");
+    }
+
+    this.telemetry = (KafkaTelemetry) kafkaTelemetry;
   }
 }

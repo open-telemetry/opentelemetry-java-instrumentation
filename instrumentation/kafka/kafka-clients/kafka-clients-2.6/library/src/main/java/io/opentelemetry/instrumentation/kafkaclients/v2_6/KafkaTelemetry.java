@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
@@ -232,8 +233,8 @@ public final class KafkaTelemetry {
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
         TracingProducerInterceptor.class.getName());
     config.put(
-        TracingProducerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
-        new OpenTelemetrySupplier(openTelemetry));
+        TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        new KafkaTelemetrySupplier(this));
     return Collections.unmodifiableMap(config);
   }
 
@@ -260,8 +261,8 @@ public final class KafkaTelemetry {
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
         TracingConsumerInterceptor.class.getName());
     config.put(
-        TracingConsumerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
-        new OpenTelemetrySupplier(openTelemetry));
+        TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        new KafkaTelemetrySupplier(this));
     return Collections.unmodifiableMap(config);
   }
 
