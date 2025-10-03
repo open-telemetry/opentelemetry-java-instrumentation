@@ -1,0 +1,81 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
+import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
+import java.util.stream.Stream;
+import net.bytebuddy.description.NamedElement;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.pool.TypePool;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.objectweb.asm.Opcodes;
+
+class ExtendsClassMatcherTest {
+
+  private static TypePool typePool;
+
+  @BeforeAll
+  static void setUp() {
+    typePool =
+        AgentTooling.poolStrategy()
+            .typePool(
+                AgentTooling.locationStrategy()
+                    .classFileLocator(ExtendsClassMatcherTest.class.getClassLoader(), null),
+                ExtendsClassMatcherTest.class.getClassLoader());
+  }
+
+  @ParameterizedTest(name = "test matcher {0} -> {1}")
+  @MethodSource("testMatcherProvider")
+  void testMatcher(Class<?> matcherClass, Class<?> type, boolean expected) {
+    ElementMatcher<NamedElement> matcher = named(matcherClass.getName());
+    TypeDescription argument = typePool.describe(type.getName()).resolve();
+
+    boolean result = extendsClass(matcher).matches(argument);
+
+    assertEquals(expected, result);
+  }
+
+  private static Stream<Arguments> testMatcherProvider() {
+    return Stream.of(
+        Arguments.of(A.class, B.class, false),
+        Arguments.of(A.class, F.class, false),
+        Arguments.of(G.class, F.class, false),
+        Arguments.of(F.class, F.class, true),
+        Arguments.of(F.class, G.class, true));
+  }
+
+  @Test
+  void testTraversalExceptions() {
+    TypeDescription type = mock(TypeDescription.class);
+    TypeDescription.Generic typeGeneric = mock(TypeDescription.Generic.class);
+
+    when(type.getModifiers()).thenReturn(Opcodes.ACC_ABSTRACT);
+    when(type.asGenericType()).thenReturn(typeGeneric);
+    when(typeGeneric.asErasure()).thenThrow(new RuntimeException("asErasure exception"));
+    when(type.getSuperClass()).thenThrow(new RuntimeException("getSuperClass exception"));
+
+    boolean result = extendsClass(named(Object.class.getName())).matches(type);
+
+    // Should default to false when exception occurs
+    assertFalse(result);
+  }
+}

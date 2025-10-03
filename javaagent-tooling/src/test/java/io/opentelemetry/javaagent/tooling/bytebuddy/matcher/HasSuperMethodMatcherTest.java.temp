@@ -1,0 +1,81 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
+import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
+import static net.bytebuddy.matcher.ElementMatchers.none;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass;
+import java.util.stream.Stream;
+import net.bytebuddy.description.method.MethodDescription;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class HasSuperMethodMatcherTest {
+
+  @ParameterizedTest(name = "test matcher {0}.{1}")
+  @MethodSource("testMatcherProvider")
+  void testMatcher(Class<?> type, String methodName, boolean expected) throws Exception {
+    MethodDescription argument =
+        new MethodDescription.ForLoadedMethod(type.getDeclaredMethod(methodName));
+
+    boolean result = hasSuperMethod(isAnnotatedWith(Trace.class)).matches(argument);
+
+    assertEquals(expected, result);
+  }
+
+  private static Stream<Arguments> testMatcherProvider() {
+    return Stream.of(
+        Arguments.of(A.class, "a", false),
+        Arguments.of(B.class, "b", true),
+        Arguments.of(C.class, "c", false),
+        Arguments.of(F.class, "f", true),
+        Arguments.of(G.class, "g", false),
+        Arguments.of(TracedClass.class, "a", true),
+        Arguments.of(UntracedClass.class, "a", false),
+        Arguments.of(UntracedClass.class, "b", true));
+  }
+
+  @Test
+  void testConstructorNeverMatches() {
+    MethodDescription method = mock(MethodDescription.class);
+    when(method.isConstructor()).thenReturn(true);
+
+    boolean result = hasSuperMethod(none()).matches(method);
+
+    assertFalse(result);
+  }
+
+  @Test
+  void testTraversalExceptions() throws Exception {
+    MethodDescription method = mock(MethodDescription.class);
+    MethodDescription.SignatureToken sigToken =
+        new MethodDescription.ForLoadedMethod(A.class.getDeclaredMethod("a")).asSignatureToken();
+
+    when(method.isConstructor()).thenReturn(false);
+    when(method.asSignatureToken()).thenReturn(sigToken);
+    when(method.getDeclaringType()).thenReturn(null);
+
+    boolean result = hasSuperMethod(none()).matches(method);
+
+    // Should default to false when exception occurs
+    assertFalse(result);
+  }
+}
