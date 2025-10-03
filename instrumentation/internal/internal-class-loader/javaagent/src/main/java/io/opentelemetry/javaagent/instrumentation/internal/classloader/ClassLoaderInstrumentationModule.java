@@ -35,9 +35,8 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        // added first so it would get applied after other instrumentations
-        new LoadInjectedClassInstrumentation(),
         new BootDelegationInstrumentation(),
+        new LoadInjectedClassInstrumentation(),
         new ResourceInjectionInstrumentation(),
         new DefineClassInstrumentation());
   }

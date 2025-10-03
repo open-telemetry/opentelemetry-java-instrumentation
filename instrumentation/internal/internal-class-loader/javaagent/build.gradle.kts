@@ -5,6 +5,7 @@ plugins {
 dependencies {
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
+  compileOnly(project(":instrumentation:internal:internal-class-loader:compile-stub"))
 
   testImplementation(project(":javaagent-bootstrap"))
 
@@ -20,4 +21,10 @@ dependencies {
   // testImplementation("org.osgi:org.osgi.core:4.0.0")
   testImplementation("org.eclipse.platform:org.eclipse.osgi:3.13.200")
   testImplementation("org.apache.felix:org.apache.felix.framework:6.0.2")
+}
+
+tasks {
+  shadowJar {
+    relocate("io.opentelemetry.javaagent.instrumentation.internal.classloader.stub", "java.lang")
+  }
 }

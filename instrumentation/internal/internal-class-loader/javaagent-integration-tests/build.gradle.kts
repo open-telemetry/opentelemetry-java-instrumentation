@@ -6,5 +6,5 @@ dependencies {
   compileOnly("org.apache.commons:commons-lang3:3.12.0")
   testImplementation("org.apache.commons:commons-lang3:3.12.0")
 
-  testInstrumentation(project(":instrumentation:internal:internal-class-loader:javaagent"))
+  testInstrumentation(project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shadow"))
 }
