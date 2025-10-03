@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import java.util.Map;
 import java.util.Objects;
@@ -52,7 +55,13 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
     Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
-      this.telemetry = KafkaTelemetry.create(GlobalOpenTelemetry.get());
+      // TODO: remove these config properties checks once declarative configuration is available
+      this.telemetry =
+          KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+              .setCapturedHeaders(
+                  ConfigPropertiesUtil.getList(
+                      "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+              .build();
       return;
     }
 
