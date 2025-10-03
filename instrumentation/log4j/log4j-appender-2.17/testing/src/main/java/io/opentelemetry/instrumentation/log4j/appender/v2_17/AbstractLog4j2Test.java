@@ -266,11 +266,21 @@ public abstract class AbstractLog4j2Test {
   }
 
   protected List<AttributeAssertion> addCodeLocationAttributes(String methodName) {
-    String selector = System.getProperty("Log4j2.contextSelector");
-    boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
-    if (async && !Boolean.getBoolean("testLatestDeps")) {
-      // source info is not available by default when async logger is used in non latest dep tests
-      return new ArrayList<>();
+    // For javaagent tests, code location is always captured (even with AsyncLogger)
+    // because the javaagent auto-instruments the appender
+    boolean isJavaagent = testing()
+        .getClass()
+        .getName()
+        .contains("AgentInstrumentationExtension");
+    
+    if (!isJavaagent) {
+      // For library tests, AsyncLogger can't capture code location in older versions
+      String selector = System.getProperty("Log4j2.contextSelector");
+      boolean async = selector != null && selector.endsWith("AsyncLoggerContextSelector");
+      if (async && !Boolean.getBoolean("testLatestDeps")) {
+        // source info is not available by default when async logger is used in non latest dep tests
+        return new ArrayList<>();
+      }
     }
 
     List<AttributeAssertion> result = new ArrayList<>();
