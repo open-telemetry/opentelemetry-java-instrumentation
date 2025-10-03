@@ -80,6 +80,7 @@ class RpcClientMetricsTest {
                 assertThat(metric)
                     .hasName("rpc.client.duration")
                     .hasUnit("ms")
+                    .hasDescription("Measures the duration of outbound RPC.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -112,6 +113,7 @@ class RpcClientMetricsTest {
                 assertThat(metric)
                     .hasName("rpc.client.duration")
                     .hasUnit("ms")
+                    .hasDescription("Measures the duration of outbound RPC.")
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
