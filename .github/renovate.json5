@@ -349,6 +349,18 @@
   customManagers: [
     {
       customType: 'regex',
+      datasourceTemplate: 'java-version',
+      managerFilePatterns: [
+        '.github/workflows/**'
+      ],
+      matchStrings: [
+        '(?<currentValue>\\d+) # renovate: datasource=java-version',
+      ],
+      depNameTemplate: 'java',
+      extractVersionTemplate: '^(?<version>\\d+)',
+    },
+    {
+      customType: 'regex',
       datasourceTemplate: 'pypi',
       managerFilePatterns: [
         '/^.github/workflows//',
