@@ -1,0 +1,125 @@
+name: Verify metric descriptions match semantic conventions
+
+on:
+  schedule:
+    # Run daily at 9:00 AM UTC
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check-descriptions:
+    runs-on: ubuntu-latest
+    outputs:
+      mismatches-found: ${{ steps.check.outputs.mismatches-found }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b # v5.3.0
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install pyyaml
+
+      - id: check
+        name: Check metric descriptions
+        run: |
+          if ./.github/scripts/verify-metric-descriptions.py; then
+            echo "mismatches-found=false" >> $GITHUB_OUTPUT
+          else
+            echo "mismatches-found=true" >> $GITHUB_OUTPUT
+            # Save the mismatches for the PR body
+            if [ -f /tmp/semconv-check/mismatches.txt ]; then
+              cp /tmp/semconv-check/mismatches.txt ${{ runner.temp }}/mismatches.txt
+            fi
+          fi
+
+      - name: Upload mismatches
+        if: steps.check.outputs.mismatches-found == 'true'
+        uses: actions/upload-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v5.0.0
+        with:
+          name: mismatches
+          path: ${{ runner.temp }}/mismatches.txt
+
+  create-pr:
+    permissions:
+      contents: write  # for git push to PR branch
+      pull-requests: write  # for creating PRs
+    runs-on: ubuntu-latest
+    if: needs.check-descriptions.outputs.mismatches-found == 'true'
+    needs:
+      - check-descriptions
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Download mismatches
+        uses: actions/download-artifact@6f51ac03b9356f520e9adb1b1b7802705f340c2b # v5.0.0
+        with:
+          name: mismatches
+          path: ${{ runner.temp }}
+
+      - name: Check if PR already exists
+        id: check-pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          matches=$(gh pr list \
+                        --author app/otelbot \
+                        --state open \
+                        --search "in:title \"Update metric descriptions to match semantic conventions\"")
+          if [ ! -z "$matches" ]
+          then
+            echo "already-opened=true" >> $GITHUB_OUTPUT
+            echo "PR already exists, skipping creation"
+          else
+            echo "already-opened=false" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        if: steps.check-pr.outputs.already-opened != 'true'
+        id: otelbot-token
+        with:
+          app-id: ${{ vars.OTELBOT_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
+
+      - name: Create issue about mismatches
+        if: steps.check-pr.outputs.already-opened != 'true'
+        env:
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: |
+          # Read the mismatches file
+          mismatches_content=$(cat ${{ runner.temp }}/mismatches.txt)
+          
+          # Create PR body
+          body="## Metric Description Mismatches Found
+
+The automated verification found that some metric descriptions in the Java code do not match the \`brief\` field in the OpenTelemetry semantic conventions.
+
+### Mismatches
+
+\`\`\`
+${mismatches_content}
+\`\`\`
+
+### Action Required
+
+Please review these mismatches and update the metric descriptions in the Java code to match the semantic conventions. The descriptions should exactly match the \`brief\` field in the corresponding YAML files in the [semantic-conventions repository](https://github.com/open-telemetry/semantic-conventions).
+
+### Reference
+
+- Semantic conventions repository: https://github.com/open-telemetry/semantic-conventions
+- Related issue: #9478
+
+This PR was automatically created by the [verify-metric-descriptions workflow]($GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/workflows/verify-metric-descriptions.yml)."
+
+          # Create the issue
+          gh issue create \
+            --title "Metric descriptions do not match semantic conventions" \
+            --body "$body" \
+            --label "bug,metric"
