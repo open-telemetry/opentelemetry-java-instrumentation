@@ -298,7 +298,7 @@ final class OpenTelemetryTracing implements Tracing {
               if (output != null) {
                 String error = output.getError();
                 if (error != null) {
-                  span.setStatus(StatusCode.ERROR, error);
+                  span.setStatus(StatusCode.ERROR);
                 }
               }
 
