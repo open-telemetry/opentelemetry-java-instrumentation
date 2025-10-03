@@ -34,8 +34,6 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   @Override
   public Map<String, Object> producerProps() {
     Map<String, Object> props = super.producerProps();
-    props.put(
-        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
     props.putAll(kafkaTelemetry.producerInterceptorConfigProperties());
     return props;
   }
@@ -43,8 +41,6 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   @Override
   public Map<String, Object> consumerProps() {
     Map<String, Object> props = super.consumerProps();
-    props.put(
-        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
     props.putAll(kafkaTelemetry.consumerInterceptorConfigProperties());
     return props;
   }
