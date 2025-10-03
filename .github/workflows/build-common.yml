@@ -238,7 +238,7 @@ jobs:
           - 11
           - 17
           - 21
-          - 24 # renovate: datasource=java-version
+          - 25 # renovate: datasource=java-version
         vm:
           - hotspot
           - openj9
@@ -252,7 +252,7 @@ jobs:
           - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
-          - test-java-version: 24 # renovate: datasource=java-version
+          - test-java-version: 25 # renovate: datasource=java-version
             vm: openj9
       fail-fast: false
     steps:
