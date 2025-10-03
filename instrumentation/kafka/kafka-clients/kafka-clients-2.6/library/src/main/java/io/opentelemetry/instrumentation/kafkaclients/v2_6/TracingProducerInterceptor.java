@@ -48,22 +48,33 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   public void configure(Map<String, ?> configs) {
     clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
 
-    // Try to get KafkaTelemetry from config
     Object telemetrySupplier = configs.get(KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
-    if (telemetrySupplier instanceof Supplier) {
-      Object kafkaTelemetry = ((Supplier<?>) telemetrySupplier).get();
-      if (kafkaTelemetry instanceof KafkaTelemetry) {
-        this.telemetry = (KafkaTelemetry) kafkaTelemetry;
-        return;
-      }
+    if (telemetrySupplier == null) {
+      // Fallback to GlobalOpenTelemetry if not configured
+      this.telemetry =
+          KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+              .setCapturedHeaders(
+                  ConfigPropertiesUtil.getList(
+                      "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+              .build();
+      return;
     }
 
-    // Fallback to GlobalOpenTelemetry if not configured
-    this.telemetry =
-        KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-            .setCapturedHeaders(
-                ConfigPropertiesUtil.getList(
-                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-            .build();
+    if (!(telemetrySupplier instanceof Supplier)) {
+      throw new IllegalStateException(
+          "Configuration property "
+              + KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + " is not instance of Supplier");
+    }
+
+    Object kafkaTelemetry = ((Supplier<?>) telemetrySupplier).get();
+    if (!(kafkaTelemetry instanceof KafkaTelemetry)) {
+      throw new IllegalStateException(
+          "Configuration property "
+              + KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
+              + " supplier does not return KafkaTelemetry instance");
+    }
+
+    this.telemetry = (KafkaTelemetry) kafkaTelemetry;
   }
 }
