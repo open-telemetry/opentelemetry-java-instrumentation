@@ -20,6 +20,7 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
 
+  testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
   testImplementation("org.awaitility:awaitility")
 
   if (testLatestDeps) {
