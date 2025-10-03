@@ -401,11 +401,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       BedrockRuntimeAccess.recordResponseEvents(
           otelContext, eventLogger, executionAttributes, response, genAiCaptureMessageContent);
     }
-    if (captureExperimentalSpanAttributes) {
-      AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
-      if (sdkRequest != null) {
-        fieldMapper.mapToAttributes(response, sdkRequest, span);
-      }
+    AwsSdkRequest sdkRequest = executionAttributes.getAttribute(AWS_SDK_REQUEST_ATTRIBUTE);
+    if (sdkRequest != null) {
+      fieldMapper.mapToAttributes(response, sdkRequest, span);
     }
   }
 
