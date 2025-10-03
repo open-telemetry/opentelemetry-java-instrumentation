@@ -65,7 +65,7 @@ public final class DbConnectionPoolMetrics {
         .upDownCounterBuilder(metricName)
         .setUnit(emitStableDatabaseSemconv() ? "{connection}" : "{connections}")
         .setDescription(
-            "The number of connections that are currently in state described by the state attribute.")
+            "The number of connections that are currently in state described by the `state` attribute.")
         .buildObserver();
   }
 
