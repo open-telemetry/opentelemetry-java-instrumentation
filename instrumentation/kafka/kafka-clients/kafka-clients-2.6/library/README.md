@@ -35,42 +35,32 @@ The Kafka clients API provides a way to "intercept" messages before they are sen
 The OpenTelemetry instrumented Kafka library provides two interceptors to be configured to add tracing information automatically.
 The interceptor class has to be set in the properties bag used to create the Kafka client.
 
-##### Recommended approach: Configuring interceptors with KafkaTelemetry
+##### Recommended approach: Configuring interceptors with OpenTelemetry
 
-The recommended way to use interceptors is to configure them with a `KafkaTelemetry` instance.
-This gives you full control over the configuration, including which `OpenTelemetry` instance to use,
-whether to enable receive telemetry, and which headers to capture.
+The recommended way to use interceptors is to configure them with an `OpenTelemetry` instance.
+Interceptors will use system properties for additional configuration like captured headers and receive telemetry settings.
 
-For the producer, configure the interceptor with the KafkaTelemetry instance:
+For the producer:
 
 ```java
-KafkaTelemetry telemetry = KafkaTelemetry.builder(openTelemetry)
-    .setCapturedHeaders(Arrays.asList("custom-header"))
-    .build();
-
 Map<String, Object> props = new HashMap<>();
 props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
-props.put(TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
-    new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier(telemetry));
+props.put(TracingProducerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
+    new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier(openTelemetry));
 
 Producer<String, String> producer = new KafkaProducer<>(props);
 ```
 
-For the consumer, configure the interceptor with the KafkaTelemetry instance:
+For the consumer:
 
 ```java
-KafkaTelemetry telemetry = KafkaTelemetry.builder(openTelemetry)
-    .setMessagingReceiveInstrumentationEnabled(true)
-    .setCapturedHeaders(Arrays.asList("custom-header"))
-    .build();
-
 Map<String, Object> props = new HashMap<>();
 props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-group");
 props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
-props.put(TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
-    new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier(telemetry));
+props.put(TracingConsumerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
+    new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier(openTelemetry));
 
 Consumer<String, String> consumer = new KafkaConsumer<>(props);
 ```

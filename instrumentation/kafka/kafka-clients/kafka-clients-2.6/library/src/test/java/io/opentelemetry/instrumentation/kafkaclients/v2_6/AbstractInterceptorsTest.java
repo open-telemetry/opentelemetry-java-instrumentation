@@ -46,10 +46,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     props.put(
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
     props.put(
-        TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        TracingProducerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
         new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal
-                .KafkaTelemetrySupplier(
-            kafkaTelemetry));
+                .OpenTelemetrySupplier(
+            testing.getOpenTelemetry()));
     return props;
   }
 
@@ -62,10 +62,10 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     props.put(
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
     props.put(
-        TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        TracingConsumerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
         new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal
-                .KafkaTelemetrySupplier(
-            kafkaTelemetry));
+                .OpenTelemetrySupplier(
+            testing.getOpenTelemetry()));
     return props;
   }
 
