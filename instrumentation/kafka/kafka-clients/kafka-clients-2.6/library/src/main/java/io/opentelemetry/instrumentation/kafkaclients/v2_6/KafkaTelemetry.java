@@ -208,6 +208,58 @@ public final class KafkaTelemetry {
   }
 
   /**
+   * Returns configuration properties that can be used to enable tracing via {@code
+   * TracingProducerInterceptor}. Add these resulting properties to the configuration map used to
+   * initialize a {@link org.apache.kafka.clients.producer.KafkaProducer}.
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * //    KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+   * //    Map<String, Object> config = new HashMap<>();
+   * //    config.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
+   * //    config.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+   * //    config.putAll(telemetry.producerInterceptorConfigProperties());
+   * //    try (KafkaProducer<?, ?> producer = new KafkaProducer<>(config)) { ... }
+   * }</pre>
+   *
+   * @return the kafka producer interceptor config properties
+   */
+  public Map<String, ?> producerInterceptorConfigProperties() {
+    Map<String, Object> config = new HashMap<>();
+    config.put(
+        TracingProducerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
+        new OpenTelemetrySupplier(openTelemetry));
+    return Collections.unmodifiableMap(config);
+  }
+
+  /**
+   * Returns configuration properties that can be used to enable tracing via {@code
+   * TracingConsumerInterceptor}. Add these resulting properties to the configuration map used to
+   * initialize a {@link org.apache.kafka.clients.consumer.KafkaConsumer}.
+   *
+   * <p>Example usage:
+   *
+   * <pre>{@code
+   * //    KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+   * //    Map<String, Object> config = new HashMap<>();
+   * //    config.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, ...);
+   * //    config.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+   * //    config.putAll(telemetry.consumerInterceptorConfigProperties());
+   * //    try (KafkaConsumer<?, ?> consumer = new KafkaConsumer<>(config)) { ... }
+   * }</pre>
+   *
+   * @return the kafka consumer interceptor config properties
+   */
+  public Map<String, ?> consumerInterceptorConfigProperties() {
+    Map<String, Object> config = new HashMap<>();
+    config.put(
+        TracingConsumerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
+        new OpenTelemetrySupplier(openTelemetry));
+    return Collections.unmodifiableMap(config);
+  }
+
+  /**
    * Build and inject span into record.
    *
    * @param record the producer record to inject span info.

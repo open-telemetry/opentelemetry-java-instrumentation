@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.nio.charset.StandardCharsets;
@@ -29,14 +28,15 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  private static final KafkaTelemetry kafkaTelemetry =
+      KafkaTelemetry.create(testing.getOpenTelemetry());
+
   @Override
   public Map<String, Object> producerProps() {
     Map<String, Object> props = super.producerProps();
     props.put(
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
-    props.put(
-        TracingProducerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
-        new OpenTelemetrySupplier(testing.getOpenTelemetry()));
+    props.putAll(kafkaTelemetry.producerInterceptorConfigProperties());
     return props;
   }
 
@@ -45,9 +45,7 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
     Map<String, Object> props = super.consumerProps();
     props.put(
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
-    props.put(
-        TracingConsumerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
-        new OpenTelemetrySupplier(testing.getOpenTelemetry()));
+    props.putAll(kafkaTelemetry.consumerInterceptorConfigProperties());
     return props;
   }
 
