@@ -70,9 +70,9 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
-      // TODO: remove these config properties checks once declarative configuration is available
       this.telemetry =
           KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+              // TODO: remove now that programmatic configuration is available
               .setMessagingReceiveInstrumentationEnabled(
                   ConfigPropertiesUtil.getBoolean(
                       "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",

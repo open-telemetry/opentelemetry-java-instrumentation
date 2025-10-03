@@ -55,9 +55,9 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
     Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     if (telemetrySupplier == null) {
       // Fallback to GlobalOpenTelemetry if not configured
-      // TODO: remove these config properties checks once declarative configuration is available
       this.telemetry =
           KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+              // TODO: remove now that programmatic configuration is available
               .setCapturedHeaders(
                   ConfigPropertiesUtil.getList(
                       "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
