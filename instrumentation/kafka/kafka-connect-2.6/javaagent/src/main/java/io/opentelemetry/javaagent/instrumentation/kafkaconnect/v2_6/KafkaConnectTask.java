@@ -1,0 +1,46 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
+
+import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
+import org.apache.kafka.connect.sink.SinkRecord;
+
+public final class KafkaConnectTask {
+
+  private final Collection<SinkRecord> records;
+
+  public KafkaConnectTask(Collection<SinkRecord> records) {
+    this.records = records;
+  }
+
+  public Collection<SinkRecord> getRecords() {
+    return records;
+  }
+
+  public SinkRecord getFirstRecord() {
+    return records.isEmpty() ? null : records.iterator().next();
+  }
+
+  public Set<String> getTopics() {
+    return records.stream()
+        .map(SinkRecord::topic)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
+  }
+
+  public String getDestinationName() {
+    Set<String> topics = getTopics();
+    if (topics.isEmpty()) {
+      return null;
+    }
+    if (topics.size() == 1) {
+      return topics.iterator().next();
+    }
+    return topics.stream().collect(Collectors.joining(",", "[", "]"));
+  }
+}
