@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.bootstrap;
 
-import java.lang.invoke.MethodHandles;
+import java.security.ProtectionDomain;
 import java.util.function.BiFunction;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
@@ -38,25 +38,27 @@ public final class InjectedClassHelper {
     return helperClassDetector.test(classLoader, className);
   }
 
-  private static volatile BiFunction<ClassLoader, String, HelperClassLoader> helperClassLoader;
+  private static volatile BiFunction<ClassLoader, String, HelperClassInfo> helperClassInfo;
 
-  public static void internalSetHelperClassLoader(
-      BiFunction<ClassLoader, String, HelperClassLoader> helperClassLoader) {
-    if (InjectedClassHelper.helperClassLoader != null) {
+  public static void internalSetHelperClassInfo(
+      BiFunction<ClassLoader, String, HelperClassInfo> helperClassInfo) {
+    if (InjectedClassHelper.helperClassInfo != null) {
       // Only possible by misuse of this API, just ignore.
       return;
     }
-    InjectedClassHelper.helperClassLoader = helperClassLoader;
+    InjectedClassHelper.helperClassInfo = helperClassInfo;
   }
 
-  public static HelperClassLoader getHelperClassLoader(ClassLoader classLoader, String className) {
-    if (helperClassLoader == null) {
+  public static HelperClassInfo getHelperClassInfo(ClassLoader classLoader, String className) {
+    if (helperClassInfo == null) {
       return null;
     }
-    return helperClassLoader.apply(classLoader, className);
+    return helperClassInfo.apply(classLoader, className);
   }
 
-  public interface HelperClassLoader {
-    Class<?> loadHelperClass(MethodHandles.Lookup lookup) throws Throwable;
+  public interface HelperClassInfo {
+    byte[] getClassBytes();
+
+    ProtectionDomain getProtectionDomain();
   }
 }

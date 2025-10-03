@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.test
 
 import groovy.transform.CompileStatic
+import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
@@ -16,7 +17,6 @@ import net.bytebuddy.dynamic.ClassFileLocator
 import net.bytebuddy.dynamic.loading.ClassInjector
 import spock.lang.Specification
 
-import java.lang.invoke.MethodHandles
 import java.lang.ref.WeakReference
 import java.time.Duration
 import java.util.concurrent.atomic.AtomicReference
@@ -32,8 +32,28 @@ class HelperInjectionTest extends Specification {
       super(new URL[0], (ClassLoader) null)
     }
 
-    def lookup() {
-      MethodHandles.lookup()
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      // the same code as added by LoadInjectedClassInstrumentation
+      InjectedClassHelper.HelperClassInfo helperClassInfo = InjectedClassHelper.getHelperClassInfo(this, name)
+      if (helperClassInfo != null) {
+        Class<?> clazz = findLoadedClass(name)
+        if (clazz != null) {
+          return clazz
+        }
+        try {
+          byte[] bytes = helperClassInfo.getClassBytes()
+          return defineClass(name, bytes, 0, bytes.length, helperClassInfo.getProtectionDomain())
+        } catch (LinkageError error) {
+          clazz = findLoadedClass(name)
+          if (clazz != null) {
+            return clazz
+          }
+          throw error
+        }
+      }
+
+      return super.loadClass(name, resolve)
     }
   }
 
@@ -54,7 +74,6 @@ class HelperInjectionTest extends Specification {
 
     when:
     injector.transform(null, null, emptyLoader.get(), null, null)
-    HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName).loadHelperClass(emptyLoader.get().lookup())
     emptyLoader.get().loadClass(helperClassName)
     then:
     isClassLoaded(helperClassName, emptyLoader.get())

@@ -12,7 +12,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
-import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassLoader;
+import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassInfo;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldDetector;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
@@ -20,12 +20,8 @@ import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.net.URL;
 import java.nio.file.Files;
-import java.security.PrivilegedAction;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
@@ -71,7 +67,7 @@ public class HelperInjector implements Transformer {
 
   static {
     InjectedClassHelper.internalSetHelperClassDetector(HelperInjector::isInjectedClass);
-    InjectedClassHelper.internalSetHelperClassLoader(HelperInjector::loadHelperClass);
+    InjectedClassHelper.internalSetHelperClassInfo(HelperInjector::getHelperClassInfo);
   }
 
   // Need this because we can't put null into the injectedClassLoaders map.
@@ -83,17 +79,9 @@ public class HelperInjector implements Transformer {
         }
       };
 
-  private static final HelperClassInjector BOOT_CLASS_INJECTOR =
-      new HelperClassInjector(null) {
-        @Override
-        Class<?> inject(
-            ClassLoader classLoader, String className, ClassLoaderAccess classLoaderAccess) {
-          throw new UnsupportedOperationException("should not be called");
-        }
-      };
+  private static final HelperClass BOOT_CLASS = new HelperClass(null);
 
-  private static final Cache<ClassLoader, Map<String, HelperClassInjector>> helperInjectors =
-      Cache.weak();
+  private static final Cache<ClassLoader, Map<String, HelperClass>> helperClasses = Cache.weak();
 
   private final String requestingName;
 
@@ -282,15 +270,13 @@ public class HelperInjector implements Transformer {
             new Object[] {classLoader, classnameToBytes.keySet()});
       }
 
-      Map<String, HelperClassInjector> map =
-          helperInjectors.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+      Map<String, HelperClass> map =
+          helperClasses.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
       for (Map.Entry<String, Supplier<byte[]>> entry : classnameToBytes.entrySet()) {
         // for boot loader we use a placeholder injector, we only need these classes to be
         // in the injected classes map to later tell which of the classes are injected
-        HelperClassInjector injector =
-            isBootClassLoader(classLoader)
-                ? BOOT_CLASS_INJECTOR
-                : new HelperClassInjector(entry.getValue());
+        HelperClass injector =
+            isBootClassLoader(classLoader) ? BOOT_CLASS : new HelperClass(entry.getValue());
         map.put(entry.getKey(), injector);
       }
 
@@ -418,136 +404,44 @@ public class HelperInjector implements Transformer {
   }
 
   public static boolean isInjectedClass(ClassLoader classLoader, String className) {
-    Map<String, HelperClassInjector> injectorMap =
-        helperInjectors.get(maskNullClassLoader(classLoader));
-    if (injectorMap == null) {
+    Map<String, HelperClass> helperMap = helperClasses.get(maskNullClassLoader(classLoader));
+    if (helperMap == null) {
       return false;
     }
-    return injectorMap.containsKey(className);
+    return helperMap.containsKey(className);
   }
 
-  private static final ClassValue<ClassLoaderAccess> classLoaderAccessClassValue =
-      new ClassValue<ClassLoaderAccess>() {
-        @Override
-        protected ClassLoaderAccess computeValue(Class<?> type) {
-          return new ClassLoaderAccess();
-        }
-      };
-
-  private static class ClassLoaderAccess {
-    volatile MethodHandle findLoadedClass;
-    volatile MethodHandle defineClass;
-
-    void initialize(MethodHandles.Lookup lookup) throws Exception {
-      if (findLoadedClass == null) {
-        findLoadedClass =
-            lookup.findVirtual(
-                ClassLoader.class,
-                "findLoadedClass",
-                MethodType.methodType(Class.class, String.class));
-      }
-      if (defineClass == null) {
-        defineClass =
-            lookup.findVirtual(
-                ClassLoader.class,
-                "defineClass",
-                MethodType.methodType(
-                    Class.class,
-                    String.class,
-                    byte[].class,
-                    int.class,
-                    int.class,
-                    ProtectionDomain.class));
-      }
-    }
-
-    Class<?> loadClass(ClassLoader classLoader, String className, byte[] classBytes)
-        throws Throwable {
-      // first check whether the class is already defined
-      Class<?> clazz = (Class<?>) findLoadedClass.invoke(classLoader, className);
-      if (clazz != null) {
-        return clazz;
-      }
-
-      // we don't attempt to synchronize class definitions but let them race and recover from
-      // duplicate class definitions by checking whether the class got defined in the catch block
-      // we don't define packages for injected helper classes
-      try {
-        return (Class<?>)
-            defineClass.invoke(
-                classLoader,
-                className,
-                classBytes,
-                0,
-                classBytes.length,
-                HelperInjector.PROTECTION_DOMAIN);
-      } catch (Throwable throwable) {
-        clazz = (Class<?>) findLoadedClass.invoke(classLoader, className);
-        if (clazz != null) {
-          return clazz;
-        }
-        throw throwable;
-      }
-    }
-  }
-
-  // visible for testing
-  static HelperClassLoader loadHelperClass(ClassLoader classLoader, String className) {
+  private static HelperClassInfo getHelperClassInfo(ClassLoader classLoader, String className) {
     if (classLoader == null) {
       throw new IllegalStateException("boot loader not supported");
     }
-    Map<String, HelperClassInjector> injectorMap = helperInjectors.get(classLoader);
-    if (injectorMap == null) {
+    Map<String, HelperClass> helperMap = helperClasses.get(classLoader);
+    if (helperMap == null) {
       return null;
     }
-    HelperClassInjector helperClassInjector = injectorMap.get(className);
-    if (helperClassInjector == null) {
+    HelperClass helperClass = helperMap.get(className);
+    if (helperClass == null) {
       return null;
     }
 
-    return lookup -> {
-      // if lookup is not specified fall back to using ClassInjector.UsingReflection
-      // this is used on jdk8
-      if (lookup == null) {
-        return helperClassInjector.inject(classLoader, className);
+    return new HelperClassInfo() {
+      @Override
+      public byte[] getClassBytes() {
+        return helperClass.bytes.get();
       }
-      ClassLoaderAccess classLoaderAccess = classLoaderAccessClassValue.get(classLoader.getClass());
-      classLoaderAccess.initialize(lookup);
-      return helperClassInjector.inject(classLoader, className, classLoaderAccess);
+
+      @Override
+      public ProtectionDomain getProtectionDomain() {
+        return PROTECTION_DOMAIN;
+      }
     };
   }
 
-  private static class HelperClassInjector {
+  private static class HelperClass {
     private final Supplier<byte[]> bytes;
 
-    HelperClassInjector(Supplier<byte[]> bytes) {
+    HelperClass(Supplier<byte[]> bytes) {
       this.bytes = bytes;
-    }
-
-    Class<?> inject(ClassLoader classLoader, String className, ClassLoaderAccess classLoaderAccess)
-        throws Throwable {
-      return classLoaderAccess.loadClass(classLoader, className, bytes.get());
-    }
-
-    Class<?> inject(ClassLoader classLoader, String className) {
-      // if security manager is present byte buddy calls
-      // checkPermission(new ReflectPermission("suppressAccessChecks")) so we must call class
-      // injection with AccessController.doPrivileged when security manager is enabled
-      Map<String, Class<?>> result =
-          execute(
-              () ->
-                  new ClassInjector.UsingReflection(classLoader, PROTECTION_DOMAIN)
-                      .injectRaw(Collections.singletonMap(className, bytes.get())));
-      return result.get(className);
-    }
-  }
-
-  @SuppressWarnings("removal") // AccessController is deprecated for removal
-  private static <T> T execute(PrivilegedAction<T> action) {
-    if (System.getSecurityManager() != null) {
-      return java.security.AccessController.doPrivileged(action);
-    } else {
-      return action.run();
     }
   }
 }
