@@ -23,6 +23,12 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
 
+  protected static KafkaTelemetry createKafkaTelemetry() {
+    return KafkaTelemetry.builder(testing.getOpenTelemetry())
+        .setMessagingReceiveInstrumentationEnabled(false)
+        .build();
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {

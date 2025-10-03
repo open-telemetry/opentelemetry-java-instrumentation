@@ -28,19 +28,36 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  private static KafkaTelemetry kafkaTelemetry;
+
+  protected static KafkaTelemetry createKafkaTelemetry() {
+    return KafkaTelemetry.builder(testing.getOpenTelemetry())
+        .setCapturedHeaders(java.util.Collections.singletonList("Test-Message-Header"))
+        .setMessagingReceiveInstrumentationEnabled(true)
+        .build();
+  }
+
   @Override
   public Map<String, Object> producerProps() {
+    if (kafkaTelemetry == null) {
+      kafkaTelemetry = createKafkaTelemetry();
+    }
     Map<String, Object> props = super.producerProps();
     props.put(
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+    props.putAll(kafkaTelemetry.producerInterceptorConfigProperties());
     return props;
   }
 
   @Override
   public Map<String, Object> consumerProps() {
+    if (kafkaTelemetry == null) {
+      kafkaTelemetry = createKafkaTelemetry();
+    }
     Map<String, Object> props = super.consumerProps();
     props.put(
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+    props.putAll(kafkaTelemetry.consumerInterceptorConfigProperties());
     return props;
   }
 

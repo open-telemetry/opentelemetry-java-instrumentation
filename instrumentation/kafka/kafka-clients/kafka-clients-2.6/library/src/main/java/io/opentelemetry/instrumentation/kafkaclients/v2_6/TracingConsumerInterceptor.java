@@ -16,6 +16,8 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -29,22 +31,16 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setMessagingReceiveInstrumentationEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
-
+  @Nullable private KafkaTelemetry telemetry;
   private String consumerGroup;
   private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
+    if (telemetry == null) {
+      return records;
+    }
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
     Context receiveContext = telemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
@@ -67,6 +63,25 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 
-    // TODO: support experimental attributes config
+    // Try to get KafkaTelemetry from config
+    Object telemetrySupplier = configs.get(KafkaTelemetry.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+    if (telemetrySupplier instanceof Supplier) {
+      Object kafkaTelemetry = ((Supplier<?>) telemetrySupplier).get();
+      if (kafkaTelemetry instanceof KafkaTelemetry) {
+        this.telemetry = (KafkaTelemetry) kafkaTelemetry;
+        return;
+      }
+    }
+
+    // Fallback to GlobalOpenTelemetry if not configured
+    this.telemetry =
+        KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+            .setMessagingReceiveInstrumentationEnabled(
+                ConfigPropertiesUtil.getBoolean(
+                    "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
+            .setCapturedHeaders(
+                ConfigPropertiesUtil.getList(
+                    "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+            .build();
   }
 }
