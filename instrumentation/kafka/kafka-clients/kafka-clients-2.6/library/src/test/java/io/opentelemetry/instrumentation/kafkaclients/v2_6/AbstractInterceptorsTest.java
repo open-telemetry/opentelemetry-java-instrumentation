@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaClientBaseTest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.nio.charset.StandardCharsets;
@@ -28,44 +29,25 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
-  private static KafkaTelemetry kafkaTelemetry;
-
-  protected static KafkaTelemetry createKafkaTelemetry() {
-    return KafkaTelemetry.builder(testing.getOpenTelemetry())
-        .setCapturedHeaders(java.util.Collections.singletonList("Test-Message-Header"))
-        .setMessagingReceiveInstrumentationEnabled(true)
-        .build();
-  }
-
   @Override
   public Map<String, Object> producerProps() {
-    if (kafkaTelemetry == null) {
-      kafkaTelemetry = createKafkaTelemetry();
-    }
     Map<String, Object> props = super.producerProps();
     props.put(
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
     props.put(
         TracingProducerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
-        new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal
-                .OpenTelemetrySupplier(
-            testing.getOpenTelemetry()));
+        new OpenTelemetrySupplier(testing.getOpenTelemetry()));
     return props;
   }
 
   @Override
   public Map<String, Object> consumerProps() {
-    if (kafkaTelemetry == null) {
-      kafkaTelemetry = createKafkaTelemetry();
-    }
     Map<String, Object> props = super.consumerProps();
     props.put(
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
     props.put(
         TracingConsumerInterceptor.CONFIG_KEY_OPENTELEMETRY_SUPPLIER,
-        new io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal
-                .OpenTelemetrySupplier(
-            testing.getOpenTelemetry()));
+        new OpenTelemetrySupplier(testing.getOpenTelemetry()));
     return props;
   }
 
