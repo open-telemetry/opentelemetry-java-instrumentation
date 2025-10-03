@@ -58,7 +58,7 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
   public static class LoadClassAdvice {
 
     // Class loader stub is shaded back to the real class loader class. It is used to call protected
-    // method from the advice that the complier won't let us call directly. During runtime it is
+    // method from the advice that the compiler won't let us call directly. During runtime it is
     // fine since this code is inlined into subclasses of ClassLoader that can call protected
     // methods.
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
