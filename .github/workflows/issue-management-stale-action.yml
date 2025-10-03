@@ -34,6 +34,7 @@ jobs:
           stale-pr-message: >
             This PR has been labeled as stale due to lack of activity and needing author feedback.
             It will be automatically closed if there is no further activity over the next 7 days.
+          operations-per-run: 1000
 
       # Action #2: Close old enhancement requests
       # - Targets: Issues with "enhancement" label (but NOT "needs author feedback")
@@ -52,6 +53,7 @@ jobs:
           close-issue-message: >
             Since there has been no activity on this enhancement for the past year we are closing it to help maintain our backlog.
             Anyone who would like to work on it is still welcome to do so, and we can re-open it at that time.
+          operations-per-run: 1000
 
       # Action #3: Handle stale PRs
       # - After 180 days inactive: Adds "stale" label + warning comment
@@ -67,3 +69,4 @@ jobs:
             This PR has been labeled as stale due to lack of activity.
             It will be automatically closed if there is no further activity over the next 14 days.
           exempt-draft-pr: false
+          operations-per-run: 1000
