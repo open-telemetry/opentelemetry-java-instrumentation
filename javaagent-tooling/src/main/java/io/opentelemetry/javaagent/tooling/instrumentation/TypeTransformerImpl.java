@@ -9,7 +9,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -31,7 +31,7 @@ final class TypeTransformerImpl implements TypeTransformer {
   @Override
   public void applyAdviceToMethod(
       ElementMatcher<? super MethodDescription> methodMatcher,
-      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      UnaryOperator<Advice.WithCustomMapping> mappingCustomizer,
       String adviceClassName) {
     agentBuilder =
         agentBuilder.transform(

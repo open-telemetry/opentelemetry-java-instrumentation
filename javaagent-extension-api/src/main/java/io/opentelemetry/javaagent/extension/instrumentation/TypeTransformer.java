@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.extension.instrumentation;
 
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -25,7 +25,7 @@ public interface TypeTransformer {
    */
   default void applyAdviceToMethod(
       ElementMatcher<? super MethodDescription> methodMatcher, String adviceClassName) {
-    applyAdviceToMethod(methodMatcher, Function.identity(), adviceClassName);
+    applyAdviceToMethod(methodMatcher, UnaryOperator.identity(), adviceClassName);
   }
 
   /**
@@ -34,7 +34,7 @@ public interface TypeTransformer {
    */
   void applyAdviceToMethod(
       ElementMatcher<? super MethodDescription> methodMatcher,
-      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      UnaryOperator<Advice.WithCustomMapping> mappingCustomizer,
       String adviceClassName);
 
   /**

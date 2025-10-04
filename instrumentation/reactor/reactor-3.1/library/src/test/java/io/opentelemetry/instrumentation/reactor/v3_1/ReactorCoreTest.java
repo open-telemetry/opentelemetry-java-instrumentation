@@ -25,6 +25,7 @@ import java.lang.reflect.Method;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -131,7 +132,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                 (Flux<Integer>)
                     FLUX_CONTEXT_WRITE_METHOD.invoke(
                         interim,
-                        (Function<reactor.util.context.Context, reactor.util.context.Context>)
+                        (UnaryOperator<reactor.util.context.Context>)
                             ctx -> {
                               Context parent =
                                   ContextPropagationOperator.getOpenTelemetryContext(
@@ -389,7 +390,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
             (Flux<Object>)
                 FLUX_CONTEXT_WRITE_METHOD.invoke(
                     interim,
-                    (Function<reactor.util.context.Context, reactor.util.context.Context>)
+                    (UnaryOperator<reactor.util.context.Context>)
                         context -> {
                           // subscribers that know that their subscription can happen
                           // ahead of time and in the 'wrong' context, has to clean up 'wrong'
@@ -565,7 +566,7 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       return (Mono<T>)
           MONO_CONTEXT_WRITE_METHOD.invoke(
               interim,
-              (Function<reactor.util.context.Context, reactor.util.context.Context>)
+              (UnaryOperator<reactor.util.context.Context>)
                   ctx -> {
                     Context parent =
                         ContextPropagationOperator.getOpenTelemetryContext(ctx, Context.current());

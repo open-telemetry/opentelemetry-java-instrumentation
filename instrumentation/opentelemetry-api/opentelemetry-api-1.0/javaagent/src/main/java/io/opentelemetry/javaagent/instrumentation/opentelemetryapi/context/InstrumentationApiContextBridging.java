@@ -12,7 +12,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 final class InstrumentationApiContextBridging {
@@ -199,13 +199,13 @@ final class InstrumentationApiContextBridging {
     }
   }
 
-  private static Function<Object, Object> httpRouteStateConvert(
+  private static UnaryOperator<Object> httpRouteStateConvert(
       MethodHandle create,
       MethodHandle getMethod,
       MethodHandle getRoute,
       MethodHandle getUpdatedBySourceOrder,
       MethodHandle getSpan,
-      Function<Object, Object> convertSpan) {
+      UnaryOperator<Object> convertSpan) {
     return httpRouteHolder -> {
       try {
         String method = (String) getMethod.invoke(httpRouteHolder);

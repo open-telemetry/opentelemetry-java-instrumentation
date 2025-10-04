@@ -9,14 +9,14 @@ import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 class MainJarPathFinder {
   private final Supplier<String[]> getProcessHandleArguments;
-  private final Function<String, String> getSystemProperty;
+  private final UnaryOperator<String> getSystemProperty;
   private final Predicate<Path> fileExists;
 
   public MainJarPathFinder() {
@@ -26,7 +26,7 @@ class MainJarPathFinder {
   // visible for tests
   MainJarPathFinder(
       Supplier<String[]> getProcessHandleArguments,
-      Function<String, String> getSystemProperty,
+      UnaryOperator<String> getSystemProperty,
       Predicate<Path> fileExists) {
     this.getProcessHandleArguments = getProcessHandleArguments;
     this.getSystemProperty = getSystemProperty;
