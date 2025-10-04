@@ -63,10 +63,8 @@ class ArmeriaGrpcTest {
     GreeterGrpc.GreeterBlockingStub client =
         GrpcClients.builder(server.httpUri()).build(GreeterGrpc.GreeterBlockingStub.class);
 
-    Helloworld.Response response =
-        testing.runWithSpan(
-            "parent",
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    Helloworld.Response response = testing.runWithSpan("parent", () -> client.sayHello(request));
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
