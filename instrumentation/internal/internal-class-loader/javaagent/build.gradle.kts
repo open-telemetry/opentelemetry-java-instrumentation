@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -5,6 +7,7 @@ plugins {
 dependencies {
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
+  compileOnly(project(":instrumentation:internal:internal-class-loader:compile-stub"))
 
   testImplementation(project(":javaagent-bootstrap"))
 
@@ -20,4 +23,33 @@ dependencies {
   // testImplementation("org.osgi:org.osgi.core:4.0.0")
   testImplementation("org.eclipse.platform:org.eclipse.osgi:3.13.200")
   testImplementation("org.apache.felix:org.apache.felix.framework:6.0.2")
+}
+
+val shadedJar by tasks.registering(ShadowJar::class) {
+  from(zipTree(tasks.jar.get().archiveFile))
+  archiveClassifier.set("shaded")
+}
+
+tasks {
+  withType(ShadowJar::class) {
+    relocate("io.opentelemetry.javaagent.instrumentation.internal.classloader.stub", "java.lang")
+  }
+
+  assemble {
+    dependsOn(shadedJar)
+  }
+}
+
+// Create a consumable configuration for the shaded jar. We can't use the "shadow" configuration
+// because that is taken by the agent-testing.jar
+configurations {
+  consumable("shaded") {
+    attributes {
+      attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named("shaded"))
+    }
+  }
+}
+
+artifacts {
+  add("shaded", shadedJar)
 }

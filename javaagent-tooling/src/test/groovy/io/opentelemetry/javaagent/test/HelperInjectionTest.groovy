@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.test
 
-
+import groovy.transform.CompileStatic
+import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper
 import io.opentelemetry.javaagent.tooling.AgentInstaller
 import io.opentelemetry.javaagent.tooling.HelperInjector
 import io.opentelemetry.javaagent.tooling.Utils
@@ -25,6 +26,37 @@ import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc
 
 class HelperInjectionTest extends Specification {
 
+  @CompileStatic
+  class EmptyLoader extends URLClassLoader {
+    EmptyLoader() {
+      super(new URL[0], (ClassLoader) null)
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      // the same code as added by LoadInjectedClassInstrumentation
+      InjectedClassHelper.HelperClassInfo helperClassInfo = InjectedClassHelper.getHelperClassInfo(this, name)
+      if (helperClassInfo != null) {
+        Class<?> clazz = findLoadedClass(name)
+        if (clazz != null) {
+          return clazz
+        }
+        try {
+          byte[] bytes = helperClassInfo.getClassBytes()
+          return defineClass(name, bytes, 0, bytes.length, helperClassInfo.getProtectionDomain())
+        } catch (LinkageError error) {
+          clazz = findLoadedClass(name)
+          if (clazz != null) {
+            return clazz
+          }
+          throw error
+        }
+      }
+
+      return super.loadClass(name, resolve)
+    }
+  }
+
   def "helpers injected to non-delegating classloader"() {
     setup:
     URL[] helpersSourceUrls = new URL[1]
@@ -33,7 +65,7 @@ class HelperInjectionTest extends Specification {
 
     String helperClassName = HelperInjectionTest.getPackage().getName() + '.HelperClass'
     HelperInjector injector = new HelperInjector("test", [helperClassName], [], helpersSourceLoader, null)
-    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], (ClassLoader) null))
+    AtomicReference<EmptyLoader> emptyLoader = new AtomicReference<>(new EmptyLoader())
 
     when:
     emptyLoader.get().loadClass(helperClassName)
@@ -42,7 +74,6 @@ class HelperInjectionTest extends Specification {
 
     when:
     injector.transform(null, null, emptyLoader.get(), null, null)
-    HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName)
     emptyLoader.get().loadClass(helperClassName)
     then:
     isClassLoaded(helperClassName, emptyLoader.get())
