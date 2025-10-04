@@ -12,8 +12,8 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import io.opentelemetry.sdk.resources.Resource;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -29,7 +29,7 @@ class JarServiceNameResourceExtractorTest {
   @Test
   void extractResource_empty() {
     String[] processArgs = new String[0];
-    Function<String, String> getProperty = prop -> null;
+    UnaryOperator<String> getProperty = prop -> null;
     Predicate<Path> fileExists = JarServiceNameResourceExtractorTest::failPath;
     JarServiceNameResourceExtractor serviceNameProvider =
         getExtractor(processArgs, getProperty, fileExists);
@@ -40,7 +40,7 @@ class JarServiceNameResourceExtractorTest {
   }
 
   private static JarServiceNameResourceExtractor getExtractor(
-      String[] processArgs, Function<String, String> getProperty, Predicate<Path> fileExists) {
+      String[] processArgs, UnaryOperator<String> getProperty, Predicate<Path> fileExists) {
     return new JarServiceNameResourceExtractor(
         new MainJarPathFinder(() -> processArgs, getProperty, fileExists));
   }
@@ -100,7 +100,7 @@ class JarServiceNameResourceExtractorTest {
   @ParameterizedTest
   @MethodSource("sunCommandLineArguments")
   void extractResource_sunCommandLine(String commandLine, Path jarPath) {
-    Function<String, String> getProperty =
+    UnaryOperator<String> getProperty =
         key -> "sun.java.command".equals(key) ? commandLine : null;
     Predicate<Path> fileExists = jarPath::equals;
 
@@ -116,7 +116,7 @@ class JarServiceNameResourceExtractorTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/7567
   @Test
   void extractResource_sunCommandLineProblematicArgs() {
-    Function<String, String> getProperty =
+    UnaryOperator<String> getProperty =
         key -> key.equals("sun.java.command") ? "one C:/two" : null;
     Predicate<Path> fileExists = path -> false;
 
