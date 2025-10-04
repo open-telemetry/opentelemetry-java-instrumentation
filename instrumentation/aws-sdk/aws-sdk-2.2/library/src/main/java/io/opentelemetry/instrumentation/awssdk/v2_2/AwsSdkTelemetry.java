@@ -121,7 +121,6 @@ public class AwsSdkTelemetry {
         dynamoDbInstrumenter,
         bedrockRuntimeInstrumenter,
         eventLogger,
-        captureExperimentalSpanAttributes,
         messagingPropagator,
         useXrayPropagator,
         recordIndividualHttpError,
