@@ -18,8 +18,6 @@ import ratpack.handling.Handler;
 
 public final class TracingHandler implements Handler {
 
-  private static final String INITIAL_SPAN_NAME = "ratpack.handler";
-
   public static final Handler INSTANCE = new TracingHandler();
 
   @Override
@@ -34,15 +32,15 @@ public final class TracingHandler implements Handler {
         serverContext != null ? serverContext.context() : Java8BytecodeBridge.currentContext();
     io.opentelemetry.context.Context callbackContext;
 
-    if (instrumenter().shouldStart(parentOtelContext, INITIAL_SPAN_NAME)) {
+    if (instrumenter().shouldStart(parentOtelContext, INSTANCE)) {
       io.opentelemetry.context.Context otelContext =
-          instrumenter().start(parentOtelContext, INITIAL_SPAN_NAME);
+          instrumenter().start(parentOtelContext, INSTANCE);
       ctx.getExecution().add(otelContext);
       ctx.getResponse()
           .beforeSend(
               response -> {
                 updateSpanNames(otelContext, ctx);
-                instrumenter().end(otelContext, INITIAL_SPAN_NAME, null, null);
+                instrumenter().end(otelContext, INSTANCE, null, null);
               });
       callbackContext = otelContext;
     } else {
