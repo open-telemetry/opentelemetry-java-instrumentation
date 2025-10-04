@@ -25,7 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -184,7 +184,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
           @Override
           public void applyAdviceToMethod(
               ElementMatcher<? super MethodDescription> methodMatcher,
-              Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+              UnaryOperator<Advice.WithCustomMapping> mappingCustomizer,
               String adviceClassName) {
             adviceNames.add(adviceClassName);
           }

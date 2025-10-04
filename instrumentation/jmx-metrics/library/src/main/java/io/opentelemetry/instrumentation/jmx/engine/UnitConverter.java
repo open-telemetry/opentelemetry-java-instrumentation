@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.jmx.engine;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 /**
@@ -24,7 +24,7 @@ class UnitConverter {
     registerConversion("ns", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toNanos(1));
   }
 
-  private final Function<Number, Number> convertingFunction;
+  private final UnaryOperator<Number> convertingFunction;
 
   /**
    * Get an instance of converter that is able to convert a value from a given source to a target
@@ -66,7 +66,7 @@ class UnitConverter {
    */
   // visible for testing
   static void registerConversion(
-      String sourceUnit, String targetUnit, Function<Number, Number> convertingFunction) {
+      String sourceUnit, String targetUnit, UnaryOperator<Number> convertingFunction) {
     if (sourceUnit.isEmpty()) {
       throw new IllegalArgumentException("Non empty sourceUnit must be provided");
     }
@@ -92,7 +92,7 @@ class UnitConverter {
    *
    * @param convertingFunction an algorithm applied when converting value
    */
-  UnitConverter(Function<Number, Number> convertingFunction) {
+  UnitConverter(UnaryOperator<Number> convertingFunction) {
     this.convertingFunction = convertingFunction;
   }
 
