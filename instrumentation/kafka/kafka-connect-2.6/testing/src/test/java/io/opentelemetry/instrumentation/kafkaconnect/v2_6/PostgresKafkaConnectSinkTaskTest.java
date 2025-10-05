@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -75,17 +76,17 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   @Override
   protected void stopDatabaseContainer() {
     if (postgreSql != null) {
-      try {
-        postgreSql.stop();
-      } catch (RuntimeException e) {
-        logger.error("Error stopping PostgreSQL: " + e.getMessage());
-      }
+      postgreSql.stop();
     }
   }
 
   @Override
   protected void clearDatabaseData() {
-    clearPostgresTable();
+    try {
+      clearPostgresTable();
+    } catch (SQLException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   @Override
@@ -99,10 +100,6 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     return CONNECTOR_NAME;
   }
 
-  @Override
-  protected String getTopicName() {
-    return TOPIC_NAME;
-  }
 
   @Test
   public void testKafkaConnectPostgresSinkTaskInstrumentation()
@@ -145,8 +142,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                         span ->
                                             span.getName().contains(uniqueTopicName)
                                                 && span.getKind()
-                                                    == io.opentelemetry.api.trace.SpanKind
-                                                        .CONSUMER);
+                                                    == CONSUMER);
 
                             boolean hasInsertSpan =
                                 trace.stream()
@@ -170,7 +166,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .filter(
                           span ->
                               span.getName().contains(uniqueTopicName)
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                                  && span.getKind() == CONSUMER)
                       .findFirst()
                       .orElse(null);
               assertThat(kafkaConnectSpan).isNotNull();
@@ -190,7 +186,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
   @Test
   public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation()
-      throws IOException, InterruptedException {
+      throws IOException {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -247,7 +243,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                               (span.getName().contains(topicName1)
                                       || span.getName().contains(topicName2)
                                       || span.getName().contains(topicName3))
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                                  && span.getKind() == CONSUMER)
                       .count();
 
               long totalInsertSpans =
@@ -273,7 +269,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                   && span.getName().contains("]")
                                   && span.getName().contains("process")
                                   && span.getKind()
-                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+                                      == CONSUMER);
 
               boolean hasIndividualSpans =
                   traces.stream()
@@ -285,7 +281,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                       || span.getName().contains(topicName3))
                                   && !span.getName().contains("[")
                                   && span.getKind()
-                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+                                      == CONSUMER);
 
               assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
             });
@@ -374,7 +370,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
         .all();
   }
 
-  private static long getRecordCountFromPostgres() {
+  private static long getRecordCountFromPostgres() throws SQLException {
     try (Connection conn =
             DriverManager.getConnection(postgreSql.getJdbcUrl(), DB_USERNAME, DB_PASSWORD);
         Statement st = conn.createStatement();
@@ -382,21 +378,16 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
       if (rs.next()) {
         return rs.getLong(1);
       }
-    } catch (SQLException e) {
-      logger.warn("Failed to count PostgreSQL records: {}", e.getMessage());
-      return 0;
     }
     return 0;
   }
 
-  private static void clearPostgresTable() {
+  private static void clearPostgresTable() throws SQLException {
     try (Connection conn =
             DriverManager.getConnection(postgreSql.getJdbcUrl(), DB_USERNAME, DB_PASSWORD);
         Statement st = conn.createStatement()) {
       st.executeUpdate("DELETE FROM " + DB_TABLE_PERSON);
       logger.info("Cleared PostgreSQL table: {}", DB_TABLE_PERSON);
-    } catch (SQLException e) {
-      logger.warn("Failed to clear PostgreSQL table: {}", e.getMessage());
     }
   }
 }

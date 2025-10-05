@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -63,11 +64,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   @Override
   protected void stopDatabaseContainer() {
     if (mongoDB != null) {
-      try {
-        mongoDB.stop();
-      } catch (RuntimeException e) {
-        logger.error("Error stopping MongoDB: " + e.getMessage());
-      }
+      mongoDB.stop();
     }
   }
 
@@ -87,10 +84,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     return CONNECTOR_NAME;
   }
 
-  @Override
-  protected String getTopicName() {
-    return TOPIC_NAME;
-  }
 
   @Test
   public void testKafkaConnectMongoSinkTaskInstrumentation()
@@ -127,8 +120,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                         span ->
                                             span.getName().contains(uniqueTopicName)
                                                 && span.getKind()
-                                                    == io.opentelemetry.api.trace.SpanKind
-                                                        .CONSUMER);
+                                                    == CONSUMER);
 
                             boolean hasInsertSpan =
                                 trace.stream()
@@ -152,7 +144,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .filter(
                           span ->
                               span.getName().contains(uniqueTopicName)
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                                  && span.getKind() == CONSUMER)
                       .findFirst()
                       .orElse(null);
               assertThat(kafkaConnectSpan).isNotNull();
@@ -223,7 +215,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                               (span.getName().contains(topicName1)
                                       || span.getName().contains(topicName2)
                                       || span.getName().contains(topicName3))
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CONSUMER)
+                                  && span.getKind() == CONSUMER)
                       .count();
 
               long totalUpdateSpans =
@@ -238,16 +230,16 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
               assertThat(totalKafkaConnectSpans).isGreaterThanOrEqualTo(1);
               assertThat(totalUpdateSpans).isGreaterThanOrEqualTo(3);
 
-              boolean hasMultiTopicSpan =
+              // When records are from multiple topics, the destination name is null,
+              // resulting in a span name like "kafka process" without topic names.
+              // Individual topic spans may still be created if processed separately.
+              boolean hasGenericProcessSpan =
                   traces.stream()
                       .flatMap(trace -> trace.stream())
                       .anyMatch(
                           span ->
-                              span.getName().contains("[")
-                                  && span.getName().contains("]")
-                                  && span.getName().contains("process")
-                                  && span.getKind()
-                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+                              span.getName().equals("kafka process")
+                                  && span.getKind() == CONSUMER);
 
               boolean hasIndividualSpans =
                   traces.stream()
@@ -257,11 +249,9 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                               (span.getName().contains(topicName1)
                                       || span.getName().contains(topicName2)
                                       || span.getName().contains(topicName3))
-                                  && !span.getName().contains("[")
-                                  && span.getKind()
-                                      == io.opentelemetry.api.trace.SpanKind.CONSUMER);
+                                  && span.getKind() == CONSUMER);
 
-              assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
+              assertThat(hasGenericProcessSpan || hasIndividualSpans).isTrue();
             });
   }
 
@@ -335,8 +325,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
       MongoDatabase database = mongoClient.getDatabase(DB_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
       return collection.countDocuments();
-    } catch (RuntimeException e) {
-      return 0;
     }
   }
 
@@ -345,8 +333,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
       MongoDatabase database = mongoClient.getDatabase(DB_NAME);
       MongoCollection<Document> collection = database.getCollection(COLLECTION_NAME);
       collection.drop();
-    } catch (RuntimeException e) {
-      // Ignore cleanup failures
     }
   }
 }

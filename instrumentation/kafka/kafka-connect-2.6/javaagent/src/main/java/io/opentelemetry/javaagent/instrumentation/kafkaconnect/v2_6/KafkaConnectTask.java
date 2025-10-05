@@ -23,11 +23,7 @@ public final class KafkaConnectTask {
     return records;
   }
 
-  public SinkRecord getFirstRecord() {
-    return records.isEmpty() ? null : records.iterator().next();
-  }
-
-  public Set<String> getTopics() {
+  private Set<String> getTopics() {
     return records.stream()
         .map(SinkRecord::topic)
         .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -38,9 +34,12 @@ public final class KafkaConnectTask {
     if (topics.isEmpty()) {
       return null;
     }
+    // Return the topic name only if all records are from the same topic.
+    // When records are from multiple topics, return null as there is no standard way
+    // to represent multiple destination names in messaging.destination.name attribute.
     if (topics.size() == 1) {
       return topics.iterator().next();
     }
-    return topics.stream().collect(Collectors.joining(",", "[", "]"));
+    return null;
   }
 }

@@ -44,7 +44,6 @@ import org.testcontainers.containers.Network;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.lifecycle.Startables;
-import org.testcontainers.shaded.com.google.common.base.VerifyException;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
@@ -105,8 +104,6 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
 
   protected abstract String getConnectorName();
 
-  protected abstract String getTopicName();
-
   // Static methods
   protected static String getKafkaConnectUrl() {
     return format(
@@ -150,7 +147,7 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   }
 
   @BeforeAll
-  public void setupBase() throws IOException {
+  public void setupBase() {
     network = Network.newNetwork();
 
     // Start backend container first (like smoke tests)
@@ -333,15 +330,14 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
     try (AdminClient adminClient = createAdminClient()) {
       NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
       adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new RuntimeException("Failed to create topic: " + topicName, e);
     } catch (Exception e) {
-      if (e instanceof InterruptedException) {
-        Thread.currentThread().interrupt();
-        throw new VerifyException("Failed to create topic: " + topicName, e);
-      } else if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
+      if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
         // Topic already exists, continue
       } else {
-        logger.error("Error creating topic: {}", e.getMessage());
-        throw new VerifyException("Failed to create topic: " + topicName, e);
+        throw new RuntimeException("Failed to create topic: " + topicName, e);
       }
     }
   }
@@ -352,6 +348,8 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
           .atMost(Duration.ofSeconds(60))
           .pollInterval(Duration.ofMillis(500))
           .until(() -> adminClient.listTopics().names().get().contains(topicName));
+    } catch (RuntimeException e) {
+      throw new RuntimeException("Failed to await topic creation: " + topicName, e);
     }
   }
 
@@ -381,45 +379,25 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
 
     // Stop all containers in reverse order of startup to ensure clean shutdown
     if (kafkaConnect != null) {
-      try {
-        kafkaConnect.stop();
-      } catch (RuntimeException e) {
-        logger.error("Error stopping Kafka Connect: " + e.getMessage());
-      }
+      kafkaConnect.stop();
     }
 
     stopDatabaseContainer();
 
     if (kafka != null) {
-      try {
-        kafka.stop();
-      } catch (RuntimeException e) {
-        logger.error("Error stopping Kafka: " + e.getMessage());
-      }
+      kafka.stop();
     }
 
     if (zookeeper != null) {
-      try {
-        zookeeper.stop();
-      } catch (RuntimeException e) {
-        logger.error("Error stopping Zookeeper: " + e.getMessage());
-      }
+      zookeeper.stop();
     }
 
     if (backend != null) {
-      try {
-        backend.stop();
-      } catch (RuntimeException e) {
-        logger.error("Error stopping backend: " + e.getMessage());
-      }
+      backend.stop();
     }
 
     if (network != null) {
-      try {
-        network.close();
-      } catch (RuntimeException e) {
-        logger.error("Error closing network: " + e.getMessage());
-      }
+      network.close();
     }
   }
 }

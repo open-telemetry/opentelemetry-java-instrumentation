@@ -12,18 +12,21 @@ import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
 enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
   INSTANCE;
 
   @Override
   public Iterable<String> keys(SinkRecord record) {
     if (record.headers() == null) {
-      return java.util.Collections.emptyList();
+      return emptyList();
     }
 
     return StreamSupport.stream(record.headers().spliterator(), false)
         .map(Header::key)
-        .collect(java.util.stream.Collectors.toList());
+        .collect(toList());
   }
 
   @Override

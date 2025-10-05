@@ -7,13 +7,11 @@ package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
-import org.apache.kafka.connect.sink.SinkRecord;
 
 enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConnectTask, Void> {
   INSTANCE;
@@ -83,12 +81,9 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
 
   @Override
   public List<String> getMessageHeader(KafkaConnectTask request, String name) {
-    SinkRecord firstRecord = request.getFirstRecord();
-    if (firstRecord == null || firstRecord.headers() == null) {
-      return Collections.emptyList();
-    }
-
-    return StreamSupport.stream(firstRecord.headers().spliterator(), false)
+    return request.getRecords().stream()
+        .filter(record -> record.headers() != null)
+        .flatMap(record -> StreamSupport.stream(record.headers().spliterator(), false))
         .filter(header -> name.equals(header.key()) && header.value() != null)
         .map(header -> convertHeaderValue(header))
         .collect(Collectors.toList());
