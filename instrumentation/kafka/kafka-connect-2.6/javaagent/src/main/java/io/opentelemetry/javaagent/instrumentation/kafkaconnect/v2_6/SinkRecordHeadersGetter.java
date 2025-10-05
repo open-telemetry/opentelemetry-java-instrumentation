@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
 import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.connect.header.Header;
 import org.apache.kafka.connect.sink.SinkRecord;
-
-import static java.util.Collections.emptyList;
-import static java.util.stream.Collectors.toList;
 
 enum SinkRecordHeadersGetter implements TextMapGetter<SinkRecord> {
   INSTANCE;

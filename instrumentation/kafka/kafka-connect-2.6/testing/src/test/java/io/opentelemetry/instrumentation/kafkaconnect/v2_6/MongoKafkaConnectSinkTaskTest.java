@@ -84,7 +84,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     return CONNECTOR_NAME;
   }
 
-
   @Test
   public void testKafkaConnectMongoSinkTaskInstrumentation()
       throws IOException, InterruptedException {
@@ -119,8 +118,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                     .anyMatch(
                                         span ->
                                             span.getName().contains(uniqueTopicName)
-                                                && span.getKind()
-                                                    == CONSUMER);
+                                                && span.getKind() == CONSUMER);
 
                             boolean hasInsertSpan =
                                 trace.stream()
@@ -238,8 +236,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .flatMap(trace -> trace.stream())
                       .anyMatch(
                           span ->
-                              span.getName().equals("kafka process")
-                                  && span.getKind() == CONSUMER);
+                              span.getName().equals("kafka process") && span.getKind() == CONSUMER);
 
               boolean hasIndividualSpans =
                   traces.stream()

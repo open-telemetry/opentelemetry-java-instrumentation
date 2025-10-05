@@ -100,7 +100,6 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     return CONNECTOR_NAME;
   }
 
-
   @Test
   public void testKafkaConnectPostgresSinkTaskInstrumentation()
       throws IOException, InterruptedException {
@@ -141,8 +140,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                     .anyMatch(
                                         span ->
                                             span.getName().contains(uniqueTopicName)
-                                                && span.getKind()
-                                                    == CONSUMER);
+                                                && span.getKind() == CONSUMER);
 
                             boolean hasInsertSpan =
                                 trace.stream()
@@ -185,8 +183,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation()
-      throws IOException {
+  public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation() throws IOException {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -268,8 +265,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                               span.getName().contains("[")
                                   && span.getName().contains("]")
                                   && span.getName().contains("process")
-                                  && span.getKind()
-                                      == CONSUMER);
+                                  && span.getKind() == CONSUMER);
 
               boolean hasIndividualSpans =
                   traces.stream()
@@ -280,8 +276,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                       || span.getName().contains(topicName2)
                                       || span.getName().contains(topicName3))
                                   && !span.getName().contains("[")
-                                  && span.getKind()
-                                      == CONSUMER);
+                                  && span.getKind() == CONSUMER);
 
               assertThat(hasMultiTopicSpan || hasIndividualSpans).isTrue();
             });
