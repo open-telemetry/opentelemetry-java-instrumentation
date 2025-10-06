@@ -8,11 +8,11 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import static java.util.Collections.emptyIterator;
 
 import io.grpc.Metadata;
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum GrpcRequestGetter implements ExtendedTextMapGetter<GrpcRequest> {
+enum GrpcRequestGetter implements TextMapGetter<GrpcRequest> {
   INSTANCE;
 
   @Override
