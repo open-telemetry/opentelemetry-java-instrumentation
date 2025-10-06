@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizer;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationCustomizerProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ConsoleExporterModel;
@@ -31,7 +32,7 @@ public class SpanLoggingCustomizerProvider implements DeclarativeConfigurationCu
   private static void maybeEnableLoggingExporter(OpenTelemetryConfigurationModel model) {
     // read from system properties as it's an early init property and the config bridge is not
     // available here
-    if (!"true".equals(System.getProperty("otel.javaagent.debug"))) {
+    if (!ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false)) {
       return;
     }
     // don't install another instance if the user has already explicitly requested it.
