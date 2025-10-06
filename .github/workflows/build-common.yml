@@ -252,8 +252,6 @@ jobs:
           - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
-          - test-java-version: 25 # renovate: datasource=java-version
-            vm: openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -336,22 +334,27 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const matrix = JSON.parse(process.env.matrix);
-            const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
-            
-            const workflow_jobs_nested = await github.paginate(
-              github.rest.actions.listJobsForWorkflowRun,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: context.runId,
-                per_page: 100
-              },
-              (response) => {
-                return response.data;
-              },
-            );
-            return workflow_jobs_nested.flat().find((job) => job.name === job_name).html_url;
+            try {
+              const matrix = JSON.parse(process.env.matrix);
+              const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
+              const workflow_jobs_nested = await github.paginate(
+                github.rest.actions.listJobsForWorkflowRun,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: context.runId,
+                  per_page: 100
+                },
+                (response) => {
+                  return response.data;
+                },
+              );
+              const job = workflow_jobs_nested.flat().find((job) => job.name === job_name);
+              return job ? job.html_url : '';
+            } catch (e) {
+              core.warning(`Failed to get current job url: ${e}`);
+              return '';
+            }
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
