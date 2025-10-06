@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
+
 import io.opentelemetry.context.Context;
 import java.util.function.BiConsumer;
 
@@ -20,6 +22,6 @@ public final class OpenSearchResponseHandler implements BiConsumer<Object, Throw
   @Override
   public void accept(Object response, Throwable error) {
     // OpenSearch responses don't provide response information, so the span is closed with null.
-    OpenSearchSingletons.instrumenter().end(context, otelRequest, null, error);
+    instrumenter().end(context, otelRequest, null, error);
   }
 }

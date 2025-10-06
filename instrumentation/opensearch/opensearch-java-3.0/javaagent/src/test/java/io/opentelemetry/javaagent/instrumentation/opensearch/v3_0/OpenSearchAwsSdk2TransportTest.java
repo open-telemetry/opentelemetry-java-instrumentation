@@ -29,7 +29,6 @@ import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,7 +50,7 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.utils.AttributeMap;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchJavaTest {
+class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
 
   protected static final MockWebServerExtension server = new MockWebServerExtension();
 
@@ -152,33 +151,22 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchJavaTest {
   @Test
   @Override
   void shouldGetStatusAsyncWithTraces() throws Exception {
-    AtomicReference<CompletableFuture<HealthResponse>> responseCompletableFuture =
-        new AtomicReference<>();
     CountDownLatch countDownLatch = new CountDownLatch(1);
 
-    getTesting()
-        .runWithSpan(
-            "client",
-            () -> {
-              CompletableFuture<HealthResponse> future = openSearchAsyncClient.cluster().health();
-              responseCompletableFuture.set(future);
-
-              future.whenComplete(
-                  (response, throwable) -> {
-                    getTesting()
-                        .runWithSpan(
-                            "callback",
-                            () -> {
-                              if (throwable != null) {
-                                throw new RuntimeException(throwable);
-                              }
-                              countDownLatch.countDown();
-                            });
-                  });
-            });
+    CompletableFuture<HealthResponse> responseCompletableFuture =
+        getTesting()
+            .runWithSpan(
+                "client",
+                () ->
+                    openSearchAsyncClient
+                        .cluster()
+                        .health()
+                        .whenComplete(
+                            (response, throwable) ->
+                                getTesting().runWithSpan("callback", countDownLatch::countDown)));
 
     countDownLatch.await();
-    HealthResponse healthResponse = responseCompletableFuture.get().get();
+    HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
 
     getTesting()

@@ -25,7 +25,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -39,7 +38,7 @@ import org.testcontainers.utility.DockerImageName;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class AbstractOpenSearchJavaTest {
+abstract class AbstractOpenSearchTest {
 
   protected OpenSearchClient openSearchClient;
   protected OpenSearchAsyncClient openSearchAsyncClient;
@@ -105,33 +104,22 @@ abstract class AbstractOpenSearchJavaTest {
 
   @Test
   void shouldGetStatusAsyncWithTraces() throws Exception {
-    AtomicReference<CompletableFuture<HealthResponse>> responseCompletableFuture =
-        new AtomicReference<>();
     CountDownLatch countDownLatch = new CountDownLatch(1);
 
-    getTesting()
-        .runWithSpan(
-            "client",
-            () -> {
-              CompletableFuture<HealthResponse> future = openSearchAsyncClient.cluster().health();
-              responseCompletableFuture.set(future);
-
-              future.whenComplete(
-                  (response, throwable) -> {
-                    getTesting()
-                        .runWithSpan(
-                            "callback",
-                            () -> {
-                              if (throwable != null) {
-                                throw new RuntimeException(throwable);
-                              }
-                              countDownLatch.countDown();
-                            });
-                  });
-            });
+    CompletableFuture<HealthResponse> responseCompletableFuture =
+        getTesting()
+            .runWithSpan(
+                "client",
+                () ->
+                    openSearchAsyncClient
+                        .cluster()
+                        .health()
+                        .whenComplete(
+                            (response, throwable) ->
+                                getTesting().runWithSpan("callback", countDownLatch::countDown)));
 
     countDownLatch.await();
-    HealthResponse healthResponse = responseCompletableFuture.get().get();
+    HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
 
     getTesting()
