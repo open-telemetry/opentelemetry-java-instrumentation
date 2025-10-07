@@ -8,12 +8,15 @@
 
 ## Connection Pool Unwrapping
 
-The JDBC instrumentation unwraps pooled connections to cache database metadata efficiently. Most
+The JDBC instrumentation requires unwrapping pooled connections (via `java.sql.Wrapper`) to
+correctly attribute database operations to the underlying connection and to cache metadata. Most
 connection pools support this by default.
 
-**Performance issue?** If unwrapping fails, database metadata is extracted on every operation
-instead of being cached, causing higher CPU usage. To fix, ensure your connection pool supports
-unwrapping:
+**Performance issue?** If unwrapping fails, the instrumentation may have degraded performance or
+increased overhead with some JDBC drivers. Metadata extraction may result in database queries on
+every operation (depending on driver implementation and caching behavior) instead of being cached,
+and operations may be attributed to the wrong database connection. To fix, ensure your connection
+pool supports unwrapping:
 
 **Vibur DBCP example:**
 ```java

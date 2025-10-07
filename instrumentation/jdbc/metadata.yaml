@@ -3,9 +3,11 @@ description: >
   named after the SQL verb, enriched with standard DB client attributes (system, database,
   operation, sanitized statement, peer address) and error details if an exception occurs.
 
-  The instrumentation unwraps pooled connections to cache database metadata. If your connection pool
-  doesn't support unwrapping (java.sql.Wrapper), metadata extraction will occur on every operation,
-  causing higher CPU usage.
+  The instrumentation requires unwrapping pooled connections (via java.sql.Wrapper) to correctly
+  attribute database operations to the underlying connection and to cache metadata. If your connection
+  pool doesn't support unwrapping, the instrumentation may have degraded performance or increased
+  overhead with some JDBC drivers, as metadata extraction may result in database queries on every
+  operation depending on driver implementation and caching behavior.
 
   There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections,
   but is disabled by default due to the volume of telemetry produced.
