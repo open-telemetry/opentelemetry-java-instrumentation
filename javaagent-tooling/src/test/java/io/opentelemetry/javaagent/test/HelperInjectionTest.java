@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.test;
 
 import static io.opentelemetry.instrumentation.test.utils.ClasspathUtils.isClassLoaded;
 import static io.opentelemetry.instrumentation.test.utils.GcUtils.awaitGc;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -18,8 +19,8 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.description.type.TypeDescription;
@@ -36,7 +37,7 @@ class HelperInjectionTest {
     ClassLoader helpersSourceLoader = new URLClassLoader(helpersSourceUrls);
 
     String helperClassName = HelperInjectionTest.class.getPackage().getName() + ".HelperClass";
-    HelperInjector injector = new HelperInjector("test", List.of(helperClassName), List.of(), helpersSourceLoader, null);
+    HelperInjector injector = new HelperInjector("test", singletonList(helperClassName), Collections.emptyList(), helpersSourceLoader, null);
     AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], null));
 
     assertThatThrownBy(() -> emptyLoader.get().loadClass(helperClassName))
@@ -72,8 +73,8 @@ class HelperInjectionTest {
     String helperClassName = HelperInjectionTest.class.getPackage().getName() + ".HelperClass";
     HelperInjector injector = new HelperInjector(
         "test",
-        List.of(helperClassName),
-        List.of(),
+        Arrays.asList(helperClassName),
+        Collections.emptyList(),
         this.getClass().getClassLoader(),
         ByteBuddyAgent.getInstrumentation());
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], null);
