@@ -13,9 +13,7 @@ import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import muzzle.HelperReferenceWrapperTestClasses;
 import net.bytebuddy.pool.TypePool;
 import org.junit.jupiter.api.BeforeAll;
@@ -73,7 +71,6 @@ class HelperReferenceWrapperTest {
         new HelperReferenceWrapper.Factory(typePool, references, helperClassPredicate)
             .create(helperClass);
 
-    // helperWrapper assertions
     assertThat(helperWrapper.isAbstract()).isFalse();
 
     assertThat(helperWrapper.getMethods())
@@ -101,7 +98,7 @@ class HelperReferenceWrapperTest {
         .satisfies(
             baseHelper -> {
               assertThat(baseHelper.isAbstract()).isTrue();
-              assertThat(baseHelper.getMethods().collect(Collectors.toList()))
+              assertThat(baseHelper.getMethods())
                   .hasSize(2)
                   .satisfies(
                       method -> {
@@ -144,9 +141,7 @@ class HelperReferenceWrapperTest {
                             .satisfies(
                                 wrapper -> {
                                   assertThat(wrapper.isAbstract()).isTrue();
-                                  List<HelperReferenceWrapper.Method> interface1Methods =
-                                      wrapper.getMethods().collect(Collectors.toList());
-                                  assertThat(interface1Methods)
+                                  assertThat(wrapper.getMethods())
                                       .hasSize(1)
                                       .satisfies(
                                           method -> {
@@ -156,8 +151,7 @@ class HelperReferenceWrapperTest {
                                           },
                                           atIndex(0));
                                   assertThat(wrapper.hasSuperTypes()).isFalse();
-                                  assertThat(wrapper.getSuperTypes().collect(Collectors.toList()))
-                                      .isEmpty();
+                                  assertThat(wrapper.getSuperTypes()).isEmpty();
                                 },
                                 atIndex(1));
                       },
@@ -166,11 +160,8 @@ class HelperReferenceWrapperTest {
             atIndex(0))
         .satisfies(
             interface2 -> {
-              // interface2 assertions
               assertThat(interface2.isAbstract()).isTrue();
-              List<HelperReferenceWrapper.Method> interface2Methods =
-                  interface2.getMethods().collect(Collectors.toList());
-              assertThat(interface2Methods)
+              assertThat(interface2.getMethods())
                   .hasSize(1)
                   .satisfies(
                       method -> {
@@ -180,7 +171,7 @@ class HelperReferenceWrapperTest {
                       },
                       atIndex(0));
               assertThat(interface2.hasSuperTypes()).isFalse();
-              assertThat(interface2.getSuperTypes().collect(Collectors.toList())).isEmpty();
+              assertThat(interface2.getSuperTypes()).isEmpty();
             },
             atIndex(1));
   }
