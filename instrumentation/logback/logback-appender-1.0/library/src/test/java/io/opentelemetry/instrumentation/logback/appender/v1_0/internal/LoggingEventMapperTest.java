@@ -17,9 +17,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledInNativeImage;
 
-@DisabledInNativeImage
 class LoggingEventMapperTest {
 
   @Test
