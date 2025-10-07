@@ -77,7 +77,7 @@ public class OpenTelemetryAutoConfiguration {
   @Configuration
   @Conditional(OtelEnabled.class)
   @ConditionalOnMissingBean(OpenTelemetry.class)
-  @SuppressWarnings("OtelPrivateConstructorForUtilityClass")
+  @SuppressWarnings("OtelPrivateConstructorForUtilityClass") // spring uses reflection
   static class OpenTelemetrySdkConfig {
 
     @Configuration
