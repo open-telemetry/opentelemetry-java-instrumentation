@@ -172,12 +172,6 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public InstrumentationConfig instrumentationConfig(
-          ConfigProperties properties, ConfigProvider configProvider) {
-        return new ConfigPropertiesBridge(properties, configProvider);
-      }
-
-      @Bean
       public ConfigProvider configProvider(OpenTelemetryConfigurationModel model) {
         return SdkConfigProvider.create(model);
       }
@@ -192,6 +186,12 @@ public class OpenTelemetryAutoConfiguration {
       public ConfigProperties otelProperties(ConfigProvider configProvider) {
         return new DeclarativeConfigPropertiesBridgeBuilder()
             .buildFromInstrumentationConfig(configProvider.getInstrumentationConfig());
+      }
+
+      @Bean
+      public InstrumentationConfig instrumentationConfig(
+          ConfigProperties properties, ConfigProvider configProvider) {
+        return new ConfigPropertiesBridge(properties, configProvider);
       }
 
       @Bean
