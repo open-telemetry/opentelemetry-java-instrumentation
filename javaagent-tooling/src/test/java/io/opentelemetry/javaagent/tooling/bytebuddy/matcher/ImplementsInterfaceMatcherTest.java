@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
@@ -23,22 +28,25 @@ class ImplementsInterfaceMatcherTest {
 
   @BeforeAll
   static void setUp() {
-    typePool = AgentTooling.poolStrategy()
-        .typePool(AgentTooling.locationStrategy().classFileLocator(ImplementsInterfaceMatcherTest.class.getClassLoader(), null),
-                  ImplementsInterfaceMatcherTest.class.getClassLoader());
+    typePool =
+        AgentTooling.poolStrategy()
+            .typePool(
+                AgentTooling.locationStrategy()
+                    .classFileLocator(ImplementsInterfaceMatcherTest.class.getClassLoader(), null),
+                ImplementsInterfaceMatcherTest.class.getClassLoader());
   }
 
   @ParameterizedTest
   @CsvSource({
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, true",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, true",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, false",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E, true",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, true",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, true",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, false",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, false"
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, true",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, true",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, false",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E, true",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, true",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, true",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, false",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, false"
   })
   void testMatcher(String matcherClassName, String typeClassName, boolean expectedResult) {
     TypeDescription argument = typePool.describe(typeClassName).resolve();

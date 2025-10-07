@@ -27,18 +27,21 @@ class ExtendsClassMatcherTest {
 
   @BeforeAll
   static void setUp() {
-    typePool = AgentTooling.poolStrategy()
-        .typePool(AgentTooling.locationStrategy().classFileLocator(ExtendsClassMatcherTest.class.getClassLoader(), null),
-                  ExtendsClassMatcherTest.class.getClassLoader());
+    typePool =
+        AgentTooling.poolStrategy()
+            .typePool(
+                AgentTooling.locationStrategy()
+                    .classFileLocator(ExtendsClassMatcherTest.class.getClassLoader(), null),
+                ExtendsClassMatcherTest.class.getClassLoader());
   }
 
   @ParameterizedTest
   @CsvSource({
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, false",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, true",
-      "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, true"
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, false",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, true",
+    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, true"
   })
   void testMatcher(String matcherClassName, String typeClassName, boolean expectedResult) {
     TypeDescription argument = typePool.describe(typeClassName).resolve();
