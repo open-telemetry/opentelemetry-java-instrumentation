@@ -41,8 +41,8 @@ public class UnicastRefInstrumentation implements TypeInstrumentation {
   public static class InvokeAdvice {
 
     public static class AdviceScope {
-      public Context context;
-      public Scope scope;
+      private final Context context;
+      private final Scope scope;
 
       private AdviceScope(Context context, Scope scope) {
         this.context = context;
