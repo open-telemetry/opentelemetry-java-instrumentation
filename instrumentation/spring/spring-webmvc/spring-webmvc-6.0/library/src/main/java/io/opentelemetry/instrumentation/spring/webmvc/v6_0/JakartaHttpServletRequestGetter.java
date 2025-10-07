@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.v6_0;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.Iterator;
 
-enum JakartaHttpServletRequestGetter implements ExtendedTextMapGetter<HttpServletRequest> {
+enum JakartaHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
   INSTANCE;
 
   @Override

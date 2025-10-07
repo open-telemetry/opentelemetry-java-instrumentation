@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.netty.common.v4_0.internal.server;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import java.util.Collections;
 import java.util.Iterator;
@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public enum HttpRequestHeadersGetter implements ExtendedTextMapGetter<HttpRequestAndChannel> {
+public enum HttpRequestHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {
   INSTANCE;
 
   @Override

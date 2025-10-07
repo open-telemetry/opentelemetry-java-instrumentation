@@ -21,7 +21,7 @@ jobs:
       # Action #1: Handle issues/PRs awaiting author feedback
       # - After 7 days inactive: Adds "stale" label + warning comment
       # - After 7 more days inactive: Closes
-      - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
+      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
         with:
           only-labels: "needs author feedback"
           days-before-stale: 7
@@ -40,7 +40,7 @@ jobs:
       # - Targets: Issues with "enhancement" label (but NOT "needs author feedback")
       # - After 365 days inactive: Adds "stale" label + closes immediately (no warning period)
       # - Skips: Issues with "needs author feedback" to avoid conflicts with Action #1
-      - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
+      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
         with:
           only-labels: "enhancement"
           # Skip issues that need author feedback (handled by the first action with 7+7 day policy)
@@ -58,7 +58,7 @@ jobs:
       # Action #3: Handle stale PRs
       # - After 180 days inactive: Adds "stale" label + warning comment
       # - After 14 more days inactive: Closes
-      - uses: actions/stale@3a9db7e6a41a89f618792c92c0e97cc736e1b13f # v10.0.0
+      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
         with:
           days-before-issue-stale: -1
           days-before-issue-close: -1

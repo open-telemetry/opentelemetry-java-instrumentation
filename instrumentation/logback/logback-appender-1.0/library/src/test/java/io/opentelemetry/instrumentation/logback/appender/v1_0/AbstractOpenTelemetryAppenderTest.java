@@ -142,6 +142,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
   void logContextData() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
+    MDC.put("event.name", "MyEventName");
     try {
       logger.info("log message 1");
     } finally {
@@ -158,6 +159,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                     .hasInstrumentationScope(instrumentationScopeInfo)
                     .hasBody("log message 1")
                     .hasTotalAttributeCount(2 + codeAttributesLogCount()) // code attributes
+                    .hasEventName("MyEventName")
                     .hasAttributesSatisfying(
                         equalTo(AttributeKey.stringKey("key1"), "val1"),
                         equalTo(AttributeKey.stringKey("key2"), "val2")));

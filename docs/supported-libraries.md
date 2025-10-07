@@ -231,8 +231,8 @@ These are the JVMs and operating systems that the integration tests are run agai
 
 | JVM                                                                                       | Versions          | OS                |
 |-------------------------------------------------------------------------------------------|-------------------|-------------------|
-| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                        | 8, 11, 17, 21, 24 | [`ubuntu-latest`] |
-| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/) | 8, 11, 17, 21, 23 | [`ubuntu-latest`] |
+| [OpenJDK (Eclipse Temurin)](https://adoptium.net/)                                        | 8, 11, 17, 21, 25 | [`ubuntu-latest`] |
+| [OpenJ9 (IBM Semeru Runtimes)](https://developer.ibm.com/languages/java/semeru-runtimes/) | 8, 11, 17, 21, 25 | [`ubuntu-latest`] |
 
 ## Disabled instrumentations
 
