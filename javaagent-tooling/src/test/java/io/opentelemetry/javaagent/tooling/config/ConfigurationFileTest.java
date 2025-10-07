@@ -16,35 +16,16 @@ import java.nio.file.Files;
 import java.util.Map;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 
-@ClearSystemProperty.ClearSystemProperties
+@ClearSystemProperty(key = "otel.javaagent.configuration-file")
 class ConfigurationFileTest {
 
   @TempDir File tmpDir;
 
-  @Rule public final EnvironmentVariables environmentVariables = new EnvironmentVariables();
-
-  private String originalSystemProperty;
-
-  @BeforeEach
-  void setUp() {
-    originalSystemProperty = System.getProperty("otel.javaagent.configuration-file");
-    System.clearProperty("otel.javaagent.configuration-file");
-  }
-
-  @AfterEach
-  void tearDown() {
-    if (originalSystemProperty != null) {
-      System.setProperty("otel.javaagent.configuration-file", originalSystemProperty);
-    } else {
-      System.clearProperty("otel.javaagent.configuration-file");
-    }
-  }
+  @Rule public EnvironmentVariables environmentVariables = new EnvironmentVariables();
 
   @Test
   void shouldUseEnvVar() throws IOException {
