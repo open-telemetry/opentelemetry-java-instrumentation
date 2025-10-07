@@ -24,7 +24,7 @@ class AgentLoadedIntoBootstrapTest {
         Collections.emptyMap(),
         true);
 
-    assertThat(exitCode).isEqualTo(0);
+    assertThat(exitCode).isZero();
   }
 
   // this tests the case where someone adds the contents of opentelemetry-javaagent.jar by mistake
@@ -54,9 +54,12 @@ class AgentLoadedIntoBootstrapTest {
           pathToJar,
           true);
 
-      assertThat(exitCode).isEqualTo(0);
+      assertThat(exitCode).isZero();
     } finally {
-      new File(pathToJar).delete();
+      boolean deleted = new File(pathToJar).delete();
+      if (!deleted) {
+        System.err.println("Failed to delete temporary jar file: " + pathToJar);
+      }
     }
   }
 }
