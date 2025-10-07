@@ -8,8 +8,11 @@ package io.opentelemetry.javaagent.tooling.config;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.Map;
 import org.junit.Rule;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
@@ -17,7 +20,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junitpioneer.jupiter.ClearSystemProperty;
 
+@ClearSystemProperty.ClearSystemProperties
 class ConfigurationFileTest {
 
   @TempDir File tmpDir;
@@ -91,7 +96,8 @@ class ConfigurationFileTest {
 
   private String createFile(String name, String contents) throws IOException {
     File file = new File(tmpDir, name);
-    try (FileWriter writer = new FileWriter(file)) {
+    try (Writer writer =
+        new OutputStreamWriter(Files.newOutputStream(file.toPath()), StandardCharsets.UTF_8)) {
       writer.write(contents);
     }
     return file.getAbsolutePath();
