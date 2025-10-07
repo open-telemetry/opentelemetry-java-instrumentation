@@ -56,14 +56,14 @@ class SafeHasSuperTypeMatcherTest {
   }
 
   @Test
-  void testExceptionGettingInterfaces() throws Exception {
+      void testExceptionGettingInterfaces() {
     TypeDescription type = mock(TypeDescription.class);
     TypeDescription.Generic typeGeneric = mock(TypeDescription.Generic.class);
 
     when(type.asGenericType()).thenReturn(typeGeneric);
-    when(typeGeneric.asErasure()).thenThrow(new Exception("asErasure exception"));
-    when(type.getInterfaces()).thenThrow(new Exception("getInterfaces exception"));
-    when(type.getSuperClass()).thenThrow(new Exception("getSuperClass exception"));
+    when(typeGeneric.asErasure()).thenThrow(new RuntimeException("asErasure exception"));
+    when(type.getInterfaces()).thenThrow(new RuntimeException("getInterfaces exception"));
+    when(type.getSuperClass()).thenThrow(new RuntimeException("getSuperClass exception"));
 
     boolean result = hasSuperType(named(Object.class.getName())).matches(type);
 
@@ -73,7 +73,7 @@ class SafeHasSuperTypeMatcherTest {
   }
 
   @Test
-  void testTraversalExceptions() throws Exception {
+  void testTraversalExceptions() {
     TypeDescription type = mock(TypeDescription.class);
     TypeDescription.Generic typeGeneric = mock(TypeDescription.Generic.class);
     TypeList.Generic interfaces = mock(TypeList.Generic.class);
@@ -82,7 +82,7 @@ class SafeHasSuperTypeMatcherTest {
     when(type.getInterfaces()).thenReturn(interfaces);
     when(interfaces.iterator()).thenReturn(iterator);
     when(type.asGenericType()).thenReturn(typeGeneric);
-    when(typeGeneric.asErasure()).thenThrow(new Exception("asErasure exception"));
+    when(typeGeneric.asErasure()).thenThrow(new RuntimeException("asErasure exception"));
 
     boolean result = hasSuperType(named(Object.class.getName())).matches(type);
 
