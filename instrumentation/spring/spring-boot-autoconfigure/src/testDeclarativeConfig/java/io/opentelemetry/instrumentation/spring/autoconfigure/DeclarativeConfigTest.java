@@ -120,4 +120,15 @@ class DeclarativeConfigTest {
             "otel.instrumentation/development.java.spring_web.enabled=true")
         .run(context -> assertThat(context).hasBean("otelRestTemplateBeanPostProcessor"));
   }
+
+  @Test
+  void shouldNotLoadInstrumentationWhenExplicitlyDisabled() {
+    this.contextRunner
+        .withConfiguration(AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class))
+        .withPropertyValues(
+            "otel.file_format=1.0-rc.1",
+            "otel.instrumentation/development.java.spring_starter.instrumentation_mode=none",
+            "otel.instrumentation/development.java.spring_web.enabled=false")
+        .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
+  }
 }
