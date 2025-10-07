@@ -19,7 +19,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledInNativeImage;
 
-@DisabledInNativeImage // conflict with Mockito
+@DisabledInNativeImage
 class LoggingEventMapperTest {
 
   @Test
