@@ -5,11 +5,12 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle;
 
-import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.atIndex;
 
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
+import io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Source;
 import java.util.HashMap;
 import java.util.List;
@@ -75,13 +76,13 @@ class HelperReferenceWrapperTest {
     // helperWrapper assertions
     assertThat(helperWrapper.isAbstract()).isFalse();
 
-    List<HelperReferenceWrapper.Method> helperMethods =
-        helperWrapper.getMethods().collect(Collectors.toList());
-    assertThat(helperMethods).hasSize(1);
-    HelperReferenceWrapper.Method barMethod = helperMethods.get(0);
-    assertThat(barMethod.isAbstract()).isFalse();
-    assertThat(barMethod.getName()).isEqualTo("bar");
-    assertThat(barMethod.getDescriptor()).isEqualTo("()V");
+    assertThat(helperWrapper.getMethods())
+        .hasSize(1)
+        .satisfies(method -> {
+          assertThat(method.isAbstract()).isFalse();
+          assertThat(method.getName()).isEqualTo("bar");
+          assertThat(method.getDescriptor()).isEqualTo("()V");
+        }, atIndex(0));
 
     List<HelperReferenceWrapper.Field> helperFields =
         helperWrapper.getFields().collect(Collectors.toList());
