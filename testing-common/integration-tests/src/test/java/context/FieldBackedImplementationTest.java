@@ -79,7 +79,7 @@ class FieldBackedImplementationTest {
     boolean hasAccessorInterface = false;
     boolean accessorInterfaceIsSynthetic = false;
     for (Class<?> iface : keyClass.getInterfaces()) {
-      if ("io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker"
+      if ("io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker"
           .equals(iface.getName())) {
         hasMarkerInterface = true;
       }

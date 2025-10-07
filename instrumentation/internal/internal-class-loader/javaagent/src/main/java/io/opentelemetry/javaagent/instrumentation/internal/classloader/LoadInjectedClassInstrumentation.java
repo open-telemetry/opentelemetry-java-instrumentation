@@ -57,10 +57,37 @@ public class LoadInjectedClassInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class LoadClassAdvice {
 
+    // Class loader stub is shaded back to the real class loader class. It is used to call protected
+    // method from the advice that the compiler won't let us call directly. During runtime it is
+    // fine since this code is inlined into subclasses of ClassLoader that can call protected
+    // methods.
     @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
     public static Class<?> onEnter(
-        @Advice.This ClassLoader classLoader, @Advice.Argument(0) String name) {
-      return InjectedClassHelper.loadHelperClass(classLoader, name);
+        @Advice.This java.lang.ClassLoader classLoader,
+        @Advice.This
+            io.opentelemetry.javaagent.instrumentation.internal.classloader.stub.ClassLoader
+                classLoaderStub,
+        @Advice.Argument(0) String name) {
+      InjectedClassHelper.HelperClassInfo helperClassInfo =
+          InjectedClassHelper.getHelperClassInfo(classLoader, name);
+      if (helperClassInfo != null) {
+        Class<?> clazz = classLoaderStub.findLoadedClass(name);
+        if (clazz != null) {
+          return clazz;
+        }
+        try {
+          byte[] bytes = helperClassInfo.getClassBytes();
+          return classLoaderStub.defineClass(
+              name, bytes, 0, bytes.length, helperClassInfo.getProtectionDomain());
+        } catch (LinkageError error) {
+          clazz = classLoaderStub.findLoadedClass(name);
+          if (clazz != null) {
+            return clazz;
+          }
+          throw error;
+        }
+      }
+      return null;
     }
 
     @AssignReturned.ToReturned
