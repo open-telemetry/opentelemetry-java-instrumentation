@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.atIndex;
 
 import io.opentelemetry.javaagent.tooling.muzzle.references.ClassRef;
 import io.opentelemetry.javaagent.tooling.muzzle.references.Flag;
@@ -74,105 +73,81 @@ class HelperReferenceWrapperTest {
     assertThat(helperWrapper.isAbstract()).isFalse();
 
     assertThat(helperWrapper.getMethods())
-        .hasSize(1)
-        .satisfies(
+        .satisfiesExactly(
             method -> {
               assertThat(method.isAbstract()).isFalse();
               assertThat(method.getName()).isEqualTo("bar");
               assertThat(method.getDescriptor()).isEqualTo("()V");
-            },
-            atIndex(0));
+            });
 
     assertThat(helperWrapper.getFields())
-        .hasSize(1)
-        .satisfies(
+        .satisfiesExactly(
             field -> {
               assertThat(field.getName()).isEqualTo("declaredField");
               assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
-            },
-            atIndex(0));
+            });
 
     assertThat(helperWrapper.hasSuperTypes()).isTrue();
     assertThat(helperWrapper.getSuperTypes())
-        .hasSize(2)
-        .satisfies(
+        .satisfiesExactly(
             baseHelper -> {
               assertThat(baseHelper.isAbstract()).isTrue();
               assertThat(baseHelper.getMethods())
-                  .hasSize(2)
-                  .satisfies(
+                  .satisfiesExactly(
                       method -> {
                         assertThat(method.isAbstract()).isFalse();
                         assertThat(method.getName()).isEqualTo("foo");
                         assertThat(method.getDescriptor()).isEqualTo("()V");
                       },
-                      atIndex(0))
-                  .satisfies(
                       method -> {
                         assertThat(method.isAbstract()).isTrue();
                         assertThat(method.getName()).isEqualTo("abstract");
                         assertThat(method.getDescriptor()).isEqualTo("()I");
-                      },
-                      atIndex(1));
+                      });
 
               assertThat(baseHelper.hasSuperTypes()).isTrue();
               assertThat(baseHelper.getSuperTypes())
-                  .hasSize(1)
-                  .satisfies(
-                      abstractClasspathType -> {
-                        assertThat(abstractClasspathType.isAbstract()).isTrue();
-                        assertThat(abstractClasspathType.getMethods()).isEmpty();
+                  .satisfiesExactly(
+                      helperReferenceWrapper -> {
+                        assertThat(helperReferenceWrapper.isAbstract()).isTrue();
+                        assertThat(helperReferenceWrapper.getMethods()).isEmpty();
 
-                        assertThat(abstractClasspathType.getFields())
-                            .hasSize(1)
-                            .satisfies(
+                        assertThat(helperReferenceWrapper.getFields())
+                            .satisfiesExactly(
                                 field -> {
                                   assertThat(field.getName()).isEqualTo("field");
                                   assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
-                                },
-                                atIndex(0));
+                                });
 
-                        assertThat(abstractClasspathType.hasSuperTypes()).isTrue();
-                        assertThat(abstractClasspathType.getSuperTypes())
-                            .hasSize(2)
-                            .satisfies(
+                        assertThat(helperReferenceWrapper.hasSuperTypes()).isTrue();
+                        assertThat(helperReferenceWrapper.getSuperTypes())
+                            .satisfiesExactly(
                                 wrapper -> assertThat(wrapper.hasSuperTypes()).isFalse(),
-                                atIndex(0))
-                            .satisfies(
                                 wrapper -> {
                                   assertThat(wrapper.isAbstract()).isTrue();
                                   assertThat(wrapper.getMethods())
-                                      .hasSize(1)
-                                      .satisfies(
+                                      .satisfiesExactly(
                                           method -> {
                                             assertThat(method.isAbstract()).isTrue();
                                             assertThat(method.getName()).isEqualTo("foo");
                                             assertThat(method.getDescriptor()).isEqualTo("()V");
-                                          },
-                                          atIndex(0));
+                                          });
                                   assertThat(wrapper.hasSuperTypes()).isFalse();
                                   assertThat(wrapper.getSuperTypes()).isEmpty();
-                                },
-                                atIndex(1));
-                      },
-                      atIndex(0));
+                                });
+                      });
             },
-            atIndex(0))
-        .satisfies(
-            interface2 -> {
-              assertThat(interface2.isAbstract()).isTrue();
-              assertThat(interface2.getMethods())
-                  .hasSize(1)
-                  .satisfies(
+            wrapper -> {
+              assertThat(wrapper.isAbstract()).isTrue();
+              assertThat(wrapper.getMethods())
+                  .satisfiesExactly(
                       method -> {
                         assertThat(method.isAbstract()).isTrue();
                         assertThat(method.getName()).isEqualTo("bar");
                         assertThat(method.getDescriptor()).isEqualTo("()V");
-                      },
-                      atIndex(0));
-              assertThat(interface2.hasSuperTypes()).isFalse();
-              assertThat(interface2.getSuperTypes()).isEmpty();
-            },
-            atIndex(1));
+                      });
+              assertThat(wrapper.hasSuperTypes()).isFalse();
+              assertThat(wrapper.getSuperTypes()).isEmpty();
+            });
   }
 }
