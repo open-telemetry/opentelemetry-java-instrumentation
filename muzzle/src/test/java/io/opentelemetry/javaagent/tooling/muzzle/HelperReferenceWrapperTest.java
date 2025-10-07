@@ -86,10 +86,12 @@ class HelperReferenceWrapperTest {
 
     List<HelperReferenceWrapper.Field> helperFields =
         helperWrapper.getFields().collect(Collectors.toList());
-    assertThat(helperFields).hasSize(1);
-    HelperReferenceWrapper.Field declaredField = helperFields.get(0);
-    assertThat(declaredField.getName()).isEqualTo("declaredField");
-    assertThat(declaredField.getDescriptor()).isEqualTo("Ljava/lang/Object;");
+    assertThat(helperFields)
+        .hasSize(1)
+        .satisfies(field -> {
+          assertThat(field.getName()).isEqualTo("declaredField");
+          assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
+        }, atIndex(0));
 
     assertThat(helperWrapper.hasSuperTypes()).isTrue();
     List<HelperReferenceWrapper> superTypes =
@@ -101,15 +103,18 @@ class HelperReferenceWrapperTest {
     assertThat(baseHelper.isAbstract()).isTrue();
     List<HelperReferenceWrapper.Method> baseHelperMethods =
         baseHelper.getMethods().collect(Collectors.toList());
-    assertThat(baseHelperMethods).hasSize(2);
-    HelperReferenceWrapper.Method fooMethod = baseHelperMethods.get(0);
-    assertThat(fooMethod.isAbstract()).isFalse();
-    assertThat(fooMethod.getName()).isEqualTo("foo");
-    assertThat(fooMethod.getDescriptor()).isEqualTo("()V");
-    HelperReferenceWrapper.Method abstractMethod = baseHelperMethods.get(1);
-    assertThat(abstractMethod.isAbstract()).isTrue();
-    assertThat(abstractMethod.getName()).isEqualTo("abstract");
-    assertThat(abstractMethod.getDescriptor()).isEqualTo("()I");
+    assertThat(baseHelperMethods)
+        .hasSize(2)
+        .satisfies(method -> {
+          assertThat(method.isAbstract()).isFalse();
+          assertThat(method.getName()).isEqualTo("foo");
+          assertThat(method.getDescriptor()).isEqualTo("()V");
+        }, atIndex(0))
+        .satisfies(method -> {
+          assertThat(method.isAbstract()).isTrue();
+          assertThat(method.getName()).isEqualTo("abstract");
+          assertThat(method.getDescriptor()).isEqualTo("()I");
+        }, atIndex(1));
 
     assertThat(baseHelper.hasSuperTypes()).isTrue();
     List<HelperReferenceWrapper> baseSuperTypes =
@@ -120,10 +125,12 @@ class HelperReferenceWrapperTest {
     assertThat(abstractClasspathType.getMethods().collect(Collectors.toList())).isEmpty();
     List<HelperReferenceWrapper.Field> abstractFields =
         abstractClasspathType.getFields().collect(Collectors.toList());
-    assertThat(abstractFields).hasSize(1);
-    HelperReferenceWrapper.Field field = abstractFields.get(0);
-    assertThat(field.getName()).isEqualTo("field");
-    assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
+    assertThat(abstractFields)
+        .hasSize(1)
+        .satisfies(field -> {
+          assertThat(field.getName()).isEqualTo("field");
+          assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
+        }, atIndex(0));
 
     assertThat(abstractClasspathType.hasSuperTypes()).isTrue();
     List<HelperReferenceWrapper> abstractSuperTypes =
@@ -135,11 +142,13 @@ class HelperReferenceWrapperTest {
     assertThat(interface1.isAbstract()).isTrue();
     List<HelperReferenceWrapper.Method> interface1Methods =
         interface1.getMethods().collect(Collectors.toList());
-    assertThat(interface1Methods).hasSize(1);
-    HelperReferenceWrapper.Method interface1Method = interface1Methods.get(0);
-    assertThat(interface1Method.isAbstract()).isTrue();
-    assertThat(interface1Method.getName()).isEqualTo("foo");
-    assertThat(interface1Method.getDescriptor()).isEqualTo("()V");
+    assertThat(interface1Methods)
+        .hasSize(1)
+        .satisfies(method -> {
+          assertThat(method.isAbstract()).isTrue();
+          assertThat(method.getName()).isEqualTo("foo");
+          assertThat(method.getDescriptor()).isEqualTo("()V");
+        }, atIndex(0));
     assertThat(interface1.hasSuperTypes()).isFalse();
     assertThat(interface1.getSuperTypes().collect(Collectors.toList())).isEmpty();
 
@@ -148,11 +157,13 @@ class HelperReferenceWrapperTest {
     assertThat(interface2.isAbstract()).isTrue();
     List<HelperReferenceWrapper.Method> interface2Methods =
         interface2.getMethods().collect(Collectors.toList());
-    assertThat(interface2Methods).hasSize(1);
-    HelperReferenceWrapper.Method interface2Method = interface2Methods.get(0);
-    assertThat(interface2Method.isAbstract()).isTrue();
-    assertThat(interface2Method.getName()).isEqualTo("bar");
-    assertThat(interface2Method.getDescriptor()).isEqualTo("()V");
+    assertThat(interface2Methods)
+        .hasSize(1)
+        .satisfies(method -> {
+          assertThat(method.isAbstract()).isTrue();
+          assertThat(method.getName()).isEqualTo("bar");
+          assertThat(method.getDescriptor()).isEqualTo("()V");
+        }, atIndex(0));
     assertThat(interface2.hasSuperTypes()).isFalse();
     assertThat(interface2.getSuperTypes().collect(Collectors.toList())).isEmpty();
   }
