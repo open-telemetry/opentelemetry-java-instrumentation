@@ -19,7 +19,6 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.time.Duration;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.concurrent.atomic.AtomicReference;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -28,6 +27,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.loading.ClassInjector;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("UnnecessaryAsync")
 class HelperInjectionTest {
 
   @Test
@@ -37,8 +37,15 @@ class HelperInjectionTest {
     ClassLoader helpersSourceLoader = new URLClassLoader(helpersSourceUrls);
 
     String helperClassName = HelperInjectionTest.class.getPackage().getName() + ".HelperClass";
-    HelperInjector injector = new HelperInjector("test", singletonList(helperClassName), Collections.emptyList(), helpersSourceLoader, null);
-    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], null));
+    HelperInjector injector =
+        new HelperInjector(
+            "test",
+            singletonList(helperClassName),
+            Collections.emptyList(),
+            helpersSourceLoader,
+            null);
+    AtomicReference<URLClassLoader> emptyLoader =
+        new AtomicReference<>(new URLClassLoader(new URL[0], null));
 
     assertThatThrownBy(() -> emptyLoader.get().loadClass(helperClassName))
         .isInstanceOf(ClassNotFoundException.class);
@@ -48,7 +55,8 @@ class HelperInjectionTest {
     emptyLoader.get().loadClass(helperClassName);
 
     assertThat(isClassLoaded(helperClassName, emptyLoader.get())).isTrue();
-    // injecting into emptyLoader should not cause helper class to be load in the helper source classloader
+    // injecting into emptyLoader should not cause helper class to be load in the helper source
+    // classloader
     assertThat(isClassLoaded(helperClassName, helpersSourceLoader)).isFalse();
 
     // references to emptyLoader are gone
@@ -71,12 +79,13 @@ class HelperInjectionTest {
         EarlyInitAgentConfig.create());
 
     String helperClassName = HelperInjectionTest.class.getPackage().getName() + ".HelperClass";
-    HelperInjector injector = new HelperInjector(
-        "test",
-        Arrays.asList(helperClassName),
-        Collections.emptyList(),
-        this.getClass().getClassLoader(),
-        ByteBuddyAgent.getInstrumentation());
+    HelperInjector injector =
+        new HelperInjector(
+            "test",
+            singletonList(helperClassName),
+            Collections.emptyList(),
+            this.getClass().getClassLoader(),
+            ByteBuddyAgent.getInstrumentation());
     URLClassLoader bootstrapChild = new URLClassLoader(new URL[0], null);
 
     assertThatThrownBy(() -> bootstrapChild.loadClass(helperClassName))
@@ -96,11 +105,13 @@ class HelperInjectionTest {
     // Copied from HelperInjector:
     ClassFileLocator locator = ClassFileLocator.ForClassLoader.of(Utils.getAgentClassLoader());
     byte[] classBytes = locator.locate(helperClassName).resolve();
-    TypeDescription typeDesc = new TypeDescription.Latent(
-        helperClassName, 0, null, Collections.emptyList());
+    TypeDescription typeDesc =
+        new TypeDescription.Latent(helperClassName, 0, null, Collections.emptyList());
 
-    AtomicReference<URLClassLoader> emptyLoader = new AtomicReference<>(new URLClassLoader(new URL[0], null));
-    AtomicReference<ClassInjector> injector = new AtomicReference<>(new ClassInjector.UsingReflection(emptyLoader.get()));
+    AtomicReference<URLClassLoader> emptyLoader =
+        new AtomicReference<>(new URLClassLoader(new URL[0], null));
+    AtomicReference<ClassInjector> injector =
+        new AtomicReference<>(new ClassInjector.UsingReflection(emptyLoader.get()));
     injector.get().inject(Collections.singletonMap(typeDesc, classBytes));
 
     WeakReference<ClassInjector> injectorRef = new WeakReference<>(injector.get());
