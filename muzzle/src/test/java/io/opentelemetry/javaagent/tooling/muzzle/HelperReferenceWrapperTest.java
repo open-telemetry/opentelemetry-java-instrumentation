@@ -84,9 +84,7 @@ class HelperReferenceWrapperTest {
           assertThat(method.getDescriptor()).isEqualTo("()V");
         }, atIndex(0));
 
-    List<HelperReferenceWrapper.Field> helperFields =
-        helperWrapper.getFields().collect(Collectors.toList());
-    assertThat(helperFields)
+    assertThat(helperWrapper.getFields())
         .hasSize(1)
         .satisfies(field -> {
           assertThat(field.getName()).isEqualTo("declaredField");
@@ -101,9 +99,7 @@ class HelperReferenceWrapperTest {
     // baseHelper assertions
     HelperReferenceWrapper baseHelper = superTypes.get(0);
     assertThat(baseHelper.isAbstract()).isTrue();
-    List<HelperReferenceWrapper.Method> baseHelperMethods =
-        baseHelper.getMethods().collect(Collectors.toList());
-    assertThat(baseHelperMethods)
+    assertThat(baseHelper.getMethods().collect(Collectors.toList()))
         .hasSize(2)
         .satisfies(method -> {
           assertThat(method.isAbstract()).isFalse();
