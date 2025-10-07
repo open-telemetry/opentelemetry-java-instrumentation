@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.tooling.muzzle
 
+import static org.assertj.core.api.Assertions.assertThat
+
 import external.LibraryBaseClass
 import io.opentelemetry.instrumentation.TestHelperClasses
 import io.opentelemetry.instrumentation.test.utils.ClasspathUtils
@@ -16,10 +18,12 @@ import io.opentelemetry.test.TestAbstractSuperClass
 import io.opentelemetry.test.TestInterface
 import muzzle.TestClasses
 import muzzle.TestClasses.Nested
+import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
+import org.junit.jupiter.params.provider.ValueSource
 import org.objectweb.asm.Type
-import spock.lang.Shared
-import spock.lang.Specification
-import spock.lang.Unroll
 
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag.ABSTRACT
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.ManifestationFlag.INTERFACE
@@ -30,37 +34,40 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumV
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.NON_STATIC
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.STATIC
 
-@Unroll
-class ReferenceMatcherTest extends Specification {
+class ReferenceMatcherTest {
   static final TEST_EXTERNAL_INSTRUMENTATION_PACKAGE = "com.external.otel.instrumentation"
 
-  @Shared
-  ClassLoader safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(Nested.A,
-    Nested.B,
-    Nested.SomeInterface,
-    Nested.SomeImplementation)] as URL[],
-    (ClassLoader) null)
+  static ClassLoader safeClasspath
+  static ClassLoader unsafeClasspath
 
-  @Shared
-  ClassLoader unsafeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(Nested.A,
-    Nested.SomeInterface,
-    Nested.SomeImplementation)] as URL[],
-    (ClassLoader) null)
+  @BeforeAll
+  static void setup() {
+    safeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(Nested.A,
+      Nested.B,
+      Nested.SomeInterface,
+      Nested.SomeImplementation)] as URL[],
+      (ClassLoader) null)
 
-  def "match safe classpaths"() {
-    setup:
+    unsafeClasspath = new URLClassLoader([ClasspathUtils.createJarWithClasses(Nested.A,
+      Nested.SomeInterface,
+      Nested.SomeImplementation)] as URL[],
+      (ClassLoader) null)
+  }
+
+  @Test
+  void matchSafeClasspaths() {
     def collector = new ReferenceCollector({ false })
     collector.collectReferencesFromAdvice(TestClasses.MethodBodyAdvice.name)
     def refMatcher = createMatcher(collector.getReferences())
 
-    expect:
-    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(safeClasspath)).empty
-    getMismatchClassSet(refMatcher.getMismatchedReferenceSources(unsafeClasspath)) == [Mismatch.MissingClass] as Set
+    assertThat(getMismatchClassSet(refMatcher.getMismatchedReferenceSources(safeClasspath))).isEmpty()
+    assertThat(getMismatchClassSet(refMatcher.getMismatchedReferenceSources(unsafeClasspath)))
+        .containsExactly(Mismatch.MissingClass)
   }
 
-  def "matching does not hold a strong reference to classloaders"() {
-    expect:
-    MuzzleWeakReferenceTestUtil.classLoaderRefIsGarbageCollected()
+  @Test
+  void matchingDoesNotHoldStrongReferenceToClassloaders() {
+    assertThat(MuzzleWeakReferenceTestUtil.classLoaderRefIsGarbageCollected()).isTrue()
   }
 
   private static class CountingClassLoader extends URLClassLoader {
@@ -77,8 +84,8 @@ class ReferenceMatcherTest extends Specification {
     }
   }
 
-  def "muzzle type pool caches"() {
-    setup:
+  @Test
+  void muzzleTypePoolCaches() {
     def cl = new CountingClassLoader(
       [ClasspathUtils.createJarWithClasses(Nested.A,
         Nested.B,
@@ -91,146 +98,140 @@ class ReferenceMatcherTest extends Specification {
 
     def refMatcher1 = createMatcher(collector.getReferences())
     def refMatcher2 = createMatcher(collector.getReferences())
-    assert getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl)).empty
+    assertThat(getMismatchClassSet(refMatcher1.getMismatchedReferenceSources(cl))).isEmpty()
     int countAfterFirstMatch = cl.count
     // the second matcher should be able to used cached type descriptions from the first
-    assert getMismatchClassSet(refMatcher2.getMismatchedReferenceSources(cl)).empty
+    assertThat(getMismatchClassSet(refMatcher2.getMismatchedReferenceSources(cl))).isEmpty()
 
-    expect:
-    cl.count == countAfterFirstMatch
+    assertThat(cl.count).isEqualTo(countAfterFirstMatch)
   }
 
-  def "matching ref #referenceName #referenceFlag against #classToCheck produces #expectedMismatches"() {
-    setup:
+  @ParameterizedTest
+  @CsvSource([
+    "muzzle.TestClasses\$Nested\$B, NON_INTERFACE, ''",
+    "muzzle.TestClasses\$Nested\$B, INTERFACE, MissingFlag"
+  ])
+  void matchingRef(String referenceName, String referenceFlag, String expectedMismatch) {
+    def flag = referenceFlag == "NON_INTERFACE" ? NON_INTERFACE : INTERFACE
     def ref = ClassRef.builder(referenceName)
-      .addFlag(referenceFlag)
+      .addFlag(flag)
       .build()
 
-    when:
     def mismatches = createMatcher([(ref.className): ref]).getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == expectedMismatches as Set
-
-    where:
-    referenceName | referenceFlag | classToCheck | expectedMismatches
-    Nested.B.name | NON_INTERFACE | Nested.B     | []
-    Nested.B.name | INTERFACE     | Nested.B     | [Mismatch.MissingFlag]
+    if (expectedMismatch.isEmpty()) {
+      assertThat(getMismatchClassSet(mismatches)).isEmpty()
+    } else {
+      assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingFlag)
+    }
   }
 
-  def "method match #methodTestDesc"() {
-    setup:
+  @ParameterizedTest
+  @CsvSource([
+    "method, (Ljava/lang/String;)Ljava/lang/String;, '', muzzle.TestClasses\$Nested\$B, ''",
+    "hashCode, ()I, '', muzzle.TestClasses\$Nested\$B, ''",
+    "someMethod, ()V, '', muzzle.TestClasses\$Nested\$SomeInterface, ''",
+    "privateStuff, ()V, PRIVATE_OR_HIGHER, muzzle.TestClasses\$Nested\$B, ''",
+    "privateStuff, ()V, PROTECTED_OR_HIGHER, muzzle.TestClasses\$Nested\$B2, MissingFlag",
+    "staticMethod, ()V, NON_STATIC, muzzle.TestClasses\$Nested\$B, MissingFlag",
+    "missingMethod, ()V, '', muzzle.TestClasses\$Nested\$B, MissingMethod"
+  ])
+  void methodMatch(String methodName, String methodDesc, String methodFlagsStr, String classToCheckName, String expectedMismatch) {
     def methodType = Type.getMethodType(methodDesc)
+    def methodFlags = parseMethodFlags(methodFlagsStr)
+    def classToCheck = Class.forName(classToCheckName)
+
     def reference = ClassRef.builder(classToCheck.name)
       .addMethod(new Source[0], methodFlags as Flag[], methodName, methodType.returnType, methodType.argumentTypes)
       .build()
 
-    when:
     def mismatches = createMatcher([(reference.className): reference])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == expectedMismatches as Set
-
-    where:
-    methodName      | methodDesc                               | methodFlags           | classToCheck         | expectedMismatches       | methodTestDesc
-    "method"        | "(Ljava/lang/String;)Ljava/lang/String;" | []                    | Nested.B             | []                       | "match method declared in class"
-    "hashCode"      | "()I"                                    | []                    | Nested.B             | []                       | "match method declared in superclass"
-    "someMethod"    | "()V"                                    | []                    | Nested.SomeInterface | []                       | "match method declared in interface"
-    "privateStuff"  | "()V"                                    | [PRIVATE_OR_HIGHER]   | Nested.B             | []                       | "match private method"
-    "privateStuff"  | "()V"                                    | [PROTECTED_OR_HIGHER] | Nested.B2            | [Mismatch.MissingFlag]   | "fail match private in supertype"
-    "staticMethod"  | "()V"                                    | [NON_STATIC]          | Nested.B             | [Mismatch.MissingFlag]   | "static method mismatch"
-    "missingMethod" | "()V"                                    | []                    | Nested.B             | [Mismatch.MissingMethod] | "missing method mismatch"
+    if (expectedMismatch.isEmpty()) {
+      assertThat(getMismatchClassSet(mismatches)).isEmpty()
+    } else {
+      def expectedMismatchClass = getMismatchClass(expectedMismatch)
+      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatchClass)
+    }
   }
 
-  def "field match #fieldTestDesc"() {
-    setup:
+  @ParameterizedTest
+  @CsvSource([
+    "missingField, Ljava/lang/String;, '', muzzle.TestClasses\$Nested\$A, MissingField",
+    "privateField, Ljava/lang/String;, '', muzzle.TestClasses\$Nested\$A, MissingField",
+    "privateField, Ljava/lang/Object;, PRIVATE_OR_HIGHER, muzzle.TestClasses\$Nested\$A, ''",
+    "privateField, Ljava/lang/Object;, PROTECTED_OR_HIGHER, muzzle.TestClasses\$Nested\$A2, MissingFlag",
+    "protectedField, Ljava/lang/Object;, STATIC, muzzle.TestClasses\$Nested\$A, MissingFlag",
+    "staticB, Lmuzzle/TestClasses\$Nested\$B;, STATIC|PROTECTED_OR_HIGHER, muzzle.TestClasses\$Nested\$A, ''",
+    "number, I, PACKAGE_OR_HIGHER, muzzle.TestClasses\$Nested\$Primitives, ''",
+    "flag, Z, PACKAGE_OR_HIGHER, muzzle.TestClasses\$Nested\$Primitives, ''"
+  ])
+  void fieldMatch(String fieldName, String fieldType, String fieldFlagsStr, String classToCheckName, String expectedMismatch) {
+    def fieldFlags = parseFieldFlags(fieldFlagsStr)
+    def classToCheck = Class.forName(classToCheckName)
+
     def reference = ClassRef.builder(classToCheck.name)
       .addField(new Source[0], fieldFlags as Flag[], fieldName, Type.getType(fieldType), false)
       .build()
 
-    when:
     def mismatches = createMatcher([(reference.className): reference])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == expectedMismatches as Set
-
-    where:
-    fieldName        | fieldType                              | fieldFlags                    | classToCheck      | expectedMismatches      | fieldTestDesc
-    "missingField"   | "Ljava/lang/String;"                   | []                            | Nested.A          | [Mismatch.MissingField] | "mismatch missing field"
-    "privateField"   | "Ljava/lang/String;"                   | []                            | Nested.A          | [Mismatch.MissingField] | "mismatch field type signature"
-    "privateField"   | "Ljava/lang/Object;"                   | [PRIVATE_OR_HIGHER]           | Nested.A          | []                      | "match private field"
-    "privateField"   | "Ljava/lang/Object;"                   | [PROTECTED_OR_HIGHER]         | Nested.A2         | [Mismatch.MissingFlag]  | "mismatch private field in supertype"
-    "protectedField" | "Ljava/lang/Object;"                   | [STATIC]                      | Nested.A          | [Mismatch.MissingFlag]  | "mismatch static field"
-    "staticB"        | Type.getType(Nested.B).getDescriptor() | [STATIC, PROTECTED_OR_HIGHER] | Nested.A          | []                      | "match static field"
-    "number"         | "I"                                    | [PACKAGE_OR_HIGHER]           | Nested.Primitives | []                      | "match primitive int"
-    "flag"           | "Z"                                    | [PACKAGE_OR_HIGHER]           | Nested.Primitives | []                      | "match primitive boolean"
+    if (expectedMismatch.isEmpty()) {
+      assertThat(getMismatchClassSet(mismatches)).isEmpty()
+    } else {
+      def expectedMismatchClass = getMismatchClass(expectedMismatch)
+      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatchClass)
+    }
   }
 
-  def "should not check abstract #desc helper classes"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldNotCheckAbstractHelperClasses(String className) {
     def reference = ClassRef.builder(className)
       .setSuperClassName(TestHelperClasses.HelperSuperClass.name)
       .addFlag(ABSTRACT)
       .addMethod(new Source[0], [ABSTRACT] as Flag[], "unimplemented", Type.VOID_TYPE)
       .build()
 
-    when:
     def mismatches = createMatcher([(reference.className): reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    mismatches.empty
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(mismatches).isEmpty()
   }
 
-  def "should not check #desc helper classes with no supertypes"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldNotCheckHelperClassesWithNoSupertypes(String className) {
     def reference = ClassRef.builder(className)
       .setSuperClassName(Object.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
-    when:
     def mismatches = createMatcher([(reference.className): reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    mismatches.empty
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(mismatches).isEmpty()
   }
 
-  def "should fail #desc helper classes that does not implement all abstract methods"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldFailHelperClassesThatDoesNotImplementAllAbstractMethods(String className) {
     def reference = ClassRef.builder(className)
       .setSuperClassName(TestAbstractSuperClass.name)
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
-    when:
     def mismatches = createMatcher([(reference.className): reference], [reference.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == [Mismatch.MissingMethod] as Set
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod)
   }
 
-  def "should fail #desc helper classes that do not implement all abstract methods - even if empty abstract class reference exists"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldFailHelperClassesThatDoNotImplementAllAbstractMethodsEvenIfEmptyAbstractClassReferenceExists(String className) {
     def emptySuperClassRef = ClassRef.builder(TestAbstractSuperClass.name)
       .build()
     def reference = ClassRef.builder(className)
@@ -238,23 +239,17 @@ class ReferenceMatcherTest extends Specification {
       .addMethod(new Source[0], [] as Flag[], "someMethod", Type.VOID_TYPE)
       .build()
 
-    when:
     def mismatches = createMatcher(
       [(reference.className): reference, (emptySuperClassRef.className): emptySuperClassRef],
       [reference.className, emptySuperClassRef.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == [Mismatch.MissingMethod] as Set
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod)
   }
 
-  def "should check #desc helper class whether interface methods are implemented in the super class"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldCheckHelperClassWhetherInterfaceMethodsAreImplementedInTheSuperClass(String className) {
     def baseHelper = ClassRef.builder("io.opentelemetry.instrumentation.BaseHelper")
       .setSuperClassName(Object.name)
       .addInterfaceName(TestInterface.name)
@@ -267,65 +262,50 @@ class ReferenceMatcherTest extends Specification {
       .addMethod(new Source[0], [] as Flag[], "bar", Type.VOID_TYPE)
       .build()
 
-    when:
     def mismatches = createMatcher(
       [(helper.className): helper, (baseHelper.className): baseHelper],
       [helper.className, baseHelper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    mismatches.empty
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(mismatches).isEmpty()
   }
 
-  def "should check #desc helper class whether used fields are declared in the super class"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldCheckHelperClassWhetherUsedFieldsAreDeclaredInTheSuperClass(String className) {
     def helper = ClassRef.builder(className)
       .setSuperClassName(LibraryBaseClass.name)
       .addField(new Source[0], new Flag[0], "field", Type.getType("Ljava/lang/Integer;"), false)
       .build()
 
-    when:
     def mismatches = createMatcher([(helper.className): helper], [helper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    mismatches.empty
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(mismatches).isEmpty()
   }
 
-  def "should fail helper class when it uses fields undeclared in the super class: #desc"() {
-    given:
+  @ParameterizedTest
+  @CsvSource([
+    "io.opentelemetry.instrumentation.Helper, differentField, Ljava/lang/Integer;",
+    "io.opentelemetry.instrumentation.Helper, field, Lcom/external/DifferentType;",
+    "com.external.otel.instrumentation.Helper, differentField, Ljava/lang/Integer;",
+    "com.external.otel.instrumentation.Helper, field, Lcom/external/DifferentType;"
+  ])
+  void shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClass(String className, String fieldName, String fieldType) {
     def helper = ClassRef.builder(className)
       .setSuperClassName(DeclaredFieldTestClass.LibraryBaseClass.name)
       .addField(new Source[0], new Flag[0], fieldName, Type.getType(fieldType), false)
       .build()
 
-    when:
     def mismatches = createMatcher([(helper.className): helper], [helper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == [Mismatch.MissingField] as Set
-
-    where:
-    desc                                    | className                                         | fieldName        | fieldType
-    "internal helper, different field name" | "io.opentelemetry.instrumentation.Helper"         | "differentField" | "Ljava/lang/Integer;"
-    "internal helper, different field type" | "io.opentelemetry.instrumentation.Helper"         | "field"          | "Lcom/external/DifferentType;"
-    "external helper, different field name" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "differentField" | "Ljava/lang/Integer;"
-    "external helper, different field type" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper" | "field"          | "Lcom/external/DifferentType;"
+    assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingField)
   }
 
-  def "should fail #desc helper class when the library parent class has different constructor"() {
-    given:
+  @ParameterizedTest
+  @ValueSource(strings = ["io.opentelemetry.instrumentation.Helper", "com.external.otel.instrumentation.Helper"])
+  void shouldFailHelperClassWhenTheLibraryParentClassHasDifferentConstructor(String className) {
     def helper = ClassRef.builder(className)
       .setSuperClassName(TestClasses.BaseClassWithConstructor.name)
       .build()
@@ -335,17 +315,10 @@ class ReferenceMatcherTest extends Specification {
       .addMethod(new Source[0], new Flag[0], "<init>", Type.VOID_TYPE)
       .build()
 
-    when:
     def mismatches = createMatcher([(helper.className): helper, (baseClassRef.className): baseClassRef], [helper.className])
       .getMismatchedReferenceSources(this.class.classLoader)
 
-    then:
-    getMismatchClassSet(mismatches) == [Mismatch.MissingMethod] as Set
-
-    where:
-    desc       | className
-    "internal" | "io.opentelemetry.instrumentation.Helper"
-    "external" | "${TEST_EXTERNAL_INSTRUMENTATION_PACKAGE}.Helper"
+    assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod)
   }
 
   private static ReferenceMatcher createMatcher(Map<String, ClassRef> references = [:],
@@ -359,5 +332,33 @@ class ReferenceMatcherTest extends Specification {
       mismatchClasses.add(mismatch.class)
     }
     return mismatchClasses
+  }
+
+  private static List<Flag> parseMethodFlags(String flagsStr) {
+    if (flagsStr.isEmpty()) return []
+    def flags = []
+    if (flagsStr.contains("PRIVATE_OR_HIGHER")) flags.add(PRIVATE_OR_HIGHER)
+    if (flagsStr.contains("PROTECTED_OR_HIGHER")) flags.add(PROTECTED_OR_HIGHER)
+    if (flagsStr.contains("NON_STATIC")) flags.add(NON_STATIC)
+    return flags
+  }
+
+  private static List<Flag> parseFieldFlags(String flagsStr) {
+    if (flagsStr.isEmpty()) return []
+    def flags = []
+    if (flagsStr.contains("PRIVATE_OR_HIGHER")) flags.add(PRIVATE_OR_HIGHER)
+    if (flagsStr.contains("PROTECTED_OR_HIGHER")) flags.add(PROTECTED_OR_HIGHER)
+    if (flagsStr.contains("PACKAGE_OR_HIGHER")) flags.add(PACKAGE_OR_HIGHER)
+    if (flagsStr.contains("STATIC")) flags.add(STATIC)
+    return flags
+  }
+
+  private static Class getMismatchClass(String mismatchName) {
+    switch (mismatchName) {
+      case "MissingFlag": return Mismatch.MissingFlag
+      case "MissingMethod": return Mismatch.MissingMethod
+      case "MissingField": return Mismatch.MissingField
+      default: throw new IllegalArgumentException("Unknown mismatch: " + mismatchName)
+    }
   }
 }
