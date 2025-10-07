@@ -17,12 +17,13 @@ class AgentLoadedIntoBootstrapTest {
 
   @Test
   void agentLoadsInWhenSeparateJvmIsLaunched() throws Exception {
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        AgentLoadedChecker.class.getName(),
-        new String[0],
-        new String[0],
-        Collections.emptyMap(),
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            AgentLoadedChecker.class.getName(),
+            new String[0],
+            new String[0],
+            Collections.emptyMap(),
+            true);
 
     assertThat(exitCode).isZero();
   }
@@ -40,19 +41,15 @@ class AgentLoadedIntoBootstrapTest {
   @Test
   void applicationUberJarShouldNotBeAddedToTheBootstrapClassLoader() throws Exception {
     String mainClassName = MyClassLoaderIsNotBootstrap.class.getName();
-    String pathToJar = IntegrationTestUtils.createJarWithClasses(
-        mainClassName,
-        MyClassLoaderIsNotBootstrap.class,
-        OpenTelemetryAgent.class).getPath();
+    String pathToJar =
+        IntegrationTestUtils.createJarWithClasses(
+                mainClassName, MyClassLoaderIsNotBootstrap.class, OpenTelemetryAgent.class)
+            .getPath();
 
     try {
-      int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-          mainClassName,
-          new String[0],
-          new String[0],
-          Collections.emptyMap(),
-          pathToJar,
-          true);
+      int exitCode =
+          IntegrationTestUtils.runOnSeparateJvm(
+              mainClassName, new String[0], new String[0], Collections.emptyMap(), pathToJar, true);
 
       assertThat(exitCode).isZero();
     } finally {

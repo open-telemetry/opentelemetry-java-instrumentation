@@ -25,7 +25,8 @@ class ClassLoadingTest {
 
   @BeforeEach
   void setUp() throws Exception {
-    classpath = new URL[] {createJarWithClasses(ClassToInstrument.class, ClassToInstrumentChild.class)};
+    classpath =
+        new URL[] {createJarWithClasses(ClassToInstrument.class, ClassToInstrumentChild.class)};
   }
 
   /** Assert that we can instrument classloaders which cannot resolve agent advice classes. */
@@ -33,8 +34,10 @@ class ClassLoadingTest {
   void instrumentClassloaderWithoutAgentClasses() throws Exception {
     URLClassLoader loader = new URLClassLoader(classpath, null);
 
-    assertThatThrownBy(() ->
-        loader.loadClass("io.opentelemetry.javaagent.instrumentation.trace_annotation.TraceAdvice"))
+    assertThatThrownBy(
+            () ->
+                loader.loadClass(
+                    "io.opentelemetry.javaagent.instrumentation.trace_annotation.TraceAdvice"))
         .isInstanceOf(ClassNotFoundException.class);
 
     Class<?> instrumentedClass = loader.loadClass(ClassToInstrument.class.getName());
@@ -55,7 +58,8 @@ class ClassLoadingTest {
     assertThat(ref.get()).isNull();
   }
 
-  // We are doing this because Groovy cannot properly resolve constructor argument types in anonymous classes
+  // We are doing this because Groovy cannot properly resolve constructor argument types in
+  // anonymous classes
   static class CountingClassLoader extends URLClassLoader {
     public int count = 0;
 
@@ -77,17 +81,17 @@ class ClassLoadingTest {
       int countAfterFirstLoad = loader.count;
       loader.loadClass(ClassToInstrumentChild.class.getName());
 
-      // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription is created from transformation bytes.
-      assertThat(loader.count)
-          .isPositive()
-          .isEqualTo(countAfterFirstLoad);
+      // ClassToInstrumentChild won't cause an additional getResource() because its TypeDescription
+      // is created from transformation bytes.
+      assertThat(loader.count).isPositive().isEqualTo(countAfterFirstLoad);
     }
   }
 
   @Test
-  void makeSureThatByteBuddyDoesntReuseCachedTypeDescriptionsBetweenDifferentClassloaders() throws Exception {
+  void makeSureThatByteBuddyDoesntReuseCachedTypeDescriptionsBetweenDifferentClassloaders()
+      throws Exception {
     try (CountingClassLoader loader1 = new CountingClassLoader(classpath);
-         CountingClassLoader loader2 = new CountingClassLoader(classpath)) {
+        CountingClassLoader loader2 = new CountingClassLoader(classpath)) {
 
       loader1.loadClass(ClassToInstrument.class.getName());
       loader2.loadClass(ClassToInstrument.class.getName());

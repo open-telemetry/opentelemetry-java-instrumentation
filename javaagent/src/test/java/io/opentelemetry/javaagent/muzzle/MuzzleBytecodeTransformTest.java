@@ -23,8 +23,10 @@ class MuzzleBytecodeTransformTest {
     List<Class<?>> nonLazyFields = new ArrayList<>();
     List<Class<?>> unInitFields = new ArrayList<>();
 
-    Class<?> instrumentationModuleClass = IntegrationTestUtils.getAgentClassLoader()
-        .loadClass("io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule");
+    Class<?> instrumentationModuleClass =
+        IntegrationTestUtils.getAgentClassLoader()
+            .loadClass(
+                "io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule");
 
     for (Object instrumenter : ServiceLoader.load(instrumentationModuleClass)) {
       if (!instrumentationModuleClass.isAssignableFrom(instrumenter.getClass())) {

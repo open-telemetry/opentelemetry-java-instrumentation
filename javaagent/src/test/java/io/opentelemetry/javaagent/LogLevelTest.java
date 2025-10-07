@@ -22,28 +22,30 @@ class LogLevelTest {
 
   @Test
   void otelJavaagentDebugFalse() throws Exception {
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{"-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"},
-        new String[0],
-        Collections.emptyMap(),
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {"-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"},
+            new String[0],
+            Collections.emptyMap(),
+            true);
 
     assertThat(exitCode).isOne();
   }
 
   @Test
   void slf4jDebugAndOtelJavaagentDebugIsFalse() throws Exception {
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{
-            "-Dotel.javaagent.debug=false",
-            "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug",
-            "-Dotel.javaagent.enabled=false"
-        },
-        new String[0],
-        Collections.emptyMap(),
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {
+              "-Dotel.javaagent.debug=false",
+              "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug",
+              "-Dotel.javaagent.enabled=false"
+            },
+            new String[0],
+            Collections.emptyMap(),
+            true);
 
     assertThat(exitCode).isZero();
   }
@@ -53,24 +55,26 @@ class LogLevelTest {
     Map<String, String> env = new HashMap<>();
     env.put("OTEL_JAVAAGENT_DEBUG", "true");
 
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{"-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"},
-        new String[0],
-        env,
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {"-Dotel.javaagent.debug=false", "-Dotel.javaagent.enabled=false"},
+            new String[0],
+            env,
+            true);
 
     assertThat(exitCode).isOne();
   }
 
   @Test
   void otelJavaagentDebugIsTrue() throws Exception {
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{"-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"},
-        new String[0],
-        Collections.emptyMap(),
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {"-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"},
+            new String[0],
+            Collections.emptyMap(),
+            true);
 
     assertThat(exitCode).isZero();
   }
@@ -80,12 +84,13 @@ class LogLevelTest {
     Map<String, String> env = new HashMap<>();
     env.put("OTEL_JAVAAGENT_DEBUG", "true");
 
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{"-Dotel.javaagent.enabled=false"},
-        new String[0],
-        env,
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {"-Dotel.javaagent.enabled=false"},
+            new String[0],
+            env,
+            true);
 
     assertThat(exitCode).isZero();
   }
@@ -95,12 +100,13 @@ class LogLevelTest {
     Map<String, String> env = new HashMap<>();
     env.put("OTEL_JAVAAGENT_DEBUG", "false");
 
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{"-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"},
-        new String[0],
-        env,
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {"-Dotel.javaagent.debug=true", "-Dotel.javaagent.enabled=false"},
+            new String[0],
+            env,
+            true);
 
     assertThat(exitCode).isZero();
   }
@@ -110,15 +116,16 @@ class LogLevelTest {
     Map<String, String> env = new HashMap<>();
     env.put("OTEL_JAVAAGENT_DEBUG", "false");
 
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{
-            "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug",
-            "-Dotel.javaagent.enabled=false"
-        },
-        new String[0],
-        env,
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {
+              "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=debug",
+              "-Dotel.javaagent.enabled=false"
+            },
+            new String[0],
+            env,
+            true);
 
     assertThat(exitCode).isZero();
   }
@@ -128,15 +135,16 @@ class LogLevelTest {
     Map<String, String> env = new HashMap<>();
     env.put("OTEL_JAVAAGENT_DEBUG", "true");
 
-    int exitCode = IntegrationTestUtils.runOnSeparateJvm(
-        LogLevelChecker.class.getName(),
-        new String[]{
-            "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=info",
-            "-Dotel.javaagent.enabled=false"
-        },
-        new String[0],
-        env,
-        true);
+    int exitCode =
+        IntegrationTestUtils.runOnSeparateJvm(
+            LogLevelChecker.class.getName(),
+            new String[] {
+              "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.defaultLogLevel=info",
+              "-Dotel.javaagent.enabled=false"
+            },
+            new String[0],
+            env,
+            true);
 
     assertThat(exitCode).isOne();
   }
