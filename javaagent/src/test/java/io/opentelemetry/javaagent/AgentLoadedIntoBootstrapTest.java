@@ -53,10 +53,7 @@ class AgentLoadedIntoBootstrapTest {
 
       assertThat(exitCode).isZero();
     } finally {
-      boolean deleted = new File(pathToJar).delete();
-      if (!deleted) {
-        System.err.println("Failed to delete temporary jar file: " + pathToJar);
-      }
+      new File(pathToJar).delete();
     }
   }
 }
