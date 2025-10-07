@@ -26,12 +26,6 @@ import java.util.Collections;
 import java.util.List;
 
 public class TestExporterCustomizerProvider implements DeclarativeConfigurationCustomizerProvider {
-
-  @Override
-  public int order() {
-    return Integer.MIN_VALUE; // run before other customizers that might add exporters
-  }
-
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     if (TestSpanExporterComponentProvider.getSpanExporter() == null) {

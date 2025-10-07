@@ -9,20 +9,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 class LoggingExporterAutoConfigurationTest {
-  @RegisterExtension
-  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
-
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
           .withBean(
@@ -35,20 +29,28 @@ class LoggingExporterAutoConfigurationTest {
   @Test
   void instrumentationEnabled() {
     runner
-        .withPropertyValues("otel.debug=true")
+        .withPropertyValues("otel.debug=true", "otel.traces.exporter=none")
         .run(
             context ->
                 assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .containsOnlyOnce("cntscnt"));
+                    .containsOnlyOnce("LoggingSpanExporter"));
+  }
+
+  @Test
+  void alreadyAdded() {
+    runner
+        .withPropertyValues("otel.debug=true", "otel.traces.exporter=logging")
+        .run(
+            context ->
+                assertThat(context.getBean(OpenTelemetry.class).toString())
+                    .containsOnlyOnce("LoggingSpanExporter"));
   }
 
   @Test
   void instrumentationDisabled() {
-    runner
-        .withPropertyValues("otel.debug=false")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .doesNotContain("cntscnt"));
+    runner.run(
+        context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .doesNotContain("LoggingSpanExporter"));
   }
 }
