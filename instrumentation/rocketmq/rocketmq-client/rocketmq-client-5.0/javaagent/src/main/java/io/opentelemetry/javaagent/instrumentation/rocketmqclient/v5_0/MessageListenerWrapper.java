@@ -15,8 +15,15 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 public final class MessageListenerWrapper implements MessageListener {
   private final MessageListener delegator;
 
-  public MessageListenerWrapper(MessageListener delegator) {
+  private MessageListenerWrapper(MessageListener delegator) {
     this.delegator = delegator;
+  }
+
+  public static MessageListener wrapIfNeeded(MessageListener messageListener) {
+    if (messageListener instanceof MessageListenerWrapper) {
+      return messageListener;
+    }
+    return new MessageListenerWrapper(messageListener);
   }
 
   @Override

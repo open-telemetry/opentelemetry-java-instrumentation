@@ -12,7 +12,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -29,13 +28,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
   }
 
   @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return Arrays.asList(
-        "io.opentelemetry.javaagent.instrumentation.internal.classloader.BootstrapPackagesHelper",
-        "io.opentelemetry.javaagent.tooling.Constants");
-  }
-
-  @Override
   public List<String> injectedClassNames() {
     return getAdditionalHelperClassNames();
   }
@@ -47,5 +39,12 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
         new LoadInjectedClassInstrumentation(),
         new ResourceInjectionInstrumentation(),
         new DefineClassInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    // This module uses inlined advices to prevent recursion issues with invokedynamic, which is
+    // forced by using 'applyInlineAdvice' in 'transform' method of instrumentations.
+    return true;
   }
 }
