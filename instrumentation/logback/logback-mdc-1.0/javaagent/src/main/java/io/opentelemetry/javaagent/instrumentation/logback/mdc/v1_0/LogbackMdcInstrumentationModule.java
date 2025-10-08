@@ -29,4 +29,11 @@ public class LogbackMdcInstrumentationModule extends InstrumentationModule
   public boolean isIndyReady() {
     return true;
   }
+
+  @Override
+  public int order() {
+    // run before logback appender instrumentation so that the appender instrumentation can observe
+    // the attributes added to the mdc by this instrumentation
+    return -1;
+  }
 }
