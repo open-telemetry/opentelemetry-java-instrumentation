@@ -12,7 +12,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
@@ -26,18 +25,19 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
-      "opentelemetry.kafka-telemetry.supplier";
+  private static final KafkaTelemetry telemetry =
+      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
+          .setCapturedHeaders(
+              ConfigPropertiesUtil.getList(
+                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
+          .build();
 
-  @Nullable private KafkaTelemetry telemetry;
   @Nullable private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    if (telemetry != null) {
-      telemetry.buildAndInjectSpan(producerRecord, clientId);
-    }
+    telemetry.buildAndInjectSpan(producerRecord, clientId);
     return producerRecord;
   }
 
@@ -48,37 +48,9 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   public void close() {}
 
   @Override
-  public void configure(Map<String, ?> configs) {
-    clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
+  public void configure(Map<String, ?> map) {
+    clientId = Objects.toString(map.get(ProducerConfig.CLIENT_ID_CONFIG), null);
 
-    Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
-    if (telemetrySupplier == null) {
-      // Fallback to GlobalOpenTelemetry if not configured
-      this.telemetry =
-          KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-              // TODO: remove now that programmatic configuration is available
-              .setCapturedHeaders(
-                  ConfigPropertiesUtil.getList(
-                      "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-              .build();
-      return;
-    }
-
-    if (!(telemetrySupplier instanceof Supplier)) {
-      throw new IllegalStateException(
-          "Configuration property "
-              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
-              + " is not instance of Supplier");
-    }
-
-    Object kafkaTelemetry = ((Supplier<?>) telemetrySupplier).get();
-    if (!(kafkaTelemetry instanceof KafkaTelemetry)) {
-      throw new IllegalStateException(
-          "Configuration property "
-              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
-              + " supplier does not return KafkaTelemetry instance");
-    }
-
-    this.telemetry = (KafkaTelemetry) kafkaTelemetry;
+    // TODO: support experimental attributes config
   }
 }

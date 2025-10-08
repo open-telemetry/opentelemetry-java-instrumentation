@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
@@ -211,9 +210,9 @@ public final class KafkaTelemetry {
   }
 
   /**
-   * Returns configuration properties that can be used to enable tracing via {@code
-   * TracingProducerInterceptor}. Add these resulting properties to the configuration map used to
-   * initialize a {@link org.apache.kafka.clients.producer.KafkaProducer}.
+   * Returns configuration properties that can be used to enable OpenTelemetry instrumentation via
+   * {@code OpenTelemetryProducerInterceptor}. Add these resulting properties to the configuration
+   * map used to initialize a {@link org.apache.kafka.clients.producer.KafkaProducer}.
    *
    * <p>Example usage:
    *
@@ -230,17 +229,18 @@ public final class KafkaTelemetry {
   public Map<String, ?> producerInterceptorConfigProperties() {
     Map<String, Object> config = new HashMap<>();
     config.put(
-        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
+        OpenTelemetryProducerInterceptor.class.getName());
     config.put(
-        TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
         new KafkaTelemetrySupplier(this));
     return Collections.unmodifiableMap(config);
   }
 
   /**
-   * Returns configuration properties that can be used to enable tracing via {@code
-   * TracingConsumerInterceptor}. Add these resulting properties to the configuration map used to
-   * initialize a {@link org.apache.kafka.clients.consumer.KafkaConsumer}.
+   * Returns configuration properties that can be used to enable OpenTelemetry instrumentation via
+   * {@code OpenTelemetryConsumerInterceptor}. Add these resulting properties to the configuration
+   * map used to initialize a {@link org.apache.kafka.clients.consumer.KafkaConsumer}.
    *
    * <p>Example usage:
    *
@@ -257,9 +257,10 @@ public final class KafkaTelemetry {
   public Map<String, ?> consumerInterceptorConfigProperties() {
     Map<String, Object> config = new HashMap<>();
     config.put(
-        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
+        OpenTelemetryConsumerInterceptor.class.getName());
     config.put(
-        TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
         new KafkaTelemetrySupplier(this));
     return Collections.unmodifiableMap(config);
   }

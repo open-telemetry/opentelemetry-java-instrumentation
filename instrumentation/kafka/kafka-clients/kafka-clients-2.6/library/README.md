@@ -70,17 +70,19 @@ Consumer<String, String> consumer = new KafkaConsumer<>(props);
 If you don't explicitly configure the interceptors with a `KafkaTelemetry` instance, they will fall back to using
 `GlobalOpenTelemetry.get()` and system properties for configuration.
 
-Use the `TracingProducerInterceptor` for the producer in order to create a "send" span automatically, each time a message is sent.
+Use the `OpenTelemetryProducerInterceptor` for the producer in order to create a "send" span automatically, each time a message is sent.
 
 ```java
-props.setProperty(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+props.setProperty(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, OpenTelemetryProducerInterceptor.class.getName());
 ```
 
-Use the `TracingConsumerInterceptor` for the consumer in order to create a "receive" span automatically, each time a message is received.
+Use the `OpenTelemetryConsumerInterceptor` for the consumer in order to create a "receive" span automatically, each time a message is received.
 
 ```java
-props.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+props.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, OpenTelemetryConsumerInterceptor.class.getName());
 ```
+
+Note: The `TracingProducerInterceptor` and `TracingConsumerInterceptor` classes are still available for backwards compatibility, but new code should use the `OpenTelemetry*` variants.
 
 The interceptors will use the following system properties for configuration:
 - `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` - Enable receive telemetry (default: false)

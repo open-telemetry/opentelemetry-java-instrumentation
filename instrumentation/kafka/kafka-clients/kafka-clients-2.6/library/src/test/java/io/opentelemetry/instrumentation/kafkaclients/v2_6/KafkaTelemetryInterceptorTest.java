@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaTelemetrySupplier;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.ByteArrayInputStream;
@@ -66,7 +66,7 @@ class KafkaTelemetryInterceptorTest {
             () -> {
               Map<String, Object> producerConfig = producerConfig();
               producerConfig.put(
-                  TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, "foo");
+                  OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, "foo");
               new KafkaProducer<>(producerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
@@ -78,7 +78,7 @@ class KafkaTelemetryInterceptorTest {
             () -> {
               Map<String, Object> producerConfig = producerConfig();
               producerConfig.put(
-                  TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+                  OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
                   (Supplier<?>) () -> "not a KafkaTelemetry");
               new KafkaProducer<>(producerConfig).close();
             })
@@ -96,7 +96,7 @@ class KafkaTelemetryInterceptorTest {
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
               consumerConfig.put(
-                  TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, "foo");
+                  OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, "foo");
               new KafkaConsumer<>(consumerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
@@ -108,7 +108,7 @@ class KafkaTelemetryInterceptorTest {
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
               consumerConfig.put(
-                  TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+                  OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
                   (Supplier<?>) () -> "not a KafkaTelemetry");
               new KafkaConsumer<>(consumerConfig).close();
             })
@@ -128,9 +128,9 @@ class KafkaTelemetryInterceptorTest {
       throws IOException, ClassNotFoundException {
     // Check that producer config has the supplier
     Object producerSupplier =
-        map.get(TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+        map.get(OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
     Object consumerSupplier =
-        map.get(TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+        map.get(OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
 
     KafkaTelemetrySupplier supplier = null;
     if (producerSupplier instanceof KafkaTelemetrySupplier) {
@@ -166,9 +166,9 @@ class KafkaTelemetryInterceptorTest {
     try (ObjectInputStream inputStream =
         new CustomObjectInputStream(new ByteArrayInputStream(byteOutputStream.toByteArray()))) {
       Map<String, Object> result = (Map<String, Object>) inputStream.readObject();
-      assertThat(result.get(TracingProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER))
+      assertThat(result.get(OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER))
           .isNull();
-      assertThat(result.get(TracingConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER))
+      assertThat(result.get(OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER))
           .isNull();
     }
   }
