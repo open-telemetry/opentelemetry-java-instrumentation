@@ -36,7 +36,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureKeyValuePairAttributes = false;
   private boolean captureLoggerContext = false;
   private boolean captureArguments = false;
-  private boolean captureLogstashAttributes = false;
+  private boolean captureLogstashMarkers = false;
+  private boolean captureLogstashStructuredArguments = false;
   private List<String> captureMdcAttributes = emptyList();
   private boolean captureEventName = false;
 
@@ -88,7 +89,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
             .setCaptureArguments(captureArguments)
-            .setCaptureLogstashAttributes(captureLogstashAttributes)
+            .setCaptureLogstashMarkers(captureLogstashMarkers)
+            .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
             .setCaptureEventName(captureEventName)
             .build();
     eventsToReplay = new ArrayBlockingQueue<>(numLogsCapturedBeforeOtelInstall);
@@ -188,9 +190,30 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
    * Sets whether the Logstash attributes should be set to logs.
    *
    * @param captureLogstashAttributes To enable or disable capturing Logstash attributes
+   * @deprecated Use {@link #setCaptureLogstashStructuredArguments(boolean)} instead. This method
+   *     is deprecated and will be removed in a future release.
    */
+  @Deprecated
   public void setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-    this.captureLogstashAttributes = captureLogstashAttributes;
+    setCaptureLogstashStructuredArguments(captureLogstashAttributes);
+  }
+
+  /**
+   * Sets whether the Logstash marker attributes should be set to logs.
+   *
+   * @param captureLogstashMarkers To enable or disable capturing Logstash marker attributes
+   */
+  public void setCaptureLogstashMarkers(boolean captureLogstashMarkers) {
+    this.captureLogstashMarkers = captureLogstashMarkers;
+  }
+
+  /**
+   * Sets whether the Logstash StructuredArguments should be captured as attributes.
+   *
+   * @param captureLogstashStructuredArguments To enable or disable capturing Logstash StructuredArguments
+   */
+  public void setCaptureLogstashStructuredArguments(boolean captureLogstashStructuredArguments) {
+    this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
   }
 
   /** Configures the {@link MDC} attributes that will be copied to logs. */

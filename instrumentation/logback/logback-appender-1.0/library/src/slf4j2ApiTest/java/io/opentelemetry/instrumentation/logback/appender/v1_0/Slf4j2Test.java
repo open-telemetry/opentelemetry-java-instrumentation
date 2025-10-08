@@ -15,6 +15,7 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import net.logstash.logback.argument.StructuredArguments;
 import net.logstash.logback.marker.Markers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -238,5 +239,118 @@ public class Slf4j2Test {
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(codeAttributesLogCount()));
+  }
+
+  @Test
+  void structuredArgumentsWithV() {
+    logger.warn(
+        "This is a warning log for customerId: {}",
+        StructuredArguments.v("customer_id", "123"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("This is a warning log for customerId: 123")
+                .hasTotalAttributeCount(codeAttributesLogCount() + 3)
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.stringKey("customer_id"), "123"),
+                    equalTo(
+                        AttributeKey.stringKey("log.body.template"),
+                        "This is a warning log for customerId: {}"),
+                    equalTo(
+                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        Arrays.asList("123"))));
+  }
+
+  @Test
+  void structuredArgumentsWithKeyValue() {
+    logger.info("Processing order: {}", StructuredArguments.keyValue("order_id", "ORD-456"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("Processing order: order_id=ORD-456")
+                .hasTotalAttributeCount(codeAttributesLogCount() + 3)
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.stringKey("order_id"), "ORD-456"),
+                    equalTo(AttributeKey.stringKey("log.body.template"), "Processing order: {}"),
+                    equalTo(
+                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        Arrays.asList("order_id=ORD-456"))));
+  }
+
+  @Test
+  void structuredArgumentsMultiple() {
+    logger.warn(
+        "Transaction failed for customer: {} with amount: {}",
+        StructuredArguments.v("customer_id", "789"),
+        StructuredArguments.v("amount", 99.99));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("Transaction failed for customer: 789 with amount: 99.99")
+                .hasTotalAttributeCount(codeAttributesLogCount() + 4)
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.stringKey("customer_id"), "789"),
+                    equalTo(AttributeKey.doubleKey("amount"), 99.99),
+                    equalTo(
+                        AttributeKey.stringKey("log.body.template"),
+                        "Transaction failed for customer: {} with amount: {}"),
+                    equalTo(
+                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        Arrays.asList("789", "99.99"))));
+  }
+
+  @Test
+  void structuredArgumentsWithEventName() {
+    logger.info("Event occurred: {}", StructuredArguments.v("event.name", "OrderPlaced"));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasBody("Event occurred: OrderPlaced")
+                .hasEventName("OrderPlaced")
+                .hasTotalAttributeCount(codeAttributesLogCount() + 2)
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.stringKey("log.body.template"), "Event occurred: {}"),
+                    equalTo(
+                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        Arrays.asList("OrderPlaced"))));
+  }
+
+  @Test
+  void structuredArgumentsWithTypedValues() {
+    long timestamp = System.currentTimeMillis();
+    logger.info(
+        "User logged in: {} at {} with session: {}",
+        StructuredArguments.v("user_id", 12345),
+        StructuredArguments.v("timestamp", timestamp),
+        StructuredArguments.v("session_active", true));
+
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasResource(resource)
+                .hasInstrumentationScope(instrumentationScopeInfo)
+                .hasTotalAttributeCount(codeAttributesLogCount() + 5)
+                .hasAttributesSatisfying(
+                    equalTo(AttributeKey.longKey("user_id"), 12345L),
+                    equalTo(AttributeKey.longKey("timestamp"), timestamp),
+                    equalTo(AttributeKey.booleanKey("session_active"), true),
+                    equalTo(
+                        AttributeKey.stringKey("log.body.template"),
+                        "User logged in: {} at {} with session: {}"),
+                    equalTo(
+                        AttributeKey.stringArrayKey("log.body.parameters"),
+                        Arrays.asList("12345", String.valueOf(timestamp), "true"))));
   }
 }
