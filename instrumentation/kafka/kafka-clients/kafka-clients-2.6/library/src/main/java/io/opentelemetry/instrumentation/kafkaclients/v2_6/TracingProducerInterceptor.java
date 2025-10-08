@@ -22,7 +22,12 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * A ProducerInterceptor that adds tracing capability. Add this interceptor's class name or class
  * via ProducerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Producer's properties to get it
  * instantiated and used. See more details on ProducerInterceptor usage in its Javadoc.
+ *
+ * @deprecated Use {@link OpenTelemetryProducerInterceptor} instead. This class uses {@link
+ *     GlobalOpenTelemetry} and is not configurable. The new class allows you to pass a configured
+ *     {@link KafkaTelemetry} instance.
  */
+@Deprecated
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
   private static final KafkaTelemetry telemetry =
