@@ -20,6 +20,7 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-appender-2.17:library"))
 
+  testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
   testImplementation("org.awaitility:awaitility")
 
   if (testLatestDeps) {
@@ -64,6 +65,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-map-message-attributes=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
 }
 
 configurations {
