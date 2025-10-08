@@ -21,6 +21,7 @@ import org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfigurat
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
     classes = {
@@ -42,8 +43,7 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
   void restTemplate() {
     testing.clearAllExportedData();
 
-    org.springframework.web.client.RestTemplate restTemplate =
-        restTemplateBuilder.rootUri("http://localhost:" + port).build();
+    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
     testing.waitAndAssertTraces(
         traceAssert ->
