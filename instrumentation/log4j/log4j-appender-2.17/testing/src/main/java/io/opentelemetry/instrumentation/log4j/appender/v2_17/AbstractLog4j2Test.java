@@ -45,11 +45,11 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class AbstractLog4j2Test {
 
-  protected static final Logger logger = LogManager.getLogger("abc");
+  private static final Logger logger = LogManager.getLogger("abc");
 
   protected abstract InstrumentationExtension testing();
 
-  protected static Stream<Arguments> provideParameters() {
+  private static Stream<Arguments> provideParameters() {
     return Stream.of(
         Arguments.of(false, false),
         Arguments.of(false, true),
@@ -57,7 +57,7 @@ public abstract class AbstractLog4j2Test {
         Arguments.of(true, true));
   }
 
-  protected static List<AttributeAssertion> threadAttributesAssertions() {
+  private static List<AttributeAssertion> threadAttributesAssertions() {
     return asList(
         equalTo(THREAD_NAME, Thread.currentThread().getName()),
         equalTo(THREAD_ID, Thread.currentThread().getId()));
@@ -255,7 +255,7 @@ public abstract class AbstractLog4j2Test {
         .waitAndAssertLogRecords(logRecord -> logRecord.hasAttributesSatisfyingExactly(assertions));
   }
 
-  protected static void performLogging(
+  private static void performLogging(
       OneArgLoggerMethod oneArgLoggerMethod,
       TwoArgLoggerMethod twoArgLoggerMethod,
       boolean logException) {
