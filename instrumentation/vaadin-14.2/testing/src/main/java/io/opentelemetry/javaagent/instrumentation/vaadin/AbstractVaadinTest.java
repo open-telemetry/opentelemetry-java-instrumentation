@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vaadin;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
@@ -170,7 +171,11 @@ public abstract class AbstractVaadinTest
                         assertThat(spans.get(spans.size() - 1))
                             .hasName("EventRpcHandler.handle/click")
                             .hasParent(spans.get(spans.size() - 2))
-                            .hasKind(SpanKind.INTERNAL);
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionAssertions(
+                                    "com.vaadin.flow.server.communication.rpc.EventRpcHandler",
+                                    "handle"));
                       });
             });
   }
