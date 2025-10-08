@@ -208,8 +208,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
-   * Configures the {@link MDC} attributes that will be excluded from being copied to logs when
-   * all attributes are being copied.
+   * Configures the {@link MDC} attributes that will be excluded from being copied to logs when all
+   * attributes are being copied.
    *
    * @param attributes The attributes to exclude from being copied
    */
