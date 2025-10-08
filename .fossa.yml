@@ -714,6 +714,12 @@ targets:
       target: ':instrumentation:mongo:mongo-async-3.3:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:nats:nats-2.17:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:nats:nats-2.17:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:netty:netty-3.8:javaagent'
     - type: gradle
       path: ./

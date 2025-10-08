@@ -121,6 +121,8 @@ readonly INSTRUMENTATIONS=(
   "jetty-httpclient:jetty-httpclient-12.0:javaagent:test"
   "jetty-httpclient:jetty-httpclient-9.2:javaagent:test"
   "jodd-http-4.2:javaagent:test"
+  "nats:nats-2.17:javaagent:test"
+  "nats:nats-2.17:javaagent:testExperimental"
   "netty:netty-3.8:javaagent:test"
   "netty:netty-4.0:javaagent:test"
   "netty:netty-4.1:javaagent:test"

@@ -271,6 +271,12 @@ final class OpenTelemetryTracing implements Tracing {
     @CanIgnoreReturnValue
     @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+      // Extract args BEFORE calling start() so db.statement can include them
+      // when it's set on SpanBuilder (making it available to samplers)
+      if (command.getArgs() != null) {
+        argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
+      }
+
       start();
       long startNanos = System.nanoTime();
 
@@ -279,10 +285,6 @@ final class OpenTelemetryTracing implements Tracing {
         throw new IllegalStateException("Span started but null, this is a programming error.");
       }
       span.updateName(command.getType().toString());
-
-      if (command.getArgs() != null) {
-        argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
-      }
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
@@ -296,7 +298,7 @@ final class OpenTelemetryTracing implements Tracing {
               if (output != null) {
                 String error = output.getError();
                 if (error != null) {
-                  span.setStatus(StatusCode.ERROR, error);
+                  span.setStatus(StatusCode.ERROR);
                 }
               }
 
@@ -311,8 +313,27 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
+      // Set db.statement on SpanBuilder before starting span so it's available to samplers
+      if (name != null) {
+        String statement =
+            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
+        if (statement != null) {
+          if (SemconvStability.emitStableDatabaseSemconv()) {
+            spanBuilder.setAttribute(DB_QUERY_TEXT, statement);
+            attributesBuilder.put(DB_QUERY_TEXT, statement);
+          }
+          if (SemconvStability.emitOldDatabaseSemconv()) {
+            spanBuilder.setAttribute(DB_STATEMENT, statement);
+            attributesBuilder.put(DB_STATEMENT, statement);
+          }
+        }
+      }
+
       span = spanBuilder.startSpan();
       spanStartNanos = System.nanoTime();
+      // Note: Span name cannot be set on SpanBuilder because it's set during
+      // tracer.spanBuilder(name) call in nextSpan(), and we don't know the actual command name at
+      // that point. We have to update the name after the span starts.
       if (name != null) {
         span.updateName(name);
       }
@@ -401,19 +422,11 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private void finish(Span span, long startTime) {
-      if (name != null) {
-        String statement =
-            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          span.setAttribute(DB_QUERY_TEXT, statement);
-          metrics.onEnd(
-              metrics.onStart(Context.current(), Attributes.empty(), startTime),
-              attributesBuilder.build(),
-              System.nanoTime());
-        }
-        if (SemconvStability.emitOldDatabaseSemconv()) {
-          span.setAttribute(DB_STATEMENT, statement);
-        }
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        metrics.onEnd(
+            metrics.onStart(Context.current(), Attributes.empty(), startTime),
+            attributesBuilder.build(),
+            System.nanoTime());
       }
       span.end();
     }

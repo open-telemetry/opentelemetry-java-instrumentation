@@ -3361,7 +3361,11 @@ libraries:
     - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
-        attributes: []
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   graphql:
   - name: graphql-java-12.0
     description: This instrumentation enables spans for GraphQL Java operations.
@@ -5274,6 +5278,57 @@ libraries:
     target_versions:
       javaagent:
       - org.mybatis:mybatis:[3.2.0,)
+  nats:
+  - name: nats-2.17
+    description: This instrumentation provides messaging spans for NATS
+    source_path: instrumentation/nats/nats-2.17
+    scope:
+      name: io.opentelemetry.nats-2.17
+    target_versions:
+      javaagent:
+      - io.nats:jnats:[2.17.2,)
+      library:
+      - io.nats:jnats:2.17.2
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: Allows configuring headers to capture as span attributes.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.header.captured_header
+          type: STRING_ARRAY
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.header.captured_header
+          type: STRING_ARRAY
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   netty:
   - name: netty-3.8
     source_path: instrumentation/netty/netty-3.8
