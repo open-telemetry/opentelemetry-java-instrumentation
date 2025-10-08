@@ -22,14 +22,14 @@ class SpanLoggingCustomizerProviderTest {
 
   @ParameterizedTest
   @CsvSource({
-    "true, true, false",
+    "true, false, true",
     "false, false, false",
     ", false, false", // empty value means property is not set
     "invalid, false, false",
     "true, true, true",
   })
   @ClearSystemProperty(key = "otel.javaagent.debug")
-  void addSpanLoggingExporter(String propertyValue, boolean expected, boolean alreadyAdded) {
+  void addSpanLoggingExporter(String propertyValue, boolean alreadyAdded, boolean expected) {
     if (propertyValue != null) {
       System.setProperty("otel.javaagent.debug", propertyValue);
     }
