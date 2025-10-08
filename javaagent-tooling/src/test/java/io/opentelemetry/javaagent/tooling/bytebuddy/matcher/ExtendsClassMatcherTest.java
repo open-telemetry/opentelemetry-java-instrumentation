@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -64,7 +63,7 @@ class ExtendsClassMatcherTest {
     boolean result = extendsClass(named(Object.class.getName())).matches(type);
 
     assertThat(result).isFalse();
-    assertThatCode(() -> extendsClass(named(Object.class.getName())).matches(type))
-        .doesNotThrowAnyException();
+    // should not throw
+    extendsClass(named(Object.class.getName())).matches(type);
   }
 }

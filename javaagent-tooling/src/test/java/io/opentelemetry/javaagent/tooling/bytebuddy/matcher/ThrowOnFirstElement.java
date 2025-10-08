@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
 import java.util.Iterator;
 
-public class ThrowOnFirstElement implements Iterator<Object> {
+class ThrowOnFirstElement implements Iterator<Object> {
   private int current = 0;
 
   @Override
