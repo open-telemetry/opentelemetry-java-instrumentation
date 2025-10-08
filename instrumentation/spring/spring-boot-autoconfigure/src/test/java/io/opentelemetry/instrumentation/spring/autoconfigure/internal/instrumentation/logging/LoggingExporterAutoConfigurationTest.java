@@ -29,7 +29,7 @@ class LoggingExporterAutoConfigurationTest {
   @Test
   void instrumentationEnabled() {
     runner
-        .withPropertyValues("otel.debug=true", "otel.traces.exporter=none")
+        .withPropertyValues("otel.spring-starter.debug=true", "otel.traces.exporter=none")
         .run(
             context ->
                 assertThat(context.getBean(OpenTelemetry.class).toString())
@@ -39,7 +39,7 @@ class LoggingExporterAutoConfigurationTest {
   @Test
   void alreadyAdded() {
     runner
-        .withPropertyValues("otel.debug=true", "otel.traces.exporter=logging")
+        .withPropertyValues("otel.spring-starter.debug=true", "otel.traces.exporter=logging")
         .run(
             context ->
                 assertThat(context.getBean(OpenTelemetry.class).toString())

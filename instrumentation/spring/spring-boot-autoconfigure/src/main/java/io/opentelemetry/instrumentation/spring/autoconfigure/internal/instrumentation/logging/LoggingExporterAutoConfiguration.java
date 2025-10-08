@@ -24,8 +24,8 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @Conditional(SdkEnabled.class)
-// for forwards compatibility with declarative configuration
-@ConditionalOnProperty(name = "otel.debug", havingValue = "true")
+// to match "otel.javaagent.debug" system property
+@ConditionalOnProperty(name = "otel.spring-starter.debug", havingValue = "true")
 @ConditionalOnClass(LoggingSpanExporter.class)
 @Configuration
 public class LoggingExporterAutoConfiguration {
