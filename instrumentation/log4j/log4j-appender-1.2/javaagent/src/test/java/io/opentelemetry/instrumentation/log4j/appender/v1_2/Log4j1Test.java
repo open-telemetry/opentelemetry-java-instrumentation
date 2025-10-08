@@ -176,11 +176,13 @@ class Log4j1Test {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
+    MDC.put("event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
+      MDC.remove("event.name");
     }
 
     List<AttributeAssertion> assertions =
@@ -195,6 +197,7 @@ class Log4j1Test {
         logRecord ->
             logRecord
                 .hasBody("xyz")
+                .hasEventName("MyEventName")
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")

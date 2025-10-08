@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.2"
+  id("com.gradle.develocity") version "4.2.1"
 }
 
 dependencyResolutionManagement {
@@ -414,6 +414,9 @@ include(":instrumentation:mongo:mongo-4.0:javaagent")
 include(":instrumentation:mongo:mongo-async-3.3:javaagent")
 include(":instrumentation:mongo:mongo-common:testing")
 include(":instrumentation:mybatis-3.2:javaagent")
+include(":instrumentation:nats:nats-2.17:javaagent")
+include(":instrumentation:nats:nats-2.17:library")
+include(":instrumentation:nats:nats-2.17:testing")
 include(":instrumentation:netty:netty-3.8:javaagent")
 include(":instrumentation:netty:netty-4.0:javaagent")
 include(":instrumentation:netty:netty-4.1:javaagent")

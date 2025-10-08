@@ -20,7 +20,7 @@ public final class BootstrapPackagePrefixesHolder {
 
   private static volatile List<String> bootstrapPackagePrefixes;
 
-  public static List<String> getBoostrapPackagePrefixes() {
+  public static List<String> getBootstrapPackagePrefixes() {
     return bootstrapPackagePrefixes;
   }
 
