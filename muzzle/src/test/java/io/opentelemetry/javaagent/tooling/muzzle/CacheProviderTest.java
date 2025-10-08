@@ -18,7 +18,6 @@ class CacheProviderTest {
 
   @Test
   void keyBootstrapEquivalence() {
-    // ClassLoader loader = null;
     int loaderHash = AgentCachingPoolStrategy.BOOTSTRAP_HASH;
     WeakReference<ClassLoader> loaderRef = null;
 
@@ -27,8 +26,7 @@ class CacheProviderTest {
     AgentCachingPoolStrategy.TypeCacheKey key2 =
         new AgentCachingPoolStrategy.TypeCacheKey(loaderHash, loaderRef, "foo");
 
-    assertThat(key1).hasSameHashCodeAs(key2);
-    assertThat(key1).isEqualTo(key2);
+    assertThat(key1).hasSameHashCodeAs(key2).isEqualTo(key2);
   }
 
   @Test
@@ -42,8 +40,7 @@ class CacheProviderTest {
     AgentCachingPoolStrategy.TypeCacheKey key2 =
         new AgentCachingPoolStrategy.TypeCacheKey(loaderHash, loaderRef, "foo");
 
-    assertThat(key1).hasSameHashCodeAs(key2);
-    assertThat(key1).isEqualTo(key2);
+    assertThat(key1).hasSameHashCodeAs(key2).isEqualTo(key2);
     // ensures that loader isn't collected
     assertThat(loader).isNotNull();
   }
@@ -62,8 +59,7 @@ class CacheProviderTest {
 
     assertThat(loaderRef1).isNotSameAs(loaderRef2);
 
-    assertThat(key1).hasSameHashCodeAs(key2);
-    assertThat(key1).isEqualTo(key2);
+    assertThat(key1).hasSameHashCodeAs(key2).isEqualTo(key2);
     // ensures that loader isn't collected
     assertThat(loader).isNotNull();
   }
@@ -108,7 +104,6 @@ class CacheProviderTest {
     assertThat(loader2).isNotNull();
   }
 
-  @SuppressWarnings("deprecation") // TypeDescription.VOID is deprecated
   @Test
   void testBasicCaching() {
     AgentCachingPoolStrategy poolStrat = new AgentCachingPoolStrategy(null);
@@ -117,7 +112,8 @@ class CacheProviderTest {
 
     TypePool.CacheProvider cacheProvider = poolStrat.getCacheProvider(loader);
 
-    cacheProvider.register("foo", new TypePool.Resolution.Simple(TypeDescription.VOID));
+    cacheProvider.register(
+        "foo", new TypePool.Resolution.Simple(TypeDescription.ForLoadedType.of(void.class)));
 
     // not strictly guaranteed, but fine for this test
     assertThat(cacheProvider.find("foo")).isNotNull();
