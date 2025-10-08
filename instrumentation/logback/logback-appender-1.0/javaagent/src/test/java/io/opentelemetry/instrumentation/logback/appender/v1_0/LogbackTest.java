@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
@@ -166,6 +167,15 @@ class LogbackTest {
                       equalTo(EXCEPTION_MESSAGE, "hello"),
                       satisfies(
                           EXCEPTION_STACKTRACE, v -> v.contains(LogbackTest.class.getName()))));
+            }
+            if (withParent) {
+              SpanContext spanContext = testing.spans().get(0).getSpanContext();
+              attributeAsserts.addAll(
+                  Arrays.asList(
+                      equalTo(AttributeKey.stringKey("trace_id"), spanContext.getTraceId()),
+                      equalTo(AttributeKey.stringKey("span_id"), spanContext.getSpanId()),
+                      equalTo(
+                          AttributeKey.stringKey("trace_flags"), TraceFlags.getSampled().asHex())));
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
           });
