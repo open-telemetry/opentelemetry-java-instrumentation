@@ -209,7 +209,6 @@ testing {
       implementation("org.slf4j:log4j-over-slf4j")
       implementation("org.slf4j:jcl-over-slf4j")
       implementation("org.slf4j:jul-to-slf4j")
-      implementation("com.github.stefanbirkner:system-rules")
     }
   }
 }
