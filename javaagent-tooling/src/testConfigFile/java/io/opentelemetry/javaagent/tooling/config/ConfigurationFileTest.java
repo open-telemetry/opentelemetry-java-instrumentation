@@ -14,18 +14,23 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Map;
-import org.junit.Rule;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junitpioneer.jupiter.ClearSystemProperty;
+import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
+import uk.org.webcompere.systemstubs.jupiter.SystemStub;
+import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
 
+@ExtendWith(SystemStubsExtension.class)
 @ClearSystemProperty(key = "otel.javaagent.configuration-file")
 class ConfigurationFileTest {
 
   @TempDir File tmpDir;
 
-  @Rule public EnvironmentVariables environmentVariables = new EnvironmentVariables();
+  @SystemStub private EnvironmentVariables environmentVariables;
+
+//  @SystemStub private SystemProperties systemProperties;
 
   @Test
   void shouldUseEnvVar() throws IOException {
