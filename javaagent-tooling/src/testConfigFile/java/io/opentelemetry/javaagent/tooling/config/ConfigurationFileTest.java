@@ -17,20 +17,19 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.junitpioneer.jupiter.ClearSystemProperty;
 import uk.org.webcompere.systemstubs.environment.EnvironmentVariables;
 import uk.org.webcompere.systemstubs.jupiter.SystemStub;
 import uk.org.webcompere.systemstubs.jupiter.SystemStubsExtension;
+import uk.org.webcompere.systemstubs.properties.SystemProperties;
 
 @ExtendWith(SystemStubsExtension.class)
-@ClearSystemProperty(key = "otel.javaagent.configuration-file")
 class ConfigurationFileTest {
 
   @TempDir File tmpDir;
 
   @SystemStub private EnvironmentVariables environmentVariables;
 
-//  @SystemStub private SystemProperties systemProperties;
+  @SystemStub private SystemProperties systemProperties;
 
   @Test
   void shouldUseEnvVar() throws IOException {
@@ -45,7 +44,7 @@ class ConfigurationFileTest {
   @Test
   void shouldUseSystemProperty() throws IOException {
     String path = createFile("config", "property1=val-sys");
-    System.setProperty("otel.javaagent.configuration-file", path);
+    systemProperties.set("otel.javaagent.configuration-file", path);
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
 
@@ -56,7 +55,7 @@ class ConfigurationFileTest {
   void shouldUseSystemPropertyOverEnvVar() throws IOException {
     String pathEnv = createFile("configEnv", "property1=val-env");
     String path = createFile("config", "property1=val-sys");
-    System.setProperty("otel.javaagent.configuration-file", path);
+    systemProperties.set("otel.javaagent.configuration-file", path);
     environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", pathEnv);
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
@@ -66,7 +65,7 @@ class ConfigurationFileTest {
 
   @Test
   void shouldReturnEmptyPropertiesIfFileDoesNotExist() {
-    System.setProperty("otel.javaagent.configuration-file", "somePath");
+    systemProperties.set("otel.javaagent.configuration-file", "somePath");
 
     Map<String, String> properties = ConfigurationFile.loadConfigFile();
 
