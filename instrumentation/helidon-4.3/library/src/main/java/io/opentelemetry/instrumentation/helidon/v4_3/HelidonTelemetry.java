@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.helidon.v4_3;
 
 import io.helidon.webserver.http.Filter;
+import io.helidon.webserver.http.HttpRouting;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.api.OpenTelemetry;
@@ -29,6 +30,10 @@ public final class HelidonTelemetry {
     this.instrumenter = instrumenter;
   }
 
+  /**
+   * Construct a new OpenTelemetry enabled {@link Filter}. Add it with {@link
+   * HttpRouting.Builder#addFilter(Filter)} to start capturing telemetry.
+   */
   public Filter createFilter() {
     return new OpenTelemetryFilter(instrumenter);
   }

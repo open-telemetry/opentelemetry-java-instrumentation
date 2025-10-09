@@ -11,7 +11,6 @@ import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import java.net.InetSocketAddress;
 import java.util.List;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest, ServerResponse> {
@@ -43,24 +42,15 @@ enum HelidonAttributesGetter implements HttpServerAttributesGetter<ServerRequest
     return req.headers().values(HeaderNames.create(name));
   }
 
-  @Nullable
   @Override
   public Integer getHttpResponseStatusCode(
-      ServerRequest req, @Nullable ServerResponse res, @Nullable Throwable error) {
-
-    return Objects.requireNonNull(res).status().code();
+      ServerRequest req, ServerResponse res, @Nullable Throwable error) {
+    return res.status().code();
   }
 
   @Override
-  public List<String> getHttpResponseHeader(
-      ServerRequest req, @Nullable ServerResponse res, String name) {
-    return Objects.requireNonNull(res).headers().values(HeaderNames.create(name));
-  }
-
-  @Nullable
-  @Override
-  public String getHttpRoute(ServerRequest req) {
-    return null;
+  public List<String> getHttpResponseHeader(ServerRequest req, ServerResponse res, String name) {
+    return res.headers().values(HeaderNames.create(name));
   }
 
   @Override

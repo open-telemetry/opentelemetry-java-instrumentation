@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.helidon.v4_3.internal.Experimental;
 import io.opentelemetry.instrumentation.helidon.v4_3.internal.HelidonInstrumenterBuilderUtil;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class HelidonTelemetryBuilder {
@@ -44,10 +43,7 @@ public final class HelidonTelemetryBuilder {
   /** Sets the status extractor for server spans. */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setStatusExtractor(
-      Function<
-              SpanStatusExtractor<ServerRequest, ServerResponse>,
-              SpanStatusExtractor<ServerRequest, ServerResponse>>
-          statusExtractor) {
+      UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
   }
