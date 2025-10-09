@@ -28,11 +28,12 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
+import org.objectweb.asm.Type;
 
 final class RealFieldInjector implements AsmVisitorWrapper {
 
   private static final String INSTALLED_FIELDS_MARKER_CLASS_NAME =
-      Utils.getInternalName(VirtualFieldInstalledMarker.class);
+      Type.getInternalName(VirtualFieldInstalledMarker.class);
 
   private final FieldAccessorInterfaces fieldAccessorInterfaces;
   private final String typeName;

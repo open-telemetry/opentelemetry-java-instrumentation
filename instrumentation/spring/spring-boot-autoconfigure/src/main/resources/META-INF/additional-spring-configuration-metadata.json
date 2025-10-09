@@ -296,6 +296,12 @@
       "description": "Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of <code>host_or_ip=user_assigned_name</code> pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
     },
     {
+      "name": "otel.instrumentation.common.thread-details.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of thread details (thread id and thread name) as span attributes.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.http.client.capture-request-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP request headers to capture in HTTP clients."
@@ -626,6 +632,12 @@
       "type": "java.lang.Integer",
       "description": "The maximum number of links per span.",
       "defaultValue": 128
+    },
+    {
+      "name": "otel.spring-starter.debug",
+      "type": "java.lang.Boolean",
+      "description": "Print spans to console for debugging purposes.",
+      "defaultValue": false
     },
     {
       "name": "otel.traces.exporter",
