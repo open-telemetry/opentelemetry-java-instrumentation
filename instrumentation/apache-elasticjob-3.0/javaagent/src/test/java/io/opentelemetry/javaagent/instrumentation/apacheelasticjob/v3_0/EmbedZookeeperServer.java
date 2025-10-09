@@ -19,8 +19,7 @@ public final class EmbedZookeeperServer {
           new TestingServer(
               port, new File(String.format("target/test_zk_data/%s/", System.nanoTime())));
     } catch (Exception ex) {
-      // Log the exception instead of printing stack trace
-      System.err.println("Failed to start embedded ZooKeeper server: " + ex.getMessage());
+      // ignore
     } finally {
       Runtime.getRuntime()
           .addShutdownHook(
