@@ -30,6 +30,12 @@ import java.util.List;
 @AutoService(DeclarativeConfigurationCustomizerProvider.class)
 public class AgentTestExporterCustomizerProvider
     implements DeclarativeConfigurationCustomizerProvider {
+
+  @Override
+  public int order() {
+    return Integer.MIN_VALUE; // run before other customizers that might add exporters
+  }
+
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
     TestExportersUtil.initTestExporters();
