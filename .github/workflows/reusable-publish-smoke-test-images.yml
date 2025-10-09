@@ -33,7 +33,7 @@ jobs:
       contents: read
       packages: write
     env:
-      LATEST_JAVA_VERSION: 23 # renovate: datasource=java-version
+      LATEST_JAVA_VERSION: 25 # renovate: datasource=java-version
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
