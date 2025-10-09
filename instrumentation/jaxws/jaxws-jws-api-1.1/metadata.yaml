@@ -1,4 +1,5 @@
 display_name: JWS API
+disabled_by_default: true
 description: >
   This instrumentation enables controller spans for methods annotated with the @WebService
   annotation from the JWS API (controller spans are disabled by default).
@@ -7,7 +8,6 @@ features:
   - CONTROLLER_SPANS
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-    description: Enables the creation of experimental controller (INTERNAL) spans.
+    description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
-disabled_by_default: true

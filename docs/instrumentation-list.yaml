@@ -4699,9 +4699,18 @@ libraries:
       - javax.xml.ws:jaxws-api:[2.0,]
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxws-2.0-axis2-1.6
     display_name: Apache Axis2 1.6 JAX-WS 2.x
     description: |
@@ -4718,9 +4727,14 @@ libraries:
       - org.apache.axis2:axis2-jaxws:[1.6.0,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jaxws-cxf-3.0
     display_name: Apache CXF 3.x JAX-WS
     description: |
@@ -4737,9 +4751,14 @@ libraries:
       - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jaxws-jws-api-1.1
     display_name: JWS API
     description: |
@@ -4756,9 +4775,18 @@ libraries:
       - javax.jws:javax.jws-api:[1.1,]
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxws-metro-2.2
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:

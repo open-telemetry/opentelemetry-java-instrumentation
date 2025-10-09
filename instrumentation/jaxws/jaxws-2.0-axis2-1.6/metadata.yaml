@@ -8,6 +8,6 @@ features:
   - CONTROLLER_SPANS
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-    description: Enables the creation of experimental controller (INTERNAL) spans.
+    description: Enables the creation of experimental controller spans.
     type: boolean
     default: false
