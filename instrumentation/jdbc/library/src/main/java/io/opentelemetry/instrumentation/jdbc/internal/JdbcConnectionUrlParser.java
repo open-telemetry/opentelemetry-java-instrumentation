@@ -912,7 +912,13 @@ public enum JdbcConnectionUrlParser {
       return GENERIC_URL_LIKE.doParse(clickhouseUrl, builder);
     }
   },
-  /** jdbc:oceanbase://host:port/dbname jdbc:oceanbase:oracle://host:port/dbname */
+  /**
+   * Sample urls:
+   * <ul>
+   *   <li>jdbc:oceanbase://host:port/dbname
+   *   <li>jdbc:oceanbase:oracle://host:port/dbname
+   * </ul>
+   */
   OCEANBASE("oceanbase") {
     @Override
     DbInfo.Builder doParse(String jdbcUrl, DbInfo.Builder builder) {
