@@ -939,9 +939,15 @@ public enum JdbcConnectionUrlParser {
   },
   /**
    * <a href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints">Driver
-   * configuration doc</a> jdbc:lindorm:table:url=http//server_name:30060/test
-   * jdbc:lindorm:tsdb:url=http://server_name:8242/test
-   * jabc:lindorm:search:url=http://server_name:30070/test
+   * configuration doc</a>
+   *
+   * <p>Sample urls:
+   *
+   * <ul>
+   *   <li>jdbc:lindorm:table:url=http//server_name:30060/test
+   *   <li>jdbc:lindorm:tsdb:url=http://server_name:8242/test
+   *   <li>jabc:lindorm:search:url=http://server_name:30070/test
+   * </ul>
    */
   LINDORM("lindorm") {
     private static final String DEFAULT_HOST = "localhost";
@@ -967,7 +973,7 @@ public enum JdbcConnectionUrlParser {
       return GENERIC_URL_LIKE.doParse(realUrl, builder);
     }
   },
-  /** jdbc:polardb://server_name:1901/dbname */
+  /** Sample url: jdbc:polardb://server_name:1901/dbname */
   POLARDB("polardb") {
     private static final int DEFAULT_PORT = 1521;
     private static final String DEFAULT_HOST = "localhost";
