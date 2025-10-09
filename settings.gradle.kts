@@ -209,7 +209,6 @@ include(":instrumentation:couchbase:couchbase-common:testing")
 include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
 include(":instrumentation:dropwizard:dropwizard-views-0.7:javaagent")
-
 include(":instrumentation:elasticsearch:elasticsearch-api-client-7.16:javaagent")
 include(":instrumentation:elasticsearch:elasticsearch-api-client-7.16:javaagent-unit-tests")
 include(":instrumentation:elasticsearch:elasticsearch-rest-5.0:javaagent")
