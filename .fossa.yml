@@ -138,6 +138,12 @@ targets:
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:helidon-4.3:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:helidon-4.3:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:hikaricp-3.0:javaagent'
     - type: gradle
       path: ./
