@@ -90,4 +90,3 @@ abstract class AbstractDeprecatedInterceptorsTest extends KafkaClientBaseTest {
 
   abstract void assertTraces();
 }
-
