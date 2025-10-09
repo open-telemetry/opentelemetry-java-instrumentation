@@ -914,6 +914,7 @@ public enum JdbcConnectionUrlParser {
   },
   /**
    * Sample urls:
+   *
    * <ul>
    *   <li>jdbc:oceanbase://host:port/dbname
    *   <li>jdbc:oceanbase:oracle://host:port/dbname
