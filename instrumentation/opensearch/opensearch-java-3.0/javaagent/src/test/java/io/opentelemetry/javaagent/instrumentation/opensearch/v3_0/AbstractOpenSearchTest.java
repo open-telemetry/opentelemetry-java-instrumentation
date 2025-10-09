@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -150,5 +153,16 @@ abstract class AbstractOpenSearchTest {
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(1))));
+  }
+
+  @Test
+  void shouldRecordMetrics() throws IOException {
+    HealthResponse healthResponse = openSearchClient.cluster().health();
+    assertThat(healthResponse).isNotNull();
+
+    getTesting().waitForTraces(1);
+
+    assertDurationMetric(
+        getTesting(), "io.opentelemetry.opensearch-java-3.0", DB_OPERATION_NAME, DB_SYSTEM_NAME);
   }
 }
