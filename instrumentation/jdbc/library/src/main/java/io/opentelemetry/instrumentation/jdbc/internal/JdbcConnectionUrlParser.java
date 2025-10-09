@@ -938,7 +938,7 @@ public enum JdbcConnectionUrlParser {
   },
   /**
    * <a
-   * href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints?spm=a2c63.p38356.help-menu-172543.d_2_0_1.7a1e41feMntzyJ">Driver
+   * href="https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints">Driver
    * configuration doc</a> jdbc:lindorm:table:url=http//server_name:30060/test
    * jdbc:lindorm:tsdb:url=http://server_name:8242/test
    * jabc:lindorm:search:url=http://server_name:30070/test
