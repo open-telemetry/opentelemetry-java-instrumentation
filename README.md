@@ -49,7 +49,7 @@ java -javaagent:path/to/opentelemetry-javaagent.jar \
 By default, the OpenTelemetry Java agent uses the
 [OTLP exporter](https://github.com/open-telemetry/opentelemetry-java/tree/main/exporters/otlp)
 configured to send data to an
-[OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md)
+[OpenTelemetry collector](https://github.com/open-telemetry/opentelemetry-collector/blob/main/receiver/otlpreceiver/README.md#fail)
 at `http://localhost:4318`.
 
 Configuration parameters are passed as Java system properties (`-D` flags) or
