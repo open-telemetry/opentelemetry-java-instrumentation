@@ -31,6 +31,7 @@ abstract class AbstractDeprecatedInterceptorsTest extends KafkaClientBaseTest {
   private static final KafkaTelemetry kafkaTelemetry =
       KafkaTelemetry.create(testing.getOpenTelemetry());
 
+  @SuppressWarnings("deprecation") // testing deprecated interceptors
   @Override
   public Map<String, Object> producerProps() {
     Map<String, Object> props = super.producerProps();
@@ -40,6 +41,7 @@ abstract class AbstractDeprecatedInterceptorsTest extends KafkaClientBaseTest {
     return props;
   }
 
+  @SuppressWarnings("deprecation") // testing deprecated interceptors
   @Override
   public Map<String, Object> consumerProps() {
     Map<String, Object> props = super.consumerProps();
