@@ -24,9 +24,8 @@ tasks {
 
   test {
     filter {
-      excludeTestsMatching("*DeprecatedInterceptorsTest")
+      excludeTestsMatching("*Deprecated*")
     }
-    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
 
   val testDeprecated by registering(Test::class) {
@@ -39,8 +38,16 @@ tasks {
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
 
+  val testDeprecatedSuppressReceiveSpans by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DeprecatedInterceptorsSuppressReceiveSpansTest")
+    }
+  }
+
   check {
-    dependsOn(testDeprecated)
+    dependsOn(testDeprecated, testDeprecatedSuppressReceiveSpans)
   }
 }
 
