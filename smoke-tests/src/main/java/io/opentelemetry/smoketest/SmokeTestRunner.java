@@ -42,7 +42,9 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
 
   @Override
   public void clearAllExportedData() {
-    telemetryRetriever.clearTelemetry();
+    if (telemetryRetriever != null) {
+      telemetryRetriever.clearTelemetry();
+    }
   }
 
   @Override
