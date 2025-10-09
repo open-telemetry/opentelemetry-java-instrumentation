@@ -33,9 +33,12 @@ class ElasticJobExperimentalAttributeExtractor
     attributes.put(ELASTICJOB_JOB_NAME, elasticJobProcessRequest.getJobName());
     attributes.put(ELASTICJOB_TASK_ID, elasticJobProcessRequest.getTaskId());
     attributes.put(ELASTICJOB_ITEM, elasticJobProcessRequest.getItem());
-    attributes.put(ELASTICJOB_SHARDING_TOTAL_COUNT, elasticJobProcessRequest.getShardingTotalCount());
+    attributes.put(
+        ELASTICJOB_SHARDING_TOTAL_COUNT, elasticJobProcessRequest.getShardingTotalCount());
     if (elasticJobProcessRequest.getShardingItemParameters() != null) {
-      attributes.put(ELASTICJOB_SHARDING_ITEM_PARAMETERS, elasticJobProcessRequest.getShardingItemParameters());
+      attributes.put(
+          ELASTICJOB_SHARDING_ITEM_PARAMETERS,
+          elasticJobProcessRequest.getShardingItemParameters());
     }
   }
 

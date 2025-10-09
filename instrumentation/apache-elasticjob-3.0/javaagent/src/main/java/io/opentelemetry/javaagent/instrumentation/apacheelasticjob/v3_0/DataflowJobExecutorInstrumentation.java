@@ -29,9 +29,7 @@ public class DataflowJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod()
-            .and(named("process"))
-            .and(takesArguments(4)),
+        isMethod().and(named("process")).and(takesArguments(4)),
         DataflowJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
   }
 
@@ -50,7 +48,9 @@ public class DataflowJobExecutorInstrumentation implements TypeInstrumentation {
               shardingContext.getTaskId(),
               shardingContext.getShardingItem(),
               shardingContext.getShardingTotalCount(),
-              shardingContext.getShardingParameter() != null ? shardingContext.getShardingParameter() : "",
+              shardingContext.getShardingParameter() != null
+                  ? shardingContext.getShardingParameter()
+                  : "",
               "DATAFLOW",
               elasticJob.getClass(),
               "processData");

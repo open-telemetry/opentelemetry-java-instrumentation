@@ -114,7 +114,9 @@ public class ElasticJobTest {
       assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
       assertThat(span.getAttributes().get(AttributeKey.stringKey("job.system")))
           .isEqualTo("elasticjob");
-      assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
+      assertThat(
+              span.getAttributes()
+                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
           .isEqualTo("javaHttpJob");
       assertThat(
               span.getAttributes()
@@ -122,12 +124,17 @@ public class ElasticJobTest {
           .isEqualTo(3L);
       assertThat(
               span.getAttributes()
-                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.sharding.item.parameters")))
+                  .get(
+                      AttributeKey.stringKey(
+                          "scheduling.apache-elasticjob.sharding.item.parameters")))
           .isEqualTo("{0=Beijing, 1=Shanghai, 2=Guangzhou}");
 
-      assertThat(span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
+      assertThat(
+              span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
           .isIn(0L, 1L, 2L);
-      assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.task.id")))
+      assertThat(
+              span.getAttributes()
+                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.task.id")))
           .contains("javaHttpJob");
     }
 
@@ -135,7 +142,8 @@ public class ElasticJobTest {
         spans.stream()
             .map(
                 span ->
-                    span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
+                    span.getAttributes()
+                        .get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
             .collect(Collectors.toSet());
     assertThat(shardItems).containsExactlyInAnyOrder(0L, 1L, 2L);
   }
@@ -170,7 +178,9 @@ public class ElasticJobTest {
       assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
       assertThat(span.getAttributes().get(AttributeKey.stringKey("job.system")))
           .isEqualTo("elasticjob");
-      assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
+      assertThat(
+              span.getAttributes()
+                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
           .isEqualTo("simpleElasticJob");
       assertThat(
               span.getAttributes()
@@ -181,9 +191,12 @@ public class ElasticJobTest {
       assertThat(span.getAttributes().get(AttributeKey.stringKey("code.namespace")))
           .isEqualTo(
               "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobTest$SynchronizedTestSimpleJob");
-      assertThat(span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
+      assertThat(
+              span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
           .isIn(0L, 1L);
-      assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.task.id")))
+      assertThat(
+              span.getAttributes()
+                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.task.id")))
           .contains("simpleElasticJob");
     }
 
@@ -191,7 +204,8 @@ public class ElasticJobTest {
         spans.stream()
             .map(
                 span ->
-                    span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
+                    span.getAttributes()
+                        .get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
             .collect(Collectors.toSet());
     assertThat(shardItems).containsExactlyInAnyOrder(0L, 1L);
   }
@@ -226,7 +240,9 @@ public class ElasticJobTest {
       assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
       assertThat(span.getAttributes().get(AttributeKey.stringKey("job.system")))
           .isEqualTo("elasticjob");
-      assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
+      assertThat(
+              span.getAttributes()
+                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
           .isEqualTo("dataflowElasticJob");
       assertThat(
               span.getAttributes()
@@ -237,9 +253,12 @@ public class ElasticJobTest {
       assertThat(span.getAttributes().get(AttributeKey.stringKey("code.namespace")))
           .isEqualTo(
               "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobTest$SynchronizedTestDataflowJob");
-      assertThat(span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
+      assertThat(
+              span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
           .isIn(0L, 1L);
-      assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.task.id")))
+      assertThat(
+              span.getAttributes()
+                  .get(AttributeKey.stringKey("scheduling.apache-elasticjob.task.id")))
           .contains("dataflowElasticJob");
     }
 
@@ -247,7 +266,8 @@ public class ElasticJobTest {
         spans.stream()
             .map(
                 span ->
-                    span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
+                    span.getAttributes()
+                        .get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
             .collect(Collectors.toSet());
     assertThat(shardItems).containsExactlyInAnyOrder(0L, 1L);
   }
@@ -267,9 +287,12 @@ public class ElasticJobTest {
                               .hasAttributesSatisfyingExactly(
                                   equalTo(AttributeKey.stringKey("job.system"), "elasticjob"),
                                   equalTo(
-                                      AttributeKey.stringKey("scheduling.apache-elasticjob.job.name"),
+                                      AttributeKey.stringKey(
+                                          "scheduling.apache-elasticjob.job.name"),
                                       "scriptElasticJob"),
-                                  equalTo(AttributeKey.longKey("scheduling.apache-elasticjob.item"), 0L),
+                                  equalTo(
+                                      AttributeKey.longKey("scheduling.apache-elasticjob.item"),
+                                      0L),
                                   equalTo(
                                       AttributeKey.longKey(
                                           "scheduling.apache-elasticjob.sharding.total.count"),
@@ -279,7 +302,8 @@ public class ElasticJobTest {
                                           "scheduling.apache-elasticjob.sharding.item.parameters"),
                                       "{0=null}"),
                                   satisfies(
-                                      AttributeKey.stringKey("scheduling.apache-elasticjob.task.id"),
+                                      AttributeKey.stringKey(
+                                          "scheduling.apache-elasticjob.task.id"),
                                       taskId -> taskId.contains("scriptElasticJob")))));
     } finally {
       bootstrap.shutdown();
@@ -317,7 +341,9 @@ public class ElasticJobTest {
     assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
     assertThat(span.getAttributes().get(AttributeKey.stringKey("job.system")))
         .isEqualTo("elasticjob");
-    assertThat(span.getAttributes().get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
+    assertThat(
+            span.getAttributes()
+                .get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
         .isEqualTo("failedElasticJob");
     assertThat(span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
         .isEqualTo(0L);
@@ -327,7 +353,9 @@ public class ElasticJobTest {
         .isEqualTo(1L);
     assertThat(
             span.getAttributes()
-                .get(AttributeKey.stringKey("scheduling.apache-elasticjob.sharding.item.parameters")))
+                .get(
+                    AttributeKey.stringKey(
+                        "scheduling.apache-elasticjob.sharding.item.parameters")))
         .isEqualTo("failed");
     assertThat(span.getAttributes().get(AttributeKey.stringKey("code.function")))
         .isEqualTo("execute");
