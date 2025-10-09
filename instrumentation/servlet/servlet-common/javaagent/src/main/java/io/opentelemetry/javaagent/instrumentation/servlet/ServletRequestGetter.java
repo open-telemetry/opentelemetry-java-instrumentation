@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.Iterator;
 
 public class ServletRequestGetter<REQUEST>
-    implements ExtendedTextMapGetter<ServletRequestContext<REQUEST>> {
+    implements TextMapGetter<ServletRequestContext<REQUEST>> {
   protected final ServletAccessor<REQUEST, ?> accessor;
 
   public ServletRequestGetter(ServletAccessor<REQUEST, ?> accessor) {

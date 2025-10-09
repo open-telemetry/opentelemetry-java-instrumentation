@@ -24,6 +24,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner.Typing;
@@ -60,38 +61,57 @@ public class AwsLambdaRequestHandlerInstrumentation implements TypeInstrumentati
   @SuppressWarnings("unused")
   public static class HandleRequestAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
-        @Advice.Argument(1) Context context,
-        @Advice.Local("otelInput") AwsLambdaRequest input,
-        @Advice.Local("otelContext") io.opentelemetry.context.Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope) {
-      input = AwsLambdaRequest.create(context, arg, Collections.emptyMap());
-      io.opentelemetry.context.Context parentContext = functionInstrumenter().extract(input);
+    public static class AdviceScope {
+      private final AwsLambdaRequest lambdaRequest;
+      private final io.opentelemetry.context.Context context;
+      private final Scope scope;
 
-      if (!functionInstrumenter().shouldStart(parentContext, input)) {
-        return;
+      private AdviceScope(
+          AwsLambdaRequest lambdaRequest,
+          io.opentelemetry.context.Context otelContext,
+          Scope scope) {
+        this.lambdaRequest = lambdaRequest;
+        this.context = otelContext;
+        this.scope = scope;
       }
 
-      otelContext = functionInstrumenter().start(parentContext, input);
-      otelScope = otelContext.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Object arg, Context context) {
+        AwsLambdaRequest lambdaRequest =
+            AwsLambdaRequest.create(context, arg, Collections.emptyMap());
+        io.opentelemetry.context.Context parentContext =
+            functionInstrumenter().extract(lambdaRequest);
+        if (!functionInstrumenter().shouldStart(parentContext, lambdaRequest)) {
+          return null;
+        }
+
+        io.opentelemetry.context.Context otelContext =
+            functionInstrumenter().start(parentContext, lambdaRequest);
+        return new AdviceScope(lambdaRequest, otelContext, otelContext.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        functionInstrumenter().end(context, lambdaRequest, null, throwable);
+        OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
+        @Advice.Argument(1) Context context) {
+      return AdviceScope.start(arg, context);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(value = 0, typing = Typing.DYNAMIC) Object arg,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelInput") AwsLambdaRequest input,
-        @Advice.Local("otelContext") io.opentelemetry.context.Context functionContext,
-        @Advice.Local("otelScope") Scope functionScope) {
-
-      if (functionScope != null) {
-        functionScope.close();
-        functionInstrumenter().end(functionContext, input, null, throwable);
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-
-      OpenTelemetrySdkAccess.forceFlush(flushTimeout().toNanos(), TimeUnit.NANOSECONDS);
     }
   }
 }

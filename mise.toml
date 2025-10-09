@@ -1,0 +1,21 @@
+[tools]
+lychee = "0.20.1"
+
+[settings]
+# Only install tools explicitly defined in the [tools] section above
+idiomatic_version_file_enable_tools = []
+
+# Windows configuration for file-based tasks
+# Based on: https://github.com/jdx/mise/discussions/4461
+windows_executable_extensions = ["sh"]
+windows_default_file_shell_args = "bash"
+use_file_shell_for_executable_tasks = true
+
+[tasks."lint:links"]
+file = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java-contrib/refs/heads/main/.mise/tasks/lint/links.sh"
+
+[tasks."lint:local-links"]
+file = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java-contrib/refs/heads/main/.mise/tasks/lint/local-links.sh"
+
+[tasks."lint:links-in-modified-files"]
+file = "https://raw.githubusercontent.com/open-telemetry/opentelemetry-java-contrib/refs/heads/main/.mise/tasks/lint/links-in-modified-files.sh"

@@ -88,6 +88,9 @@ semantic_conventions:
   - HTTP_CLIENT_SPANS
   - DATABASE_CLIENT_SPANS
   - JVM_RUNTIME_METRICS
+features:
+  - HTTP_ROUTE
+  - CONTEXT_PROPAGATION
 disabled_by_default: true
 classification: library
 library_link: https://github.com/...
@@ -156,13 +159,13 @@ If the instrumentation adheres to one or more specific semantic conventions, inc
 
 List of possible options:
 
-* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client)
+* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client-span)
 * [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
 * [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
 * [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
-* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes)
+* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-client-span)
 * [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
-* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes)
+* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-server-span)
 * [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
 * [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
 * [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
@@ -173,6 +176,20 @@ List of possible options:
 * [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
 * [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
 * [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+
+### Features (optional)
+
+As a way to help further categorize instrumentations, you can add a `features` field with a list of
+the relevant functionality descriptions.
+
+List of possible options:
+
+* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
+* `EXPERIMENTAL_ONLY`: Instrumentation that is experimental and may not be stable
+* `CONTEXT_PROPAGATION`: Instrumentation that provides context propagation capabilities
+* `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
+* `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans
+* `VIEW_SPANS`: Instrumentation that generates view-level spans
 
 ### Library Link
 

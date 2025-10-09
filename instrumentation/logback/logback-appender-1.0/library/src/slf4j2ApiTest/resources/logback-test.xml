@@ -17,6 +17,7 @@
     <captureArguments>true</captureArguments>
     <captureLogstashAttributes>true</captureLogstashAttributes>
     <captureMdcAttributes>*</captureMdcAttributes>
+    <captureEventName>true</captureEventName>
   </appender>
 
   <root level="INFO">

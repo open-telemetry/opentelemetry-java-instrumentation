@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
@@ -15,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -27,8 +29,12 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-abstract class AbstractLettuceClientTest {
+public abstract class AbstractLettuceClientTest {
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
+
+  private static final boolean COMMAND_ENCODING_EVENTS_ENABLED =
+      Boolean.getBoolean(
+          "otel.instrumentation.lettuce.experimental.command-encoding-events.enabled");
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -93,5 +99,19 @@ abstract class AbstractLettuceClientTest {
       }
     }
     return result;
+  }
+
+  protected static void assertCommandEncodeEvents(SpanData span) {
+    if (COMMAND_ENCODING_EVENTS_ENABLED) {
+      assertThat(span)
+          .hasEventsSatisfyingExactly(
+              event -> event.hasName("redis.encode.start"),
+              event -> event.hasName("redis.encode.end"));
+    } else {
+      assertThat(span.getEvents())
+          .noneSatisfy(event -> assertThat(event).hasName("redis.encode.start"));
+      assertThat(span.getEvents())
+          .noneSatisfy(event -> assertThat(event).hasName("redis.encode.end"));
+    }
   }
 }
