@@ -27,7 +27,9 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
   static final String greeting = "Hello Kafka!";
 
   private static final KafkaTelemetry kafkaTelemetry =
-      KafkaTelemetry.create(testing.getOpenTelemetry());
+      KafkaTelemetry.builder(testing.getOpenTelemetry())
+          .setMessagingReceiveInstrumentationEnabled(true)
+          .build();
 
   @Override
   public Map<String, Object> producerProps() {

@@ -22,27 +22,25 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  test {
+    filter {
+      excludeTestsMatching("*DeprecatedInterceptorsTest")
+    }
+    systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
+  }
+
+  val testDeprecated by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      includeTestsMatching("WrapperSuppressReceiveSpansTest")
+      includeTestsMatching("*DeprecatedInterceptorsTest")
     }
-    include("**/InterceptorsSuppressReceiveSpansTest.*", "**/WrapperSuppressReceiveSpansTest.*")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      excludeTestsMatching("WrapperSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
 
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testDeprecated)
   }
 }
 
