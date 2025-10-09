@@ -3361,11 +3361,7 @@ libraries:
     - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
-        attributes:
-        - name: code.function
-          type: STRING
-        - name: code.namespace
-          type: STRING
+        attributes: []
   graphql:
   - name: graphql-java-12.0
     description: This instrumentation enables spans for GraphQL Java operations.
@@ -3760,6 +3756,44 @@ libraries:
           type: STRING
         - name: rpc.system
           type: STRING
+  helidon:
+  - name: helidon-4.3
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for the Helidon HTTP server.
+    library_link: https://helidon.io/
+    source_path: instrumentation/helidon-4.3
+    minimum_java_version: 21
+    scope:
+      name: io.opentelemetry.helidon-4.3
+    target_versions:
+      javaagent:
+      - io.helidon.webserver:helidon-webserver:[4.3.0,)
+      library:
+      - io.helidon.webserver:helidon-webserver:4.3.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.body.size` and `http.server.response.body.size` metrics.
+      type: boolean
+      default: false
   hibernate:
   - name: hibernate-3.3
     description: |
@@ -4691,6 +4725,15 @@ libraries:
     target_versions:
       javaagent:
       - javax.xml.ws:jaxws-api:[2.0,]
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxws-2.0-axis2-1.6
     source_path: instrumentation/jaxws/jaxws-2.0-axis2-1.6
     scope:
@@ -4698,6 +4741,11 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.axis2:axis2-jaxws:[1.6.0,)
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jaxws-cxf-3.0
     source_path: instrumentation/jaxws/jaxws-cxf-3.0
     scope:
@@ -4705,6 +4753,11 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.cxf:cxf-rt-frontend-jaxws:[3.0.0,)
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jaxws-jws-api-1.1
     disabled_by_default: true
     source_path: instrumentation/jaxws/jaxws-jws-api-1.1
@@ -4713,6 +4766,15 @@ libraries:
     target_versions:
       javaagent:
       - javax.jws:javax.jws-api:[1.1,]
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   - name: jaxws-metro-2.2
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:
@@ -5305,8 +5367,6 @@ libraries:
           type: STRING
         - name: messaging.destination.temporary
           type: BOOLEAN
-        - name: messaging.header.captured_header
-          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation
@@ -5321,8 +5381,6 @@ libraries:
           type: STRING
         - name: messaging.destination.temporary
           type: BOOLEAN
-        - name: messaging.header.captured_header
-          type: STRING_ARRAY
         - name: messaging.message.body.size
           type: LONG
         - name: messaging.operation
@@ -5820,6 +5878,35 @@ libraries:
         - name: gen_ai.usage.output_tokens
           type: LONG
   opensearch:
+  - name: opensearch-java-3.0
+    source_path: instrumentation/opensearch/opensearch-java-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.opensearch-java-3.0
+    target_versions:
+      javaagent:
+      - org.opensearch.client:opensearch-java:[3.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   - name: opensearch-rest-1.0
     source_path: instrumentation/opensearch/opensearch-rest-1.0
     minimum_java_version: 11
@@ -5828,6 +5915,27 @@ libraries:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   - name: opensearch-rest-3.0
     source_path: instrumentation/opensearch/opensearch-rest-3.0
     minimum_java_version: 11
@@ -5836,6 +5944,27 @@ libraries:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[3.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   oracle:
   - name: oracle-ucp-11.2
     description: The Oracle Universal Connection Pool (UCP) instrumentation generates
