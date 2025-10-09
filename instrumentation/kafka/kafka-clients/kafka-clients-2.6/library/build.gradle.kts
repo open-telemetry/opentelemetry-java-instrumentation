@@ -34,6 +34,7 @@ tasks {
     filter {
       includeTestsMatching("*DeprecatedInterceptorsTest")
     }
+    forkEvery = 1 // to avoid system properties polluting other tests
     systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
