@@ -351,10 +351,12 @@
       customType: 'regex',
       datasourceTemplate: 'java-version',
       managerFilePatterns: [
-        '.github/workflows/**'
+        '.github/workflows/**',
+        '**/*.gradle.kts'
       ],
       matchStrings: [
         '(?<currentValue>\\d+) # renovate: datasource=java-version',
+        '"(?<currentValue>\\d+)" # renovate: datasource=java-version',
       ],
       depNameTemplate: 'java',
       extractVersionTemplate: '^(?<version>\\d+)',
