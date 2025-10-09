@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -48,6 +49,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
+      internalSet(attributes, DB_QUERY_SUMMARY, getter.getDbQuerySummary(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
