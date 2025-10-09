@@ -86,6 +86,7 @@ readonly INSTRUMENTATIONS=(
   "grpc-1.6:javaagent:test"
   "grpc-1.6:javaagent:testExperimental"
   "gwt-2.0:javaagent:test"
+  "helidon-4.3:javaagent:test"
   "hibernate:hibernate-3.3:javaagent:test"
   "hibernate:hibernate-3.3:javaagent:testExperimental"
   "hibernate:hibernate-4.0:javaagent:test"
