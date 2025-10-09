@@ -429,6 +429,9 @@ targets:
       target: ':instrumentation:dropwizard:dropwizard-views-0.7:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:elasticjob-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:elasticsearch:elasticsearch-api-client-7.16:javaagent'
     - type: gradle
       path: ./
