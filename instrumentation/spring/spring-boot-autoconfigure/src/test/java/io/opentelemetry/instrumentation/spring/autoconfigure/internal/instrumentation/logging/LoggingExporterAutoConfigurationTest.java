@@ -27,7 +27,7 @@ class LoggingExporterAutoConfigurationTest {
                   LoggingExporterAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
 
   @Test
-  void instrumentationEnabled() {
+  void debugEnabled() {
     runner
         .withPropertyValues("otel.spring-starter.debug=true", "otel.traces.exporter=none")
         .run(
@@ -47,10 +47,20 @@ class LoggingExporterAutoConfigurationTest {
   }
 
   @Test
-  void instrumentationDisabled() {
+  void debugUnset() {
     runner.run(
         context ->
             assertThat(context.getBean(OpenTelemetry.class).toString())
                 .doesNotContain("LoggingSpanExporter"));
+  }
+
+  @Test
+  void debugDisabled() {
+    runner
+        .withPropertyValues("otel.spring-starter.debug=false", "otel.traces.exporter=none")
+        .run(
+            context ->
+                assertThat(context.getBean(OpenTelemetry.class).toString())
+                    .doesNotContain("LoggingSpanExporter"));
   }
 }
