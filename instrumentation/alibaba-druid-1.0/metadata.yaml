@@ -4,3 +4,13 @@ description: >
 library_link: https://github.com/alibaba/druid
 semantic_conventions:
   - DATABASE_POOL_METRICS
+configurations:
+  - name: otel.semconv-stability.opt-in
+    description: >
+      Opt-in to emit stable semantic conventions instead of the old
+      experimental semantic conventions. Accepts a comma-separated list of semantic convention
+      groups (e.g., `database`, `http`, `messaging`). Use `<group>/dup` to emit both old and new
+      conventions simultaneously. Stable semantic conventions will become the default in version
+      3.0 of the agent.
+    type: list
+    default: ""
