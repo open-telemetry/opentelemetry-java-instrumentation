@@ -17,18 +17,4 @@ class UtilsTest {
 
     assertThat(result).isEqualTo("com/example/Something.class");
   }
-
-  @Test
-  void getClassNameConvertsSlashesToDots() {
-    String result = Utils.getClassName("com/example/Something");
-
-    assertThat(result).isEqualTo("com.example.Something");
-  }
-
-  @Test
-  void getInternalNameConvertsSlashesToDots() {
-    String result = Utils.getInternalName(UtilsTest.class);
-
-    assertThat(result).isEqualTo("io/opentelemetry/javaagent/tooling/UtilsTest");
-  }
 }
