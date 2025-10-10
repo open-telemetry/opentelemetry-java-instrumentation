@@ -46,12 +46,14 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.webapp.WebAppContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   @RegisterExtension
@@ -107,7 +109,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
   }
 
   @ParameterizedTest
-  @CsvSource({"hello.jsf, *.jsf", "faces/hello.xhtml, faces/*"})
+  @MethodSource("pathAndRouteParams")
   void testPath(String path, String route) {
     AggregatedHttpResponse response =
         client.get(address.resolve(path).toString()).aggregate().join();
@@ -284,5 +286,9 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                         .hasStatus(StatusData.error())
                         .hasException(expectedException),
                 span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", expectedException)));
+  }
+
+  static Stream<Arguments> pathAndRouteParams() {
+    return Stream.of(Arguments.of("hello.jsf", "*.jsf"), Arguments.of("faces/hello.xhtml", "faces/*"));
   }
 }
