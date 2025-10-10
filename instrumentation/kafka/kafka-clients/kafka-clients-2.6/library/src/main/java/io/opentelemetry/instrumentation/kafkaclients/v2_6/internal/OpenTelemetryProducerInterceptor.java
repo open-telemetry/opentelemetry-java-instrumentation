@@ -24,7 +24,7 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 public class OpenTelemetryProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
   public static final String CONFIG_KEY_KAFKA_HELPER_SUPPLIER =
-      "opentelemetry.kafka-helper.supplier";
+      "opentelemetry.kafka-telemetry.supplier";
 
   @Nullable private KafkaHelper helper;
   @Nullable private String clientId;

@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaHelperSupplier;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryConsumerInterceptor;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryProducerInterceptor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -68,25 +68,25 @@ class KafkaTelemetryInterceptorTest {
             () -> {
               Map<String, Object> producerConfig = producerConfig();
               producerConfig.put(
-                  OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, "foo");
+                  OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER, "foo");
               new KafkaProducer<>(producerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-telemetry.supplier is not instance of Supplier");
+            "Configuration property opentelemetry.kafka-telemetry.supplier is not instance of KafkaHelperSupplier");
 
     // Bad config - supplier returns wrong type
     assertThatThrownBy(
             () -> {
               Map<String, Object> producerConfig = producerConfig();
               producerConfig.put(
-                  OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
-                  (Supplier<?>) () -> "not a KafkaTelemetry");
+                  OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER,
+                  (Supplier<?>) () -> "not a KafkaHelper");
               new KafkaProducer<>(producerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-telemetry.supplier supplier does not return KafkaTelemetry instance");
+            "Configuration property opentelemetry.kafka-telemetry.supplier is not instance of KafkaHelperSupplier");
   }
 
   @Test
@@ -98,25 +98,25 @@ class KafkaTelemetryInterceptorTest {
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
               consumerConfig.put(
-                  OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, "foo");
+                  OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER, "foo");
               new KafkaConsumer<>(consumerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-telemetry.supplier is not instance of Supplier");
+            "Configuration property opentelemetry.kafka-telemetry.supplier is not instance of KafkaHelperSupplier");
 
     // Bad config - supplier returns wrong type
     assertThatThrownBy(
             () -> {
               Map<String, Object> consumerConfig = consumerConfig();
               consumerConfig.put(
-                  OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
-                  (Supplier<?>) () -> "not a KafkaTelemetry");
+                  OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER,
+                  (Supplier<?>) () -> "not a KafkaHelper");
               new KafkaConsumer<>(consumerConfig).close();
             })
         .hasRootCauseInstanceOf(IllegalStateException.class)
         .hasRootCauseMessage(
-            "Configuration property opentelemetry.kafka-telemetry.supplier supplier does not return KafkaTelemetry instance");
+            "Configuration property opentelemetry.kafka-telemetry.supplier is not instance of KafkaHelperSupplier");
   }
 
   @Test
@@ -130,15 +130,15 @@ class KafkaTelemetryInterceptorTest {
       throws IOException, ClassNotFoundException {
     // Check that producer config has the supplier
     Object producerSupplier =
-        map.get(OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+        map.get(OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER);
     Object consumerSupplier =
-        map.get(OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
+        map.get(OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER);
 
-    KafkaTelemetrySupplier supplier = null;
-    if (producerSupplier instanceof KafkaTelemetrySupplier) {
-      supplier = (KafkaTelemetrySupplier) producerSupplier;
-    } else if (consumerSupplier instanceof KafkaTelemetrySupplier) {
-      supplier = (KafkaTelemetrySupplier) consumerSupplier;
+    KafkaHelperSupplier supplier = null;
+    if (producerSupplier instanceof KafkaHelperSupplier) {
+      supplier = (KafkaHelperSupplier) producerSupplier;
+    } else if (consumerSupplier instanceof KafkaHelperSupplier) {
+      supplier = (KafkaHelperSupplier) consumerSupplier;
     }
 
     assertThat(supplier).isNotNull();
@@ -168,9 +168,9 @@ class KafkaTelemetryInterceptorTest {
     try (ObjectInputStream inputStream =
         new CustomObjectInputStream(new ByteArrayInputStream(byteOutputStream.toByteArray()))) {
       Map<String, Object> result = (Map<String, Object>) inputStream.readObject();
-      assertThat(result.get(OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER))
+      assertThat(result.get(OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER))
           .isNull();
-      assertThat(result.get(OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER))
+      assertThat(result.get(OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER))
           .isNull();
     }
   }

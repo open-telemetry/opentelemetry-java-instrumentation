@@ -29,7 +29,7 @@ import org.apache.kafka.common.TopicPartition;
 public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
   public static final String CONFIG_KEY_KAFKA_HELPER_SUPPLIER =
-      "opentelemetry.kafka-helper.supplier";
+      "opentelemetry.kafka-telemetry.supplier";
 
   @Nullable private KafkaHelper helper;
   private String consumerGroup;
