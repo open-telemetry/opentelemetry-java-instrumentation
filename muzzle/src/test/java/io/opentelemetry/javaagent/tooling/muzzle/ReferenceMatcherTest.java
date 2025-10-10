@@ -291,7 +291,7 @@ class ReferenceMatcherTest {
         "io.opentelemetry.instrumentation.Helper",
         "com.external.otel.instrumentation.Helper"
       })
-  void shouldFailHelperClassesThatDoesNotImplementAllAbstractMethods(String className) {
+  void shouldFailHelperClassesThatDoNotImplementAllAbstractMethods(String className) {
     ClassRef reference =
         ClassRef.builder(className)
             .setSuperClassName(TestAbstractSuperClass.class.getName())
