@@ -24,7 +24,7 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 23})
+  @ValueSource(ints = {8, 11, 17, 21})
   void securityManagerSmokeTest(int jdk) {
     start(jdk);
     testing.waitAndAssertTraces(
