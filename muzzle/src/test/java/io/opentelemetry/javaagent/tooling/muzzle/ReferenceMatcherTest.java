@@ -86,12 +86,9 @@ class ReferenceMatcherTest {
   }
 
   @Test
-  void matchingDoesNotHoldStrongReferenceToClassloaders() {
-    try {
-      assertThat(MuzzleWeakReferenceTestUtil.classLoaderRefIsGarbageCollected()).isTrue();
-    } catch (InterruptedException | TimeoutException e) {
-      throw new RuntimeException(e);
-    }
+  void matchingDoesNotHoldStrongReferenceToClassloaders()
+      throws InterruptedException, TimeoutException {
+    assertThat(MuzzleWeakReferenceTestUtil.classLoaderRefIsGarbageCollected()).isTrue();
   }
 
   private static class CountingClassLoader extends URLClassLoader {
