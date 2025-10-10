@@ -47,19 +47,6 @@ public class KafkaProducerTelemetry {
     this.producerPropagationEnabled = producerPropagationEnabled;
   }
 
-  // these getters are needed for the deprecated wrap() methods in KafkaTelemetry
-  public TextMapPropagator getPropagator() {
-    return propagator;
-  }
-
-  public Instrumenter<KafkaProducerRequest, RecordMetadata> getProducerInstrumenter() {
-    return producerInstrumenter;
-  }
-
-  public TextMapSetter<Headers> getSetter() {
-    return SETTER;
-  }
-
   /**
    * Build and inject span into record.
    *

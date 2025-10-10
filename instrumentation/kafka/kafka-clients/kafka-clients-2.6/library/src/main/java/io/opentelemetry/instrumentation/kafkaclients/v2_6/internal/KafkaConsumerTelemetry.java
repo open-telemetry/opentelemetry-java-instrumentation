@@ -40,12 +40,23 @@ public class KafkaConsumerTelemetry {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
-  // this getter is needed for the deprecated wrap() methods in KafkaTelemetry
-  public Instrumenter<KafkaProcessRequest, Void> getConsumerProcessInstrumenter() {
-    return consumerProcessInstrumenter;
+  public <K, V> ConsumerRecords<K, V> addTracing(
+      ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
+    if (consumerRecords.isEmpty()) {
+      return consumerRecords;
+    }
+
+    Map<TopicPartition, List<ConsumerRecord<K, V>>> records = new LinkedHashMap<>();
+    for (TopicPartition partition : consumerRecords.partitions()) {
+      List<ConsumerRecord<K, V>> list = consumerRecords.records(partition);
+      if (list != null && !list.isEmpty()) {
+        list = TracingList.wrap(list, consumerProcessInstrumenter, () -> true, consumerContext);
+      }
+      records.put(partition, list);
+    }
+    return new ConsumerRecords<>(records);
   }
 
-  // this overload is needed for the deprecated wrap() methods in KafkaTelemetry
   public <K, V> Context buildAndFinishSpan(
       ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
     return buildAndFinishSpan(
@@ -77,22 +88,5 @@ public class KafkaConsumerTelemetry {
     // this is the suggested behavior according to the spec batch receive scenario:
     // https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md#batch-receiving
     return context;
-  }
-
-  public <K, V> ConsumerRecords<K, V> addTracing(
-      ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
-    if (consumerRecords.isEmpty()) {
-      return consumerRecords;
-    }
-
-    Map<TopicPartition, List<ConsumerRecord<K, V>>> records = new LinkedHashMap<>();
-    for (TopicPartition partition : consumerRecords.partitions()) {
-      List<ConsumerRecord<K, V>> list = consumerRecords.records(partition);
-      if (list != null && !list.isEmpty()) {
-        list = TracingList.wrap(list, consumerProcessInstrumenter, () -> true, consumerContext);
-      }
-      records.put(partition, list);
-    }
-    return new ConsumerRecords<>(records);
   }
 }
