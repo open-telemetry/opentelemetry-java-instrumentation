@@ -92,11 +92,11 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "28.0.1.Final", jdk = "21-openj9")
   static class Wildfly28Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "28.0.1.Final", jdk = "23")
-  static class Wildfly28Jdk23 extends WildflySmokeTest {}
+  @AppServer(version = "28.0.1.Final", jdk = "25")
+  static class Wildfly28Jdk25 extends WildflySmokeTest {}
 
-  @AppServer(version = "28.0.1.Final", jdk = "23-openj9")
-  static class Wildfly28Jdk23Openj9 extends WildflySmokeTest {}
+  @AppServer(version = "28.0.1.Final", jdk = "25-openj9")
+  static class Wildfly28Jdk25Openj9 extends WildflySmokeTest {}
 
   @AppServer(version = "29.0.1.Final", jdk = "11")
   static class Wildfly29Jdk11 extends WildflySmokeTest {}
@@ -116,11 +116,11 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "29.0.1.Final", jdk = "21-openj9")
   static class Wildfly29Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "29.0.1.Final", jdk = "23")
-  static class Wildfly29Jdk23 extends WildflySmokeTest {}
+  @AppServer(version = "29.0.1.Final", jdk = "25")
+  static class Wildfly29Jdk25 extends WildflySmokeTest {}
 
-  @AppServer(version = "29.0.1.Final", jdk = "23-openj9")
-  static class Wildfly29Jdk23Openj9 extends WildflySmokeTest {}
+  @AppServer(version = "29.0.1.Final", jdk = "25-openj9")
+  static class Wildfly29Jdk25Openj9 extends WildflySmokeTest {}
 
   @AppServer(version = "30.0.1.Final", jdk = "11")
   static class Wildfly30Jdk11 extends WildflySmokeTest {}
@@ -140,9 +140,9 @@ abstract class WildflySmokeTest extends AppServerTest {
   @AppServer(version = "30.0.1.Final", jdk = "21-openj9")
   static class Wildfly30Jdk21Openj9 extends WildflySmokeTest {}
 
-  @AppServer(version = "30.0.1.Final", jdk = "23")
-  static class Wildfly30Jdk23 extends WildflySmokeTest {}
+  @AppServer(version = "30.0.1.Final", jdk = "25")
+  static class Wildfly30Jdk25 extends WildflySmokeTest {}
 
-  @AppServer(version = "30.0.1.Final", jdk = "23-openj9")
-  static class Wildfly30Jdk23Openj9 extends WildflySmokeTest {}
+  @AppServer(version = "30.0.1.Final", jdk = "25-openj9")
+  static class Wildfly30Jdk25Openj9 extends WildflySmokeTest {}
 }

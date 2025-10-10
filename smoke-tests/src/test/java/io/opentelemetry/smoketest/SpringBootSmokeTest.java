@@ -23,7 +23,7 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20241021.11448062567")
+        .springBoot("20251009.18389598610")
         .setServiceName(false)
         .env("OTEL_METRICS_EXPORTER", "otlp")
         .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
