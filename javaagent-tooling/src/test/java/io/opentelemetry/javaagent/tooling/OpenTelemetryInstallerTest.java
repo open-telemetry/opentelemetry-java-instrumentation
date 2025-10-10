@@ -49,7 +49,7 @@ class OpenTelemetryInstallerTest {
         // propertyValue, expected, fail
         Arguments.of("default", true, false),
         Arguments.of("none", false, false),
-        Arguments.of(null, true, false), // null value means property is not set
+        Arguments.of(null, true, false),
         Arguments.of("invalid", false, true));
   }
 

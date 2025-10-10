@@ -67,9 +67,9 @@ class UnitConverterTest {
   private static Stream<Arguments> shouldSkipConversionWhenSourceUnitNotSpecifiedProvider() {
     return Stream.of(
         // sourceUnit, targetUnit
-        Arguments.of(null, "s"), // null -> "s"
-        Arguments.of("", "s"), // "" -> "s"
-        Arguments.of("1", "")); // empty target unit
+        Arguments.of(null, "s"),
+        Arguments.of("", "s"),
+        Arguments.of("1", ""));
   }
 
   @ParameterizedTest

@@ -27,7 +27,7 @@ class SpanLoggingCustomizerProviderTest {
         // propertyValue, alreadyAdded, expected
         Arguments.of("true", false, true),
         Arguments.of("false", false, false),
-        Arguments.of(null, false, false), // null value means property is not set
+        Arguments.of(null, false, false),
         Arguments.of("invalid", false, false),
         Arguments.of("true", true, true));
   }
