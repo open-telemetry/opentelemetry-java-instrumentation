@@ -80,7 +80,7 @@ public final class KafkaTelemetry {
     return producerTelemetry;
   }
 
-    // this method can be removed when the deprecated TracingProducerInterceptor is removed
+  // this method can be removed when the deprecated TracingProducerInterceptor is removed
   KafkaConsumerTelemetry getConsumerTelemetry() {
     return consumerTelemetry;
   }
