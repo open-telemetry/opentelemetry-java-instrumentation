@@ -35,12 +35,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
+import java.util.stream.Stream;
 import muzzle.TestClasses;
 import muzzle.TestClasses.Nested;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.objectweb.asm.Type;
 
@@ -131,46 +133,49 @@ class ReferenceMatcherTest {
     assertThat(cl.count).isEqualTo(countAfterFirstMatch);
   }
 
+  private static Stream<Arguments> matchingRefProvider() {
+    return Stream.of(
+        Arguments.of(Nested.B.class, NON_INTERFACE, null),
+        Arguments.of(Nested.B.class, INTERFACE, Mismatch.MissingFlag.class));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "muzzle.TestClasses$Nested$B, NON_INTERFACE, ''",
-    "muzzle.TestClasses$Nested$B, INTERFACE, MissingFlag"
-  })
-  void matchingRef(String referenceName, String referenceFlag, String expectedMismatch) {
-    Flag flag = "NON_INTERFACE".equals(referenceFlag) ? NON_INTERFACE : INTERFACE;
-    ClassRef ref = ClassRef.builder(referenceName).addFlag(flag).build();
+  @MethodSource("matchingRefProvider")
+  void matchingRef(Class<?> referenceClass, Flag referenceFlag, Class<? extends Mismatch> expectedMismatch) {
+    ClassRef ref = ClassRef.builder(referenceClass.getName()).addFlag(referenceFlag).build();
 
     List<Mismatch> mismatches =
         createMatcher(Collections.singletonMap(ref.getClassName(), ref))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
-    if (expectedMismatch.isEmpty()) {
+    if (expectedMismatch == null) {
       assertThat(getMismatchClassSet(mismatches)).isEmpty();
     } else {
-      assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingFlag.class);
+      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatch);
     }
   }
 
+  private static Stream<Arguments> methodMatchProvider() {
+    return Stream.of(
+        Arguments.of("method", "(Ljava/lang/String;)Ljava/lang/String;", "", Nested.B.class, null),
+        Arguments.of("hashCode", "()I", "", Nested.B.class, null),
+        Arguments.of("someMethod", "()V", "", Nested.SomeInterface.class, null),
+        Arguments.of("privateStuff", "()V", "PRIVATE_OR_HIGHER", Nested.B.class, null),
+        Arguments.of("privateStuff", "()V", "PROTECTED_OR_HIGHER", Nested.B2.class, Mismatch.MissingFlag.class),
+        Arguments.of("staticMethod", "()V", "NON_STATIC", Nested.B.class, Mismatch.MissingFlag.class),
+        Arguments.of("missingMethod", "()V", "", Nested.B.class, Mismatch.MissingMethod.class));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "method, (Ljava/lang/String;)Ljava/lang/String;, '', muzzle.TestClasses$Nested$B, ''",
-    "hashCode, ()I, '', muzzle.TestClasses$Nested$B, ''",
-    "someMethod, ()V, '', muzzle.TestClasses$Nested$SomeInterface, ''",
-    "privateStuff, ()V, PRIVATE_OR_HIGHER, muzzle.TestClasses$Nested$B, ''",
-    "privateStuff, ()V, PROTECTED_OR_HIGHER, muzzle.TestClasses$Nested$B2, MissingFlag",
-    "staticMethod, ()V, NON_STATIC, muzzle.TestClasses$Nested$B, MissingFlag",
-    "missingMethod, ()V, '', muzzle.TestClasses$Nested$B, MissingMethod"
-  })
+  @MethodSource("methodMatchProvider")
   void methodMatch(
       String methodName,
       String methodDesc,
       String methodFlagsStr,
-      String classToCheckName,
-      String expectedMismatch)
-      throws ClassNotFoundException {
+      Class<?> classToCheck,
+      Class<? extends Mismatch> expectedMismatch) {
     Type methodType = Type.getMethodType(methodDesc);
     List<Flag> methodFlags = parseMethodFlags(methodFlagsStr);
-    Class<?> classToCheck = Class.forName(classToCheckName);
 
     ClassRef reference =
         ClassRef.builder(classToCheck.getName())
@@ -186,34 +191,34 @@ class ReferenceMatcherTest {
         createMatcher(Collections.singletonMap(reference.getClassName(), reference))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
-    if (expectedMismatch.isEmpty()) {
+    if (expectedMismatch == null) {
       assertThat(getMismatchClassSet(mismatches)).isEmpty();
     } else {
-      Class<? extends Mismatch> expectedMismatchClass = getMismatchClass(expectedMismatch);
-      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatchClass);
+      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatch);
     }
   }
 
+  private static Stream<Arguments> fieldMatchProvider() {
+    return Stream.of(
+        Arguments.of("missingField", "Ljava/lang/String;", "", Nested.A.class, Mismatch.MissingField.class),
+        Arguments.of("privateField", "Ljava/lang/String;", "", Nested.A.class, Mismatch.MissingField.class),
+        Arguments.of("privateField", "Ljava/lang/Object;", "PRIVATE_OR_HIGHER", Nested.A.class, null),
+        Arguments.of("privateField", "Ljava/lang/Object;", "PROTECTED_OR_HIGHER", Nested.A2.class, Mismatch.MissingFlag.class),
+        Arguments.of("protectedField", "Ljava/lang/Object;", "STATIC", Nested.A.class, Mismatch.MissingFlag.class),
+        Arguments.of("staticB", "Lmuzzle/TestClasses$Nested$B;", "STATIC|PROTECTED_OR_HIGHER", Nested.A.class, null),
+        Arguments.of("number", "I", "PACKAGE_OR_HIGHER", Nested.Primitives.class, null),
+        Arguments.of("flag", "Z", "PACKAGE_OR_HIGHER", Nested.Primitives.class, null));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "missingField, Ljava/lang/String;, '', muzzle.TestClasses$Nested$A, MissingField",
-    "privateField, Ljava/lang/String;, '', muzzle.TestClasses$Nested$A, MissingField",
-    "privateField, Ljava/lang/Object;, PRIVATE_OR_HIGHER, muzzle.TestClasses$Nested$A, ''",
-    "privateField, Ljava/lang/Object;, PROTECTED_OR_HIGHER, muzzle.TestClasses$Nested$A2, MissingFlag",
-    "protectedField, Ljava/lang/Object;, STATIC, muzzle.TestClasses$Nested$A, MissingFlag",
-    "staticB, Lmuzzle/TestClasses$Nested$B;, STATIC|PROTECTED_OR_HIGHER, muzzle.TestClasses$Nested$A, ''",
-    "number, I, PACKAGE_OR_HIGHER, muzzle.TestClasses$Nested$Primitives, ''",
-    "flag, Z, PACKAGE_OR_HIGHER, muzzle.TestClasses$Nested$Primitives, ''"
-  })
+  @MethodSource("fieldMatchProvider")
   void fieldMatch(
       String fieldName,
       String fieldType,
       String fieldFlagsStr,
-      String classToCheckName,
-      String expectedMismatch)
-      throws ClassNotFoundException {
+      Class<?> classToCheck,
+      Class<? extends Mismatch> expectedMismatch) {
     List<Flag> fieldFlags = parseFieldFlags(fieldFlagsStr);
-    Class<?> classToCheck = Class.forName(classToCheckName);
 
     ClassRef reference =
         ClassRef.builder(classToCheck.getName())
@@ -229,11 +234,10 @@ class ReferenceMatcherTest {
         createMatcher(Collections.singletonMap(reference.getClassName(), reference))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
-    if (expectedMismatch.isEmpty()) {
+    if (expectedMismatch == null) {
       assertThat(getMismatchClassSet(mismatches)).isEmpty();
     } else {
-      Class<? extends Mismatch> expectedMismatchClass = getMismatchClass(expectedMismatch);
-      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatchClass);
+      assertThat(getMismatchClassSet(mismatches)).containsExactly(expectedMismatch);
     }
   }
 
@@ -392,13 +396,16 @@ class ReferenceMatcherTest {
     assertThat(mismatches).isEmpty();
   }
 
+  private static Stream<Arguments> shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClassProvider() {
+    return Stream.of(
+        Arguments.of("io.opentelemetry.instrumentation.Helper", "differentField", "Ljava/lang/Integer;"),
+        Arguments.of("io.opentelemetry.instrumentation.Helper", "field", "Lcom/external/DifferentType;"),
+        Arguments.of("com.external.otel.instrumentation.Helper", "differentField", "Ljava/lang/Integer;"),
+        Arguments.of("com.external.otel.instrumentation.Helper", "field", "Lcom/external/DifferentType;"));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "io.opentelemetry.instrumentation.Helper, differentField, Ljava/lang/Integer;",
-    "io.opentelemetry.instrumentation.Helper, field, Lcom/external/DifferentType;",
-    "com.external.otel.instrumentation.Helper, differentField, Ljava/lang/Integer;",
-    "com.external.otel.instrumentation.Helper, field, Lcom/external/DifferentType;"
-  })
+  @MethodSource("shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClassProvider")
   void shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClass(
       String className, String fieldName, String fieldType) {
     ClassRef helper =
@@ -503,18 +510,5 @@ class ReferenceMatcherTest {
       flags.add(STATIC);
     }
     return flags;
-  }
-
-  private static Class<? extends Mismatch> getMismatchClass(String mismatchName) {
-    switch (mismatchName) {
-      case "MissingFlag":
-        return Mismatch.MissingFlag.class;
-      case "MissingMethod":
-        return Mismatch.MissingMethod.class;
-      case "MissingField":
-        return Mismatch.MissingField.class;
-      default:
-        throw new IllegalArgumentException("Unknown mismatch: " + mismatchName);
-    }
   }
 }
