@@ -40,7 +40,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    telemetry.buildAndInjectSpan(producerRecord, clientId);
+    telemetry.getHelper().buildAndInjectSpan(producerRecord, clientId);
     return producerRecord;
   }
 

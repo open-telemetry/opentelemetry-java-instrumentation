@@ -10,7 +10,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
-import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaHelper;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -28,28 +28,28 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
-      "opentelemetry.kafka-telemetry.supplier";
+  public static final String CONFIG_KEY_KAFKA_HELPER_SUPPLIER =
+      "opentelemetry.kafka-helper.supplier";
 
-  @Nullable private KafkaTelemetry telemetry;
+  @Nullable private KafkaHelper helper;
   private String consumerGroup;
   private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
-    if (telemetry == null) {
+    if (helper == null) {
       return records;
     }
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
-    Context receiveContext = telemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
+    Context receiveContext = helper.buildAndFinishSpan(records, consumerGroup, clientId, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
         KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
-    return telemetry.addTracing(records, consumerContext);
+    return helper.addTracing(records, consumerContext);
   }
 
   @Override
@@ -63,9 +63,9 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 
-    KafkaTelemetrySupplier supplier =
-        getProperty(configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaTelemetrySupplier.class);
-    this.telemetry = supplier.get();
+    KafkaHelperSupplier supplier =
+        getProperty(configs, CONFIG_KEY_KAFKA_HELPER_SUPPLIER, KafkaHelperSupplier.class);
+    this.helper = supplier.get();
   }
 
   @SuppressWarnings("unchecked")
