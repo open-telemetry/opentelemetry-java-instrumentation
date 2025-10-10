@@ -12,10 +12,12 @@ import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
@@ -36,6 +38,18 @@ public class KafkaConsumerTelemetry {
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter) {
     this.consumerReceiveInstrumenter = consumerReceiveInstrumenter;
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
+  }
+
+  // this getter is needed for the deprecated wrap() methods in KafkaTelemetry
+  public Instrumenter<KafkaProcessRequest, Void> getConsumerProcessInstrumenter() {
+    return consumerProcessInstrumenter;
+  }
+
+  // this overload is needed for the deprecated wrap() methods in KafkaTelemetry
+  public <K, V> Context buildAndFinishSpan(
+      ConsumerRecords<K, V> records, Consumer<K, V> consumer, Timer timer) {
+    return buildAndFinishSpan(
+        records, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer), timer);
   }
 
   public <K, V> Context buildAndFinishSpan(

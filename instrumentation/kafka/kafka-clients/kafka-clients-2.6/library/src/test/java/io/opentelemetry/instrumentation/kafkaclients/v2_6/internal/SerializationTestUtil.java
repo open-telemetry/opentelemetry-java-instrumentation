@@ -19,15 +19,13 @@ import java.util.Map;
 class SerializationTestUtil {
 
   /**
-   * Tests that a configuration map can be serialized and that OpenTelemetry classes are replaced
-   * with null during serialization (via writeReplace()).
-   *
-   * @param map the configuration map to serialize
-   * @param configKey the key to check for in the deserialized map
+   * Tests that a configuration map can be serialized and that supplier instance is replaced with
+   * null during serialization (via writeReplace()).
    */
-  static void testSerialize(Map<String, Object> map, String configKey)
+  static void testSerialize(Map<String, Object> map, String supplierKey)
       throws IOException, ClassNotFoundException {
-    Object supplierValue = map.get(configKey);
+
+    Object supplierValue = map.get(supplierKey);
     assertThat(supplierValue).isNotNull();
 
     ByteArrayOutputStream byteOutputStream = new ByteArrayOutputStream();
@@ -56,7 +54,7 @@ class SerializationTestUtil {
       @SuppressWarnings("unchecked")
       Map<String, Object> result = (Map<String, Object>) inputStream.readObject();
       // After deserialization, the supplier should be null (replaced via writeReplace())
-      assertThat(result.get(configKey)).isNull();
+      assertThat(result.get(supplierKey)).isNull();
     }
   }
 

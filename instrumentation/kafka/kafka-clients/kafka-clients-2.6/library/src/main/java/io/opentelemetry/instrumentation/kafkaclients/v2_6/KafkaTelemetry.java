@@ -6,7 +6,11 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.Timer;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
@@ -19,14 +23,21 @@ import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaProducer
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaProducerTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryConsumerInterceptor;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryProducerInterceptor;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.Callback;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.metrics.MetricsReporter;
 
@@ -52,14 +63,75 @@ public final class KafkaTelemetry {
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }
 
-  @Deprecated
+  // this method can be removed when the deprecated TracingProducerInterceptor is removed
   KafkaProducerTelemetry getProducerTelemetry() {
     return producerTelemetry;
   }
 
-  @Deprecated
+  // this method can be removed when the deprecated TracingProducerInterceptor is removed
   KafkaConsumerTelemetry getConsumerTelemetry() {
     return consumerTelemetry;
+  }
+
+  // TODO consider if this is needed in public API
+  @SuppressWarnings("unchecked")
+  public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
+    return (Producer<K, V>)
+        Proxy.newProxyInstance(
+            KafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Producer.class},
+            (proxy, method, args) -> {
+              // Future<RecordMetadata> send(ProducerRecord<K, V> record)
+              // Future<RecordMetadata> send(ProducerRecord<K, V> record, Callback callback)
+              if ("send".equals(method.getName())
+                  && method.getParameterCount() >= 1
+                  && method.getParameterTypes()[0] == ProducerRecord.class) {
+                ProducerRecord<K, V> record = (ProducerRecord<K, V>) args[0];
+                Callback callback =
+                    method.getParameterCount() >= 2
+                            && method.getParameterTypes()[1] == Callback.class
+                        ? (Callback) args[1]
+                        : null;
+                return producerTelemetry.buildAndInjectSpan(record, producer, callback, producer::send);
+              }
+              try {
+                return method.invoke(producer, args);
+              } catch (InvocationTargetException exception) {
+                throw exception.getCause();
+              }
+            });
+  }
+
+  // TODO consider if this is needed in public API
+  @SuppressWarnings("unchecked")
+  public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
+    return (Consumer<K, V>)
+        Proxy.newProxyInstance(
+            KafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Consumer.class},
+            (proxy, method, args) -> {
+              Object result;
+              Timer timer = "poll".equals(method.getName()) ? Timer.start() : null;
+              try {
+                result = method.invoke(consumer, args);
+              } catch (InvocationTargetException exception) {
+                throw exception.getCause();
+              }
+              // ConsumerRecords<K, V> poll(long timeout)
+              // ConsumerRecords<K, V> poll(Duration duration)
+              if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
+                ConsumerRecords<K, V> consumerRecords = (ConsumerRecords<K, V>) result;
+                Context receiveContext =
+                    consumerTelemetry.buildAndFinishSpan(consumerRecords, consumer, timer);
+                if (receiveContext == null) {
+                  receiveContext = Context.current();
+                }
+                KafkaConsumerContext consumerContext =
+                    KafkaConsumerContextUtil.create(receiveContext, consumer);
+                result = consumerTelemetry.addTracing(consumerRecords, consumerContext);
+              }
+              return result;
+            });
   }
 
   /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
