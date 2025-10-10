@@ -16,7 +16,7 @@ import java.io.ObjectOutputStream;
 import java.io.ObjectStreamClass;
 import java.util.Map;
 
-final class SerializationTestUtil {
+class SerializationTestUtil {
 
   /**
    * Tests that a configuration map can be serialized and that OpenTelemetry classes are replaced
