@@ -13,6 +13,8 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumV
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.MinimumVisibilityFlag.PROTECTED_OR_HIGHER;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.NON_STATIC;
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.STATIC;
+import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import external.LibraryBaseClass;
@@ -26,7 +28,6 @@ import io.opentelemetry.test.TestAbstractSuperClass;
 import io.opentelemetry.test.TestInterface;
 import java.net.URL;
 import java.net.URLClassLoader;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -157,13 +158,13 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> methodMatchProvider() {
     return Stream.of(
-        Arguments.of("method", "(Ljava/lang/String;)Ljava/lang/String;", "", Nested.B.class, null),
-        Arguments.of("hashCode", "()I", "", Nested.B.class, null),
-        Arguments.of("someMethod", "()V", "", Nested.SomeInterface.class, null),
-        Arguments.of("privateStuff", "()V", "PRIVATE_OR_HIGHER", Nested.B.class, null),
-        Arguments.of("privateStuff", "()V", "PROTECTED_OR_HIGHER", Nested.B2.class, Mismatch.MissingFlag.class),
-        Arguments.of("staticMethod", "()V", "NON_STATIC", Nested.B.class, Mismatch.MissingFlag.class),
-        Arguments.of("missingMethod", "()V", "", Nested.B.class, Mismatch.MissingMethod.class));
+        Arguments.of("method", "(Ljava/lang/String;)Ljava/lang/String;", emptySet(), Nested.B.class, null),
+        Arguments.of("hashCode", "()I", emptySet(), Nested.B.class, null),
+        Arguments.of("someMethod", "()V", emptySet(), Nested.SomeInterface.class, null),
+        Arguments.of("privateStuff", "()V", singleton(PRIVATE_OR_HIGHER), Nested.B.class, null),
+        Arguments.of("privateStuff", "()V", singleton(PROTECTED_OR_HIGHER), Nested.B2.class, Mismatch.MissingFlag.class),
+        Arguments.of("staticMethod", "()V", singleton(NON_STATIC), Nested.B.class, Mismatch.MissingFlag.class),
+        Arguments.of("missingMethod", "()V", emptySet(), Nested.B.class, Mismatch.MissingMethod.class));
   }
 
   @ParameterizedTest
@@ -171,11 +172,10 @@ class ReferenceMatcherTest {
   void methodMatch(
       String methodName,
       String methodDesc,
-      String methodFlagsStr,
+      Set<Flag> methodFlags,
       Class<?> classToCheck,
       Class<? extends Mismatch> expectedMismatch) {
     Type methodType = Type.getMethodType(methodDesc);
-    List<Flag> methodFlags = parseMethodFlags(methodFlagsStr);
 
     ClassRef reference =
         ClassRef.builder(classToCheck.getName())
@@ -200,14 +200,14 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> fieldMatchProvider() {
     return Stream.of(
-        Arguments.of("missingField", "Ljava/lang/String;", "", Nested.A.class, Mismatch.MissingField.class),
-        Arguments.of("privateField", "Ljava/lang/String;", "", Nested.A.class, Mismatch.MissingField.class),
-        Arguments.of("privateField", "Ljava/lang/Object;", "PRIVATE_OR_HIGHER", Nested.A.class, null),
-        Arguments.of("privateField", "Ljava/lang/Object;", "PROTECTED_OR_HIGHER", Nested.A2.class, Mismatch.MissingFlag.class),
-        Arguments.of("protectedField", "Ljava/lang/Object;", "STATIC", Nested.A.class, Mismatch.MissingFlag.class),
-        Arguments.of("staticB", "Lmuzzle/TestClasses$Nested$B;", "STATIC|PROTECTED_OR_HIGHER", Nested.A.class, null),
-        Arguments.of("number", "I", "PACKAGE_OR_HIGHER", Nested.Primitives.class, null),
-        Arguments.of("flag", "Z", "PACKAGE_OR_HIGHER", Nested.Primitives.class, null));
+        Arguments.of("missingField", "Ljava/lang/String;", emptySet(), Nested.A.class, Mismatch.MissingField.class),
+        Arguments.of("privateField", "Ljava/lang/String;", emptySet(), Nested.A.class, Mismatch.MissingField.class),
+        Arguments.of("privateField", "Ljava/lang/Object;", singleton(PRIVATE_OR_HIGHER), Nested.A.class, null),
+        Arguments.of("privateField", "Ljava/lang/Object;", singleton(PROTECTED_OR_HIGHER), Nested.A2.class, Mismatch.MissingFlag.class),
+        Arguments.of("protectedField", "Ljava/lang/Object;", singleton(STATIC), Nested.A.class, Mismatch.MissingFlag.class),
+        Arguments.of("staticB", "Lmuzzle/TestClasses$Nested$B;", new HashSet<>(Arrays.asList(STATIC, PROTECTED_OR_HIGHER)), Nested.A.class, null),
+        Arguments.of("number", "I", singleton(PACKAGE_OR_HIGHER), Nested.Primitives.class, null),
+        Arguments.of("flag", "Z", singleton(PACKAGE_OR_HIGHER), Nested.Primitives.class, null));
   }
 
   @ParameterizedTest
@@ -215,11 +215,9 @@ class ReferenceMatcherTest {
   void fieldMatch(
       String fieldName,
       String fieldType,
-      String fieldFlagsStr,
+      Set<Flag> fieldFlags,
       Class<?> classToCheck,
       Class<? extends Mismatch> expectedMismatch) {
-    List<Flag> fieldFlags = parseFieldFlags(fieldFlagsStr);
-
     ClassRef reference =
         ClassRef.builder(classToCheck.getName())
             .addField(
@@ -473,42 +471,5 @@ class ReferenceMatcherTest {
       mismatchClasses.add(mismatch.getClass());
     }
     return mismatchClasses;
-  }
-
-  private static List<Flag> parseMethodFlags(String flagsStr) {
-    if (flagsStr.isEmpty()) {
-      return Collections.emptyList();
-    }
-    List<Flag> flags = new ArrayList<>();
-    if (flagsStr.contains("PRIVATE_OR_HIGHER")) {
-      flags.add(PRIVATE_OR_HIGHER);
-    }
-    if (flagsStr.contains("PROTECTED_OR_HIGHER")) {
-      flags.add(PROTECTED_OR_HIGHER);
-    }
-    if (flagsStr.contains("NON_STATIC")) {
-      flags.add(NON_STATIC);
-    }
-    return flags;
-  }
-
-  private static List<Flag> parseFieldFlags(String flagsStr) {
-    if (flagsStr.isEmpty()) {
-      return Collections.emptyList();
-    }
-    List<Flag> flags = new ArrayList<>();
-    if (flagsStr.contains("PRIVATE_OR_HIGHER")) {
-      flags.add(PRIVATE_OR_HIGHER);
-    }
-    if (flagsStr.contains("PROTECTED_OR_HIGHER")) {
-      flags.add(PROTECTED_OR_HIGHER);
-    }
-    if (flagsStr.contains("PACKAGE_OR_HIGHER")) {
-      flags.add(PACKAGE_OR_HIGHER);
-    }
-    if (flagsStr.contains("STATIC")) {
-      flags.add(STATIC);
-    }
-    return flags;
   }
 }
