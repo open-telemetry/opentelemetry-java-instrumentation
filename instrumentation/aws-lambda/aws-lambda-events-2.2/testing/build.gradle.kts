@@ -12,5 +12,4 @@ dependencies {
   api("org.mockito:mockito-junit-jupiter")
 
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("com.github.stefanbirkner:system-lambda")
 }
