@@ -19,6 +19,8 @@ import java.util.function.Supplier;
 public class KafkaProducerTelemetrySupplier
     implements Supplier<KafkaProducerTelemetry>, Serializable {
 
+  private static final long serialVersionUID = 1L;
+
   private final KafkaProducerTelemetry producerTelemetry;
 
   public KafkaProducerTelemetrySupplier(KafkaProducerTelemetry producerTelemetry) {
@@ -30,11 +32,8 @@ public class KafkaProducerTelemetrySupplier
     return producerTelemetry;
   }
 
-  /**
-   * Replaces this object with null in the serialization stream. This ensures the supplier does not
-   * get serialized.
-   */
   private Object writeReplace() {
+    // serialize this object to null
     return null;
   }
 }
