@@ -65,6 +65,7 @@ class SpanLoggingCustomizerProviderTest {
     return model;
   }
 
+  // Arguments: propertyValue, alreadyAdded, expected
   static Stream<Arguments> spanLoggingExporterTestData() {
     return Stream.of(
         Arguments.of("true", false, true),

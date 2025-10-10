@@ -32,6 +32,7 @@ class UnitConverterTest {
     assertEquals(expectedConvertedValue, actualValue);
   }
 
+  // Arguments: originalValue, originalUnit, expectedConvertedValue
   static Stream<Arguments> predefinedToSecondsConversions() {
     return Stream.of(
         Arguments.of(1000000000L, "ns", 1.0),
@@ -55,6 +56,7 @@ class UnitConverterTest {
         .hasMessage("Unsupported conversion from [" + sourceUnit + "] to [" + targetUnit + "]");
   }
 
+  // Arguments: sourceUnit, targetUnit
   static Stream<Arguments> unsupportedConversions() {
     return Stream.of(
         Arguments.of("--", "--"),
@@ -69,6 +71,7 @@ class UnitConverterTest {
     assertThat(converter).isNull();
   }
 
+  // Arguments: sourceUnit, targetUnit
   static Stream<Arguments> sourceUnitNotSpecified() {
     return Stream.of(
         Arguments.of(null, "s"), // null -> "s"
@@ -98,6 +101,7 @@ class UnitConverterTest {
         .hasMessageMatching("Non empty .+Unit must be provided");
   }
 
+  // Arguments: sourceUnit, targetUnit
   static Stream<Arguments> emptyUnits() {
     return Stream.of(Arguments.of("", "By"), Arguments.of("By", ""));
   }

@@ -221,6 +221,7 @@ class HttpClientAttributesExtractorTest {
     assertThat(attributes.build()).containsOnly(entry(URL_FULL, expectedResult));
   }
 
+  // Arguments: url, expectedResult
   static Stream<Arguments> urlRedactionTestData() {
     return Stream.of(
         Arguments.of("https://user1:secret@github.com", "https://REDACTED:REDACTED@github.com"),

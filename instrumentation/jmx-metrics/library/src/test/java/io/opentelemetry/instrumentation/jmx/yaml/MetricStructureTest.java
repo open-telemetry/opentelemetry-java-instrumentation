@@ -32,6 +32,7 @@ public class MetricStructureTest {
     assertThat(ma.acquireAttributeValue(null, null)).isEqualTo(expectedValue);
   }
 
+  // Arguments: target, expectedValue
   static Stream<Arguments> constantAttributes() {
     return Stream.of(
         Arguments.of("const(Hello)", "Hello"), Arguments.of("lowercase(const(Hello))", "hello"));
@@ -60,6 +61,7 @@ public class MetricStructureTest {
     assertThat(ma.acquireAttributeValue(mockConnection, objectName)).isEqualTo(expectedValue);
   }
 
+  // Arguments: target, value, expectedValue
   static Stream<Arguments> beanAttributes() {
     return Stream.of(
         Arguments.of("beanattr(beanAttribute)", "Hello", "Hello"),
@@ -80,6 +82,7 @@ public class MetricStructureTest {
     assertThat(ma.acquireAttributeValue(mockConnection, objectName)).isEqualTo(expectedValue);
   }
 
+  // Arguments: target, value, expectedValue
   static Stream<Arguments> beanParams() {
     return Stream.of(
         Arguments.of("param(name)", "Hello", "Hello"),

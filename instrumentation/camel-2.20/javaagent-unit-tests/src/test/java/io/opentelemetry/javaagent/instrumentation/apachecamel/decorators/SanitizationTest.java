@@ -32,6 +32,7 @@ class SanitizationTest {
     assertThat(actualSanitized).isEqualTo(expected);
   }
 
+  // Arguments: original, expected
   static Stream<Arguments> cqlStatements() {
     return Stream.of(
         Arguments.of("FROM TABLE WHERE FIELD>=-1234", "FROM TABLE WHERE FIELD>=?"),
@@ -55,6 +56,7 @@ class SanitizationTest {
     assertThat(actualSanitized).isEqualTo(expected);
   }
 
+  // Arguments: original, expected
   static Stream<Arguments> jdbcStatements() {
     return Stream.of(
         Arguments.of("SELECT 3", "SELECT ?"),
@@ -81,6 +83,7 @@ class SanitizationTest {
     assertThat(actualSanitized).isEqualTo(expected);
   }
 
+  // Arguments: original, expected
   static Stream<Arguments> sqlStatements() {
     return Stream.of(
         Arguments.of(

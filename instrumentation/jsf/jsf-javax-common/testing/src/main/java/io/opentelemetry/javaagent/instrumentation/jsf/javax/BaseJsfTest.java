@@ -288,6 +288,7 @@ public abstract class BaseJsfTest extends AbstractHttpServerUsingTest<Server> {
                 span -> handlerSpan(trace, 0, "#{greetingForm.submit()}", expectedException)));
   }
 
+  // Arguments: path, route
   static Stream<Arguments> pathAndRouteParams() {
     return Stream.of(Arguments.of("hello.jsf", "*.jsf"), Arguments.of("faces/hello.xhtml", "faces/*"));
   }

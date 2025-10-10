@@ -78,6 +78,7 @@ class OpenTelemetryInstallerTest {
     }
   }
 
+  // Arguments: propertyValue, expected, fail
   static Stream<Arguments> instrumentationModeTestData() {
     return Stream.of(
         Arguments.of("default", true, false),

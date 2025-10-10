@@ -34,6 +34,7 @@ class HelperClassPredicateTest {
     assertThat(predicate.isHelperClass(className)).isFalse();
   }
 
+  // Arguments: desc, className
   static Stream<Arguments> collectReferencesTestData() {
     return Stream.of(
         Arguments.of(
@@ -45,6 +46,7 @@ class HelperClassPredicateTest {
             "com.example.instrumentation.library.ThirdPartyExternalInstrumentation"));
   }
 
+  // Arguments: desc, className
   static Stream<Arguments> notCollectReferencesTestData() {
     return Stream.of(
         Arguments.of("Java SDK class", "java.util.ArrayList"),

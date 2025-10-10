@@ -478,6 +478,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         });
   }
 
+  // Arguments: path, responseCode
   static Stream<Arguments> errorSpanTestData() {
     return Stream.of(Arguments.of("/error", 500), Arguments.of("/client-error", 400));
   }

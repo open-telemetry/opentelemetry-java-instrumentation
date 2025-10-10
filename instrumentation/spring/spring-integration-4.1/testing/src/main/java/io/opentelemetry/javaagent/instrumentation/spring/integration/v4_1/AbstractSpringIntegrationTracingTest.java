@@ -252,6 +252,7 @@ abstract class AbstractSpringIntegrationTracingTest {
     }
   }
 
+  // Arguments: channelName, interceptorSpanName
   static Stream<Arguments> channelNameAndSpanName() {
     return Stream.of(
         Arguments.of("directChannel", "application.directChannel process"),

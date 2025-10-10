@@ -81,6 +81,7 @@ class FailedRequestWithUrlMakerTest {
         .isEqualTo((isSecure ? "https" : "http") + "://opentelemetry.io/docs");
   }
 
+  // Arguments: port, isSecure
   static Stream<Arguments> defaultPorts() {
     return Stream.of(Arguments.of(80, false), Arguments.of(443, true));
   }
