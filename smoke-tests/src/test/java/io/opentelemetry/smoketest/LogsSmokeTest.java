@@ -18,7 +18,7 @@ class LogsSmokeTest extends AbstractSmokeTest<Integer> {
 
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
-    options.springBoot("20211213.1570880324");
+    options.springBoot("20251009.18389598610");
   }
 
   @ParameterizedTest

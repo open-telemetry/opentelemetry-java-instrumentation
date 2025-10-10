@@ -64,7 +64,7 @@ public abstract class AppServerTest extends AbstractSmokeTest<AppServerImage> {
   static Function<AppServerImage, String> appServerImage(String targetImagePrefix) {
     return a -> {
       String platformSuffix = a.isWindows() ? "-windows" : "";
-      String extraTag = "-20241014.11321808438";
+      String extraTag = "-20251010.18403014526";
       String fullSuffix = a.getServerVersion() + "-jdk" + a.getJdk() + platformSuffix + extraTag;
       return targetImagePrefix + ":" + fullSuffix;
     };

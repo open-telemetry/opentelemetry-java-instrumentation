@@ -24,9 +24,9 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
   protected void configure(SmokeTestOptions<Integer> options) {
     options
         .image(
-            jdk ->
-                String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20241021.11448062549",
+        jdk ->
+            String.format(
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20251009.18389598594",
                     jdk))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server started.*"));
   }

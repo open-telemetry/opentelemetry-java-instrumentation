@@ -20,7 +20,7 @@ class PrometheusSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20211213.1570880324")
+        .springBoot("20251009.18389598610")
         .env("OTEL_METRICS_EXPORTER", "prometheus")
         .env("OTEL_EXPORTER_PROMETHEUS_PORT", String.valueOf(PROMETHEUS_PORT))
         .extraPorts(PROMETHEUS_PORT);
