@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.v2_6;
+package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -21,14 +22,10 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
 /**
- * A ConsumerInterceptor that adds OpenTelemetry instrumentation. Add this interceptor's class name
- * or class via ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Consumer's properties to
- * get it instantiated and used. See more details on ConsumerInterceptor usage in its Javadoc.
+ * A ConsumerInterceptor that adds OpenTelemetry instrumentation.
  *
- * <p>To configure the interceptor, use {@link KafkaTelemetry#consumerInterceptorConfigProperties}
- * to obtain the configuration properties and add them to your consumer configuration.
- *
- * @see KafkaTelemetry#consumerInterceptorConfigProperties()
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 

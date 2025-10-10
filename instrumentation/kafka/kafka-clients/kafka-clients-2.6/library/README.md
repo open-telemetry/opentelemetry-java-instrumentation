@@ -31,11 +31,9 @@ There are two options for capturing traces, either using interceptors or wrappin
 
 #### Using interceptors
 
-The Kafka clients API provides a way to "intercept" messages before they are sent to the brokers as well as messages received from the broker before being passed to the application.
-The OpenTelemetry instrumented Kafka library provides two interceptors to be configured to add tracing information automatically.
-The interceptor class has to be set in the properties bag used to create the Kafka client.
+The Kafka clients API provides a way to intercept messages before they are sent to the brokers as well as messages received from the broker before being passed to the application.
 
-For the producer:
+To intercept messages and emit telemetry for a `KafkaProducer`:
 
 ```java
 KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
@@ -47,7 +45,7 @@ props.putAll(telemetry.producerInterceptorConfigProperties());
 Producer<String, String> producer = new KafkaProducer<>(props);
 ```
 
-For the consumer:
+To intercept messages and emit telemetry for a `KafkaConsumer`:
 
 ```java
 KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);

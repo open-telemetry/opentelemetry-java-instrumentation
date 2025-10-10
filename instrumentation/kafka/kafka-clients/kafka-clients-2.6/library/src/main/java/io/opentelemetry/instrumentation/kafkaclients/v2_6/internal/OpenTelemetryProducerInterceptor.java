@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.v2_6;
+package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -16,14 +17,10 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 /**
- * A ProducerInterceptor that adds OpenTelemetry instrumentation. Add this interceptor's class name
- * or class via ProducerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Producer's properties to
- * get it instantiated and used. See more details on ProducerInterceptor usage in its Javadoc.
+ * A ProducerInterceptor that adds OpenTelemetry instrumentation.
  *
- * <p>To configure the interceptor, use {@link KafkaTelemetry#producerInterceptorConfigProperties}
- * to obtain the configuration properties and add them to your producer configuration.
- *
- * @see KafkaTelemetry#producerInterceptorConfigProperties()
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public class OpenTelemetryProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
