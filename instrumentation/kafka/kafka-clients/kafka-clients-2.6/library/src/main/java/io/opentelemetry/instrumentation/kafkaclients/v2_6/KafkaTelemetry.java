@@ -80,11 +80,12 @@ public final class KafkaTelemetry {
     return producerTelemetry;
   }
 
-  // this method can be removed when the deprecated TracingProducerInterceptor is removed
+    // this method can be removed when the deprecated TracingProducerInterceptor is removed
   KafkaConsumerTelemetry getConsumerTelemetry() {
     return consumerTelemetry;
   }
 
+  /** Returns a decorated {@link Producer} that emits spans for each sent message. */
   @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
     return (Producer<K, V>)
@@ -103,7 +104,8 @@ public final class KafkaTelemetry {
                             && method.getParameterTypes()[1] == Callback.class
                         ? (Callback) args[1]
                         : null;
-                return producerTelemetry.buildAndInjectSpan(record, producer, callback, producer::send);
+                return producerTelemetry.buildAndInjectSpan(
+                    record, producer, callback, producer::send);
               }
               try {
                 return method.invoke(producer, args);
@@ -113,6 +115,7 @@ public final class KafkaTelemetry {
             });
   }
 
+  /** Returns a decorated {@link Consumer} that consumes spans for each received message. */
   @SuppressWarnings("unchecked")
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
     return (Consumer<K, V>)
@@ -143,7 +146,6 @@ public final class KafkaTelemetry {
               return result;
             });
   }
-
 
   /**
    * Produces a set of kafka client config properties (consumer or producer) to register a {@link
