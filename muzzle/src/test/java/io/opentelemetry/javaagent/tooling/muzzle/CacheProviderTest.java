@@ -41,7 +41,7 @@ class CacheProviderTest {
         new AgentCachingPoolStrategy.TypeCacheKey(loaderHash, loaderRef, "foo");
 
     assertThat(key1).hasSameHashCodeAs(key2).isEqualTo(key2);
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader).isNotNull();
   }
 
@@ -60,7 +60,7 @@ class CacheProviderTest {
     assertThat(loaderRef1).isNotSameAs(loaderRef2);
 
     assertThat(key1).hasSameHashCodeAs(key2).isEqualTo(key2);
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader).isNotNull();
   }
 
@@ -77,7 +77,7 @@ class CacheProviderTest {
     // not strictly guaranteed -- but important for performance
     assertThat(fooKey.hashCode()).isNotEqualTo(barKey.hashCode());
     assertThat(fooKey).isNotEqualTo(barKey);
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader).isNotNull();
   }
 
@@ -99,7 +99,7 @@ class CacheProviderTest {
     // not strictly guaranteed -- but important for performance
     assertThat(fooKey1.hashCode()).isNotEqualTo(fooKey2.hashCode());
     assertThat(fooKey1).isNotEqualTo(fooKey2);
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader1).isNotNull();
     assertThat(loader2).isNotNull();
   }
@@ -117,7 +117,7 @@ class CacheProviderTest {
 
     // not strictly guaranteed, but fine for this test
     assertThat(cacheProvider.find("foo")).isNotNull();
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader).isNotNull();
   }
 
@@ -138,7 +138,7 @@ class CacheProviderTest {
 
     assertThat(cacheProvider1A.find("foo")).isSameAs(cacheProvider1B.find("foo"));
 
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader1).isNotNull();
   }
 
@@ -161,7 +161,7 @@ class CacheProviderTest {
 
     assertThat(cacheProvider1.find("foo")).isNotSameAs(cacheProvider2.find("foo"));
 
-    // ensures that loader isn't collected
+    // use loader to ensures that it isn't collected before the test completes
     assertThat(loader1).isNotNull();
     assertThat(loader2).isNotNull();
   }
