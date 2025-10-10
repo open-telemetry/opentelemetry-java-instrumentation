@@ -49,7 +49,9 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
 
     KafkaProducerTelemetrySupplier supplier =
         getProperty(
-            configs, CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER, KafkaProducerTelemetrySupplier.class);
+            configs,
+            CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER,
+            KafkaProducerTelemetrySupplier.class);
     this.producerTelemetry = supplier.get();
   }
 

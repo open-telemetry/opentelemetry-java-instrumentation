@@ -51,7 +51,9 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
     Context receiveContext =
-        telemetry.getConsumerTelemetry().buildAndFinishSpan(records, consumerGroup, clientId, timer);
+        telemetry
+            .getConsumerTelemetry()
+            .buildAndFinishSpan(records, consumerGroup, clientId, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
