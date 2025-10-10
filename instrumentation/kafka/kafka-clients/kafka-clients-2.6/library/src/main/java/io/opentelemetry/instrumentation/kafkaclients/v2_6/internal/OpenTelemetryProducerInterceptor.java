@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaHelper;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -23,17 +22,17 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class OpenTelemetryProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  public static final String CONFIG_KEY_KAFKA_HELPER_SUPPLIER =
+  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
       "opentelemetry.kafka-telemetry.supplier";
 
-  @Nullable private KafkaHelper helper;
+  @Nullable private KafkaProducerTelemetry producerTelemetry;
   @Nullable private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    if (helper != null) {
-      helper.buildAndInjectSpan(producerRecord, clientId);
+    if (producerTelemetry != null) {
+      producerTelemetry.buildAndInjectSpan(producerRecord, clientId);
     }
     return producerRecord;
   }
@@ -48,9 +47,10 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
   public void configure(Map<String, ?> configs) {
     clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
 
-    KafkaHelperSupplier supplier =
-        getProperty(configs, CONFIG_KEY_KAFKA_HELPER_SUPPLIER, KafkaHelperSupplier.class);
-    this.helper = supplier.get();
+    KafkaProducerTelemetrySupplier supplier =
+        getProperty(
+            configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaProducerTelemetrySupplier.class);
+    this.producerTelemetry = supplier.get();
   }
 
   @SuppressWarnings("unchecked")

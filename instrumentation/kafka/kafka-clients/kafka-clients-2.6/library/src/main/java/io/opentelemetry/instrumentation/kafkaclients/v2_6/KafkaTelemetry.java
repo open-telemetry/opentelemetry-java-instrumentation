@@ -13,7 +13,10 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.MetricsReporterList;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetryMetricsReporter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.OpenTelemetrySupplier;
-import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaHelperSupplier;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaConsumerTelemetry;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaConsumerTelemetrySupplier;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaProducerTelemetry;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.KafkaProducerTelemetrySupplier;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryConsumerInterceptor;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryProducerInterceptor;
 import java.util.Collections;
@@ -30,7 +33,8 @@ import org.apache.kafka.common.metrics.MetricsReporter;
 public final class KafkaTelemetry {
 
   private final OpenTelemetry openTelemetry;
-  private final KafkaHelper helper;
+  private final KafkaProducerTelemetry producerTelemetry;
+  private final KafkaConsumerTelemetry consumerTelemetry;
 
   KafkaTelemetry(
       OpenTelemetry openTelemetry,
@@ -39,18 +43,23 @@ public final class KafkaTelemetry {
       Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter,
       boolean producerPropagationEnabled) {
     this.openTelemetry = openTelemetry;
-    this.helper =
-        new KafkaHelper(
+    this.producerTelemetry =
+        new KafkaProducerTelemetry(
             openTelemetry.getPropagators().getTextMapPropagator(),
             producerInstrumenter,
-            consumerReceiveInstrumenter,
-            consumerProcessInstrumenter,
             producerPropagationEnabled);
+    this.consumerTelemetry =
+        new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }
 
   @Deprecated
-  KafkaHelper getHelper() {
-    return helper;
+  KafkaProducerTelemetry getProducerTelemetry() {
+    return producerTelemetry;
+  }
+
+  @Deprecated
+  KafkaConsumerTelemetry getConsumerTelemetry() {
+    return consumerTelemetry;
   }
 
   /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -128,8 +137,8 @@ public final class KafkaTelemetry {
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
         OpenTelemetryProducerInterceptor.class.getName());
     config.put(
-        OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER,
-        new KafkaHelperSupplier(helper));
+        OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        new KafkaProducerTelemetrySupplier(producerTelemetry));
     return Collections.unmodifiableMap(config);
   }
 
@@ -156,8 +165,8 @@ public final class KafkaTelemetry {
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
         OpenTelemetryConsumerInterceptor.class.getName());
     config.put(
-        OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_HELPER_SUPPLIER,
-        new KafkaHelperSupplier(helper));
+        OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        new KafkaConsumerTelemetrySupplier(consumerTelemetry));
     return Collections.unmodifiableMap(config);
   }
 }

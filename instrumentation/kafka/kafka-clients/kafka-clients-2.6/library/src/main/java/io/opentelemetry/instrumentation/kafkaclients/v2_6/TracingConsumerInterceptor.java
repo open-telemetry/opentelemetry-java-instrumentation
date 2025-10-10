@@ -51,13 +51,13 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
     Context receiveContext =
-        telemetry.getHelper().buildAndFinishSpan(records, consumerGroup, clientId, timer);
+        telemetry.getConsumerTelemetry().buildAndFinishSpan(records, consumerGroup, clientId, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
         KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
-    return telemetry.getHelper().addTracing(records, consumerContext);
+    return telemetry.getConsumerTelemetry().addTracing(records, consumerContext);
   }
 
   @Override
