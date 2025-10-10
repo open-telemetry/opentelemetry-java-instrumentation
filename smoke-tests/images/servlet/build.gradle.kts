@@ -42,7 +42,8 @@ val targets = mapOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
     // Test application is not deployed when server is sarted with hotspot jdk version 21
     ImageTarget(listOf("6.2023.12"), listOf("hotspot"), listOf("11", "17"), war = "servlet-5.0"),
-    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21", latestJava), war = "servlet-5.0")
+    // Payara 6.2023.12 does not support Java 25 (OSGi bundle resolution failures)
+    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
