@@ -28,6 +28,10 @@ public class DistroVersionResourceProvider implements ResourceProvider {
 
   @Override
   public Resource createResource(ConfigProperties config) {
+    return get();
+  }
+
+  static Resource get() {
     return Resource.create(
         Attributes.of(
             TELEMETRY_DISTRO_NAME,
