@@ -31,7 +31,7 @@ class HelperClassPredicateTest {
   @CsvSource({
     "Java SDK class, java.util.ArrayList",
     "javaagent-tooling class, io.opentelemetry.javaagent.tooling.Constants",
-    "instrumentation-api class, io.opentelemetry.instrumentation.api.InstrumentationVersion",
+    "instrumentation-api class, io.opentelemetry.instrumentation.api.instrumenter.Instrumenter",
     "bootstrap class, io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge"
   })
   void shouldNotCollectReferencesFor(String desc, String className) {
