@@ -2581,7 +2581,7 @@ libraries:
       - io.dropwizard:dropwizard-views:(,3.0.0)
     configurations:
     - name: otel.instrumentation.common.experimental.view-telemetry.enabled
-      description: Enables the creation of experimental view (INTERNAL) spans.
+      description: Enables the creation of experimental view spans.
       type: boolean
       default: false
     telemetry:
@@ -3344,7 +3344,7 @@ libraries:
   grails:
   - name: grails-3.0
     description: |
-      This instrumentation enriches existing HTTP server spans with HTTP route information, and optionally enables experimental controller (INTERNAL) spans for Grails applications.
+      This instrumentation enriches existing HTTP server spans with HTTP route information, and optionally enables experimental controller spans for Grails applications.
     library_link: https://grails.apache.org/
     source_path: instrumentation/grails-3.0
     scope:
@@ -3354,7 +3354,7 @@ libraries:
       - org.grails:grails-web-url-mappings:[3.0,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:
@@ -3850,7 +3850,7 @@ libraries:
   hibernate:
   - name: hibernate-3.3
     description: |
-      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
+      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
@@ -3877,7 +3877,7 @@ libraries:
           type: STRING
   - name: hibernate-4.0
     description: |
-      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
+      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
@@ -3904,7 +3904,7 @@ libraries:
           type: STRING
   - name: hibernate-6.0
     description: |
-      This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
+      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
     library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
@@ -3931,8 +3931,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-procedure-call-4.3
-    description: This instrumentation enables the generation of INTERNAL spans for
-      Hibernate stored procedure calls.
+    description: This instrumentation enables the generation of spans for Hibernate
+      stored procedure calls.
     library_link: https://github.com/hibernate/hibernate-orm
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
@@ -4184,8 +4184,8 @@ libraries:
           type: STRING
   hystrix:
   - name: hystrix-1.4
-    description: This instrumentation enables the generation of INTERNAL spans for
-      Hystrix command executions and fallbacks.
+    description: This instrumentation enables the generation of spans for Hystrix
+      command executions and fallbacks.
     library_link: https://github.com/Netflix/Hystrix
     source_path: instrumentation/hystrix-1.4
     scope:
@@ -4460,7 +4460,7 @@ libraries:
       - javax.ws.rs:jsr311-api:[0.5,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:
@@ -4485,7 +4485,7 @@ libraries:
       - javax.ws.rs:javax.ws.rs-api:[,]
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4515,7 +4515,7 @@ libraries:
       - org.apache.cxf:cxf-rt-frontend-jaxrs:[3.2,4)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4555,7 +4555,7 @@ libraries:
       - org.glassfish.jersey.containers:jersey-container-servlet:[2.0,3.0.0)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4595,7 +4595,7 @@ libraries:
       - org.jboss.resteasy:resteasy-jaxrs:[3.5.0.Final,4)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4635,7 +4635,7 @@ libraries:
       - org.jboss.resteasy:resteasy-core:[4.0.0.Final,6)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4674,7 +4674,7 @@ libraries:
       - jakarta.ws.rs:jakarta.ws.rs-api:[3.0.0,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4704,7 +4704,7 @@ libraries:
       - org.glassfish.jersey.core:jersey-server:[3.0.0,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -4744,7 +4744,7 @@ libraries:
       - org.jboss.resteasy:resteasy-core:[6.0.0.Final,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.jaxrs.experimental-span-attributes
@@ -6910,8 +6910,8 @@ libraries:
       - com.sparkjava:spark-core:[2.3,)
   spring:
   - name: spring-batch-3.0
-    description: This instrumentation enables INTERNAL spans for jobs run by the Spring
-      Batch framework.
+    description: This instrumentation enables spans for jobs run by the Spring Batch
+      framework.
     library_link: https://spring.io/projects/spring-batch
     disabled_by_default: true
     source_path: instrumentation/spring/spring-batch-3.0
@@ -7439,7 +7439,7 @@ libraries:
       - org.springframework:spring-web:[6.0.0,)
   - name: spring-webflux-5.0
     description: |
-      This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also optionally enables experimental controller (INTERNAL) spans.
+      This instrumentation enables HTTP client spans and metrics for Spring WebFlux 5.0. It also optionally enables experimental controller spans.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html
     source_path: instrumentation/spring/spring-webflux/spring-webflux-5.0
     scope:
@@ -7451,7 +7451,7 @@ libraries:
       - io.projectreactor.netty:reactor-netty:[0.8.0.RELEASE,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:
@@ -7575,7 +7575,7 @@ libraries:
           type: STRING
   - name: spring-webmvc-3.1
     description: |
-      This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 3.1+.
+      This instrumentation enables optional Controller and View spans for Spring WebMVC 3.1+.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-3.1
     scope:
@@ -7590,11 +7590,11 @@ libraries:
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.view-telemetry.enabled
-      description: Enables the creation of experimental view (INTERNAL) spans.
+      description: Enables the creation of experimental view spans.
       type: boolean
       default: false
     telemetry:
@@ -7676,7 +7676,7 @@ libraries:
           type: STRING
   - name: spring-webmvc-6.0
     description: |
-      This instrumentation enables optional Controller and View (INTERNAL) spans for Spring WebMVC 6.0+.
+      This instrumentation enables optional Controller and View spans for Spring WebMVC 6.0+.
     library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/servlet/mvc/package-summary.html
     source_path: instrumentation/spring/spring-webmvc/spring-webmvc-6.0
     minimum_java_version: 17
@@ -7692,11 +7692,11 @@ libraries:
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables the creation of experimental controller (INTERNAL) spans.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     - name: otel.instrumentation.common.experimental.view-telemetry.enabled
-      description: Enables the creation of experimental view (INTERNAL) spans.
+      description: Enables the creation of experimental view spans.
       type: boolean
       default: false
     telemetry:
