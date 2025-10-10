@@ -36,12 +36,14 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.Assumptions;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
@@ -144,7 +146,7 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
   }
 
   @ParameterizedTest
-  @CsvSource({"1", "4"})
+  @MethodSource("requestCounts")
   void accessLogHasIdsForCountRequests(int count) {
     AggregatedHttpRequest request = request(ACCESS_LOG_SUCCESS, "GET");
 
@@ -182,6 +184,10 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
                               assertThat(loggedSpans).contains(span.getSpanId());
                             })
                 .collect(Collectors.toList()));
+  }
+
+  static Stream<Arguments> requestCounts() {
+    return Stream.of(Arguments.of(1), Arguments.of(4));
   }
 
   @Test

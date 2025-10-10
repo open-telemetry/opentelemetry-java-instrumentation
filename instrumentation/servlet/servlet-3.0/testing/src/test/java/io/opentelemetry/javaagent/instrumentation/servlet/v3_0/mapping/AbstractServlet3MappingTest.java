@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -26,7 +27,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
     extends AbstractHttpServerUsingTest<SERVER> {
@@ -54,15 +56,7 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "prefix, /prefix/*, true",
-    "prefix/, /prefix/*, true",
-    "prefix/a, /prefix/*, true",
-    "prefixa, /*, false",
-    "a.suffix, /*.suffix, true",
-    ".suffix, /*.suffix, true",
-    "suffix, /*, false",
-  })
+  @MethodSource("pathTestData")
   void testPath(String path, String route, boolean success) {
 
     AggregatedHttpResponse response =
@@ -87,6 +81,17 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
 
           trace.hasSpansSatisfyingExactly(assertions);
         });
+  }
+
+  static Stream<Arguments> pathTestData() {
+    return Stream.of(
+        Arguments.of("prefix", "/prefix/*", true),
+        Arguments.of("prefix/", "/prefix/*", true),
+        Arguments.of("prefix/a", "/prefix/*", true),
+        Arguments.of("prefixa", "/*", false),
+        Arguments.of("a.suffix", "/*.suffix", true),
+        Arguments.of(".suffix", "/*.suffix", true),
+        Arguments.of("suffix", "/*", false));
   }
 
   public static class TestServlet extends HttpServlet {
