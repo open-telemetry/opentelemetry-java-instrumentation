@@ -19,8 +19,8 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
   protected void configure(SmokeTestOptions<Integer> options) {
     options
         .image(
-        jdk ->
-            String.format(
+            jdk ->
+                String.format(
                     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-20251009.18389598609",
                     jdk))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
