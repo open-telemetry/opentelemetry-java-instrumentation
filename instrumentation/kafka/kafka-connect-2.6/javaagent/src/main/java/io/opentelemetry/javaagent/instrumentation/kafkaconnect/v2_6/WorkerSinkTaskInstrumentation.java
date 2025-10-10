@@ -15,8 +15,8 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 /**
- * This instrumentation is responsible for suppressing the underlying Kafka client consumer spans
- * to avoid duplicate telemetry. Without this suppression, both high-level Kafka Connect spans (from
+ * This instrumentation is responsible for suppressing the underlying Kafka client consumer spans to
+ * avoid duplicate telemetry. Without this suppression, both high-level Kafka Connect spans (from
  * {@link SinkTaskInstrumentation}) and low-level kafka-clients spans would be created for the same
  * consumer operation. This ensures only the meaningful Kafka Connect spans are generated.
  */
