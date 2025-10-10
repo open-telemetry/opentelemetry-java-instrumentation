@@ -43,6 +43,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.objectweb.asm.Type;
 
@@ -166,9 +167,10 @@ class ReferenceMatcherTest {
         Arguments.of("missingMethod", Type.getMethodType(Type.VOID_TYPE), emptySet(), Nested.B.class, Mismatch.MissingMethod.class));
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "{0}")
   @MethodSource("methodMatchProvider")
   void methodMatch(
+      String name,
       String methodName,
       Type methodType,
       Set<Flag> methodFlags,
@@ -236,14 +238,14 @@ class ReferenceMatcherTest {
     }
   }
 
-  private static Stream<Arguments> shouldNotCheckAbstractHelperClassesProvider() {
+  private static Stream<Arguments> helperClassNames() {
     return Stream.of(
         Arguments.of("io.opentelemetry.instrumentation.Helper"),
         Arguments.of("com.external.otel.instrumentation.Helper"));
   }
 
   @ParameterizedTest
-  @MethodSource("shouldNotCheckAbstractHelperClassesProvider")
+  @MethodSource("helperClassNames")
   void shouldNotCheckAbstractHelperClasses(String className) {
     ClassRef reference =
         ClassRef.builder(className)
@@ -261,19 +263,13 @@ class ReferenceMatcherTest {
     assertThat(mismatches).isEmpty();
   }
 
-  private static Stream<Arguments> shouldNotCheckHelperClassesWithNoSupertypesProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper", "someMethod", Type.VOID_TYPE),
-        Arguments.of("com.external.otel.instrumentation.Helper", "someMethod", Type.VOID_TYPE));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldNotCheckHelperClassesWithNoSupertypesProvider")
-  void shouldNotCheckHelperClassesWithNoSupertypes(String className, String methodName, Type returnType) {
+  @MethodSource("helperClassNames")
+  void shouldNotCheckHelperClassesWithNoSupertypes(String className) {
     ClassRef reference =
         ClassRef.builder(className)
             .setSuperClassName(Object.class.getName())
-            .addMethod(new Source[0], new Flag[0], methodName, returnType)
+            .addMethod(new Source[0], new Flag[0], "someMethod", Type.VOID_TYPE)
             .build();
 
     List<Mismatch> mismatches =
@@ -285,14 +281,8 @@ class ReferenceMatcherTest {
     assertThat(mismatches).isEmpty();
   }
 
-  private static Stream<Arguments> shouldFailHelperClassesThatDoNotImplementAllAbstractMethodsProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper"),
-        Arguments.of("com.external.otel.instrumentation.Helper"));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldFailHelperClassesThatDoNotImplementAllAbstractMethodsProvider")
+  @MethodSource("helperClassNames")
   void shouldFailHelperClassesThatDoNotImplementAllAbstractMethods(String className) {
     ClassRef reference =
         ClassRef.builder(className)
@@ -309,14 +299,8 @@ class ReferenceMatcherTest {
     assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod.class);
   }
 
-  private static Stream<Arguments> shouldFailHelperClassesThatDoNotImplementAllAbstractMethodsEvenIfEmptyAbstractClassReferenceExistsProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper"),
-        Arguments.of("com.external.otel.instrumentation.Helper"));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldFailHelperClassesThatDoNotImplementAllAbstractMethodsEvenIfEmptyAbstractClassReferenceExistsProvider")
+  @MethodSource("helperClassNames")
   void
       shouldFailHelperClassesThatDoNotImplementAllAbstractMethodsEvenIfEmptyAbstractClassReferenceExists(
           String className) {
@@ -341,14 +325,8 @@ class ReferenceMatcherTest {
     assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod.class);
   }
 
-  private static Stream<Arguments> shouldCheckHelperClassWhetherInterfaceMethodsAreImplementedInTheSuperClassProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper"),
-        Arguments.of("com.external.otel.instrumentation.Helper"));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldCheckHelperClassWhetherInterfaceMethodsAreImplementedInTheSuperClassProvider")
+  @MethodSource("helperClassNames")
   void shouldCheckHelperClassWhetherInterfaceMethodsAreImplementedInTheSuperClass(
       String className) {
     ClassRef baseHelper =
@@ -378,14 +356,8 @@ class ReferenceMatcherTest {
     assertThat(mismatches).isEmpty();
   }
 
-  private static Stream<Arguments> shouldCheckHelperClassWhetherUsedFieldsAreDeclaredInTheSuperClassProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper"),
-        Arguments.of("com.external.otel.instrumentation.Helper"));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldCheckHelperClassWhetherUsedFieldsAreDeclaredInTheSuperClassProvider")
+  @MethodSource("helperClassNames")
   void shouldCheckHelperClassWhetherUsedFieldsAreDeclaredInTheSuperClass(String className) {
     ClassRef helper =
         ClassRef.builder(className)
@@ -397,22 +369,19 @@ class ReferenceMatcherTest {
     List<Mismatch> mismatches =
         createMatcher(
                 Collections.singletonMap(helper.getClassName(), helper),
-                Collections.singletonList(helper.getClass().getClassLoader()))
+                singletonList(helper.getClass().getClassLoader()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(mismatches).isEmpty();
   }
 
-  private static Stream<Arguments> shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClassProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper", "differentField", "Ljava/lang/Integer;"),
-        Arguments.of("io.opentelemetry.instrumentation.Helper", "field", "Lcom/external/DifferentType;"),
-        Arguments.of("com.external.otel.instrumentation.Helper", "differentField", "Ljava/lang/Integer;"),
-        Arguments.of("com.external.otel.instrumentation.Helper", "field", "Lcom/external/DifferentType;"));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClassProvider")
+  @CsvSource({
+    "io.opentelemetry.instrumentation.Helper, differentField, Ljava/lang/Integer;",
+    "io.opentelemetry.instrumentation.Helper, field, Lcom/external/DifferentType;",
+    "com.external.otel.instrumentation.Helper, differentField, Ljava/lang/Integer;",
+    "com.external.otel.instrumentation.Helper, field, Lcom/external/DifferentType;"
+  })
   void shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClass(
       String className, String fieldName, String fieldType) {
     ClassRef helper =
@@ -433,14 +402,8 @@ class ReferenceMatcherTest {
     assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingField.class);
   }
 
-  private static Stream<Arguments> shouldFailHelperClassWhenTheLibraryParentClassHasDifferentConstructorProvider() {
-    return Stream.of(
-        Arguments.of("io.opentelemetry.instrumentation.Helper"),
-        Arguments.of("com.external.otel.instrumentation.Helper"));
-  }
-
   @ParameterizedTest
-  @MethodSource("shouldFailHelperClassWhenTheLibraryParentClassHasDifferentConstructorProvider")
+  @MethodSource("helperClassNames")
   void shouldFailHelperClassWhenTheLibraryParentClassHasDifferentConstructor(String className) {
     ClassRef helper =
         ClassRef.builder(className)
