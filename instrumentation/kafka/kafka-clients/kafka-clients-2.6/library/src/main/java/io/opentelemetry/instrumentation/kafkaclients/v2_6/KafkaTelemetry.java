@@ -137,7 +137,7 @@ public final class KafkaTelemetry {
         ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,
         OpenTelemetryProducerInterceptor.class.getName());
     config.put(
-        OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        OpenTelemetryProducerInterceptor.CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER,
         new KafkaProducerTelemetrySupplier(producerTelemetry));
     return Collections.unmodifiableMap(config);
   }
@@ -165,7 +165,7 @@ public final class KafkaTelemetry {
         ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,
         OpenTelemetryConsumerInterceptor.class.getName());
     config.put(
-        OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER,
+        OpenTelemetryConsumerInterceptor.CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER,
         new KafkaConsumerTelemetrySupplier(consumerTelemetry));
     return Collections.unmodifiableMap(config);
   }

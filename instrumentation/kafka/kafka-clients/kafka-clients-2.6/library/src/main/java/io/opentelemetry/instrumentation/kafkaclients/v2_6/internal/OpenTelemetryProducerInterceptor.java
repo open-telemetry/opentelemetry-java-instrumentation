@@ -22,8 +22,8 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  */
 public class OpenTelemetryProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
-      "opentelemetry.kafka-telemetry.supplier";
+  public static final String CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER =
+      "opentelemetry.kafka-producer-telemetry.supplier";
 
   @Nullable private KafkaProducerTelemetry producerTelemetry;
   @Nullable private String clientId;
@@ -49,7 +49,7 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
 
     KafkaProducerTelemetrySupplier supplier =
         getProperty(
-            configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaProducerTelemetrySupplier.class);
+            configs, CONFIG_KEY_KAFKA_PRODUCER_TELEMETRY_SUPPLIER, KafkaProducerTelemetrySupplier.class);
     this.producerTelemetry = supplier.get();
   }
 

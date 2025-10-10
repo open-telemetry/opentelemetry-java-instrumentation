@@ -27,8 +27,8 @@ import org.apache.kafka.common.TopicPartition;
  */
 public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  public static final String CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER =
-      "opentelemetry.kafka-telemetry.supplier";
+  public static final String CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER =
+      "opentelemetry.kafka-consumer-telemetry.supplier";
 
   @Nullable private KafkaConsumerTelemetry consumerTelemetry;
   private String consumerGroup;
@@ -65,7 +65,7 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
 
     KafkaConsumerTelemetrySupplier supplier =
         getProperty(
-            configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaConsumerTelemetrySupplier.class);
+            configs, CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER, KafkaConsumerTelemetrySupplier.class);
     this.consumerTelemetry = supplier.get();
   }
 
