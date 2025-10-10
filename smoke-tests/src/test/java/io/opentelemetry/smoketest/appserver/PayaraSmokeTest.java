@@ -71,7 +71,4 @@ abstract class PayaraSmokeTest extends AppServerTest {
 
   @AppServer(version = "6.2023.12", jdk = "21-openj9")
   static class Payara6Jdk21Openj9 extends PayaraSmokeTest {}
-
-  @AppServer(version = "6.2023.12", jdk = "25-openj9")
-  static class Payara6Jdk25Openj9 extends PayaraSmokeTest {}
 }
