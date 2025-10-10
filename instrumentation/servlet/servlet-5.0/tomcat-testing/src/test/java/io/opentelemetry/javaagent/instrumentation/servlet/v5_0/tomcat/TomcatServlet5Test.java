@@ -43,6 +43,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Context> {
@@ -146,7 +147,7 @@ public abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Co
   }
 
   @ParameterizedTest
-  @MethodSource("requestCounts")
+  @CsvSource({"1", "4"})
   void accessLogHasIdsForCountRequests(int count) {
     AggregatedHttpRequest request = request(ACCESS_LOG_SUCCESS, "GET");
 
@@ -184,10 +185,6 @@ public abstract class TomcatServlet5Test extends AbstractServlet5Test<Tomcat, Co
                               assertThat(loggedSpans).contains(span.getSpanId());
                             })
                 .collect(Collectors.toList()));
-  }
-
-  static Stream<Arguments> requestCounts() {
-    return Stream.of(Arguments.of(1), Arguments.of(4));
   }
 
   @Test
