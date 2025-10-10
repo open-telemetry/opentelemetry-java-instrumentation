@@ -15,6 +15,8 @@ import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.Ownershi
 import static io.opentelemetry.javaagent.tooling.muzzle.references.Flag.OwnershipFlag.STATIC;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import external.LibraryBaseClass;
@@ -142,11 +144,12 @@ class ReferenceMatcherTest {
 
   @ParameterizedTest
   @MethodSource("matchingRefProvider")
-  void matchingRef(Class<?> referenceClass, Flag referenceFlag, Class<? extends Mismatch> expectedMismatch) {
+  void matchingRef(
+      Class<?> referenceClass, Flag referenceFlag, Class<? extends Mismatch> expectedMismatch) {
     ClassRef ref = ClassRef.builder(referenceClass.getName()).addFlag(referenceFlag).build();
 
     List<Mismatch> mismatches =
-        createMatcher(Collections.singletonMap(ref.getClassName(), ref))
+        createMatcher(singletonMap(ref.getClassName(), ref))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     if (expectedMismatch == null) {
@@ -158,19 +161,61 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> methodMatchProvider() {
     return Stream.of(
-        Arguments.of("method", Type.getMethodType(Type.getType(String.class), Type.getType(String.class)), emptySet(), Nested.B.class, null),
-        Arguments.of("hashCode", Type.getMethodType(Type.INT_TYPE), emptySet(), Nested.B.class, null),
-        Arguments.of("someMethod", Type.getMethodType(Type.VOID_TYPE), emptySet(), Nested.SomeInterface.class, null),
-        Arguments.of("privateStuff", Type.getMethodType(Type.VOID_TYPE), singleton(PRIVATE_OR_HIGHER), Nested.B.class, null),
-        Arguments.of("privateStuff", Type.getMethodType(Type.VOID_TYPE), singleton(PROTECTED_OR_HIGHER), Nested.B2.class, Mismatch.MissingFlag.class),
-        Arguments.of("staticMethod", Type.getMethodType(Type.VOID_TYPE), singleton(NON_STATIC), Nested.B.class, Mismatch.MissingFlag.class),
-        Arguments.of("missingMethod", Type.getMethodType(Type.VOID_TYPE), emptySet(), Nested.B.class, Mismatch.MissingMethod.class));
+        Arguments.of(
+            "match method declared in class",
+            "method",
+            Type.getMethodType(Type.getType(String.class), Type.getType(String.class)),
+            emptySet(),
+            Nested.B.class,
+            null),
+        Arguments.of(
+            "match method declared in superclass",
+            "hashCode",
+            Type.getMethodType(Type.INT_TYPE),
+            emptySet(),
+            Nested.B.class,
+            null),
+        Arguments.of(
+            "match method declared in interface",
+            "someMethod",
+            Type.getMethodType(Type.VOID_TYPE),
+            emptySet(),
+            Nested.SomeInterface.class,
+            null),
+        Arguments.of(
+            "match private method",
+            "privateStuff",
+            Type.getMethodType(Type.VOID_TYPE),
+            singleton(PRIVATE_OR_HIGHER),
+            Nested.B.class,
+            null),
+        Arguments.of(
+            "fail match private in supertype",
+            "privateStuff",
+            Type.getMethodType(Type.VOID_TYPE),
+            singleton(PROTECTED_OR_HIGHER),
+            Nested.B2.class,
+            Mismatch.MissingFlag.class),
+        Arguments.of(
+            "static method mismatch",
+            "staticMethod",
+            Type.getMethodType(Type.VOID_TYPE),
+            singleton(NON_STATIC),
+            Nested.B.class,
+            Mismatch.MissingFlag.class),
+        Arguments.of(
+            "missing method mismatch",
+            "missingMethod",
+            Type.getMethodType(Type.VOID_TYPE),
+            emptySet(),
+            Nested.B.class,
+            Mismatch.MissingMethod.class));
   }
 
   @ParameterizedTest(name = "{0}")
   @MethodSource("methodMatchProvider")
   void methodMatch(
-      String name,
+      String testName,
       String methodName,
       Type methodType,
       Set<Flag> methodFlags,
@@ -187,7 +232,7 @@ class ReferenceMatcherTest {
             .build();
 
     List<Mismatch> mismatches =
-        createMatcher(Collections.singletonMap(reference.getClassName(), reference))
+        createMatcher(singletonMap(reference.getClassName(), reference))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     if (expectedMismatch == null) {
@@ -199,19 +244,68 @@ class ReferenceMatcherTest {
 
   private static Stream<Arguments> fieldMatchProvider() {
     return Stream.of(
-        Arguments.of("missingField", Type.getType(String.class), emptySet(), Nested.A.class, Mismatch.MissingField.class),
-        Arguments.of("privateField", Type.getType(String.class), emptySet(), Nested.A.class, Mismatch.MissingField.class),
-        Arguments.of("privateField", Type.getType(Object.class), singleton(PRIVATE_OR_HIGHER), Nested.A.class, null),
-        Arguments.of("privateField", Type.getType(Object.class), singleton(PROTECTED_OR_HIGHER), Nested.A2.class, Mismatch.MissingFlag.class),
-        Arguments.of("protectedField", Type.getType(Object.class), singleton(STATIC), Nested.A.class, Mismatch.MissingFlag.class),
-        Arguments.of("staticB", Type.getType(Nested.B.class), new HashSet<>(Arrays.asList(STATIC, PROTECTED_OR_HIGHER)), Nested.A.class, null),
-        Arguments.of("number", Type.INT_TYPE, singleton(PACKAGE_OR_HIGHER), Nested.Primitives.class, null),
-        Arguments.of("flag", Type.BOOLEAN_TYPE, singleton(PACKAGE_OR_HIGHER), Nested.Primitives.class, null));
+        Arguments.of(
+            "mismatch missing field",
+            "missingField",
+            Type.getType(String.class),
+            emptySet(),
+            Nested.A.class,
+            Mismatch.MissingField.class),
+        Arguments.of(
+            "mismatch field type signature",
+            "privateField",
+            Type.getType(String.class),
+            emptySet(),
+            Nested.A.class,
+            Mismatch.MissingField.class),
+        Arguments.of(
+            "match private field",
+            "privateField",
+            Type.getType(Object.class),
+            singleton(PRIVATE_OR_HIGHER),
+            Nested.A.class,
+            null),
+        Arguments.of(
+            "mismatch private field in supertype",
+            "privateField",
+            Type.getType(Object.class),
+            singleton(PROTECTED_OR_HIGHER),
+            Nested.A2.class,
+            Mismatch.MissingFlag.class),
+        Arguments.of(
+            "mismatch static field",
+            "protectedField",
+            Type.getType(Object.class),
+            singleton(STATIC),
+            Nested.A.class,
+            Mismatch.MissingFlag.class),
+        Arguments.of(
+            "match static field",
+            "staticB",
+            Type.getType(Nested.B.class),
+            new HashSet<>(Arrays.asList(STATIC, PROTECTED_OR_HIGHER)),
+            Nested.A.class,
+            null),
+        Arguments.of(
+            "match primitive int",
+            "number",
+            Type.INT_TYPE,
+            singleton(PACKAGE_OR_HIGHER),
+            Nested.Primitives.class,
+            null),
+        Arguments.of(
+            "match primitive boolean",
+            "flag",
+            Type.BOOLEAN_TYPE,
+            singleton(PACKAGE_OR_HIGHER),
+            Nested.Primitives.class,
+            null));
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "{0}")
   @MethodSource("fieldMatchProvider")
   void fieldMatch(
+      String testName,
       String fieldName,
       Type fieldType,
       Set<Flag> fieldFlags,
@@ -219,16 +313,11 @@ class ReferenceMatcherTest {
       Class<? extends Mismatch> expectedMismatch) {
     ClassRef reference =
         ClassRef.builder(classToCheck.getName())
-            .addField(
-                new Source[0],
-                fieldFlags.toArray(new Flag[0]),
-                fieldName,
-                fieldType,
-                false)
+            .addField(new Source[0], fieldFlags.toArray(new Flag[0]), fieldName, fieldType, false)
             .build();
 
     List<Mismatch> mismatches =
-        createMatcher(Collections.singletonMap(reference.getClassName(), reference))
+        createMatcher(singletonMap(reference.getClassName(), reference))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     if (expectedMismatch == null) {
@@ -256,8 +345,8 @@ class ReferenceMatcherTest {
 
     List<Mismatch> mismatches =
         createMatcher(
-                Collections.singletonMap(reference.getClassName(), reference),
-                Collections.singletonList(reference.getClassName()))
+                singletonMap(reference.getClassName(), reference),
+                singletonList(reference.getClassName()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(mismatches).isEmpty();
@@ -274,8 +363,8 @@ class ReferenceMatcherTest {
 
     List<Mismatch> mismatches =
         createMatcher(
-                Collections.singletonMap(reference.getClassName(), reference),
-                Collections.singletonList(reference.getClassName()))
+                singletonMap(reference.getClassName(), reference),
+                singletonList(reference.getClassName()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(mismatches).isEmpty();
@@ -292,8 +381,8 @@ class ReferenceMatcherTest {
 
     List<Mismatch> mismatches =
         createMatcher(
-                Collections.singletonMap(reference.getClassName(), reference),
-                Collections.singletonList(reference.getClassName()))
+                singletonMap(reference.getClassName(), reference),
+                singletonList(reference.getClassName()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod.class);
@@ -368,22 +457,23 @@ class ReferenceMatcherTest {
 
     List<Mismatch> mismatches =
         createMatcher(
-                Collections.singletonMap(helper.getClassName(), helper),
-                singletonList(helper.getClass().getClassLoader()))
+                singletonMap(helper.getClassName(), helper), singletonList(helper.getClassName()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(mismatches).isEmpty();
   }
 
-  @ParameterizedTest
-  @CsvSource({
-    "io.opentelemetry.instrumentation.Helper, differentField, Ljava/lang/Integer;",
-    "io.opentelemetry.instrumentation.Helper, field, Lcom/external/DifferentType;",
-    "com.external.otel.instrumentation.Helper, differentField, Ljava/lang/Integer;",
-    "com.external.otel.instrumentation.Helper, field, Lcom/external/DifferentType;"
-  })
+  @ParameterizedTest(name = "{0}")
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "internal helper, different field name | io.opentelemetry.instrumentation.Helper | differentField | Ljava/lang/Integer;",
+        "internal helper, different field type | io.opentelemetry.instrumentation.Helper | field | Lcom/external/DifferentType;",
+        "external helper, different field name | com.external.otel.instrumentation.Helper | differentField | Ljava/lang/Integer;",
+        "external helper, different field type | com.external.otel.instrumentation.Helper | field | Lcom/external/DifferentType;"
+      })
   void shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClass(
-      String className, String fieldName, String fieldType) {
+      String testName, String className, String fieldName, String fieldType) {
     ClassRef helper =
         ClassRef.builder(className)
             .setSuperClassName(
@@ -395,8 +485,7 @@ class ReferenceMatcherTest {
 
     List<Mismatch> mismatches =
         createMatcher(
-                Collections.singletonMap(helper.getClassName(), helper),
-                Collections.singletonList(helper.getClass().getClassLoader()))
+                singletonMap(helper.getClassName(), helper), singletonList(helper.getClassName()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingField.class);
@@ -421,7 +510,7 @@ class ReferenceMatcherTest {
     references.put(baseClassRef.getClassName(), baseClassRef);
 
     List<Mismatch> mismatches =
-        createMatcher(references, Collections.singletonList(helper.getClassName()))
+        createMatcher(references, singletonList(helper.getClassName()))
             .getMismatchedReferenceSources(this.getClass().getClassLoader());
 
     assertThat(getMismatchClassSet(mismatches)).containsExactly(Mismatch.MissingMethod.class);
