@@ -14,11 +14,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -69,12 +71,7 @@ abstract class AbstractSpringIntegrationTracingTest {
   }
 
   @ParameterizedTest
-  @CsvSource(
-      value = {
-        "directChannel,application.directChannel process",
-        "executorChannel,executorChannel process"
-      },
-      delimiter = ',')
+  @MethodSource("channelNameAndSpanName")
   public void shouldPropagateContext(String channelName, String interceptorSpanName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
@@ -253,5 +250,11 @@ abstract class AbstractSpringIntegrationTracingTest {
     public void initialize() {
       linkedChannel1().subscribe(message -> linkedChannel2().send(message));
     }
+  }
+
+  static Stream<Arguments> channelNameAndSpanName() {
+    return Stream.of(
+        Arguments.of("directChannel", "application.directChannel process"),
+        Arguments.of("executorChannel", "executorChannel process"));
   }
 }

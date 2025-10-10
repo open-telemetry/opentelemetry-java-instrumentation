@@ -19,11 +19,13 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class OpenTelemetryInstallerTest {
 
@@ -43,12 +45,7 @@ class OpenTelemetryInstallerTest {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "default, true, false",
-    "none, false, false",
-    ", true, false", // empty value means property is not set
-    "invalid, false, true",
-  })
+  @MethodSource("instrumentationModeTestData")
   void defaultEnabledInDeclarativeConfigPropertiesBridge(
       String propertyValue, boolean expected, boolean fail) {
     String mode = propertyValue == null ? "" : "instrumentation_mode: \"" + propertyValue + "\"";
@@ -79,5 +76,13 @@ class OpenTelemetryInstallerTest {
                   .getBoolean("otel.instrumentation.common.default-enabled"))
           .isEqualTo(expected);
     }
+  }
+
+  static Stream<Arguments> instrumentationModeTestData() {
+    return Stream.of(
+        Arguments.of("default", true, false),
+        Arguments.of("none", false, false),
+        Arguments.of(null, true, false), // null value means property is not set
+        Arguments.of("invalid", false, true));
   }
 }
