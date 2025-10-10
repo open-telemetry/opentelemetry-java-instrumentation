@@ -11,18 +11,20 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricAttribute;
+import java.util.stream.Stream;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
 import javax.management.MBeanServerConnection;
 import javax.management.ObjectName;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class MetricStructureTest {
 
   @ParameterizedTest
-  @CsvSource({"const(Hello),Hello", "lowercase(const(Hello)),hello"})
+  @MethodSource("constantAttributes")
   void metricAttribute_constant(String target, String expectedValue) {
     MetricAttribute ma = MetricStructure.buildMetricAttribute("name", target);
     assertThat(ma.getAttributeName()).isEqualTo("name");
@@ -30,11 +32,13 @@ public class MetricStructureTest {
     assertThat(ma.acquireAttributeValue(null, null)).isEqualTo(expectedValue);
   }
 
+  static Stream<Arguments> constantAttributes() {
+    return Stream.of(
+        Arguments.of("const(Hello)", "Hello"), Arguments.of("lowercase(const(Hello))", "hello"));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "beanattr(beanAttribute),Hello,Hello",
-    "lowercase(beanattr(beanAttribute)),Hello,hello",
-  })
+  @MethodSource("beanAttributes")
   void metricAttribute_beanAttribute(String target, String value, String expectedValue)
       throws Exception {
     MetricAttribute ma = MetricStructure.buildMetricAttribute("name", target);
@@ -56,11 +60,14 @@ public class MetricStructureTest {
     assertThat(ma.acquireAttributeValue(mockConnection, objectName)).isEqualTo(expectedValue);
   }
 
+  static Stream<Arguments> beanAttributes() {
+    return Stream.of(
+        Arguments.of("beanattr(beanAttribute)", "Hello", "Hello"),
+        Arguments.of("lowercase(beanattr(beanAttribute))", "Hello", "hello"));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "param(name),Hello,Hello",
-    "lowercase(param(name)),Hello,hello",
-  })
+  @MethodSource("beanParams")
   void metricAttribute_beanParam(String target, String value, String expectedValue)
       throws Exception {
     MetricAttribute ma = MetricStructure.buildMetricAttribute("name", target);
@@ -71,6 +78,12 @@ public class MetricStructureTest {
     MBeanServerConnection mockConnection = mock(MBeanServerConnection.class);
 
     assertThat(ma.acquireAttributeValue(mockConnection, objectName)).isEqualTo(expectedValue);
+  }
+
+  static Stream<Arguments> beanParams() {
+    return Stream.of(
+        Arguments.of("param(name)", "Hello", "Hello"),
+        Arguments.of("lowercase(param(name))", "Hello", "hello"));
   }
 
   @ParameterizedTest

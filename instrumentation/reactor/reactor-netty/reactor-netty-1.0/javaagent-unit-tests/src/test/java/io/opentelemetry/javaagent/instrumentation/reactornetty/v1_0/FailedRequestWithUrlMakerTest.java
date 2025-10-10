@@ -11,10 +11,12 @@ import static org.mockito.Mockito.when;
 
 import java.net.InetSocketAddress;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -63,10 +65,7 @@ class FailedRequestWithUrlMakerTest {
   }
 
   @ParameterizedTest
-  @CsvSource({
-    "80, false",
-    "443, true",
-  })
+  @MethodSource("defaultPorts")
   @SuppressWarnings("MockitoDoSetup")
   void shouldSkipDefaultPorts(int port, boolean isSecure) {
     when(config.baseUrl()).thenReturn("/");
@@ -80,5 +79,9 @@ class FailedRequestWithUrlMakerTest {
 
     assertThat(request.resourceUrl())
         .isEqualTo((isSecure ? "https" : "http") + "://opentelemetry.io/docs");
+  }
+
+  static Stream<Arguments> defaultPorts() {
+    return Stream.of(Arguments.of(80, false), Arguments.of(443, true));
   }
 }

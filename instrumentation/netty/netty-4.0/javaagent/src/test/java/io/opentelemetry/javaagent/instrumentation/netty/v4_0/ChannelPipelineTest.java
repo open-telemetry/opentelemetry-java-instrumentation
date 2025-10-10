@@ -21,12 +21,14 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class ChannelPipelineTest {
 
@@ -56,7 +58,7 @@ class ChannelPipelineTest {
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/1373
   // and https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   @ParameterizedTest
-  @CsvSource({"by instance", "by class", "by name", "first"})
+  @MethodSource("removeHandlerTestNames")
   void testRemoveOurHandler(String testName) throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new NoopChannelHandler());
     ChannelPipeline channelPipeline = (ChannelPipeline) getConstructor().newInstance(channel);
@@ -96,10 +98,18 @@ class ChannelPipelineTest {
     assertEquals(0, channelPipeline.toMap().size());
   }
 
+  static Stream<Arguments> removeHandlerTestNames() {
+    return Stream.of(
+        Arguments.of("by instance"),
+        Arguments.of("by class"),
+        Arguments.of("by name"),
+        Arguments.of("first"));
+  }
+
   // regression test for
   // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/4040
   @ParameterizedTest
-  @CsvSource({"by instance", "by class", "by name"})
+  @MethodSource("replaceHandlerDescriptions")
   void shouldReplaceHandler(String desc) throws Exception {
     EmbeddedChannel channel = new EmbeddedChannel(new NoopChannelHandler());
     ChannelPipeline channelPipeline = (ChannelPipeline) getConstructor().newInstance(channel);
@@ -138,6 +148,11 @@ class ChannelPipelineTest {
 
     // http and instrumentation handlers were removed; noop handler was added
     assertEquals(anotherNoopHandler, channelPipeline.first());
+  }
+
+  static Stream<Arguments> replaceHandlerDescriptions() {
+    return Stream.of(
+        Arguments.of("by instance"), Arguments.of("by class"), Arguments.of("by name"));
   }
 
   // regression test for
