@@ -5894,7 +5894,58 @@ libraries:
         - name: gen_ai.usage.output_tokens
           type: LONG
   opensearch:
+  - name: opensearch-java-3.0
+    description: |
+      This instrumentation enables database client spans and database client metrics for the OpenSearch Java client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://docs.opensearch.org/latest/clients/java/
+    source_path: instrumentation/opensearch/opensearch-java-3.0
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.opensearch-java-3.0
+    target_versions:
+      javaagent:
+      - org.opensearch.client:opensearch-java:[3.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   - name: opensearch-rest-1.0
+    description: |
+      This instrumentation enables database client spans and database client metrics for OpenSearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://docs.opensearch.org/latest/clients/
     source_path: instrumentation/opensearch/opensearch-rest-1.0
     minimum_java_version: 11
     scope:
@@ -5902,7 +5953,44 @@ libraries:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[1.0,3.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   - name: opensearch-rest-3.0
+    description: |
+      This instrumentation enables database client spans and database client metrics for OpenSearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://docs.opensearch.org/latest/clients/
     source_path: instrumentation/opensearch/opensearch-rest-3.0
     minimum_java_version: 11
     scope:
@@ -5910,6 +5998,37 @@ libraries:
     target_versions:
       javaagent:
       - org.opensearch.client:opensearch-rest-client:[3.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
   oracle:
   - name: oracle-ucp-11.2
     description: The Oracle Universal Connection Pool (UCP) instrumentation generates
