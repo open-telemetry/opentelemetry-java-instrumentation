@@ -63,6 +63,18 @@ public final class KafkaTelemetry {
         new KafkaConsumerTelemetry(consumerReceiveInstrumenter, consumerProcessInstrumenter);
   }
 
+  /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
+  public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
+    return builder(openTelemetry).build();
+  }
+
+  /**
+   * Returns a new {@link KafkaTelemetryBuilder} configured with the given {@link OpenTelemetry}.
+   */
+  public static KafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+    return new KafkaTelemetryBuilder(openTelemetry);
+  }
+
   // this method can be removed when the deprecated TracingProducerInterceptor is removed
   KafkaProducerTelemetry getProducerTelemetry() {
     return producerTelemetry;
@@ -132,17 +144,6 @@ public final class KafkaTelemetry {
             });
   }
 
-  /** Returns a new {@link KafkaTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static KafkaTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
-  }
-
-  /**
-   * Returns a new {@link KafkaTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
-  public static KafkaTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new KafkaTelemetryBuilder(openTelemetry);
-  }
 
   /**
    * Produces a set of kafka client config properties (consumer or producer) to register a {@link
