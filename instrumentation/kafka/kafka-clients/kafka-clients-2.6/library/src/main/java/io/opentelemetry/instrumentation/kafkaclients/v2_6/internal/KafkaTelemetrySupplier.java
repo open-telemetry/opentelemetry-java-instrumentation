@@ -3,8 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.v2_6;
+package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -16,17 +17,17 @@ import java.util.function.Supplier;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-final class KafkaTelemetrySupplier implements Supplier<Object>, Serializable {
+public final class KafkaTelemetrySupplier implements Supplier<KafkaTelemetry>, Serializable {
   private static final long serialVersionUID = 1L;
-  private final transient Object kafkaTelemetry;
+  private final transient KafkaTelemetry kafkaTelemetry;
 
-  KafkaTelemetrySupplier(Object kafkaTelemetry) {
+  public KafkaTelemetrySupplier(KafkaTelemetry kafkaTelemetry) {
     Objects.requireNonNull(kafkaTelemetry);
     this.kafkaTelemetry = kafkaTelemetry;
   }
 
   @Override
-  public Object get() {
+  public KafkaTelemetry get() {
     return kafkaTelemetry;
   }
 

@@ -9,7 +9,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import java.util.Map;
 import java.util.Objects;
-import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerInterceptor;
@@ -54,21 +53,21 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
       return;
     }
 
-    if (!(telemetrySupplier instanceof Supplier)) {
-      throw new IllegalStateException(
-          "Configuration property "
-              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
-              + " is not instance of Supplier");
-    }
+    KafkaTelemetrySupplier supplier =
+        getProperty(configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaTelemetrySupplier.class);
+    this.telemetry = supplier.get();
+  }
 
-    Object kafkaTelemetry = ((Supplier<?>) telemetrySupplier).get();
-    if (!(kafkaTelemetry instanceof KafkaTelemetry)) {
-      throw new IllegalStateException(
-          "Configuration property "
-              + CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER
-              + " supplier does not return KafkaTelemetry instance");
+  @SuppressWarnings("unchecked")
+  private static <T> T getProperty(Map<String, ?> configs, String key, Class<T> requiredType) {
+    Object value = configs.get(key);
+    if (value == null) {
+      throw new IllegalStateException("Missing required configuration property: " + key);
     }
-
-    this.telemetry = (KafkaTelemetry) kafkaTelemetry;
+    if (!requiredType.isInstance(value)) {
+      throw new IllegalStateException(
+          "Configuration property " + key + " is not instance of " + requiredType.getSimpleName());
+    }
+    return (T) value;
   }
 }
