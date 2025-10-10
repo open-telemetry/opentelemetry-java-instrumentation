@@ -49,6 +49,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,7 +57,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -447,8 +449,14 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   // TODO: add basic auth scenario
 
+  private static Stream<Arguments> errorSpanProvider() {
+    return Stream.of(
+        // path, responseCode
+        Arguments.of("/error", 500), Arguments.of("/client-error", 400));
+  }
+
   @ParameterizedTest
-  @CsvSource({"/error,500", "/client-error,400"})
+  @MethodSource("errorSpanProvider")
   void errorSpan(String path, int responseCode) {
     assumeTrue(options.getHasSendRequest());
 

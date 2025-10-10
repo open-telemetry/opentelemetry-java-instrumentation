@@ -45,7 +45,6 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.objectweb.asm.Type;
 
@@ -463,15 +462,34 @@ class ReferenceMatcherTest {
     assertThat(mismatches).isEmpty();
   }
 
+  private static Stream<Arguments>
+      shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClassProvider() {
+    return Stream.of(
+        // testName, className, fieldName, fieldType
+        Arguments.of(
+            "internal helper, different field name",
+            "io.opentelemetry.instrumentation.Helper",
+            "differentField",
+            "Ljava/lang/Integer;"),
+        Arguments.of(
+            "internal helper, different field type",
+            "io.opentelemetry.instrumentation.Helper",
+            "field",
+            "Lcom/external/DifferentType;"),
+        Arguments.of(
+            "external helper, different field name",
+            "com.external.otel.instrumentation.Helper",
+            "differentField",
+            "Ljava/lang/Integer;"),
+        Arguments.of(
+            "external helper, different field type",
+            "com.external.otel.instrumentation.Helper",
+            "field",
+            "Lcom/external/DifferentType;"));
+  }
+
   @ParameterizedTest(name = "{0}")
-  @CsvSource(
-      delimiter = '|',
-      value = {
-        "internal helper, different field name | io.opentelemetry.instrumentation.Helper | differentField | Ljava/lang/Integer;",
-        "internal helper, different field type | io.opentelemetry.instrumentation.Helper | field | Lcom/external/DifferentType;",
-        "external helper, different field name | com.external.otel.instrumentation.Helper | differentField | Ljava/lang/Integer;",
-        "external helper, different field type | com.external.otel.instrumentation.Helper | field | Lcom/external/DifferentType;"
-      })
+  @MethodSource("shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClassProvider")
   void shouldFailHelperClassWhenItUsesFieldsUndeclaredInTheSuperClass(
       String testName, String className, String fieldName, String fieldType) {
     ClassRef helper =

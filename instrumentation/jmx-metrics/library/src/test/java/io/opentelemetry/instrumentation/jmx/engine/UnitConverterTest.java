@@ -9,27 +9,33 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class UnitConverterTest {
 
+  private static Stream<Arguments> shouldSupportPredefined_to_s_ConversionsProvider() {
+    return Stream.of(
+        // originalValue, originalUnit, expectedConvertedValue
+        Arguments.of(1000000000L, "ns", 1.0),
+        Arguments.of(25L, "ns", 0.000000025),
+        Arguments.of(96614101945L, "ns", 96.614101945),
+        Arguments.of(0L, "ns", 0.0),
+        Arguments.of(1000000L, "us", 1.0),
+        Arguments.of(25L, "us", 0.000025),
+        Arguments.of(96614101945L, "us", 96614.101945),
+        Arguments.of(0L, "ns", 0.0),
+        Arguments.of(1000L, "ms", 1.0),
+        Arguments.of(25L, "ms", 0.025),
+        Arguments.of(9661410L, "ms", 9661.41),
+        Arguments.of(0L, "ms", 0.0));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "1000000000,ns, 1.0",
-    "25,ns, 0.000000025",
-    "96614101945,ns, 96.614101945",
-    "0,ns, 0",
-    "1000000,us, 1.0",
-    "25,us, 0.000025",
-    "96614101945,us, 96614.101945",
-    "0,ns, 0",
-    "1000,ms, 1.0",
-    "25,ms, 0.025",
-    "9661410,ms, 9661.41",
-    "0,ms, 0",
-  })
+  @MethodSource("shouldSupportPredefined_to_s_ConversionsProvider")
   void shouldSupportPredefined_to_s_Conversions(
       Long originalValue, String originalUnit, Double expectedConvertedValue) {
     // Given
@@ -43,23 +49,31 @@ class UnitConverterTest {
     assertEquals(expectedConvertedValue, actualValue);
   }
 
+  private static Stream<Arguments> shouldHandleUnsupportedConversionProvider() {
+    return Stream.of(
+        // sourceUnit, targetUnit
+        Arguments.of("--", "--"),
+        Arguments.of("ms", "non-existing"),
+        Arguments.of("non-existing", "s"));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "--, --",
-    "ms, non-existing",
-    "non-existing, s",
-  })
+  @MethodSource("shouldHandleUnsupportedConversionProvider")
   void shouldHandleUnsupportedConversion(String sourceUnit, String targetUnit) {
     assertThatThrownBy(() -> UnitConverter.getInstance(sourceUnit, targetUnit))
         .hasMessage("Unsupported conversion from [" + sourceUnit + "] to [" + targetUnit + "]");
   }
 
+  private static Stream<Arguments> shouldSkipConversionWhenSourceUnitNotSpecifiedProvider() {
+    return Stream.of(
+        // sourceUnit, targetUnit
+        Arguments.of(null, "s"), // null -> "s"
+        Arguments.of("", "s"), // "" -> "s"
+        Arguments.of("1", "")); // empty target unit
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    ", s", // null -> "s"
-    "'', s", // "" -> "s"
-    "1, ''", // empty target unit
-  })
+  @MethodSource("shouldSkipConversionWhenSourceUnitNotSpecifiedProvider")
   void shouldSkipConversionWhenSourceUnitNotSpecified(String sourceUnit, String targetUnit) {
     UnitConverter converter = UnitConverter.getInstance(sourceUnit, targetUnit);
     assertThat(converter).isNull();
@@ -80,10 +94,14 @@ class UnitConverterTest {
     assertEquals(5400.0, actualValue);
   }
 
+  private static Stream<Arguments> shouldNotAllowRegisteringConversionWithAnyUnitEmptyProvider() {
+    return Stream.of(
+        // sourceUnit, targetUnit
+        Arguments.of("", "By"), Arguments.of("By", ""));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "'', By", "By, ''",
-  })
+  @MethodSource("shouldNotAllowRegisteringConversionWithAnyUnitEmptyProvider")
   void shouldNotAllowRegisteringConversionWithAnyUnitEmpty(String sourceUnit, String targetUnit) {
     assertThatThrownBy(() -> UnitConverter.registerConversion(sourceUnit, targetUnit, (value) -> 0))
         .hasMessageMatching("Non empty .+Unit must be provided");

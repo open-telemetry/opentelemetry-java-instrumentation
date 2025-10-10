@@ -9,21 +9,27 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.util.stream.Stream;
 import org.apache.camel.Exchange;
 import org.apache.camel.Message;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class SanitizationTest {
 
+  private static Stream<Arguments> sanitizeCqlProvider() {
+    return Stream.of(
+        // original, expected
+        Arguments.of("FROM TABLE WHERE FIELD>=-1234", "FROM TABLE WHERE FIELD>=?"),
+        Arguments.of(
+            "SELECT Name, Phone.Number FROM Contact WHERE Address.State = 'NY'",
+            "SELECT Name, Phone.Number FROM Contact WHERE Address.State = ?"),
+        Arguments.of("FROM col WHERE @Tag='Something'", "FROM col WHERE @Tag=?"));
+  }
+
   @ParameterizedTest
-  @CsvSource(
-      delimiter = '|',
-      value = {
-        "FROM TABLE WHERE FIELD>=-1234 | FROM TABLE WHERE FIELD>=?",
-        "SELECT Name, Phone.Number FROM Contact WHERE Address.State = 'NY' | SELECT Name, Phone.Number FROM Contact WHERE Address.State = ?",
-        "FROM col WHERE @Tag='Something' | FROM col WHERE @Tag=?"
-      })
+  @MethodSource("sanitizeCqlProvider")
   void sanitizeCql(String original, String expected) {
     DbSpanDecorator decorator = new DbSpanDecorator("cql", "");
 
@@ -36,13 +42,20 @@ class SanitizationTest {
     assertThat(actualSanitized).isEqualTo(expected);
   }
 
+  private static Stream<Arguments> sanitizeJdbcProvider() {
+    return Stream.of(
+        // original, expected
+        Arguments.of("SELECT 3", "SELECT ?"),
+        Arguments.of(
+            "SELECT * FROM TABLE WHERE FIELD = 1234", "SELECT * FROM TABLE WHERE FIELD = ?"),
+        Arguments.of("SELECT * FROM TABLE WHERE FIELD<-1234", "SELECT * FROM TABLE WHERE FIELD<?"),
+        Arguments.of(
+            "SELECT col1 AS col2 FROM users WHERE field=1234",
+            "SELECT col1 AS col2 FROM users WHERE field=?"));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "SELECT 3, SELECT ?",
-    "SELECT * FROM TABLE WHERE FIELD = 1234, SELECT * FROM TABLE WHERE FIELD = ?",
-    "SELECT * FROM TABLE WHERE FIELD<-1234, SELECT * FROM TABLE WHERE FIELD<?",
-    "SELECT col1 AS col2 FROM users WHERE field=1234, SELECT col1 AS col2 FROM users WHERE field=?"
-  })
+  @MethodSource("sanitizeJdbcProvider")
   void sanitizeJdbc(String original, String expected) {
     DbSpanDecorator decorator = new DbSpanDecorator("jdbc", "");
 
@@ -55,12 +68,18 @@ class SanitizationTest {
     assertThat(actualSanitized).isEqualTo(expected);
   }
 
+  private static Stream<Arguments> sanitizeSqlProvider() {
+    return Stream.of(
+        // original, expected
+        Arguments.of(
+            "SELECT * FROM table WHERE col1=1234 AND col2>3",
+            "SELECT * FROM table WHERE col1=? AND col2>?"),
+        Arguments.of("UPDATE table SET col=12", "UPDATE table SET col=?"),
+        Arguments.of("insert into table where col=321", "insert into table where col=?"));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "SELECT * FROM table WHERE col1=1234 AND col2>3, SELECT * FROM table WHERE col1=? AND col2>?",
-    "UPDATE table SET col=12, UPDATE table SET col=?",
-    "insert into table where col=321, insert into table where col=?"
-  })
+  @MethodSource("sanitizeSqlProvider")
   void sanitizeSql(String original, String expected) {
 
     DbSpanDecorator decorator = new DbSpanDecorator("sql", "");

@@ -14,20 +14,26 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junitpioneer.jupiter.ClearSystemProperty;
 
 class SpanLoggingCustomizerProviderTest {
 
+  private static Stream<Arguments> addSpanLoggingExporterProvider() {
+    return Stream.of(
+        // propertyValue, alreadyAdded, expected
+        Arguments.of("true", false, true),
+        Arguments.of("false", false, false),
+        Arguments.of(null, false, false), // null value means property is not set
+        Arguments.of("invalid", false, false),
+        Arguments.of("true", true, true));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "true, false, true",
-    "false, false, false",
-    ", false, false", // empty value means property is not set
-    "invalid, false, false",
-    "true, true, true",
-  })
+  @MethodSource("addSpanLoggingExporterProvider")
   @ClearSystemProperty(key = "otel.javaagent.debug")
   void addSpanLoggingExporter(String propertyValue, boolean alreadyAdded, boolean expected) {
     if (propertyValue != null) {
