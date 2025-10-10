@@ -73,7 +73,6 @@ public final class KafkaTelemetry {
     return consumerTelemetry;
   }
 
-  // TODO consider if this is needed in public API
   @SuppressWarnings("unchecked")
   public <K, V> Producer<K, V> wrap(Producer<K, V> producer) {
     return (Producer<K, V>)
@@ -102,7 +101,6 @@ public final class KafkaTelemetry {
             });
   }
 
-  // TODO consider if this is needed in public API
   @SuppressWarnings("unchecked")
   public <K, V> Consumer<K, V> wrap(Consumer<K, V> consumer) {
     return (Consumer<K, V>)
