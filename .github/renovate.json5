@@ -356,7 +356,7 @@
       ],
       matchStrings: [
         '(?<currentValue>\\d+) # renovate: datasource=java-version',
-        '"(?<currentValue>\\d+)" # renovate: datasource=java-version',
+        '"(?<currentValue>\\d+)" // renovate: datasource=java-version',
       ],
       depNameTemplate: 'java',
       extractVersionTemplate: '^(?<version>\\d+)',
