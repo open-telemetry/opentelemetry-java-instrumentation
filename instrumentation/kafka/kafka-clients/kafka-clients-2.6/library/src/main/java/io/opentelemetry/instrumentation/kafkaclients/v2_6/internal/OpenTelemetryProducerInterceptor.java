@@ -48,11 +48,6 @@ public class OpenTelemetryProducerInterceptor<K, V> implements ProducerIntercept
   public void configure(Map<String, ?> configs) {
     clientId = Objects.toString(configs.get(ProducerConfig.CLIENT_ID_CONFIG), null);
 
-    Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
-    if (telemetrySupplier == null) {
-      return;
-    }
-
     KafkaTelemetrySupplier supplier =
         getProperty(configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaTelemetrySupplier.class);
     this.telemetry = supplier.get();

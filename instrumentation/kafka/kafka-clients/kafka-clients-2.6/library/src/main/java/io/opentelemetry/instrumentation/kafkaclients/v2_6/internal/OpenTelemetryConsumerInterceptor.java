@@ -63,11 +63,6 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 
-    Object telemetrySupplier = configs.get(CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER);
-    if (telemetrySupplier == null) {
-      return;
-    }
-
     KafkaTelemetrySupplier supplier =
         getProperty(configs, CONFIG_KEY_KAFKA_TELEMETRY_SUPPLIER, KafkaTelemetrySupplier.class);
     this.telemetry = supplier.get();
