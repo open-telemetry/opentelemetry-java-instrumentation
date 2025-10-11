@@ -30,6 +30,7 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
 import java.time.Duration;
@@ -1150,6 +1151,17 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
                 assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
+              }
+
+              // Check for peer.service when test is configured to expect it
+              if (options.getTestPeerService()) {
+                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
+                if (expectedPeerService != null) {
+                  assertThat(attrs)
+                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
+                }
+                // If expectedPeerService is null, we don't assert absence here
+                // to allow flexibility in individual tests
               }
             });
   }

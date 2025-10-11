@@ -101,6 +101,10 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getHasUrlTemplate();
 
+  public abstract boolean getTestPeerService();
+
+  public abstract Function<URI, String> getExpectedPeerServiceName();
+
   @Nullable
   abstract SpanEndsAfterType getSpanEndsAfterType();
 
@@ -145,6 +149,8 @@ public abstract class HttpClientTestOptions {
           .setTestCaptureHttpHeaders(true)
           .setHasSendRequest(true)
           .setHasUrlTemplate(false)
+          .setTestPeerService(true)
+          .setExpectedPeerServiceName(uri -> "test-peer-service")
           .setHttpProtocolVersion(uri -> "1.1");
     }
 
@@ -195,6 +201,10 @@ public abstract class HttpClientTestOptions {
     Builder setHasSendRequest(boolean value);
 
     Builder setHasUrlTemplate(boolean value);
+
+    Builder setTestPeerService(boolean value);
+
+    Builder setExpectedPeerServiceName(Function<URI, String> value);
 
     Builder setHttpProtocolVersion(Function<URI, String> value);
 
