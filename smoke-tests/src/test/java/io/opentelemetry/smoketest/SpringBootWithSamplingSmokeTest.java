@@ -27,7 +27,7 @@ class SpringBootWithSamplingSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void springBootWithProbabilitySamplingEnabled(int jdk) {
     start(jdk);
     for (int i = 1; i <= NUM_TRIES; i++) {
