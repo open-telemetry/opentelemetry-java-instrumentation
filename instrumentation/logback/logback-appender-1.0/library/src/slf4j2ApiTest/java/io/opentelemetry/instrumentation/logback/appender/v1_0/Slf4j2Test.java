@@ -244,8 +244,7 @@ public class Slf4j2Test {
   @Test
   void structuredArgumentsWithV() {
     logger.warn(
-        "This is a warning log for customerId: {}",
-        StructuredArguments.v("customer_id", "123"));
+        "This is a warning log for customerId: {}", StructuredArguments.v("customer_id", "123"));
 
     testing.waitAndAssertLogRecords(
         logRecord ->
@@ -260,8 +259,7 @@ public class Slf4j2Test {
                         AttributeKey.stringKey("log.body.template"),
                         "This is a warning log for customerId: {}"),
                     equalTo(
-                        AttributeKey.stringArrayKey("log.body.parameters"),
-                        Arrays.asList("123"))));
+                        AttributeKey.stringArrayKey("log.body.parameters"), Arrays.asList("123"))));
   }
 
   @Test

@@ -66,7 +66,8 @@ public final class LoggingEventMapper {
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final boolean supportsLogstashMarkers = supportsLogstashMarkers();
-  private static final boolean supportsLogstashStructuredArguments = supportsLogstashStructuredArguments();
+  private static final boolean supportsLogstashStructuredArguments =
+      supportsLogstashStructuredArguments();
   private static final Cache<String, AttributeKey<String>> attributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<List<String>> LOG_MARKER =
@@ -473,7 +474,8 @@ public final class LoggingEventMapper {
     return true;
   }
 
-  private void captureLogstashMarkerAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureLogstashMarkerAttributes(
+      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
       captureMultipleLogstashMarkers(builder, loggingEvent);
     } else {
@@ -487,8 +489,7 @@ public final class LoggingEventMapper {
   }
 
   @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
-  private void captureSingleLogstashMarker(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureSingleLogstashMarker(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (isLogstashMarker(marker)) {
       captureLogstashMarkerAndReferences(builder, marker);
@@ -519,7 +520,6 @@ public final class LoggingEventMapper {
       }
     }
   }
-  
 
   private void captureLogstashMarker(LogRecordBuilder builder, Object logstashMarker) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
@@ -752,7 +752,8 @@ public final class LoggingEventMapper {
     }
 
     @CanIgnoreReturnValue
-    public Builder setCaptureLogstashStructuredArguments(boolean captureLogstashStructuredArguments) {
+    public Builder setCaptureLogstashStructuredArguments(
+        boolean captureLogstashStructuredArguments) {
       this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
       return this;
     }
