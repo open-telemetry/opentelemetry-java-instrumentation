@@ -31,6 +31,7 @@ import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
 import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
 import java.time.Duration;
@@ -1156,10 +1157,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .satisfies(
             spanData -> {
               // Check for peer.service when running with javaagent instrumentation
-              if (spanData
-                  .getInstrumentationScopeInfo()
-                  .getName()
-                  .startsWith("io.opentelemetry.javaagent")) {
+              String distroName =
+                  spanData
+                      .getResource()
+                      .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
+              if ("opentelemetry-java-instrumentation".equals(distroName)) {
                 String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
                 if (expectedPeerService != null) {
                   assertThat(spanData.getAttributes())

@@ -203,7 +203,10 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
       PeerServiceResolver peerServiceResolver) {
     return addAttributesExtractor(
-        HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
+        HttpClientPeerServiceAttributesExtractor.create(
+            httpAttributesExtractorBuilder.getServerAddressAndPortExtractor(),
+            attributesGetter,
+            peerServiceResolver));
   }
 
   /** Sets the {@code peer.service} attribute for http client spans. */

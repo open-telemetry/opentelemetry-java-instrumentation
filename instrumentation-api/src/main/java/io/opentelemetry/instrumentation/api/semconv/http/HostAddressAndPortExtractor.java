@@ -10,11 +10,19 @@ import static io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttrib
 
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 
-final class HostAddressAndPortExtractor<REQUEST> implements AddressAndPortExtractor<REQUEST> {
+/**
+ * Extractor that gets server address and port from the HTTP Host header. This class is used as a
+ * fallback when the {@link HttpClientAttributesGetter#getServerAddress(Object)} and {@link
+ * HttpClientAttributesGetter#getServerPort(Object)} methods return null.
+ *
+ * @since 2.0.0
+ */
+public final class HostAddressAndPortExtractor<REQUEST>
+    implements AddressAndPortExtractor<REQUEST> {
 
   private final HttpCommonAttributesGetter<REQUEST, ?> getter;
 
-  HostAddressAndPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
+  public HostAddressAndPortExtractor(HttpCommonAttributesGetter<REQUEST, ?> getter) {
     this.getter = getter;
   }
 
