@@ -491,7 +491,7 @@ public final class LoggingEventMapper {
       LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (isLogstashMarker(marker)) {
-      captureLogstashMarker(builder, marker);
+      captureLogstashMarkerAndReferences(builder, marker);
     }
   }
 
@@ -500,27 +500,28 @@ public final class LoggingEventMapper {
       LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     for (Marker marker : loggingEvent.getMarkerList()) {
       if (isLogstashMarker(marker)) {
-        captureLogstashMarker(builder, marker);
+        captureLogstashMarkerAndReferences(builder, marker);
       }
     }
   }
 
   @NoMuzzle
-  private void captureLogstashMarker(LogRecordBuilder builder, Marker marker) {
+  private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
-    captureLogstashMarkerAttributes(builder, logstashMarker);
+    captureLogstashMarker(builder, logstashMarker);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
         Marker referenceMarker = it.next();
         if (isLogstashMarker(referenceMarker)) {
-          captureLogstashMarker(builder, referenceMarker);
+          captureLogstashMarkerAndReferences(builder, referenceMarker);
         }
       }
     }
   }
 
-  private void captureLogstashMarkerAttributes(LogRecordBuilder builder, Object logstashMarker) {
+  @NoMuzzle
+  private void captureLogstashMarker(LogRecordBuilder builder, LogstashMarker logstashMarker) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(builder, logstashMarker, this.captureEventName);
@@ -656,7 +657,7 @@ public final class LoggingEventMapper {
     // StructuredArguments created by v() or keyValue() extend SingleFieldAppendingMarker
     // which has getFieldName() and provides field value via reflection
     SingleFieldAppendingMarker marker = (SingleFieldAppendingMarker) argument;
-    captureLogstashMarkerAttributes(builder, marker);
+    captureLogstashMarker(builder, marker);
   }
 
   private interface FieldReader {
