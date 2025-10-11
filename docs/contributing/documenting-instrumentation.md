@@ -150,7 +150,7 @@ Some notes when writing descriptions:
   "This instrumentation **enables** HTTP server spans and HTTP server metrics for the ActiveJ" instead
   of something like "This instrumentation **provides** HTTP server spans and HTTP server metrics for the ActiveJ".
 * Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
-  * If it doesn't generate new telemetry, clearly explain what it's purpose is, for example whether it
+  * If it doesn't generate new telemetry, clearly explain what its purpose is, for example whether it
     augments or enriches existing telemetry produced by other instrumentations (e.g., by adding
     attributes or ensuring context propagation).
 * When describing the functionality of the instrumentation and the telemetry, specify using
