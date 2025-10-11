@@ -26,13 +26,13 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
         .image(
             jdk ->
                 String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20241021.11448062549",
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-20251009.18389598594",
                     jdk))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server started.*"));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 23})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void grpcSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
     ManagedChannel channel = null;

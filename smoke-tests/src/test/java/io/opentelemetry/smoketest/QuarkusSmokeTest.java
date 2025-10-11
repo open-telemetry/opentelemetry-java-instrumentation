@@ -21,14 +21,14 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
         .image(
             jdk ->
                 String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-20250915.17728045126",
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-20251009.18389598609",
                     jdk))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
         .setServiceName(false);
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {17, 21, 23}) // Quarkus 3.7+ requires Java 17+
+  @ValueSource(ints = {17, 21, 25}) // Quarkus 3.7+ requires Java 17+
   void quarkusSmokeTest(int jdk) {
     start(jdk);
 

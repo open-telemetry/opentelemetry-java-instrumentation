@@ -42,7 +42,7 @@ val targets = mapOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
     // Test application is not deployed when server is sarted with hotspot jdk version 21
     ImageTarget(listOf("6.2023.12"), listOf("hotspot"), listOf("11", "17"), war = "servlet-5.0"),
-    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21", latestJava), war = "servlet-5.0")
+    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
@@ -63,12 +63,12 @@ val targets = mapOf(
     ImageTarget(
       listOf("17.0.1.Final", "21.0.0.Final"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", latestJava)
+      listOf("8", "11", "17", "21")
     ),
     ImageTarget(
       listOf("28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21", latestJava),
+      listOf("11", "17", "21"),
       war = "servlet-5.0"
     ),
   ),

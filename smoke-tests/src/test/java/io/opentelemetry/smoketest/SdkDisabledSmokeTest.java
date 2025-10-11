@@ -18,13 +18,13 @@ class SdkDisabledSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20211213.1570880324")
+        .springBoot("20251011.18424653812")
         .env("OTEL_SDK_DISABLED", "true")
         .telemetryTimeout(Duration.ofSeconds(5));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void noopSdkSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
     assertThat(client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");

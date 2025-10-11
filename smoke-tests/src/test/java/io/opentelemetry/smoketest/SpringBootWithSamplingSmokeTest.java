@@ -21,13 +21,13 @@ class SpringBootWithSamplingSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20211213.1570880324")
+        .springBoot("20251011.18424653812")
         .env("OTEL_TRACES_SAMPLER", "parentbased_traceidratio")
         .env("OTEL_TRACES_SAMPLER_ARG", String.valueOf(SAMPLER_PROBABILITY));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void springBootWithProbabilitySamplingEnabled(int jdk) {
     start(jdk);
     for (int i = 1; i <= NUM_TRIES; i++) {
