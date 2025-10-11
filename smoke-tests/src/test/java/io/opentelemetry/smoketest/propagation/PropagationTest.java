@@ -16,7 +16,7 @@ abstract class PropagationTest extends AbstractSmokeTest<Integer> {
 
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
-    options.springBoot("20251009.18389598610");
+    options.springBoot("20251011.18424653812");
   }
 
   @Test
