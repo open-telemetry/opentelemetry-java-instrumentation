@@ -10,5 +10,6 @@
 | `otel.instrumentation.logback-appender.experimental.capture-arguments`                 | Boolean | `false` | Enable the capture of Logback logger arguments.                                                                                                                                            |
 | `otel.instrumentation.logback-appender.experimental.capture-logstash-attributes`       | Boolean | `false` | Enable the capture of Logstash attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods. |
 | `otel.instrumentation.logback-appender.experimental.capture-mdc-attributes`            | String  |         | Comma separated list of MDC attributes to capture. Use the wildcard character `*` to capture all attributes.                                                                               |
+| `otel.instrumentation.logback-appender.experimental.capture-event-name`                | Boolean | `false` | Enable moving the `event.name` attribute (captured by one of the other mechanisms of capturing attributes) to the log event name.                                                          |
 
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes

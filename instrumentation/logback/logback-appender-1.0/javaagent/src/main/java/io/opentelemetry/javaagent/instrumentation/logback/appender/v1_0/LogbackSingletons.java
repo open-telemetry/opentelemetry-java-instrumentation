@@ -47,6 +47,9 @@ public final class LogbackSingletons {
         config.getList(
             "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
             emptyList());
+    boolean captureEventName =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-event-name", false);
 
     mapper =
         LoggingEventMapper.builder()
@@ -58,6 +61,7 @@ public final class LogbackSingletons {
             .setCaptureLoggerContext(captureLoggerContext)
             .setCaptureArguments(captureArguments)
             .setCaptureLogstashAttributes(captureLogstashAttributes)
+            .setCaptureEventName(captureEventName)
             .build();
   }
 

@@ -11,7 +11,3 @@ dependencies {
 
   latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1.1 module
 }
-
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dio.opentelemetry.context.enableStrictContext=false")
-}

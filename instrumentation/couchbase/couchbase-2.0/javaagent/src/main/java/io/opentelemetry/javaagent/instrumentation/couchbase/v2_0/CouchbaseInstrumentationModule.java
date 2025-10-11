@@ -41,4 +41,9 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
   public List<String> injectedClassNames() {
     return singletonList("rx.OpenTelemetryTracingUtil");
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

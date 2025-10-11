@@ -35,7 +35,7 @@ tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental log attributes
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-event-name=true")
   jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }
