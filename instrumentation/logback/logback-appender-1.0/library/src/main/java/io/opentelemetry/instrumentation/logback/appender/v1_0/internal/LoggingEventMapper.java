@@ -519,9 +519,9 @@ public final class LoggingEventMapper {
       }
     }
   }
+  
 
-  @NoMuzzle
-  private void captureLogstashMarker(LogRecordBuilder builder, LogstashMarker logstashMarker) {
+  private void captureLogstashMarker(LogRecordBuilder builder, Object logstashMarker) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(builder, logstashMarker, this.captureEventName);
