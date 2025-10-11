@@ -28,7 +28,7 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void springBootSmokeTest(int jdk) {
     start(jdk);
 

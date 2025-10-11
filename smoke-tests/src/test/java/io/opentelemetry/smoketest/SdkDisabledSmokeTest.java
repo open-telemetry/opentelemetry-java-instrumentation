@@ -24,7 +24,7 @@ class SdkDisabledSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void noopSdkSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
     assertThat(client().get("/greeting").aggregate().join().contentUtf8()).isEqualTo("Hi!");
