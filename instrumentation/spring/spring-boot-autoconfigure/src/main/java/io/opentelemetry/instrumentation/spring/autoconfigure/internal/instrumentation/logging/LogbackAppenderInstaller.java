@@ -143,12 +143,23 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
     }
 
-    Boolean captureLogstashAttributes =
+    Boolean captureLogstashMarkerAttributes =
+        DeprecatedConfigProperties.getBoolean(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-markers",
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes");
+    if (captureLogstashMarkerAttributes != null) {
+      openTelemetryAppender.setCaptureLogstashMarkerAttributes(
+          captureLogstashMarkerAttributes.booleanValue());
+    }
+
+    Boolean captureLogstashStructuredArguments =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes");
-    if (captureLogstashAttributes != null) {
-      openTelemetryAppender.setCaptureLogstashAttributes(captureLogstashAttributes.booleanValue());
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments");
+    if (captureLogstashStructuredArguments != null) {
+      openTelemetryAppender.setCaptureLogstashStructuredArguments(
+          captureLogstashStructuredArguments.booleanValue());
     }
 
     String mdcAttributeProperty =
