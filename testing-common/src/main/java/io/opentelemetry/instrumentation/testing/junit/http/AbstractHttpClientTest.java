@@ -1152,16 +1152,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               } else {
                 assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
-
-              // Check for peer.service when test is configured to expect it
-              if (options.getTestPeerService()) {
+            })
+        .satisfies(
+            spanData -> {
+              // Check for peer.service when running with javaagent instrumentation
+              if (spanData
+                  .getInstrumentationScopeInfo()
+                  .getName()
+                  .startsWith("io.opentelemetry.javaagent")) {
                 String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
                 if (expectedPeerService != null) {
-                  assertThat(attrs)
+                  assertThat(spanData.getAttributes())
                       .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
                 }
-                // If expectedPeerService is null, we don't assert absence here
-                // to allow flexibility in individual tests
               }
             });
   }
