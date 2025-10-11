@@ -47,5 +47,6 @@ tasks {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
     systemProperty("metadataConfig", "otel.instrumentation.http.client.emit-experimental-telemetry=true,otel.instrumentation.http.server.emit-experimental-telemetry=true")
+    systemProperty("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
   }
 }

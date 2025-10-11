@@ -20,3 +20,7 @@ dependencies {
 
   latestDepTestLibrary("org.springframework:spring-web:5.+") // see spring-web-6.0 module
 }
+
+tasks.withType<Test>().configureEach {
+  systemProperty("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
+}
