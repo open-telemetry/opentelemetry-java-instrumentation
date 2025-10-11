@@ -14,11 +14,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.Executors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -68,13 +70,15 @@ abstract class AbstractSpringIntegrationTracingTest {
     }
   }
 
+  private static Stream<Arguments> shouldPropagateContextProvider() {
+    return Stream.of(
+        // channelName, interceptorSpanName
+        Arguments.of("directChannel", "application.directChannel process"),
+        Arguments.of("executorChannel", "executorChannel process"));
+  }
+
   @ParameterizedTest
-  @CsvSource(
-      value = {
-        "directChannel,application.directChannel process",
-        "executorChannel,executorChannel process"
-      },
-      delimiter = ',')
+  @MethodSource("shouldPropagateContextProvider")
   public void shouldPropagateContext(String channelName, String interceptorSpanName) {
     SubscribableChannel channel =
         applicationContext.getBean(channelName, SubscribableChannel.class);
