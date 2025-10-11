@@ -22,7 +22,10 @@ import org.apache.kafka.clients.producer.RecordMetadata;
  * A ProducerInterceptor that adds tracing capability. Add this interceptor's class name or class
  * via ProducerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Producer's properties to get it
  * instantiated and used. See more details on ProducerInterceptor usage in its Javadoc.
+ *
+ * @deprecated Use {@link KafkaTelemetry#producerInterceptorConfigProperties()} instead.
  */
+@Deprecated
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
   private static final KafkaTelemetry telemetry =
@@ -37,7 +40,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
   @Override
   @CanIgnoreReturnValue
   public ProducerRecord<K, V> onSend(ProducerRecord<K, V> producerRecord) {
-    telemetry.buildAndInjectSpan(producerRecord, clientId);
+    telemetry.getProducerTelemetry().buildAndInjectSpan(producerRecord, clientId);
     return producerRecord;
   }
 
