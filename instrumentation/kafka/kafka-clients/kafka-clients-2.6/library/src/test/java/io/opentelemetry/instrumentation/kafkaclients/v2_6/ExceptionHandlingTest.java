@@ -7,52 +7,54 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.lang.reflect.Proxy;
+import java.time.Duration;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.producer.Producer;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
-class ExceptionHandlingTest extends KafkaClientBaseTest {
+class ExceptionHandlingTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Test
-  void testConsumerPropagatesException() {
-    Consumer<?, ?> throwingConsumer =
+  void testConsumerExceptionPropagatesToCaller() {
+    Consumer<?, ?> consumer =
         (Consumer<?, ?>)
             Proxy.newProxyInstance(
-                getClass().getClassLoader(),
+                ExceptionHandlingTest.class.getClassLoader(),
                 new Class<?>[] {Consumer.class},
-                new InvocationHandler() {
-                  @Override
-                  public Object invoke(Object proxy, Method method, Object[] args) {
-                    throw new IllegalStateException("Test exception");
-                  }
+                (proxy, method, args) -> {
+                  throw new IllegalStateException("can't invoke");
                 });
-    Consumer<?, ?> wrappedConsumer =
-        KafkaTelemetry.create(testing.getOpenTelemetry()).wrap(throwingConsumer);
-    assertThatThrownBy(() -> wrappedConsumer.poll(null))
+
+    KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
+    Consumer<?, ?> wrappedConsumer = telemetry.wrap(consumer);
+
+    assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofMillis(1)))
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Test exception");
+        .hasMessage("can't invoke");
   }
 
   @Test
-  void testProducerPropagatesException() {
-    Producer<?, ?> throwingProducer =
+  void testProducerExceptionPropagatesToCaller() {
+    Producer<?, ?> producer =
         (Producer<?, ?>)
             Proxy.newProxyInstance(
-                getClass().getClassLoader(),
+                ExceptionHandlingTest.class.getClassLoader(),
                 new Class<?>[] {Producer.class},
-                new InvocationHandler() {
-                  @Override
-                  public Object invoke(Object proxy, Method method, Object[] args) {
-                    throw new IllegalStateException("Test exception");
-                  }
+                (proxy, method, args) -> {
+                  throw new IllegalStateException("can't invoke");
                 });
-    Producer<?, ?> wrappedProducer =
-        KafkaTelemetry.create(testing.getOpenTelemetry()).wrap(throwingProducer);
-    assertThatThrownBy(() -> wrappedProducer.send(null))
+
+    KafkaTelemetry telemetry = KafkaTelemetry.builder(testing.getOpenTelemetry()).build();
+    Producer<?, ?> wrappedProducer = telemetry.wrap(producer);
+    assertThatThrownBy(wrappedProducer::flush)
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("Test exception");
+        .hasMessage("can't invoke");
   }
 }

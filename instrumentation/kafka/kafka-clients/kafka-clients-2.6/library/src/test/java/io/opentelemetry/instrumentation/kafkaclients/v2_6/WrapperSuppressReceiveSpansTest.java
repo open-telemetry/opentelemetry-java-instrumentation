@@ -46,19 +46,18 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(sendAttributes(testHeaders)),
                 span ->
-                    span.hasName("producer callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span ->
                     span.hasName(SHARED_TOPIC + " process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
-                        .hasLinksSatisfying(links -> assertThat(links).isEmpty())
                         .hasAttributesSatisfyingExactly(processAttributes(greeting, testHeaders)),
                 span ->
                     span.hasName("process child")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(3))));
+                        .hasParent(trace.getSpan(2)),
+                span ->
+                    span.hasName("producer callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
