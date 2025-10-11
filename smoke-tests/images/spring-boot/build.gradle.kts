@@ -17,10 +17,6 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
 }
 
-otelJava {
-  minJavaVersionSupported = JavaVersion.VERSION_17
-}
-
 configurations.runtimeClasspath {
   resolutionStrategy {
     // requires old logback (and therefore also old slf4j)
@@ -33,6 +29,16 @@ val targetJDK = project.findProperty("targetJDK") ?: "17"
 
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
+
+java {
+  // Jib detects the Java version from sourceCompatibility to determine the entrypoint format.
+  // Java 8 doesn't support the @argfile syntax (added in Java 9), so Jib needs to know
+  // to use an expanded classpath format instead (e.g., /app/classes:/app/libs/*).
+  if (targetJDK == "8") {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+  }
+}
 
 springBoot {
   buildInfo {
