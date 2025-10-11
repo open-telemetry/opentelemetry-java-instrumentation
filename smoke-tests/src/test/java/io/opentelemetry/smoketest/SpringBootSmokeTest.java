@@ -60,7 +60,7 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
                                         ServiceAttributes.SERVICE_NAME, "otel-spring-test-app")
                                     .hasAttribute(
                                         ServiceAttributes.SERVICE_VERSION,
-                                        "2.10.0-alpha-SNAPSHOT")),
+                                        "2.21.0-alpha-SNAPSHOT")),
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
