@@ -27,7 +27,7 @@ import org.apache.kafka.common.TopicPartition;
  * via ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Consumer's properties to get it
  * instantiated and used. See more details on ConsumerInterceptor usage in its Javadoc.
  *
- * @deprecated Use {@link OpenTelemetryConsumerInterceptor} instead.
+ * @deprecated Use {@link KafkaTelemetry#consumerInterceptorConfigProperties()} instead.
  */
 @Deprecated
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
