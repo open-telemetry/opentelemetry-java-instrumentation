@@ -534,7 +534,7 @@ class AdviceTransformer {
             Type[] argumentTypes = ga.getArgumentTypes();
 
             if (isEnterAdvice) {
-              // we have changed the type fo method arguments annotated with @Advice.Local to Object
+              // we have changed the type of method arguments annotated with @Advice.Local to Object
               // here we'll load the argument, cast it to its actual type, and store it back
               for (AdviceLocal adviceLocal : adviceLocals) {
                 ga.loadArg(adviceLocal.adviceIndex);
