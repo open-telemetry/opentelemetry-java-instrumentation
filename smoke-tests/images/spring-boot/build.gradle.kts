@@ -42,6 +42,9 @@ java {
 
 springBoot {
   buildInfo {
+    properties {
+      version = "1.2.3"
+    }
   }
 }
 
