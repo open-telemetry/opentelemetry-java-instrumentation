@@ -55,7 +55,9 @@ public final class ReactorNettySingletons {
                 ? NettyConnectionInstrumentationFlag.ENABLED
                 : NettyConnectionInstrumentationFlag.DISABLED,
             NettyConnectionInstrumentationFlag.DISABLED);
-    CONNECTION_INSTRUMENTER = instrumenterFactory.createConnectionInstrumenter();
+    CONNECTION_INSTRUMENTER =
+        instrumenterFactory.createConnectionInstrumenter(
+            AgentCommonConfig.get().getPeerServiceResolver());
   }
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
