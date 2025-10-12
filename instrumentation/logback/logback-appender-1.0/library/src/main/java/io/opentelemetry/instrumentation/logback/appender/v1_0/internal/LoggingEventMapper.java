@@ -736,8 +736,8 @@ public final class LoggingEventMapper {
     }
 
     /**
-     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method
-     *     is deprecated and will be removed in a future release.
+     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
+     *     deprecated and will be removed in a future release.
      */
     @Deprecated
     @CanIgnoreReturnValue

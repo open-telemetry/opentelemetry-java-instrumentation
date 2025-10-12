@@ -127,9 +127,6 @@ public class LogstashMarkerTest {
         .log();
 
     testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("log message 1")
-                .hasTotalAttributeCount(0));
+        logRecord -> logRecord.hasBody("log message 1").hasTotalAttributeCount(0));
   }
 }

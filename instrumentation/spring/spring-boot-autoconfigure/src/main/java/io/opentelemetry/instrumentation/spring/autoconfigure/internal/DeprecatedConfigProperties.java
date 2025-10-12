@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import static java.util.logging.Level.WARNING;
 
 import java.util.logging.Logger;
-import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at

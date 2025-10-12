@@ -71,10 +71,7 @@ public class LogstashStructuredArgsTest {
     logger.info("Event occurred: {}", StructuredArguments.v("event.name", "OrderPlaced"));
 
     testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("Event occurred: OrderPlaced")
-                .hasEventName("OrderPlaced"));
+        logRecord -> logRecord.hasBody("Event occurred: OrderPlaced").hasEventName("OrderPlaced"));
   }
 
   @Test
@@ -88,10 +85,9 @@ public class LogstashStructuredArgsTest {
 
     testing.waitAndAssertLogRecords(
         logRecord ->
-            logRecord
-                .hasAttributesSatisfying(
-                    equalTo(AttributeKey.longKey("user_id"), 12345L),
-                    equalTo(AttributeKey.longKey("timestamp"), timestamp),
-                    equalTo(AttributeKey.booleanKey("session_active"), true)));
+            logRecord.hasAttributesSatisfying(
+                equalTo(AttributeKey.longKey("user_id"), 12345L),
+                equalTo(AttributeKey.longKey("timestamp"), timestamp),
+                equalTo(AttributeKey.booleanKey("session_active"), true)));
   }
 }
