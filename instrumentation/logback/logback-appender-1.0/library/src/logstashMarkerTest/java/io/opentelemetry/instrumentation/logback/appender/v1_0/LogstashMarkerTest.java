@@ -22,8 +22,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tests for Logstash Marker functionality using net.logstash.logback.marker.Markers.
- * This test suite focuses specifically on testing marker-based structured logging.
+ * Tests for Logstash Marker functionality using net.logstash.logback.marker.Markers. This test
+ * suite focuses specifically on testing marker-based structured logging.
  */
 public class LogstashMarkerTest {
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");

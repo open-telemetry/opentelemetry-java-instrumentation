@@ -19,8 +19,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Tests for Logstash StructuredArguments functionality using net.logstash.logback.argument.StructuredArguments.
- * This test suite focuses specifically on testing structured argument logging.
+ * Tests for Logstash StructuredArguments functionality using
+ * net.logstash.logback.argument.StructuredArguments. This test suite focuses specifically on
+ * testing structured argument logging.
  */
 public class LogstashStructuredArgsTest {
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
@@ -51,8 +52,7 @@ public class LogstashStructuredArgsTest {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("Basic structured arg: 123")
-                .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("customer_id"), "123")));
+                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("customer_id"), "123")));
   }
 
   @Test
@@ -65,8 +65,7 @@ public class LogstashStructuredArgsTest {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("Processing order: order_id=ORD-456")
-                .hasAttributesSatisfying(
-                    equalTo(AttributeKey.stringKey("order_id"), "ORD-456")));
+                .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("order_id"), "ORD-456")));
   }
 
   @Test
