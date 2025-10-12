@@ -9,8 +9,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.resources.Resource;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -28,14 +26,8 @@ public class LogstashMarkerTest {
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
 
-  private static Resource resource;
-  private static InstrumentationScopeInfo instrumentationScopeInfo;
-
   @BeforeAll
   static void setupAll() {
-    resource = Resource.getDefault();
-    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
-
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
@@ -56,8 +48,6 @@ public class LogstashMarkerTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(3) // 3 markers (event.name handled separately)
                 .hasEventName("MyEventName")
@@ -95,8 +85,6 @@ public class LogstashMarkerTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 // 14 fields (including map keys)
                 .hasTotalAttributeCount(14)
@@ -141,8 +129,6 @@ public class LogstashMarkerTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(0));
   }

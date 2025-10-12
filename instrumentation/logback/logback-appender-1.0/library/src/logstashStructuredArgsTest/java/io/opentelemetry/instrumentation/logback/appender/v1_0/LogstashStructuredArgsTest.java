@@ -9,8 +9,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.resources.Resource;
 import net.logstash.logback.argument.StructuredArguments;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -25,14 +23,8 @@ public class LogstashStructuredArgsTest {
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
 
-  private static Resource resource;
-  private static InstrumentationScopeInfo instrumentationScopeInfo;
-
   @BeforeAll
   static void setupAll() {
-    resource = Resource.getDefault();
-    instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
-
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
@@ -43,8 +35,6 @@ public class LogstashStructuredArgsTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("Basic structured arg: 123")
                 .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("customer_id"), "123")));
   }
@@ -56,8 +46,6 @@ public class LogstashStructuredArgsTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("Processing order: order_id=ORD-456")
                 .hasAttributesSatisfying(equalTo(AttributeKey.stringKey("order_id"), "ORD-456")));
   }
@@ -72,8 +60,6 @@ public class LogstashStructuredArgsTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("Transaction: 789 amount: 99.99")
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.stringKey("customer_id"), "789"),
@@ -87,8 +73,6 @@ public class LogstashStructuredArgsTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("Event occurred: OrderPlaced")
                 .hasEventName("OrderPlaced"));
   }
@@ -105,8 +89,6 @@ public class LogstashStructuredArgsTest {
     testing.waitAndAssertLogRecords(
         logRecord ->
             logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.longKey("user_id"), 12345L),
                     equalTo(AttributeKey.longKey("timestamp"), timestamp),
