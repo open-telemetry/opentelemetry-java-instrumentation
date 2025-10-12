@@ -42,4 +42,5 @@ tasks {
 tasks.withType<Test>().configureEach {
   // TODO run tests both with and without experimental span attributes
   jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+  systemProperty("otel.instrumentation.common.peer-service-mapping", "127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service")
 }
