@@ -80,7 +80,7 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
     }
 
     AddressAndPort addressAndPort = addressAndPortExtractor.extract(request);
-    
+
     Supplier<String> pathSupplier = () -> getUrlPath(attributesGetter, request);
     String peerService =
         mapToPeerService(addressAndPort.getAddress(), addressAndPort.getPort(), pathSupplier);
