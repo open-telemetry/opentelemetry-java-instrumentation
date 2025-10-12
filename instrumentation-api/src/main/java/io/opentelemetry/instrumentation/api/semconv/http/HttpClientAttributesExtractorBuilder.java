@@ -49,8 +49,7 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     serverAddressAndPortExtractor =
-        new ServerAddressAndPortExtractor<>(
-            httpAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
+        ServerAddressAndPortExtractor.createWithHostHeaderFallback(httpAttributesGetter);
   }
 
   /**
@@ -200,16 +199,5 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
 
   InternalServerAttributesExtractor<REQUEST> buildServerExtractor() {
     return new InternalServerAttributesExtractor<>(serverAddressAndPortExtractor);
-  }
-
-  /**
-   * Returns the {@link AddressAndPortExtractor} that will be used to extract server address and
-   * port. This extractor includes fallback logic to extract from the Host header if the attributes
-   * getter returns null.
-   *
-   * @return the server address and port extractor
-   */
-  public AddressAndPortExtractor<REQUEST> getServerAddressAndPortExtractor() {
-    return serverAddressAndPortExtractor;
   }
 }

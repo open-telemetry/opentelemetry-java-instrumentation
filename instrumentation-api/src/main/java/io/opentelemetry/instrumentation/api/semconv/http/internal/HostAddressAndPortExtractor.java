@@ -3,19 +3,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.semconv.http;
+package io.opentelemetry.instrumentation.api.semconv.http.internal;
 
-import static io.opentelemetry.instrumentation.api.semconv.http.HeaderParsingHelper.setPort;
-import static io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesExtractor.firstHeaderValue;
-
+import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
+import java.util.List;
+import javax.annotation.Nullable;
 
 /**
- * Extractor that gets server address and port from the HTTP Host header. This class is used as a
- * fallback when the {@link HttpClientAttributesGetter#getServerAddress(Object)} and {@link
- * HttpClientAttributesGetter#getServerPort(Object)} methods return null.
+ * Extracts server address and port from the HTTP Host header.
  *
- * @since 2.0.0
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public final class HostAddressAndPortExtractor<REQUEST>
     implements AddressAndPortExtractor<REQUEST> {
@@ -39,6 +38,22 @@ public final class HostAddressAndPortExtractor<REQUEST>
     } else {
       sink.setAddress(host.substring(0, hostHeaderSeparator));
       setPort(sink, host, hostHeaderSeparator + 1, host.length());
+    }
+  }
+
+  @Nullable
+  private static String firstHeaderValue(List<String> values) {
+    return values.isEmpty() ? null : values.get(0);
+  }
+
+  private static void setPort(AddressPortSink sink, String header, int start, int end) {
+    if (start == end) {
+      return;
+    }
+    try {
+      sink.setPort(Integer.parseInt(header.substring(start, end)));
+    } catch (NumberFormatException ignored) {
+      // malformed port, ignoring
     }
   }
 }

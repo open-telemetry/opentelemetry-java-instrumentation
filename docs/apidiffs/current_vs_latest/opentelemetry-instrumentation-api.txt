@@ -1,9 +1,2 @@
 Comparing source compatibility of opentelemetry-instrumentation-api-2.21.0-SNAPSHOT.jar against opentelemetry-instrumentation-api-2.20.1.jar
-***  MODIFIED CLASS: PUBLIC (<- PACKAGE_PROTECTED) FINAL io.opentelemetry.instrumentation.api.semconv.http.HostAddressAndPortExtractor  (not serializable)
-	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
-	GENERIC TEMPLATES: === REQUEST:java.lang.Object
-	***  MODIFIED CONSTRUCTOR: PUBLIC (<- PACKAGE_PROTECTED) HostAddressAndPortExtractor(io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter<REQUEST,?><REQUEST,?>)
-***  MODIFIED CLASS: PUBLIC FINAL io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder  (not serializable)
-	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
-	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
-	+++  NEW METHOD: PUBLIC(+) io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor<REQUEST> getServerAddressAndPortExtractor()
+No changes.
