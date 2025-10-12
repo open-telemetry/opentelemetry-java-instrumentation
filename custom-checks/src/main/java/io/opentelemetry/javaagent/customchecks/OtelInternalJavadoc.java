@@ -83,6 +83,6 @@ public class OtelInternalJavadoc extends BugChecker implements BugChecker.ClassT
     if (docCommentTree == null) {
       return null;
     }
-    return docCommentTree.toString().replace("\n", "");
+    return docCommentTree.toString().replace("\n", " ").replace(" * ", " ").replaceAll("\\s+", " ");
   }
 }

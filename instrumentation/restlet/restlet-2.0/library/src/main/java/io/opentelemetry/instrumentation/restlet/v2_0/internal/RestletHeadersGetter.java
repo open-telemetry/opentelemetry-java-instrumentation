@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.restlet.v2_0.internal;
 
 import static java.util.Collections.emptySet;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -21,7 +21,7 @@ import org.restlet.Message;
 import org.restlet.Request;
 import org.restlet.util.Series;
 
-final class RestletHeadersGetter implements ExtendedTextMapGetter<Request> {
+final class RestletHeadersGetter implements TextMapGetter<Request> {
 
   private static final MethodHandle GET_ATTRIBUTES;
 

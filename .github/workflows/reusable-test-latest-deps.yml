@@ -55,7 +55,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -91,15 +91,26 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-              per_page: 100
-            });
-            const matrix = JSON.parse(process.env.matrix);
-            const job_name = `test-latest-deps / testLatestDeps${ matrix['test-partition'] }`;
-            return workflow_run.jobs.find((job) => job.name === job_name).html_url;
+            try {
+              const job_name = `test-latest-deps / testLatestDeps${ matrix['test-partition'] }`;
+              const workflow_jobs_nested = await github.paginate(
+                github.rest.actions.listJobsForWorkflowRun,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: context.runId,
+                  per_page: 100
+                },
+                (response) => {
+                  return response.data;
+                },
+              );
+              const job = workflow_jobs_nested.flat().find((job) => job.name === job_name);
+              return job ? job.html_url : '';
+            } catch (e) {
+              core.warning(`Failed to get current job url: ${e}`);
+              return '';
+            }
 
       - name: Flaky test report
         if: ${{ !cancelled() }}

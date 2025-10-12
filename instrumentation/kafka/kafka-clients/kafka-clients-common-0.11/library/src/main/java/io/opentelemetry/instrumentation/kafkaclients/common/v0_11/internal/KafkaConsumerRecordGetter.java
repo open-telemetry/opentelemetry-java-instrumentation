@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.Iterator;
 import java.util.stream.Collectors;
@@ -13,7 +13,7 @@ import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import org.apache.kafka.common.header.Header;
 
-enum KafkaConsumerRecordGetter implements ExtendedTextMapGetter<KafkaProcessRequest> {
+enum KafkaConsumerRecordGetter implements TextMapGetter<KafkaProcessRequest> {
   INSTANCE;
 
   @Override

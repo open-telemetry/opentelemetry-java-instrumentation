@@ -57,4 +57,9 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
   protected int getResponseStatus(Response response) {
     return response.getStatusLine().getStatusCode();
   }
+
+  @Override
+  protected String getInstrumentationName() {
+    return "io.opentelemetry.opensearch-rest-1.0";
+  }
 }

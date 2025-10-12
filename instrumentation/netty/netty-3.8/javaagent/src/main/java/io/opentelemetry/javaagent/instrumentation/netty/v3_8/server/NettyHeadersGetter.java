@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
-import io.opentelemetry.context.propagation.internal.ExtendedTextMapGetter;
+import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 
-enum NettyHeadersGetter implements ExtendedTextMapGetter<HttpRequestAndChannel> {
+enum NettyHeadersGetter implements TextMapGetter<HttpRequestAndChannel> {
   INSTANCE;
 
   @Override

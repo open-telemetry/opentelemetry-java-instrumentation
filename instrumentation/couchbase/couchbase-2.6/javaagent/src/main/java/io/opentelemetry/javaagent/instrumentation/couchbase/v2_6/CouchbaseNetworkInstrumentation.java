@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_6;
 
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_6.VirtualFieldHelper.COUCHBASE_REQUEST_INFO;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -12,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.message.CouchbaseRequest;
 import com.couchbase.client.deps.io.netty.channel.ChannelHandlerContext;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.CouchbaseRequestInfo;
@@ -51,10 +51,7 @@ public class CouchbaseNetworkInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) ChannelHandlerContext channelHandlerContext,
         @Advice.Argument(1) CouchbaseRequest request) {
 
-      VirtualField<CouchbaseRequest, CouchbaseRequestInfo> virtualField =
-          VirtualField.find(CouchbaseRequest.class, CouchbaseRequestInfo.class);
-
-      CouchbaseRequestInfo requestInfo = virtualField.get(request);
+      CouchbaseRequestInfo requestInfo = COUCHBASE_REQUEST_INFO.get(request);
       if (requestInfo != null) {
         requestInfo.setPeerAddress(channelHandlerContext.channel().remoteAddress());
         requestInfo.setLocalAddress(localSocket);

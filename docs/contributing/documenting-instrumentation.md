@@ -83,11 +83,15 @@ instrumentation.
 Example:
 
 ```yaml
+display_name: "Example Instrumentation"
 description: "This instrumentation enables..."
 semantic_conventions:
   - HTTP_CLIENT_SPANS
   - DATABASE_CLIENT_SPANS
   - JVM_RUNTIME_METRICS
+features:
+  - HTTP_ROUTE
+  - CONTEXT_PROPAGATION
 disabled_by_default: true
 classification: library
 library_link: https://github.com/...
@@ -114,6 +118,15 @@ additional_telemetry:
             type: "STRING"
 ```
 
+### Display Name (optional)
+
+Display name is mostly used for UI purposes, and has two main uses:
+
+- Providing a more user-friendly name for the instrumentation than the module name
+  (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
+- Collapsing multiple related modules into a single display name
+  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-fork-join-2.5").
+
 ### Description (required)
 
 At a minimum, every instrumentation metadata file should include a `description`.
@@ -137,7 +150,7 @@ Some notes when writing descriptions:
   "This instrumentation **enables** HTTP server spans and HTTP server metrics for the ActiveJ" instead
   of something like "This instrumentation **provides** HTTP server spans and HTTP server metrics for the ActiveJ".
 * Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
-  * If it doesn't generate new telemetry, clearly explain what it's purpose is, for example whether it
+  * If it doesn't generate new telemetry, clearly explain what its purpose is, for example whether it
     augments or enriches existing telemetry produced by other instrumentations (e.g., by adding
     attributes or ensuring context propagation).
 * When describing the functionality of the instrumentation and the telemetry, specify using
@@ -147,6 +160,13 @@ Some notes when writing descriptions:
   the description unless they are essential to understanding the purpose of the instrumentation.
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
+* When describing instrumentations with controller or view spans:
+  * Always explicitly state that controller/view spans are disabled by default
+  * Use the phrase "(controller spans are disabled by default)" or "(view spans are disabled by default)"
+  * When an instrumentation has both enabled-by-default features (like HTTP_ROUTE) and disabled-by-default
+    features (like CONTROLLER_SPANS or VIEW_SPANS), describe the enabled features first, then the disabled features
+  * Example: "This instrumentation enriches HTTP server spans with route information, and enables
+    controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default)."
 
 
 ### Semantic Conventions
@@ -173,6 +193,22 @@ List of possible options:
 * [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
 * [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
 * [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+
+### Features (optional)
+
+As a way to help further categorize instrumentations, you can add a `features` field with a list of
+the relevant functionality descriptions.
+
+List of possible options:
+
+* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
+* `CONTEXT_PROPAGATION`: Instrumentation that propagates OpenTelemetry context across application or thread boundaries. This applies to:
+  * Inter-process/application context propagation: Passing context through headers between applications (HTTP, gRPC, messaging, etc.)
+  * Inter-thread context propagation: Passing context from one thread to another (executors, actors, reactive streams, etc.)
+  * Does not include standard single-threaded scope management or normal span creation patterns
+* `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
+* `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
+* `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
 
 ### Library Link
 

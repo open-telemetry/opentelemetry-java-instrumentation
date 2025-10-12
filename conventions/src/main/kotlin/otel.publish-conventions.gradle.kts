@@ -1,6 +1,8 @@
 plugins {
   `maven-publish`
   signing
+
+  id("otel.japicmp-conventions")
 }
 
 publishing {
