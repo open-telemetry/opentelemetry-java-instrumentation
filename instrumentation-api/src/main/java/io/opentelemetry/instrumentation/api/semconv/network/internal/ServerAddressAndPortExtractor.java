@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
-import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 
 /**
@@ -24,22 +22,6 @@ public final class ServerAddressAndPortExtractor<REQUEST>
       AddressAndPortExtractor<REQUEST> fallbackAddressAndPortExtractor) {
     this.getter = getter;
     this.fallbackAddressAndPortExtractor = fallbackAddressAndPortExtractor;
-  }
-
-  /**
-   * Creates a {@link ServerAddressAndPortExtractor} with a fallback to extract from the HTTP Host
-   * header. This is the standard configuration for HTTP client instrumentation.
-   *
-   * @param httpAttributesGetter the HTTP attributes getter (which also implements ServerAttributesGetter)
-   * @return a new extractor with Host header fallback
-   */
-  public static <REQUEST> ServerAddressAndPortExtractor<REQUEST> createWithHostHeaderFallback(
-      HttpCommonAttributesGetter<REQUEST, ?> httpAttributesGetter) {
-    // HttpCommonAttributesGetter extends ServerAttributesGetter, so this is safe
-    @SuppressWarnings("unchecked")
-    ServerAttributesGetter<REQUEST> serverGetter = (ServerAttributesGetter<REQUEST>) httpAttributesGetter;
-    return new ServerAddressAndPortExtractor<>(
-        serverGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
   }
 
   @Override

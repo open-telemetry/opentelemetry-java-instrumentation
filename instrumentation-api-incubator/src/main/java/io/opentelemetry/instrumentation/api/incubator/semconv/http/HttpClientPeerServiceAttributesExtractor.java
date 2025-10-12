@@ -12,8 +12,10 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceRes
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
@@ -44,14 +46,18 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   /**
    * Returns a new {@link HttpClientPeerServiceAttributesExtractor} that will use the passed {@code
-   * addressAndPortExtractor} to extract the server address and port, and the {@code
-   * attributesGetter} to extract the URL path for peer service resolution.
+   * attributesGetter} to extract server address and port (with fallback to the HTTP Host header).
+   *
+   * @param attributesGetter the HTTP attributes getter
+   * @param peerServiceResolver the peer service resolver
    */
   public static <REQUEST, RESPONSE>
       HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
-          AddressAndPortExtractor<REQUEST> addressAndPortExtractor,
           HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
           PeerServiceResolver peerServiceResolver) {
+    AddressAndPortExtractor<REQUEST> addressAndPortExtractor =
+        new ServerAddressAndPortExtractor<>(
+            attributesGetter, new HostAddressAndPortExtractor<>(attributesGetter));
     return new HttpClientPeerServiceAttributesExtractor<>(
         addressAndPortExtractor, attributesGetter, peerServiceResolver);
   }

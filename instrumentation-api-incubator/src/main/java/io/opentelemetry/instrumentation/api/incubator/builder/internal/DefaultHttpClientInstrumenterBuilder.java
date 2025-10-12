@@ -31,7 +31,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.ServerAddressAndPortExtractor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -204,10 +203,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setPeerServiceResolver(
       PeerServiceResolver peerServiceResolver) {
     return addAttributesExtractor(
-        HttpClientPeerServiceAttributesExtractor.create(
-            ServerAddressAndPortExtractor.createWithHostHeaderFallback(attributesGetter),
-            attributesGetter,
-            peerServiceResolver));
+        HttpClientPeerServiceAttributesExtractor.create(attributesGetter, peerServiceResolver));
   }
 
   /** Sets the {@code peer.service} attribute for http client spans. */

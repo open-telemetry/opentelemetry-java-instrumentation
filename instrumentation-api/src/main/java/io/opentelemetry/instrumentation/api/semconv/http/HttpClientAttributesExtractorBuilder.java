@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HostAddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPortExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalServerAttributesExtractor;
@@ -49,7 +50,8 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
       HttpClientAttributesGetter<REQUEST, RESPONSE> httpAttributesGetter) {
     this.httpAttributesGetter = httpAttributesGetter;
     serverAddressAndPortExtractor =
-        ServerAddressAndPortExtractor.createWithHostHeaderFallback(httpAttributesGetter);
+        new ServerAddressAndPortExtractor<>(
+            httpAttributesGetter, new HostAddressAndPortExtractor<>(httpAttributesGetter));
   }
 
   /**
