@@ -9,6 +9,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeprecatedConfigProperties;
 import java.util.Iterator;
 import java.util.Optional;
 import org.slf4j.ILoggerFactory;
