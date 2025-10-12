@@ -19,30 +19,19 @@ public final class DeprecatedConfigProperties {
 
   private static final Logger logger = Logger.getLogger(DeprecatedConfigProperties.class.getName());
 
-  public static Boolean getBoolean(
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
+  public static boolean getBoolean(
+      InstrumentationConfig config,
       String deprecatedPropertyName,
-      String newPropertyName) {
-    warnIfUsed(applicationEnvironmentPreparedEvent, deprecatedPropertyName, newPropertyName);
-    Boolean deprecatedValue =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty(deprecatedPropertyName, Boolean.class);
-    Boolean newValue =
-        applicationEnvironmentPreparedEvent
-            .getEnvironment()
-            .getProperty(newPropertyName, Boolean.class);
-
-    // Return the new value if it exists, otherwise return the deprecated value
-    return newValue != null ? newValue : deprecatedValue;
+      String newPropertyName,
+      boolean defaultValue) {
+    warnIfUsed(config, deprecatedPropertyName, newPropertyName);
+    boolean value = config.getBoolean(deprecatedPropertyName, defaultValue);
+    return config.getBoolean(newPropertyName, value);
   }
 
   private static void warnIfUsed(
-      ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
-      String deprecatedPropertyName,
-      String newPropertyName) {
-    if (applicationEnvironmentPreparedEvent.getEnvironment().getProperty(deprecatedPropertyName)
-        != null) {
+      InstrumentationConfig config, String deprecatedPropertyName, String newPropertyName) {
+    if (config.getString(deprecatedPropertyName) != null) {
       logger.log(
           WARNING,
           "Deprecated property \"{0}\" was used; use the \"{1}\" property instead",
