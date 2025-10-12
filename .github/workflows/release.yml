@@ -153,8 +153,10 @@ jobs:
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/CHANGELOG_SECTION.md
 
-          # Format changelog section for release notes (includes breaking changes handling)
-          .github/scripts/format-release-notes.sh /tmp/CHANGELOG_SECTION.md /tmp/release-notes.txt
+          # the complex perl regex is needed because markdown docs render newlines as soft wraps
+          # while release notes render them as line breaks
+          perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' /tmp/CHANGELOG_SECTION.md \
+            >> /tmp/release-notes.txt
 
           # conditional block not indented because of the heredoc
           if [[ $VERSION == *.0 ]]; then

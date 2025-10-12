@@ -50,28 +50,28 @@ done <<< "$commits"
 
 # Output breaking changes section
 if [[ "$breaking_changes_found" == "true" ]]; then
-  echo "### ⚠️ Breaking Changes"
+  echo "## ⚠️ Breaking Changes"
   echo
   echo -n "$breaking_changes"
 fi
 
 # Output deprecations section
 if [[ "$deprecations_found" == "true" ]]; then
-  echo "### 🚫 Deprecations"
+  echo "## 🚫 Deprecations"
   echo
   echo -n "$deprecations"
 fi
 
 # Output "no changes" messages if needed
 if [[ "$breaking_changes_found" == "false" ]]; then
-  echo "### ⚠️ Breaking Changes"
+  echo "## ⚠️ Breaking Changes"
   echo
   echo "*No breaking changes in this release.*"
   echo
 fi
 
 if [[ "$deprecations_found" == "false" ]]; then
-  echo "### 🚫 Deprecations"
+  echo "## 🚫 Deprecations"
   echo
   echo "*No deprecations in this release.*"
   echo
