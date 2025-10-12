@@ -18,11 +18,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Tests for Logstash StructuredArguments functionality using
- * net.logstash.logback.argument.StructuredArguments. This test suite focuses specifically on
- * testing structured argument logging.
- */
 public class LogstashStructuredArgsTest {
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
