@@ -736,13 +736,13 @@ public final class LoggingEventMapper {
     }
 
     /**
-     * @deprecated Use {@link #setCaptureLogstashStructuredArguments(boolean)} instead. This method
+     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method
      *     is deprecated and will be removed in a future release.
      */
     @Deprecated
     @CanIgnoreReturnValue
     public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-      return setCaptureLogstashStructuredArguments(captureLogstashAttributes);
+      return setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
     }
 
     @CanIgnoreReturnValue

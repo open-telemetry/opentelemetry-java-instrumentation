@@ -33,7 +33,6 @@ public class LogstashStructuredArgsTest {
     resource = Resource.getDefault();
     instrumentationScopeInfo = InstrumentationScopeInfo.create("TestLogger");
 
-    // Configuration is handled by logback-test.xml in resources
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
   }
 
