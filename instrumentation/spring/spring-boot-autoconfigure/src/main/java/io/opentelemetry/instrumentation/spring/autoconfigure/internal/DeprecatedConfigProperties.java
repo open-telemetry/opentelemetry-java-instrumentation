@@ -24,11 +24,15 @@ public final class DeprecatedConfigProperties {
       String deprecatedPropertyName,
       String newPropertyName) {
     warnIfUsed(applicationEnvironmentPreparedEvent, deprecatedPropertyName, newPropertyName);
-    Boolean deprecatedValue = 
-        applicationEnvironmentPreparedEvent.getEnvironment().getProperty(deprecatedPropertyName, Boolean.class);
-    Boolean newValue = 
-        applicationEnvironmentPreparedEvent.getEnvironment().getProperty(newPropertyName, Boolean.class);
-    
+    Boolean deprecatedValue =
+        applicationEnvironmentPreparedEvent
+            .getEnvironment()
+            .getProperty(deprecatedPropertyName, Boolean.class);
+    Boolean newValue =
+        applicationEnvironmentPreparedEvent
+            .getEnvironment()
+            .getProperty(newPropertyName, Boolean.class);
+
     // Return the new value if it exists, otherwise return the deprecated value
     return newValue != null ? newValue : deprecatedValue;
   }
@@ -37,7 +41,8 @@ public final class DeprecatedConfigProperties {
       ApplicationEnvironmentPreparedEvent applicationEnvironmentPreparedEvent,
       String deprecatedPropertyName,
       String newPropertyName) {
-    if (applicationEnvironmentPreparedEvent.getEnvironment().getProperty(deprecatedPropertyName) != null) {
+    if (applicationEnvironmentPreparedEvent.getEnvironment().getProperty(deprecatedPropertyName)
+        != null) {
       logger.log(
           WARNING,
           "Deprecated property \"{0}\" was used; use the \"{1}\" property instead",
