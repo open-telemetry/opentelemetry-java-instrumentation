@@ -8,16 +8,10 @@
       </pattern>
     </encoder>
   </appender>
+  
   <appender name="OpenTelemetry"
     class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
-    <captureExperimentalAttributes>false</captureExperimentalAttributes>
-    <captureCodeAttributes>true</captureCodeAttributes>
-    <captureMarkerAttribute>true</captureMarkerAttribute>
-    <captureKeyValuePairAttributes>true</captureKeyValuePairAttributes>
-    <captureArguments>true</captureArguments>
     <captureLogstashMarkerAttributes>true</captureLogstashMarkerAttributes>
-    <captureLogstashStructuredArguments>true</captureLogstashStructuredArguments>
-    <captureMdcAttributes>*</captureMdcAttributes>
     <captureEventName>true</captureEventName>
   </appender>
 
