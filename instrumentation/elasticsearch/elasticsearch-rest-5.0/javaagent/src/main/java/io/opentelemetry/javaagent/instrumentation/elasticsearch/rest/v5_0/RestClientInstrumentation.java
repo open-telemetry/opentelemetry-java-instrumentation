@@ -19,7 +19,10 @@ import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.
 import io.opentelemetry.instrumentation.elasticsearch.rest.common.v5_0.internal.RestResponseListener;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.elasticsearch.client.ResponseListener;
@@ -45,45 +48,67 @@ public class RestClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PerformRequestAsyncAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) String method,
-        @Advice.Argument(1) String endpoint,
-        @Advice.Local("otelRequest") ElasticsearchRestRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Argument(value = 5, readOnly = false) ResponseListener responseListener) {
+    public static class AdviceScope {
+      private final ElasticsearchRestRequest request;
+      private final Context parentContext;
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = currentContext();
-      request = ElasticsearchRestRequest.create(method, endpoint);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(
+          ElasticsearchRestRequest request, Context parentContext, Context context, Scope scope) {
+        this.request = request;
+        this.parentContext = parentContext;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(ElasticsearchRestRequest request) {
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(request, parentContext, context, context.makeCurrent());
+      }
 
-      responseListener =
-          new RestResponseListener(
-              responseListener, parentContext, instrumenter(), context, request);
+      public RestResponseListener wrapListener(ResponseListener listener) {
+        return new RestResponseListener(listener, parentContext, instrumenter(), context, request);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        if (throwable != null) {
+          instrumenter().end(context, request, null, throwable);
+        }
+        // span ended in RestResponseListener
+      }
+    }
+
+    @AssignReturned.ToArguments(@ToArgument(value = 5, index = 1))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Object[] onEnter(
+        @Advice.Argument(0) String method,
+        @Advice.Argument(1) String endpoint,
+        @Advice.Argument(5) ResponseListener originalResponseListener) {
+      ResponseListener responseListener = originalResponseListener;
+
+      ElasticsearchRestRequest request = ElasticsearchRestRequest.create(method, endpoint);
+      AdviceScope adviceScope = AdviceScope.start(request);
+      if (adviceScope == null) {
+        return new Object[] {null, responseListener};
+      }
+      responseListener = adviceScope.wrapListener(responseListener);
+      return new Object[] {adviceScope, responseListener};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelRequest") ElasticsearchRestRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-
-      if (scope == null) {
-        return;
+        @Advice.Thrown Throwable throwable, @Advice.Enter Object[] enterResult) {
+      AdviceScope adviceScope = (AdviceScope) enterResult[0];
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      scope.close();
-
-      if (throwable != null) {
-        instrumenter().end(context, request, null, throwable);
-      }
-      // span ended in RestResponseListener
     }
   }
 }

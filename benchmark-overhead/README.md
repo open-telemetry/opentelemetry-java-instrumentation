@@ -50,7 +50,7 @@ relative overhead.
 | Thread switch rate       | # / s  | Max observed thread context switch rate                                      |
 | GC time                  | ms     | Total amount of time spent paused for garbage collection                     |
 | Request mean             | ms     | Average time to handle a single web request (measured at the caller)         |
-| Request p95              | ms     | 95th percentile time to handle a single web requ4st (measured at the caller) |
+| Request p95              | ms     | 95th percentile time to handle a single web request (measured at the caller) |
 | Iteration mean           | ms     | average time to do a single pass through the k6 test script                  |
 | Iteration p95            | ms     | 95th percentile time to do a single pass through the k6 test script          |
 | Peak threads             | #      | Highest number of running threads in the VM, including agent threads         |

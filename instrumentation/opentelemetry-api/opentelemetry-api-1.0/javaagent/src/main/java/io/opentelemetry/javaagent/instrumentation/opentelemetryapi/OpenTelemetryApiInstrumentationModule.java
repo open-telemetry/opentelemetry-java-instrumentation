@@ -27,7 +27,8 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
         new ContextInstrumentation(),
         new ContextStorageWrappersInstrumentation(),
         new OpenTelemetryInstrumentation(),
-        new SpanInstrumentation());
+        new SpanInstrumentation(),
+        new InstrumentationUtilInstrumentation());
   }
 
   @Override
@@ -41,5 +42,10 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     // We don't want to fall back to accidentally trying to load those from the agent CL
     // when they haven't been injected
     return Collections.singletonList("io.opentelemetry.javaagent.instrumentation.opentelemetryapi");
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

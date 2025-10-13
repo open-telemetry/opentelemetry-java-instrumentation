@@ -8,11 +8,13 @@ package io.opentelemetry.instrumentation.api.incubator.builder.internal;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientUrlTemplate;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -69,7 +71,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
-      TextMapSetter<REQUEST> headerSetter) {
+      @Nullable TextMapSetter<REQUEST> headerSetter) {
     this.instrumentationName = Objects.requireNonNull(instrumentationName, "instrumentationName");
     this.openTelemetry = Objects.requireNonNull(openTelemetry, "openTelemetry");
     this.attributesGetter = Objects.requireNonNull(attributesGetter, "attributesGetter");
@@ -82,7 +84,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       String instrumentationName,
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter) {
-    return new DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>(
+    return new DefaultHttpClientInstrumenterBuilder<>(
         instrumentationName, openTelemetry, attributesGetter, null);
   }
 
@@ -91,7 +93,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       OpenTelemetry openTelemetry,
       HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter,
       TextMapSetter<REQUEST> headerSetter) {
-    return new DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>(
+    return new DefaultHttpClientInstrumenterBuilder<>(
         instrumentationName,
         openTelemetry,
         attributesGetter,
@@ -219,12 +221,20 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   public Instrumenter<REQUEST, RESPONSE> build() {
-    if (emitExperimentalHttpClientTelemetry
-        && attributesGetter instanceof HttpClientExperimentalAttributesGetter) {
-      HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalAttributesGetter =
-          (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) attributesGetter;
+    if (emitExperimentalHttpClientTelemetry) {
+      Function<REQUEST, String> urlTemplateExtractorFunction = unused -> null;
+      if (attributesGetter instanceof HttpClientExperimentalAttributesGetter) {
+        HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalAttributesGetter =
+            (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) attributesGetter;
+        urlTemplateExtractorFunction = experimentalAttributesGetter::getUrlTemplate;
+      }
+      Function<REQUEST, String> urlTemplateExtractor = urlTemplateExtractorFunction;
       Experimental.setUrlTemplateExtractor(
-          httpSpanNameExtractorBuilder, experimentalAttributesGetter::getUrlTemplate);
+          httpSpanNameExtractorBuilder,
+          request -> {
+            String urlTemplate = HttpClientUrlTemplate.get(Context.current());
+            return urlTemplate != null ? urlTemplate : urlTemplateExtractor.apply(request);
+          });
     }
     SpanNameExtractor<? super REQUEST> spanNameExtractor =
         spanNameExtractorTransformer.apply(httpSpanNameExtractorBuilder.build());

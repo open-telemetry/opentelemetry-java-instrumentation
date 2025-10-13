@@ -1,1 +1,5 @@
 disabled_by_default: true
+description: >
+  This instrumentation configures the OpenTelemetry Micrometer bridge to receive metrics from
+  Spring Boot Actuator. It does not produce telemetry on its own.
+library_link: https://spring.io/projects/spring-boot

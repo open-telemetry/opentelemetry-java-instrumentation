@@ -6,6 +6,9 @@ targets:
     # (as opposed to internal testing modules
     - type: gradle
       path: ./
+      target: ':declarative-config-bridge'
+    - type: gradle
+      path: ./
       target: ':instrumentation-annotations'
     - type: gradle
       path: ./
@@ -90,9 +93,6 @@ targets:
       target: ':instrumentation:camel-2.20:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:clickhouse-client-0.5:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:executors:bootstrap'
     - type: gradle
       path: ./
@@ -100,6 +100,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:external-annotations:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:failsafe-3.0:library'
     - type: gradle
       path: ./
       target: ':instrumentation:finagle-http-23.11:javaagent'
@@ -133,6 +136,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:gwt-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:helidon-4.3:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:helidon-4.3:library'
     - type: gradle
       path: ./
       target: ':instrumentation:hikaricp-3.0:javaagent'
@@ -348,6 +357,12 @@ targets:
       target: ':instrumentation:aws-lambda:aws-lambda-events-2.2:library'
     - type: gradle
       path: ./
+      target: ':instrumentation:aws-lambda:aws-lambda-events-3.11:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:aws-lambda:aws-lambda-events-common-2.2:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:aws-sdk:aws-sdk-1.11:javaagent'
     - type: gradle
       path: ./
@@ -385,6 +400,15 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:cassandra:cassandra-4.4:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:clickhouse:clickhouse-client-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:clickhouse:clickhouse-client-v1-0.5:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-2-common:javaagent'
@@ -693,6 +717,12 @@ targets:
       target: ':instrumentation:mongo:mongo-async-3.3:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:nats:nats-2.17:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:nats:nats-2.17:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:netty:netty-3.8:javaagent'
     - type: gradle
       path: ./
@@ -721,6 +751,15 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:okhttp:okhttp-3.0:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:openai:openai-java-1.1:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:openai:openai-java-1.1:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opensearch:opensearch-java-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opensearch:opensearch-rest-1.0:javaagent'
@@ -769,6 +808,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'

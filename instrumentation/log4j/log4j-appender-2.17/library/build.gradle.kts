@@ -8,6 +8,7 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
 
+  testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
 
@@ -24,20 +25,24 @@ tasks {
   }
 
   val testAsyncLogger by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector")
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code")
   }
 
   val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
   }
 
   check {
-    dependsOn(testAsyncLogger)
-    dependsOn(testStableSemconv)
-    dependsOn(testBothSemconv)
+    dependsOn(testAsyncLogger, testStableSemconv, testBothSemconv)
   }
 }

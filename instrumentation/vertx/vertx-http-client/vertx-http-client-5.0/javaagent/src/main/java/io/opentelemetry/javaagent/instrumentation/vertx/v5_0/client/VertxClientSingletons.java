@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.instrumentation.vertx.client.Contexts;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.VertxClientInstrumenterFactory;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClientRequest;
@@ -28,6 +29,9 @@ public final class VertxClientSingletons {
 
   private static final VirtualField<HttpClientRequest, HostAndPort> authorityField =
       VirtualField.find(HttpClientRequest.class, HostAndPort.class);
+
+  public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
+      VirtualField.find(HttpClientRequest.class, Contexts.class);
 
   public static void setAuthority(HttpClientRequest request, HostAndPort authority) {
     authorityField.set(request, authority);

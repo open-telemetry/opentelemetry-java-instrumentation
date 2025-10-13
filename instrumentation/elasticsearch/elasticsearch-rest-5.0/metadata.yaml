@@ -1,7 +1,15 @@
+description: This instrumentation enables database client spans and database client metrics for Elasticsearch REST clients.
+library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
 configurations:
   - name: otel.instrumentation.elasticsearch.capture-search-query
-    description: |
+    description: >
       Enable the capture of search query bodies. It is important to note that Elasticsearch queries
       may contain personal or sensitive information.
     type: boolean
     default: false
+  - name: otel.instrumentation.http.known-methods
+    description: >
+      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
+      other methods will be treated as `_OTHER`.
+    type: list
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"

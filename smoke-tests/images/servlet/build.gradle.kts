@@ -1,6 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import org.apache.commons.lang.StringUtils
 
 plugins {
   id("otel.spotless-conventions")
@@ -20,14 +19,16 @@ data class ImageTarget(
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
 
+val latestJava = "25" // renovate: datasource=java-version
+
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23"), mapOf("sourceVersion" to "9.4.53.v20231009")),
-    ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), mapOf("sourceVersion" to "10.0.19")),
-    ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
-    ImageTarget(listOf("12.0.6"), listOf("hotspot", "openj9"), listOf("17", "21", "23"), mapOf("sourceVersion" to "12.0.6"), "servlet-5.0"),
+    ImageTarget(listOf("9.4.53"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava), mapOf("sourceVersion" to "9.4.53.v20231009")),
+    ImageTarget(listOf("10.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), mapOf("sourceVersion" to "10.0.19")),
+    ImageTarget(listOf("11.0.19"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), mapOf("sourceVersion" to "11.0.19"), "servlet-5.0"),
+    ImageTarget(listOf("12.0.6"), listOf("hotspot", "openj9"), listOf("17", "21", latestJava), mapOf("sourceVersion" to "12.0.6"), "servlet-5.0"),
   ),
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
@@ -41,18 +42,18 @@ val targets = mapOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
     // Test application is not deployed when server is sarted with hotspot jdk version 21
     ImageTarget(listOf("6.2023.12"), listOf("hotspot"), listOf("11", "17"), war = "servlet-5.0"),
-    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21", "23"), war = "servlet-5.0")
+    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21", latestJava), war = "servlet-5.0")
   ),
   "tomcat" to listOf(
     ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
-    ImageTarget(listOf("8.5.98"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23"), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("9.0.85"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23"), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.1.18"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(listOf("8.5.98"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava), mapOf("majorVersion" to "8")),
+    ImageTarget(listOf("9.0.85"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava), mapOf("majorVersion" to "9")),
+    ImageTarget(listOf("10.1.18"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), mapOf("majorVersion" to "10"), "servlet-5.0"),
   ),
   "tomee" to listOf(
     ImageTarget(listOf("7.0.9", "7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("8.0.16"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", "23")),
-    ImageTarget(listOf("9.1.2"), listOf("hotspot", "openj9"), listOf("11", "17", "21", "23"), war = "servlet-5.0"),
+    ImageTarget(listOf("8.0.16"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava)),
+    ImageTarget(listOf("9.1.2"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), war = "servlet-5.0"),
   ),
   "websphere" to listOf(
     ImageTarget(listOf("8.5.5.22", "9.0.5.14"), listOf("openj9"), listOf("8"), windows = false),
@@ -62,12 +63,12 @@ val targets = mapOf(
     ImageTarget(
       listOf("17.0.1.Final", "21.0.0.Final"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "23")
+      listOf("8", "11", "17", "21", latestJava)
     ),
     ImageTarget(
       listOf("28.0.1.Final", "29.0.1.Final", "30.0.1.Final"),
       listOf("hotspot", "openj9"),
-      listOf("11", "17", "21", "23"),
+      listOf("11", "17", "21", latestJava),
       war = "servlet-5.0"
     ),
   ),
@@ -98,22 +99,24 @@ tasks {
   createDockerTasks(buildWindowsTestImages, true)
 
   val printSmokeTestsConfigurations by registering {
-    for ((server, matrices) in targets) {
-      val smokeTestServer = findProperty("smokeTestServer")
-      if (smokeTestServer != null && server != smokeTestServer) {
-        continue
-      }
-      println(server)
-      val serverName = StringUtils.capitalize(server)
-      for (entry in matrices) {
-        for (version in entry.version) {
-          val dotIndex = version.indexOf('.')
-          val majorVersion = if (dotIndex != -1) version.substring(0, dotIndex) else version
-          for (jdk in entry.jdk) {
-            for (vm in entry.vm) {
-              println("@AppServer(version = \"$version\", jdk = \"$jdk${if (vm == "hotspot") "" else "-openj9"}\")")
-              println("class ${serverName}${majorVersion}Jdk${jdk}${if (vm == "hotspot") "" else "Openj9"} extends ${serverName}SmokeTest {")
-              println("}")
+    doFirst {
+      for ((server, matrices) in targets) {
+        val smokeTestServer = findProperty("smokeTestServer")
+        if (smokeTestServer != null && server != smokeTestServer) {
+          continue
+        }
+        println(server)
+        val serverName = server.replaceFirstChar(Char::uppercase)
+        for (entry in matrices) {
+          for (version in entry.version) {
+            val dotIndex = version.indexOf('.')
+            val majorVersion = if (dotIndex != -1) version.substring(0, dotIndex) else version
+            for (jdk in entry.jdk) {
+              for (vm in entry.vm) {
+                println("@AppServer(version = \"$version\", jdk = \"$jdk${if (vm == "hotspot") "" else "-openj9"}\")")
+                println("class ${serverName}${majorVersion}Jdk${jdk}${if (vm == "hotspot") "" else "Openj9"} extends ${serverName}SmokeTest {")
+                println("}")
+              }
             }
           }
         }

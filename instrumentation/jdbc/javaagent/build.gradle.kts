@@ -31,6 +31,7 @@ dependencies {
   testLibrary("org.apache.tomcat:tomcat-juli:7.0.19")
   testLibrary("com.zaxxer:HikariCP:2.4.0")
   testLibrary("com.mchange:c3p0:0.9.5")
+  testLibrary("com.alibaba:druid:1.2.20")
 
   // some classes in earlier versions of derby were split out into derbytools in later versions
   latestDepTestLibrary("org.apache.derby:derbytools:latest.release")
@@ -56,6 +57,9 @@ sourceSets {
 
 tasks {
   val testSlick by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SlickTest")
     }
@@ -70,16 +74,10 @@ tasks {
     jvmArgs("-Dotel.instrumentation.jdbc.sqlcommenter.enabled=true")
   }
 
-  test {
-    filter {
-      excludeTestsMatching("SlickTest")
-      excludeTestsMatching("SqlCommenterTest")
-      excludeTestsMatching("PreparedStatementParametersTest")
-    }
-    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-  }
-
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       excludeTestsMatching("SlickTest")
       excludeTestsMatching("SqlCommenterTest")
@@ -90,6 +88,9 @@ tasks {
   }
 
   val testSlickStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SlickTest")
     }
@@ -98,10 +99,22 @@ tasks {
   }
 
   val testCaptureParameters by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.capture-query-parameters=true")
+  }
+
+  test {
+    filter {
+      excludeTestsMatching("SlickTest")
+      excludeTestsMatching("SqlCommenterTest")
+      excludeTestsMatching("PreparedStatementParametersTest")
+    }
+    jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
   }
 
   check {
@@ -115,6 +128,7 @@ tasks {
 
 tasks {
   withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }

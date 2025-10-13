@@ -54,6 +54,7 @@ public class Slf4j2Test {
         .addKeyValue("long key", 4L)
         .addKeyValue("float key", 5.0f)
         .addKeyValue("double key", 6.0)
+        .addKeyValue("event.name", "MyEventName")
         .log();
 
     testing.waitAndAssertLogRecords(
@@ -63,6 +64,7 @@ public class Slf4j2Test {
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 8) // 8 key value pairs
+                .hasEventName("MyEventName")
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.stringKey("string key"), "string value"),
                     equalTo(AttributeKey.booleanKey("boolean key"), true),
@@ -140,6 +142,7 @@ public class Slf4j2Test {
         .atInfo()
         .setMessage("log message 1")
         .addMarker(Markers.append("field1", "value1"))
+        .addMarker(Markers.append("event.name", "MyEventName"))
         .addMarker(Markers.appendEntries(entries))
         .log();
 
@@ -150,6 +153,7 @@ public class Slf4j2Test {
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
                 .hasTotalAttributeCount(codeAttributesLogCount() + 3) // 3 markers
+                .hasEventName("MyEventName")
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.stringKey("field1"), "value1"),
                     equalTo(AttributeKey.longKey("field2"), 2L),

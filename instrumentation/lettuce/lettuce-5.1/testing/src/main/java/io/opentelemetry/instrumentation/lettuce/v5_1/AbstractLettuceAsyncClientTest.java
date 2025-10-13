@@ -168,9 +168,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -214,9 +212,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(SERVER_PORT, port),
                                           equalTo(maybeStable(DB_SYSTEM), "redis"),
                                           equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
-                                  .hasEventsSatisfyingExactly(
-                                      event -> event.hasName("redis.encode.start"),
-                                      event -> event.hasName("redis.encode.end"))));
+                                  .satisfies(
+                                      AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
               if (testCallback()) {
                 spanAsserts.add(
@@ -294,9 +291,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(maybeStable(DB_SYSTEM), "redis"),
                                           equalTo(
                                               maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
-                                  .hasEventsSatisfyingExactly(
-                                      event -> event.hasName("redis.encode.start"),
-                                      event -> event.hasName("redis.encode.end"))));
+                                  .satisfies(
+                                      AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
               if (testCallback()) {
                 spanAsserts.addAll(
@@ -360,9 +356,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                           equalTo(SERVER_PORT, port),
                                           equalTo(maybeStable(DB_SYSTEM), "redis"),
                                           equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
-                                  .hasEventsSatisfyingExactly(
-                                      event -> event.hasName("redis.encode.start"),
-                                      event -> event.hasName("redis.encode.end"))));
+                                  .satisfies(
+                                      AbstractLettuceClientTest::assertCommandEncodeEvents)));
 
               if (testCallback()) {
                 spanAsserts.add(
@@ -422,9 +417,7 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(
                                         maybeStable(DB_STATEMENT),
                                         "HMSET TESTHM firstname ? lastname ? age ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)),
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span ->
@@ -439,8 +432,6 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "HGETALL TESTHM")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }

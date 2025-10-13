@@ -45,7 +45,7 @@ public final class ContextPropagationDebug {
   private final Context sourceContext;
   private final List<Propagation> locations;
   // context after adding debug locations
-  private Context wrappedContext;
+  @Nullable private Context wrappedContext;
 
   private ContextPropagationDebug(Context sourceContext) {
     this.sourceContext = sourceContext;
@@ -139,10 +139,10 @@ public final class ContextPropagationDebug {
   }
 
   private static class Propagation {
-    public final String carrierClassName;
-    public final StackTraceElement[] location;
+    final String carrierClassName;
+    final StackTraceElement[] location;
 
-    public Propagation(String carrierClassName, StackTraceElement[] location) {
+    Propagation(String carrierClassName, StackTraceElement[] location) {
       this.carrierClassName = carrierClassName;
       this.location = location;
     }

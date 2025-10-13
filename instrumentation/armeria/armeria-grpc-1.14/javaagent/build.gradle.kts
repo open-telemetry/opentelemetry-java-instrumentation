@@ -24,6 +24,11 @@ dependencies {
   testLibrary("com.linecorp.armeria:armeria-junit5:1.14.0")
 }
 
+tasks.named<Checkstyle>("checkstyleTest") {
+  // exclude generated classes
+  exclude("**/example/**")
+}
+
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 protobuf {
   protoc {
@@ -52,4 +57,8 @@ afterEvaluate {
     add("compileProtoPath", platform(project(":dependencyManagement")))
     add("testCompileProtoPath", platform(project(":dependencyManagement")))
   }
+}
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

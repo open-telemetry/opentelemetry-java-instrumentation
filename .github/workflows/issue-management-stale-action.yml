@@ -4,6 +4,7 @@ on:
   schedule:
     # hourly at minute 23
     - cron: "23 * * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -12,25 +13,60 @@ jobs:
   stale:
     permissions:
       contents: read
+      actions: write # because actions/stale deletes its old cache before saving new one
       issues: write  # for actions/stale to close stale issues
       pull-requests: write  # for actions/stale to close stale PRs
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
+      # Action #1: Handle issues/PRs awaiting author feedback
+      # - After 7 days inactive: Adds "stale" label + warning comment
+      # - After 7 more days inactive: Closes
+      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
         with:
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          only-labels: "needs author feedback"
           days-before-stale: 7
           days-before-close: 7
-          only-labels: "needs author feedback"
           stale-issue-label: stale
           stale-issue-message: >
-            This has been automatically marked as stale because it has been marked
-            as needing author feedback and has not had any activity for 7 days.
-            It will be closed automatically if there is no response from the author
-            within 7 additional days from this comment.
+            This issue has been labeled as stale due to lack of activity and needing author feedback.
+            It will be automatically closed if there is no further activity over the next 7 days.
           stale-pr-label: stale
           stale-pr-message: >
-            This has been automatically marked as stale because it has been marked
-            as needing author feedback and has not had any activity for 7 days.
-            It will be closed automatically if there is no response from the author
-            within 7 additional days from this comment.
+            This PR has been labeled as stale due to lack of activity and needing author feedback.
+            It will be automatically closed if there is no further activity over the next 7 days.
+          operations-per-run: 1000
+
+      # Action #2: Close old enhancement requests
+      # - Targets: Issues with "enhancement" label (but NOT "needs author feedback")
+      # - After 365 days inactive: Adds "stale" label + closes immediately (no warning period)
+      # - Skips: Issues with "needs author feedback" to avoid conflicts with Action #1
+      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
+        with:
+          only-labels: "enhancement"
+          # Skip issues that need author feedback (handled by the first action with 7+7 day policy)
+          exempt-issue-labels: "needs author feedback"
+          days-before-pr-stale: -1
+          days-before-pr-close: -1
+          days-before-issue-stale: 365
+          days-before-issue-close: 0
+          stale-issue-label: stale
+          close-issue-message: >
+            Since there has been no activity on this enhancement for the past year we are closing it to help maintain our backlog.
+            Anyone who would like to work on it is still welcome to do so, and we can re-open it at that time.
+          operations-per-run: 1000
+
+      # Action #3: Handle stale PRs
+      # - After 180 days inactive: Adds "stale" label + warning comment
+      # - After 14 more days inactive: Closes
+      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
+        with:
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+          days-before-pr-stale: 180
+          days-before-pr-close: 14
+          stale-pr-label: stale
+          stale-pr-message: >
+            This PR has been labeled as stale due to lack of activity.
+            It will be automatically closed if there is no further activity over the next 14 days.
+          exempt-draft-pr: false
+          operations-per-run: 1000

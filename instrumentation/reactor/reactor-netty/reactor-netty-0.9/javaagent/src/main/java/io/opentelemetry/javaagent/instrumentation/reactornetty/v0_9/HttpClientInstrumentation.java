@@ -17,6 +17,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.BiConsumer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import reactor.netty.Connection;
@@ -74,92 +76,111 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
   public static class CreateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(HttpClient.class);
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(HttpClient.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
+    public static HttpClient stopSpan(
         @Advice.Thrown Throwable throwable,
-        @Advice.Return(readOnly = false) HttpClient client,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Return HttpClient client,
+        @Advice.Enter CallDepth callDepth) {
 
       if (callDepth.decrementAndGet() == 0 && throwable == null) {
-        client = client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
+        return client.doOnRequest(new OnRequest()).mapConnect(new MapConnect());
       }
+      return client;
     }
   }
 
   @SuppressWarnings("unused")
   public static class OnRequestAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
+    public static BiConsumer<? super HttpClientRequest, ? super Connection> onEnter(
+        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Connection> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnRequestDecorator(callback);
+        return new DecoratorFunctions.OnRequestDecorator(callback);
       }
+      return callback;
     }
   }
 
   @SuppressWarnings("unused")
   public static class OnRequestErrorAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
+    public static BiConsumer<? super HttpClientRequest, ? super Throwable> onEnter(
+        @Advice.Argument(0) BiConsumer<? super HttpClientRequest, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnRequestErrorDecorator(callback);
+        return new DecoratorFunctions.OnRequestErrorDecorator(callback);
       }
+      return callback;
     }
   }
 
   @SuppressWarnings("unused")
   public static class OnResponseAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientResponse, ? super Connection> callback,
+    public static BiConsumer<? super HttpClientResponse, ? super Connection> onEnter(
+        @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Connection> callback,
         @Advice.Origin("#m") String methodName) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
         boolean forceParentContext = methodName.equals("doAfterResponse");
-        callback = new DecoratorFunctions.OnResponseDecorator(callback, forceParentContext);
+        return new DecoratorFunctions.OnResponseDecorator(callback, forceParentContext);
       }
+      return callback;
     }
   }
 
   @SuppressWarnings("unused")
   public static class OnResponseErrorAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
+    public static BiConsumer<? super HttpClientResponse, ? super Throwable> onEnter(
+        @Advice.Argument(0) BiConsumer<? super HttpClientResponse, ? super Throwable> callback) {
       if (DecoratorFunctions.shouldDecorate(callback.getClass())) {
-        callback = new DecoratorFunctions.OnResponseErrorDecorator(callback);
+        return new DecoratorFunctions.OnResponseErrorDecorator(callback);
       }
+      return callback;
     }
   }
 
   @SuppressWarnings("unused")
   public static class OnErrorAdvice {
 
+    @AssignReturned.ToArguments({
+      @ToArgument(value = 0, index = 0),
+      @ToArgument(value = 1, index = 1)
+    })
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback,
-        @Advice.Argument(value = 1, readOnly = false)
-            BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback) {
+    public static Object[] onEnter(
+        @Advice.Argument(0)
+            BiConsumer<? super HttpClientRequest, ? super Throwable> originalRequestCallback,
+        @Advice.Argument(1)
+            BiConsumer<? super HttpClientResponse, ? super Throwable> originalResponseCallback) {
+
+      // intermediate variables needed for inlined instrumentation
+      BiConsumer<? super HttpClientRequest, ? super Throwable> requestCallback =
+          originalRequestCallback;
+      BiConsumer<? super HttpClientResponse, ? super Throwable> responseCallback =
+          originalResponseCallback;
+
       if (DecoratorFunctions.shouldDecorate(requestCallback.getClass())) {
         requestCallback = new DecoratorFunctions.OnRequestErrorDecorator(requestCallback);
       }
       if (DecoratorFunctions.shouldDecorate(responseCallback.getClass())) {
         responseCallback = new DecoratorFunctions.OnResponseErrorDecorator(responseCallback);
       }
+      return new Object[] {requestCallback, responseCallback};
     }
   }
 }

@@ -56,11 +56,14 @@ public class TargetSystemTest {
   private static final Logger targetSystemLogger = LoggerFactory.getLogger("targetSystem");
 
   private static final String AGENT_PATH = "/opentelemetry-instrumentation-javaagent.jar";
+  protected static final String APP_PATH = "/testapp.war";
 
   private static final Network network = Network.newNetwork();
 
   private static OtlpGrpcServer otlpServer;
   private static Path agentPath;
+  private static Path testAppPath;
+
   private static String otlpEndpoint;
 
   private GenericContainer<?> targetSystem;
@@ -73,10 +76,16 @@ public class TargetSystemTest {
     Testcontainers.exposeHostPorts(otlpServer.httpPort());
     otlpEndpoint = "http://host.testcontainers.internal:" + otlpServer.httpPort();
 
-    String path = System.getProperty("io.opentelemetry.javaagent.path");
-    assertThat(path).isNotNull();
-    agentPath = Paths.get(path);
-    assertThat(agentPath).isReadable().isNotEmptyFile();
+    TargetSystemTest.agentPath = getArtifactPath("io.opentelemetry.javaagent.path");
+    TargetSystemTest.testAppPath = getArtifactPath("io.opentelemetry.testapp.path");
+  }
+
+  private static Path getArtifactPath(String systemProperty) {
+    String pathValue = System.getProperty(systemProperty);
+    assertThat(pathValue).isNotNull();
+    Path path = Paths.get(pathValue);
+    assertThat(path).isReadable().isNotEmptyFile();
+    return path;
   }
 
   @BeforeEach
@@ -112,6 +121,10 @@ public class TargetSystemTest {
     }
   }
 
+  protected static String getOtlpEndpoint() {
+    return otlpEndpoint;
+  }
+
   protected static String javaAgentJvmArgument() {
     return "-javaagent:" + AGENT_PATH;
   }
@@ -142,7 +155,6 @@ public class TargetSystemTest {
     // disable runtime telemetry metrics
     config.put("otel.instrumentation.runtime-telemetry.enabled", "false");
     // set yaml config files to test
-    config.put("otel.jmx.target", "tomcat");
     config.put(
         "otel.jmx.config",
         yamlFiles.stream()
@@ -182,17 +194,23 @@ public class TargetSystemTest {
     targetSystem.start();
   }
 
-  protected static void copyFilesToTarget(GenericContainer<?> target, List<String> yamlFiles) {
-    // copy agent to target system
+  protected static void copyAgentToTarget(GenericContainer<?> target) {
+    logger.info("copying java agent {} to container {}", agentPath, AGENT_PATH);
     target.withCopyFileToContainer(MountableFile.forHostPath(agentPath), AGENT_PATH);
+  }
 
-    // copy yaml files to target system
+  protected static void copyYamlFilesToTarget(GenericContainer<?> target, List<String> yamlFiles) {
     for (String file : yamlFiles) {
       String resourcePath = yamlResourcePath(file);
       String destPath = containerYamlPath(file);
       logger.info("copying yaml from resources {} to container {}", resourcePath, destPath);
       target.withCopyFileToContainer(MountableFile.forClasspathResource(resourcePath), destPath);
     }
+  }
+
+  protected static void copyTestWebAppToTarget(GenericContainer<?> target, String targetPath) {
+    logger.info("copying test application {} to container {}", testAppPath, targetPath);
+    target.withCopyFileToContainer(MountableFile.forHostPath(testAppPath), targetPath);
   }
 
   private static String yamlResourcePath(String yaml) {

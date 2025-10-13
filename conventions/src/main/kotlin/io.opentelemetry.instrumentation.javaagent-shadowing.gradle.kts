@@ -8,9 +8,17 @@ plugins {
 //       io.opentelemetry.instrumentation.muzzle-check.gradle.kts
 tasks.withType<ShadowJar>().configureEach {
   mergeServiceFiles()
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  filesMatching("META-INF/services/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
   // Merge any AWS SDK service files that may be present (too bad they didn't just use normal
   // service loader...)
   mergeServiceFiles("software/amazon/awssdk/global/handlers")
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  filesMatching("software/amazon/awssdk/global/handlers/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
 
   exclude("**/module-info.class")
 
@@ -29,6 +37,7 @@ tasks.withType<ShadowJar>().configureEach {
     relocate("io.opentelemetry.api", "io.opentelemetry.javaagent.shaded.io.opentelemetry.api")
     relocate("io.opentelemetry.semconv", "io.opentelemetry.javaagent.shaded.io.opentelemetry.semconv")
     relocate("io.opentelemetry.context", "io.opentelemetry.javaagent.shaded.io.opentelemetry.context")
+    relocate("io.opentelemetry.common", "io.opentelemetry.javaagent.shaded.io.opentelemetry.common")
   }
 
   // relocate(the OpenTelemetry extensions that are used by instrumentation modules)

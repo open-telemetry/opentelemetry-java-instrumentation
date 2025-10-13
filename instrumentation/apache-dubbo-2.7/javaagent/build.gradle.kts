@@ -40,6 +40,7 @@ testing {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // to suppress non-fatal errors on jdk17
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
@@ -47,7 +48,6 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  systemProperty("collectSpans", true)
 }
 
 tasks {

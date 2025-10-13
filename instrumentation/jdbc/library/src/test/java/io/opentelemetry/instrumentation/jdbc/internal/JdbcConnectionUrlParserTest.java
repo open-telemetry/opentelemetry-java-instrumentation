@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
+import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
@@ -40,12 +41,12 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest
   @ValueSource(strings = {"", "jdbc:", "jdbc::", "bogus:string"})
   void testInvalidUrlReturnsDefault(String url) {
-    assertThat(JdbcConnectionUrlParser.parse(url, null)).isEqualTo(DbInfo.DEFAULT);
+    assertThat(JdbcConnectionUrlParser.parse(url, null)).isEqualTo(DEFAULT);
   }
 
   @Test
   void testNullUrlReturnsDefault() {
-    assertThat(JdbcConnectionUrlParser.parse(null, null)).isEqualTo(DbInfo.DEFAULT);
+    assertThat(JdbcConnectionUrlParser.parse(null, null)).isEqualTo(DEFAULT);
   }
 
   private static Stream<Arguments> mySqlArguments() {
@@ -147,6 +148,27 @@ class JdbcConnectionUrlParserTest {
             .setHost("mdb.host")
             .setPort(3306)
             .setDb("mdbdb")
+            .build(),
+        arg("jdbc:mysql:loadbalance://localhost")
+            .setShortUrl("mysql:loadbalance://localhost:3306")
+            .setSystem("mysql")
+            .setSubtype("loadbalance")
+            .setHost("localhost")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:loadbalance://host:3306") // with port but no slash
+            .setShortUrl("mysql:loadbalance://host:3306")
+            .setSystem("mysql")
+            .setSubtype("loadbalance")
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mysql:failover://[::1]:3306") // IPv6 without slash
+            .setShortUrl("mysql:failover://::1:3306")
+            .setSystem("mysql")
+            .setSubtype("failover")
+            .setHost("::1")
+            .setPort(3306)
             .build());
   }
 
@@ -329,6 +351,27 @@ class JdbcConnectionUrlParserTest {
             .setHost("localhost")
             .setPort(33)
             .setDb("mdbdb")
+            .build(),
+        arg("jdbc:mariadb:loadbalance://localhost")
+            .setShortUrl("mariadb:loadbalance://localhost:3306")
+            .setSystem("mariadb")
+            .setSubtype("loadbalance")
+            .setHost("localhost")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mariadb:loadbalance://host:3306") // with port but no slash
+            .setShortUrl("mariadb:loadbalance://host:3306")
+            .setSystem("mariadb")
+            .setSubtype("loadbalance")
+            .setHost("host")
+            .setPort(3306)
+            .build(),
+        arg("jdbc:mariadb:failover://[::1]:3306") // IPv6 without slash
+            .setShortUrl("mariadb:failover://::1:3306")
+            .setSystem("mariadb")
+            .setSubtype("failover")
+            .setHost("::1")
+            .setPort(3306)
             .build());
   }
 
@@ -1254,6 +1297,127 @@ class JdbcConnectionUrlParserTest {
   @ParameterizedTest(name = "{index}: {0}")
   @MethodSource("secretsManagerArguments")
   void testSecretsManagerParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> openTracingArguments() {
+    return args(
+        // https://github.com/opentracing-contrib/java-jdbc
+        arg("jdbc:tracing:mysql://example.com:50000")
+            .setShortUrl("mysql://example.com:50000")
+            .setSystem("mysql")
+            .setHost("example.com")
+            .setPort(50000)
+            .build(),
+        arg("jdbc:tracing:postgresql://example.com:50000/dbname")
+            .setShortUrl("postgresql://example.com:50000")
+            .setSystem("postgresql")
+            .setHost("example.com")
+            .setPort(50000)
+            .setDb("dbname")
+            .build(),
+        arg("jdbc:tracing:oracle:thin:@example.com:50000/ORCL")
+            .setShortUrl("oracle:thin://example.com:50000")
+            .setSystem("oracle")
+            .setSubtype("thin")
+            .setHost("example.com")
+            .setPort(50000)
+            .setName("orcl")
+            .build(),
+        arg("jdbc:tracing:sqlserver://example.com:50000")
+            .setShortUrl("sqlserver://example.com:50000")
+            .setSystem("mssql")
+            .setHost("example.com")
+            .setPort(50000)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("openTracingArguments")
+  void testOpenTracingParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> oceanbaseArguments() {
+    return args(
+        // https://en.oceanbase.com/
+        arg("jdbc:oceanbase://host:3306/test")
+            .setShortUrl("oceanbase://host:3306")
+            .setSystem("oceanbase")
+            .setHost("host")
+            .setPort(3306)
+            .setDb("test")
+            .build(),
+        arg("jdbc:oceanbase:oracle://host:1521")
+            .setShortUrl("oceanbase:oracle://host:1521")
+            .setSystem("oracle")
+            .setSubtype("oracle")
+            .setHost("host")
+            .setPort(1521)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("oceanbaseArguments")
+  void testOceasbaseParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> lindormArguments() {
+    return args(
+        // https://www.alibabacloud.com/help/en/lindorm/user-guide/view-endpoints
+        arg("jdbc:lindorm:table:url=http://host:30060/test")
+            .setShortUrl("lindorm:table://host:30060")
+            .setSystem("lindorm")
+            .setSubtype("table")
+            .setHost("host")
+            .setDb("test")
+            .setPort(30060)
+            .build(),
+        arg("jdbc:lindorm:tsdb:url=http://host:8242/test")
+            .setShortUrl("lindorm:tsdb://host:8242")
+            .setSystem("lindorm")
+            .setSubtype("tsdb")
+            .setHost("host")
+            .setDb("test")
+            .setPort(8242)
+            .setDb("test")
+            .build(),
+        arg("jdbc:lindorm:search:url=http://host:30070/test")
+            .setShortUrl("lindorm:search://host:30070")
+            .setSystem("lindorm")
+            .setSubtype("search")
+            .setHost("host")
+            .setDb("test")
+            .setPort(30070)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("lindormArguments")
+  void testLindormManagerParsing(ParseTestArgument argument) {
+    testVerifySystemSubtypeParsingOfUrl(argument);
+  }
+
+  private static Stream<Arguments> polardbArguments() {
+    return args(
+        arg("jdbc:polardb://example.com:1901")
+            .setShortUrl("polardb://example.com:1901")
+            .setSystem("polardb")
+            .setHost("example.com")
+            .setPort(1901)
+            .build(),
+        arg("jdbc:polardb://example.com")
+            .setShortUrl("polardb://example.com:1521")
+            .setSystem("polardb")
+            .setHost("example.com")
+            .setPort(1521)
+            .build());
+  }
+
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("polardbArguments")
+  void testPolardbParsing(ParseTestArgument argument) {
     testVerifySystemSubtypeParsingOfUrl(argument);
   }
 

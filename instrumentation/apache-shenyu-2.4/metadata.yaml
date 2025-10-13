@@ -1,5 +1,12 @@
+description: >
+  This instrumentation does not emit telemetry on its own. Instead, it augments existing HTTP server
+  spans and HTTP server metrics with the HTTP route and Shenyu specific attributes.
+library_link: https://shenyu.apache.org/
 configurations:
   - name: otel.instrumentation.apache-shenyu.experimental-span-attributes
-    description: Enables experimental span attributes for Apache Shenyu instrumentation.
+    description: > 
+      Enables experimental `apache-shenyu.meta.` prefixed span attributes `app-name`,
+      `service-name`, `context-path`, `param-types`, `id`, `method-name`, `rpc-type`, `path` and
+      `rpc-ext`.
     type: boolean
     default: false

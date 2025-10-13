@@ -8,6 +8,9 @@ on:
       success:
         type: boolean
         required: true
+      failure-details:
+        type: string
+        required: false
 
 permissions:
   contents: read
@@ -19,7 +22,7 @@ jobs:
       issues: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
       - name: Open issue or add comment if issue already open
         env:
@@ -31,14 +34,19 @@ jobs:
           echo $number
           echo ${{ inputs.success }}
 
+          # Prepare the issue body with failure details if available
+          if [[ -n "${{ inputs.failure-details }}" ]]; then
+            issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."$'\n\n'"## Failure Details"$'\n\n'"${{ inputs.failure-details }}"
+          else
+            issue_body="See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+          fi
+
           if [[ $number ]]; then
             if [[ "${{ inputs.success }}" == "true" ]]; then
               gh issue close $number
             else
-              gh issue comment $number \
-                               --body "See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+              gh issue comment $number --body "$issue_body"
             fi
           elif [[ "${{ inputs.success }}" == "false" ]]; then
-            gh issue create --title "Workflow failed: $GITHUB_WORKFLOW (#$GITHUB_RUN_NUMBER)" \
-                            --body "See [$GITHUB_WORKFLOW #$GITHUB_RUN_NUMBER](https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID)."
+            gh issue create --title "Workflow failed: $GITHUB_WORKFLOW (#$GITHUB_RUN_NUMBER)" --body "$issue_body"
           fi

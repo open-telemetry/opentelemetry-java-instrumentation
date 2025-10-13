@@ -1,0 +1,4 @@
+description: >
+  This instrumentation enables HTTP client spans and metrics for the Armeria HTTP client, and HTTP
+  server spans and metrics for the Armeria HTTP server.
+library_link: https://armeria.dev/

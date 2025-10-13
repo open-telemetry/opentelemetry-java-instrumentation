@@ -1,0 +1,4 @@
+description: >
+  This instrumentation enables RPC client spans and metrics for the Armeria gRPC client, and RPC
+  server spans and metrics for the Armeria gRPC server.
+library_link: https://armeria.dev/

@@ -192,6 +192,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.web.")
+        .allowClass("org.springframework.web.client.RestTemplate")
         .allowClass("org.springframework.web.servlet.")
         .allowClass("org.springframework.web.filter.")
         .allowClass("org.springframework.web.multipart.")
@@ -249,7 +250,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("com.google.common.")
         .allowClass("com.google.common.util.concurrent.")
         .allowClass("com.google.common.base.internal.Finalizer")
-        .allowClass("com.google.common.base.Java8Usage$$Lambda");
+        .allowClass("com.google.common.base.Java8Usage$$Lambda")
+        .allowClass("com.google.common.eventbus.Subscriber$");
 
     builder
         .ignoreClass("com.google.inject.")

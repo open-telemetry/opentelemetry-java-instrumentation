@@ -25,7 +25,7 @@ dependencies {
   // test dependencies
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
-  testImplementation("org.assertj:assertj-core:3.27.3")
+  testImplementation("org.assertj:assertj-core:3.27.6")
 
   add("codegen", "io.opentelemetry.javaagent:opentelemetry-javaagent-tooling:${versions.opentelemetryJavaagentAlpha}")
   add("muzzleBootstrap", "io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:${versions.opentelemetryJavaagentAlpha}")
@@ -35,7 +35,12 @@ dependencies {
 
 shadowJar {
   configurations = [project.configurations.runtimeClasspath, project.configurations.testInstrumentation]
+
   mergeServiceFiles()
+  // mergeServiceFiles requires that duplicate strategy is set to include
+  filesMatching("inst/META-INF/services/**") {
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
+  }
 
   archiveFileName = 'agent-testing.jar'
 
@@ -46,12 +51,15 @@ tasks.withType(Test).configureEach {
   inputs.file(shadowJar.archiveFile)
 
   jvmArgs "-Dotel.javaagent.debug=true"
-  jvmArgs "-javaagent:${configurations.testAgent.files.first().absolutePath}"
   jvmArgs "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.archiveFile.get().asFile.absolutePath}"
   jvmArgs "-Dotel.javaagent.testing.additional-library-ignores.enabled=false"
   jvmArgs "-Dotel.javaagent.testing.fail-on-context-leak=true"
   // prevent sporadic gradle deadlocks, see SafeLogger for more details
   jvmArgs "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
+
+  jvmArgumentProviders.add(new JavaagentProvider(project.providers.provider {
+    configurations.testAgent.files.first()
+  }))
 
   dependsOn shadowJar
   dependsOn configurations.testAgent.buildDependencies
@@ -63,5 +71,20 @@ tasks.withType(Test).configureEach {
       return false
     }
     return true
+  }
+}
+
+class JavaagentProvider implements CommandLineArgumentProvider {
+  @InputFile
+  @PathSensitive(PathSensitivity.RELATIVE)
+  Provider<File> agentJar
+
+  JavaagentProvider(Provider<File> agentJar) {
+    this.agentJar = agentJar
+  }
+
+  @Override
+  Iterable<String> asArguments() {
+    return ["-javaagent:${agentJar.get().absolutePath}"]
   }
 }

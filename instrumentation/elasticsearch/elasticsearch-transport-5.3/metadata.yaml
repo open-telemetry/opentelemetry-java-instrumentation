@@ -1,0 +1,18 @@
+description: >
+  This instrumentation enables database client spans and database client metrics for Elasticsearch
+  transport client requests. Each call produces a span named after the Elasticsearch action,
+  enriched with transport-specific attributes.
+library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
+configurations:
+  - name: otel.instrumentation.elasticsearch.experimental-span-attributes
+    description: >
+      Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
+      `elasticsearch.request.indices`, `elasticsearch.request.search.types`,
+      `elasticsearch.request.write.type`, `elasticsearch.request.write.version`,
+      `elasticsearch.response.status`, `elasticsearch.shard.broadcast.failed`,
+      `elasticsearch.shard.broadcast.successful`, `elasticsearch.shard.broadcast.total`,
+      `elasticsearch.shard.replication.failed`, `elasticsearch.shard.replication.successful`,
+      `elasticsearch.shard.replication.total`, `elasticsearch.type`, and
+      `elasticsearch.version` experimental span attributes.
+    type: boolean
+    default: false

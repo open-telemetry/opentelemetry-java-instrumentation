@@ -59,8 +59,10 @@ final class OpenTelemetryTracing implements Tracing {
   OpenTelemetryTracing(
       io.opentelemetry.api.trace.Tracer tracer,
       RedisCommandSanitizer sanitizer,
-      OperationListener metrics) {
-    this.tracerProvider = new OpenTelemetryTracerProvider(tracer, sanitizer, metrics);
+      OperationListener metrics,
+      boolean encodingEventsEnabled) {
+    this.tracerProvider =
+        new OpenTelemetryTracerProvider(tracer, sanitizer, metrics, encodingEventsEnabled);
   }
 
   @Override
@@ -100,8 +102,10 @@ final class OpenTelemetryTracing implements Tracing {
     OpenTelemetryTracerProvider(
         io.opentelemetry.api.trace.Tracer tracer,
         RedisCommandSanitizer sanitizer,
-        OperationListener metrics) {
-      openTelemetryTracer = new OpenTelemetryTracer(tracer, sanitizer, metrics);
+        OperationListener metrics,
+        boolean encodingEventsEnabled) {
+      openTelemetryTracer =
+          new OpenTelemetryTracer(tracer, sanitizer, metrics, encodingEventsEnabled);
     }
 
     @Override
@@ -125,7 +129,7 @@ final class OpenTelemetryTracing implements Tracing {
       this.context = Context.current();
     }
 
-    public Context getSpanContext() {
+    Context getSpanContext() {
       return context;
     }
   }
@@ -143,14 +147,17 @@ final class OpenTelemetryTracing implements Tracing {
     private final io.opentelemetry.api.trace.Tracer tracer;
     private final RedisCommandSanitizer sanitizer;
     private final OperationListener metrics;
+    private final boolean encodingEventsEnabled;
 
     OpenTelemetryTracer(
         io.opentelemetry.api.trace.Tracer tracer,
         RedisCommandSanitizer sanitizer,
-        OperationListener metrics) {
+        OperationListener metrics,
+        boolean encodingEventsEnabled) {
       this.tracer = tracer;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
+      this.encodingEventsEnabled = encodingEventsEnabled;
     }
 
     @Override
@@ -179,7 +186,7 @@ final class OpenTelemetryTracing implements Tracing {
       if (SemconvStability.emitOldDatabaseSemconv()) {
         spanBuilder.setAttribute(DB_SYSTEM, REDIS);
       }
-      return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics);
+      return new OpenTelemetrySpan(context, spanBuilder, sanitizer, metrics, encodingEventsEnabled);
     }
   }
 
@@ -193,6 +200,7 @@ final class OpenTelemetryTracing implements Tracing {
     private final SpanBuilder spanBuilder;
     private final RedisCommandSanitizer sanitizer;
     private final OperationListener metrics;
+    private final boolean encodingEventsEnabled;
 
     @Nullable private String name;
     @Nullable private List<Object> events;
@@ -207,12 +215,14 @@ final class OpenTelemetryTracing implements Tracing {
         Context context,
         SpanBuilder spanBuilder,
         RedisCommandSanitizer sanitizer,
-        OperationListener metrics) {
+        OperationListener metrics,
+        boolean encodingEventsEnabled) {
       this.context = context;
       this.spanBuilder = spanBuilder;
       this.sanitizer = sanitizer;
       this.metrics = metrics;
       this.attributesBuilder = Attributes.builder();
+      this.encodingEventsEnabled = encodingEventsEnabled;
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributesBuilder.put(DB_SYSTEM_NAME, REDIS);
       }
@@ -259,8 +269,14 @@ final class OpenTelemetryTracing implements Tracing {
     // Added and called in 6.0+
     // @Override
     @CanIgnoreReturnValue
-    @SuppressWarnings("UnusedMethod")
+    @SuppressWarnings({"UnusedMethod", "EffectivelyPrivate"})
     public synchronized Tracer.Span start(RedisCommand<?, ?, ?> command) {
+      // Extract args BEFORE calling start() so db.statement can include them
+      // when it's set on SpanBuilder (making it available to samplers)
+      if (command.getArgs() != null) {
+        argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
+      }
+
       start();
       long startNanos = System.nanoTime();
 
@@ -269,10 +285,6 @@ final class OpenTelemetryTracing implements Tracing {
         throw new IllegalStateException("Span started but null, this is a programming error.");
       }
       span.updateName(command.getType().toString());
-
-      if (command.getArgs() != null) {
-        argsList = OtelCommandArgsUtil.getCommandArgs(command.getArgs());
-      }
 
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
@@ -286,7 +298,7 @@ final class OpenTelemetryTracing implements Tracing {
               if (output != null) {
                 String error = output.getError();
                 if (error != null) {
-                  span.setStatus(StatusCode.ERROR, error);
+                  span.setStatus(StatusCode.ERROR);
                 }
               }
 
@@ -301,8 +313,27 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span start() {
+      // Set db.statement on SpanBuilder before starting span so it's available to samplers
+      if (name != null) {
+        String statement =
+            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
+        if (statement != null) {
+          if (SemconvStability.emitStableDatabaseSemconv()) {
+            spanBuilder.setAttribute(DB_QUERY_TEXT, statement);
+            attributesBuilder.put(DB_QUERY_TEXT, statement);
+          }
+          if (SemconvStability.emitOldDatabaseSemconv()) {
+            spanBuilder.setAttribute(DB_STATEMENT, statement);
+            attributesBuilder.put(DB_STATEMENT, statement);
+          }
+        }
+      }
+
       span = spanBuilder.startSpan();
       spanStartNanos = System.nanoTime();
+      // Note: Span name cannot be set on SpanBuilder because it's set during
+      // tracer.spanBuilder(name) call in nextSpan(), and we don't know the actual command name at
+      // that point. We have to update the name after the span starts.
       if (name != null) {
         span.updateName(name);
       }
@@ -326,6 +357,11 @@ final class OpenTelemetryTracing implements Tracing {
     @Override
     @CanIgnoreReturnValue
     public synchronized Tracer.Span annotate(String value) {
+      if (!encodingEventsEnabled && value.startsWith("redis.encode.")) {
+        // skip noisy encode events produced by io.lettuce.core.protocol.TracedCommand
+        return this;
+      }
+
       if (span != null) {
         span.addEvent(value);
       } else {
@@ -386,19 +422,11 @@ final class OpenTelemetryTracing implements Tracing {
     }
 
     private void finish(Span span, long startTime) {
-      if (name != null) {
-        String statement =
-            sanitizer.sanitize(name, argsList != null ? argsList : splitArgs(argsString));
-        if (SemconvStability.emitStableDatabaseSemconv()) {
-          span.setAttribute(DB_QUERY_TEXT, statement);
-          metrics.onEnd(
-              metrics.onStart(Context.current(), Attributes.empty(), startTime),
-              attributesBuilder.build(),
-              System.nanoTime());
-        }
-        if (SemconvStability.emitOldDatabaseSemconv()) {
-          span.setAttribute(DB_STATEMENT, statement);
-        }
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        metrics.onEnd(
+            metrics.onStart(Context.current(), Attributes.empty(), startTime),
+            attributesBuilder.build(),
+            System.nanoTime());
       }
       span.end();
     }

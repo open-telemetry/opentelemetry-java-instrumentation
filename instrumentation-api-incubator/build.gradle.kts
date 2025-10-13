@@ -4,8 +4,8 @@ plugins {
   id("otel.java-conventions")
   id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
-  id("otel.japicmp-conventions")
   id("otel.publish-conventions")
+  id("otel.nullaway-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
@@ -42,15 +42,18 @@ tasks {
   }
 
   val testStableSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database,code")
   }
 
   val testBothSemconv by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     jvmArgs("-Dotel.semconv-stability.opt-in=database/dup,code/dup")
   }
 
   check {
-    dependsOn(testStableSemconv)
-    dependsOn(testBothSemconv)
+    dependsOn(testStableSemconv, testBothSemconv)
   }
 }

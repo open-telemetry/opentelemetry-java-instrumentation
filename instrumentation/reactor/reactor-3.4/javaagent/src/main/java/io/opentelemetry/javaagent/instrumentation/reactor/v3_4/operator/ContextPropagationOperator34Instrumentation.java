@@ -18,6 +18,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.context.AgentContextStorage;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -48,18 +49,18 @@ public class ContextPropagationOperator34Instrumentation implements TypeInstrume
       return false;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
+    public static Context methodExit(
         @Advice.Argument(0) reactor.util.context.ContextView reactorContext,
-        @Advice.Argument(1) Context defaultContext,
-        @Advice.Return(readOnly = false) Context applicationContext) {
+        @Advice.Argument(1) Context defaultContext) {
 
       io.opentelemetry.context.Context agentContext =
           ContextPropagationOperator.getOpenTelemetryContextFromContextView(reactorContext, null);
       if (agentContext == null) {
-        applicationContext = defaultContext;
+        return defaultContext;
       } else {
-        applicationContext = AgentContextStorage.toApplicationContext(agentContext);
+        return AgentContextStorage.toApplicationContext(agentContext);
       }
     }
   }

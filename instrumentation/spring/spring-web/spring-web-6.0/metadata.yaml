@@ -1,0 +1,2 @@
+description: This instrumentation enriches HTTP server spans and metrics with route information.
+library_link: https://github.com/spring-projects/spring-framework

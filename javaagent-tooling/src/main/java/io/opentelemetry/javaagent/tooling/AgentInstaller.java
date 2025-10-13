@@ -161,12 +161,10 @@ public class AgentInstaller {
 
     installEarlyInstrumentation(agentBuilder, inst);
 
-    // If noop OpenTelemetry is enabled, autoConfiguredSdk will be null and AgentListeners are not
-    // called
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
-        installOpenTelemetrySdk(extensionClassLoader);
+        installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
-    ConfigProperties sdkConfig = AgentListener.resolveConfigProperties(autoConfiguredSdk);
+    ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
     AgentInstrumentationConfig.internalInitializeConfig(
         new ConfigPropertiesBridge(
             sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
@@ -174,7 +172,7 @@ public class AgentInstaller {
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
     ConfiguredResourceAttributesHolder.initialize(
-        SdkAutoconfigureAccess.getResourceAttributes(autoConfiguredSdk));
+        SdkAutoconfigureAccess.getResource(autoConfiguredSdk).getAttributes());
 
     for (BeforeAgentListener agentListener :
         loadOrdered(BeforeAgentListener.class, extensionClassLoader)) {
@@ -491,6 +489,7 @@ public class AgentInstaller {
       Thread thread = new Thread(this::runAgentListeners);
       thread.setName("delayed-agent-listeners");
       thread.setDaemon(true);
+      thread.setContextClassLoader(null);
       thread.start();
     }
 

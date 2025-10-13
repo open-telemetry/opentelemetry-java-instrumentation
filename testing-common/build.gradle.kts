@@ -8,16 +8,10 @@ group = "io.opentelemetry.javaagent"
 
 sourceSets {
   main {
-    val armeriaShadedDeps = project(":testing:armeria-shaded-for-testing")
+    val shadedDeps = project(":testing:dependencies-shaded-for-testing")
     output.dir(
-      armeriaShadedDeps.file("build/extracted/shadow"),
-      "builtBy" to ":testing:armeria-shaded-for-testing:extractShadowJar"
-    )
-
-    val protoShadedDeps = project(":testing:proto-shaded-for-testing")
-    output.dir(
-      protoShadedDeps.file("build/extracted/shadow"),
-      "builtBy" to ":testing:proto-shaded-for-testing:extractShadowJar"
+      shadedDeps.file("build/extracted/shadow"),
+      "builtBy" to ":testing:dependencies-shaded-for-testing:extractShadowJar"
     )
   }
 }
@@ -53,9 +47,9 @@ dependencies {
   api("org.awaitility:awaitility")
   api("org.mockito:mockito-core")
   api("org.slf4j:slf4j-api")
+  api("com.google.code.findbugs:annotations")
 
-  compileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-  compileOnly(project(":testing:proto-shaded-for-testing", configuration = "shadow"))
+  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
   compileOnly(project(":javaagent-bootstrap"))
 
   compileOnly("com.google.auto.value:auto-value-annotations")
@@ -69,6 +63,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-exporter-logging")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  compileOnly("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   api(project(":instrumentation-api-incubator"))
 
   annotationProcessor("com.google.auto.service:auto-service")
@@ -87,5 +82,10 @@ dependencies {
 tasks {
   javadoc {
     enabled = false
+  }
+
+  jar {
+    // When there are duplicates between multiple shaded dependencies, just ignore them.
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   }
 }

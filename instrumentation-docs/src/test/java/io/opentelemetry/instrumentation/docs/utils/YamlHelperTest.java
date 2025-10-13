@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_METRICS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_SPANS;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -13,7 +16,8 @@ import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
-import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetaData;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationFeature;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
@@ -22,6 +26,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,12 +41,14 @@ class YamlHelperTest {
         InstrumentationType.JAVAAGENT,
         new HashSet<>(List.of("org.springframework:spring-web:[6.0.0,)")));
 
-    InstrumentationMetaData springMetadata =
-        new InstrumentationMetaData(
-            "Spring Web 6.0 instrumentation",
-            InstrumentationClassification.LIBRARY.toString(),
-            true,
-            null);
+    InstrumentationMetadata springMetadata =
+        new InstrumentationMetadata.Builder()
+            .description("Spring Web 6.0 instrumentation")
+            .displayName("Spring Web")
+            .classification(InstrumentationClassification.LIBRARY.name())
+            .disabledByDefault(true)
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
+            .build();
 
     modules.add(
         new InstrumentationModule.Builder()
@@ -79,7 +86,11 @@ class YamlHelperTest {
             libraries:
               spring:
               - name: spring-web-6.0
+                display_name: Spring Web
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
                 disabled_by_default: true
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
@@ -107,17 +118,23 @@ class YamlHelperTest {
     Map<InstrumentationType, Set<String>> springTargetVersions =
         Map.of(InstrumentationType.JAVAAGENT, Set.of("org.springframework:spring-web:[6.0.0,)"));
 
-    InstrumentationMetaData springMetadata =
-        new InstrumentationMetaData(
-            "Spring Web 6.0 instrumentation",
-            InstrumentationClassification.LIBRARY.toString(),
-            false,
-            List.of(
-                new ConfigurationOption(
-                    "otel.instrumentation.spring-web-6.0.enabled",
-                    "Enables or disables Spring Web 6.0 instrumentation.",
-                    "true",
-                    ConfigurationType.BOOLEAN)));
+    InstrumentationMetadata springMetadata =
+        new InstrumentationMetadata.Builder()
+            .description("Spring Web 6.0 instrumentation")
+            .classification(InstrumentationClassification.LIBRARY.name())
+            .disabledByDefault(false)
+            .features(
+                List.of(
+                    InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTEXT_PROPAGATION))
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
+            .configurations(
+                List.of(
+                    new ConfigurationOption(
+                        "otel.instrumentation.spring-web-6.0.enabled",
+                        "Enables or disables Spring Web 6.0 instrumentation.",
+                        "true",
+                        ConfigurationType.BOOLEAN)))
+            .build();
 
     modules.add(
         new InstrumentationModule.Builder()
@@ -130,9 +147,10 @@ class YamlHelperTest {
             .minJavaVersion(11)
             .build());
 
-    InstrumentationMetaData internalMetadata =
-        new InstrumentationMetaData(
-            null, InstrumentationClassification.INTERNAL.toString(), null, null);
+    InstrumentationMetadata internalMetadata =
+        new InstrumentationMetadata.Builder()
+            .classification(InstrumentationClassification.INTERNAL.name())
+            .build();
 
     modules.add(
         new InstrumentationModule.Builder()
@@ -144,9 +162,10 @@ class YamlHelperTest {
             .targetVersions(new HashMap<>())
             .build());
 
-    InstrumentationMetaData customMetadata =
-        new InstrumentationMetaData(
-            null, InstrumentationClassification.CUSTOM.toString(), null, null);
+    InstrumentationMetadata customMetadata =
+        new InstrumentationMetadata.Builder()
+            .classification(InstrumentationClassification.CUSTOM.name())
+            .build();
 
     Map<InstrumentationType, Set<String>> externalAnnotationsVersions =
         Map.of(
@@ -175,6 +194,12 @@ class YamlHelperTest {
               spring:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
+                features:
+                - HTTP_ROUTE
+                - CONTEXT_PROPAGATION
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
                 scope:
@@ -212,6 +237,10 @@ class YamlHelperTest {
             description: test description
             classification: internal
             disabled_by_default: true
+            library_link: https://example.com/test-library
+            features:
+              - HTTP_ROUTE
+              - CONTROLLER_SPANS
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -219,7 +248,7 @@ class YamlHelperTest {
                 default: true
             """;
 
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
 
     ConfigurationOption config = metadata.getConfigurations().get(0);
     assertThat(config.name())
@@ -228,17 +257,34 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
 
+    assertThat(metadata.getFeatures())
+        .containsExactly(
+            InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTROLLER_SPANS);
+
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");
     assertThat(metadata.getDisabledByDefault()).isEqualTo(true);
+    assertThat(metadata.getLibraryLink()).isEqualTo("https://example.com/test-library");
   }
 
   @Test
   void testMetadataParserWithOnlyLibraryEntry() throws JsonProcessingException {
     String input = "classification: internal";
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getLibraryLink()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+    assertThat(metadata.getConfigurations()).isEmpty();
+  }
+
+  @Test
+  void testMetadataParserWithOnlyLibraryLink() throws JsonProcessingException {
+    String input = "library_link: https://example.com/only-link";
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getLibraryLink()).isEqualTo("https://example.com/only-link");
     assertThat(metadata.getDisabledByDefault()).isFalse();
     assertThat(metadata.getConfigurations()).isEmpty();
   }
@@ -246,7 +292,7 @@ class YamlHelperTest {
   @Test
   void testMetadataParserWithOnlyDescription() throws JsonProcessingException {
     String input = "description: false";
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDisabledByDefault()).isFalse();
     assertThat(metadata.getConfigurations()).isEmpty();
@@ -255,7 +301,7 @@ class YamlHelperTest {
   @Test
   void testMetadataParserWithOnlyDisabledByDefault() throws JsonProcessingException {
     String input = "disabled_by_default: true";
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
     assertThat(metadata.getDescription()).isNull();
     assertThat(metadata.getDisabledByDefault()).isTrue();
@@ -272,7 +318,7 @@ class YamlHelperTest {
                 type: boolean
                 default: true
         """;
-    InstrumentationMetaData metadata = YamlHelper.metaDataParser(input);
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
     ConfigurationOption config = metadata.getConfigurations().get(0);
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
@@ -285,6 +331,21 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
+  }
+
+  @Test
+  void testMetadataParserWithOnlyFeatures() throws JsonProcessingException {
+    String input =
+        """
+            features:
+              - HTTP_ROUTE
+        """;
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+    assertThat(metadata.getFeatures()).containsExactly(InstrumentationFeature.HTTP_ROUTE);
   }
 
   @Test
@@ -417,6 +478,144 @@ class YamlHelperTest {
                 - name: server.port
                   type: LONG
         """;
+
+    assertThat(expectedYaml).isEqualTo(stringWriter.toString());
+  }
+
+  @Test
+  void testTelemetryGroupsAreSorted() throws Exception {
+    EmittedMetrics.Metric metric =
+        new EmittedMetrics.Metric("a.metric", "description", "COUNTER", "1", emptyList());
+    EmittedSpans.Span span = new EmittedSpans.Span("SERVER", emptyList());
+
+    // First ordering
+    Map<String, List<EmittedMetrics.Metric>> metrics1 = new LinkedHashMap<>();
+    metrics1.put("z-group", List.of(metric));
+    metrics1.put("a-group", List.of(metric));
+
+    Map<String, List<EmittedSpans.Span>> spans1 = new LinkedHashMap<>();
+    spans1.put("c-group", List.of(span));
+    spans1.put("f-group", List.of(span));
+    spans1.put("b-group", List.of(span));
+
+    List<InstrumentationModule> modules1 = new ArrayList<>();
+    modules1.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test/test-1.0")
+            .instrumentationName("test-1.0")
+            .namespace("test")
+            .group("test")
+            .metrics(metrics1)
+            .spans(spans1)
+            .build());
+
+    StringWriter stringWriter1 = new StringWriter();
+    BufferedWriter writer1 = new BufferedWriter(stringWriter1);
+    YamlHelper.generateInstrumentationYaml(modules1, writer1);
+    writer1.flush();
+    String yaml1 = stringWriter1.toString();
+
+    // Different ordering
+    Map<String, List<EmittedMetrics.Metric>> metrics2 = new LinkedHashMap<>();
+    metrics2.put("a-group", List.of(metric));
+    metrics2.put("z-group", List.of(metric));
+
+    Map<String, List<EmittedSpans.Span>> spans2 = new LinkedHashMap<>();
+    spans2.put("f-group", List.of(span));
+    spans2.put("b-group", List.of(span));
+    spans2.put("c-group", List.of(span));
+
+    List<InstrumentationModule> modules2 = new ArrayList<>();
+    modules2.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test/test-1.0")
+            .instrumentationName("test-1.0")
+            .namespace("test")
+            .group("test")
+            .metrics(metrics2)
+            .spans(spans2)
+            .build());
+
+    StringWriter stringWriter2 = new StringWriter();
+    BufferedWriter writer2 = new BufferedWriter(stringWriter2);
+    YamlHelper.generateInstrumentationYaml(modules2, writer2);
+    writer2.flush();
+    String yaml2 = stringWriter2.toString();
+
+    assertThat(yaml1).isEqualTo(yaml2);
+  }
+
+  @Test
+  void testYamlGenerationWithLibraryLink() throws Exception {
+    List<InstrumentationModule> modules = new ArrayList<>();
+    Map<InstrumentationType, Set<String>> targetVersions = new HashMap<>();
+    targetVersions.put(
+        InstrumentationType.JAVAAGENT, new HashSet<>(List.of("com.example:test-library:[1.0.0,)")));
+
+    InstrumentationMetadata metadataWithLink =
+        new InstrumentationMetadata.Builder()
+            .description("Test library instrumentation with link")
+            .classification(InstrumentationClassification.LIBRARY.name())
+            .disabledByDefault(false)
+            .libraryLink("https://example.com/test-library-docs")
+            .build();
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/test-lib/test-lib-1.0")
+            .instrumentationName("test-lib-1.0")
+            .namespace("test-lib")
+            .group("test-lib")
+            .targetVersions(targetVersions)
+            .metadata(metadataWithLink)
+            .build());
+
+    InstrumentationMetadata metadataWithoutLink =
+        new InstrumentationMetadata.Builder()
+            .description("Test library instrumentation without link")
+            .classification(InstrumentationClassification.LIBRARY.name())
+            .disabledByDefault(false)
+            .build();
+
+    modules.add(
+        new InstrumentationModule.Builder()
+            .srcPath("instrumentation/other-lib/other-lib-1.0")
+            .instrumentationName("other-lib-1.0")
+            .namespace("other-lib")
+            .group("other-lib")
+            .targetVersions(targetVersions)
+            .metadata(metadataWithoutLink)
+            .build());
+
+    StringWriter stringWriter = new StringWriter();
+    BufferedWriter writer = new BufferedWriter(stringWriter);
+
+    YamlHelper.generateInstrumentationYaml(modules, writer);
+    writer.flush();
+
+    String expectedYaml =
+        """
+            libraries:
+              other-lib:
+              - name: other-lib-1.0
+                description: Test library instrumentation without link
+                source_path: instrumentation/other-lib/other-lib-1.0
+                scope:
+                  name: io.opentelemetry.other-lib-1.0
+                target_versions:
+                  javaagent:
+                  - com.example:test-library:[1.0.0,)
+              test-lib:
+              - name: test-lib-1.0
+                description: Test library instrumentation with link
+                library_link: https://example.com/test-library-docs
+                source_path: instrumentation/test-lib/test-lib-1.0
+                scope:
+                  name: io.opentelemetry.test-lib-1.0
+                target_versions:
+                  javaagent:
+                  - com.example:test-library:[1.0.0,)
+            """;
 
     assertThat(expectedYaml).isEqualTo(stringWriter.toString());
   }

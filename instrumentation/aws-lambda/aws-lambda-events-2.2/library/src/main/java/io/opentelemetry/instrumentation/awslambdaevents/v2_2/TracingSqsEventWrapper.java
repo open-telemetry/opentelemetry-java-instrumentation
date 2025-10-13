@@ -9,11 +9,17 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.SQSEvent;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
+import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.LambdaParameters;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
+/**
+ * @deprecated use {@link
+ *     io.opentelemetry.instrumentation.awslambdaevents.v3_11.TracingSqsEventWrapper} instead.
+ */
+@Deprecated
 public class TracingSqsEventWrapper extends TracingSqsEventHandler {
 
   private final WrappedLambda wrappedLambda;

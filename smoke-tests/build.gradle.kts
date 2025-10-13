@@ -15,30 +15,30 @@ otelJava {
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
 
-val dockerJavaVersion = "3.5.3"
+val dockerJavaVersion = "3.6.0"
 dependencies {
-  testCompileOnly("com.google.auto.value:auto-value-annotations")
-  testAnnotationProcessor("com.google.auto.value:auto-value")
+  compileOnly("com.google.auto.value:auto-value-annotations")
+  annotationProcessor("com.google.auto.value:auto-value")
 
-  api("org.spockframework:spock-core")
   api(project(":testing-common"))
 
-  implementation(platform("io.grpc:grpc-bom:1.73.0"))
+  implementation(platform("io.grpc:grpc-bom:1.76.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.31.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.32.1")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
 
-  testImplementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
-  testImplementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
+  implementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
+  implementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
 
-  // make IntelliJ see shaded Armeria
-  testCompileOnly(project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
+  // make IntelliJ see shaded Armeria and protobuf
+  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
+  testCompileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {

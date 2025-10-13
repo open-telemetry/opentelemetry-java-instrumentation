@@ -10,17 +10,13 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.util.List;
 import java.util.Map;
 import org.jboss.logmanager.ExtLogRecord;
@@ -34,6 +30,9 @@ public final class LoggingEventMapper {
 
   private static final Cache<String, AttributeKey<String>> mdcAttributeKeys = Cache.bounded(100);
 
+  // copied from EventIncubatingAttributes
+  private static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
+
   private final List<String> captureMdcAttributes;
 
   private static final boolean captureExperimentalAttributes =
@@ -42,6 +41,11 @@ public final class LoggingEventMapper {
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
+
+  private final boolean captureEventName =
+      AgentInstrumentationConfig.get()
+          .getBoolean(
+              "otel.instrumentation.jboss-logmanager.experimental.capture-event-name", false);
 
   private LoggingEventMapper() {
     this.captureMdcAttributes =
@@ -77,27 +81,18 @@ public final class LoggingEventMapper {
       builder.setSeverityText(level.toString());
     }
 
-    AttributesBuilder attributes = Attributes.builder();
-
     Throwable throwable = record.getThrown();
     if (throwable != null) {
-      // TODO (trask) extract method for recording exception into
-      // io.opentelemetry:opentelemetry-api
-      attributes.put(ExceptionAttributes.EXCEPTION_TYPE, throwable.getClass().getName());
-      attributes.put(ExceptionAttributes.EXCEPTION_MESSAGE, throwable.getMessage());
-      StringWriter writer = new StringWriter();
-      throwable.printStackTrace(new PrintWriter(writer));
-      attributes.put(ExceptionAttributes.EXCEPTION_STACKTRACE, writer.toString());
+      // this cast is safe within java agent instrumentation
+      ((ExtendedLogRecordBuilder) builder).setException(throwable);
     }
-    captureMdcAttributes(attributes);
+    captureMdcAttributes(builder);
 
     if (captureExperimentalAttributes) {
       Thread currentThread = Thread.currentThread();
-      attributes.put(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
-      attributes.put(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
+      builder.setAttribute(ThreadIncubatingAttributes.THREAD_NAME, currentThread.getName());
+      builder.setAttribute(ThreadIncubatingAttributes.THREAD_ID, currentThread.getId());
     }
-
-    builder.setAllAttributes(attributes.build());
 
     builder.setContext(Context.current());
 
@@ -105,15 +100,14 @@ public final class LoggingEventMapper {
     builder.emit();
   }
 
-  private void captureMdcAttributes(AttributesBuilder attributes) {
+  private void captureMdcAttributes(LogRecordBuilder builder) {
 
     Map<String, String> context = MDC.copy();
 
     if (captureAllMdcAttributes) {
       if (context != null) {
         for (Map.Entry<String, String> entry : context.entrySet()) {
-          attributes.put(
-              getMdcAttributeKey(String.valueOf(entry.getKey())), String.valueOf(entry.getValue()));
+          setAttributeOrEventName(builder, getMdcAttributeKey(entry.getKey()), entry.getValue());
         }
       }
       return;
@@ -121,14 +115,23 @@ public final class LoggingEventMapper {
 
     for (String key : captureMdcAttributes) {
       Object value = context.get(key);
-      if (value != null) {
-        attributes.put(key, value.toString());
-      }
+      setAttributeOrEventName(builder, getMdcAttributeKey(key), value);
     }
   }
 
   public static AttributeKey<String> getMdcAttributeKey(String key) {
     return mdcAttributeKeys.computeIfAbsent(key, AttributeKey::stringKey);
+  }
+
+  private void setAttributeOrEventName(
+      LogRecordBuilder builder, AttributeKey<String> key, Object value) {
+    if (value != null) {
+      if (captureEventName && key.equals(EVENT_NAME)) {
+        builder.setEventName(value.toString());
+      } else {
+        builder.setAttribute(key, value.toString());
+      }
+    }
   }
 
   private static Severity levelToSeverity(java.util.logging.Level level) {

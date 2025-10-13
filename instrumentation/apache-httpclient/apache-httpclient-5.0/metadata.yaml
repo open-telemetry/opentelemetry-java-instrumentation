@@ -1,0 +1,6 @@
+display_name: Apache HttpClient
+description: This instrumentation enables HTTP client spans and HTTP client metrics for version 5 of the Apache HttpClient.
+library_link: https://hc.apache.org/index.html
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS

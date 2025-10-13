@@ -1,0 +1,6 @@
+description: >
+  This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding
+  additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to
+  Elasticsearch database client spans. Versions 8.10 and later of the client have native support for
+  OpenTelemetry.
+library_link: https://www.elastic.co/docs/reference/elasticsearch/clients/java

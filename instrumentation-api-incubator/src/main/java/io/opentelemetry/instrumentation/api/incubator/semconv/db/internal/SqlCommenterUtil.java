@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
@@ -33,8 +34,8 @@ public final class SqlCommenterUtil {
     }
 
     class State {
-      String traceparent;
-      String tracestate;
+      @Nullable String traceparent;
+      @Nullable String tracestate;
     }
 
     State state = new State();
@@ -44,6 +45,9 @@ public final class SqlCommenterUtil {
             Context.current(),
             state,
             (carrier, key, value) -> {
+              if (carrier == null) {
+                return;
+              }
               if ("traceparent".equals(key)) {
                 carrier.traceparent = value;
               } else if ("tracestate".equals(key)) {

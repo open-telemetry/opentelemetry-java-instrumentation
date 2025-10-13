@@ -1,5 +1,12 @@
+description: >
+  This instrumentation enables database client spans and database client metrics for Couchbase 2.6
+  operations. It automatically traces key-value operations (get, upsert, replace, remove), view
+  queries, N1QL queries, and cluster management operations.
+library_link: https://github.com/couchbase/couchbase-java-client
 configurations:
   - name: otel.instrumentation.couchbase.experimental-span-attributes
-    description: Enables experimental span attributes couchbase.operation_id and couchbase.local.address
+    description: >
+      Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`.
+      Different operation types receive different experimental attributes.
     type: boolean
     default: false

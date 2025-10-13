@@ -16,6 +16,8 @@ import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -41,10 +43,11 @@ final class BaseClusterInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SingleResultCallbackArg1Advice {
 
+    @AssignReturned.ToArguments(@ToArgument(1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapCallback(
-        @Advice.Argument(value = 1, readOnly = false) SingleResultCallback<Object> callback) {
-      callback = new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+    public static SingleResultCallback<Object> wrapCallback(
+        @Advice.Argument(1) SingleResultCallback<Object> callback) {
+      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
     }
   }
 }

@@ -26,6 +26,8 @@ dependencies {
 
 tasks {
   val testChunkRootSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*ChunkRootSpanTest")
     }
@@ -34,6 +36,8 @@ tasks {
   }
 
   val testItemLevelSpan by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
     filter {
       includeTestsMatching("*ItemLevelSpanTest")
       includeTestsMatching("*CustomSpanEventTest")
@@ -48,11 +52,13 @@ tasks {
       excludeTestsMatching("*ItemLevelSpanTest")
       excludeTestsMatching("*CustomSpanEventTest")
     }
+
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+    systemProperty("metadataConfig", "otel.instrumentation.spring-batch.experimental-span-attributes=true")
   }
 
   check {
-    dependsOn(testChunkRootSpan)
-    dependsOn(testItemLevelSpan)
+    dependsOn(testChunkRootSpan, testItemLevelSpan)
   }
 
   withType<Test>().configureEach {

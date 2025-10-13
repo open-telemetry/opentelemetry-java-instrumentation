@@ -52,7 +52,7 @@ class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
   private static class TypePoolWrapper implements TypePool {
     private final TypePool typePool;
 
-    public TypePoolWrapper(TypePool typePool) {
+    TypePoolWrapper(TypePool typePool) {
       this.typePool = typePool;
     }
 
@@ -158,7 +158,7 @@ class AdviceUninliningPoolStrategy implements AgentBuilder.PoolStrategy {
 
   private static class DelegatingMethodDescription
       extends MethodDescription.InDefinedShape.AbstractBase {
-    protected final MethodDescription.InDefinedShape method;
+    final MethodDescription.InDefinedShape method;
 
     DelegatingMethodDescription(MethodDescription.InDefinedShape method) {
       this.method = method;

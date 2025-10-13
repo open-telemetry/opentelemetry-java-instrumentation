@@ -27,11 +27,11 @@ No targets are enabled by default. The supported target environments are listed 
 
 - [activemq](javaagent/activemq.md)
 - [camel](javaagent/camel.md)
-- [jetty](javaagent/jetty.md)
+- [jetty](library/jetty.md)
 - [kafka-broker](javaagent/kafka-broker.md)
 - [tomcat](library/tomcat.md)
-- [wildfly](javaagent/wildfly.md)
-- [hadoop](javaagent/hadoop.md)
+- [wildfly](library/wildfly.md)
+- [hadoop](library/hadoop.md)
 
 The [jvm](library/jvm.md) metrics definitions are also included in the [jmx-metrics library](./library)
 to allow reusing them without instrumentation. When using instrumentation, the [runtime-telemetry](../runtime-telemetry)
@@ -371,6 +371,40 @@ rules:
         desc: Recent CPU utilization for the process as reported by the JVM.
 ```
 
+### Aggregation over multiple MBean instances
+
+Sometimes, multiple MBean instances are registered with distinct names and we need to capture the aggregate value over all the instances.
+
+For example, the JVM exposes the number of GC executions in the `CollectionCount` attribute of the MBean instances returned by `java.lang:name=*,type=GarbageCollector` query,
+there are multiple instances each with a distinct value for the `name` parameter.
+
+To capture the total number of GC executions across all those instances in a single metric, we can use the following configuration
+where the `name` parameter in the MBean name is NOT mapped to a metric attribute.
+
+```yaml
+  - bean: java.lang:name=*,type=GarbageCollector
+    mapping:
+      CollectionCount:
+        metric: custom.jvm.gc.count
+        unit: '{collection}'
+        type: counter
+        desc: JVM GC execution count
+```
+
+When two or more MBean parameters are used, it is also possible to perform a partial aggregation:
+- parameters not mapped as metric attributes are discarded
+- parameters mapped as metric attributes with `param(<mbeanParam>)` are preserved
+- values are aggregated with mapped metric attributes
+
+The applied aggregation depends on the metric type:
+- `counter` or `updowncounter`: sum aggregation
+- `gauge`: last-value aggregation
+
+As a consequence, it is not recommended to use it for `gauge` metrics when querying more than one MBean instance as it would produce unpredictable results.
+
+When there is only a single MBean instance, using a `gauge` metric produces the expected value, hence allowing to avoid mapping all the MBean parameters
+to metric attributes.
+
 ### General Syntax
 
 Here is the general description of the accepted configuration file syntax. The whole contents of the file is case-sensitive, with exception for `type` as described in the table below.
@@ -415,12 +449,12 @@ The following table explains the used terms with more details.
 
 | Syntactic Element  | Description                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 |--------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| OBJECTNAME         | A syntactically valid string representing an ObjectName (see [ObjectName constructor](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-)).                                                                                                                                                                                                                                                    |
+| OBJECTNAME         | A syntactically valid string representing an [ObjectName](https://docs.oracle.com/javase/8/docs/api/javax/management/ObjectName.html#ObjectName-java.lang.String-).                                                                                                                                                                                                                                                                                 |
 | ATTRIBUTE          | Any well-formed string that can be used as a metric [attribute](https://opentelemetry.io/docs/reference/specification/common/#attribute) key.                                                                                                                                                                                                                                                                                                       |
 | ATTR               | A non-empty string used as a name of the MBean attribute. The MBean attribute value must be a String, otherwise the specified metric attribute will not be used.                                                                                                                                                                                                                                                                                    |
 | PARAM              | A non-empty string used as a property key in the ObjectName identifying the MBean which provides the metric value. If the ObjectName does not have a property with the given key, the specified metric attribute will not be used.                                                                                                                                                                                                                  |
 | METRIC_NAME_PREFIX | Any non-empty string which will be prepended to the specified metric (instrument) names.                                                                                                                                                                                                                                                                                                                                                            |
-| METRIC_NAME        | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-naming-rule).                                                                                                                                                                                                                                     |
+| METRIC_NAME        | Any non-empty string. The string, prefixed by the optional prefix (see above) must satisfy [instrument naming rule](https://opentelemetry.io/docs/specs/otel/metrics/api/#instrument-name-syntax).                                                                                                                                                                                                                                                  |
 | TYPE               | One of `counter`, `updowncounter`, or `gauge`. The default is `gauge`. This value is case insensitive.                                                                                                                                                                                                                                                                                                                                              |
 | DESCRIPTION        | Any string to be used as human-readable [description](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-description) of the metric. If the description is not provided by the rule, an attempt will be made to extract one automatically from the corresponding MBean.                                                                                                                                                  |
 | UNIT               | A string identifying the [unit](https://opentelemetry.io/docs/reference/specification/metrics/api/#instrument-unit) of measurements reported by the metric. Enclose the string in single or double quotes if using unit annotations.                                                                                                                                                                                                                |

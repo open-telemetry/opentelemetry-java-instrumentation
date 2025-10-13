@@ -17,6 +17,7 @@ dependencies {
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":muzzle"))
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry:opentelemetry-sdk")
@@ -45,6 +46,7 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-gcp-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources")
   implementation("io.opentelemetry.contrib:opentelemetry-baggage-processor")
+  implementation("io.opentelemetry.contrib:opentelemetry-samplers")
 
   api("net.bytebuddy:byte-buddy-dep")
   implementation("org.ow2.asm:asm-tree")
@@ -61,6 +63,7 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("com.google.guava:guava")
   testImplementation("org.junit-pioneer:junit-pioneer")
+  testImplementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 testing {

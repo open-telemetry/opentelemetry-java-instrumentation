@@ -17,14 +17,18 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingCallable;
 import io.opentelemetry.javaagent.bootstrap.executors.ContextPropagatingRunnable;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ForkJoinTask;
 import java.util.concurrent.Future;
@@ -89,7 +93,13 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
+        @Advice.This Object executor,
+        @Advice.Argument(value = 0, readOnly = false) Runnable task,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(executor.getClass());
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
+      }
       Context context = Java8BytecodeBridge.currentContext();
       if (!ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return null;
@@ -107,7 +117,11 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
     public static void exitJobSubmit(
         @Advice.Argument(0) Runnable task,
         @Advice.Enter PropagatedContext propagatedContext,
-        @Advice.Thrown Throwable throwable) {
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
       VirtualField<Runnable, PropagatedContext> virtualField =
           VirtualField.find(Runnable.class, PropagatedContext.class);
       ExecutorAdviceHelper.cleanUpAfterSubmit(propagatedContext, throwable, virtualField, task);
@@ -144,14 +158,24 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static PropagatedContext enterJobSubmit(
-        @Advice.Argument(value = 0, readOnly = false) Runnable task) {
-      Context context = Java8BytecodeBridge.currentContext();
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<Runnable, PropagatedContext> virtualField =
-            VirtualField.find(Runnable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+        @Advice.This Object executor,
+        @Advice.Argument(value = 0, readOnly = false) Runnable task,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(executor.getClass());
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
       }
-      return null;
+      Context context = Java8BytecodeBridge.currentContext();
+      if (!ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        return null;
+      }
+      if (ContextPropagatingRunnable.shouldDecorateRunnable(task)) {
+        task = ContextPropagatingRunnable.propagateContext(task, context);
+        return null;
+      }
+      VirtualField<Runnable, PropagatedContext> virtualField =
+          VirtualField.find(Runnable.class, PropagatedContext.class);
+      return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -159,7 +183,11 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Runnable task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return Future<?> future) {
+        @Advice.Return Future<?> future,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
       if (propagatedContext != null && future != null) {
         VirtualField<Future<?>, PropagatedContext> virtualField =
             VirtualField.find(Future.class, PropagatedContext.class);
@@ -175,14 +203,25 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
   public static class SetCallableStateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Callable<?> task) {
-      Context context = Java8BytecodeBridge.currentContext();
-      if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
-        VirtualField<Callable<?>, PropagatedContext> virtualField =
-            VirtualField.find(Callable.class, PropagatedContext.class);
-        return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+    public static PropagatedContext enterJobSubmit(
+        @Advice.This Object executor,
+        @Advice.Argument(value = 0, readOnly = false) Callable<?> task,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      callDepth = CallDepth.forClass(executor.getClass());
+      if (callDepth.getAndIncrement() > 0) {
+        return null;
       }
-      return null;
+      Context context = Java8BytecodeBridge.currentContext();
+      if (!ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        return null;
+      }
+      if (ContextPropagatingCallable.shouldDecorateCallable(task)) {
+        task = ContextPropagatingCallable.propagateContext(task, context);
+        return null;
+      }
+      VirtualField<Callable<?>, PropagatedContext> virtualField =
+          VirtualField.find(Callable.class, PropagatedContext.class);
+      return ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -190,7 +229,11 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Callable<?> task,
         @Advice.Enter PropagatedContext propagatedContext,
         @Advice.Thrown Throwable throwable,
-        @Advice.Return Future<?> future) {
+        @Advice.Return Future<?> future,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
       if (propagatedContext != null && future != null) {
         VirtualField<Future<?>, PropagatedContext> virtualField =
             VirtualField.find(Future.class, PropagatedContext.class);
@@ -207,18 +250,51 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Collection<?> submitEnter(
-        @Advice.Argument(0) Collection<? extends Callable<?>> tasks) {
+        @Advice.This Object executor,
+        @Advice.Argument(value = 0, readOnly = false) Collection<? extends Callable<?>> tasks,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
       if (tasks == null) {
         return Collections.emptyList();
       }
 
+      callDepth = CallDepth.forClass(executor.getClass());
+      if (callDepth.getAndIncrement() > 0) {
+        return Collections.emptyList();
+      }
+
       Context context = Java8BytecodeBridge.currentContext();
+
+      // first, go through the list and wrap all Callables that need to be wrapped
+      List<Callable<?>> list = null;
       for (Callable<?> task : tasks) {
-        if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+        if (!ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
+          continue;
+        }
+        if (ContextPropagatingCallable.shouldDecorateCallable(task)) {
+          // lazily create the list only if we need to
+          if (list == null) {
+            list = new ArrayList<>();
+          }
+          list.add(ContextPropagatingCallable.propagateContext(task, context));
+        }
+      }
+
+      for (Callable<?> task : tasks) {
+        if (ExecutorAdviceHelper.shouldPropagateContext(context, task)
+            && !ContextPropagatingCallable.shouldDecorateCallable(task)) {
           VirtualField<Callable<?>, PropagatedContext> virtualField =
               VirtualField.find(Callable.class, PropagatedContext.class);
           ExecutorAdviceHelper.attachContextToTask(context, virtualField, task);
+          // if there are wrapped Callables, we need to add the unwrapped ones as well
+          if (list != null) {
+            list.add(task);
+          }
         }
+      }
+
+      // replace the original list with our new list if we created one
+      if (list != null) {
+        tasks = list;
       }
 
       // returning tasks and not propagatedContexts to avoid allocating another list just for an
@@ -228,7 +304,13 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void submitExit(
-        @Advice.Enter Collection<? extends Callable<?>> tasks, @Advice.Thrown Throwable throwable) {
+        @Advice.Enter Collection<? extends Callable<?>> tasks,
+        @Advice.Thrown Throwable throwable,
+        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+
       /*
        Note1: invokeAny doesn't return any futures so all we need to do for it
        is to make sure we close all scopes in case of an exception.

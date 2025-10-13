@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.trace.Bridging;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -40,13 +41,11 @@ public class SpanInstrumentation implements TypeInstrumentation {
       return false;
     }
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.Argument(0) SpanContext applicationSpanContext,
-        @Advice.Return(readOnly = false) Span applicationSpan) {
-      applicationSpan =
-          Bridging.toApplication(
-              io.opentelemetry.api.trace.Span.wrap(Bridging.toAgent(applicationSpanContext)));
+    public static Span methodExit(@Advice.Argument(0) SpanContext applicationSpanContext) {
+      return Bridging.toApplication(
+          io.opentelemetry.api.trace.Span.wrap(Bridging.toAgent(applicationSpanContext)));
     }
   }
 }

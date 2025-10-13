@@ -1,1 +1,7 @@
-description: This instrumentation provides CLIENT spans and metrics for the Apache HttpAsyncClient.
+display_name: Apache HttpAsyncClient
+description: This instrumentation enables HTTP client spans and HTTP client metrics for the Apache HttpAsyncClient.
+library_link: https://hc.apache.org/index.html
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
+

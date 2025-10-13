@@ -1,0 +1,4 @@
+description: >
+  This instrumentation provides a library integration for the Spring WebFlux WebClient and Webflux
+  server versions 5.3+ that enables HTTP client and server spans and metrics.
+library_link: https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/web/reactive/package-summary.html

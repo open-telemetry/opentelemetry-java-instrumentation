@@ -32,6 +32,7 @@ dependencies {
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
   suites {
@@ -54,6 +55,8 @@ testing {
 
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
+
+            systemProperty("collectMetadata", collectMetadata)
           }
         }
       }
@@ -68,6 +71,9 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {

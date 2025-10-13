@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.v3_3;
 
+import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.HIBERNATE_SESSION_ID;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.junit.jupiter.api.Named.named;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.util.function.BiConsumer;
@@ -92,10 +92,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
@@ -127,10 +124,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span -> assertClientSpan(span, trace.getSpan(3))));
   }
 
@@ -172,10 +166,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
   }
 
   @ParameterizedTest
@@ -205,10 +196,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
@@ -237,10 +225,7 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id")))));
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
   }
 
   @Test
@@ -294,19 +279,13 @@ class SessionTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span ->
                     assertSpanWithSessionId(
                         span,
                         trace.getSpan(0),
                         "Transaction.commit",
-                        trace
-                            .getSpan(1)
-                            .getAttributes()
-                            .get(AttributeKey.stringKey("hibernate.session_id"))),
+                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
                 span -> assertClientSpan(span, trace.getSpan(5), "INSERT"),
                 span -> assertClientSpan(span, trace.getSpan(5), "DELETE")));
   }
@@ -576,13 +555,13 @@ class SessionTest extends AbstractHibernateTest {
   }
 
   private static class Parameter {
-    public final String methodName;
-    public final String resource;
-    public final BiConsumer<Session, Value> sessionMethodTest;
-    public final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
-    public final Function<Session, Query> queryBuildMethod;
+    final String methodName;
+    final String resource;
+    final BiConsumer<Session, Value> sessionMethodTest;
+    final BiConsumer<StatelessSession, Value> statelessSessionMethodTest;
+    final Function<Session, Query> queryBuildMethod;
 
-    public Parameter(
+    Parameter(
         String methodName,
         String resource,
         BiConsumer<Session, Value> sessionMethodTest,
@@ -606,9 +585,6 @@ class SessionTest extends AbstractHibernateTest {
                 span,
                 trace.getSpan(0),
                 "Transaction.commit",
-                trace
-                    .getSpan(1)
-                    .getAttributes()
-                    .get(AttributeKey.stringKey("hibernate.session_id"))));
+                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)));
   }
 }
