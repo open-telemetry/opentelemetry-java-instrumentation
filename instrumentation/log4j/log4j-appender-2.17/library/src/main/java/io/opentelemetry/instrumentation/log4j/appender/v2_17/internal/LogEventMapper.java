@@ -16,6 +16,7 @@ import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
@@ -76,9 +77,16 @@ public final class LogEventMapper<T> {
     this.captureExperimentalAttributes = captureExperimentalAttributes;
     this.captureMapMessageAttributes = captureMapMessageAttributes;
     this.captureMarkerAttribute = captureMarkerAttribute;
-    this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureAllContextDataAttributes =
         captureContextDataAttributes.size() == 1 && captureContextDataAttributes.get(0).equals("*");
+    // If captureEventName is enabled, ensure "event.name" is in the list that we loop over
+    if (captureEventName
+        && !captureAllContextDataAttributes
+        && !captureContextDataAttributes.contains("event.name")) {
+      captureContextDataAttributes = new ArrayList<>(captureContextDataAttributes);
+      captureContextDataAttributes.add("event.name");
+    }
+    this.captureContextDataAttributes = captureContextDataAttributes;
     this.captureEventName = captureEventName;
   }
 
