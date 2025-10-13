@@ -371,8 +371,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
         }
         // returning tasks and not propagatedContexts to avoid allocating another list just for an
         // edge case (exception)
-
-        return new CallableCollectionAdviceScope(callDepth, list);
+        return new CallableCollectionAdviceScope(callDepth, list != null ? list : tasks);
       }
 
       public void end(@Nullable Throwable throwable) {
@@ -389,7 +388,7 @@ public class JavaExecutorInstrumentation implements TypeInstrumentation {
          any parent spans in case of an error.
          (according to ExecutorService docs and AbstractExecutorService code)
         */
-        if (throwable != null && tasks != null) {
+        if (throwable != null) {
           for (Callable<?> task : tasks) {
             if (task != null) {
               PropagatedContext propagatedContext = CALLABLE_PROPAGATED_CONTEXT.get(task);
