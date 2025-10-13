@@ -111,16 +111,20 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
       }
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void addDbInfo(
-        @Advice.Return PreparedStatement statement, @Advice.Enter Object[] enterResult) {
+        @Advice.Return PreparedStatement statement,
+        @Advice.Enter Object[] enterResult,
+        @Advice.Thrown Throwable error) {
       Context context = Java8BytecodeBridge.currentContext();
       PrepareContext prepareContext = PrepareContext.get(context);
       Scope scope = (Scope) enterResult[1];
       if (scope != null) {
         scope.close();
       }
-      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class) || prepareContext == null) {
+      if (error != null
+          || prepareContext == null
+          || JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
