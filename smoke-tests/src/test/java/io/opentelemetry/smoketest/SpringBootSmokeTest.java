@@ -23,7 +23,7 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20251011.18424653812")
+        .springBoot("20251013.18455512027")
         .setServiceName(false)
         .env("OTEL_METRICS_EXPORTER", "otlp")
         .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
@@ -60,7 +60,7 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
                                         ServiceAttributes.SERVICE_NAME, "otel-spring-test-app")
                                     .hasAttribute(
                                         ServiceAttributes.SERVICE_VERSION,
-                                        "2.21.0-alpha-SNAPSHOT")),
+                                        "1.2.3")),
                 span -> span.hasName("WebController.withSpan")));
 
     // Check agent version is logged on startup
