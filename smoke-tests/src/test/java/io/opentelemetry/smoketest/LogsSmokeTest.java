@@ -18,11 +18,11 @@ class LogsSmokeTest extends AbstractSmokeTest<Integer> {
 
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
-    options.springBoot("20211213.1570880324");
+    options.springBoot("20251011.18424653812");
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void shouldExportLogs(int jdk) {
     start(jdk);
     client().get("/greeting").aggregate().join();
