@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.logback.appender.v1_0.internal;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FILE_PATH;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_LINE_NUMBER;
-import static java.util.Collections.emptyList;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.spi.ILoggingEvent;
@@ -35,6 +34,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -77,6 +77,7 @@ public final class LoggingEventMapper {
 
   private final boolean captureExperimentalAttributes;
   private final List<String> captureMdcAttributes;
+  private final Set<String> excludeMdcAttributes;
   private final boolean captureAllMdcAttributes;
   private final boolean captureCodeAttributes;
   private final boolean captureMarkerAttribute;
@@ -90,6 +91,7 @@ public final class LoggingEventMapper {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
     this.captureCodeAttributes = builder.captureCodeAttributes;
     this.captureMdcAttributes = builder.captureMdcAttributes;
+    this.excludeMdcAttributes = builder.excludeMdcAttributes;
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
@@ -243,7 +245,9 @@ public final class LoggingEventMapper {
   void captureMdcAttributes(LogRecordBuilder builder, Map<String, String> mdcProperties) {
     if (captureAllMdcAttributes) {
       for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {
-        setAttributeOrEventName(builder, getAttributeKey(entry.getKey()), entry.getValue());
+        if (!excludeMdcAttributes.contains(entry.getKey())) {
+          setAttributeOrEventName(builder, getAttributeKey(entry.getKey()), entry.getValue());
+        }
       }
       return;
     }
@@ -636,7 +640,8 @@ public final class LoggingEventMapper {
    */
   public static final class Builder {
     private boolean captureExperimentalAttributes;
-    private List<String> captureMdcAttributes = emptyList();
+    private List<String> captureMdcAttributes = List.of();
+    private Set<String> excludeMdcAttributes = Set.of();
     private boolean captureCodeAttributes;
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
@@ -656,6 +661,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureMdcAttributes(List<String> captureMdcAttributes) {
       this.captureMdcAttributes = captureMdcAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setExcludeMdcAttributes(Set<String> excludeMdcAttributes) {
+      this.excludeMdcAttributes = excludeMdcAttributes;
       return this;
     }
 

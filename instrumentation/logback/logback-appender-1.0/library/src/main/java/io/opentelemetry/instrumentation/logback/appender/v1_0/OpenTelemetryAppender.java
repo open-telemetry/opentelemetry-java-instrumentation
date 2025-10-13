@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
-import static java.util.Collections.emptyList;
-
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
@@ -37,7 +35,8 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   private boolean captureLoggerContext = false;
   private boolean captureArguments = false;
   private boolean captureLogstashAttributes = false;
-  private List<String> captureMdcAttributes = emptyList();
+  private List<String> captureMdcAttributes = List.of();
+  private Set<String> excludeMdcAttributes = Set.of();
   private boolean captureEventName = false;
 
   private volatile OpenTelemetry openTelemetry;
@@ -83,6 +82,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setCaptureMdcAttributes(captureMdcAttributes)
+            .setExcludeMdcAttributes(excludeMdcAttributes)
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
@@ -193,12 +193,31 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     this.captureLogstashAttributes = captureLogstashAttributes;
   }
 
-  /** Configures the {@link MDC} attributes that will be copied to logs. */
+  /**
+   * Configures the {@link MDC} attributes that will be copied to logs. A single wildcard * will
+   * copy all attributes.
+   *
+   * @param attributes The attributes to copy
+   */
   public void setCaptureMdcAttributes(String attributes) {
     if (attributes != null) {
       captureMdcAttributes = filterBlanksAndNulls(attributes.split(","));
     } else {
-      captureMdcAttributes = emptyList();
+      captureMdcAttributes = List.of();
+    }
+  }
+
+  /**
+   * Configures the {@link MDC} attributes that will be excluded from being copied to logs when all
+   * attributes are being copied.
+   *
+   * @param attributes The attributes to exclude from being copied
+   */
+  public void setExcludeMdcAttributes(String attributes) {
+    if (attributes != null) {
+      excludeMdcAttributes = Set.copyOf(filterBlanksAndNulls(attributes.split(",")));
+    } else {
+      excludeMdcAttributes = Set.of();
     }
   }
 
