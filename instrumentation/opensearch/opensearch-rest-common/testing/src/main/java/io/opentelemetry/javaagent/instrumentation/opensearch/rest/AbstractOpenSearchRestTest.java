@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -48,6 +51,8 @@ public abstract class AbstractOpenSearchRestTest {
   protected abstract RestClient buildRestClient() throws Exception;
 
   protected abstract int getResponseStatus(Response response);
+
+  protected abstract String getInstrumentationName();
 
   @BeforeAll
   void setUp() throws Exception {
@@ -168,5 +173,15 @@ public abstract class AbstractOpenSearchRestTest {
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void shouldRecordMetrics() throws IOException {
+    Response response = client.performRequest(new Request("GET", "_cluster/health"));
+    assertThat(getResponseStatus(response)).isEqualTo(200);
+
+    getTesting().waitForTraces(1);
+
+    assertDurationMetric(getTesting(), getInstrumentationName(), DB_OPERATION_NAME, DB_SYSTEM_NAME);
   }
 }

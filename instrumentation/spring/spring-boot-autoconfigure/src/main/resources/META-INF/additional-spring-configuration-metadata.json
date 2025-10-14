@@ -296,6 +296,12 @@
       "description": "Used to specify a mapping from host names or IP addresses to peer services, as a comma-separated list of <code>host_or_ip=user_assigned_name</code> pairs. The peer service is added as an attribute to a span whose host or IP address match the mapping. See https://opentelemetry.io/docs/zero-code/java/agent/configuration/#peer-service-name."
     },
     {
+      "name": "otel.instrumentation.common.thread-details.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of thread details (thread id and thread name) as span attributes.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.http.client.capture-request-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP request headers to capture in HTTP clients."
@@ -436,9 +442,15 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logstash attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
+      "description": "Enable the capture of Logstash marker attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).",
       "defaultValue": false
     },
     {
@@ -626,6 +638,12 @@
       "type": "java.lang.Integer",
       "description": "The maximum number of links per span.",
       "defaultValue": 128
+    },
+    {
+      "name": "otel.spring-starter.debug",
+      "type": "java.lang.Boolean",
+      "description": "Print spans to console for debugging purposes.",
+      "defaultValue": false
     },
     {
       "name": "otel.traces.exporter",

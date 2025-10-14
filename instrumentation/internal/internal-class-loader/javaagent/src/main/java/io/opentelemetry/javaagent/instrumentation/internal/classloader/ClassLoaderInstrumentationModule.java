@@ -12,7 +12,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModul
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -26,13 +25,6 @@ public class ClassLoaderInstrumentationModule extends InstrumentationModule
   public boolean defaultEnabled(ConfigProperties config) {
     // internal instrumentations are always enabled by default
     return true;
-  }
-
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return Arrays.asList(
-        "io.opentelemetry.javaagent.instrumentation.internal.classloader.BootstrapPackagesHelper",
-        "io.opentelemetry.javaagent.tooling.Constants");
   }
 
   @Override

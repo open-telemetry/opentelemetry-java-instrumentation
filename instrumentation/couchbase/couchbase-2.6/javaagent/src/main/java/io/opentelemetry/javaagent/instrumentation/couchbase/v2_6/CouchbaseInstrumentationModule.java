@@ -30,4 +30,9 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
   public String getModuleGroup() {
     return "couchbase";
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

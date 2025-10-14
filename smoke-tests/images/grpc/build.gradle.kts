@@ -8,7 +8,7 @@ plugins {
 }
 
 dependencies {
-  implementation(platform("io.grpc:grpc-bom:1.75.0"))
+  implementation(platform("io.grpc:grpc-bom:1.76.0"))
   implementation(platform("io.opentelemetry:opentelemetry-bom:1.0.0"))
   implementation(platform("io.opentelemetry:opentelemetry-bom-alpha:1.0.0-alpha"))
   implementation(platform("org.apache.logging.log4j:log4j-bom:2.25.2"))
