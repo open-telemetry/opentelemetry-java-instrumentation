@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobSingletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.JobTypeHelper.determineJobTypeFromExecutor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -67,25 +68,6 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
                   : shardingContexts.getShardingItemParameters().toString(),
               jobType);
       return helper().startSpan(request);
-    }
-
-    public static String determineJobTypeFromExecutor(Object jobItemExecutor) {
-      if (jobItemExecutor == null) {
-        return "UNKNOWN";
-      } else {
-        switch (jobItemExecutor.getClass().getSimpleName()) {
-          case "HttpJobExecutor":
-            return "HTTP";
-          case "ScriptJobExecutor":
-            return "SCRIPT";
-          case "SimpleJobExecutor":
-            return "SIMPLE";
-          case "DataflowJobExecutor":
-            return "DATAFLOW";
-          default:
-            return "UNKNOWN";
-        }
-      }
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)

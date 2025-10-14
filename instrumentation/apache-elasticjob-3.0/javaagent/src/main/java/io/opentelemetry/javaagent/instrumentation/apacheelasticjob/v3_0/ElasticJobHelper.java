@@ -34,10 +34,6 @@ public final class ElasticJobHelper {
 
   public void endSpan(@Nullable ElasticJobScope scope, @Nullable Throwable throwable) {
     if (scope != null) {
-      if (throwable != null) {
-        scope.request.setFailed();
-      }
-
       scope.scope.close();
       this.instrumenter.end(scope.context, scope.request, null, throwable);
     }

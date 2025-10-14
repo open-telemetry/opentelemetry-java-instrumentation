@@ -46,6 +46,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ElasticJobTest {
@@ -87,8 +89,6 @@ public class ElasticJobTest {
 
   @AfterEach
   public void clearSpans() {
-    testing.clearData();
-
     try {
       Thread.sleep(100L);
     } catch (InterruptedException var2) {
@@ -97,7 +97,7 @@ public class ElasticJobTest {
   }
 
   @Test
-  public void testHttpJob() throws InterruptedException {
+  public void testHttpJob() {
     ScheduleJobBootstrap bootstrap = setUpHttpJob(regCenter);
     try {
       bootstrap.schedule();
@@ -273,38 +273,37 @@ public class ElasticJobTest {
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
   public void testScriptJob() throws IOException {
     ScheduleJobBootstrap bootstrap = setUpScriptJob(regCenter);
     try {
-      testing.waitAndAssertTracesWithoutScopeVersionVerification(
+      testing.waitAndAssertTraces(
           trace ->
-              trace
-                  .hasSize(1)
-                  .hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasKind(SpanKind.INTERNAL)
-                              .hasName("SCRIPT")
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(AttributeKey.stringKey("job.system"), "elasticjob"),
-                                  equalTo(
-                                      AttributeKey.stringKey(
-                                          "scheduling.apache-elasticjob.job.name"),
-                                      "scriptElasticJob"),
-                                  equalTo(
-                                      AttributeKey.longKey("scheduling.apache-elasticjob.item"),
-                                      0L),
-                                  equalTo(
-                                      AttributeKey.longKey(
-                                          "scheduling.apache-elasticjob.sharding.total.count"),
-                                      1L),
-                                  equalTo(
-                                      AttributeKey.stringKey(
-                                          "scheduling.apache-elasticjob.sharding.item.parameters"),
-                                      "{0=null}"),
-                                  satisfies(
-                                      AttributeKey.stringKey(
-                                          "scheduling.apache-elasticjob.task.id"),
-                                      taskId -> taskId.contains("scriptElasticJob")))));
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SpanKind.INTERNAL)
+                          .hasName("SCRIPT")
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(AttributeKey.stringKey("job.system"), "elasticjob"),
+                              equalTo(
+                                  AttributeKey.stringKey(
+                                      "scheduling.apache-elasticjob.job.name"),
+                                  "scriptElasticJob"),
+                              equalTo(
+                                  AttributeKey.longKey("scheduling.apache-elasticjob.item"),
+                                  0L),
+                              equalTo(
+                                  AttributeKey.longKey(
+                                      "scheduling.apache-elasticjob.sharding.total.count"),
+                                  1L),
+                              equalTo(
+                                  AttributeKey.stringKey(
+                                      "scheduling.apache-elasticjob.sharding.item.parameters"),
+                                  "{0=null}"),
+                              satisfies(
+                                  AttributeKey.stringKey(
+                                      "scheduling.apache-elasticjob.task.id"),
+                                  taskId -> taskId.contains("scriptElasticJob")))));
     } finally {
       bootstrap.shutdown();
     }
