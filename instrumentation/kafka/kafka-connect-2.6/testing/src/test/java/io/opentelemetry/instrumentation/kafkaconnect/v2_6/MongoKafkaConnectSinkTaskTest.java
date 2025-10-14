@@ -130,7 +130,8 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                         .hasLinksSatisfying(
                             links ->
                                 assertThat(links)
-                                    .isEmpty()), // Verify no span links since no traceparent header was injected
+                                    .isEmpty()), // Verify no span links since no traceparent header
+                // was injected
                 span ->
                     span.hasName("update " + DB_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)

@@ -149,7 +149,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                         .hasLinksSatisfying(
                             links ->
                                 assertThat(links)
-                                    .isEmpty()), // Verify no span links since no traceparent header was injected
+                                    .isEmpty()), // Verify no span links since no traceparent header
+                // was injected
                 span ->
                     span.hasName("SELECT test")
                         .hasKind(SpanKind.CLIENT)
@@ -340,12 +341,12 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .filter(
                           span ->
                               ((span.getName().contains(topicName1)
-                                      || span.getName().contains(topicName2)
-                                      || span.getName().contains(topicName3))
-                                  || (span.getName().contains("[")
-                                      && span.getName().contains("]")
-                                      && span.getName().contains("process"))
-                                  || span.getName().equals("unknown process"))
+                                          || span.getName().contains(topicName2)
+                                          || span.getName().contains(topicName3))
+                                      || (span.getName().contains("[")
+                                          && span.getName().contains("]")
+                                          && span.getName().contains("process"))
+                                      || span.getName().equals("unknown process"))
                                   && span.getKind() == CONSUMER)
                       .count();
 
@@ -398,7 +399,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .flatMap(trace -> trace.stream())
                       .anyMatch(
                           span ->
-                              span.getName().equals("unknown process") && span.getKind() == CONSUMER);
+                              span.getName().equals("unknown process")
+                                  && span.getKind() == CONSUMER);
 
               assertThat(hasMultiTopicSpan || hasIndividualSpans || hasUnknownProcessSpan)
                   .as(
@@ -412,12 +414,12 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .filter(
                           span ->
                               ((span.getName().contains(topicName1)
-                                      || span.getName().contains(topicName2)
-                                      || span.getName().contains(topicName3))
-                                  || (span.getName().contains("[")
-                                      && span.getName().contains("]")
-                                      && span.getName().contains("process"))
-                                  || span.getName().equals("unknown process"))
+                                          || span.getName().contains(topicName2)
+                                          || span.getName().contains(topicName3))
+                                      || (span.getName().contains("[")
+                                          && span.getName().contains("]")
+                                          && span.getName().contains("process"))
+                                      || span.getName().equals("unknown process"))
                                   && span.getKind() == CONSUMER
                                   && !span.getLinks().isEmpty())
                       .count();
