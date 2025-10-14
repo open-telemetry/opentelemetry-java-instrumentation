@@ -8,11 +8,15 @@ package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.testing.assertj.TraceAssert;
+import io.opentelemetry.sdk.trace.data.LinkData;
 import io.restassured.http.ContentType;
 import java.io.IOException;
 import java.sql.Connection;
@@ -22,11 +26,13 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.time.Duration;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
@@ -82,12 +88,8 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Override
-  protected void clearDatabaseData() {
-    try {
-      clearPostgresTable();
-    } catch (SQLException e) {
-      throw new RuntimeException(e);
-    }
+  protected void clearDatabaseData() throws Exception {
+    clearPostgresTable();
   }
 
   @Override
@@ -102,13 +104,12 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectPostgresSinkTaskInstrumentation()
-      throws IOException, InterruptedException {
-    String uniqueTopicName = TOPIC_NAME + "-" + System.currentTimeMillis();
-    setupPostgresSinkConnector(uniqueTopicName);
+  public void testKafkaConnectPostgresSinkTaskInstrumentation() throws Exception {
+    String testTopicName = TOPIC_NAME;
+    setupPostgresSinkConnector(testTopicName);
 
-    createTopic(uniqueTopicName);
-    awaitForTopicCreation(uniqueTopicName);
+    createTopic(testTopicName);
+    awaitForTopicCreation(testTopicName);
 
     Properties props = new Properties();
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
@@ -118,10 +119,10 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     testing.waitForTraces(9); // Skip initial traces from Kafka Connect startup
     testing.clearData();
 
-    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+    try (Producer<String, String> producer = instrument(new KafkaProducer<>(props))) {
       producer.send(
           new ProducerRecord<>(
-              uniqueTopicName,
+              testTopicName,
               "test-key",
               "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":1,\"name\":\"TestUser\"}}"));
       producer.flush();
@@ -129,8 +130,17 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 1);
 
+    AtomicReference<SpanContext> producerSpanContext = new AtomicReference<>();
     testing.waitAndAssertTraces(
         trace ->
+            // producer is in a separate trace, linked to consumer with a span link
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName(testTopicName + " publish").hasKind(SpanKind.PRODUCER).hasNoParent();
+                  producerSpanContext.set(span.actual().getSpanContext());
+                }),
+        trace ->
+            // kafka connect sends message to status topic while processing our message
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("kafka-connect-status publish")
@@ -140,41 +150,28 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                     span.hasName("kafka-connect-status process")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(uniqueTopicName + " process")
-                        .hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasLinksSatisfying(
-                            links ->
-                                assertThat(links)
-                                    .isEmpty()), // Verify no span links since no traceparent header
-                // was injected
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("INSERT test." + DB_TABLE_PERSON)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))),
+        trace -> {
+          // kafka connect consumer trace, linked to producer span via a span link
+          Consumer<SpanDataAssert> selectAssertion =
+              span ->
+                  span.hasName("SELECT test").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
+
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName(testTopicName + " process")
+                      .hasKind(CONSUMER)
+                      .hasNoParent()
+                      .hasLinks(LinkData.create(producerSpanContext.get())),
+              selectAssertion,
+              selectAssertion,
+              selectAssertion,
+              selectAssertion,
+              selectAssertion,
+              span ->
+                  span.hasName("INSERT test." + DB_TABLE_PERSON)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0)));
+        },
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
@@ -184,107 +181,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectPostgresSinkTaskWithSpanLinks()
-      throws IOException, InterruptedException {
-    String uniqueTopicName = TOPIC_NAME + "-links-" + System.currentTimeMillis();
-    setupPostgresSinkConnector(uniqueTopicName);
-
-    createTopic(uniqueTopicName);
-    awaitForTopicCreation(uniqueTopicName);
-
-    Properties props = new Properties();
-    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
-    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
-
-    testing.waitForTraces(9); // Skip initial traces from Kafka Connect startup
-    testing.clearData();
-
-    // Define expected trace and span IDs for span link validation
-    String expectedTraceId = "2af7651916cd43dd8448eb211c80320f"; // 32 hex chars
-    String expectedSpanId = "d9c7c989f97918e5"; // 16 hex chars
-
-    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
-      ProducerRecord<String, String> record =
-          new ProducerRecord<>(
-              uniqueTopicName,
-              "test-key",
-              "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":1,\"name\":\"TestUser\"}}");
-
-      // Inject traceparent header to enable span linking
-      String traceparent = "00-" + expectedTraceId + "-" + expectedSpanId + "-01";
-      record
-          .headers()
-          .add("traceparent", traceparent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
-
-      producer.send(record);
-      producer.flush();
-    }
-
-    await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 1);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("kafka-connect-status publish")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent(),
-                span ->
-                    span.hasName("kafka-connect-status process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(uniqueTopicName + " process")
-                        .hasKind(CONSUMER)
-                        .hasNoParent()
-                        .hasLinksSatisfying(
-                            links ->
-                                assertThat(links)
-                                    .singleElement()
-                                    .satisfies(
-                                        link -> {
-                                          assertThat(link.getSpanContext().getTraceId())
-                                              .isEqualTo(expectedTraceId);
-                                          assertThat(link.getSpanContext().getSpanId())
-                                              .isEqualTo(expectedSpanId);
-                                        })),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("INSERT test." + DB_TABLE_PERSON)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
-  }
-
-  @Test
-  public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation() throws IOException {
+  public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation() throws Exception {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
@@ -302,8 +199,15 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.BATCH_SIZE_CONFIG, 10); // to send messages in one batch
+    props.put(ProducerConfig.LINGER_MS_CONFIG, 10_000); // 10 seconds
 
-    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+    testing.waitForTraces(9); // Skip initial traces from Kafka Connect startup
+    testing.clearData();
+
+    Span parentSpan = openTelemetry.getTracer("test").spanBuilder("parent").startSpan();
+    try (Producer<String, String> producer = instrument(new KafkaProducer<>(props));
+        Scope ignore = parentSpan.makeCurrent()) {
       producer.send(
           new ProducerRecord<>(
               topicName1,
@@ -320,117 +224,85 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
               "key3",
               "{\"schema\":{\"type\":\"struct\",\"fields\":[{\"field\":\"id\",\"type\":\"int32\"},{\"field\":\"name\",\"type\":\"string\"}]},\"payload\":{\"id\":3,\"name\":\"User3\"}}"));
       producer.flush();
+    } finally {
+      parentSpan.end();
     }
 
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromPostgres() >= 3);
 
-    // For multi-topic tests, we can't predict exact trace structure since messages
-    // may be batched together or processed separately. We use a flexible assertion
-    // that counts spans across all traces.
-    await()
-        .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = testing.waitForTraces(1);
+    Consumer<TraceAssert> kafkaStatusAssertion =
+        trace ->
+            // kafka connect sends message to status topic while processing our message
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("kafka-connect-status publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("kafka-connect-status process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0)));
 
-              // Count total Kafka Connect consumer spans and database INSERT spans across all
-              // traces
-              long totalKafkaConnectSpans =
-                  traces.stream()
-                      .flatMap(trace -> trace.stream())
-                      .filter(
-                          span ->
-                              ((span.getName().contains(topicName1)
-                                          || span.getName().contains(topicName2)
-                                          || span.getName().contains(topicName3))
-                                      || (span.getName().contains("[")
-                                          && span.getName().contains("]")
-                                          && span.getName().contains("process"))
-                                      || span.getName().equals("unknown process"))
-                                  && span.getKind() == CONSUMER)
-                      .count();
+    AtomicReference<SpanContext> producerSpanContext1 = new AtomicReference<>();
+    AtomicReference<SpanContext> producerSpanContext2 = new AtomicReference<>();
+    AtomicReference<SpanContext> producerSpanContext3 = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace ->
+            // producer is in a separate trace, linked to consumer with a span link
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> {
+                  span.hasName(topicName1 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0));
+                  producerSpanContext1.set(span.actual().getSpanContext());
+                },
+                span -> {
+                  span.hasName(topicName2 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0));
+                  producerSpanContext2.set(span.actual().getSpanContext());
+                },
+                span -> {
+                  span.hasName(topicName3 + " publish")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0));
+                  producerSpanContext3.set(span.actual().getSpanContext());
+                }),
+        kafkaStatusAssertion,
+        kafkaStatusAssertion,
+        kafkaStatusAssertion,
+        trace -> {
+          // kafka connect consumer trace, linked to producer span via a span link
+          Consumer<SpanDataAssert> selectAssertion =
+              span ->
+                  span.hasName("SELECT test").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
 
-              long totalInsertSpans =
-                  traces.stream()
-                      .flatMap(trace -> trace.stream())
-                      .filter(
-                          span ->
-                              span.getName().equals("INSERT test." + DB_TABLE_PERSON)
-                                  && span.getKind() == SpanKind.CLIENT)
-                      .count();
-
-              // PostgreSQL JDBC batches INSERT operations, so we expect at least 1 INSERT span
-              // (unlike MongoDB which creates separate spans for each update)
-              assertThat(totalKafkaConnectSpans)
-                  .as("Expected at least 1 Kafka Connect consumer span")
-                  .isGreaterThanOrEqualTo(1);
-              assertThat(totalInsertSpans)
-                  .as(
-                      "Expected at least 1 INSERT span (JDBC batches multiple records into one INSERT)")
-                  .isGreaterThanOrEqualTo(1);
-
-              // When records are from multiple topics, we may see either:
-              // 1. A multi-topic span with format like "[topic1, topic2, topic3] process"
-              // 2. Individual spans for each topic
-              // 3. A generic "unknown process" span when Kafka Connect can't determine topic name
-              boolean hasMultiTopicSpan =
-                  traces.stream()
-                      .flatMap(trace -> trace.stream())
-                      .anyMatch(
-                          span ->
-                              span.getName().contains("[")
-                                  && span.getName().contains("]")
-                                  && span.getName().contains("process")
-                                  && span.getKind() == CONSUMER);
-
-              boolean hasIndividualSpans =
-                  traces.stream()
-                      .flatMap(trace -> trace.stream())
-                      .anyMatch(
-                          span ->
-                              (span.getName().contains(topicName1)
-                                      || span.getName().contains(topicName2)
-                                      || span.getName().contains(topicName3))
-                                  && !span.getName().contains("[")
-                                  && span.getKind() == CONSUMER);
-
-              boolean hasUnknownProcessSpan =
-                  traces.stream()
-                      .flatMap(trace -> trace.stream())
-                      .anyMatch(
-                          span ->
-                              span.getName().equals("unknown process")
-                                  && span.getKind() == CONSUMER);
-
-              assertThat(hasMultiTopicSpan || hasIndividualSpans || hasUnknownProcessSpan)
-                  .as(
-                      "Expected either a multi-topic span, individual topic spans, or 'unknown process' span")
-                  .isTrue();
-
-              // Verify that no span links are present since we didn't inject traceparent headers
-              long consumerSpansWithLinks =
-                  traces.stream()
-                      .flatMap(trace -> trace.stream())
-                      .filter(
-                          span ->
-                              ((span.getName().contains(topicName1)
-                                          || span.getName().contains(topicName2)
-                                          || span.getName().contains(topicName3))
-                                      || (span.getName().contains("[")
-                                          && span.getName().contains("]")
-                                          && span.getName().contains("process"))
-                                      || span.getName().equals("unknown process"))
-                                  && span.getKind() == CONSUMER
-                                  && !span.getLinks().isEmpty())
-                      .count();
-
-              if (consumerSpansWithLinks > 0) {
-                throw new AssertionError(
-                    "Expected no span links since no traceparent header was injected, but found: "
-                        + consumerSpansWithLinks
-                        + " consumer span(s) with links");
-              }
-            });
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("unknown process")
+                      .hasKind(CONSUMER)
+                      .hasNoParent()
+                      .hasLinks(
+                          LinkData.create(producerSpanContext1.get()),
+                          LinkData.create(producerSpanContext2.get()),
+                          LinkData.create(producerSpanContext3.get())),
+              selectAssertion,
+              selectAssertion,
+              selectAssertion,
+              selectAssertion,
+              selectAssertion,
+              span ->
+                  span.hasName("INSERT test." + DB_TABLE_PERSON)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasParent(trace.getSpan(0)));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
   }
 
   private static void setupPostgresSinkConnector(String topicName) throws IOException {

@@ -12,13 +12,21 @@ import static org.awaitility.Awaitility.await;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
+import io.opentelemetry.context.propagation.ContextPropagators;
+import io.opentelemetry.context.propagation.TextMapPropagator;
+import io.opentelemetry.exporter.logging.LoggingSpanExporter;
+import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.trace.SdkTracerProvider;
+import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.opentelemetry.smoketest.SmokeTestInstrumentationExtension;
 import io.opentelemetry.smoketest.TelemetryRetriever;
 import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
-import java.io.IOException;
-import java.net.ServerSocket;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.Locale;
@@ -29,6 +37,8 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.common.errors.TopicExistsException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -91,6 +101,8 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   protected static GenericContainer<?> kafkaConnect;
   protected static int kafkaExposedPort;
 
+  protected static OpenTelemetrySdk openTelemetry;
+
   // Abstract methods for database-specific setup
   protected abstract void setupDatabaseContainer();
 
@@ -98,7 +110,7 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
 
   protected abstract void stopDatabaseContainer();
 
-  protected abstract void clearDatabaseData();
+  protected abstract void clearDatabaseData() throws Exception;
 
   protected abstract String getConnectorInstallCommand();
 
@@ -121,29 +133,9 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
     return kafka.getHost() + ":" + kafkaExposedPort;
   }
 
-  protected static int getRandomFreePort() {
-    try (ServerSocket serverSocket = new ServerSocket(0)) {
-      return serverSocket.getLocalPort();
-    } catch (IOException e) {
-      return 0;
-    }
-  }
-
   @Override
   public TelemetryRetriever getTelemetryRetriever() {
     return telemetryRetriever;
-  }
-
-  // Custom cleanup method that handles telemetry clearing gracefully
-  protected static void clearTelemetryGracefully() {
-    if (telemetryRetriever != null) {
-      try {
-        telemetryRetriever.clearTelemetry();
-      } catch (RuntimeException e) {
-        // Ignore cleanup errors - backend might already be stopped
-        logger.debug("Failed to clear telemetry during cleanup: {}", e.getMessage());
-      }
-    }
   }
 
   @BeforeAll
@@ -162,26 +154,28 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
                 Wait.forHttp("/health")
                     .forPort(BACKEND_PORT)
                     .withStartupTimeout(Duration.of(5, MINUTES)))
-            .withStartupTimeout(Duration.of(5, MINUTES))
-            .withEnv(
-                "DOCKER_DEFAULT_PLATFORM",
-                "linux/amd64"); // Force AMD64 for stability on ARM64 hosts
-
+            .withStartupTimeout(Duration.of(5, MINUTES));
     backend.start();
 
-    // Initialize TelemetryRetriever after backend starts with custom error handling
     telemetryRetriever =
-        new TelemetryRetriever(backend.getMappedPort(BACKEND_PORT), Duration.ofMinutes(2)) {
-          @Override
-          public void clearTelemetry() {
-            try {
-              super.clearTelemetry();
-            } catch (RuntimeException e) {
-              // Ignore cleanup errors - backend might already be stopped
-              logger.debug("Failed to clear telemetry: {}", e.getMessage());
-            }
-          }
-        };
+        new TelemetryRetriever(backend.getMappedPort(BACKEND_PORT), Duration.ofSeconds(30));
+
+    openTelemetry =
+        OpenTelemetrySdk.builder()
+            .setTracerProvider(
+                SdkTracerProvider.builder()
+                    .addSpanProcessor(SimpleSpanProcessor.create(LoggingSpanExporter.create()))
+                    .addSpanProcessor(
+                        SimpleSpanProcessor.create(
+                            OtlpGrpcSpanExporter.builder()
+                                .setEndpoint(
+                                    "http://localhost:" + backend.getMappedPort(BACKEND_PORT))
+                                .build()))
+                    .build())
+            .setPropagators(
+                ContextPropagators.create(
+                    TextMapPropagator.composite(W3CTraceContextPropagator.getInstance())))
+            .build();
 
     setupZookeeper();
     setupKafka();
@@ -215,7 +209,7 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   private static void setupKafka() {
     String zookeeperInternalUrl = ZOOKEEPER_NETWORK_ALIAS + ":" + ZOOKEEPER_INTERNAL_PORT;
 
-    kafkaExposedPort = getRandomFreePort();
+    kafkaExposedPort = PortUtils.findOpenPort();
     kafka =
         new FixedHostPortGenericContainer<>("confluentinc/cp-kafka:" + CONFLUENT_VERSION)
             .withFixedExposedPort(kafkaExposedPort, KAFKA_INTERNAL_PORT)
@@ -319,26 +313,22 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   }
 
   @BeforeEach
-  public void resetBase() {
+  public void resetBase() throws Exception {
     deleteConnectorIfExists();
     clearDatabaseData();
-    // Clear spans from backend using telemetry retriever
-    clearTelemetryGracefully();
   }
 
-  protected void createTopic(String topicName) {
+  @SuppressWarnings("InterruptedExceptionSwallowed")
+  protected void createTopic(String topicName) throws Exception {
     try (AdminClient adminClient = createAdminClient()) {
       NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
       adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new RuntimeException("Failed to create topic: " + topicName, e);
     } catch (Exception e) {
-      if (e.getCause() instanceof org.apache.kafka.common.errors.TopicExistsException) {
+      if (e.getCause() instanceof TopicExistsException) {
         // Topic already exists, continue
-      } else {
-        throw new RuntimeException("Failed to create topic: " + topicName, e);
+        return;
       }
+      throw e;
     }
   }
 
@@ -348,8 +338,6 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
           .atMost(Duration.ofSeconds(60))
           .pollInterval(Duration.ofMillis(500))
           .until(() -> adminClient.listTopics().names().get().contains(topicName));
-    } catch (RuntimeException e) {
-      throw new RuntimeException("Failed to await topic creation: " + topicName, e);
     }
   }
 
@@ -374,8 +362,8 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
 
   @AfterAll
   public void cleanupBase() {
-    // Clear telemetry before stopping containers to avoid connection errors
-    clearTelemetryGracefully();
+    telemetryRetriever.close();
+    openTelemetry.close();
 
     // Stop all containers in reverse order of startup to ensure clean shutdown
     if (kafkaConnect != null) {
@@ -399,5 +387,9 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
     if (network != null) {
       network.close();
     }
+  }
+
+  protected static Producer<String, String> instrument(Producer<String, String> producer) {
+    return KafkaTelemetry.create(openTelemetry).wrap(producer);
   }
 }

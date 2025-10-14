@@ -15,6 +15,9 @@ dependencies {
   testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.apache.kafka:kafka-clients:3.6.1")
+  testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
+  testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
+  testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
 
   testImplementation("org.testcontainers:postgresql:1.21.3") // For PostgreSQLContainer
   testImplementation("org.postgresql:postgresql:42.7.2") // PostgreSQL JDBC driver
