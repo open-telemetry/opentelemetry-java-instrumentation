@@ -82,6 +82,30 @@ testing {
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
           implementation("org.slf4j:slf4j-api:latest.release")
+        } else {
+          implementation("ch.qos.logback:logback-classic") {
+            version {
+              strictly("1.3.0")
+            }
+          }
+          implementation("org.slf4j:slf4j-api") {
+            version {
+              strictly("2.0.0")
+            }
+          }
+        }
+      }
+    }
+
+    val logstashMarkerTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation(project(":testing-common"))
+
+        if (latestDepTest) {
+          implementation("ch.qos.logback:logback-classic:latest.release")
+          implementation("org.slf4j:slf4j-api:latest.release")
           implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
         } else {
           implementation("ch.qos.logback:logback-classic") {
@@ -97,6 +121,36 @@ testing {
           implementation("net.logstash.logback:logstash-logback-encoder") {
             version {
               strictly("3.0")
+            }
+          }
+        }
+      }
+    }
+
+    val logstashStructuredArgsTest by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation(project(":testing-common"))
+
+        if (latestDepTest) {
+          implementation("ch.qos.logback:logback-classic:latest.release")
+          implementation("org.slf4j:slf4j-api:latest.release")
+          implementation("net.logstash.logback:logstash-logback-encoder:latest.release")
+        } else {
+          implementation("ch.qos.logback:logback-classic") {
+            version {
+              strictly("1.3.0")
+            }
+          }
+          implementation("org.slf4j:slf4j-api") {
+            version {
+              strictly("2.0.0")
+            }
+          }
+          implementation("net.logstash.logback:logstash-logback-encoder") {
+            version {
+              strictly("6.6")
             }
           }
         }
