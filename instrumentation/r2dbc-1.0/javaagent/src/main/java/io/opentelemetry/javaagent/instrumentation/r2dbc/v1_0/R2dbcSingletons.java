@@ -30,7 +30,8 @@ public final class R2dbcSingletons {
                 PeerServiceAttributesExtractor.create(
                     R2dbcNetAttributesGetter.INSTANCE,
                     AgentCommonConfig.get().getPeerServiceResolver()));
-    Experimental.setEnableSqlCommenter(builder,
+    Experimental.setEnableSqlCommenter(
+        builder,
         AgentInstrumentationConfig.get()
             .getBoolean(
                 "otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled",
