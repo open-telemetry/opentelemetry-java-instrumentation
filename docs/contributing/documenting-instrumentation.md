@@ -83,11 +83,15 @@ instrumentation.
 Example:
 
 ```yaml
+display_name: "Example Instrumentation"
 description: "This instrumentation enables..."
 semantic_conventions:
   - HTTP_CLIENT_SPANS
   - DATABASE_CLIENT_SPANS
   - JVM_RUNTIME_METRICS
+features:
+  - HTTP_ROUTE
+  - CONTEXT_PROPAGATION
 disabled_by_default: true
 classification: library
 library_link: https://github.com/...
@@ -96,7 +100,32 @@ configurations:
     description: Enables statement sanitization for database queries.
     type: boolean
     default: true
+override_telemetry: false
+additional_telemetry:
+  - when: "default"
+    metrics:
+      - name: "metric.name"
+        description: "Metric description"
+        type: "COUNTER"
+        unit: "1"
+        attributes:
+          - name: "attribute.name"
+            type: "STRING"
+    spans:
+      - span_kind: "CLIENT"
+        attributes:
+          - name: "span.attribute"
+            type: "STRING"
 ```
+
+### Display Name (optional)
+
+Display name is mostly used for UI purposes, and has two main uses:
+
+- Providing a more user-friendly name for the instrumentation than the module name
+  (e.g., "Apache CXF JAX-RS 2.x" instead of "jaxrs-2.0-cxf-3.2").
+- Collapsing multiple related modules into a single display name
+  (e.g., "Akka Actors" for both "akka-actor-2.3" and "akka-actor-fork-join-2.5").
 
 ### Description (required)
 
@@ -121,7 +150,7 @@ Some notes when writing descriptions:
   "This instrumentation **enables** HTTP server spans and HTTP server metrics for the ActiveJ" instead
   of something like "This instrumentation **provides** HTTP server spans and HTTP server metrics for the ActiveJ".
 * Explicitly state whether the instrumentation generates new telemetry (spans, metrics, logs).
-  * If it doesn't generate new telemetry, clearly explain what it's purpose is, for example whether it
+  * If it doesn't generate new telemetry, clearly explain what its purpose is, for example whether it
     augments or enriches existing telemetry produced by other instrumentations (e.g., by adding
     attributes or ensuring context propagation).
 * When describing the functionality of the instrumentation and the telemetry, specify using
@@ -131,6 +160,13 @@ Some notes when writing descriptions:
   the description unless they are essential to understanding the purpose of the instrumentation.
 * It is not usually necessary to include specific library or framework version numbers in the
   description, unless that context is significant in some way.
+* When describing instrumentations with controller or view spans:
+  * Always explicitly state that controller/view spans are disabled by default
+  * Use the phrase "(controller spans are disabled by default)" or "(view spans are disabled by default)"
+  * When an instrumentation has both enabled-by-default features (like HTTP_ROUTE) and disabled-by-default
+    features (like CONTROLLER_SPANS or VIEW_SPANS), describe the enabled features first, then the disabled features
+  * Example: "This instrumentation enriches HTTP server spans with route information, and enables
+    controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default)."
 
 
 ### Semantic Conventions
@@ -140,13 +176,13 @@ If the instrumentation adheres to one or more specific semantic conventions, inc
 
 List of possible options:
 
-* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client)
+* [HTTP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-client-span)
 * [HTTP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-client)
 * [HTTP_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-spans.md#http-server)
 * [HTTP_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/http/http-metrics.md#http-server)
-* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#client-attributes)
+* [RPC_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-client-span)
 * [RPC_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-client)
-* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#server-attributes)
+* [RPC_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-spans.md#rpc-server-span)
 * [RPC_SERVER_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/rpc/rpc-metrics.md#rpc-server)
 * [MESSAGING_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/messaging/messaging-spans.md)
 * [DATABASE_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md)
@@ -157,6 +193,22 @@ List of possible options:
 * [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
 * [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-spans.md)
 * [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+
+### Features (optional)
+
+As a way to help further categorize instrumentations, you can add a `features` field with a list of
+the relevant functionality descriptions.
+
+List of possible options:
+
+* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
+* `CONTEXT_PROPAGATION`: Instrumentation that propagates OpenTelemetry context across application or thread boundaries. This applies to:
+  * Inter-process/application context propagation: Passing context through headers between applications (HTTP, gRPC, messaging, etc.)
+  * Inter-thread context propagation: Passing context from one thread to another (executors, actors, reactive streams, etc.)
+  * Does not include standard single-threaded scope management or normal span creation patterns
+* `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
+* `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
+* `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
 
 ### Library Link
 
@@ -204,6 +256,82 @@ this field, and it will default to `library`.
 If an instrumentation is disabled by default, set `disabled_by_default: true`. This indicates that
 the instrumentation will not be active unless explicitly enabled by the user. If this field is omitted,
 it defaults to `false`, meaning the instrumentation is enabled by default.
+
+### Manual Telemetry Documentation (optional)
+
+You can manually document telemetry metadata (metrics and spans) directly in the `metadata.yaml` file
+using the `additional_telemetry` field. This is useful for:
+
+- Documenting telemetry that may not be captured during automated test runs
+- Adding telemetry documentation when `.telemetry` files are not available
+- Providing additional context or details about emitted telemetry
+
+#### additional_telemetry
+
+The `additional_telemetry` field allows you to specify telemetry metadata organized by configuration
+conditions (`when` field):
+
+```yaml
+additional_telemetry:
+  - when: "default"  # Telemetry emitted by default
+    metrics:
+      - name: "http.server.request.duration"
+        description: "Duration of HTTP server requests"
+        type: "HISTOGRAM"
+        unit: "ms"
+        attributes:
+          - name: "http.method"
+            type: "STRING"
+          - name: "http.status_code"
+            type: "LONG"
+    spans:
+      - span_kind: "SERVER"
+        attributes:
+          - name: "http.method"
+            type: "STRING"
+          - name: "http.url"
+            type: "STRING"
+  - when: "otel.instrumentation.example.experimental-metrics.enabled"  # Telemetry enabled by configuration
+    metrics:
+      - name: "example.experimental.metric"
+        description: "Experimental metric enabled by configuration"
+        type: "COUNTER"
+        unit: "1"
+```
+
+Each telemetry entry includes:
+
+- `when`: The configuration condition under which this telemetry is emitted. Use `"default"` for telemetry
+  emitted by default, or specify the configuration option name for conditional telemetry.
+- `metrics`: List of metrics with their name, description, type, unit, and attributes
+- `spans`: List of span configurations with their span_kind and attributes
+
+For metrics, supported `type` values include: `COUNTER`, `GAUGE`, `HISTOGRAM`, `EXPONENTIAL_HISTOGRAM`.
+
+For spans, supported `span_kind` values include: `CLIENT`, `SERVER`, `PRODUCER`, `CONSUMER`, `INTERNAL`.
+
+For attributes, supported `type` values include: `STRING`, `LONG`, `DOUBLE`, `BOOLEAN`.
+
+#### override_telemetry
+
+Set `override_telemetry: true` to completely replace any auto-generated telemetry data from `.telemetry`
+files. When this is enabled, only the manually documented telemetry in `additional_telemetry` will be
+used, and any `.telemetry` files will be ignored.
+
+```yaml
+override_telemetry: true
+additional_telemetry:
+  - when: "default"
+    metrics:
+      - name: "manually.documented.metric"
+        description: "This completely replaces auto-generated telemetry"
+        type: "GAUGE"
+        unit: "bytes"
+```
+
+If `override_telemetry` is `false` or omitted (default behavior), manual telemetry will be merged with
+auto-generated telemetry, with manual entries taking precedence in case of conflicts (same metric name
+or span kind within the same `when` condition).
 
 ## Instrumentation List (docs/instrumentation-list.md)
 

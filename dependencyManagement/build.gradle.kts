@@ -5,8 +5,8 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.54.1"
-val otelContribVersion = "1.49.0-alpha"
+val otelSdkVersion = "1.55.0"
+val otelContribVersion = "1.50.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -37,9 +37,9 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.41.0"
-val byteBuddyVersion = "1.17.7"
-val asmVersion = "9.8"
+val errorProneVersion = "2.42.0"
+val byteBuddyVersion = "1.17.8"
+val asmVersion = "9.9"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
@@ -80,7 +80,7 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.13.4",
+  "org.junit.jupiter:junit-jupiter-api:5.14.0",
   "org.spockframework:spock-core:2.4-M6-groovy-4.0",
   "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
 
@@ -110,18 +110,18 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
   "io.opentelemetry.proto:opentelemetry-proto:1.8.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.5",
+  "org.assertj:assertj-core:3.27.6",
   "org.awaitility:awaitility:4.3.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.codehaus.mojo:animal-sniffer-annotations:1.24",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.26",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.14"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
 )
 
 javaPlatform {

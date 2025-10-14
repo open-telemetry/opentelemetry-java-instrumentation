@@ -12,8 +12,8 @@ dependencies {
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
   implementation("io.opentelemetry:opentelemetry-sdk-common")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.13.4"))
-  testImplementation("org.assertj:assertj-core:3.27.5")
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.0"))
+  testImplementation("org.assertj:assertj-core:3.27.6")
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
 }

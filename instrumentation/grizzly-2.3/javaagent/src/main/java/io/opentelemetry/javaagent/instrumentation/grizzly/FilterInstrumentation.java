@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -52,22 +53,17 @@ public class FilterInstrumentation implements TypeInstrumentation {
   public static class HandleReadAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This BaseFilter it,
-        @Advice.Argument(0) FilterChainContext ctx,
-        @Advice.Local("otelScope") Scope scope) {
+    public static Scope onEnter(
+        @Advice.This BaseFilter it, @Advice.Argument(0) FilterChainContext ctx) {
       if (Java8BytecodeBridge.currentSpan().getSpanContext().isValid()) {
-        return;
+        return null;
       }
-
       Context context = GrizzlyStateStorage.getContext(ctx);
-      if (context != null) {
-        scope = context.makeCurrent();
-      }
+      return context != null ? context.makeCurrent() : null;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.This BaseFilter it, @Advice.Local("otelScope") Scope scope) {
+    public static void onExit(@Advice.This BaseFilter it, @Advice.Enter @Nullable Scope scope) {
       if (scope != null) {
         scope.close();
       }

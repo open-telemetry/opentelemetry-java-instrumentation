@@ -12,10 +12,10 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -43,39 +43,53 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HandlerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This Object source,
-        @Advice.Argument(0) Request request,
-        @Advice.Argument(1) Response response,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      if (!helper().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = helper().start(parentContext, request, response);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Object source, Request request, Response response) {
+        Context parentContext = Context.current();
+        if (!helper().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = helper().start(parentContext, request, response);
+        Scope scope = context.makeCurrent();
+        HttpServerResponseCustomizerHolder.getCustomizer()
+            .customize(context, response, Jetty12ResponseMutator.INSTANCE);
+        return new AdviceScope(context, scope);
+      }
 
-      HttpServerResponseCustomizerHolder.getCustomizer()
-          .customize(context, response, Jetty12ResponseMutator.INSTANCE);
+      public void end(Request request, Response response, @Nullable Throwable throwable) {
+        scope.close();
+        if (throwable != null) {
+          helper().end(context, request, response, throwable);
+        }
+      }
+    }
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.This Object source,
+        @Advice.Argument(0) Request request,
+        @Advice.Argument(1) Response response) {
+      return AdviceScope.start(source, request, response);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.Argument(0) Request request,
         @Advice.Argument(1) Response response,
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
-      if (throwable != null) {
-        helper().end(context, request, response, throwable);
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(request, response, throwable);
       }
     }
   }

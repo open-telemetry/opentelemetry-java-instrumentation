@@ -76,7 +76,7 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
 
   @Nullable
   private String mapToPeerService(
-      @Nullable String host, @Nullable Integer port, @Nullable Supplier<String> pathSupplier) {
+      @Nullable String host, @Nullable Integer port, Supplier<String> pathSupplier) {
     if (host == null) {
       return null;
     }

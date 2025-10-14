@@ -146,7 +146,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     return typePool(classFileLocator, classLoader);
   }
 
-  private TypePool.CacheProvider getCacheProvider(ClassLoader classLoader) {
+  // visible for testing
+  TypePool.CacheProvider getCacheProvider(ClassLoader classLoader) {
     if (classLoader == null) {
       return bootstrapCacheProvider;
     }
@@ -167,7 +168,8 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
    *
    * <p>The loaderHash exists to avoid calling get & strengthening the Reference.
    */
-  private static final class TypeCacheKey {
+  // visible for testing
+  static final class TypeCacheKey {
     private final int loaderHash;
     @Nullable private final WeakReference<ClassLoader> loaderRef;
     private final String className;

@@ -51,7 +51,7 @@ public final class SqlStatementSanitizer {
         CacheKey.create(statement, dialect), k -> sanitizeImpl(statement, dialect));
   }
 
-  private static SqlStatementInfo sanitizeImpl(@Nullable String statement, SqlDialect dialect) {
+  private static SqlStatementInfo sanitizeImpl(String statement, SqlDialect dialect) {
     supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
     return AutoSqlSanitizer.sanitize(statement, dialect);
   }
