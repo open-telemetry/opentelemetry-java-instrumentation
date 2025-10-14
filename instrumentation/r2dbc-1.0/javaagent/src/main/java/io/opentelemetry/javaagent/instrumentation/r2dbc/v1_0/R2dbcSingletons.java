@@ -24,7 +24,7 @@ public final class R2dbcSingletons {
           .setEnableSqlCommenter(
               AgentInstrumentationConfig.get()
                   .getBoolean(
-                      "otel.instrumentation.r2dbc.sqlcommenter.enabled",
+                      "otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled",
                       AgentCommonConfig.get().isSqlCommenterEnabled()))
           .addAttributesExtractor(
               PeerServiceAttributesExtractor.create(

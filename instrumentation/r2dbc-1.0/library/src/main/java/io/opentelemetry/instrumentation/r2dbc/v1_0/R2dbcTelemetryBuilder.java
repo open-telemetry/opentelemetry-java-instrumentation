@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
 import java.util.function.Function;
 
@@ -21,6 +22,11 @@ public final class R2dbcTelemetryBuilder {
   private Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
       spanNameExtractorTransformer = Function.identity();
   private boolean sqlCommenterEnabled;
+
+  static {
+    Experimental.internalSetEnableSqlCommenter(
+        (builder, sqlCommenterEnabled) -> builder.sqlCommenterEnabled = sqlCommenterEnabled);
+  }
 
   R2dbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     instrumenterBuilder = new R2dbcInstrumenterBuilder(openTelemetry);
@@ -50,19 +56,6 @@ public final class R2dbcTelemetryBuilder {
       Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
           spanNameExtractorTransformer) {
     this.spanNameExtractorTransformer = spanNameExtractorTransformer;
-    return this;
-  }
-
-  /**
-   * Sets whether to augment sql query with comment containing the tracing information. See <a
-   * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
-   *
-   * <p>WARNING: augmenting queries with tracing context will make query texts unique, which may
-   * have adverse impact on database performance. Consult with database experts before enabling.
-   */
-  @CanIgnoreReturnValue
-  public R2dbcTelemetryBuilder setEnableSqlCommenter(boolean sqlCommenterEnabled) {
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
     return this;
   }
 

@@ -89,7 +89,8 @@ public final class CommonConfig {
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
     sqlCommenterEnabled =
-        config.getBoolean("otel.instrumentation.common.db-sqlcommenter.enabled", false);
+        config.getBoolean(
+            "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false);
     emitExperimentalHttpClientTelemetry =
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
     redactQueryParameters =

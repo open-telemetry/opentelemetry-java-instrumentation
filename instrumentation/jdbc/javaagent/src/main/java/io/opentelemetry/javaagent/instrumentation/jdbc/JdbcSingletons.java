@@ -32,7 +32,7 @@ public final class JdbcSingletons {
   private static final boolean SQLCOMMENTER_ENABLED =
       AgentInstrumentationConfig.get()
           .getBoolean(
-              "otel.instrumentation.jdbc.sqlcommenter.enabled",
+              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
               AgentCommonConfig.get().isSqlCommenterEnabled());
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 

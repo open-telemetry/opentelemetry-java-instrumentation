@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -23,6 +24,11 @@ public final class JdbcTelemetryBuilder {
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
   private boolean sqlCommenterEnabled = false;
+
+  static {
+    Experimental.internalSetEnableSqlCommenter(
+        (builder, sqlCommenterEnabled) -> builder.sqlCommenterEnabled = sqlCommenterEnabled);
+  }
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -66,19 +72,6 @@ public final class JdbcTelemetryBuilder {
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setCaptureQueryParameters(boolean enabled) {
     this.captureQueryParameters = enabled;
-    return this;
-  }
-
-  /**
-   * Sets whether to augment sql query with comment containing the tracing information. See <a
-   * href="https://google.github.io/sqlcommenter/">sqlcommenter</a> for more info.
-   *
-   * <p>WARNING: augmenting queries with tracing context will make query texts unique, which may
-   * have adverse impact on database performance. Consult with database experts before enabling.
-   */
-  @CanIgnoreReturnValue
-  public JdbcTelemetryBuilder setEnableSqlCommenter(boolean sqlCommenterEnabled) {
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
     return this;
   }
 

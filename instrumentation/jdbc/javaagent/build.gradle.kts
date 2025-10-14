@@ -71,7 +71,7 @@ tasks {
       includeTestsMatching("SqlCommenterTest")
     }
     include("**/SqlCommenterTest.*")
-    jvmArgs("-Dotel.instrumentation.jdbc.sqlcommenter.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.sqlcommenter.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {

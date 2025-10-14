@@ -62,8 +62,12 @@ public final class OpenTelemetryDriver implements Driver {
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
+  // XXX value proeprty?
   private static final boolean sqlCommenterEnabled =
-      ConfigPropertiesUtil.getBoolean("otel.instrumentation.common.db-sqlcommenter.enabled", false);
+      ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+          ConfigPropertiesUtil.getBoolean(
+              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false));
 
   static {
     try {

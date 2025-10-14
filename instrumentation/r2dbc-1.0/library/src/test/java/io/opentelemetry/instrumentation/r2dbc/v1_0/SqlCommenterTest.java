@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -98,9 +99,10 @@ class SqlCommenterTest {
 
     List<String> queries = new ArrayList<>();
 
+    R2dbcTelemetryBuilder builder = R2dbcTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setEnableSqlCommenter(builder, sqlCommenterEnabled);
     ConnectionFactory connectionFactory =
-        R2dbcTelemetry.builder(testing.getOpenTelemetry())
-            .setEnableSqlCommenter(sqlCommenterEnabled)
+        builder
             .build()
             .wrapConnectionFactory(
                 ProxyConnectionFactory.builder(original)
