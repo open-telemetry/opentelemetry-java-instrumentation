@@ -15,6 +15,7 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.restassured.http.ContentType;
 import java.io.IOException;
@@ -98,66 +99,125 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
+    testing.waitForTraces(9); // Skip initial traces from Kafka Connect startup
+    testing.clearData();
+
     try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
       producer.send(
           new ProducerRecord<>(uniqueTopicName, "test-key", "{\"id\":1,\"name\":\"TestUser\"}"));
       producer.flush();
     }
+
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 1);
-    await()
-        .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              List<List<SpanData>> traces = testing.waitForTraces(1);
-              List<SpanData> targetTrace =
-                  traces.stream()
-                      .filter(
-                          trace -> {
-                            boolean hasKafkaConnectSpan =
-                                trace.stream()
-                                    .anyMatch(
-                                        span ->
-                                            span.getName().contains(uniqueTopicName)
-                                                && span.getKind() == CONSUMER);
 
-                            boolean hasInsertSpan =
-                                trace.stream()
-                                    .anyMatch(
-                                        span ->
-                                            span.getName().contains("update")
-                                                && span.getKind()
-                                                    == io.opentelemetry.api.trace.SpanKind.CLIENT);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("kafka-connect-status publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("kafka-connect-status process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(uniqueTopicName + " process")
+                        .hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasLinksSatisfying(
+                            links ->
+                                assertThat(links)
+                                    .isEmpty()), // Verify no span links since no traceparent header was injected
+                span ->
+                    span.hasName("update " + DB_NAME + "." + COLLECTION_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
+  }
 
-                            return hasKafkaConnectSpan && hasInsertSpan;
-                          })
-                      .findFirst()
-                      .orElse(null);
+  @Test
+  public void testKafkaConnectMongoSinkTaskWithSpanLinks()
+      throws IOException, InterruptedException {
+    String uniqueTopicName = TOPIC_NAME + "-links";
+    setupMongoSinkConnector(uniqueTopicName);
 
-              assertThat(targetTrace).isNotNull();
+    createTopic(uniqueTopicName);
+    awaitForTopicCreation(uniqueTopicName);
 
-              assertThat(targetTrace).hasSizeGreaterThanOrEqualTo(2);
+    Properties props = new Properties();
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getKafkaBoostrapServers());
+    props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
-              SpanData kafkaConnectSpan =
-                  targetTrace.stream()
-                      .filter(
-                          span ->
-                              span.getName().contains(uniqueTopicName)
-                                  && span.getKind() == CONSUMER)
-                      .findFirst()
-                      .orElse(null);
-              assertThat(kafkaConnectSpan).isNotNull();
-              assertThat(kafkaConnectSpan.getParentSpanContext().isValid()).isFalse(); // No parent
+    testing.waitForTraces(9); // Skip initial traces from Kafka Connect startup
+    testing.clearData();
 
-              SpanData insertSpan =
-                  targetTrace.stream()
-                      .filter(
-                          span ->
-                              span.getName().contains("update")
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
-                      .findFirst()
-                      .orElse(null);
-              assertThat(insertSpan).isNotNull();
-            });
+    // Define expected trace and span IDs for span link validation
+    String expectedTraceId = "1af7651916cd43dd8448eb211c80319f"; // 32 hex chars
+    String expectedSpanId = "c9c7c989f97918e4"; // 16 hex chars
+
+    try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
+      ProducerRecord<String, String> record =
+          new ProducerRecord<>(uniqueTopicName, "test-key", "{\"id\":1,\"name\":\"TestUser\"}");
+
+      // Inject traceparent header to enable span linking
+      String traceparent = "00-" + expectedTraceId + "-" + expectedSpanId + "-01";
+      record
+          .headers()
+          .add("traceparent", traceparent.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+      producer.send(record);
+      producer.flush();
+    }
+
+    await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 1);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("kafka-connect-status publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("kafka-connect-status process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(uniqueTopicName + " process")
+                        .hasKind(CONSUMER)
+                        .hasNoParent()
+                        .hasLinksSatisfying(
+                            links ->
+                                assertThat(links)
+                                    .singleElement()
+                                    .satisfies(
+                                        link -> {
+                                          assertThat(link.getSpanContext().getTraceId())
+                                              .isEqualTo(expectedTraceId);
+                                          assertThat(link.getSpanContext().getSpanId())
+                                              .isEqualTo(expectedSpanId);
+                                        })),
+                span ->
+                    span.hasName("update " + DB_NAME + "." + COLLECTION_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /connectors").hasKind(SpanKind.SERVER).hasNoParent()));
   }
 
   @Test
@@ -181,6 +241,9 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class);
 
+    testing.waitForTraces(9); // Skip initial traces from Kafka Connect startup
+    testing.clearData();
+
     try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
       producer.send(
           new ProducerRecord<>(
@@ -196,11 +259,13 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
 
     await().atMost(Duration.ofSeconds(60)).until(() -> getRecordCountFromMongo() >= 3);
 
+    // For multi-topic tests, we can't predict exact trace structure since messages
+    // may be batched together or processed separately. We use a flexible assertion
+    // that counts spans across all traces.
     await()
         .atMost(Duration.ofSeconds(30))
         .untilAsserted(
             () -> {
-              // Wait for at least 1 trace (could be 1 batch trace or multiple individual traces)
               List<List<SpanData>> traces = testing.waitForTraces(1);
 
               // Count total Kafka Connect consumer spans and database update spans across all
@@ -212,7 +277,9 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                           span ->
                               (span.getName().contains(topicName1)
                                       || span.getName().contains(topicName2)
-                                      || span.getName().contains(topicName3))
+                                      || span.getName().contains(topicName3)
+                                      || span.getName().equals("kafka process")
+                                      || span.getName().equals("unknown process"))
                                   && span.getKind() == CONSUMER)
                       .count();
 
@@ -222,21 +289,32 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                       .filter(
                           span ->
                               span.getName().contains("update")
-                                  && span.getKind() == io.opentelemetry.api.trace.SpanKind.CLIENT)
+                                  && span.getKind() == SpanKind.CLIENT)
                       .count();
 
-              assertThat(totalKafkaConnectSpans).isGreaterThanOrEqualTo(1);
-              assertThat(totalUpdateSpans).isGreaterThanOrEqualTo(3);
+              // Verify we have at least 1 Kafka Connect consumer span and 3 update operations
+              if (totalKafkaConnectSpans < 1) {
+                throw new AssertionError(
+                    "Expected at least 1 Kafka Connect consumer span but found: "
+                        + totalKafkaConnectSpans);
+              }
+              if (totalUpdateSpans < 3) {
+                throw new AssertionError(
+                    "Expected at least 3 MongoDB update spans (one per message) but found: "
+                        + totalUpdateSpans);
+              }
 
-              // When records are from multiple topics, the destination name is null,
-              // resulting in a span name like "kafka process" without topic names.
-              // Individual topic spans may still be created if processed separately.
+              // When records are from multiple topics, the destination name may be null,
+              // resulting in a span name like "kafka process" or "unknown process".
+              // Individual topic spans may also be created if processed separately.
               boolean hasGenericProcessSpan =
                   traces.stream()
                       .flatMap(trace -> trace.stream())
                       .anyMatch(
                           span ->
-                              span.getName().equals("kafka process") && span.getKind() == CONSUMER);
+                              (span.getName().equals("kafka process")
+                                      || span.getName().equals("unknown process"))
+                                  && span.getKind() == CONSUMER);
 
               boolean hasIndividualSpans =
                   traces.stream()
@@ -248,7 +326,32 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                                       || span.getName().contains(topicName3))
                                   && span.getKind() == CONSUMER);
 
-              assertThat(hasGenericProcessSpan || hasIndividualSpans).isTrue();
+              if (!hasGenericProcessSpan && !hasIndividualSpans) {
+                throw new AssertionError(
+                    "Expected either a generic 'kafka/unknown process' span or individual topic-specific spans");
+              }
+
+              // Verify that no span links are present since we didn't inject traceparent headers
+              long consumerSpansWithLinks =
+                  traces.stream()
+                      .flatMap(trace -> trace.stream())
+                      .filter(
+                          span ->
+                              (span.getName().contains(topicName1)
+                                      || span.getName().contains(topicName2)
+                                      || span.getName().contains(topicName3)
+                                      || span.getName().equals("kafka process")
+                                      || span.getName().equals("unknown process"))
+                                  && span.getKind() == CONSUMER
+                                  && !span.getLinks().isEmpty())
+                      .count();
+
+              if (consumerSpansWithLinks > 0) {
+                throw new AssertionError(
+                    "Expected no span links since no traceparent header was injected, but found: "
+                        + consumerSpansWithLinks
+                        + " consumer span(s) with links");
+              }
             });
   }
 

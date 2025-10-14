@@ -26,7 +26,7 @@ final class KafkaConnectBatchProcessSpanLinksExtractor
   public void extract(SpanLinksBuilder spanLinks, Context parentContext, KafkaConnectTask request) {
 
     for (SinkRecord record : request.getRecords()) {
-      singleRecordLinkExtractor.extract(spanLinks, Context.root(), record);
+      singleRecordLinkExtractor.extract(spanLinks, parentContext, record);
     }
   }
 }
