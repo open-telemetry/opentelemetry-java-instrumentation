@@ -120,30 +120,24 @@ public class NativeAerospikeClientInstrumentation implements TypeInstrumentation
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ContextHolder onEnter(@Advice.AllArguments Object[] args) {
-      System.out.println("[AEROSPIKE-INST] GET onEnter called with " + args.length + " arguments");
-      
       Key key = null;
       for (Object arg : args) {
         if (arg instanceof Key) {
           key = (Key) arg;
-          System.out.println("[AEROSPIKE-INST] Found Key in GET: " + key.namespace + "/" + key.setName + "/" + key.userKey);
           break;
         }
       }
 
       AerospikeRequest request = AerospikeInstrumentationHelper.createRequest("GET", key);
       if (request == null) {
-        System.out.println("[AEROSPIKE-INST] GET request is null");
         return null;
       }
 
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, request)) {
-        System.out.println("[AEROSPIKE-INST] GET instrumenter said NO");
         return null;
       }
 
-      System.out.println("[AEROSPIKE-INST] GET starting span...");
       Context context = instrumenter().start(parentContext, request);
       return new ContextHolder(context, request, context.makeCurrent());
     }
@@ -153,18 +147,12 @@ public class NativeAerospikeClientInstrumentation implements TypeInstrumentation
         @Advice.Enter @Nullable ContextHolder holder,
         @Advice.Thrown Throwable throwable) {
 
-      System.out.println("[AEROSPIKE-INST] GET onExit called, holder=" + holder + ", throwable=" + throwable);
-
       if (holder == null) {
-        System.out.println("[AEROSPIKE-INST] GET holder is null - returning");
         return;
       }
 
-      System.out.println("[AEROSPIKE-INST] GET closing scope...");
       holder.scope.close();
-      System.out.println("[AEROSPIKE-INST] GET ending span...");
       instrumenter().end(holder.context, holder.request, null, throwable);
-      System.out.println("[AEROSPIKE-INST] GET span ended!");
     }
   }
 
