@@ -28,4 +28,3 @@ public final class JobTypeHelper {
 
   private JobTypeHelper() {}
 }
-

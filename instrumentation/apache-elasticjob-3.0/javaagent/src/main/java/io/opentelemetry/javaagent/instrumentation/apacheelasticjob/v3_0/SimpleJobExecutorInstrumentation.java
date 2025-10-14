@@ -31,8 +31,12 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isMethod()
             .and(named("process"))
-            .and(takesArgument(0, named("org.apache.shardingsphere.elasticjob.simple.job.SimpleJob")))
-            .and(takesArgument(3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
+            .and(
+                takesArgument(
+                    0, named("org.apache.shardingsphere.elasticjob.simple.job.SimpleJob")))
+            .and(
+                takesArgument(
+                    3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
         SimpleJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
   }
 
