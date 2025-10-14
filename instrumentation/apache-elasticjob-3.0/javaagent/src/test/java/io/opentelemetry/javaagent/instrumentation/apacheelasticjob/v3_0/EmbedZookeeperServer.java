@@ -19,19 +19,17 @@ public final class EmbedZookeeperServer {
           new TestingServer(
               port, new File(String.format("target/test_zk_data/%s/", System.nanoTime())));
     } catch (Exception ex) {
-      // ignore
-    } finally {
-      Runtime.getRuntime()
-          .addShutdownHook(
-              new Thread(
-                  () -> {
-                    try {
-                      Thread.sleep(1000L);
-                      testingServer.close();
-                    } catch (InterruptedException | IOException ignore) {
-                      // ignore
-                    }
-                  }));
+      throw new RuntimeException("Failed to start embedded ZooKeeper server", ex);
+    }
+  }
+
+  public static void stop() {
+    if (testingServer != null) {
+      try {
+        testingServer.close();
+      } catch (IOException ex) {
+        throw new RuntimeException("Failed to stop embedded ZooKeeper server", ex);
+      }
     }
   }
 

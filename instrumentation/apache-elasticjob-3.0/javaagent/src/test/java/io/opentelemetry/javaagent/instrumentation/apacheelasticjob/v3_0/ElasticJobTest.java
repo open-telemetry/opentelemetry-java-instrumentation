@@ -16,20 +16,22 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.attribute.PosixFilePermissions;
+import java.nio.file.StandardCopyOption;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -43,11 +45,8 @@ import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperConfiguration
 import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperRegistryCenter;
 import org.apache.shardingsphere.elasticjob.script.props.ScriptJobProperties;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
-import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class ElasticJobTest {
@@ -84,16 +83,13 @@ public class ElasticJobTest {
 
   @AfterAll
   public static void stop() {
-    httpServer.stop(0);
-  }
-
-  @AfterEach
-  public void clearSpans() {
-    try {
-      Thread.sleep(100L);
-    } catch (InterruptedException var2) {
-      Thread.currentThread().interrupt();
+    if (httpServer != null) {
+      httpServer.stop(0);
     }
+    if (regCenter != null) {
+      regCenter.close();
+    }
+    EmbedZookeeperServer.stop();
   }
 
   @Test
@@ -273,7 +269,6 @@ public class ElasticJobTest {
   }
 
   @Test
-  @DisabledOnOs(OS.WINDOWS)
   public void testScriptJob() throws IOException {
     ScheduleJobBootstrap bootstrap = setUpScriptJob(regCenter);
     try {
@@ -286,12 +281,10 @@ public class ElasticJobTest {
                           .hasAttributesSatisfyingExactly(
                               equalTo(AttributeKey.stringKey("job.system"), "elasticjob"),
                               equalTo(
-                                  AttributeKey.stringKey(
-                                      "scheduling.apache-elasticjob.job.name"),
+                                  AttributeKey.stringKey("scheduling.apache-elasticjob.job.name"),
                                   "scriptElasticJob"),
                               equalTo(
-                                  AttributeKey.longKey("scheduling.apache-elasticjob.item"),
-                                  0L),
+                                  AttributeKey.longKey("scheduling.apache-elasticjob.item"), 0L),
                               equalTo(
                                   AttributeKey.longKey(
                                       "scheduling.apache-elasticjob.sharding.total.count"),
@@ -301,8 +294,7 @@ public class ElasticJobTest {
                                       "scheduling.apache-elasticjob.sharding.item.parameters"),
                                   "{0=null}"),
                               satisfies(
-                                  AttributeKey.stringKey(
-                                      "scheduling.apache-elasticjob.task.id"),
+                                  AttributeKey.stringKey("scheduling.apache-elasticjob.task.id"),
                                   taskId -> taskId.contains("scriptElasticJob")))));
     } finally {
       bootstrap.shutdown();
@@ -326,53 +318,40 @@ public class ElasticJobTest {
       assertThat(job.awaitExecution(10, TimeUnit.SECONDS))
           .as("Job should execute within timeout")
           .isTrue();
-      await().atMost(Duration.ofSeconds(2)).until(() -> testing.spans().size() >= 1);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasKind(SpanKind.INTERNAL)
+                          .hasName("SynchronizedTestFailedJob.execute")
+                          .hasStatus(StatusData.error())
+                          .hasException(new RuntimeException("Simulated job failure for testing"))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(AttributeKey.stringKey("job.system"), "elasticjob"),
+                              equalTo(
+                                  AttributeKey.stringKey("scheduling.apache-elasticjob.job.name"),
+                                  "failedElasticJob"),
+                              equalTo(
+                                  AttributeKey.longKey("scheduling.apache-elasticjob.item"), 0L),
+                              equalTo(
+                                  AttributeKey.longKey(
+                                      "scheduling.apache-elasticjob.sharding.total.count"),
+                                  1L),
+                              equalTo(
+                                  AttributeKey.stringKey(
+                                      "scheduling.apache-elasticjob.sharding.item.parameters"),
+                                  "failed"),
+                              satisfies(
+                                  AttributeKey.stringKey("scheduling.apache-elasticjob.task.id"),
+                                  taskId -> taskId.contains("failedElasticJob")),
+                              equalTo(AttributeKey.stringKey("code.function"), "execute"),
+                              equalTo(
+                                  AttributeKey.stringKey("code.namespace"),
+                                  "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobTest$SynchronizedTestFailedJob"))));
     } finally {
       bootstrap.shutdown();
     }
-
-    List<SpanData> spans = testing.spans();
-    assertThat(spans).hasSize(1);
-
-    SpanData span = spans.get(0);
-    assertThat(span.getName()).isEqualTo("SynchronizedTestFailedJob.execute");
-    assertThat(span.getKind()).isEqualTo(SpanKind.INTERNAL);
-    assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.ERROR);
-    assertThat(span.getAttributes().get(AttributeKey.stringKey("job.system")))
-        .isEqualTo("elasticjob");
-    assertThat(
-            span.getAttributes()
-                .get(AttributeKey.stringKey("scheduling.apache-elasticjob.job.name")))
-        .isEqualTo("failedElasticJob");
-    assertThat(span.getAttributes().get(AttributeKey.longKey("scheduling.apache-elasticjob.item")))
-        .isEqualTo(0L);
-    assertThat(
-            span.getAttributes()
-                .get(AttributeKey.longKey("scheduling.apache-elasticjob.sharding.total.count")))
-        .isEqualTo(1L);
-    assertThat(
-            span.getAttributes()
-                .get(
-                    AttributeKey.stringKey(
-                        "scheduling.apache-elasticjob.sharding.item.parameters")))
-        .isEqualTo("failed");
-    assertThat(span.getAttributes().get(AttributeKey.stringKey("code.function")))
-        .isEqualTo("execute");
-    assertThat(span.getAttributes().get(AttributeKey.stringKey("code.namespace")))
-        .isEqualTo(
-            "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobTest$SynchronizedTestFailedJob");
-
-    assertThat(span.getEvents()).hasSize(1);
-    assertThat(span.getEvents().get(0).getName()).isEqualTo("exception");
-    assertThat(
-            span.getEvents().get(0).getAttributes().get(AttributeKey.stringKey("exception.type")))
-        .isEqualTo("java.lang.RuntimeException");
-    assertThat(
-            span.getEvents()
-                .get(0)
-                .getAttributes()
-                .get(AttributeKey.stringKey("exception.message")))
-        .isEqualTo("Simulated job failure for testing");
   }
 
   private static CoordinatorRegistryCenter setUpRegistryCenter() {
@@ -410,9 +389,26 @@ public class ElasticJobTest {
   }
 
   private static String buildScriptCommandLine() throws IOException {
-    Path result = Paths.get(ElasticJobTest.class.getResource("/script/demo.sh").getPath());
-    Files.setPosixFilePermissions(result, PosixFilePermissions.fromString("rwxr-xr-x"));
-    return result.toString();
+    String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
+    String scriptName = os.contains("win") ? "/script/demo.bat" : "/script/demo.sh";
+    String extension = os.contains("win") ? ".bat" : ".sh";
+
+    Path tempScript = Files.createTempFile("elasticjob-test-", extension);
+    tempScript.toFile().deleteOnExit();
+
+    try (InputStream scriptStream = ElasticJobTest.class.getResourceAsStream(scriptName)) {
+      if (scriptStream == null) {
+        throw new IOException("Script resource not found: " + scriptName);
+      }
+      Files.copy(scriptStream, tempScript, StandardCopyOption.REPLACE_EXISTING);
+    }
+
+    File scriptFile = tempScript.toFile();
+    if (!scriptFile.setExecutable(true)) {
+      throw new IOException("Failed to set executable permission on script: " + tempScript);
+    }
+
+    return tempScript.toString();
   }
 
   static class SynchronizedTestSimpleJob extends TestSimpleJob {
