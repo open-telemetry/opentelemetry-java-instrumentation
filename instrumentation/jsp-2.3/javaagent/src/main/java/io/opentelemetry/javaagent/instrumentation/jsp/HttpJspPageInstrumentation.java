@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -59,7 +58,7 @@ public class HttpJspPageInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(HttpServletRequest req) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, req)) {
           return null;
         }
