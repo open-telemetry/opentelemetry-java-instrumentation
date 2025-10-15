@@ -76,7 +76,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
       return future.whenComplete(new OpenSearchResponseHandler(context, otelRequest));
     }
 
-    public void endWithResponse(@Nullable Object response, @Nullable Throwable throwable) {
+    public void endWithResponse(@Nullable Throwable throwable) {
       scope.close();
       instrumenter().end(context, otelRequest, null, throwable);
     }
@@ -106,7 +106,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.endWithResponse(response, throwable);
+        adviceScope.endWithResponse(throwable);
       }
     }
   }
