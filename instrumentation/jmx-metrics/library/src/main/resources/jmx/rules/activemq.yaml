@@ -28,25 +28,25 @@ rules:
         metric: memory.destination.usage
         unit: By
         type: updowncounter
-        desc: The amount of used memory
+        desc: The amount of used memory by this destination
       # activemq.memory.destination.limit
       MemoryLimit:
         metric: memory.destination.limit
         unit: By
         type: updowncounter
-        desc: The amount of configured memory limit
+        desc: The amount of configured memory limit for this destination
       # activemq.temp.destination.utilization
       TempUsagePercentUsage:
         metric: temp.destination.utilization
         unit: "1"
         type: gauge
-        desc: The percentage of non-persistent storage used
+        desc: The percentage of non-persistent storage used by this destination
       # activemq.temp.destination.limit
       TempUsageLimit:
         metric: temp.destination.limit
         unit: By
         type: updowncounter
-        desc: The amount of configured non-persistent storage limit
+        desc: The amount of configured non-persistent storage limit for this destination
       # activemq.message.queue.size
       QueueSize:
         metric: message.queue.size
