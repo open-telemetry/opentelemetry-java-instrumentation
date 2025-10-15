@@ -35,8 +35,8 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 class GwtTest {
 
@@ -46,7 +46,7 @@ class GwtTest {
   private static final Logger logger = LoggerFactory.getLogger(GwtTest.class);
   static int port;
   static Server server;
-  static BrowserWebDriverContainer<?> browser;
+  static BrowserWebDriverContainer browser;
   static URI address;
 
   static void startServer() throws Exception {
@@ -76,8 +76,7 @@ class GwtTest {
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer<>()
-            .withCapabilities(new ChromeOptions())
+        new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
 
