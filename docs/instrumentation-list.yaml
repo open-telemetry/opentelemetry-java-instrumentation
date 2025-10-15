@@ -1447,6 +1447,13 @@ libraries:
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    - MESSAGING_SPANS
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRICS
     library_link: https://aws.amazon.com/sdk-for-java/
     source_path: instrumentation/aws-sdk/aws-sdk-1.11
     scope:
@@ -1675,6 +1682,13 @@ libraries:
   - name: aws-sdk-2.2
     description: |
       This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS and Bedrock.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    - MESSAGING_SPANS
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRICS
     library_link: https://aws.amazon.com/sdk-for-java/
     source_path: instrumentation/aws-sdk/aws-sdk-2.2
     scope:
