@@ -92,6 +92,7 @@ rules:
       MemoryPercentUsage:
         metric: memory.utilization
         type: gauge
+        sourceUnit: "%"
         unit: "1"
         desc: The percentage of broker memory used
       # activemq.memory.limit
@@ -104,6 +105,7 @@ rules:
       StorePercentUsage:
         metric: store.utilization
         type: gauge
+        sourceUnit: "%"
         unit: "1"
         desc: The percentage of broker persistent storage used
       # activemq.store.limit
@@ -116,6 +118,7 @@ rules:
       TempPercentUsage:
         metric: temp.utilization
         type: gauge
+        sourceUnit: "%"
         unit: "1"
         desc: The percentage of broker non-persistent storage used
       # activemq.temp.limit
