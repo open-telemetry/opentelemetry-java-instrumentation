@@ -102,7 +102,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectMongoSinkTaskInstrumentation() throws Exception {
+  void testSingleMessage() throws Exception {
     String testTopicName = TOPIC_NAME;
     setupMongoSinkConnector(testTopicName);
     awaitForTopicCreation(testTopicName);
@@ -171,7 +171,7 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectMongoSinkTaskMultiTopicInstrumentation() throws Exception {
+  void testMultiTopic() throws Exception {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";

@@ -115,7 +115,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectPostgresSinkTaskInstrumentation() throws Exception {
+  void testSingleMessage() throws Exception {
     String testTopicName = TOPIC_NAME;
     setupPostgresSinkConnector(testTopicName);
     awaitForTopicCreation(testTopicName);
@@ -197,7 +197,7 @@ class PostgresKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   }
 
   @Test
-  public void testKafkaConnectPostgresSinkTaskMultiTopicInstrumentation() throws Exception {
+  void testMultiTopic() throws Exception {
     String topicName1 = TOPIC_NAME + "-1";
     String topicName2 = TOPIC_NAME + "-2";
     String topicName3 = TOPIC_NAME + "-3";
