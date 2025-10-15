@@ -18,6 +18,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 
 class DbClientAttributesExtractorTest {
@@ -51,6 +52,12 @@ class DbClientAttributesExtractorTest {
       return map.get("db.statement");
     }
 
+    @Nullable
+    @Override
+    public String getDbQuerySummary(Map<String, String> map) {
+      return map.get("db.query_summary");
+    }
+
     @Override
     public String getDbOperationName(Map<String, String> map) {
       return map.get("db.operation");
@@ -67,6 +74,7 @@ class DbClientAttributesExtractorTest {
     request.put("db.name", "potatoes");
     request.put("db.connection_string", "mydb:///potatoes");
     request.put("db.statement", "SELECT * FROM potato");
+    request.put("db.query_summary", "SELECT potato");
     request.put("db.operation", "SELECT");
 
     Context context = Context.root();
@@ -94,6 +102,7 @@ class DbClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT potato"),
               entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
@@ -110,6 +119,7 @@ class DbClientAttributesExtractorTest {
               entry(DbAttributes.DB_SYSTEM_NAME, "myDb"),
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT potato"),
               entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
     }
 

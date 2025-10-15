@@ -9,8 +9,8 @@ dependencies {
 
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
 
-  implementation("org.testcontainers:kafka")
-  implementation("org.testcontainers:junit-jupiter")
+  implementation("org.testcontainers:testcontainers-kafka")
+  implementation("org.testcontainers:testcontainers-junit-jupiter")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

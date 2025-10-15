@@ -1614,6 +1614,23 @@ class JdbcInstrumentationTest {
                                 emitStableDatabaseSemconv() ? 2L : null))));
   }
 
+  // test that sqlcommenter is not enabled by default
+  @Test
+  void testSqlCommenterNotEnabled() throws SQLException {
+    List<String> executedSql = new ArrayList<>();
+    Connection connection = new TestConnection(executedSql::add);
+    Statement statement = connection.createStatement();
+
+    cleanup.deferCleanup(statement);
+    cleanup.deferCleanup(connection);
+
+    String query = "SELECT 1";
+    testing.runWithSpan("parent", () -> statement.execute(query));
+
+    assertThat(executedSql).hasSize(1);
+    assertThat(executedSql.get(0)).isEqualTo(query);
+  }
+
   @ParameterizedTest
   @MethodSource("transactionOperationsStream")
   void testCommitTransaction(String system, Connection connection, String username, String url)
