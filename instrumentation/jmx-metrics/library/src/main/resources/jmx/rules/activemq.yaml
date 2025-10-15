@@ -25,27 +25,27 @@ rules:
         unit: "{consumer}"
         type: updowncounter
         desc: The number of consumers subscribed to this destination
-      # activemq.memory.usage
+      # activemq.memory.destination.usage
       MemoryUsageByteCount:
-        metric: memory.usage
+        metric: memory.destination.usage
         unit: By
         type: updowncounter
         desc: The amount of used memory
-      # activemq.memory.limit
+      # activemq.memory.destination.limit
       MemoryLimit:
-        metric: memory.limit
+        metric: memory.destination.limit
         unit: By
         type: updowncounter
         desc: The amount of configured memory limit
-      # activemq.temp.utilization
+      # activemq.temp.destination.utilization
       TempUsagePercentUsage:
-        metric: temp.utilization
+        metric: temp.destination.utilization
         unit: "1"
         type: gauge
         desc: The percentage of non-persistent storage used
-      # activemq.temp.limit
+      # activemq.temp.destination.limit
       TempUsageLimit:
-        metric: temp.limit
+        metric: temp.destination.limit
         unit: By
         type: updowncounter
         desc: The amount of configured non-persistent storage limit
@@ -88,21 +88,39 @@ rules:
         type: updowncounter
         unit: "{connection}"
         desc: The number of active connections
-      # activemq.broker.memory.limit
-      MemoryPercentLimit:
-        metric: broker.temp.limit
+      # activemq.memory.utilization
+      MemoryPercentUsage:
+        metric: memory.utilization
+        type: gauge
+        unit: "1"
+        desc: The percentage of broker memory used
+      # activemq.memory.limit
+      MemoryLimit:
+        metric: memory.limit
         type: updowncounter
         unit: By
-        desc: The amount of configured broker non-persistent storage limit
-      # activemq.broker.store.limit
+        desc: The amount of configured broker memory limit
+      # activemq.store.utilization
+      StorePercentUsage:
+        metric: store.utilization
+        type: gauge
+        unit: "1"
+        desc: The percentage of broker persistent storage used
+      # activemq.store.limit
       StorePercentLimit:
-        metric: broker.store.limit
+        metric: store.limit
         type: updowncounter
         unit: By
         desc: The amount of configured broker persistent storage limit
-      # activemq.broker.temp.limit
-      TempPercentLimit:
-        metric: broker.temp.limit
+      # activemq.temp.utilization
+      TempPercentUsage:
+        metric: temp.utilization
+        type: gauge
+        unit: "1"
+        desc: The percentage of broker non-persistent storage used
+      # activemq.temp.limit
+      TempLimit:
+        metric: temp.limit
         type: updowncounter
         unit: By
         desc: The amount of configured broker non-persistent storage limit
