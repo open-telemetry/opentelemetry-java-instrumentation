@@ -23,8 +23,6 @@ public class ActiveMqTest extends TargetSystemTest {
 
   private static final int ACTIVEMQ_PORT = 61616;
 
-  // TODO: test both 'classic' and 'artemis' variants
-
   @Test
   void activemqTest() {
     List<String> yamlFiles = Collections.singletonList("activemq.yaml");
@@ -119,6 +117,15 @@ public class ActiveMqTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription(
                         "The number of messages acknowledged and removed from this destination"))
+        .add(
+            "activemq.message.enqueue.average_duration",
+            metric ->
+                metric
+                    .isGauge()
+                    .hasUnit("s")
+                    .hasDataPointsWithAttributes(topicAttributes)
+                    .hasDescription(
+                        "The average time a message was held on this destination"))
         // destination memory/temp usage and limits
         .add(
             "activemq.memory.destination.usage",

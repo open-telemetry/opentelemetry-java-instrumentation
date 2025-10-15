@@ -71,7 +71,13 @@ rules:
         unit: "{message}"
         type: counter
         desc: The number of messages acknowledged and removed from this destination
-
+      # activemq.message.enqueue.average_duration
+      AverageEnqueueTime:
+        metric: message.enqueue.average_duration
+        sourceUnit: ms
+        unit: s
+        type: gauge
+        desc: The average time a message was held on this destination
 
   # Broker-level metrics
   - bean: org.apache.activemq:type=Broker,brokerName=*
