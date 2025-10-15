@@ -21,7 +21,7 @@ dependencies {
 
   library("org.apache.kafka:kafka-clients:0.11.0.0")
 
-  testImplementation("org.testcontainers:kafka")
+  testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
 }
 

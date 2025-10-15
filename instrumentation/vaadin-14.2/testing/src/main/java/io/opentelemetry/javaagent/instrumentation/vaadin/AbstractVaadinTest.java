@@ -40,8 +40,8 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.testcontainers.Testcontainers;
-import org.testcontainers.containers.BrowserWebDriverContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.selenium.BrowserWebDriverContainer;
 
 public abstract class AbstractVaadinTest
     extends AbstractHttpServerUsingTest<ConfigurableApplicationContext> {
@@ -51,7 +51,7 @@ public abstract class AbstractVaadinTest
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
-  private BrowserWebDriverContainer<?> browser;
+  private BrowserWebDriverContainer browser;
 
   @SpringBootApplication
   @EnableVaadin("test.vaadin")
@@ -76,8 +76,7 @@ public abstract class AbstractVaadinTest
     Testcontainers.exposeHostPorts(port);
 
     browser =
-        new BrowserWebDriverContainer<>()
-            .withCapabilities(new ChromeOptions())
+        new BrowserWebDriverContainer("selenium/standalone-chrome")
             .withLogConsumer(new Slf4jLogConsumer(logger));
     browser.start();
 
