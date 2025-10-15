@@ -120,21 +120,23 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
       AdviceScope adviceScope = AdviceScope.start(request, endpoint);
       if (adviceScope == null) {
-        return new Object[] {null, null};
+        return new Object[] {null};
       }
-      return new Object[] {adviceScope, null};
+      return new Object[] {adviceScope};
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @Advice.Return(readOnly = false) CompletableFuture<Object> future,
+    @Advice.AssignReturned.ToReturned
+    public static CompletableFuture<Object> stopSpan(
+        @Advice.Return CompletableFuture<Object> future,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter Object[] enterResult) {
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {
         adviceScope.endWithFuture(throwable);
-        future = adviceScope.wrapFuture(future);
+        return adviceScope.wrapFuture(future);
       }
+      return future;
     }
   }
 }
