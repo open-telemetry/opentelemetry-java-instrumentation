@@ -13,6 +13,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.AsmVisitorWrapper;
@@ -65,7 +66,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
                       MethodList<?> methods,
                       int writerFlags,
                       int readerFlags) {
-                    return new ClassVisitor(Opcodes.ASM9, classVisitor) {
+                    return new ClassVisitor(AsmApi.VERSION, classVisitor) {
                       @Override
                       public MethodVisitor visitMethod(
                           int access,

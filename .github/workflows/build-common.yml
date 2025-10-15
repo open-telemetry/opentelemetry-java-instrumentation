@@ -38,7 +38,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -60,7 +60,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -99,7 +99,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -187,7 +187,7 @@ jobs:
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -238,9 +238,7 @@ jobs:
           - 11
           - 17
           - 21
-          - 23
-          - 24
-          - 25-ea
+          - 25 # renovate: datasource=java-version
         vm:
           - hotspot
           - openj9
@@ -254,12 +252,6 @@ jobs:
           - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
-          - test-java-version: 23
-            vm: hotspot
-          - test-java-version: 24
-            vm: openj9
-          - test-java-version: 25-ea
-            vm: openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -298,7 +290,7 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           # only push cache for one matrix option since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
@@ -342,22 +334,27 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const matrix = JSON.parse(process.env.matrix);
-            const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
-            
-            const workflow_jobs_nested = await github.paginate(
-              github.rest.actions.listJobsForWorkflowRun,
-              {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                run_id: context.runId,
-                per_page: 100
-              },
-              (response) => {
-                return response.data;
-              },
-            );
-            return workflow_jobs_nested.flat().find((job) => job.name === job_name).html_url;
+            try {
+              const matrix = JSON.parse(process.env.matrix);
+              const job_name = `common / test${ matrix['test-partition'] } (${ matrix['test-java-version'] }, ${ matrix.vm }, indy ${ matrix['test-indy'] })`;
+              const workflow_jobs_nested = await github.paginate(
+                github.rest.actions.listJobsForWorkflowRun,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: context.runId,
+                  per_page: 100
+                },
+                (response) => {
+                  return response.data;
+                },
+              );
+              const job = workflow_jobs_nested.flat().find((job) => job.name === job_name);
+              return job ? job.html_url : '';
+            } catch (e) {
+              core.warning(`Failed to get current job url: ${e}`);
+              return '';
+            }
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
@@ -429,7 +426,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           # only push cache for one matrix option per OS since github action cache space is limited
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
@@ -481,7 +478,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
@@ -504,7 +501,7 @@ jobs:
           java-version-file: .java-version
 
       - name: Set up Gradle cache
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
