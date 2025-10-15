@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.2.1"
+  id("com.gradle.develocity") version "4.2.2"
 }
 
 dependencyResolutionManagement {
@@ -247,6 +247,9 @@ include(":instrumentation:grpc-1.6:testing")
 include(":instrumentation:guava-10.0:javaagent")
 include(":instrumentation:guava-10.0:library")
 include(":instrumentation:gwt-2.0:javaagent")
+include(":instrumentation:helidon-4.3:javaagent")
+include(":instrumentation:helidon-4.3:library")
+include(":instrumentation:helidon-4.3:testing")
 include(":instrumentation:hibernate:hibernate-3.3:javaagent")
 include(":instrumentation:hibernate:hibernate-4.0:javaagent")
 include(":instrumentation:hibernate:hibernate-6.0:javaagent")
@@ -307,7 +310,6 @@ include(":instrumentation:jaxrs-client:jaxrs-client-2.0-testing")
 include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
-include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6-testing")
 include(":instrumentation:jaxws:jaxws-2.0-common-testing")
 include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
@@ -395,6 +397,7 @@ include(":instrumentation:liberty:liberty-dispatcher-20.0:javaagent")
 include(":instrumentation:log4j:log4j-appender-1.2:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.17:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.17:library")
+include(":instrumentation:log4j:log4j-appender-2.17:testing")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.7:javaagent")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaagent")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure")
@@ -437,6 +440,7 @@ include(":instrumentation:openai:openai-java-1.1:library")
 include(":instrumentation:openai:openai-java-1.1:testing")
 include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
+include(":instrumentation:opensearch:opensearch-java-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common:javaagent")

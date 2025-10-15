@@ -3,3 +3,5 @@ description: >
   Context to extract the HTTP route and attach it to existing HTTP server spans and HTTP server
   metrics.
 library_link: https://avaje.io/jex/
+features:
+  - HTTP_ROUTE

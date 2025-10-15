@@ -58,8 +58,9 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       DbInfo dbInfo,
       String query,
       Instrumenter<DbRequest, Void> instrumenter,
-      boolean captureQueryParameters) {
-    super(delegate, connection, dbInfo, query, instrumenter);
+      boolean captureQueryParameters,
+      boolean sqlCommenterEnabled) {
+    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenterEnabled);
     this.captureQueryParameters = captureQueryParameters;
     this.parameters = new HashMap<>();
   }

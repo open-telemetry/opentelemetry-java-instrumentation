@@ -66,6 +66,8 @@ public final class LoggingEventMapper {
   private static final boolean supportsKeyValuePairs = supportsKeyValuePairs();
   private static final boolean supportsMultipleMarkers = supportsMultipleMarkers();
   private static final boolean supportsLogstashMarkers = supportsLogstashMarkers();
+  private static final boolean supportsLogstashStructuredArguments =
+      supportsLogstashStructuredArguments();
   private static final Cache<String, AttributeKey<String>> attributeKeys = Cache.bounded(100);
 
   private static final AttributeKey<List<String>> LOG_MARKER =
@@ -83,7 +85,8 @@ public final class LoggingEventMapper {
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
   private final boolean captureArguments;
-  private final boolean captureLogstashAttributes;
+  private final boolean captureLogstashMarkerAttributes;
+  private final boolean captureLogstashStructuredArguments;
   private final boolean captureEventName;
 
   private LoggingEventMapper(Builder builder) {
@@ -94,7 +97,8 @@ public final class LoggingEventMapper {
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
     this.captureArguments = builder.captureArguments;
-    this.captureLogstashAttributes = builder.captureLogstashAttributes;
+    this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
+    this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
     this.captureAllMdcAttributes =
         builder.captureMdcAttributes.size() == 1 && builder.captureMdcAttributes.get(0).equals("*");
     this.captureEventName = builder.captureEventName;
@@ -192,12 +196,19 @@ public final class LoggingEventMapper {
     }
 
     if (captureMarkerAttribute) {
-      boolean skipLogstashMarkers = supportsLogstashMarkers && captureLogstashAttributes;
+      boolean skipLogstashMarkers = supportsLogstashMarkers && captureLogstashMarkerAttributes;
       captureMarkerAttribute(builder, loggingEvent, skipLogstashMarkers);
     }
 
     if (supportsKeyValuePairs && captureKeyValuePairAttributes) {
       captureKeyValuePairAttributes(builder, loggingEvent);
+    }
+
+    if (supportsLogstashStructuredArguments
+        && captureLogstashStructuredArguments
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
+      captureLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
     }
 
     if (captureLoggerContext) {
@@ -210,8 +221,8 @@ public final class LoggingEventMapper {
       captureArguments(builder, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
     }
 
-    if (supportsLogstashMarkers && captureLogstashAttributes) {
-      captureLogstashAttributes(builder, loggingEvent);
+    if (supportsLogstashMarkers && captureLogstashMarkerAttributes) {
+      captureLogstashMarkerAttributes(builder, loggingEvent);
     }
     // span context
     builder.setContext(Context.current());
@@ -463,11 +474,12 @@ public final class LoggingEventMapper {
     return true;
   }
 
-  private void captureLogstashAttributes(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureLogstashMarkerAttributes(
+      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     if (supportsMultipleMarkers && hasMultipleMarkers(loggingEvent)) {
-      captureMultipleLogstashAttributes(builder, loggingEvent);
+      captureMultipleLogstashMarkers(builder, loggingEvent);
     } else {
-      captureSingleLogstashAttribute(builder, loggingEvent);
+      captureSingleLogstashMarker(builder, loggingEvent);
     }
   }
 
@@ -477,40 +489,39 @@ public final class LoggingEventMapper {
   }
 
   @SuppressWarnings("deprecation") // getMarker is deprecate since 1.3.0
-  private void captureSingleLogstashAttribute(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+  private void captureSingleLogstashMarker(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     Marker marker = loggingEvent.getMarker();
     if (isLogstashMarker(marker)) {
-      captureLogstashMarker(builder, marker);
+      captureLogstashMarkerAndReferences(builder, marker);
     }
   }
 
   @NoMuzzle
-  private void captureMultipleLogstashAttributes(
+  private void captureMultipleLogstashMarkers(
       LogRecordBuilder builder, ILoggingEvent loggingEvent) {
     for (Marker marker : loggingEvent.getMarkerList()) {
       if (isLogstashMarker(marker)) {
-        captureLogstashMarker(builder, marker);
+        captureLogstashMarkerAndReferences(builder, marker);
       }
     }
   }
 
   @NoMuzzle
-  private void captureLogstashMarker(LogRecordBuilder builder, Marker marker) {
+  private void captureLogstashMarkerAndReferences(LogRecordBuilder builder, Marker marker) {
     LogstashMarker logstashMarker = (LogstashMarker) marker;
-    captureLogstashMarkerAttributes(builder, logstashMarker);
+    captureLogstashMarker(builder, logstashMarker);
 
     if (logstashMarker.hasReferences()) {
       for (Iterator<Marker> it = logstashMarker.iterator(); it.hasNext(); ) {
         Marker referenceMarker = it.next();
         if (isLogstashMarker(referenceMarker)) {
-          captureLogstashMarker(builder, referenceMarker);
+          captureLogstashMarkerAndReferences(builder, referenceMarker);
         }
       }
     }
   }
 
-  private void captureLogstashMarkerAttributes(LogRecordBuilder builder, Object logstashMarker) {
+  private void captureLogstashMarker(LogRecordBuilder builder, Object logstashMarker) {
     FieldReader fieldReader = LogstashFieldReaderHolder.valueField.get(logstashMarker.getClass());
     if (fieldReader != null) {
       fieldReader.read(builder, logstashMarker, this.captureEventName);
@@ -615,6 +626,40 @@ public final class LoggingEventMapper {
     return true;
   }
 
+  private static boolean supportsLogstashStructuredArguments() {
+    try {
+      Class.forName("net.logstash.logback.argument.StructuredArgument");
+    } catch (ClassNotFoundException e) {
+      return false;
+    }
+
+    return true;
+  }
+
+  @NoMuzzle
+  private void captureLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
+    for (Object argument : arguments) {
+      if (isLogstashStructuredArgument(argument)) {
+        captureLogstashStructuredArgument(builder, argument);
+      }
+    }
+  }
+
+  @NoMuzzle
+  private static boolean isLogstashStructuredArgument(Object argument) {
+    // StructuredArguments implement the marker interface, so we can check for it
+    // without importing the class directly (which may not be available at runtime)
+    return argument instanceof SingleFieldAppendingMarker;
+  }
+
+  @NoMuzzle
+  private void captureLogstashStructuredArgument(LogRecordBuilder builder, Object argument) {
+    // StructuredArguments created by v() or keyValue() extend SingleFieldAppendingMarker
+    // which has getFieldName() and provides field value via reflection
+    SingleFieldAppendingMarker marker = (SingleFieldAppendingMarker) argument;
+    captureLogstashMarker(builder, marker);
+  }
+
   private interface FieldReader {
     void read(LogRecordBuilder builder, Object logstashMarker, boolean captureEventName);
   }
@@ -642,7 +687,8 @@ public final class LoggingEventMapper {
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
     private boolean captureArguments;
-    private boolean captureLogstashAttributes;
+    private boolean captureLogstashMarkerAttributes;
+    private boolean captureLogstashStructuredArguments;
     private boolean captureEventName;
 
     Builder() {}
@@ -689,9 +735,26 @@ public final class LoggingEventMapper {
       return this;
     }
 
+    /**
+     * @deprecated Use {@link #setCaptureLogstashMarkerAttributes(boolean)} instead. This method is
+     *     deprecated and will be removed in a future release.
+     */
+    @Deprecated
     @CanIgnoreReturnValue
     public Builder setCaptureLogstashAttributes(boolean captureLogstashAttributes) {
-      this.captureLogstashAttributes = captureLogstashAttributes;
+      return setCaptureLogstashMarkerAttributes(captureLogstashAttributes);
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureLogstashMarkerAttributes(boolean captureLogstashMarkerAttributes) {
+      this.captureLogstashMarkerAttributes = captureLogstashMarkerAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureLogstashStructuredArguments(
+        boolean captureLogstashStructuredArguments) {
+      this.captureLogstashStructuredArguments = captureLogstashStructuredArguments;
       return this;
     }
 

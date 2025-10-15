@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -28,6 +29,11 @@ public final class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
+  private static final boolean SQLCOMMENTER_ENABLED =
+      AgentInstrumentationConfig.get()
+          .getBoolean(
+              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+              AgentCommonConfig.get().isSqlCommenterEnabled());
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
@@ -95,6 +101,10 @@ public final class JdbcSingletons {
       // ignore
     }
     return false;
+  }
+
+  public static String processSql(String sql) {
+    return SQLCOMMENTER_ENABLED ? SqlCommenterUtil.processQuery(sql) : sql;
   }
 
   private JdbcSingletons() {}
