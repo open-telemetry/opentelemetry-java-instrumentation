@@ -10,6 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
 import java.util.function.Function;
 
@@ -20,6 +21,12 @@ public final class R2dbcTelemetryBuilder {
   private boolean statementSanitizationEnabled = true;
   private Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
       spanNameExtractorTransformer = Function.identity();
+  private boolean sqlCommenterEnabled;
+
+  static {
+    Experimental.internalSetEnableSqlCommenter(
+        (builder, sqlCommenterEnabled) -> builder.sqlCommenterEnabled = sqlCommenterEnabled);
+  }
 
   R2dbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     instrumenterBuilder = new R2dbcInstrumenterBuilder(openTelemetry);
@@ -57,6 +64,7 @@ public final class R2dbcTelemetryBuilder {
    */
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
-        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled));
+        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled),
+        sqlCommenterEnabled);
   }
 }
