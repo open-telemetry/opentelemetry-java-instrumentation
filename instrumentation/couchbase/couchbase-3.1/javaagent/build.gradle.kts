@@ -34,7 +34,7 @@ dependencies {
   // 3.1.4 (instead of 3.1.0) needed for test stability and for compatibility with server versions that run on M1 processors
   library("com.couchbase.client:java-client:3.1.4")
 
-  testImplementation("org.testcontainers:couchbase")
+  testImplementation("org.testcontainers:testcontainers-couchbase")
 
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.5") // see couchbase-3.1.6 module
 }

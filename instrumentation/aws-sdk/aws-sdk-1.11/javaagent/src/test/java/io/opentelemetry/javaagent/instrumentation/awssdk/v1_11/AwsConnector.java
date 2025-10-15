@@ -32,8 +32,8 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.EnumSet;
 import org.slf4j.LoggerFactory;
-import org.testcontainers.containers.localstack.LocalStackContainer;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
+import org.testcontainers.localstack.LocalStackContainer;
 import org.testcontainers.utility.DockerImageName;
 
 class AwsConnector {
@@ -45,10 +45,7 @@ class AwsConnector {
   AwsConnector() {
     localStack =
         new LocalStackContainer(DockerImageName.parse("localstack/localstack:2.0.2"))
-            .withServices(
-                LocalStackContainer.Service.SQS,
-                LocalStackContainer.Service.SNS,
-                LocalStackContainer.Service.S3)
+            .withServices("sqs", "sns", "s3")
             .withEnv("DEBUG", "1")
             .withEnv("SQS_PROVIDER", "elasticmq")
             .withStartupTimeout(Duration.ofMinutes(2));
@@ -61,30 +58,27 @@ class AwsConnector {
 
     sqsClient =
         AmazonSQSAsyncClient.asyncBuilder()
-            .withEndpointConfiguration(
-                getEndpointConfiguration(localStack, LocalStackContainer.Service.SQS))
+            .withEndpointConfiguration(getEndpointConfiguration(localStack))
             .withCredentials(credentialsProvider)
             .build();
 
     s3Client =
         AmazonS3Client.builder()
-            .withEndpointConfiguration(
-                getEndpointConfiguration(localStack, LocalStackContainer.Service.S3))
+            .withEndpointConfiguration(getEndpointConfiguration(localStack))
             .withCredentials(credentialsProvider)
             .build();
 
     snsClient =
         AmazonSNSAsyncClient.asyncBuilder()
-            .withEndpointConfiguration(
-                getEndpointConfiguration(localStack, LocalStackContainer.Service.SNS))
+            .withEndpointConfiguration(getEndpointConfiguration(localStack))
             .withCredentials(credentialsProvider)
             .build();
   }
 
   static AwsClientBuilder.EndpointConfiguration getEndpointConfiguration(
-      LocalStackContainer localStack, LocalStackContainer.Service service) {
+      LocalStackContainer localStack) {
     return new AwsClientBuilder.EndpointConfiguration(
-        localStack.getEndpointOverride(service).toString(), localStack.getRegion());
+        localStack.getEndpoint().toString(), localStack.getRegion());
   }
 
   String createQueue(String queueName) {

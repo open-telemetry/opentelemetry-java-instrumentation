@@ -23,6 +23,6 @@ abstract class JettyJpmsSmokeTest extends AppServerTest {
   @AppServer(version = "11.0.19", jdk = "21")
   static class Jetty11JpmsJdk21 extends JettyJpmsSmokeTest {}
 
-  @AppServer(version = "11.0.19", jdk = "23")
-  static class Jetty11JpmsJdk23 extends JettyJpmsSmokeTest {}
+  @AppServer(version = "11.0.19", jdk = "25")
+  static class Jetty11JpmsJdk25 extends JettyJpmsSmokeTest {}
 }

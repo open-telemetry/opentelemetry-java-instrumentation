@@ -16,7 +16,7 @@ import java.util.logging.Logger;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings("unused") // keep around for next time even if not currently used
 public final class DeprecatedConfigProperties {
 
   private static final Logger logger = Logger.getLogger(DeprecatedConfigProperties.class.getName());

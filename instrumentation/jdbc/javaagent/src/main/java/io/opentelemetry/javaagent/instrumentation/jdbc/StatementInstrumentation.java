@@ -22,6 +22,8 @@ import java.sql.PreparedStatement;
 import java.sql.Statement;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -59,21 +61,25 @@ public class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class StatementAdvice {
 
-    @Nullable
+    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static JdbcAdviceScope onEnter(
+    public static Object[] onEnter(
         @Advice.Argument(0) String sql, @Advice.This Statement statement) {
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
-        return null;
+        return new Object[] {null, sql};
       }
 
-      return JdbcAdviceScope.startStatement(CallDepth.forClass(Statement.class), sql, statement);
+      String processedSql = JdbcSingletons.processSql(sql);
+      return new Object[] {
+        JdbcAdviceScope.startStatement(CallDepth.forClass(Statement.class), sql, statement),
+        processedSql
+      };
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable JdbcAdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
+      JdbcAdviceScope adviceScope = (JdbcAdviceScope) enterResult[0];
       if (adviceScope != null) {
         adviceScope.end(throwable);
       }
@@ -83,16 +89,19 @@ public class StatementInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AddBatchAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void addBatch(@Advice.This Statement statement, @Advice.Argument(0) String sql) {
+    @AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static String addBatch(
+        @Advice.This Statement statement, @Advice.Argument(0) String sql) {
       if (statement instanceof PreparedStatement) {
-        return;
+        return sql;
       }
       if (JdbcSingletons.isWrapper(statement, Statement.class)) {
-        return;
+        return sql;
       }
 
       JdbcData.addStatementBatch(statement, sql);
+      return JdbcSingletons.processSql(sql);
     }
   }
 

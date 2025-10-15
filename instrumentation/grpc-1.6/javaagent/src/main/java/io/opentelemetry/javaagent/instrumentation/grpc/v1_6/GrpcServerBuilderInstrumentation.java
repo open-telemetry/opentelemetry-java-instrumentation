@@ -7,13 +7,13 @@ package io.opentelemetry.javaagent.instrumentation.grpc.v1_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.grpc.v1_6.GrpcSingletons.SERVER_BUILDER_INSTRUMENTED;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.grpc.ServerBuilder;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -44,22 +44,20 @@ public class GrpcServerBuilderInstrumentation implements TypeInstrumentation {
   public static class BuildAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.This ServerBuilder<?> serverBuilder,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(ServerBuilder.class);
-      if (callDepth.getAndIncrement() == 0) {
-        VirtualField<ServerBuilder<?>, Boolean> instrumented =
-            VirtualField.find(ServerBuilder.class, Boolean.class);
-        if (!Boolean.TRUE.equals(instrumented.get(serverBuilder))) {
-          serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
-          instrumented.set(serverBuilder, true);
-        }
+    public static CallDepth onEnter(@Advice.This ServerBuilder<?> serverBuilder) {
+      CallDepth callDepth = CallDepth.forClass(ServerBuilder.class);
+      if (callDepth.getAndIncrement() > 0) {
+        return callDepth;
       }
+      if (!Boolean.TRUE.equals(SERVER_BUILDER_INSTRUMENTED.get(serverBuilder))) {
+        serverBuilder.intercept(GrpcSingletons.SERVER_INTERCEPTOR);
+        SERVER_BUILDER_INSTRUMENTED.set(serverBuilder, true);
+      }
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(@Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static void onExit(@Advice.Enter CallDepth callDepth) {
       callDepth.decrementAndGet();
     }
   }
