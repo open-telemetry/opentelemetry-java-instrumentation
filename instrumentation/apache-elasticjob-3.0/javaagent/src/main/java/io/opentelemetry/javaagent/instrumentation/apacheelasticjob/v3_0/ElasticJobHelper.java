@@ -26,10 +26,9 @@ public final class ElasticJobHelper {
     Context parentContext = Context.current();
     if (!this.instrumenter.shouldStart(parentContext, request)) {
       return null;
-    } else {
-      Context context = this.instrumenter.start(parentContext, request);
-      return new ElasticJobScope(request, context, context.makeCurrent());
     }
+    Context context = this.instrumenter.start(parentContext, request);
+    return new ElasticJobScope(request, context, context.makeCurrent());
   }
 
   public void endSpan(@Nullable ElasticJobScope scope, @Nullable Throwable throwable) {
