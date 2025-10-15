@@ -75,11 +75,10 @@ public class KafkaProducerTelemetry {
   /**
    * Build and inject span into record.
    *
-   * @param record the producer record to inject span info.
+   * @param record the producer record to inject span info
    * @param callback the producer send callback
    * @return send function's result
    */
-  @SuppressWarnings("FutureReturnValueIgnored")
   public <K, V> Future<RecordMetadata> buildAndInjectSpan(
       ProducerRecord<K, V> record,
       Producer<K, V> producer,
