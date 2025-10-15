@@ -7,7 +7,7 @@ dependencies {
   implementation("com.linecorp.armeria:armeria-junit5:1.33.4")
   implementation("com.google.errorprone:error_prone_annotations")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
-  implementation("com.google.protobuf:protobuf-java-util:4.32.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.33.0")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
   implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
 }
