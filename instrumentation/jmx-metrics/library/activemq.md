@@ -3,7 +3,7 @@
 Here is the list of metrics based on MBeans exposed by ActiveMQ.
 
 | Metric Name                                  | Type          | Attributes          | Description                                                           |
-| -------------------------------------------- | ------------- | ------------------- | --------------------------------------------------------------------- |
+|----------------------------------------------|---------------|---------------------|-----------------------------------------------------------------------|
 | activemq.ProducerCount                       | UpDownCounter | destination, broker | The number of producers attached to this destination                  |
 | activemq.ConsumerCount                       | UpDownCounter | destination, broker | The number of consumers subscribed to this destination                |
 | activemq.memory.MemoryPercentUsage           | Gauge         | destination, broker | The percentage of configured memory used                              |
