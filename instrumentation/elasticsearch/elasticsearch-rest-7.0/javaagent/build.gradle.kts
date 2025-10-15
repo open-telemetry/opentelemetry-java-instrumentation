@@ -35,7 +35,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
-  testImplementation("org.testcontainers:elasticsearch")
+  testImplementation("org.testcontainers:testcontainers-elasticsearch")
 }
 
 tasks {

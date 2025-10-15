@@ -29,7 +29,7 @@ dependencies {
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
 
-  testImplementation("org.testcontainers:elasticsearch")
+  testImplementation("org.testcontainers:testcontainers-elasticsearch")
   testLibrary("org.elasticsearch.client:rest:5.0.0")
 
   latestDepTestLibrary("org.elasticsearch.client:elasticsearch-rest-client:6.3.+") // see elasticsearch-rest-6.4 module
