@@ -28,24 +28,20 @@ import io.opentelemetry.smoketest.TelemetryRetriever;
 import io.opentelemetry.smoketest.TelemetryRetrieverProvider;
 import io.restassured.http.ContentType;
 import java.time.Duration;
-import java.util.Collections;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.stream.Stream;
 import org.apache.http.HttpStatus;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
-import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.producer.Producer;
-import org.apache.kafka.common.errors.TopicExistsException;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.condition.DisabledIf;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.FixedHostPortGenericContainer;
@@ -66,9 +62,6 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   @RegisterExtension
   protected static final InstrumentationExtension testing =
       SmokeTestInstrumentationExtension.create();
-
-  protected static final Logger logger =
-      LoggerFactory.getLogger(KafkaConnectSinkTaskBaseTest.class);
 
   // Using the same fake backend pattern as smoke tests (with ARM64 support)
   protected static GenericContainer<?> backend;
@@ -316,20 +309,6 @@ public abstract class KafkaConnectSinkTaskBaseTest implements TelemetryRetriever
   public void resetBase() throws Exception {
     deleteConnectorIfExists();
     clearDatabaseData();
-  }
-
-  @SuppressWarnings("InterruptedExceptionSwallowed")
-  protected void createTopic(String topicName) throws Exception {
-    try (AdminClient adminClient = createAdminClient()) {
-      NewTopic newTopic = new NewTopic(topicName, 1, (short) 1);
-      adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
-    } catch (Exception e) {
-      if (e.getCause() instanceof TopicExistsException) {
-        // Topic already exists, continue
-        return;
-      }
-      throw e;
-    }
   }
 
   protected void awaitForTopicCreation(String topicName) {

@@ -6,6 +6,16 @@
 package io.opentelemetry.instrumentation.kafkaconnect.v2_6;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingOperationTypeIncubatingValues.PROCESS;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
+import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
 import static io.restassured.RestAssured.given;
 import static java.lang.String.format;
 import static org.awaitility.Awaitility.await;
@@ -42,6 +52,7 @@ import org.testcontainers.lifecycle.Startables;
 import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
 import org.testcontainers.utility.DockerImageName;
 
+@SuppressWarnings("deprecation") // using deprecated semconv
 @Testcontainers
 class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   // MongoDB-specific constants
@@ -94,8 +105,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
   public void testKafkaConnectMongoSinkTaskInstrumentation() throws Exception {
     String testTopicName = TOPIC_NAME;
     setupMongoSinkConnector(testTopicName);
-
-    createTopic(testTopicName);
     awaitForTopicCreation(testTopicName);
 
     Properties props = new Properties();
@@ -141,7 +150,14 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                     span.hasName(testTopicName + " process")
                         .hasKind(CONSUMER)
                         .hasNoParent()
-                        .hasLinks(LinkData.create(producerSpanContext.get())),
+                        .hasLinks(LinkData.create(producerSpanContext.get()))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                            equalTo(MESSAGING_DESTINATION_NAME, testTopicName),
+                            equalTo(MESSAGING_OPERATION, PROCESS),
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            satisfies(THREAD_ID, val -> val.isNotZero()),
+                            satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
                     span.hasName("update " + DB_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)
@@ -161,10 +177,6 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
     String topicName3 = TOPIC_NAME + "-3";
 
     setupMongoSinkConnectorMultiTopic(topicName1, topicName2, topicName3);
-
-    createTopic(topicName1);
-    createTopic(topicName2);
-    createTopic(topicName3);
     awaitForTopicCreation(topicName1);
     awaitForTopicCreation(topicName2);
     awaitForTopicCreation(topicName3);
@@ -250,7 +262,13 @@ class MongoKafkaConnectSinkTaskTest extends KafkaConnectSinkTaskBaseTest {
                         .hasLinks(
                             LinkData.create(producerSpanContext1.get()),
                             LinkData.create(producerSpanContext2.get()),
-                            LinkData.create(producerSpanContext3.get())),
+                            LinkData.create(producerSpanContext3.get()))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 3),
+                            equalTo(MESSAGING_OPERATION, PROCESS),
+                            equalTo(MESSAGING_SYSTEM, KAFKA),
+                            satisfies(THREAD_ID, val -> val.isNotZero()),
+                            satisfies(THREAD_NAME, val -> val.isNotBlank())),
                 span ->
                     span.hasName("update " + DB_NAME + "." + COLLECTION_NAME)
                         .hasKind(SpanKind.CLIENT)

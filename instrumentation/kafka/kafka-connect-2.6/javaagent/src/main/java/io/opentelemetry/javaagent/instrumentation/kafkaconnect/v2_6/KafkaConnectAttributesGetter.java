@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.KAFKA;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
@@ -18,7 +20,7 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
 
   @Override
   public String getSystem(KafkaConnectTask request) {
-    return "kafka";
+    return KAFKA;
   }
 
   @Override
@@ -73,7 +75,6 @@ enum KafkaConnectAttributesGetter implements MessagingAttributesGetter<KafkaConn
     return null;
   }
 
-  @Nullable
   @Override
   public Long getBatchMessageCount(KafkaConnectTask request, @Nullable Void unused) {
     return (long) request.getRecords().size();
