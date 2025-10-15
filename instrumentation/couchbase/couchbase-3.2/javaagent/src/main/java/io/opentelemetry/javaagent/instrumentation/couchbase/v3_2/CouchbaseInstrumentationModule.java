@@ -28,7 +28,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
     // New class introduced in 3.2.
     // CoreTransactionRequest was introduced in 3.4.0.
     return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")
-        .and(not(hasClassesNamed("com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
+        .and(
+            not(
+                hasClassesNamed(
+                    "com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
   }
 
   @Override
