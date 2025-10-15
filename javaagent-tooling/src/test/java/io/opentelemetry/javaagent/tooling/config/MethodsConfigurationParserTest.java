@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.tooling.config;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -63,10 +64,6 @@ class MethodsConfigurationParserTest {
   }
 
   private static Set<String> createSet(String... elements) {
-    Set<String> set = new HashSet<>();
-    for (String element : elements) {
-      set.add(element);
-    }
-    return set;
+    return new HashSet<>(Arrays.asList(elements));
   }
 }
