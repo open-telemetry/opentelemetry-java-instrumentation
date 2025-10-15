@@ -107,7 +107,7 @@ rules:
         unit: "1"
         desc: The percentage of broker persistent storage used
       # activemq.store.limit
-      StorePercentLimit:
+      StoreLimit:
         metric: store.limit
         type: updowncounter
         unit: By
