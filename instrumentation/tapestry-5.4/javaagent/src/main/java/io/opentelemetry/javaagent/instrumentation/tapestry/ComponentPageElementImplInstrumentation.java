@@ -69,7 +69,7 @@ public class ComponentPageElementImplInstrumentation implements TypeInstrumentat
         return new AdviceScope(request, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
 
         instrumenter().end(context, request, null, throwable);
