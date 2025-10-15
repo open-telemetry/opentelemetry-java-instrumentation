@@ -22,10 +22,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
     super("couchbase", "couchbase-3.4");
   }
 
-  @Override
+    @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // ConfigurationProfile was introduced in 3.4
-    return hasClassesNamed("com.couchbase.client.core.env.ConfigurationProfile");
+    // CoreTransactionRequest was introduced in 3.4.0 with integrated transactions support.
+    return hasClassesNamed("com.couchbase.client.core.transaction.components.CoreTransactionRequest");
   }
 
   @Override

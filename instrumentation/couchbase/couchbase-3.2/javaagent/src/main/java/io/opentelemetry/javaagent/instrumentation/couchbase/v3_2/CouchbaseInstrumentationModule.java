@@ -26,9 +26,9 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     // New class introduced in 3.2.
-    // ConfigurationProfile was introduced in 3.4.
+    // CoreTransactionRequest was introduced in 3.4.0.
     return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")
-        .and(not(hasClassesNamed("com.couchbase.client.core.env.ConfigurationProfile")));
+        .and(not(hasClassesNamed("com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
   }
 
   @Override
