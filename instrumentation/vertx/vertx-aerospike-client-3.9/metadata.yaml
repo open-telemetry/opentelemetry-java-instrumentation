@@ -1,5 +1,0 @@
-description: >
-  This instrumentation enables Aerospike client spans and Aerospike client metrics for the Vert.x Aerospike client 3.9.
-  Each Aerospike operation produces a client span named after the operation (GET, PUT, DELETE, etc.), enriched with standard database
-  attributes (system, operation, namespace, set), network attributes, and error details if an exception occurs.
-
