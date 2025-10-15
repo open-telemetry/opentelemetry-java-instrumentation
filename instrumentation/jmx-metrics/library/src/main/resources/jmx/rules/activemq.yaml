@@ -2,9 +2,7 @@
 rules:
 
     # Topic and Queues level metrics
-  - beans:
-      - org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=*
-      - org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=*
+  - bean: org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*
     metricAttribute:
       messaging.destination.name: param(destinationName)
       messaging.system: const(activemq)
