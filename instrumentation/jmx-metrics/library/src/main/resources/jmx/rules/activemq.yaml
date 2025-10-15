@@ -4,16 +4,23 @@ rules:
       - org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=*
       - org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=*
     metricAttribute:
-      destination: param(destinationName)
-      broker: param(brokerName)
+      messaging.destination.name: param(destinationName)
+      messaging.system: const(activemq)
+      # 'topic' or 'queue'
+      activemq.destination.type: lowercase(param(destinationType))
+      activemq.broker.name: param(brokerName)
     prefix: activemq.
     mapping:
+      # activemq.producer.count
       ProducerCount:
-        unit: "{producers}"
+        metric: producer.count
+        unit: "{producer}"
         type: updowncounter
         desc: The number of producers attached to this destination
+      # activemq.consumer.count
       ConsumerCount:
-        unit: "{consumers}"
+        metric: consumer.count
+        unit: "{consumer}"
         type: updowncounter
         desc: The number of consumers subscribed to this destination
       MemoryPercentUsage:
@@ -22,23 +29,26 @@ rules:
         type: gauge
         desc: The percentage of configured memory used
       QueueSize:
-        metric: message.QueueSize
-        unit: "{messages}"
+        metric: message.queue.size
+        unit: "{message}"
         type: updowncounter
         desc: The current number of messages waiting to be consumed
+      # activemq.message.expired
       ExpiredCount:
-        metric: message.ExpiredCount
-        unit: "{messages}"
+        metric: message.expired
+        unit: "{message}"
         type: counter
         desc: The number of messages not delivered because they expired
+      # activemq.message.enqueued
       EnqueueCount:
-        metric: message.EnqueueCount
-        unit: "{messages}"
+        metric: message.enqueued
+        unit: "{message}"
         type: counter
         desc: The number of messages sent to this destination
+      # activemq.message.dequeued
       DequeueCount:
-        metric: message.DequeueCount
-        unit: "{messages}"
+        metric: message.dequeued
+        unit: "{message}"
         type: counter
         desc: The number of messages acknowledged and removed from this destination
       AverageEnqueueTime:
