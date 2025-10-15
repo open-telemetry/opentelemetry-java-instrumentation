@@ -8,21 +8,29 @@ package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import java.util.Iterator;
+import java.util.stream.Stream;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.pool.TypePool;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings({"unchecked", "rawtypes"})
 class HasInterfaceMatcherTest {
 
   private static TypePool typePool;
@@ -37,27 +45,31 @@ class HasInterfaceMatcherTest {
                 HasInterfaceMatcherTest.class.getClassLoader());
   }
 
-  @ParameterizedTest
-  @CsvSource({
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, false"
-  })
-  void testMatcher(String matcherClassName, String typeClassName, boolean expectedResult) {
-    TypeDescription argument = typePool.describe(typeClassName).resolve();
+  private static Stream<Arguments> matcherParameters() {
+    return Stream.of(
+        Arguments.of(A.class, A.class, true),
+        Arguments.of(A.class, B.class, true),
+        Arguments.of(B.class, A.class, false),
+        Arguments.of(A.class, E.class, true),
+        Arguments.of(A.class, F.class, true),
+        Arguments.of(A.class, G.class, true),
+        Arguments.of(F.class, A.class, false),
+        Arguments.of(F.class, F.class, false),
+        Arguments.of(F.class, G.class, false));
+  }
 
-    boolean result = implementsInterface(named(matcherClassName)).matches(argument);
+  @ParameterizedTest
+  @MethodSource("matcherParameters")
+  void testMatcher(Class<?> matcherClass, Class<?> typeClass, boolean expectedResult) {
+    TypeDescription argument = typePool.describe(typeClass.getName()).resolve();
+
+    boolean result = implementsInterface(named(matcherClass.getName())).matches(argument);
 
     assertThat(result).isEqualTo(expectedResult);
   }
 
   @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
   void testTraversalExceptions() {
     TypeDescription type = mock(TypeDescription.class);
     TypeDescription.Generic typeGeneric = mock(TypeDescription.Generic.class);
@@ -74,7 +86,12 @@ class HasInterfaceMatcherTest {
     boolean result = implementsInterface(named(Object.class.getName())).matches(type);
 
     assertThat(result).isFalse();
-    assertThatCode(() -> implementsInterface(named(Object.class.getName())).matches(type))
-        .doesNotThrowAnyException();
+    verify(type, times(1)).isInterface();
+    verify(type, times(1)).asGenericType();
+    verify(typeGeneric, times(1)).asErasure();
+    verify(type, times(1)).getInterfaces();
+    verify(interfaces, times(1)).iterator();
+    verify(type, times(1)).getSuperClass();
+    verifyNoMoreInteractions(type, typeGeneric, interfaces);
   }
 }

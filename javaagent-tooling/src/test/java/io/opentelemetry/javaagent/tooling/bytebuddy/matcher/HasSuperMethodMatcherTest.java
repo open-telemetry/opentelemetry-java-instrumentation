@@ -10,30 +10,43 @@ import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass;
+import java.util.stream.Stream;
 import net.bytebuddy.description.method.MethodDescription;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 class HasSuperMethodMatcherTest {
 
+  private static Stream<Arguments> matcherParameters() {
+    return Stream.of(
+        Arguments.of(A.class, "a", false),
+        Arguments.of(B.class, "b", true),
+        Arguments.of(C.class, "c", false),
+        Arguments.of(F.class, "f", true),
+        Arguments.of(G.class, "g", false),
+        Arguments.of(TracedClass.class, "a", true),
+        Arguments.of(UntracedClass.class, "a", false),
+        Arguments.of(UntracedClass.class, "b", true));
+  }
+
   @ParameterizedTest
-  @CsvSource({
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A, a, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B, b, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.C, c, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F, f, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G, g, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass, a, true",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass, a, false",
-    "io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass, b, true"
-  })
-  void testMatcher(String className, String methodName, boolean expectedResult) throws Exception {
-    Class<?> clazz = Class.forName(className);
+  @MethodSource("matcherParameters")
+  void testMatcher(Class<?> clazz, String methodName, boolean expectedResult) throws Exception {
     MethodDescription argument =
         new MethodDescription.ForLoadedMethod(clazz.getDeclaredMethod(methodName));
 
@@ -50,6 +63,8 @@ class HasSuperMethodMatcherTest {
     boolean result = hasSuperMethod(none()).matches(method);
 
     assertThat(result).isFalse();
+    verify(method, times(1)).isConstructor();
+    verifyNoMoreInteractions(method);
   }
 
   @Test
@@ -65,5 +80,9 @@ class HasSuperMethodMatcherTest {
     boolean result = hasSuperMethod(none()).matches(method);
 
     assertThat(result).isFalse();
+    verify(method, times(1)).isConstructor();
+    verify(method, times(1)).asSignatureToken();
+    verify(method, times(1)).getDeclaringType();
+    verifyNoMoreInteractions(method);
   }
 }

@@ -6,9 +6,11 @@
 package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.javaagent.tooling.bytebuddy.LoggingFailSafeMatcher;
@@ -31,6 +33,8 @@ class LoggingFailSafeMatcherTest {
     boolean result = matcher.matches(new Object());
 
     assertThat(result).isEqualTo(match);
+    verify(mockMatcher, times(1)).matches(any());
+    verifyNoMoreInteractions(mockMatcher);
   }
 
   @Test
@@ -40,7 +44,8 @@ class LoggingFailSafeMatcherTest {
 
     LoggingFailSafeMatcher<Object> matcher = new LoggingFailSafeMatcher<>(mockMatcher, "test");
 
-    assertThatCode(() -> matcher.matches(new Object())).doesNotThrowAnyException();
     assertThat(matcher.matches(new Object())).isFalse();
+    verify(mockMatcher, times(1)).matches(any());
+    verifyNoMoreInteractions(mockMatcher);
   }
 }
