@@ -1,5 +1,7 @@
 ---
 rules:
+
+    # Topic and Queues level metrics
   - beans:
       - org.apache.activemq:type=Broker,brokerName=*,destinationType=Queue,destinationName=*
       - org.apache.activemq:type=Broker,brokerName=*,destinationType=Topic,destinationName=*
@@ -23,11 +25,31 @@ rules:
         unit: "{consumer}"
         type: updowncounter
         desc: The number of consumers subscribed to this destination
-      MemoryPercentUsage:
-        metric: memory.MemoryPercentUsage
-        unit: "%"
+      # activemq.memory.usage
+      MemoryUsageByteCount:
+        metric: memory.usage
+        unit: By
+        type: updowncounter
+        desc: The amount of used memory
+      # activemq.memory.limit
+      MemoryLimit:
+        metric: memory.limit
+        unit: By
+        type: updowncounter
+        desc: The amount of configured memory limit
+      # activemq.temp.utilization
+      TempUsagePercentUsage:
+        metric: temp.utilization
+        unit: "1"
         type: gauge
-        desc: The percentage of configured memory used
+        desc: The percentage of non-persistent storage used
+      # activemq.temp.limit
+      TempUsageLimit:
+        metric: temp.limit
+        unit: By
+        type: updowncounter
+        desc: The amount of configured non-persistent storage limit
+      # activemq.message.queue.size
       QueueSize:
         metric: message.queue.size
         unit: "{message}"
@@ -51,27 +73,36 @@ rules:
         unit: "{message}"
         type: counter
         desc: The number of messages acknowledged and removed from this destination
-      AverageEnqueueTime:
-        metric: message.AverageEnqueueTime
-        unit: ms
-        type: gauge
-        desc: The average time a message was held on this destination
 
+
+  # Broker-level metrics
   - bean: org.apache.activemq:type=Broker,brokerName=*
     metricAttribute:
-      broker: param(brokerName)
+      messaging.system: const(activemq)
+      activemq.broker.name: param(brokerName)
     prefix: activemq.
-    unit: "%"
-    type: gauge
     mapping:
+      # activemq.connection.count
       CurrentConnectionsCount:
-        metric: connections.CurrentConnectionsCount
+        metric: connection.count
         type: updowncounter
-        unit: "{connections}"
-        desc: The total number of current connections
-      StorePercentUsage:
-        metric: disc.StorePercentUsage
-        desc: The percentage of configured disk used for persistent messages
-      TempPercentUsage:
-        metric: disc.TempPercentUsage
-        desc: The percentage of configured disk used for non-persistent messages
+        unit: "{connection}"
+        desc: The number of active connections
+      # activemq.broker.memory.limit
+      MemoryPercentLimit:
+        metric: broker.temp.limit
+        type: updowncounter
+        unit: By
+        desc: The amount of configured broker non-persistent storage limit
+      # activemq.broker.store.limit
+      StorePercentLimit:
+        metric: broker.store.limit
+        type: updowncounter
+        unit: By
+        desc: The amount of configured broker persistent storage limit
+      # activemq.broker.temp.limit
+      TempPercentLimit:
+        metric: broker.temp.limit
+        type: updowncounter
+        unit: By
+        desc: The amount of configured broker non-persistent storage limit

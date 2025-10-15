@@ -59,6 +59,9 @@ public class ActiveMqTest extends TargetSystemTest {
     AttributeMatcherGroup topicAttributes =
         attributeGroup(messagingSystem, destinationName, topic, broker);
 
+    AttributeMatcherGroup brokerAttributes =
+        attributeGroup(messagingSystem, broker);
+
     return MetricsVerifier.create()
         // consumers and producers
         .add("activemq.producer.count", metric -> metric.isUpDownCounter()
@@ -74,17 +77,43 @@ public class ActiveMqTest extends TargetSystemTest {
             .hasUnit("{message}")
             .hasDataPointsWithAttributes(topicAttributes)
             .hasDescription("The current number of messages waiting to be consumed"))
-        .add("activemq.message.expired",metric -> metric.isCounter()
+        .add("activemq.message.expired", metric -> metric.isCounter()
             .hasUnit("{message}")
             .hasDataPointsWithAttributes(topicAttributes)
             .hasDescription("The number of messages not delivered because they expired"))
-        .add("activemq.message.enqueued",metric -> metric.isCounter()
+        .add("activemq.message.enqueued", metric -> metric.isCounter()
             .hasUnit("{message}")
             .hasDataPointsWithAttributes(topicAttributes)
             .hasDescription("The number of messages sent to this destination"))
-        .add("activemq.message.dequeued",metric -> metric.isCounter()
+        .add("activemq.message.dequeued", metric -> metric.isCounter()
             .hasUnit("{message}")
             .hasDataPointsWithAttributes(topicAttributes)
-            .hasDescription("The number of messages acknowledged and removed from this destination"));
+            .hasDescription(
+                "The number of messages acknowledged and removed from this destination"))
+        // destination memory/temp usage and limits
+        .add("activemq.memory.usage", metric -> metric.isUpDownCounter()
+            .hasUnit("By")
+            .hasDataPointsWithAttributes(topicAttributes)
+            .hasDescription("The amount of used memory"))
+        .add("activemq.memory.limit", metric -> metric.isUpDownCounter()
+            .hasUnit("By")
+            .hasDataPointsWithAttributes(topicAttributes)
+            .hasDescription("The amount of configured memory limit"))
+        .add("activemq.temp.utilization", metric -> metric.isGauge()
+            .hasUnit("1")
+            .hasDataPointsWithAttributes(topicAttributes)
+            .hasDescription("The percentage of non-persistent storage used"))
+        .add("activemq.temp.limit", metric -> metric.isUpDownCounter()
+            .hasUnit("By")
+            .hasDataPointsWithAttributes(topicAttributes)
+            .hasDescription("The amount of configured non-persistent storage limit"))
+        // broker metrics
+        .add("activemq.connection.count", metric ->metric.isUpDownCounter()
+            .hasUnit("{connection}")
+            .hasDataPointsWithAttributes(brokerAttributes)
+            .hasDescription("The number of active connections")
+        )
+        ;
+        // TODO broker memory/temp/storage usage and limits
   }
 }
