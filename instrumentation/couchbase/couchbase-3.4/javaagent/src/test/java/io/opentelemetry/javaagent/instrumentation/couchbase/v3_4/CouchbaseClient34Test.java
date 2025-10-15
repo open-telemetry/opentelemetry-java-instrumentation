@@ -75,9 +75,7 @@ class CouchbaseClient34Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasKind(CLIENT)
-                      .hasName("get")
-                      .hasStatus(StatusData.error());
+                  span.hasKind(CLIENT).hasName("get").hasStatus(StatusData.error());
                 },
                 span -> span.hasName("dispatch_to_server")));
   }
