@@ -33,7 +33,7 @@ dependencies {
 
   library("com.couchbase.client:java-client:3.4.0")
 
-  testImplementation("org.testcontainers:couchbase")
+  testImplementation("org.testcontainers:testcontainers-couchbase")
 }
 
 tasks {
