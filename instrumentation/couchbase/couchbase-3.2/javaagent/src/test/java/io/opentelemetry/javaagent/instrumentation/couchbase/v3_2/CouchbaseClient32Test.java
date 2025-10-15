@@ -76,7 +76,6 @@ class CouchbaseClient32Test {
             trace.hasSpansSatisfyingExactly(
                 span -> {
                   span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                  
                       .hasName("get");
                   if (Boolean.getBoolean("testLatestDeps")) {
                     span.hasStatus(StatusData.error());

@@ -34,6 +34,8 @@ dependencies {
   library("com.couchbase.client:java-client:3.2.0")
 
   testImplementation("org.testcontainers:testcontainers-couchbase")
+
+  latestDepTestLibrary("com.couchbase.client:java-client:3.3.+") // see couchbase-3.4 module
 }
 
 tasks {
