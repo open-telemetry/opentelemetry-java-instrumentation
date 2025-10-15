@@ -15,6 +15,18 @@ import java.util.concurrent.Phaser;
 import org.junit.jupiter.api.Test;
 
 class AgentClassLoaderTest {
+  private static final Method getClassLoadingLockMethod;
+
+  static {
+    // Use reflection to access protected getClassLoadingLock method
+    try {
+      getClassLoadingLockMethod =
+          ClassLoader.class.getDeclaredMethod("getClassLoadingLock", String.class);
+      getClassLoadingLockMethod.setAccessible(true);
+    } catch (NoSuchMethodException exception) {
+      throw new IllegalStateException(exception);
+    }
+  }
 
   @Test
   void agentClassloaderDoesNotLockClassloadingAroundInstance() throws Exception {
@@ -36,14 +48,9 @@ class AgentClassLoaderTest {
       Thread thread1 =
           new Thread(
               () -> {
-                try {
-                  Object lock1 = getClassLoadingLockMethod.invoke(loader, className1);
-                  synchronized (lock1) {
-                    threadHoldLockPhase.arrive();
-                    acquireLockFromMainThreadPhase.arriveAndAwaitAdvance();
-                  }
-                } catch (Exception e) {
-                  throw new RuntimeException(e);
+                synchronized (getClassLoadingLock(loader, className1)) {
+                  threadHoldLockPhase.arrive();
+                  acquireLockFromMainThreadPhase.arriveAndAwaitAdvance();
                 }
               });
       thread1.start();
@@ -51,14 +58,9 @@ class AgentClassLoaderTest {
       Thread thread2 =
           new Thread(
               () -> {
-                try {
-                  threadHoldLockPhase.arriveAndAwaitAdvance();
-                  Object lock2 = getClassLoadingLockMethod.invoke(loader, className2);
-                  synchronized (lock2) {
-                    acquireLockFromMainThreadPhase.arrive();
-                  }
-                } catch (Exception e) {
-                  throw new RuntimeException(e);
+                threadHoldLockPhase.arriveAndAwaitAdvance();
+                synchronized (getClassLoadingLock(loader, className2)) {
+                  acquireLockFromMainThreadPhase.arrive();
                 }
               });
       thread2.start();
@@ -68,6 +70,14 @@ class AgentClassLoaderTest {
       boolean applicationDidNotDeadlock = true;
 
       assertThat(applicationDidNotDeadlock).isTrue();
+    }
+  }
+
+  private static Object getClassLoadingLock(ClassLoader classLoader, String className) {
+    try {
+      return getClassLoadingLockMethod.invoke(classLoader, className);
+    } catch (Exception exception) {
+      throw new IllegalStateException(exception);
     }
   }
 
