@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.couchbase.client")
     module.set("java-client")
-    versions.set("[3.2.0,3.4.0)")
+    versions.set("[3.4.0,)")
     // these versions were released as ".bundle" instead of ".jar"
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
@@ -15,10 +15,10 @@ muzzle {
 
 sourceSets {
   main {
-    val shadedDep = project(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
+    val shadedDep = project(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
     output.dir(
       shadedDep.file("build/extracted/shadow"),
-      "builtBy" to ":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded:extractShadowJar",
+      "builtBy" to ":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded:extractShadowJar",
     )
   }
 }
@@ -26,14 +26,14 @@ sourceSets {
 dependencies {
   compileOnly(
     project(
-      path = ":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded",
+      path = ":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded",
       configuration = "shadow",
     ),
   )
 
-  library("com.couchbase.client:java-client:3.2.0")
+  library("com.couchbase.client:java-client:3.4.0")
 
-  testImplementation("org.testcontainers:testcontainers-couchbase")
+  testImplementation("org.testcontainers:couchbase")
 }
 
 tasks {
