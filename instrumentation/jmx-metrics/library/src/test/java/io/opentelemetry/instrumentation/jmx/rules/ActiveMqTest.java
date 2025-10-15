@@ -39,7 +39,7 @@ public class ActiveMqTest extends TargetSystemTest {
         new GenericContainer<>(
                 new ImageFromDockerfile()
                     .withDockerfileFromBuilder(
-                        builder -> builder.from("apache/activemq-classic:5.18.6").build()))
+                        builder -> builder.from("apache/activemq-classic:6.1.7").build()))
             .withEnv("JAVA_TOOL_OPTIONS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(ACTIVEMQ_PORT)
