@@ -102,10 +102,7 @@ class ElasticJobTest {
                           .hasName("HTTP")
                           .hasAttributesSatisfyingExactly(
                               elasticJobBaseAttributes(
-                                  "javaHttpJob",
-                                  0L,
-                                  3L,
-                                  "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
+                                  "javaHttpJob", 0L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -113,10 +110,7 @@ class ElasticJobTest {
                           .hasName("HTTP")
                           .hasAttributesSatisfyingExactly(
                               elasticJobBaseAttributes(
-                                  "javaHttpJob",
-                                  1L,
-                                  3L,
-                                  "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
+                                  "javaHttpJob", 1L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -124,10 +118,7 @@ class ElasticJobTest {
                           .hasName("HTTP")
                           .hasAttributesSatisfyingExactly(
                               elasticJobBaseAttributes(
-                                  "javaHttpJob",
-                                  2L,
-                                  3L,
-                                  "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))));
+                                  "javaHttpJob", 2L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))));
     } finally {
       bootstrap.shutdown();
     }
@@ -240,8 +231,7 @@ class ElasticJobTest {
                       span.hasKind(SpanKind.INTERNAL)
                           .hasName("SCRIPT")
                           .hasAttributesSatisfyingExactly(
-                              elasticJobBaseAttributes(
-                                  "scriptElasticJob", 0L, 1L, "{0=null}"))));
+                              elasticJobBaseAttributes("scriptElasticJob", 0L, 1L, "{0=null}"))));
     } finally {
       bootstrap.shutdown();
     }
@@ -347,14 +337,12 @@ class ElasticJobTest {
     assertions.add(equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName));
     assertions.add(equalTo(longKey("scheduling.apache-elasticjob.item"), item));
     assertions.add(
-        equalTo(
-            longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount));
+        equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount));
     assertions.add(
         equalTo(stringKey("scheduling.apache-elasticjob.sharding.item.parameters"), parameters));
     assertions.add(
         satisfies(
-            stringKey("scheduling.apache-elasticjob.task.id"),
-            taskId -> taskId.contains(jobName)));
+            stringKey("scheduling.apache-elasticjob.task.id"), taskId -> taskId.contains(jobName)));
     return assertions;
   }
 
