@@ -33,12 +33,13 @@ dependencies {
 
   library("com.couchbase.client:java-client:3.4.0")
 
+  testImplementation("org.testcontainers:testcontainers-couchbase")
+
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
-  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
+  // TODO testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
   testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
-  testImplementation("org.testcontainers:testcontainers-couchbase")
 }
 
 tasks {
