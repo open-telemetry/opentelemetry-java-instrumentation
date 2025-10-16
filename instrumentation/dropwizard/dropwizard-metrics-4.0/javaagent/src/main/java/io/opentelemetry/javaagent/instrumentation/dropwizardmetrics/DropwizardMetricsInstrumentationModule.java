@@ -12,12 +12,14 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class DropwizardMetricsInstrumentationModule extends InstrumentationModule {
+public class DropwizardMetricsInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public DropwizardMetricsInstrumentationModule() {
     super("dropwizard-metrics", "dropwizard-metrics-4.0");
@@ -45,5 +47,10 @@ public class DropwizardMetricsInstrumentationModule extends InstrumentationModul
         new HistogramInstrumentation(),
         new MeterInstrumentation(),
         new TimerInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
