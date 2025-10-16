@@ -70,9 +70,9 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
       Scope scope = context.makeCurrent();
       Request.Builder requestWithPropagation = originalReturnValue.newBuilder();
       inject(context, requestWithPropagation);
-      Request returnValue = requestWithPropagation.build();
-      CurrentState.set(parentContext, context, scope, originalReturnValue);
-      return returnValue;
+      Request request = requestWithPropagation.build();
+      CurrentState.set(parentContext, context, scope, request);
+      return request;
     }
   }
 
@@ -101,51 +101,33 @@ public class ApiClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExecuteAsyncAdvice {
 
-    public static class AdviceScope {
-      private final Scope scope;
-      private final CurrentState current;
-
-      private AdviceScope(CurrentState current, Scope scope) {
-        this.current = current;
-        this.scope = scope;
-      }
-
-      public static AdviceScope start(CurrentState current) {
-        return new AdviceScope(current, current.getContext().makeCurrent());
-      }
-
-      public ApiCallback<?> wrapCallBack(ApiCallback<?> callback) {
-        return new TracingApiCallback<>(
-            callback, current.getParentContext(), current.getContext(), current.getRequest());
-      }
-
-      public void end(@Nullable Throwable throwable) {
-        scope.close();
-        if (throwable != null) {
-          instrumenter().end(current.getContext(), current.getRequest(), null, throwable);
-        }
-        // else span will be ended in the TracingApiCallback
-      }
-    }
-
     @AssignReturned.ToArguments(@ToArgument(value = 2, index = 1))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] onEnter(
-        @Advice.Argument(0) Call httpCall, @Advice.Argument(2) ApiCallback<?> callback) {
+        @Advice.Argument(0) Call httpCall, @Advice.Argument(2) ApiCallback<?> originalCallback) {
       CurrentState current = CurrentState.remove();
       if (current == null) {
-        return new Object[] {null, callback};
+        return new Object[] {null, originalCallback};
       }
-      AdviceScope adviceScope = AdviceScope.start(current);
-      return new Object[] {adviceScope, adviceScope.wrapCallBack(callback)};
+      ApiCallback<?> callback =
+          new TracingApiCallback<>(
+              originalCallback,
+              current.getParentContext(),
+              current.getContext(),
+              current.getRequest());
+      return new Object[] {current, callback};
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter Object[] enterResult) {
-      AdviceScope adviceScope = (AdviceScope) enterResult[0];
-      if (adviceScope != null) {
-        adviceScope.end(throwable);
+      CurrentState current = (CurrentState) enterResult[0];
+      if (current != null) {
+        current.getScope().close();
+        if (throwable != null) {
+          instrumenter().end(current.getContext(), current.getRequest(), null, throwable);
+        }
+        // else span will be ended in the TracingApiCallback
       }
     }
   }
