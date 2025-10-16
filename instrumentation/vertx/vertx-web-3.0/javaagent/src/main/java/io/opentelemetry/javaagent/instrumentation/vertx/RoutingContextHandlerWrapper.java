@@ -18,30 +18,35 @@ import java.lang.reflect.UndeclaredThrowableException;
 import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 
-/** This is used to wrap Vert.x Handlers to provide nice user-friendly SERVER span names */
+/**
+ * Wraps Vert.x {@link RoutingContext} handlers to ensure proper propagation of the OpenTelemetry
+ * context and provide nice user-friendly SERVER span names.
+ */
 public final class RoutingContextHandlerWrapper implements Handler<RoutingContext> {
 
   private final Handler<RoutingContext> handler;
+  private final Context parentContext; // ✅ capture once when wrapper is created
 
   public RoutingContextHandlerWrapper(Handler<RoutingContext> handler) {
     this.handler = handler;
+    this.parentContext = Context.current(); // ✅ save the active context at registration time
   }
 
   @Override
   public void handle(RoutingContext context) {
-    Context otelContext = Context.current();
-    // remember currently set route so it could be restored
-    RoutingContextUtil.setRoute(context, RouteHolder.get(otelContext));
-    String route = getRoute(otelContext, context);
-    if (route != null && route.endsWith("/")) {
-      route = route.substring(0, route.length() - 1);
-    }
-    HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
-
-    try (Scope ignore = RouteHolder.init(otelContext, route).makeCurrent()) {
+    try (Scope scope = parentContext.makeCurrent()) {
+      // restore any route information stored previously
+      RoutingContextUtil.setRoute(context, RouteHolder.get(parentContext));
+      String route = getRoute(parentContext, context);
+      if (route != null && route.endsWith("/")) {
+        route = route.substring(0, route.length() - 1);
+      }
+      HttpServerRoute.update(parentContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
+//    try (Scope ignore = RouteHolder.init(parentContext, route).makeCurrent()) {
       handler.handle(context);
+
     } catch (Throwable throwable) {
-      Span serverSpan = LocalRootSpan.fromContextOrNull(otelContext);
+      Span serverSpan = LocalRootSpan.fromContextOrNull(parentContext);
       if (serverSpan != null) {
         serverSpan.recordException(unwrapThrowable(throwable));
       }
@@ -58,9 +63,9 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
   private static Throwable unwrapThrowable(Throwable throwable) {
     if (throwable.getCause() != null
         && (throwable instanceof ExecutionException
-            || throwable instanceof CompletionException
-            || throwable instanceof InvocationTargetException
-            || throwable instanceof UndeclaredThrowableException)) {
+        || throwable instanceof CompletionException
+        || throwable instanceof InvocationTargetException
+        || throwable instanceof UndeclaredThrowableException)) {
       return unwrapThrowable(throwable.getCause());
     }
     return throwable;

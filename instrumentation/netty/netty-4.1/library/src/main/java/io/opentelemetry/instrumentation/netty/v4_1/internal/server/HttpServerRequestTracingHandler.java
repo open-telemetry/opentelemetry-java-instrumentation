@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
+import io.vertx.core.Vertx;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -49,12 +50,31 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
 
     Context parentContext = Context.current();
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
+
+
+    HttpRequest httpRequest = (HttpRequest) msg;
+
     if (!instrumenter.shouldStart(parentContext, request)) {
       super.channelRead(ctx, msg);
       return;
     }
 
     Context context = instrumenter.start(parentContext, request);
+
+    io.opentelemetry.api.trace.Span contextSpan = io.opentelemetry.api.trace.Span.fromContext(context);
+    String traceId = contextSpan.getSpanContext().getTraceId();
+
+    // Inject the traceId as header
+    httpRequest.headers().set("otel.injected_trace_context", traceId);
+
+    io.vertx.core.Context vertxContext = Vertx.currentContext();
+
+    if (vertxContext != null) {
+      // Store the current OpenTelemetry context in Vertx context using the traceId as key
+      vertxContext.put("otel.context." + traceId, context);
+      vertxContext.put("otel.context", context);
+    }
+
     serverContexts.addLast(ServerContext.create(context, request));
 
     try (Scope ignored = context.makeCurrent()) {

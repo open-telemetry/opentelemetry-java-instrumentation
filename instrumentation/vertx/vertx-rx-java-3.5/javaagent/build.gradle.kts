@@ -17,6 +17,10 @@ dependencies {
   compileOnly("io.vertx:vertx-web:$vertxVersion")
   compileOnly("io.vertx:vertx-rx-java2:$vertxVersion")
 
+  // Vertx Core (HTTP Server, Context Management)
+  compileOnly("io.vertx:vertx-core:3.9.2")
+  compileOnly("io.vertx:vertx-codegen:3.9.2")
+
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:rxjava:rxjava-2.0:javaagent"))

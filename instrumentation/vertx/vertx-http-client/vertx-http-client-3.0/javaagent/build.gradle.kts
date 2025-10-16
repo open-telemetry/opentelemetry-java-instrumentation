@@ -16,7 +16,7 @@ dependencies {
 
   // vertx-codegen and vertx-docgen dependencies are needed for Xlint's annotation checking
   library("io.vertx:vertx-codegen:3.0.0")
-  testLibrary("io.vertx:vertx-docgen:3.0.0")
+  library("io.vertx:vertx-docgen:3.0.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
