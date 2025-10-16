@@ -119,9 +119,6 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Object request,
         @Advice.Argument(1) Endpoint<Object, Object, Object> endpoint) {
       AdviceScope adviceScope = AdviceScope.start(request, endpoint);
-      if (adviceScope == null) {
-        return new Object[] {null};
-      }
       return new Object[] {adviceScope};
     }
 
