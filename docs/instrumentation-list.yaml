@@ -5149,6 +5149,11 @@ libraries:
         and ROLLBACK operations.
       type: boolean
       default: false
+    - name: otel.instrumentation.jdbc.experimental.sqlcommenter.enabled
+      description: |
+        Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling.
+      type: boolean
+      default: false
     - name: otel.instrumentation.common.peer-service-mapping
       description: Used to specify a mapping from host names or IP addresses to peer
         services.
