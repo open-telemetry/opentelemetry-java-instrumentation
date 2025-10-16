@@ -25,10 +25,14 @@
 
 ### 🌟 New javaagent instrumentation
 
-- Add Helidon Instrumentation
+- Add Helidon instrumentation
   ([#13776](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13776))
+- Add NATS instrumentation
+  ([#13999](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13999))
 - OpenSearch Transport v3.0 Implementation
   ([#14823](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14823))
+- Add Kafka Connect API instrumentation
+  ([#14478](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14478))
 
 ### 🌟 New library instrumentation
 
@@ -73,12 +77,12 @@
   ([#14882](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14882))
 - Add `code.namespace` and `code.function` attributes to Grails controller spans
   ([#14885](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14885))
-- Expose trace_id and span_id MDC values as log record attributes by default
-  ([#14904](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14904))
 - Support Hibernate 7.2.0.CR1
   ([#14921](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14921))
 - Support capturing Logstash StructuredArguments as log record attributes
   ([#14959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14959))
+- Add gRPC request/response size metrics
+  ([#14342](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14342))
 
 ### 🛠️ Bug fixes
 
