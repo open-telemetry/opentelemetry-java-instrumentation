@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "micrometer", enabledByDefault = false)
-@AutoConfigureAfter(MetricsAutoConfiguration.class)
+@AutoConfigureAfter({MetricsAutoConfiguration.class, OpenTelemetryAutoConfiguration.class})
 @AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass(MeterRegistry.class)
