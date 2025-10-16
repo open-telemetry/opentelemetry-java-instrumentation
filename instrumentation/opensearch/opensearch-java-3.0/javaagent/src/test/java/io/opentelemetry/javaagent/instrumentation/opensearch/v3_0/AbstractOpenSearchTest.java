@@ -64,8 +64,10 @@ abstract class AbstractOpenSearchTest {
     opensearch =
         new OpensearchContainer(DockerImageName.parse("opensearchproject/opensearch:1.3.6"))
             .withSecurityEnabled();
+    // limit memory usage and disable Log4j JMX to avoid cgroup detection issues in containers
     opensearch.withEnv(
-        "OPENSEARCH_JAVA_OPTS", "-Xmx256m -Xms256m -Dcom.sun.management.jmxremote=false");
+        "OPENSEARCH_JAVA_OPTS",
+        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
     openSearchClient = buildOpenSearchClient();
