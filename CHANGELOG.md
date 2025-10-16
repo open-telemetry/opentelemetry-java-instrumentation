@@ -96,6 +96,8 @@
   ([#14841](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14841))
 - Remove span status description from Lettuce 5.1 instrumentation
   ([#14886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14886))
+- Fix Spring Boot autoconfiguration ordering for micrometer bridge
+  ([#15011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15011))
 
 ## Version 2.20.1 (2025-09-22)
 
