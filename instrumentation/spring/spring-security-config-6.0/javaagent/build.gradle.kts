@@ -23,7 +23,11 @@ dependencies {
 
   testLibrary("org.springframework:spring-test:6.0.0")
   testLibrary("org.springframework:spring-context:6.0.0")
-  testLibrary("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  // not using testLibrary because of missing parent POM in 6.2.0-M1, switch back to testLibrary
+  // when a new version is released
+  // testLibrary("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
 }
 
 otelJava {
