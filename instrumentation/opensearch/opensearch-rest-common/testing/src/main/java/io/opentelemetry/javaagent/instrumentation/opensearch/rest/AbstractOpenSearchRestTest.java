@@ -60,7 +60,8 @@ public abstract class AbstractOpenSearchRestTest {
         new OpensearchContainer(DockerImageName.parse("opensearchproject/opensearch:1.3.6"))
             .withSecurityEnabled();
     // limit memory usage
-    opensearch.withEnv("OPENSEARCH_JAVA_OPTS", "-Xmx256m -Xms256m");
+    opensearch.withEnv(
+        "OPENSEARCH_JAVA_OPTS", "-Xmx256m -Xms256m -Dcom.sun.management.jmxremote=false");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
