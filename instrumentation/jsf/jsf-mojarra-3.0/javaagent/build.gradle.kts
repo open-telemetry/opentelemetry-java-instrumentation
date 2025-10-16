@@ -22,7 +22,6 @@ dependencies {
   // library("jakarta.el:jakarta.el-api:4.0.0")
   compileOnly("jakarta.el:jakarta.el-api:4.0.0")
   testImplementation("jakarta.el:jakarta.el-api:4.0.0")
-  latestDepTestLibrary("jakarta.el:jakarta.el-api:5.+") // documented limitation
   library("jakarta.faces:jakarta.faces-api:3.0.0")
   testLibrary("org.glassfish:jakarta.faces:3.0.4")
 
