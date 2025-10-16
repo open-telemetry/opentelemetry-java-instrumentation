@@ -41,16 +41,6 @@ public class Utils {
     return className.replace('.', '/') + ".class";
   }
 
-  /** com/foo/Bar to com.foo.Bar */
-  public static String getClassName(String internalName) {
-    return internalName.replace('/', '.');
-  }
-
-  /** com.foo.Bar to com/foo/Bar */
-  public static String getInternalName(Class<?> clazz) {
-    return clazz.getName().replace('.', '/');
-  }
-
   /**
    * Get method definition for given {@link TypeDefinition} and method name.
    *

@@ -9,8 +9,11 @@ import static java.util.Collections.emptyList;
 
 import io.grpc.ClientInterceptor;
 import io.grpc.Context;
+import io.grpc.ManagedChannelBuilder;
+import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
@@ -19,6 +22,13 @@ import java.util.concurrent.atomic.AtomicReference;
 
 // Holds singleton references.
 public final class GrpcSingletons {
+
+  public static final VirtualField<ManagedChannelBuilder<?>, Boolean>
+      MANAGED_CHANNEL_BUILDER_INSTRUMENTED =
+          VirtualField.find(ManagedChannelBuilder.class, Boolean.class);
+
+  public static final VirtualField<ServerBuilder<?>, Boolean> SERVER_BUILDER_INSTRUMENTED =
+      VirtualField.find(ServerBuilder.class, Boolean.class);
 
   public static final ClientInterceptor CLIENT_INTERCEPTOR;
 
