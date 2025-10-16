@@ -22,6 +22,7 @@ dependencies {
   // library("jakarta.el:jakarta.el-api:4.0.0")
   compileOnly("jakarta.el:jakarta.el-api:4.0.0")
   testImplementation("jakarta.el:jakarta.el-api:4.0.0")
+  latestDepTestLibrary("jakarta.el:jakarta.el-api:5.+") // documented limitation
   library("org.apache.myfaces.core:myfaces-api:3.0.2")
   testLibrary("org.apache.myfaces.core:myfaces-impl:3.0.2")
 
