@@ -35,4 +35,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

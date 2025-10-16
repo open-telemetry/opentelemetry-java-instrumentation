@@ -5484,6 +5484,35 @@ libraries:
         Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
+  - name: kafka-connect-2.6
+    description: This instrumentation enables messaging spans for Kafka Connect sink
+      tasks.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://kafka.apache.org/documentation/#connect
+    source_path: instrumentation/kafka/kafka-connect-2.6
+    scope:
+      name: io.opentelemetry.kafka-connect-2.6
+    target_versions:
+      javaagent:
+      - org.apache.kafka:connect-api:[2.6.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: thread.id
+          type: LONG
+        - name: thread.name
+          type: STRING
   - name: kafka-streams-0.11
     library_link: https://kafka.apache.org/documentation/streams/
     source_path: instrumentation/kafka/kafka-streams-0.11
@@ -7611,9 +7640,9 @@ libraries:
       - org.springframework.security:spring-security-config:[6.0.0,]
       library:
       - io.projectreactor:reactor-core:3.5.0
+      - jakarta.servlet:jakarta.servlet-api:[6.0.0,6.1.0)
       - org.springframework.security:spring-security-config:6.0.0
       - org.springframework:spring-web:6.0.0
-      - jakarta.servlet:jakarta.servlet-api:6.0.0
       - org.springframework.security:spring-security-web:6.0.0
     configurations:
     - name: otel.instrumentation.common.enduser.id.enabled

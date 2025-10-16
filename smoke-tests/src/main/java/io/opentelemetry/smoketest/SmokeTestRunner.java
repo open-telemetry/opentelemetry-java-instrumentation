@@ -7,9 +7,13 @@ package io.opentelemetry.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.internal.MetaDataCollector;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.file.Paths;
 import java.util.List;
 
 /**
@@ -38,7 +42,19 @@ public class SmokeTestRunner extends InstrumentationTestRunner {
   public void beforeTestClass() {}
 
   @Override
-  public void afterTestClass() {}
+  public void afterTestClass() throws IOException {
+    // Generates files in a `.telemetry` directory within the instrumentation module with all
+    // captured emitted metadata to be used by the instrumentation-docs Doc generator.
+    if (Boolean.getBoolean("collectMetadata")) {
+      URL resource = this.getClass().getClassLoader().getResource("");
+      if (resource == null) {
+        return;
+      }
+      String path = Paths.get(resource.getPath()).toString();
+
+      MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
+    }
+  }
 
   @Override
   public void clearAllExportedData() {
