@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   api(project(":testing-common"))
-  implementation("org.testcontainers:oracle-free")
+  implementation("org.testcontainers:testcontainers-oracle-free")
 
   compileOnly("com.oracle.database.jdbc:ucp:11.2.0.4")
 }

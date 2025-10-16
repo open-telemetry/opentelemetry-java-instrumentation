@@ -16,8 +16,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
-import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.mongodb.MongoDBContainer;
 
 /** Spring has a test container integration, but that doesn't work for Spring Boot 2 */
 public class AbstractJvmMongodbSpringStarterSmokeTest
