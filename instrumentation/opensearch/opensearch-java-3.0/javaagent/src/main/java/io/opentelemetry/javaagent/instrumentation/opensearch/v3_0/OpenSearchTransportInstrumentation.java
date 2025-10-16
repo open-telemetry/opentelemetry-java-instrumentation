@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.opensearch.v3_0.OpenSearchSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -62,7 +61,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(Object request, Endpoint<Object, Object, Object> endpoint) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       OpenSearchRequest otelRequest =
           OpenSearchRequest.create(endpoint.method(request), endpoint.requestUrl(request));
       if (!instrumenter().shouldStart(parentContext, otelRequest)) {
@@ -76,12 +75,12 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
       return future.whenComplete(new OpenSearchResponseHandler(context, otelRequest));
     }
 
-    public void endWithResponse(@Nullable Throwable throwable) {
+    public void end(@Nullable Throwable throwable) {
       scope.close();
       instrumenter().end(context, otelRequest, null, throwable);
     }
 
-    public void endWithFuture(@Nullable Throwable throwable) {
+    public void endAsync(@Nullable Throwable throwable) {
       scope.close();
       if (throwable != null) {
         instrumenter().end(context, otelRequest, null, throwable);
@@ -102,11 +101,10 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Return @Nullable Object response,
         @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
       if (adviceScope != null) {
-        adviceScope.endWithResponse(throwable);
+        adviceScope.end(throwable);
       }
     }
   }
@@ -130,7 +128,7 @@ public class OpenSearchTransportInstrumentation implements TypeInstrumentation {
         @Advice.Enter Object[] enterResult) {
       AdviceScope adviceScope = (AdviceScope) enterResult[0];
       if (adviceScope != null) {
-        adviceScope.endWithFuture(throwable);
+        adviceScope.endAsync(throwable);
         return adviceScope.wrapFuture(future);
       }
       return future;
