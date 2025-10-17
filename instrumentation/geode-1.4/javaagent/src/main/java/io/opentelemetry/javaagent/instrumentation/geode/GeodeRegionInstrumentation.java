@@ -97,12 +97,6 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SimpleAdvice {
 
-    public static class AdviceLocals {
-      public GeodeRequest request;
-      public Context context;
-      public Scope scope;
-    }
-
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(
