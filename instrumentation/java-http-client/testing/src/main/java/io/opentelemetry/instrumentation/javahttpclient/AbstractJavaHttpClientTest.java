@@ -179,8 +179,7 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, method),
                             equalTo(
                                 ErrorAttributes.ERROR_TYPE, CancellationException.class.getName()),
-                            equalTo(
-                                PeerIncubatingAttributes.PEER_SERVICE, "test-peer-service")),
+                            equalTo(PeerIncubatingAttributes.PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
