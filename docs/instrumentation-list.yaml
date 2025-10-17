@@ -2049,6 +2049,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.14
     scope:
       name: io.opentelemetry.azure-core-1.14
@@ -2059,6 +2062,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.19
     scope:
       name: io.opentelemetry.azure-core-1.19
@@ -2069,6 +2075,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.36
     scope:
       name: io.opentelemetry.azure-core-1.36
@@ -2079,6 +2088,8 @@ libraries:
   - name: c3p0-0.9
     description: The c3p0 instrumentation provides connection pool metrics for c3p0
       data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/swaldman/c3p0
     source_path: instrumentation/c3p0-0.9
     scope:
