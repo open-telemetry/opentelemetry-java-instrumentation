@@ -18,15 +18,13 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest<Integer> {
         .image(
             jdk ->
                 String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk%s-20251009.18389598604",
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk%s-20251017.18602659887",
                     jdk))
         .env("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true");
   }
 
   @ParameterizedTest
-  // restore after image update
-  // @ValueSource(ints = {8, 11, 17, 21}) // Security Manager removed in Java 25
-  @ValueSource(ints = {8, 21}) // Security Manager removed in Java 25
+  @ValueSource(ints = {8, 11, 17, 21}) // Security Manager removed in Java 25
   void securityManagerSmokeTest(int jdk) {
     start(jdk);
     testing.waitAndAssertTraces(
