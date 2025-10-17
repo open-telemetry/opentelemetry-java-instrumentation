@@ -65,8 +65,10 @@ and deadlocks.
 - Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/release.yml).
   - Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
-  - This workflow will publish the artifacts to maven central and will publish a GitHub release
-    with release notes based on the change log and with the javaagent jar attached.
+  - This workflow will:
+    - Publish the artifacts to Maven Central
+    - Generate [GitHub Artifact Attestations](https://docs.github.com/en/actions/security-for-github-actions/using-artifact-attestations) for the Java agent jar and SBOM bundle
+    - Publish a GitHub release with release notes, Java agent jar, and SBOM bundle
   - Review and merge the pull request that it creates for updating the apidiff baseline version
     to the newly released version (note that this pull request won't be made until after the release
     is available in maven central).
