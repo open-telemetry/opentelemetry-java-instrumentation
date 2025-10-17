@@ -40,10 +40,15 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.elasticsearch.ElasticsearchContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class ElasticsearchClientTest {
+  private static final Logger logger = LoggerFactory.getLogger(ElasticsearchClientTest.class);
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -57,9 +62,10 @@ class ElasticsearchClientTest {
   @BeforeAll
   static void setUp() {
     elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.2");
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.28");
     // limit memory usage
     elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
+    elasticsearch.withLogConsumer(new Slf4jLogConsumer(logger));
     elasticsearch.start();
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
@@ -87,7 +93,7 @@ class ElasticsearchClientTest {
   @Test
   void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
-    assertThat(response.version().number()).isEqualTo("7.17.2");
+    assertThat(response.version().number()).isEqualTo("7.17.28");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -188,7 +194,7 @@ class ElasticsearchClientTest {
     //noinspection ResultOfMethodCallIgnored
     countDownLatch.await(10, TimeUnit.SECONDS);
 
-    assertThat(request.getResponse().version().number()).isEqualTo("7.17.2");
+    assertThat(request.getResponse().version().number()).isEqualTo("7.17.28");
 
     testing.waitAndAssertTraces(
         trace ->
