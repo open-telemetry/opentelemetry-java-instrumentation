@@ -63,9 +63,9 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
   }
 
   public static class AdviceScope {
-    public GeodeRequest request;
-    public Context context;
-    public Scope scope;
+    private final GeodeRequest request;
+    private final Context context;
+    private final Scope scope;
 
     public AdviceScope(GeodeRequest request, Context context, Scope scope) {
       this.request = request;
