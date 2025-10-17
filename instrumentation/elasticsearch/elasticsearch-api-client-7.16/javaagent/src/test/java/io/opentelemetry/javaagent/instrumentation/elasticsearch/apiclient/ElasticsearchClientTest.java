@@ -62,11 +62,9 @@ class ElasticsearchClientTest {
   @BeforeAll
   static void setUp() {
     elasticsearch =
-        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.2");
+        new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch:7.17.28");
     // limit memory usage
-    elasticsearch.withEnv(
-        "ES_JAVA_OPTS",
-        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
+    elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
     elasticsearch.withLogConsumer(new Slf4jLogConsumer(logger));
     elasticsearch.start();
 
@@ -95,7 +93,7 @@ class ElasticsearchClientTest {
   @Test
   void elasticsearchStatus() throws IOException {
     InfoResponse response = client.info();
-    assertThat(response.version().number()).isEqualTo("7.17.2");
+    assertThat(response.version().number()).isEqualTo("7.17.28");
 
     testing.waitAndAssertTraces(
         trace ->
@@ -196,7 +194,7 @@ class ElasticsearchClientTest {
     //noinspection ResultOfMethodCallIgnored
     countDownLatch.await(10, TimeUnit.SECONDS);
 
-    assertThat(request.getResponse().version().number()).isEqualTo("7.17.2");
+    assertThat(request.getResponse().version().number()).isEqualTo("7.17.28");
 
     testing.waitAndAssertTraces(
         trace ->
