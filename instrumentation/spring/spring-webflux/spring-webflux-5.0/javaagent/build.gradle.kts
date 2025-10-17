@@ -52,8 +52,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-netty:reactor-netty-1.0:javaagent"))
 
-  testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing"))
-
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing"))
 
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
