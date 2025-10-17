@@ -21,7 +21,6 @@ import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
