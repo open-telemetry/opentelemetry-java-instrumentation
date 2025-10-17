@@ -43,6 +43,8 @@ dependencies {
   testImplementation("org.apache.camel:camel-undertow:$camelversion")
   testImplementation("org.apache.camel:camel-aws:$camelversion")
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
+  testImplementation("org.apache.camel:camel-jms:$camelversion")
+  testImplementation("org.apache.activemq:activemq-broker:5.15.9")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
