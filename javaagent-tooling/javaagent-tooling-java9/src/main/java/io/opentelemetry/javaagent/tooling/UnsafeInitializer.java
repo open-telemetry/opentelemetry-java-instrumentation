@@ -22,7 +22,8 @@ public class UnsafeInitializer {
     initialize(instrumentation, classLoader, true);
   }
 
-  private static void initialize(
+  // visible for testing
+  static void initialize(
       Instrumentation instrumentation, ClassLoader classLoader, boolean testUnsafePresent) {
     Class<?> unsafeClass;
     try {
