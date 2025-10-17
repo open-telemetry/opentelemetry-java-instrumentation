@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.javaagent.instrumentation.apachecamel.ExperimentalTest.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -83,13 +85,15 @@ class JmsCamelTest {
                         .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue")),
+                            equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                            equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))),
                 span ->
                     span.hasName("queue:testQueue")
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
                             equalTo(MESSAGING_DESTINATION_NAME, "queue:testQueue"),
+                            equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
                             satisfies(
                                 MESSAGING_MESSAGE_ID,
                                 stringAssert -> stringAssert.isInstanceOf(String.class))),

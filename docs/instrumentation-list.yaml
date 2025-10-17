@@ -2132,7 +2132,14 @@ libraries:
   - name: camel-2.20
     description: |
       This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_SERVER_SPANS
+    - DATABASE_CLIENT_SPANS
+    - MESSAGING_SPANS
     library_link: https://camel.apache.org/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -2162,6 +2169,12 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: http.request.method
@@ -2171,6 +2184,10 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2198,6 +2215,14 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: camel.uri
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: camel.uri
@@ -2209,6 +2234,12 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: camel.uri
+          type: STRING
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2236,6 +2267,12 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: http.request.method
@@ -2245,6 +2282,10 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
