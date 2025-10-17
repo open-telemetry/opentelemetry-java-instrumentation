@@ -14,5 +14,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("org.springframework:spring-web:3.1.0.RELEASE")
+  library("org.springframework:spring-web:3.1.0.RELEASE")
+
+  testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
 }
