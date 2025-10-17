@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
@@ -79,7 +80,8 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server2.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)
@@ -109,7 +111,8 @@ class ArmeriaHttp2Test {
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, server1.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
+                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("GET /")
                         .hasKind(SpanKind.SERVER)
