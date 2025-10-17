@@ -24,7 +24,9 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21}) // Security Manager removed in Java 25
+  // restore after image update
+  // @ValueSource(ints = {8, 11, 17, 21}) // Security Manager removed in Java 25
+  @ValueSource(ints = {8, 21}) // Security Manager removed in Java 25
   void securityManagerSmokeTest(int jdk) {
     start(jdk);
     testing.waitAndAssertTraces(
