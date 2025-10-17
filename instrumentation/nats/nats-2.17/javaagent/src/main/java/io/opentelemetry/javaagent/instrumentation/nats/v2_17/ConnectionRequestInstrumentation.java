@@ -414,11 +414,11 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
       if (message == null) {
         return new Object[] {null, message};
       }
+      // call the instrumented requestWithTimeout method
       CompletableFuture<Message> future =
           connection.requestWithTimeout(
               message.getSubject(), message.getHeaders(), message.getData(), timeout);
 
-      // call the instrumented requestWithTimeout method
       return new Object[] {future, message};
     }
 
