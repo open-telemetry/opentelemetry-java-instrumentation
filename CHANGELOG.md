@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.21.0 (2025-10-17)
+
 ## ⚠️ Breaking Changes
 
 - Hadoop JMX metrics have been renamed to align with semantic conventions.
