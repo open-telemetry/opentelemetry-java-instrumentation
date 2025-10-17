@@ -30,7 +30,9 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  // restore after image update
+  // @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {8, 21, 25})
   void springBootSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
 
