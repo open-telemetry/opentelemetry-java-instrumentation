@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -68,7 +69,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                               Arrays.asList(
                                   equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                   equalTo(
-                                      stringKey("aws.queue.url"),
+                                      AWS_SQS_QUEUE_URL,
                                       "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                   satisfies(
                                       AWS_REQUEST_ID,
@@ -121,7 +122,7 @@ public abstract class AbstractAws2SqsTracingTest extends AbstractAws2SqsBaseTest
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(stringKey("aws.agent"), "java-aws-sdk"),
                                     equalTo(
-                                        stringKey("aws.queue.url"),
+                                        AWS_SQS_QUEUE_URL,
                                         "http://localhost:" + sqsPort + "/000000000000/testSdkSqs"),
                                     satisfies(
                                         AWS_REQUEST_ID,
