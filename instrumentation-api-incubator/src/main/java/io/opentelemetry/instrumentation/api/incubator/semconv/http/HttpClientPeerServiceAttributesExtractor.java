@@ -47,9 +47,6 @@ public final class HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE>
   /**
    * Returns a new {@link HttpClientPeerServiceAttributesExtractor} that will use the passed {@code
    * attributesGetter} to extract server address and port (with fallback to the HTTP Host header).
-   *
-   * @param attributesGetter the HTTP attributes getter
-   * @param peerServiceResolver the peer service resolver
    */
   public static <REQUEST, RESPONSE>
       HttpClientPeerServiceAttributesExtractor<REQUEST, RESPONSE> create(
