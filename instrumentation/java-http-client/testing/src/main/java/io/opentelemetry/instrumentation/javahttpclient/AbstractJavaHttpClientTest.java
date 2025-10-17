@@ -21,6 +21,7 @@ import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -177,7 +178,9 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                             equalTo(ServerAttributes.SERVER_PORT, uri.getPort()),
                             equalTo(HttpAttributes.HTTP_REQUEST_METHOD, method),
                             equalTo(
-                                ErrorAttributes.ERROR_TYPE, CancellationException.class.getName())),
+                                ErrorAttributes.ERROR_TYPE, CancellationException.class.getName()),
+                            equalTo(
+                                PeerIncubatingAttributes.PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("test-http-server")
                         .hasKind(SpanKind.SERVER)
