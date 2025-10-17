@@ -19,6 +19,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.time.Duration;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -194,7 +195,7 @@ class ContextPropagationOperatorInstrumentationTest {
   }
 
   private static class StoreOpenTelemetryContext
-      implements Function<reactor.util.context.Context, reactor.util.context.Context> {
+      implements UnaryOperator<reactor.util.context.Context> {
 
     private final Span span;
 

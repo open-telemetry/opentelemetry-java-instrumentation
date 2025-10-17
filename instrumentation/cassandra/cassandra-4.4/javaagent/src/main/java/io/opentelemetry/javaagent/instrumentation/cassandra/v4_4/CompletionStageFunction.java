@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
 import com.datastax.oss.driver.api.core.CqlSession;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
-public class CompletionStageFunction implements Function<Object, Object> {
+public class CompletionStageFunction implements UnaryOperator<Object> {
 
   @Override
   public Object apply(Object session) {

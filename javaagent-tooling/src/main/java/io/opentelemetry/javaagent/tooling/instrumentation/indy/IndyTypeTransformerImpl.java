@@ -12,7 +12,7 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
@@ -51,7 +51,7 @@ public final class IndyTypeTransformerImpl implements TypeTransformer {
   @Override
   public void applyAdviceToMethod(
       ElementMatcher<? super MethodDescription> methodMatcher,
-      Function<Advice.WithCustomMapping, Advice.WithCustomMapping> mappingCustomizer,
+      UnaryOperator<Advice.WithCustomMapping> mappingCustomizer,
       String adviceClassName) {
     // default strategy used by AgentBuilder.Transformer.ForAdvice
     AgentBuilder.PoolStrategy poolStrategy = AgentBuilder.PoolStrategy.Default.FAST;
