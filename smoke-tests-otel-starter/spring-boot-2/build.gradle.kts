@@ -7,6 +7,7 @@ description = "smoke-tests-otel-starter-spring-boot-2"
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
   runtimeOnly("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
   implementation("org.springframework.kafka:spring-kafka")
@@ -17,9 +18,9 @@ dependencies {
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
-  testImplementation("org.testcontainers:junit-jupiter")
-  testImplementation("org.testcontainers:kafka")
-  testImplementation("org.testcontainers:mongodb")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-kafka")
+  testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 

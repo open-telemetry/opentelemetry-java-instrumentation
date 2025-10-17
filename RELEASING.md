@@ -29,6 +29,8 @@ the second Monday of the month (roughly a few days after the monthly minor relea
 - Merge a pull request to `main` updating the `CHANGELOG.md`.
   - The heading for the unreleased entries should be `## Unreleased`.
   - Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change log.
+  - The script will automatically include a "Breaking Changes" section for PRs labeled with `breaking change`.
+  - The script will automatically include a "Deprecations" section for PRs labeled with `deprecation`.
 - Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/prepare-release-branch.yml).
   - Press the "Run workflow" button, and leave the default branch `main` selected.
   - Review and merge the two pull requests that it creates

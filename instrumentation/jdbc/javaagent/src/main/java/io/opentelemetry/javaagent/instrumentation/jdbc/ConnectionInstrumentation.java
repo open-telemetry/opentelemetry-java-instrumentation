@@ -18,9 +18,12 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesNoArguments;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.ImplicitContextKeyed;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcData;
+import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.sql.Connection;
@@ -28,6 +31,8 @@ import java.sql.PreparedStatement;
 import java.util.Locale;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -48,7 +53,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         nameStartsWith("prepare")
             .and(takesArgument(0, String.class))
-            // Also include CallableStatement, which is a sub type of PreparedStatement
+            // Also include CallableStatement, which is a subtype of PreparedStatement
             .and(returns(implementsInterface(named("java.sql.PreparedStatement")))),
         ConnectionInstrumentation.class.getName() + "$PrepareAdvice");
     transformer.applyAdviceToMethod(
@@ -59,14 +64,72 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PrepareAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static final class PrepareContext implements ImplicitContextKeyed {
+
+      private static final ContextKey<PrepareContext> KEY =
+          ContextKey.named("jdbc-prepare-context");
+
+      private final String originalSql;
+
+      private PrepareContext(String originalSql) {
+        this.originalSql = originalSql;
+      }
+
+      public String get() {
+        return originalSql;
+      }
+
+      @Nullable
+      public static PrepareContext get(Context context) {
+        return context.get(KEY);
+      }
+
+      public static Context init(Context context, String originalSql) {
+        if (context.get(KEY) != null) {
+          return context;
+        }
+        return context.with(new PrepareContext(originalSql));
+      }
+
+      @Override
+      public Context storeInContext(Context context) {
+        return context.with(KEY, this);
+      }
+    }
+
+    @AssignReturned.ToArguments(@ToArgument(value = 0, index = 0))
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static Object[] processSql(@Advice.Argument(0) String sql) {
+      Context context = Java8BytecodeBridge.currentContext();
+      if (PrepareContext.get(context) == null) {
+        // process sql only in the outermost prepare call and save the original sql in context
+        String processSql = JdbcSingletons.processSql(sql);
+        Scope scope = PrepareContext.init(context, sql).makeCurrent();
+        return new Object[] {processSql, scope};
+      } else {
+        return new Object[] {sql, null};
+      }
+    }
+
+    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void addDbInfo(
-        @Advice.Argument(0) String sql, @Advice.Return PreparedStatement statement) {
-      if (JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
+        @Advice.Return PreparedStatement statement,
+        @Advice.Enter Object[] enterResult,
+        @Advice.Thrown Throwable error) {
+      Context context = Java8BytecodeBridge.currentContext();
+      PrepareContext prepareContext = PrepareContext.get(context);
+      Scope scope = (Scope) enterResult[1];
+      if (scope != null) {
+        scope.close();
+      }
+      if (error != null
+          || prepareContext == null
+          || JdbcSingletons.isWrapper(statement, PreparedStatement.class)) {
         return;
       }
 
-      JdbcData.preparedStatement.set(statement, sql);
+      String originalSql = prepareContext.get();
+      JdbcData.preparedStatement.set(statement, originalSql);
     }
   }
 

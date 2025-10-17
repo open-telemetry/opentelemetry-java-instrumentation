@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   api(project(":testing-common"))
-  api("org.testcontainers:mongodb")
+  api("org.testcontainers:testcontainers-mongodb")
 
   implementation("io.opentelemetry:opentelemetry-api")
 }

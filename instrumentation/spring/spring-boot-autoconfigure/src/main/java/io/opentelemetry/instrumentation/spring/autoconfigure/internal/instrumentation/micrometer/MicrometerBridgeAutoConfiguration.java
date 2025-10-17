@@ -9,6 +9,7 @@ import io.micrometer.core.instrument.Clock;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
 import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
@@ -24,7 +25,7 @@ import org.springframework.context.annotation.Configuration;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "micrometer", enabledByDefault = false)
-@AutoConfigureAfter(MetricsAutoConfiguration.class)
+@AutoConfigureAfter({MetricsAutoConfiguration.class, OpenTelemetryAutoConfiguration.class})
 @AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass(MeterRegistry.class)

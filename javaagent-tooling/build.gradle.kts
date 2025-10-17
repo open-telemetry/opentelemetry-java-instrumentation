@@ -113,6 +113,14 @@ testing {
         compileOnly("com.google.code.findbugs:annotations")
       }
     }
+
+    val testConfigFile by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project(":javaagent-tooling"))
+        // requires mockito-inline
+        implementation("uk.org.webcompere:system-stubs-jupiter")
+      }
+    }
   }
 }
 
