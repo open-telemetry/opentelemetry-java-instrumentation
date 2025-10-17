@@ -75,6 +75,9 @@ targets:
       target: ':instrumentation:apache-dubbo-2.7:library-autoconfigure'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-elasticjob-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-httpasyncclient-4.1:javaagent'
     - type: gradle
       path: ./
