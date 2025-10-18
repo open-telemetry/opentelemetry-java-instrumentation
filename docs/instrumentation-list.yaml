@@ -5200,6 +5200,7 @@ libraries:
   - name: jdbc
     description: |
       The JDBC instrumentation provides database client spans and metrics. Each call produces a span named after the SQL verb, enriched with standard DB client attributes (system, database, operation, sanitized statement, peer address) and error details if an exception occurs.
+      The instrumentation unwraps pooled connections (via java.sql.Wrapper) to cache database metadata against the underlying physical connection. Without proper unwrapping support, caching is limited to the wrapper instance, which typically changes each time a connection is retrieved from the pool. This can result in repeated metadata extraction, potentially causing performance degradation.
       There is also a "jdbc-datasource" instrumentation that creates spans for datasource connections, but is disabled by default due to the volume of telemetry produced.
     library_link: https://docs.oracle.com/javase/8/docs/api/java/sql/package-summary.html
     source_path: instrumentation/jdbc
@@ -5536,6 +5537,13 @@ libraries:
         Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
+  - name: kafka-connect-2.6
+    source_path: instrumentation/kafka/kafka-connect-2.6
+    scope:
+      name: io.opentelemetry.kafka-connect-2.6
+    target_versions:
+      javaagent:
+      - org.apache.kafka:connect-api:[2.6.0,)
   - name: kafka-streams-0.11
     library_link: https://kafka.apache.org/documentation/streams/
     source_path: instrumentation/kafka/kafka-streams-0.11
@@ -7663,9 +7671,9 @@ libraries:
       - org.springframework.security:spring-security-config:[6.0.0,]
       library:
       - io.projectreactor:reactor-core:3.5.0
+      - jakarta.servlet:jakarta.servlet-api:[6.0.0,6.1.0)
       - org.springframework.security:spring-security-config:6.0.0
       - org.springframework:spring-web:6.0.0
-      - jakarta.servlet:jakarta.servlet-api:6.0.0
       - org.springframework.security:spring-security-web:6.0.0
     configurations:
     - name: otel.instrumentation.common.enduser.id.enabled
