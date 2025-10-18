@@ -24,6 +24,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 
   testLibrary("io.projectreactor.rabbitmq:reactor-rabbitmq:1.0.0.RELEASE")
+
+  // reactor-rabbitmq 1.5.6 (and earlier) still calls useNio() which was removed in 5.27.0
+  latestDepTestLibrary("com.rabbitmq:amqp-client:5.26.+")
 }
 
 tasks.withType<Test>().configureEach {
