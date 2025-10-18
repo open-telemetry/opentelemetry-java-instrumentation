@@ -200,6 +200,11 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
+  documentation-audit:
+    needs:
+      - release
+    uses: ./.github/workflows/documentation-synchronization-audit.yml
+
   post-release-updates:
     permissions:
       contents: write # for git push to PR branch
