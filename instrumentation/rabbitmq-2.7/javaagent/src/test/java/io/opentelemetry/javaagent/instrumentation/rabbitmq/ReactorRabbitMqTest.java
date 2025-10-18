@@ -5,25 +5,32 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.RABBITMQ;
+import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import reactor.rabbitmq.ExchangeSpecification;
 import reactor.rabbitmq.RabbitFlux;
 import reactor.rabbitmq.Sender;
 import reactor.rabbitmq.SenderOptions;
 
+@DisabledIfSystemProperty(
+    named = "testLatestDeps",
+    matches = "true",
+    disabledReason =
+        "reactor-rabbitmq 1.5.6 (and earlier) still calls `void useNio()` which was removed in 5.27.0")
 class ReactorRabbitMqTest extends AbstractRabbitMqTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -33,33 +40,24 @@ class ReactorRabbitMqTest extends AbstractRabbitMqTest {
     Sender sender =
         RabbitFlux.createSender(new SenderOptions().connectionFactory(connectionFactory));
 
-    try {
-      sender.declareExchange(ExchangeSpecification.exchange("testExchange")).block();
-    } catch (RuntimeException e) {
-      Assertions.fail("Should not fail declaring exchange", e);
-    }
+    sender.declareExchange(ExchangeSpecification.exchange("testExchange")).block();
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("exchange.declare")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasAttribute(MESSAGING_SYSTEM, "rabbitmq")
-                      .hasAttribute(AttributeKey.stringKey("rabbitmq.command"), "exchange.declare")
-                      .hasAttributesSatisfying(
-                          attributes ->
-                              assertThat(attributes)
-                                  .satisfies(
-                                      attrs -> {
-                                        String peerAddr = attrs.get(NETWORK_PEER_ADDRESS);
-                                        assertThat(peerAddr).isIn(rabbitMqIp, null);
-
-                                        String networkType = attrs.get(NETWORK_TYPE);
-                                        assertThat(networkType).isIn("ipv4", "ipv6", null);
-
-                                        assertNotNull(attrs.get(NETWORK_PEER_PORT));
-                                      }));
-                }));
+                span ->
+                    span.hasName("exchange.declare")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, RABBITMQ),
+                            equalTo(stringKey("rabbitmq.command"), "exchange.declare"),
+                            satisfies(
+                                NETWORK_PEER_ADDRESS,
+                                addr -> addr.satisfies(a -> assertThat(a).isIn(rabbitMqIp, null))),
+                            satisfies(
+                                NETWORK_TYPE,
+                                type ->
+                                    type.satisfies(t -> assertThat(t).isIn("ipv4", "ipv6", null))),
+                            satisfies(NETWORK_PEER_PORT, port -> assertThat(port).isNotNull()))));
   }
 }
