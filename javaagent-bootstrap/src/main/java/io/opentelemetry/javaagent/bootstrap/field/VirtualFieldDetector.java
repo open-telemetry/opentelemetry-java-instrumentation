@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.bootstrap.field;
 
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
+import java.lang.invoke.MethodHandles;
 import java.util.Collection;
 
 /** Helper class for detecting whether given class has virtual fields. */
@@ -47,5 +48,9 @@ public final class VirtualFieldDetector {
 
   public static void markVirtualFields(Class<?> clazz, Collection<String> virtualFieldClassName) {
     classesWithVirtualFields.put(clazz, virtualFieldClassName);
+  }
+
+  public static MethodHandles.Lookup lookup() {
+    return MethodHandles.lookup();
   }
 }

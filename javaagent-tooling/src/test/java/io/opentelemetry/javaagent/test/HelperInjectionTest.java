@@ -11,6 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.tooling.AgentInstaller;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.Utils;
@@ -30,6 +31,37 @@ import org.junit.jupiter.api.Test;
 @SuppressWarnings("UnnecessaryAsync")
 class HelperInjectionTest {
 
+  private static class EmptyLoader extends URLClassLoader {
+    EmptyLoader() {
+      super(new URL[0], null);
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      // the same code as added by LoadInjectedClassInstrumentation
+      InjectedClassHelper.HelperClassInfo helperClassInfo =
+          InjectedClassHelper.getHelperClassInfo(this, name);
+      if (helperClassInfo != null) {
+        Class<?> clazz = findLoadedClass(name);
+        if (clazz != null) {
+          return clazz;
+        }
+        try {
+          byte[] bytes = helperClassInfo.getClassBytes();
+          return defineClass(name, bytes, 0, bytes.length, helperClassInfo.getProtectionDomain());
+        } catch (LinkageError error) {
+          clazz = findLoadedClass(name);
+          if (clazz != null) {
+            return clazz;
+          }
+          throw error;
+        }
+      }
+
+      return super.loadClass(name, resolve);
+    }
+  }
+
   @Test
   void helpersInjectedToNonDelegatingClassloader() throws Exception {
     URL[] helpersSourceUrls = new URL[1];
@@ -44,14 +76,12 @@ class HelperInjectionTest {
             Collections.emptyList(),
             helpersSourceLoader,
             null);
-    AtomicReference<URLClassLoader> emptyLoader =
-        new AtomicReference<>(new URLClassLoader(new URL[0], null));
+    AtomicReference<EmptyLoader> emptyLoader = new AtomicReference<>(new EmptyLoader());
 
     assertThatThrownBy(() -> emptyLoader.get().loadClass(helperClassName))
         .isInstanceOf(ClassNotFoundException.class);
 
     injector.transform(null, null, emptyLoader.get(), null, null);
-    HelperInjector.loadHelperClass(emptyLoader.get(), helperClassName);
     emptyLoader.get().loadClass(helperClassName);
 
     assertThat(isClassLoaded(helperClassName, emptyLoader.get())).isTrue();

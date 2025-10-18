@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.bootstrap;
+package io.opentelemetry.javaagent.bootstrap.field;
 
 /**
  * A marker interface that signifies that virtual fields have been installed into the class that
