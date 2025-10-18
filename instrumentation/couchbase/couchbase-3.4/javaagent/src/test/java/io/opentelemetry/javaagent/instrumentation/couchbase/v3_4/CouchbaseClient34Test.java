@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v3_4;
 
-import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
@@ -28,7 +28,7 @@ import org.testcontainers.couchbase.CouchbaseService;
 
 // Couchbase instrumentation is owned upstream so we don't assert on the contents of the spans, only
 // that the instrumentation is properly registered by the agent, meaning some spans were generated.
-class CouchbaseClient32Test {
+class CouchbaseClient34Test {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -75,11 +75,7 @@ class CouchbaseClient32Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
-                      .hasName("get");
-                  if (Boolean.getBoolean("testLatestDeps")) {
-                    span.hasStatus(StatusData.error());
-                  }
+                  span.hasKind(CLIENT).hasName("get").hasStatus(StatusData.error());
                 },
                 span -> span.hasName("dispatch_to_server")));
   }
