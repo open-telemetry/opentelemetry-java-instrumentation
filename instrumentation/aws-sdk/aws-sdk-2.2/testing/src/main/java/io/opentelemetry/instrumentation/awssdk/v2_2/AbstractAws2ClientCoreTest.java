@@ -17,18 +17,33 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_CONSUMED_CAPACITY;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_COUNT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_ITEM_COLLECTION_METRICS;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_LIMIT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_PROVISIONED_READ_CAPACITY;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_SCANNED_COUNT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_SELECT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_COUNT;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -37,7 +52,9 @@ import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.Mock
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.RecordedRequest;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -63,10 +80,13 @@ import software.amazon.awssdk.services.dynamodb.model.DeleteTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
 import software.amazon.awssdk.services.dynamodb.model.GlobalSecondaryIndex;
 import software.amazon.awssdk.services.dynamodb.model.KeySchemaElement;
+import software.amazon.awssdk.services.dynamodb.model.KeysAndAttributes;
 import software.amazon.awssdk.services.dynamodb.model.ProvisionedThroughput;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.PutRequest;
 import software.amazon.awssdk.services.dynamodb.model.QueryRequest;
 import software.amazon.awssdk.services.dynamodb.model.UpdateItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 public abstract class AbstractAws2ClientCoreTest {
   protected static final StaticCredentialsProvider CREDENTIALS_PROVIDER =
@@ -118,12 +138,88 @@ public abstract class AbstractAws2ClientCoreTest {
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> {
-                      if (operation.equals("CreateTable")) {
-                        assertCreateTableRequest(span);
-                      } else if (operation.equals("Query")) {
-                        assertQueryRequest(span);
-                      } else {
-                        assertDynamoDbRequest(span, operation);
+                      switch (operation) {
+                        case "CreateTable":
+                          assertDynamoDbRequest(
+                              span,
+                              operation,
+                              asList(
+                                  equalTo(
+                                      AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES,
+                                      asList(
+                                          "{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}}",
+                                          "{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}")),
+                                  equalTo(AWS_DYNAMODB_PROVISIONED_READ_CAPACITY, 1.0),
+                                  equalTo(AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY, 1.0)));
+                          return;
+                        case "Query":
+                          assertDynamoDbRequest(
+                              span,
+                              operation,
+                              asList(
+                                  equalTo(AWS_DYNAMODB_LIMIT, 10),
+                                  equalTo(AWS_DYNAMODB_SELECT, "ALL_ATTRIBUTES"),
+                                  equalTo(
+                                      AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                      singletonList(
+                                          "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}"))));
+                          return;
+                        case "ListTables":
+                          assertListTablesRequest(span);
+                          return;
+                        case "BatchGetItem":
+                        case "GetItem":
+                          assertDynamoDbRequest(
+                              span,
+                              operation,
+                              singletonList(
+                                  equalTo(
+                                      AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                      singletonList(
+                                          "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}"))));
+                          return;
+                        case "BatchWriteItem":
+                          assertDynamoDbRequest(
+                              span,
+                              operation,
+                              asList(
+                                  equalTo(
+                                      AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                      singletonList(
+                                          "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
+                                  equalTo(
+                                      AWS_DYNAMODB_ITEM_COLLECTION_METRICS,
+                                      "[somekey1:[{\"ItemCollectionKey\":{\"somekey2\":{}}}]]")));
+                          return;
+                        case "DeleteItem":
+                        case "PutItem":
+                        case "UpdateItem":
+                          assertDynamoDbRequest(
+                              span,
+                              operation,
+                              asList(
+                                  equalTo(
+                                      AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                      singletonList(
+                                          "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}")),
+                                  equalTo(
+                                      AWS_DYNAMODB_ITEM_COLLECTION_METRICS,
+                                      "{\"ItemCollectionKey\":{\"somekey\":{}}}")));
+                          return;
+                        case "Scan":
+                          assertDynamoDbRequest(
+                              span,
+                              operation,
+                              asList(
+                                  equalTo(AWS_DYNAMODB_SCANNED_COUNT, 1),
+                                  equalTo(AWS_DYNAMODB_COUNT, 1),
+                                  equalTo(
+                                      AWS_DYNAMODB_CONSUMED_CAPACITY,
+                                      singletonList(
+                                          "{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}"))));
+                          return;
+                        default:
+                          assertDynamoDbRequest(span, operation, emptyList());
                       }
                     }));
 
@@ -135,7 +231,7 @@ public abstract class AbstractAws2ClientCoreTest {
     return CreateTableRequest.builder()
         .tableName("sometable")
         .globalSecondaryIndexes(
-            Arrays.asList(
+            asList(
                 GlobalSecondaryIndex.builder()
                     .indexName("globalIndex")
                     .keySchema(KeySchemaElement.builder().attributeName("attribute").build())
@@ -161,8 +257,8 @@ public abstract class AbstractAws2ClientCoreTest {
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertCreateTableRequest(SpanDataAssert span) {
-    span.hasName("DynamoDb.CreateTable")
+  private static void assertListTablesRequest(SpanDataAssert span) {
+    span.hasName("DynamoDb.ListTables")
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
         .hasAttributesSatisfyingExactly(
@@ -173,61 +269,38 @@ public abstract class AbstractAws2ClientCoreTest {
             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
             equalTo(RPC_SYSTEM, "aws-api"),
             equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, "CreateTable"),
+            equalTo(RPC_METHOD, "ListTables"),
             equalTo(stringKey("aws.agent"), "java-aws-sdk"),
             equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(stringKey("aws.table.name"), "sometable"),
+            equalTo(AWS_DYNAMODB_TABLE_COUNT, 1),
             equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
-            equalTo(maybeStable(DB_OPERATION), "CreateTable"),
-            equalTo(
-                stringKey("aws.dynamodb.global_secondary_indexes"),
-                "[{\"IndexName\":\"globalIndex\",\"KeySchema\":[{\"AttributeName\":\"attribute\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":10,\"WriteCapacityUnits\":12}},{\"IndexName\":\"globalIndexSecondary\",\"KeySchema\":[{\"AttributeName\":\"attributeSecondary\"}],\"ProvisionedThroughput\":{\"ReadCapacityUnits\":7,\"WriteCapacityUnits\":8}}]"),
-            equalTo(stringKey("aws.dynamodb.provisioned_throughput.read_capacity_units"), "1"),
-            equalTo(stringKey("aws.dynamodb.provisioned_throughput.write_capacity_units"), "1"));
-  }
-
-  @SuppressWarnings("deprecation") // using deprecated semconv
-  private static void assertQueryRequest(SpanDataAssert span) {
-    span.hasName("DynamoDb.Query")
-        .hasKind(SpanKind.CLIENT)
-        .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-            equalTo(SERVER_PORT, server.httpPort()),
-            equalTo(URL_FULL, server.httpUri() + "/"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, "Query"),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
-            equalTo(maybeStable(DB_OPERATION), "Query"),
-            equalTo(stringKey("aws.dynamodb.limit"), "10"),
-            equalTo(stringKey("aws.dynamodb.select"), "ALL_ATTRIBUTES"));
+            equalTo(maybeStable(DB_OPERATION), "ListTables"));
   }
 
   @SuppressWarnings("deprecation") // uses deprecated semconv
-  private static void assertDynamoDbRequest(SpanDataAssert span, String operation) {
+  private static void assertDynamoDbRequest(
+      SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            Arrays.asList(
+                equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                equalTo(SERVER_PORT, server.httpPort()),
+                equalTo(URL_FULL, server.httpUri() + "/"),
+                equalTo(HTTP_REQUEST_METHOD, "POST"),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                equalTo(RPC_SYSTEM, "aws-api"),
+                equalTo(RPC_SERVICE, "DynamoDb"),
+                equalTo(RPC_METHOD, operation),
+                equalTo(stringKey("aws.agent"), "java-aws-sdk"),
+                equalTo(AWS_REQUEST_ID, "UNKNOWN"),
+                equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("sometable")),
+                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
+                equalTo(maybeStable(DB_OPERATION), operation)));
+    assertions.addAll(extraAttributes);
     span.hasName("DynamoDb." + operation)
         .hasKind(SpanKind.CLIENT)
         .hasNoParent()
-        .hasAttributesSatisfyingExactly(
-            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-            equalTo(SERVER_PORT, server.httpPort()),
-            equalTo(URL_FULL, server.httpUri() + "/"),
-            equalTo(HTTP_REQUEST_METHOD, "POST"),
-            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-            equalTo(RPC_SYSTEM, "aws-api"),
-            equalTo(RPC_SERVICE, "DynamoDb"),
-            equalTo(RPC_METHOD, operation),
-            equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-            equalTo(AWS_REQUEST_ID, "UNKNOWN"),
-            equalTo(stringKey("aws.table.name"), "sometable"),
-            equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName("dynamodb")),
-            equalTo(maybeStable(DB_OPERATION), operation));
+        .hasAttributesSatisfyingExactly(assertions);
   }
 
   @SuppressWarnings("unchecked")
@@ -322,7 +395,65 @@ public abstract class AbstractAws2ClientCoreTest {
                                     AttributeValue.builder().s("differentValue").build()))
                             .conditionExpression("attributeOne <> :someVal")
                             .updateExpression("set attributeOne = :updateValue")
-                            .build())));
+                            .build())),
+        Arguments.of("ListTables", (Function<DynamoDbClient, Object>) DynamoDbClient::listTables),
+        Arguments.of(
+            "DescribeTable",
+            (Function<DynamoDbClient, Object>) c -> c.describeTable(b -> b.tableName("sometable"))),
+        Arguments.of(
+            "UpdateTable",
+            (Function<DynamoDbClient, Object>) c -> c.updateTable(b -> b.tableName("sometable"))),
+        Arguments.of(
+            "Scan", (Function<DynamoDbClient, Object>) c -> c.scan(b -> b.tableName("sometable"))),
+        Arguments.of(
+            "BatchGetItem",
+            (Function<DynamoDbClient, Object>)
+                c ->
+                    c.batchGetItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    KeysAndAttributes.builder()
+                                        .keys(
+                                            singletonList(
+                                                ImmutableMap.of(
+                                                    "keyOne",
+                                                        AttributeValue.builder().s("value").build(),
+                                                    "keyTwo",
+                                                        AttributeValue.builder()
+                                                            .s("differentValue")
+                                                            .build())))
+                                        .build())))),
+        Arguments.of(
+            "BatchWriteItem",
+            (Function<DynamoDbClient, Object>)
+                c ->
+                    c.batchWriteItem(
+                        b ->
+                            b.requestItems(
+                                ImmutableMap.of(
+                                    "sometable",
+                                    singletonList(
+                                        WriteRequest.builder()
+                                            .putRequest(
+                                                PutRequest.builder()
+                                                    .item(
+                                                        ImmutableMap.of(
+                                                            "key",
+                                                                AttributeValue.builder()
+                                                                    .s("value")
+                                                                    .build(),
+                                                            "attributeOne",
+                                                                AttributeValue.builder()
+                                                                    .s("one")
+                                                                    .build(),
+                                                            "attributeTwo",
+                                                                AttributeValue.builder()
+                                                                    .s("two")
+                                                                    .build()))
+                                                    .build())
+                                            .build()))))));
   }
 
   @ParameterizedTest
@@ -337,7 +468,8 @@ public abstract class AbstractAws2ClientCoreTest {
             .region(Region.AP_NORTHEAST_1)
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
+    server.enqueue(
+        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, getResponseContent(operation)));
     Object response = call.apply(client);
     validateOperationResponse(operation, response);
   }
@@ -354,9 +486,34 @@ public abstract class AbstractAws2ClientCoreTest {
             .region(Region.AP_NORTHEAST_1)
             .credentialsProvider(CREDENTIALS_PROVIDER)
             .build();
-    server.enqueue(HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, ""));
+    server.enqueue(
+        HttpResponse.of(HttpStatus.OK, MediaType.PLAIN_TEXT_UTF_8, getResponseContent(operation)));
     Object response =
         call.apply(wrapClient(DynamoDbClient.class, DynamoDbAsyncClient.class, client));
     validateOperationResponse(operation, response);
+  }
+
+  private static String getResponseContent(String operation) {
+    switch (operation) {
+      case "ListTables":
+        return "{\"TableNames\":[\"sometable\"]}";
+      case "BatchGetItem":
+        return "{\"ConsumedCapacity\":[{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}]}";
+      case "GetItem":
+      case "Query":
+      case "UpdateTable":
+        return "{\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}}";
+      case "BatchWriteItem":
+        return "{\"ConsumedCapacity\":[{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}],\"ItemCollectionMetrics\":{\"somekey1\":[{\"ItemCollectionKey\":{\"somekey2\":{}}}]}}";
+      case "CreateTable":
+      case "DeleteItem":
+      case "PutItem":
+      case "UpdateItem":
+        return "{\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0},\"ItemCollectionMetrics\":{\"ItemCollectionKey\":{\"somekey\":{}}}}";
+      case "Scan":
+        return "{\"Count\":1,\"ScannedCount\":1,\"ConsumedCapacity\":{\"TableName\":\"sometable\",\"CapacityUnits\":1.0}}";
+      default:
+        return "";
+    }
   }
 }

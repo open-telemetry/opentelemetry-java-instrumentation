@@ -60,7 +60,7 @@ class SerializerTest {
   }
 
   @Test
-  void shouldSerializeMapAsKeyCollection() {
+  void shouldSerializeMap() {
     // given
     Map<String, Object> map = new HashMap<>();
     map.put("uno", 1L);
@@ -69,6 +69,6 @@ class SerializerTest {
     // when
     String serialized = new Serializer().serialize(map);
     // then
-    assertThat(serialized).isEqualTo("[uno,dos,tres]");
+    assertThat(serialized).isEqualTo("[uno:1,dos:[],tres:cuatro]");
   }
 }

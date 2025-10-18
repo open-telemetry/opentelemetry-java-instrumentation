@@ -9,7 +9,9 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_LAMBDA_ARN;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsExperimentalAttributes.AWS_LAMBDA_NAME;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.request;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.requestExperimental;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.response;
+import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping.responseExperimental;
 
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.Collections;
@@ -17,28 +19,30 @@ import java.util.List;
 import java.util.Map;
 
 enum AwsSdkRequestType {
-  S3(request("aws.bucket.name", "Bucket")),
-  SQS(request("aws.queue.url", "QueueUrl"), request("aws.queue.name", "QueueName")),
-  KINESIS(request("aws.stream.name", "StreamName")),
-  DYNAMODB(request("aws.table.name", "TableName")),
+  S3(request(AttributeKeys.AWS_S3_BUCKET, "Bucket")),
+  SQS(
+      request(AttributeKeys.AWS_SQS_QUEUE_URL, "QueueUrl"),
+      requestExperimental(AttributeKey.stringKey("aws.queue.name"), "QueueName")),
+  KINESIS(request(AttributeKeys.AWS_KINESIS_STREAM_NAME, "StreamName")),
+  DYNAMODB(),
   BEDROCK_RUNTIME(),
   LAMBDA(
-      request(AWS_LAMBDA_NAME.getKey(), "FunctionName"),
-      request(AttributeKeys.AWS_LAMBDA_RESOURCE_MAPPING_ID.getKey(), "UUID"),
-      response(AWS_LAMBDA_ARN.getKey(), "Configuration.FunctionArn"),
-      response(AttributeKeys.AWS_LAMBDA_RESOURCE_MAPPING_ID.getKey(), "UUID")),
-  SECRETSMANAGER(response(AttributeKeys.AWS_SECRETSMANAGER_SECRET_ARN.getKey(), "ARN")),
+      requestExperimental(AWS_LAMBDA_NAME, "FunctionName"),
+      request(AttributeKeys.AWS_LAMBDA_RESOURCE_MAPPING_ID, "UUID"),
+      responseExperimental(AWS_LAMBDA_ARN, "Configuration.FunctionArn"),
+      response(AttributeKeys.AWS_LAMBDA_RESOURCE_MAPPING_ID, "UUID")),
+  SECRETSMANAGER(response(AttributeKeys.AWS_SECRETSMANAGER_SECRET_ARN, "ARN")),
   SNS(
       /*
        * Only one of TopicArn and TargetArn are permitted on an SNS request.
        */
-      request(AttributeKeys.MESSAGING_DESTINATION_NAME.getKey(), "TargetArn"),
-      request(AttributeKeys.MESSAGING_DESTINATION_NAME.getKey(), "TopicArn"),
-      request(AttributeKeys.AWS_SNS_TOPIC_ARN.getKey(), "TopicArn"),
-      response(AttributeKeys.AWS_SNS_TOPIC_ARN.getKey(), "TopicArn")),
-  STEPFUNCTIONS(
-      request(AttributeKeys.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN.getKey(), "stateMachineArn"),
-      request(AttributeKeys.AWS_STEP_FUNCTIONS_ACTIVITY_ARN.getKey(), "activityArn"));
+      request(AttributeKeys.MESSAGING_DESTINATION_NAME, "TargetArn"),
+      request(AttributeKeys.MESSAGING_DESTINATION_NAME, "TopicArn"),
+      request(AttributeKeys.AWS_SNS_TOPIC_ARN, "TopicArn"),
+      response(AttributeKeys.AWS_SNS_TOPIC_ARN, "TopicArn")),
+  STEP_FUNCTIONS(
+      request(AttributeKeys.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN, "stateMachineArn"),
+      request(AttributeKeys.AWS_STEP_FUNCTIONS_ACTIVITY_ARN, "activityArn"));
 
   // Wrapping in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")
@@ -63,6 +67,10 @@ enum AwsSdkRequestType {
         stringKey("aws.step_functions.activity.arn");
     static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
         stringKey("aws.step_functions.state_machine.arn");
+    static final AttributeKey<String> AWS_S3_BUCKET = stringKey("aws.s3.bucket");
+    static final AttributeKey<String> AWS_SQS_QUEUE_URL = stringKey("aws.sqs.queue.url");
+    static final AttributeKey<String> AWS_KINESIS_STREAM_NAME =
+        stringKey("aws.kinesis.stream_name");
 
     // copied from MessagingIncubatingAttributes
     static final AttributeKey<String> MESSAGING_DESTINATION_NAME =

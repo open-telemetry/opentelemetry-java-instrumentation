@@ -7,12 +7,19 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequest.BatchWriteItem;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequest.UpdateTable;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_CONSUMED_CAPACITY;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_ITEM_COLLECTION_METRICS;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_PROVISIONED_READ_CAPACITY;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
+import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -49,8 +56,8 @@ class FieldMapperTest {
     // when
     underTest.mapToAttributes(sdkRequest, awsSdkRequest, span);
     // then
-    verify(span).setAttribute("aws.dynamodb.provisioned_throughput.read_capacity_units", "55");
-    verify(span).setAttribute("aws.dynamodb.provisioned_throughput.write_capacity_units", "77");
+    verify(span).setAttribute(AWS_DYNAMODB_PROVISIONED_READ_CAPACITY, 55.0);
+    verify(span).setAttribute(AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY, 77.0);
     verifyNoMoreInteractions(span);
   }
 
@@ -63,13 +70,14 @@ class FieldMapperTest {
     FieldMapper underTest = new FieldMapper(serializer, methodHandleFactory);
     Map<String, Collection<WriteRequest>> items = new HashMap<>();
     BatchWriteItemRequest sdkRequest = BatchWriteItemRequest.builder().requestItems(items).build();
-    when(serializer.serialize(items)).thenReturn("firstTable,secondTable");
+    when(serializer.serializeCollection(items.keySet()))
+        .thenReturn(Arrays.asList("firstTable", "secondTable"));
 
     Span span = mock(Span.class);
     // when
     underTest.mapToAttributes(sdkRequest, awsSdkRequest, span);
     // then
-    verify(span).setAttribute("aws.dynamodb.table_names", "firstTable,secondTable");
+    verify(span).setAttribute(AWS_DYNAMODB_TABLE_NAMES, Arrays.asList("firstTable", "secondTable"));
     verifyNoMoreInteractions(span);
   }
 
@@ -86,15 +94,16 @@ class FieldMapperTest {
             .consumedCapacity(ConsumedCapacity.builder().build())
             .itemCollectionMetrics(items)
             .build();
-    when(serializer.serialize(sdkResponse.consumedCapacity())).thenReturn("consumedCapacity");
+    when(serializer.serializeCollection(sdkResponse.consumedCapacity()))
+        .thenReturn(singletonList("consumedCapacity"));
     when(serializer.serialize(items)).thenReturn("itemCollectionMetrics");
 
     Span span = mock(Span.class);
     // when
     underTest.mapToAttributes(sdkResponse, awsSdkRequest, span);
     // then
-    verify(span).setAttribute("aws.dynamodb.consumed_capacity", "consumedCapacity");
-    verify(span).setAttribute("aws.dynamodb.item_collection_metrics", "itemCollectionMetrics");
+    verify(span).setAttribute(AWS_DYNAMODB_CONSUMED_CAPACITY, singletonList("consumedCapacity"));
+    verify(span).setAttribute(AWS_DYNAMODB_ITEM_COLLECTION_METRICS, "itemCollectionMetrics");
     verifyNoMoreInteractions(span);
   }
 }
