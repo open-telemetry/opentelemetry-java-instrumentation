@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -55,9 +56,10 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   public static class AsyncOperationAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(MemcachedClient.class);
+    public static CallDepth trackCallDepth() {
+      CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -65,7 +67,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
         @Advice.Return OperationFuture<?> future,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -85,9 +87,10 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   public static class AsyncGetAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(MemcachedClient.class);
+    public static CallDepth trackCallDepth() {
+      CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -95,7 +98,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
         @Advice.Return GetFuture<?> future,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -114,9 +117,10 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   public static class AsyncBulkAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(MemcachedClient.class);
+    public static CallDepth trackCallDepth() {
+      CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -124,7 +128,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
         @Advice.This MemcachedClient client,
         @Advice.Origin("#m") String methodName,
         @Advice.Return BulkFuture<?> future,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.Enter CallDepth callDepth) {
       if (callDepth.decrementAndGet() > 0) {
         return;
       }
@@ -142,29 +146,45 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SyncOperationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static SyncCompletionListener methodEnter(
-        @Advice.This MemcachedClient client,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(MemcachedClient.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return null;
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      @Nullable private final SyncCompletionListener listener;
+
+      private AdviceScope(CallDepth callDepth, @Nullable SyncCompletionListener listener) {
+        this.callDepth = callDepth;
+        this.listener = listener;
       }
 
-      return SyncCompletionListener.create(currentContext(), client.getConnection(), methodName);
+      public static AdviceScope start(MemcachedClient client, String methodName) {
+        CallDepth callDepth = CallDepth.forClass(MemcachedClient.class);
+        if (callDepth.getAndIncrement() > 0) {
+          return new AdviceScope(callDepth, null);
+        }
+
+        return new AdviceScope(
+            callDepth,
+            SyncCompletionListener.create(currentContext(), client.getConnection(), methodName));
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0 || listener == null) {
+          return;
+        }
+
+        listener.done(throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope methodEnter(
+        @Advice.This MemcachedClient client, @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(client, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
-        @Advice.Enter SyncCompletionListener listener,
-        @Advice.Thrown Throwable thrown,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0 || listener == null) {
-        return;
-      }
-
-      listener.done(thrown);
+        @Advice.Thrown @Nullable Throwable thrown, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(thrown);
     }
   }
 }
