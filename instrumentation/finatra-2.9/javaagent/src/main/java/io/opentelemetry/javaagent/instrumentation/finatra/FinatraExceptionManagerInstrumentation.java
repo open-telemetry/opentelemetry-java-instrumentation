@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
+import static io.opentelemetry.javaagent.instrumentation.finatra.FinatraSingletons.THROWABLE;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.twitter.finagle.http.Response;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -45,9 +45,7 @@ public class FinatraExceptionManagerInstrumentation implements TypeInstrumentati
         return;
       }
 
-      VirtualField<Response, Throwable> virtualField =
-          VirtualField.find(Response.class, Throwable.class);
-      virtualField.set(response, throwable);
+      THROWABLE.set(response, throwable);
     }
   }
 }
