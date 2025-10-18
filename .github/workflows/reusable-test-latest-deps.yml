@@ -10,6 +10,8 @@ on:
         type: boolean
         required: false
     secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
       FLAKY_TEST_REPORTER_ACCESS_KEY:
         required: false
 
@@ -60,6 +62,8 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: List tests
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
           ./gradlew
           check -x spotlessCheck
@@ -72,6 +76,8 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
           ./gradlew
           ${{ env.test-tasks }}
