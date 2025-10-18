@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.ratpack.server;
 
+import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
@@ -22,7 +23,6 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -162,7 +162,10 @@ public abstract class AbstractRatpackRoutesTest {
                         span.hasName("/" + route)
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))
-                            .hasAttributes(Attributes.empty()));
+                            .hasAttributesSatisfyingExactly(
+                                codeFunctionAssertions(
+                                    "io.opentelemetry.javaagent.instrumentation.ratpack.TracingHandler",
+                                    "handle")));
               }
 
               trace.hasSpansSatisfyingExactly(assertions);
