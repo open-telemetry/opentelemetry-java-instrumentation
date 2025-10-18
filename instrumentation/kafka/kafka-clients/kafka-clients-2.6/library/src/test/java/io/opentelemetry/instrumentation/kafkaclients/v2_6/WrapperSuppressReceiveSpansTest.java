@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -73,7 +74,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -100,7 +101,7 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;
