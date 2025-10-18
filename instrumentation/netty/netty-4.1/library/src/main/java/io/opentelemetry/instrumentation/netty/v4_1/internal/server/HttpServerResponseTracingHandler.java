@@ -24,7 +24,7 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolSpecificEven
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContext;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ServerContexts;
 import javax.annotation.Nullable;
-
+import io.vertx.core.Vertx;
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
@@ -141,7 +141,19 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
       HttpRequestAndChannel request,
       @Nullable HttpResponse response,
       @Nullable Throwable error) {
+
+    io.opentelemetry.api.trace.Span currentSpan = io.opentelemetry.api.trace.Span.fromContext(context);
+    String currentTraceId = currentSpan.getSpanContext().getTraceId();
+
     error = NettyErrorHolder.getOrDefault(context, error);
     instrumenter.end(context, request, response, error);
+
+    io.vertx.core.Context vertxContext = Vertx.currentContext();
+
+    if (vertxContext != null) {
+      // Store the current OpenTelemetry context in Vertx context for downstream operations
+      vertxContext.remove("otel.context." + currentTraceId);
+      vertxContext.remove("otel.context");
+    }
   }
 }
