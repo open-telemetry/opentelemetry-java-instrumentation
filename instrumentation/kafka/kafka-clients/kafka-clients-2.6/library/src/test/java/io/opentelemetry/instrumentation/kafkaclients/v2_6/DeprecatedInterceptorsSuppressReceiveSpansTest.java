@@ -21,15 +21,7 @@ import java.nio.charset.StandardCharsets;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
-class InterceptorsSuppressReceiveSpansTest extends AbstractInterceptorsTest {
-
-  private static final KafkaTelemetry kafkaTelemetry =
-      KafkaTelemetry.create(testing.getOpenTelemetry());
-
-  @Override
-  protected KafkaTelemetry kafkaTelemetry() {
-    return kafkaTelemetry;
-  }
+class DeprecatedInterceptorsSuppressReceiveSpansTest extends AbstractDeprecatedInterceptorsTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
