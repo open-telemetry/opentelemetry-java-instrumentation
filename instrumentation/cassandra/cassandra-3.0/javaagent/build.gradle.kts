@@ -27,6 +27,9 @@ dependencies {
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
+  // Add Vertx dependency for context storage
+  compileOnly("io.vertx:vertx-core:4.0.0")
+  compileOnly("io.vertx:vertx-codegen:4.0.0")
 
   testLibrary("com.datastax.cassandra:cassandra-driver-core:3.2.0")
   testInstrumentation(project(":instrumentation:guava-10.0:javaagent"))

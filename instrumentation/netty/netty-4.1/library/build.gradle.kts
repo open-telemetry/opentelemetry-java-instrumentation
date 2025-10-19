@@ -7,6 +7,10 @@ dependencies {
   implementation(project(":instrumentation:netty:netty-common-4.0:library"))
   implementation(project(":instrumentation:netty:netty-common:library"))
 
+  // Add Vertx dependency for context storage
+  compileOnly("io.vertx:vertx-core:4.0.0")
+  compileOnly("io.vertx:vertx-codegen:4.0.0")
+
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 

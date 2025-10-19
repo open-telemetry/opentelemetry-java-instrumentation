@@ -23,6 +23,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.Contexts;
 import io.opentelemetry.javaagent.instrumentation.vertx.client.ExceptionHandlerWrapper;
 import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import javax.annotation.Nullable;
@@ -103,6 +104,14 @@ public class HttpRequestInstrumentation implements TypeInstrumentation {
         }
 
         Context parentContext = Context.current();
+        if (parentContext == null || parentContext == Context.root()) {
+          io.vertx.core.Context vertxContext = Vertx.currentContext();
+          if (vertxContext != null && (vertxContext.get("otel.context")!=null&&vertxContext.get("otel.context")!=Context.root())) {
+            Context storedOtelContext =
+                vertxContext.get("otel.context");
+            parentContext = storedOtelContext;
+          }
+        }
         if (!instrumenter().shouldStart(parentContext, request)) {
           return null;
         }
