@@ -33,7 +33,7 @@ dependencies {
 
   library("com.couchbase.client:java-client:3.1.6")
 
-  testImplementation("org.testcontainers:couchbase")
+  testImplementation("org.testcontainers:testcontainers-couchbase")
 
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.+") // see couchbase-3.2 module
 }

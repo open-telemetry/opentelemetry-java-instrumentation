@@ -5,40 +5,21 @@
 
 package io.opentelemetry.instrumentation.log4j.appender.v2_17;
 
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFileAndLineAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionAssertions;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_ID;
-import static io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes.THREAD_NAME;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-import io.opentelemetry.api.logs.Severity;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.Marker;
-import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.impl.Log4jLogEvent;
 import org.apache.logging.log4j.message.FormattedMessage;
-import org.apache.logging.log4j.message.StringMapMessage;
-import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -87,189 +68,6 @@ abstract class AbstractOpenTelemetryAppenderTest {
     executeAfterLogsExecution();
 
     getTesting().waitAndAssertLogRecords(logRecord -> logRecord.hasBody("log message 1"));
-  }
-
-  @Test
-  void logNoSpan() {
-    logger.info("log message 1");
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
-                    .hasBody("log message 1")
-                    .hasAttributesSatisfyingExactly(
-                        addLocationAttributes(
-                            "logNoSpan",
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId()))));
-  }
-
-  @Test
-  void logWithSpanInvalid() {
-    logger.info("log message");
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(logRecord -> logRecord.hasSpanContext(SpanContext.getInvalid()));
-  }
-
-  @Test
-  void logWithExtras() {
-    Instant start = Instant.now();
-    logger.info("log message 1", new IllegalStateException("Error!"));
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord -> {
-              logRecord
-                  .hasResource(resource)
-                  .hasInstrumentationScope(instrumentationScopeInfo)
-                  .hasBody("log message 1")
-                  .hasSeverity(Severity.INFO)
-                  .hasSeverityText("INFO")
-                  .hasAttributesSatisfyingExactly(
-                      addLocationAttributes(
-                          "logWithExtras",
-                          equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                          equalTo(THREAD_ID, Thread.currentThread().getId()),
-                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                          equalTo(EXCEPTION_MESSAGE, "Error!"),
-                          satisfies(EXCEPTION_STACKTRACE, v -> v.contains("logWithExtras"))));
-
-              LogRecordData logRecordData = AssertAccess.getActual(logRecord);
-              assertThat(logRecordData.getTimestampEpochNanos())
-                  .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
-                  .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
-            });
-  }
-
-  @Test
-  void logContextData() {
-    ThreadContext.put("key1", "val1");
-    ThreadContext.put("key2", "val2");
-    try {
-      logger.info("log message 1");
-    } finally {
-      ThreadContext.clearMap();
-    }
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
-                    .hasBody("log message 1")
-                    .hasAttributesSatisfyingExactly(
-                        addLocationAttributes(
-                            "logContextData",
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("key1"), "val1"),
-                            equalTo(stringKey("key2"), "val2"))));
-  }
-
-  @Test
-  void logStringMapMessage() {
-    StringMapMessage message = new StringMapMessage();
-    message.put("key1", "val1");
-    message.put("key2", "val2");
-    logger.info(message);
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
-                    .hasAttributesSatisfyingExactly(
-                        addLocationAttributes(
-                            "logStringMapMessage",
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
-  }
-
-  @Test
-  void logStringMapMessageWithSpecialAttribute() {
-    StringMapMessage message = new StringMapMessage();
-    message.put("key1", "val1");
-    message.put("message", "val2");
-    logger.info(message);
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
-                    .hasBody("val2")
-                    .hasAttributesSatisfyingExactly(
-                        addLocationAttributes(
-                            "logStringMapMessageWithSpecialAttribute",
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"))));
-  }
-
-  @Test
-  void testCaptureMarkerAttribute() {
-    String markerName = "aMarker";
-    Marker marker = MarkerManager.getMarker(markerName);
-
-    logger.info(marker, "Message");
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord.hasAttributesSatisfying(equalTo(stringKey("log4j.marker"), markerName)));
-  }
-
-  @Test
-  void logStructuredDataMessage() {
-    StructuredDataMessage message = new StructuredDataMessage("an id", "a message", "a type");
-    message.put("key1", "val1");
-    message.put("key2", "val2");
-    logger.info(message);
-
-    executeAfterLogsExecution();
-
-    getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(resource)
-                    .hasInstrumentationScope(instrumentationScopeInfo)
-                    .hasBody("a message")
-                    .hasAttributesSatisfyingExactly(
-                        addLocationAttributes(
-                            "logStructuredDataMessage",
-                            equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                            equalTo(THREAD_ID, Thread.currentThread().getId()),
-                            equalTo(stringKey("log4j.map_message.key1"), "val1"),
-                            equalTo(stringKey("log4j.map_message.key2"), "val2"))));
-  }
-
-  private static List<AttributeAssertion> addLocationAttributes(
-      String methodName, AttributeAssertion... assertions) {
-    return addLocationAttributes(AbstractOpenTelemetryAppenderTest.class, methodName, assertions);
   }
 
   protected static List<AttributeAssertion> addLocationAttributes(

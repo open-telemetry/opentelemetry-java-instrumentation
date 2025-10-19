@@ -13,7 +13,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -64,7 +66,7 @@ class GraphqlInstrumentation implements TypeInstrumentation {
                       MethodList<?> methods,
                       int writerFlags,
                       int readerFlags) {
-                    return new ClassVisitor(Opcodes.ASM9, classVisitor) {
+                    return new ClassVisitor(AsmApi.VERSION, classVisitor) {
                       @Override
                       public MethodVisitor visitMethod(
                           int access,
@@ -106,10 +108,11 @@ class GraphqlInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class AddInstrumentationAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Return(readOnly = false) Instrumentation instrumentation) {
+    public static Instrumentation onExit(@Advice.Return Instrumentation instrumentation) {
       // this advice is here only to get GraphqlSingletons injected and checked by muzzle
-      instrumentation = addInstrumentation(instrumentation);
+      return addInstrumentation(instrumentation);
     }
   }
 }

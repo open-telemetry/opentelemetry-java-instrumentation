@@ -13,8 +13,8 @@ plugins {
   id "com.gradleup.shadow" version "9.2.2"
   id "com.diffplug.spotless" version "8.0.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.21.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "2.21.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.22.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "2.22.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -23,11 +23,11 @@ version '1.0'
 ext {
   versions = [
     // this line is managed by .github/scripts/update-sdk-version.sh
-    opentelemetrySdk           : "1.54.1",
+    opentelemetrySdk           : "1.55.0",
 
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "2.21.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "2.21.0-alpha-SNAPSHOT"
+    opentelemetryJavaagent     : "2.22.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "2.22.0-alpha-SNAPSHOT"
   ]
 
   deps = [
@@ -98,10 +98,10 @@ dependencies {
   implementation 'org.apache.commons:commons-lang3:3.19.0'
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:1.21.3")
+  testImplementation("org.testcontainers:testcontainers:2.0.1")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.20.0")
-  testImplementation("com.google.protobuf:protobuf-java-util:4.32.1")
-  testImplementation("com.squareup.okhttp3:okhttp:5.1.0")
+  testImplementation("com.google.protobuf:protobuf-java-util:4.33.0")
+  testImplementation("com.squareup.okhttp3:okhttp:5.2.1")
   testImplementation("io.opentelemetry:opentelemetry-api")
   testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.8.0-alpha")
 
@@ -110,7 +110,7 @@ dependencies {
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
-  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.18")
+  testRuntimeOnly("ch.qos.logback:logback-classic:1.5.19")
 
   //Otel Java instrumentation that we use and extend during integration tests
   otel("io.opentelemetry.javaagent:opentelemetry-javaagent:${versions.opentelemetryJavaagent}")
