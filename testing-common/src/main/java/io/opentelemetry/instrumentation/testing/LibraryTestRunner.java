@@ -44,9 +44,8 @@ import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.SpanProcessor;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
+import java.io.File;
 import java.io.IOException;
-import java.net.URL;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -133,11 +132,7 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     // Generates files in a `.telemetry` directory within the instrumentation module with all
     // captured emitted metadata to be used by the instrumentation-docs Doc generator.
     if (Boolean.getBoolean("collectMetadata")) {
-      URL resource = this.getClass().getClassLoader().getResource("");
-      if (resource == null) {
-        return;
-      }
-      String path = Paths.get(resource.getPath()).toString();
+      String path = new File("").getAbsolutePath();
 
       MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
     }
