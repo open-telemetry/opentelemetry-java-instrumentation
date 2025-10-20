@@ -49,7 +49,7 @@ fun findArtifact(version: String): File {
 }
 
 // generate the api diff report for any module that is stable
-if (project.findProperty("otel.stable") == "true") {
+if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent") {
   afterEvaluate {
     // Only apply japicmp to projects that have a jar task (i.e. not BOMs or platforms)
     tasks.findByName("jar")?.let {
