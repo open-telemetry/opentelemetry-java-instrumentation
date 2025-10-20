@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.genai.incubating.GenAiIncubatingAttributes.GEN_AI_INPUT_MESSAGES;
@@ -46,7 +51,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-public class GenAiMessagesExtractor <REQUEST, RESPONSE>
+public class GenAiMessagesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   private static final Logger LOGGER = Logger.getLogger(GenAiMessagesExtractor.class.getName());
@@ -57,7 +62,8 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
       GenAiMessagesProvider<REQUEST, RESPONSE> messagesProvider,
       MessageCaptureOptions messageCaptureOptions,
       String instrumentationName) {
-    return new GenAiMessagesExtractor<>(attributesGetter, messagesProvider, messageCaptureOptions, instrumentationName);
+    return new GenAiMessagesExtractor<>(
+        attributesGetter, messagesProvider, messageCaptureOptions, instrumentationName);
   }
 
   private final MessageCaptureOptions messageCaptureOptions;
@@ -88,20 +94,28 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     tryInit();
-    if (CaptureMessageStrategy.SPAN_ATTRIBUTES.equals(messageCaptureOptions.captureMessageStrategy())) {
+    if (CaptureMessageStrategy.SPAN_ATTRIBUTES.equals(
+        messageCaptureOptions.captureMessageStrategy())) {
       SystemInstructions systemInstructions = messagesProvider.systemInstructions(request, null);
       if (systemInstructions != null) {
-        internalSet(attributes, GEN_AI_SYSTEM_INSTRUCTIONS, toJsonString(systemInstructions.getSerializableObject()));
+        internalSet(
+            attributes,
+            GEN_AI_SYSTEM_INSTRUCTIONS,
+            toJsonString(systemInstructions.getSerializableObject()));
       }
 
       InputMessages inputMessages = messagesProvider.inputMessages(request, null);
       if (inputMessages != null) {
-        internalSet(attributes, GEN_AI_INPUT_MESSAGES, toJsonString(inputMessages.getSerializableObject()));
+        internalSet(
+            attributes, GEN_AI_INPUT_MESSAGES, toJsonString(inputMessages.getSerializableObject()));
       }
 
       ToolDefinitions toolDefinitions = messagesProvider.toolDefinitions(request, null);
       if (toolDefinitions != null) {
-        internalSet(attributes, GEN_AI_TOOL_DEFINITIONS, toJsonString(toolDefinitions.getSerializableObject()));
+        internalSet(
+            attributes,
+            GEN_AI_TOOL_DEFINITIONS,
+            toJsonString(toolDefinitions.getSerializableObject()));
       }
     }
   }
@@ -113,38 +127,53 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (CaptureMessageStrategy.SPAN_ATTRIBUTES.equals(messageCaptureOptions.captureMessageStrategy())) {
+    if (CaptureMessageStrategy.SPAN_ATTRIBUTES.equals(
+        messageCaptureOptions.captureMessageStrategy())) {
       OutputMessages outputMessages = messagesProvider.outputMessages(request, response);
       if (outputMessages != null) {
-        internalSet(attributes, GEN_AI_OUTPUT_MESSAGES, toJsonString(outputMessages.getSerializableObject()));
+        internalSet(
+            attributes,
+            GEN_AI_OUTPUT_MESSAGES,
+            toJsonString(outputMessages.getSerializableObject()));
       }
-    } else if (CaptureMessageStrategy.EVENT.equals(messageCaptureOptions.captureMessageStrategy())) {
+    } else if (CaptureMessageStrategy.EVENT.equals(
+        messageCaptureOptions.captureMessageStrategy())) {
       emitInferenceEvent(context, request, response);
     }
   }
 
   private void emitInferenceEvent(Context context, REQUEST request, @Nullable RESPONSE response) {
     if (eventLogger != null) {
-      LogRecordBuilder builder = eventLogger.logRecordBuilder()
-          .setAttribute(EVENT_NAME, GEN_AI_CLIENT_INFERENCE_OPERATION_DETAILS)
-          .setContext(context);
+      LogRecordBuilder builder =
+          eventLogger
+              .logRecordBuilder()
+              .setAttribute(EVENT_NAME, GEN_AI_CLIENT_INFERENCE_OPERATION_DETAILS)
+              .setContext(context);
 
-      SystemInstructions systemInstructions = messagesProvider.systemInstructions(request,
-          response);
+      SystemInstructions systemInstructions =
+          messagesProvider.systemInstructions(request, response);
       if (systemInstructions != null) {
-        internalSetLogAttribute(builder, GEN_AI_SYSTEM_INSTRUCTIONS, toJsonString(systemInstructions.getSerializableObject()));
+        internalSetLogAttribute(
+            builder,
+            GEN_AI_SYSTEM_INSTRUCTIONS,
+            toJsonString(systemInstructions.getSerializableObject()));
       }
       InputMessages inputMessages = messagesProvider.inputMessages(request, response);
       if (inputMessages != null) {
-        internalSetLogAttribute(builder, GEN_AI_INPUT_MESSAGES, toJsonString(inputMessages.getSerializableObject()));
+        internalSetLogAttribute(
+            builder, GEN_AI_INPUT_MESSAGES, toJsonString(inputMessages.getSerializableObject()));
       }
       ToolDefinitions toolDefinitions = messagesProvider.toolDefinitions(request, null);
       if (toolDefinitions != null) {
-        internalSetLogAttribute(builder, GEN_AI_TOOL_DEFINITIONS, toJsonString(toolDefinitions.getSerializableObject()));
+        internalSetLogAttribute(
+            builder,
+            GEN_AI_TOOL_DEFINITIONS,
+            toJsonString(toolDefinitions.getSerializableObject()));
       }
       OutputMessages outputMessages = messagesProvider.outputMessages(request, response);
       if (outputMessages != null) {
-        internalSetLogAttribute(builder, GEN_AI_OUTPUT_MESSAGES, toJsonString(outputMessages.getSerializableObject()));
+        internalSetLogAttribute(
+            builder, GEN_AI_OUTPUT_MESSAGES, toJsonString(outputMessages.getSerializableObject()));
       }
 
       internalSetLogAttribute(builder, GEN_AI_OPERATION_NAME, getter.getOperationName(request));
@@ -155,11 +184,14 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
       internalSetLogAttribute(builder, GEN_AI_REQUEST_SEED, getter.getRequestSeed(request));
       internalSetLogAttribute(
           builder, GEN_AI_REQUEST_FREQUENCY_PENALTY, getter.getRequestFrequencyPenalty(request));
-      internalSetLogAttribute(builder, GEN_AI_REQUEST_MAX_TOKENS, getter.getRequestMaxTokens(request));
+      internalSetLogAttribute(
+          builder, GEN_AI_REQUEST_MAX_TOKENS, getter.getRequestMaxTokens(request));
       internalSetLogAttribute(
           builder, GEN_AI_REQUEST_PRESENCE_PENALTY, getter.getRequestPresencePenalty(request));
-      internalSetLogAttribute(builder, GEN_AI_REQUEST_STOP_SEQUENCES, getter.getRequestStopSequences(request));
-      internalSetLogAttribute(builder, GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
+      internalSetLogAttribute(
+          builder, GEN_AI_REQUEST_STOP_SEQUENCES, getter.getRequestStopSequences(request));
+      internalSetLogAttribute(
+          builder, GEN_AI_REQUEST_TEMPERATURE, getter.getRequestTemperature(request));
       internalSetLogAttribute(builder, GEN_AI_REQUEST_TOP_K, getter.getRequestTopK(request));
       internalSetLogAttribute(builder, GEN_AI_REQUEST_TOP_P, getter.getRequestTopP(request));
 
@@ -168,7 +200,8 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
         builder.setAttribute(GEN_AI_RESPONSE_FINISH_REASONS, finishReasons);
       }
       internalSetLogAttribute(builder, GEN_AI_RESPONSE_ID, getter.getResponseId(request, response));
-      internalSetLogAttribute(builder, GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
+      internalSetLogAttribute(
+          builder, GEN_AI_RESPONSE_MODEL, getter.getResponseModel(request, response));
       internalSetLogAttribute(
           builder, GEN_AI_USAGE_INPUT_TOKENS, getter.getUsageInputTokens(request, response));
       internalSetLogAttribute(
@@ -177,7 +210,8 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
     }
   }
 
-  private <T> void internalSetLogAttribute(LogRecordBuilder logRecordBuilder, AttributeKey<T> key, @Nullable T value) {
+  private <T> void internalSetLogAttribute(
+      LogRecordBuilder logRecordBuilder, AttributeKey<T> key, @Nullable T value) {
     if (value == null) {
       return;
     }
@@ -195,8 +229,8 @@ public class GenAiMessagesExtractor <REQUEST, RESPONSE>
         LOGGER.log(Level.WARNING, "failed to init json marshaler, global instance is null");
       }
 
-      GenAiEventLoggerProvider loggerProvider = GlobalInstanceHolder.getInstance(
-          GenAiEventLoggerProvider.class);
+      GenAiEventLoggerProvider loggerProvider =
+          GlobalInstanceHolder.getInstance(GenAiEventLoggerProvider.class);
 
       if (loggerProvider == null) {
         LOGGER.log(Level.WARNING, "failed to init event logger, logger provider is null");

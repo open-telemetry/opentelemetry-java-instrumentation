@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.chat.client;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.TELEMETRY;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -20,8 +20,8 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
 import reactor.core.publisher.Flux;
 
 @AutoService(TypeInstrumentation.class)
@@ -29,7 +29,8 @@ public class DefaultStreamResponseSpecInstrumentation implements TypeInstrumenta
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.springframework.ai.chat.client.DefaultChatClient$DefaultStreamResponseSpec");
+    return hasClassesNamed(
+        "org.springframework.ai.chat.client.DefaultChatClient$DefaultStreamResponseSpec");
   }
 
   @Override
@@ -40,8 +41,11 @@ public class DefaultStreamResponseSpecInstrumentation implements TypeInstrumenta
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("doGetObservableFluxChatResponse")).and(takesArguments(1))
-        .and(isPrivate()).and(takesArgument(0, named("org.springframework.ai.chat.client.ChatClientRequest"))),
+        isMethod()
+            .and(named("doGetObservableFluxChatResponse"))
+            .and(takesArguments(1))
+            .and(isPrivate())
+            .and(takesArgument(0, named("org.springframework.ai.chat.client.ChatClientRequest"))),
         this.getClass().getName() + "$DoGetObservableFluxChatResponseAdvice");
   }
 
@@ -54,12 +58,16 @@ public class DefaultStreamResponseSpecInstrumentation implements TypeInstrumenta
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelStreamListener") ChatClientStreamListener streamListener) {
       context = Context.current();
-      
+
       if (TELEMETRY.chatClientInstrumenter().shouldStart(context, request)) {
         context = TELEMETRY.chatClientInstrumenter().start(context, request);
-        streamListener = new ChatClientStreamListener(
-            context, request, TELEMETRY.chatClientInstrumenter(),
-            TELEMETRY.messageCaptureOptions(), true);
+        streamListener =
+            new ChatClientStreamListener(
+                context,
+                request,
+                TELEMETRY.chatClientInstrumenter(),
+                TELEMETRY.messageCaptureOptions(),
+                true);
       }
     }
 

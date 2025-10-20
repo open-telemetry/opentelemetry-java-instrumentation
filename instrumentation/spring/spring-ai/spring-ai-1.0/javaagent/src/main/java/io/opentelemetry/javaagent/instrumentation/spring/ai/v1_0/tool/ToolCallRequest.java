@@ -19,7 +19,8 @@ public final class ToolCallRequest {
     this.toolDefinition = toolDefinition;
   }
 
-  public static ToolCallRequest create(String toolInput, String toolCallId, ToolDefinition toolDefinition) {
+  public static ToolCallRequest create(
+      String toolInput, String toolCallId, ToolDefinition toolDefinition) {
     return new ToolCallRequest(toolInput, toolCallId, toolDefinition);
   }
 
@@ -31,7 +32,7 @@ public final class ToolCallRequest {
     // spring ai support function only
     return "function";
   }
-  
+
   public String getName() {
     if (toolDefinition == null) {
       return null;

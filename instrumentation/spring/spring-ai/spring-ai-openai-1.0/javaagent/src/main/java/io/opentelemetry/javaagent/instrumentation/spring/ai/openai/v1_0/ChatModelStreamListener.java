@@ -5,11 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ai.openai.v1_0;
 
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionChunk;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionChunk.ChunkChoice;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
-import org.springframework.ai.openai.api.OpenAiApi.Usage;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.genai.MessageCaptureOptions;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -20,6 +15,11 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionChunk;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionChunk.ChunkChoice;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
+import org.springframework.ai.openai.api.OpenAiApi.Usage;
 
 public final class ChatModelStreamListener {
 
@@ -83,11 +83,7 @@ public final class ChatModelStreamListener {
         // Convert ChunkChoice to Choice for compatibility with buffer
         buffer.append(
             new org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice(
-                choice.finishReason(),
-                choice.index(),
-                choice.delta(),
-                choice.logprobs())
-        );
+                choice.finishReason(), choice.index(), choice.delta(), choice.logprobs()));
       }
     }
   }
@@ -117,21 +113,26 @@ public final class ChatModelStreamListener {
       outputTokens = (int) this.outputTokens.get();
     }
 
-    List<org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice> choices = this.chatModelMessageBuffers.stream()
-        .map(ChatModelMessageBuffer::toChoice)
-        .collect(Collectors.toList());
+    List<org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice> choices =
+        this.chatModelMessageBuffers.stream()
+            .map(ChatModelMessageBuffer::toChoice)
+            .collect(Collectors.toList());
 
-    ChatCompletion result = new ChatCompletion(
-        this.requestId.get(),
-        choices,
-        null, // created
-        null, // model
-        null, // serviceTier
-        null, // systemFingerprint
-        "chat.completion",
-        new Usage(outputTokens, inputTokens, 
-                  inputTokens != null && outputTokens != null ? inputTokens + outputTokens : null,
-                  null, null));
+    ChatCompletion result =
+        new ChatCompletion(
+            this.requestId.get(),
+            choices,
+            null, // created
+            null, // model
+            null, // serviceTier
+            null, // systemFingerprint
+            "chat.completion",
+            new Usage(
+                outputTokens,
+                inputTokens,
+                inputTokens != null && outputTokens != null ? inputTokens + outputTokens : null,
+                null,
+                null));
 
     if (this.newSpan) {
       this.instrumenter.end(this.context, this.request, result, error);

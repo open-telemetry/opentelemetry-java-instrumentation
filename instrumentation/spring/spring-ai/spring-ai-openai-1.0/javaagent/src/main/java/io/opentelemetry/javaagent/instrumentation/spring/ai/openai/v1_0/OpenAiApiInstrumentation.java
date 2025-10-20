@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.spring.ai.openai.v1_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -8,9 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionChunk;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -19,6 +21,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionChunk;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 import org.springframework.http.ResponseEntity;
 import reactor.core.publisher.Flux;
 
@@ -38,14 +43,22 @@ public class OpenAiApiInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("chatCompletionEntity")).and(takesArguments(2))
-            .and(takesArgument(0, named("org.springframework.ai.openai.api.OpenAiApi$ChatCompletionRequest")))
+        isMethod()
+            .and(named("chatCompletionEntity"))
+            .and(takesArguments(2))
+            .and(
+                takesArgument(
+                    0, named("org.springframework.ai.openai.api.OpenAiApi$ChatCompletionRequest")))
             .and(returns(named("org.springframework.http.ResponseEntity"))),
         this.getClass().getName() + "$CallAdvice");
 
     transformer.applyAdviceToMethod(
-        isMethod().and(named("chatCompletionStream")).and(takesArguments(2))
-            .and(takesArgument(0, named("org.springframework.ai.openai.api.OpenAiApi$ChatCompletionRequest")))
+        isMethod()
+            .and(named("chatCompletionStream"))
+            .and(takesArguments(2))
+            .and(
+                takesArgument(
+                    0, named("org.springframework.ai.openai.api.OpenAiApi$ChatCompletionRequest")))
             .and(returns(named("reactor.core.publisher.Flux"))),
         this.getClass().getName() + "$StreamAdvice");
   }
@@ -79,7 +92,8 @@ public class OpenAiApiInstrumentation implements TypeInstrumentation {
       }
       scope.close();
 
-      TELEMETRY.chatCompletionInstrumenter()
+      TELEMETRY
+          .chatCompletionInstrumenter()
           .end(context, request, response.hasBody() ? response.getBody() : null, throwable);
     }
   }
@@ -93,12 +107,16 @@ public class OpenAiApiInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelStreamListener") ChatModelStreamListener streamListener) {
       context = Context.current();
-      
+
       if (TELEMETRY.chatCompletionInstrumenter().shouldStart(context, request)) {
         context = TELEMETRY.chatCompletionInstrumenter().start(context, request);
-        streamListener = new ChatModelStreamListener(
-            context, request, TELEMETRY.chatCompletionInstrumenter(),
-            TELEMETRY.messageCaptureOptions(), true);
+        streamListener =
+            new ChatModelStreamListener(
+                context,
+                request,
+                TELEMETRY.chatCompletionInstrumenter(),
+                TELEMETRY.messageCaptureOptions(),
+                true);
       }
     }
 

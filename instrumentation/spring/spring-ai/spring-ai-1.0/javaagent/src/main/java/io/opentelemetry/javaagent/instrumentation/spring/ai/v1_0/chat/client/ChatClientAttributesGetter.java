@@ -15,9 +15,10 @@ import javax.annotation.Nullable;
 import org.springframework.ai.chat.client.ChatClientRequest;
 import org.springframework.ai.chat.client.ChatClientResponse;
 
-public enum ChatClientAttributesGetter implements
-    GenAiAttributesGetter<ChatClientRequest, ChatClientResponse>,
-    GenAiAgentAttributesGetter<ChatClientRequest, ChatClientResponse> {
+public enum ChatClientAttributesGetter
+    implements
+        GenAiAttributesGetter<ChatClientRequest, ChatClientResponse>,
+        GenAiAgentAttributesGetter<ChatClientRequest, ChatClientResponse> {
   INSTANCE;
 
   @Override
@@ -70,7 +71,8 @@ public enum ChatClientAttributesGetter implements
   @Nullable
   @Override
   public Long getRequestMaxTokens(ChatClientRequest request) {
-    if (request.prompt().getOptions() == null || request.prompt().getOptions().getMaxTokens() == null) {
+    if (request.prompt().getOptions() == null
+        || request.prompt().getOptions().getMaxTokens() == null) {
       return null;
     }
     return request.prompt().getOptions().getMaxTokens().longValue();
@@ -122,7 +124,8 @@ public enum ChatClientAttributesGetter implements
   }
 
   @Override
-  public List<String> getResponseFinishReasons(ChatClientRequest request, @Nullable ChatClientResponse response) {
+  public List<String> getResponseFinishReasons(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
     if (response == null
         || response.chatResponse() == null
         || response.chatResponse().getResult() == null
@@ -131,7 +134,8 @@ public enum ChatClientAttributesGetter implements
       return emptyList();
     }
 
-    return singletonList(response.chatResponse().getResult().getMetadata().getFinishReason().toLowerCase());
+    return singletonList(
+        response.chatResponse().getResult().getMetadata().getFinishReason().toLowerCase());
   }
 
   @Nullable
@@ -162,7 +166,8 @@ public enum ChatClientAttributesGetter implements
 
   @Nullable
   @Override
-  public Long getUsageInputTokens(ChatClientRequest request, @Nullable ChatClientResponse response) {
+  public Long getUsageInputTokens(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
     if (response == null
         || response.chatResponse() == null
         || response.chatResponse().getMetadata() == null
@@ -177,7 +182,8 @@ public enum ChatClientAttributesGetter implements
 
   @Nullable
   @Override
-  public Long getUsageOutputTokens(ChatClientRequest request, @Nullable ChatClientResponse response) {
+  public Long getUsageOutputTokens(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
     if (response == null
         || response.chatResponse() == null
         || response.chatResponse().getMetadata() == null

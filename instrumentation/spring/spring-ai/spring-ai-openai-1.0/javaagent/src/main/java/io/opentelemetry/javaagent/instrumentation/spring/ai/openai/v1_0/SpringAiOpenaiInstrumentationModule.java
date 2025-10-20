@@ -20,7 +20,6 @@ public class SpringAiOpenaiInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new OpenAiChatModelInstrumentation(),
-        new OpenAiApiInstrumentation());
+    return asList(new OpenAiChatModelInstrumentation(), new OpenAiApiInstrumentation());
   }
 }

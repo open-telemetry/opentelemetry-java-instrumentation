@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.incubator;
 
 import static io.opentelemetry.api.common.AttributeKey.doubleKey;
@@ -10,7 +15,8 @@ import java.util.List;
 
 public final class GenAiIncubatingAttributes {
 
-  public static final AttributeKey<String> GEN_AI_OPERATION_NAME = stringKey("gen_ai.operation.name");
+  public static final AttributeKey<String> GEN_AI_OPERATION_NAME =
+      stringKey("gen_ai.operation.name");
   public static final AttributeKey<List<String>> GEN_AI_REQUEST_ENCODING_FORMATS =
       stringArrayKey("gen_ai.request.encoding_formats");
   public static final AttributeKey<Double> GEN_AI_REQUEST_FREQUENCY_PENALTY =
@@ -25,25 +31,31 @@ public final class GenAiIncubatingAttributes {
       stringArrayKey("gen_ai.request.stop_sequences");
   public static final AttributeKey<Double> GEN_AI_REQUEST_TEMPERATURE =
       doubleKey("gen_ai.request.temperature");
-  public static final AttributeKey<Double> GEN_AI_REQUEST_TOP_K =
-      doubleKey("gen_ai.request.top_k");
-  public static final AttributeKey<Double> GEN_AI_REQUEST_TOP_P =
-      doubleKey("gen_ai.request.top_p");
+  public static final AttributeKey<Double> GEN_AI_REQUEST_TOP_K = doubleKey("gen_ai.request.top_k");
+  public static final AttributeKey<Double> GEN_AI_REQUEST_TOP_P = doubleKey("gen_ai.request.top_p");
   public static final AttributeKey<List<String>> GEN_AI_RESPONSE_FINISH_REASONS =
       stringArrayKey("gen_ai.response.finish_reasons");
   public static final AttributeKey<String> GEN_AI_RESPONSE_ID = stringKey("gen_ai.response.id");
-  public static final AttributeKey<String> GEN_AI_RESPONSE_MODEL = stringKey("gen_ai.response.model");
+  public static final AttributeKey<String> GEN_AI_RESPONSE_MODEL =
+      stringKey("gen_ai.response.model");
   public static final AttributeKey<String> GEN_AI_PROVIDER_NAME = stringKey("gen_ai.provider.name");
-  public static final AttributeKey<String> GEN_AI_CONVERSATION_ID = stringKey("gen_ai.conversation.id");
-  public static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS = longKey("gen_ai.usage.input_tokens");
+  public static final AttributeKey<String> GEN_AI_CONVERSATION_ID =
+      stringKey("gen_ai.conversation.id");
+  public static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS =
+      longKey("gen_ai.usage.input_tokens");
   public static final AttributeKey<Long> GEN_AI_USAGE_OUTPUT_TOKENS =
       longKey("gen_ai.usage.output_tokens");
-  public static final AttributeKey<Long> GEN_AI_REQUEST_CHOICE_COUNT = longKey("gen_ai.request.choice.count");
+  public static final AttributeKey<Long> GEN_AI_REQUEST_CHOICE_COUNT =
+      longKey("gen_ai.request.choice.count");
   public static final AttributeKey<String> GEN_AI_OUTPUT_TYPE = stringKey("gen_ai.output.type");
-  public static final AttributeKey<String> GEN_AI_SYSTEM_INSTRUCTIONS = stringKey("gen_ai.system_instructions");
-  public static final AttributeKey<String> GEN_AI_INPUT_MESSAGES = stringKey("gen_ai.input.messages");
-  public static final AttributeKey<String> GEN_AI_OUTPUT_MESSAGES = stringKey("gen_ai.output.messages");
-  public static final AttributeKey<String> GEN_AI_TOOL_DEFINITIONS = stringKey("gen_ai.tool.definitions");
+  public static final AttributeKey<String> GEN_AI_SYSTEM_INSTRUCTIONS =
+      stringKey("gen_ai.system_instructions");
+  public static final AttributeKey<String> GEN_AI_INPUT_MESSAGES =
+      stringKey("gen_ai.input.messages");
+  public static final AttributeKey<String> GEN_AI_OUTPUT_MESSAGES =
+      stringKey("gen_ai.output.messages");
+  public static final AttributeKey<String> GEN_AI_TOOL_DEFINITIONS =
+      stringKey("gen_ai.tool.definitions");
 
   public static class GenAiOperationNameIncubatingValues {
     public static final String CHAT = "chat";
@@ -75,6 +87,7 @@ public final class GenAiIncubatingAttributes {
   }
 
   public static class GenAiEventName {
-    public static final String GEN_AI_CLIENT_INFERENCE_OPERATION_DETAILS = "gen_ai.client.inference.operation.details";
+    public static final String GEN_AI_CLIENT_INFERENCE_OPERATION_DETAILS =
+        "gen_ai.client.inference.operation.details";
   }
 }

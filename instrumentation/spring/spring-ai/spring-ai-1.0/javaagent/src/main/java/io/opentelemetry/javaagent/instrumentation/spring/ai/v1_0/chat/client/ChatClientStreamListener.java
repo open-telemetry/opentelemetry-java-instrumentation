@@ -115,20 +115,24 @@ public final class ChatClientStreamListener {
       outputTokens = (int) this.outputTokens.get();
     }
 
-    List<Generation> generations = this.chatClientMessageBuffers.stream()
-        .map(ChatClientMessageBuffer::toGeneration)
-        .collect(Collectors.toList());
+    List<Generation> generations =
+        this.chatClientMessageBuffers.stream()
+            .map(ChatClientMessageBuffer::toGeneration)
+            .collect(Collectors.toList());
 
-    ChatClientResponse response = ChatClientResponse.builder()
-        .chatResponse(ChatResponse.builder()
-            .generations(generations)
-            .metadata(ChatResponseMetadata.builder()
-                .usage(new DefaultUsage(inputTokens, outputTokens))
-                .id(requestId.get())
-                .model(model.get())
-                .build())
-            .build())
-        .build();
+    ChatClientResponse response =
+        ChatClientResponse.builder()
+            .chatResponse(
+                ChatResponse.builder()
+                    .generations(generations)
+                    .metadata(
+                        ChatResponseMetadata.builder()
+                            .usage(new DefaultUsage(inputTokens, outputTokens))
+                            .id(requestId.get())
+                            .model(model.get())
+                            .build())
+                    .build())
+            .build();
 
     if (this.newSpan) {
       this.instrumenter.end(this.context, this.request, response, error);

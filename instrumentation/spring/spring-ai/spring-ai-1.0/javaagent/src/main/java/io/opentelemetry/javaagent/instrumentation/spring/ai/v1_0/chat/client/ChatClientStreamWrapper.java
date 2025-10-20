@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.chat.client;
 
 import io.opentelemetry.context.Context;
@@ -12,10 +17,11 @@ public final class ChatClientStreamWrapper {
       ChatClientStreamListener streamListener,
       Context context) {
 
-    Flux<ChatClientResponse> chatClientResponseFlux = originFlux.doOnNext(
-            chunk -> streamListener.onChunk(chunk))
-        .doOnComplete(() -> streamListener.endSpan(null))
-        .doOnError(streamListener::endSpan);
+    Flux<ChatClientResponse> chatClientResponseFlux =
+        originFlux
+            .doOnNext(chunk -> streamListener.onChunk(chunk))
+            .doOnComplete(() -> streamListener.endSpan(null))
+            .doOnError(streamListener::endSpan);
     return ContextPropagationOperator.runWithContext(chatClientResponseFlux, context);
   }
 

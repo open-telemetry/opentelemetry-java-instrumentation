@@ -5,18 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ai.openai.v1_0;
 
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionFinishReason;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.ChatCompletionFunction;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.Role;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.ToolCall;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice;
 import io.opentelemetry.instrumentation.api.genai.MessageCaptureOptions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionFinishReason;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.ChatCompletionFunction;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.Role;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.ToolCall;
 
 final class ChatModelMessageBuffer {
   private static final String TRUNCATE_FLAG = "...[truncated]";
@@ -50,8 +50,11 @@ final class ChatModelMessageBuffer {
           if (entry.getValue().function.arguments != null) {
             arguments = entry.getValue().function.arguments.toString();
           }
-          toolCalls.add(new ToolCall(entry.getValue().id, entry.getValue().type,
-              new ChatCompletionFunction(entry.getValue().function.name, arguments)));
+          toolCalls.add(
+              new ToolCall(
+                  entry.getValue().id,
+                  entry.getValue().type,
+                  new ChatCompletionFunction(entry.getValue().function.name, arguments)));
         }
       }
     }
@@ -80,8 +83,13 @@ final class ChatModelMessageBuffer {
 
           String deltaContent = (String) choice.message().rawContent();
           if (this.rawContent.length() < this.messageCaptureOptions.maxMessageContentLength()) {
-            if (this.rawContent.length() + deltaContent.length() >= this.messageCaptureOptions.maxMessageContentLength() ) {
-              deltaContent = deltaContent.substring(0, this.messageCaptureOptions.maxMessageContentLength() - this.rawContent.length());
+            if (this.rawContent.length() + deltaContent.length()
+                >= this.messageCaptureOptions.maxMessageContentLength()) {
+              deltaContent =
+                  deltaContent.substring(
+                      0,
+                      this.messageCaptureOptions.maxMessageContentLength()
+                          - this.rawContent.length());
               this.rawContent.append(deltaContent).append(TRUNCATE_FLAG);
             } else {
               this.rawContent.append(deltaContent);
@@ -98,8 +106,7 @@ final class ChatModelMessageBuffer {
         for (int i = 0; i < choice.message().toolCalls().size(); i++) {
           ToolCall toolCall = choice.message().toolCalls().get(i);
           ToolCallBuffer buffer =
-              this.toolCalls.computeIfAbsent(
-                  i, unused -> new ToolCallBuffer(toolCall.id()));
+              this.toolCalls.computeIfAbsent(i, unused -> new ToolCallBuffer(toolCall.id()));
           if (toolCall.type() != null) {
             buffer.type = toolCall.type();
           }
@@ -108,7 +115,8 @@ final class ChatModelMessageBuffer {
             if (toolCall.function().name() != null) {
               buffer.function.name = toolCall.function().name();
             }
-            if (this.messageCaptureOptions.captureMessageContent() && toolCall.function().arguments() != null) {
+            if (this.messageCaptureOptions.captureMessageContent()
+                && toolCall.function().arguments() != null) {
               if (buffer.function.arguments == null) {
                 buffer.function.arguments = new StringBuilder();
               }

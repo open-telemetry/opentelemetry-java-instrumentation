@@ -1,11 +1,10 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.spring.ai.openai.v1_0;
 
-import javax.annotation.Nullable;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.ToolCall;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 import io.opentelemetry.instrumentation.api.genai.MessageCaptureOptions;
 import io.opentelemetry.instrumentation.api.genai.messages.InputMessage;
 import io.opentelemetry.instrumentation.api.genai.messages.InputMessages;
@@ -25,6 +24,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion.Choice;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionMessage.ToolCall;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 
 public final class ChatModelMessagesProvider
     implements GenAiMessagesProvider<ChatCompletionRequest, ChatCompletion> {
@@ -43,9 +48,9 @@ public final class ChatModelMessagesProvider
 
   @Nullable
   @Override
-  public InputMessages inputMessages(ChatCompletionRequest request, @Nullable ChatCompletion response) {
-    if (!messageCaptureOptions.captureMessageContent()
-        || request.messages() == null) {
+  public InputMessages inputMessages(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+    if (!messageCaptureOptions.captureMessageContent() || request.messages() == null) {
       return null;
     }
 
@@ -56,7 +61,8 @@ public final class ChatModelMessagesProvider
         inputMessages.append(
             InputMessage.create(Role.SYSTEM, contentToMessageParts(msg.rawContent())));
       } else if (msg.role() == ChatCompletionMessage.Role.USER) {
-        inputMessages.append(InputMessage.create(Role.USER, contentToMessageParts(msg.rawContent())));
+        inputMessages.append(
+            InputMessage.create(Role.USER, contentToMessageParts(msg.rawContent())));
       } else if (msg.role() == ChatCompletionMessage.Role.ASSISTANT) {
         List<MessagePart> messageParts = new ArrayList<>();
 
@@ -67,13 +73,14 @@ public final class ChatModelMessagesProvider
 
         List<ToolCall> toolCalls = msg.toolCalls();
         if (toolCalls != null) {
-          messageParts.addAll(toolCalls.stream()
-              .map(this::toolCallToMessagePart)
-              .collect(Collectors.toList()));
+          messageParts.addAll(
+              toolCalls.stream().map(this::toolCallToMessagePart).collect(Collectors.toList()));
         }
         inputMessages.append(InputMessage.create(Role.ASSISTANT, messageParts));
       } else if (msg.role() == ChatCompletionMessage.Role.TOOL) {
-        inputMessages.append(InputMessage.create(Role.TOOL, contentToToolMessageParts(msg.toolCallId(), msg.rawContent())));
+        inputMessages.append(
+            InputMessage.create(
+                Role.TOOL, contentToToolMessageParts(msg.toolCallId(), msg.rawContent())));
       }
     }
     return inputMessages;
@@ -81,7 +88,8 @@ public final class ChatModelMessagesProvider
 
   @Nullable
   @Override
-  public OutputMessages outputMessages(ChatCompletionRequest request, @Nullable ChatCompletion response) {
+  public OutputMessages outputMessages(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (!messageCaptureOptions.captureMessageContent()
         || response == null
         || response.choices() == null) {
@@ -100,9 +108,8 @@ public final class ChatModelMessagesProvider
         }
         List<ToolCall> toolCalls = choiceMsg.toolCalls();
         if (toolCalls != null) {
-          messageParts.addAll(toolCalls.stream()
-              .map(this::toolCallToMessagePart)
-              .collect(Collectors.toList()));
+          messageParts.addAll(
+              toolCalls.stream().map(this::toolCallToMessagePart).collect(Collectors.toList()));
         }
       }
 
@@ -117,33 +124,37 @@ public final class ChatModelMessagesProvider
 
   @Nullable
   @Override
-  public SystemInstructions systemInstructions(ChatCompletionRequest request, @Nullable ChatCompletion response) {
+  public SystemInstructions systemInstructions(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
     return null;
   }
 
   @Nullable
   @Override
-  public ToolDefinitions toolDefinitions(ChatCompletionRequest request, @Nullable ChatCompletion response) {
+  public ToolDefinitions toolDefinitions(
+      ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (request.tools() == null) {
       return null;
     }
 
     ToolDefinitions toolDefinitions = ToolDefinitions.create();
-    request.tools()
-        .stream()
+    request.tools().stream()
         .filter(Objects::nonNull)
-        .map(tool -> {
-          if (tool.getFunction() != null) {
-            String name = tool.getFunction().getName();
-            String type = tool.getType().name().toLowerCase();
-            if (messageCaptureOptions.captureMessageContent() && tool.getFunction().getDescription() != null) {
-              return ToolDefinition.create(type, name, tool.getFunction().getDescription(), null);
-            } else {
-              return ToolDefinition.create(type, name, null, null);
-            }
-          }
-          return null;
-        })
+        .map(
+            tool -> {
+              if (tool.getFunction() != null) {
+                String name = tool.getFunction().getName();
+                String type = tool.getType().name().toLowerCase();
+                if (messageCaptureOptions.captureMessageContent()
+                    && tool.getFunction().getDescription() != null) {
+                  return ToolDefinition.create(
+                      type, name, tool.getFunction().getDescription(), null);
+                } else {
+                  return ToolDefinition.create(type, name, null, null);
+                }
+              }
+              return null;
+            })
         .filter(Objects::nonNull)
         .forEach(toolDefinitions::append);
 
@@ -152,11 +163,12 @@ public final class ChatModelMessagesProvider
 
   /**
    * Support content:
+   *
    * <ul>
-   *   <li>{@code String}</li>
-   *   <li>{@code List<String>}</li>
+   *   <li>{@code String}
+   *   <li>{@code List<String>}
    * </ul>
-   * */
+   */
   private List<MessagePart> contentToMessageParts(Object rawContent) {
     List<MessagePart> messageParts = contentToMessagePartsOrNull(rawContent);
     return messageParts == null ? Collections.singletonList(TextPart.create("")) : messageParts;
@@ -164,11 +176,12 @@ public final class ChatModelMessagesProvider
 
   /**
    * Support content:
+   *
    * <ul>
-   *   <li>{@code String}</li>
-   *   <li>{@code List<String>}</li>
+   *   <li>{@code String}
+   *   <li>{@code List<String>}
    * </ul>
-   * */
+   */
   @SuppressWarnings({"unchecked", "rawtypes"})
   private List<MessagePart> contentToMessagePartsOrNull(Object rawContent) {
     if (rawContent instanceof String && !((String) rawContent).isEmpty()) {
@@ -182,21 +195,24 @@ public final class ChatModelMessagesProvider
 
   private MessagePart toolCallToMessagePart(ToolCall call) {
     if (call != null && call.function() != null) {
-      return ToolCallRequestPart.create(call.id(), call.function().name(), call.function().arguments());
+      return ToolCallRequestPart.create(
+          call.id(), call.function().name(), call.function().arguments());
     }
     return ToolCallRequestPart.create("unknown_function");
   }
 
   /**
    * Support content:
+   *
    * <ul>
-   *   <li>{@code String}</li>
-   *   <li>{@code List<String>}</li>
+   *   <li>{@code String}
+   *   <li>{@code List<String>}
    * </ul>
-   * */
+   */
   private List<MessagePart> contentToToolMessageParts(String toolCallId, Object rawContent) {
     if (rawContent instanceof String && !((String) rawContent).isEmpty()) {
-      return Collections.singletonList(ToolCallResponsePart.create(toolCallId, truncateTextContent((String) rawContent)));
+      return Collections.singletonList(
+          ToolCallResponsePart.create(toolCallId, truncateTextContent((String) rawContent)));
     }
     return Collections.singletonList(ToolCallResponsePart.create(toolCallId));
   }
@@ -210,10 +226,11 @@ public final class ChatModelMessagesProvider
   }
 
   private String truncateTextContent(String content) {
-    if (!content.endsWith(TRUNCATE_FLAG) && content.length() > messageCaptureOptions.maxMessageContentLength()) {
-      content = content.substring(0, messageCaptureOptions.maxMessageContentLength()) + TRUNCATE_FLAG;
+    if (!content.endsWith(TRUNCATE_FLAG)
+        && content.length() > messageCaptureOptions.maxMessageContentLength()) {
+      content =
+          content.substring(0, messageCaptureOptions.maxMessageContentLength()) + TRUNCATE_FLAG;
     }
     return content;
   }
-
 }

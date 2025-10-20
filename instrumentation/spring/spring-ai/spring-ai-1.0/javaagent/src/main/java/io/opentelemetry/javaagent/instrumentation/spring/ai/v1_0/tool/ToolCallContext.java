@@ -9,12 +9,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import java.util.Map;
 
-/**
- * Tool call context to store tool call ids map
- */
+/** Tool call context to store tool call ids map */
 public final class ToolCallContext {
 
-  private static final ContextKey<Map<String, String>> TOOL_CALL_IDS_KEY = 
+  private static final ContextKey<Map<String, String>> TOOL_CALL_IDS_KEY =
       ContextKey.named("spring-ai-tool-call-ids");
 
   private ToolCallContext() {}
@@ -30,12 +28,12 @@ public final class ToolCallContext {
     if (context == null || toolName == null) {
       return null;
     }
-    
+
     Map<String, String> toolCallIds = context.get(TOOL_CALL_IDS_KEY);
     if (toolCallIds == null) {
       return null;
     }
-    
+
     return toolCallIds.get(toolName);
   }
 }

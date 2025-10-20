@@ -19,7 +19,9 @@ public final class SpringAiOpenaiSingletons {
                   .getInt("otel.instrumentation.genai.message-content.max-length", 8192))
           .setCaptureMessageStrategy(
               InstrumentationConfig.get()
-                  .getString("otel.instrumentation.genai.message-content.capture-strategy", "span-attributes"))
+                  .getString(
+                      "otel.instrumentation.genai.message-content.capture-strategy",
+                      "span-attributes"))
           .build();
 
   private SpringAiOpenaiSingletons() {}

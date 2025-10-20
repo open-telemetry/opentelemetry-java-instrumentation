@@ -1,10 +1,15 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai.tool;
 
 import io.opentelemetry.instrumentation.api.instrumenter.genai.GenAiOperationAttributesGetter;
 import javax.annotation.Nullable;
 
-public interface GenAiToolAttributesGetter<REQUEST, RESPONSE> extends
-    GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
+public interface GenAiToolAttributesGetter<REQUEST, RESPONSE>
+    extends GenAiOperationAttributesGetter<REQUEST, RESPONSE> {
 
   String getToolDescription(REQUEST request);
 

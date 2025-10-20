@@ -10,9 +10,9 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.TELEMETRY;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -40,9 +40,11 @@ public class ToolCallbackInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("call")).and(takesArguments(2))
-        .and(takesArgument(0, named("java.lang.String")))
-        .and(returns(named("java.lang.String"))),
+        isMethod()
+            .and(named("call"))
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("java.lang.String")))
+            .and(returns(named("java.lang.String"))),
         this.getClass().getName() + "$CallAdvice");
   }
 
@@ -57,11 +59,12 @@ public class ToolCallbackInstrumentation implements TypeInstrumentation {
         @Advice.Local("otelScope") Scope scope,
         @Advice.Local("toolCallRequest") ToolCallRequest request) {
       context = Context.current();
-      
+
       // get tool call id from context
-      String toolCallId = ToolCallContext.getToolCallId(context, toolCallback.getToolDefinition().name());
+      String toolCallId =
+          ToolCallContext.getToolCallId(context, toolCallback.getToolDefinition().name());
       request = ToolCallRequest.create(toolInput, toolCallId, toolCallback.getToolDefinition());
-      
+
       if (TELEMETRY.toolCallInstrumenter().shouldStart(context, request)) {
         context = TELEMETRY.toolCallInstrumenter().start(context, request);
       }

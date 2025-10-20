@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.instrumentation.api.instrumenter.genai.incubating.AgentIncubatingAttributes.GEN_AI_AGENT_DESCRIPTION;
@@ -12,11 +17,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
- * Extractor of <a href="https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/">GenAI Agent
+ * Extractor of <a
+ * href="https://opentelemetry.io/docs/specs/semconv/gen-ai/gen-ai-agent-spans/">GenAI Agent
  * attributes</a>.
  *
- * <p>This class delegates to a type-specific {@link GenAiAgentAttributesGetter} for individual attribute
- * extraction from request/response objects.
+ * <p>This class delegates to a type-specific {@link GenAiAgentAttributesGetter} for individual
+ * attribute extraction from request/response objects.
  */
 public final class GenAiAgentAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
@@ -29,8 +35,7 @@ public final class GenAiAgentAttributesExtractor<REQUEST, RESPONSE>
 
   private final GenAiAgentAttributesGetter<REQUEST, RESPONSE> getter;
 
-  private GenAiAgentAttributesExtractor(
-      GenAiAgentAttributesGetter<REQUEST, RESPONSE> getter) {
+  private GenAiAgentAttributesExtractor(GenAiAgentAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
   }
 

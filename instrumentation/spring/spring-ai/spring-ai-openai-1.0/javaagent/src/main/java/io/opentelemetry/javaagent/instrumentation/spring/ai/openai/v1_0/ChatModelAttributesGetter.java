@@ -1,14 +1,19 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.spring.ai.openai.v1_0;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.instrumentation.api.instrumenter.genai.GenAiAttributesGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.genai.incubating.GenAiIncubatingAttributes;
+import java.util.List;
+import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
 import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
-import io.opentelemetry.instrumentation.api.instrumenter.genai.GenAiAttributesGetter;
-import java.util.List;
-import java.util.stream.Collectors;
 
 enum ChatModelAttributesGetter
     implements GenAiAttributesGetter<ChatCompletionRequest, ChatCompletion> {
@@ -35,7 +40,6 @@ enum ChatModelAttributesGetter
   public String getOperationTarget(ChatCompletionRequest request) {
     return getRequestModel(request);
   }
-
 
   @Nullable
   @Override
@@ -65,7 +69,8 @@ enum ChatModelAttributesGetter
       return null;
     }
     // Use maxCompletionTokens if available, otherwise fall back to maxTokens
-    Integer maxTokens = request.maxCompletionTokens() != null ? request.maxCompletionTokens() : request.maxTokens();
+    Integer maxTokens =
+        request.maxCompletionTokens() != null ? request.maxCompletionTokens() : request.maxTokens();
     return maxTokens != null ? Long.valueOf(maxTokens) : null;
   }
 
@@ -119,14 +124,15 @@ enum ChatModelAttributesGetter
       return emptyList();
     }
     return response.choices().stream()
-        .map(choice -> choice.finishReason() != null ? choice.finishReason().name().toLowerCase() : "")
+        .map(
+            choice ->
+                choice.finishReason() != null ? choice.finishReason().name().toLowerCase() : "")
         .collect(Collectors.toList());
   }
 
   @Override
   @Nullable
-  public String getResponseId(
-      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+  public String getResponseId(ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
@@ -135,8 +141,7 @@ enum ChatModelAttributesGetter
 
   @Override
   @Nullable
-  public String getResponseModel(
-      ChatCompletionRequest request, @Nullable ChatCompletion response) {
+  public String getResponseModel(ChatCompletionRequest request, @Nullable ChatCompletion response) {
     if (response == null) {
       return null;
     }
@@ -157,7 +162,9 @@ enum ChatModelAttributesGetter
   @Nullable
   public Long getUsageOutputTokens(
       ChatCompletionRequest request, @Nullable ChatCompletion response) {
-    if (response == null || response.usage() == null || response.usage().completionTokens() == null) {
+    if (response == null
+        || response.usage() == null
+        || response.usage().completionTokens() == null) {
       return null;
     }
     return Long.valueOf(response.usage().completionTokens());

@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.chat.client;
 
 import io.opentelemetry.instrumentation.api.genai.MessageCaptureOptions;
@@ -31,8 +36,8 @@ import org.springframework.ai.chat.messages.ToolResponseMessage.ToolResponse;
 import org.springframework.ai.chat.model.Generation;
 import org.springframework.ai.model.tool.ToolCallingChatOptions;
 
-public class ChatClientMessagesProvider implements
-    GenAiMessagesProvider<ChatClientRequest, ChatClientResponse> {
+public class ChatClientMessagesProvider
+    implements GenAiMessagesProvider<ChatClientRequest, ChatClientResponse> {
 
   private static final String TRUNCATE_FLAG = "...[truncated]";
 
@@ -48,7 +53,8 @@ public class ChatClientMessagesProvider implements
 
   @Nullable
   @Override
-  public InputMessages inputMessages(ChatClientRequest request, @Nullable ChatClientResponse response) {
+  public InputMessages inputMessages(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
     if (!messageCaptureOptions.captureMessageContent()
         || request.prompt().getInstructions() == null) {
       return null;
@@ -70,16 +76,17 @@ public class ChatClientMessagesProvider implements
         }
 
         if (assistantMessage.hasToolCalls()) {
-          messageParts.addAll(assistantMessage
-              .getToolCalls()
-              .stream()
-              .map(this::toolCallToMessagePart)
-              .collect(Collectors.toList()));
+          messageParts.addAll(
+              assistantMessage.getToolCalls().stream()
+                  .map(this::toolCallToMessagePart)
+                  .collect(Collectors.toList()));
         }
         inputMessages.append(InputMessage.create(Role.ASSISTANT, messageParts));
       } else if (msg.getMessageType() == MessageType.TOOL) {
         ToolResponseMessage toolResponseMessage = (ToolResponseMessage) msg;
-        inputMessages.append(InputMessage.create(Role.TOOL, contentToMessageParts(toolResponseMessage.getResponses())));
+        inputMessages.append(
+            InputMessage.create(
+                Role.TOOL, contentToMessageParts(toolResponseMessage.getResponses())));
       }
     }
     return inputMessages;
@@ -87,7 +94,8 @@ public class ChatClientMessagesProvider implements
 
   @Nullable
   @Override
-  public OutputMessages outputMessages(ChatClientRequest request, @Nullable ChatClientResponse response) {
+  public OutputMessages outputMessages(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
     if (!messageCaptureOptions.captureMessageContent()
         || response == null
         || response.chatResponse() == null
@@ -105,11 +113,10 @@ public class ChatClientMessagesProvider implements
         }
 
         if (message.hasToolCalls()) {
-          messageParts.addAll(message
-              .getToolCalls()
-              .stream()
-              .map(this::toolCallToMessagePart)
-              .collect(Collectors.toList()));
+          messageParts.addAll(
+              message.getToolCalls().stream()
+                  .map(this::toolCallToMessagePart)
+                  .collect(Collectors.toList()));
         }
       }
 
@@ -124,32 +131,35 @@ public class ChatClientMessagesProvider implements
 
   @Nullable
   @Override
-  public SystemInstructions systemInstructions(ChatClientRequest request, @Nullable ChatClientResponse response) {
+  public SystemInstructions systemInstructions(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
     return null;
   }
 
   @Nullable
   @Override
-  public ToolDefinitions toolDefinitions(ChatClientRequest request, @Nullable ChatClientResponse response) {
-    if (request.prompt().getOptions() == null || !(request.prompt()
-        .getOptions() instanceof ToolCallingChatOptions options)) {
+  public ToolDefinitions toolDefinitions(
+      ChatClientRequest request, @Nullable ChatClientResponse response) {
+    if (request.prompt().getOptions() == null
+        || !(request.prompt().getOptions() instanceof ToolCallingChatOptions options)) {
       return null;
     }
 
     ToolDefinitions toolDefinitions = ToolDefinitions.create();
 
     // See: org.springframework.ai.model.tool.DefaultToolCallingManager.resolveToolDefinitions
-    options.getToolCallbacks()
-        .stream()
-        .map(toolCallback -> {
-          String name = toolCallback.getToolDefinition().name();
-          String type = "function";
-          if (messageCaptureOptions.captureMessageContent()) {
-            return ToolDefinition.create(type, name, toolCallback.getToolDefinition().description(), null);
-          } else {
-            return ToolDefinition.create(type, name, null, null);
-          }
-        })
+    options.getToolCallbacks().stream()
+        .map(
+            toolCallback -> {
+              String name = toolCallback.getToolDefinition().name();
+              String type = "function";
+              if (messageCaptureOptions.captureMessageContent()) {
+                return ToolDefinition.create(
+                    type, name, toolCallback.getToolDefinition().description(), null);
+              } else {
+                return ToolDefinition.create(type, name, null, null);
+              }
+            })
         .filter(Objects::nonNull)
         .forEach(toolDefinitions::append);
 
@@ -157,8 +167,7 @@ public class ChatClientMessagesProvider implements
       // Skip the tool if it is already present in the request toolCallbacks.
       // That might happen if a tool is defined in the options
       // both as a ToolCallback and as a tool name.
-      if (options.getToolCallbacks()
-          .stream()
+      if (options.getToolCallbacks().stream()
           .anyMatch(tool -> tool.getToolDefinition().name().equals(toolName))) {
         continue;
       }
@@ -185,15 +194,18 @@ public class ChatClientMessagesProvider implements
     }
 
     return toolResponses.stream()
-        .map(response ->
-            ToolCallResponsePart.create(
-                response.id(), truncateTextContent(response.responseData())))
+        .map(
+            response ->
+                ToolCallResponsePart.create(
+                    response.id(), truncateTextContent(response.responseData())))
         .collect(Collectors.toList());
   }
 
   private String truncateTextContent(String content) {
-    if (!content.endsWith(TRUNCATE_FLAG) && content.length() > messageCaptureOptions.maxMessageContentLength()) {
-      content = content.substring(0, messageCaptureOptions.maxMessageContentLength()) + TRUNCATE_FLAG;
+    if (!content.endsWith(TRUNCATE_FLAG)
+        && content.length() > messageCaptureOptions.maxMessageContentLength()) {
+      content =
+          content.substring(0, messageCaptureOptions.maxMessageContentLength()) + TRUNCATE_FLAG;
     }
     return content;
   }

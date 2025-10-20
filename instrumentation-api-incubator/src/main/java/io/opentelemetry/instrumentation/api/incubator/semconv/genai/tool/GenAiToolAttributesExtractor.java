@@ -25,7 +25,8 @@ public final class GenAiToolAttributesExtractor<REQUEST, RESPONSE>
 
   /** Creates the GenAI attributes extractor. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
-      GenAiToolAttributesGetter<REQUEST, RESPONSE> attributesGetter, MessageCaptureOptions messageCaptureOptions) {
+      GenAiToolAttributesGetter<REQUEST, RESPONSE> attributesGetter,
+      MessageCaptureOptions messageCaptureOptions) {
     return new GenAiToolAttributesExtractor<>(attributesGetter, messageCaptureOptions);
   }
 

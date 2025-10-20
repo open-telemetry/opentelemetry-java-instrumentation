@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.spring.ai.v1_0;
 
 import static java.util.Collections.singletonList;
@@ -31,8 +36,7 @@ public abstract class AbstractSpringAiTest {
 
   private static final String API_URL = "https://dashscope.aliyuncs.com/compatible-mode";
 
-  @RegisterExtension
-  static final RecordingExtension recording = new RecordingExtension(API_URL);
+  @RegisterExtension static final RecordingExtension recording = new RecordingExtension(API_URL);
 
   protected abstract InstrumentationExtension getTesting();
 
@@ -42,16 +46,15 @@ public abstract class AbstractSpringAiTest {
 
   protected final OpenAiApi getOpenAiApi() {
     if (openAiApi == null) {
-      HttpClient httpClient = HttpClient.newBuilder()
-          .version(Version.HTTP_1_1)
-          .build();
+      HttpClient httpClient = HttpClient.newBuilder().version(Version.HTTP_1_1).build();
 
-      OpenAiApi.Builder builder = OpenAiApi.builder()
-          .restClientBuilder(RestClient.builder()
-              .requestFactory(new JdkClientHttpRequestFactory(httpClient)))
-          .webClientBuilder(WebClient.builder()
-              .clientConnector(new JdkClientHttpConnector(httpClient)))
-          .baseUrl("http://localhost:" + recording.getPort());
+      OpenAiApi.Builder builder =
+          OpenAiApi.builder()
+              .restClientBuilder(
+                  RestClient.builder().requestFactory(new JdkClientHttpRequestFactory(httpClient)))
+              .webClientBuilder(
+                  WebClient.builder().clientConnector(new JdkClientHttpConnector(httpClient)))
+              .baseUrl("http://localhost:" + recording.getPort());
       if (recording.isRecording()) {
         builder.apiKey(System.getenv("OPENAI_API_KEY"));
       } else {
@@ -64,17 +67,17 @@ public abstract class AbstractSpringAiTest {
 
   protected final ToolCallingManager getToolCallingManager() {
     return ToolCallingManager.builder()
-        .toolCallbackResolver(
-            new StaticToolCallbackResolver(getToolCallbacks()))
+        .toolCallbackResolver(new StaticToolCallbackResolver(getToolCallbacks()))
         .build();
   }
 
   protected final OpenAiChatModel getChatModel() {
     if (chatModel == null) {
-      chatModel = OpenAiChatModel.builder()
-          .openAiApi(getOpenAiApi())
-          .toolCallingManager(getToolCallingManager())
-          .build();
+      chatModel =
+          OpenAiChatModel.builder()
+              .openAiApi(getOpenAiApi())
+              .toolCallingManager(getToolCallingManager())
+              .build();
     }
     return chatModel;
   }
@@ -119,5 +122,4 @@ public abstract class AbstractSpringAiTest {
       return "25 degrees and sunny";
     }
   }
-
 }

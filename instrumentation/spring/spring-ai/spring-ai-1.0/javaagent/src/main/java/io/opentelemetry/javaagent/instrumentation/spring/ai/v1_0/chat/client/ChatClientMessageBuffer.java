@@ -28,8 +28,7 @@ final class ChatClientMessageBuffer {
 
   @Nullable private Map<Integer, ToolCallBuffer> toolCalls;
 
-  ChatClientMessageBuffer(int index,
-      MessageCaptureOptions messageCaptureOptions) {
+  ChatClientMessageBuffer(int index, MessageCaptureOptions messageCaptureOptions) {
     this.index = index;
     this.messageCaptureOptions = messageCaptureOptions;
   }
@@ -52,8 +51,12 @@ final class ChatClientMessageBuffer {
           if (entry.getValue().function.name == null) {
             entry.getValue().function.name = "";
           }
-          toolCalls.add(new ToolCall(entry.getValue().id, entry.getValue().type,
-              entry.getValue().function.name, arguments));
+          toolCalls.add(
+              new ToolCall(
+                  entry.getValue().id,
+                  entry.getValue().type,
+                  entry.getValue().function.name,
+                  arguments));
         }
       }
     } else {
@@ -66,7 +69,8 @@ final class ChatClientMessageBuffer {
       content = this.rawContentBuffer.toString();
     }
 
-    return new Generation(new AssistantMessage(content, Collections.emptyMap(), toolCalls),
+    return new Generation(
+        new AssistantMessage(content, Collections.emptyMap(), toolCalls),
         ChatGenerationMetadata.builder().finishReason(this.finishReason).build());
   }
 
@@ -80,9 +84,15 @@ final class ChatClientMessageBuffer {
           }
 
           String deltaContent = message.getText();
-          if (this.rawContentBuffer.length() < this.messageCaptureOptions.maxMessageContentLength()) {
-            if (this.rawContentBuffer.length() + deltaContent.length() >= this.messageCaptureOptions.maxMessageContentLength()) {
-              deltaContent = deltaContent.substring(0, this.messageCaptureOptions.maxMessageContentLength() - this.rawContentBuffer.length());
+          if (this.rawContentBuffer.length()
+              < this.messageCaptureOptions.maxMessageContentLength()) {
+            if (this.rawContentBuffer.length() + deltaContent.length()
+                >= this.messageCaptureOptions.maxMessageContentLength()) {
+              deltaContent =
+                  deltaContent.substring(
+                      0,
+                      this.messageCaptureOptions.maxMessageContentLength()
+                          - this.rawContentBuffer.length());
               this.rawContentBuffer.append(deltaContent).append(TRUNCATE_FLAG);
             } else {
               this.rawContentBuffer.append(deltaContent);
@@ -99,8 +109,7 @@ final class ChatClientMessageBuffer {
         for (int i = 0; i < message.getToolCalls().size(); i++) {
           ToolCall toolCall = message.getToolCalls().get(i);
           ToolCallBuffer buffer =
-              this.toolCalls.computeIfAbsent(
-                  i, unused -> new ToolCallBuffer(toolCall.id()));
+              this.toolCalls.computeIfAbsent(i, unused -> new ToolCallBuffer(toolCall.id()));
 
           buffer.type = toolCall.type();
           buffer.function.name = toolCall.name();
@@ -115,7 +124,9 @@ final class ChatClientMessageBuffer {
     }
 
     ChatGenerationMetadata metadata = generation.getMetadata();
-    if (metadata != null && metadata.getFinishReason() != null && !metadata.getFinishReason().isEmpty()) {
+    if (metadata != null
+        && metadata.getFinishReason() != null
+        && !metadata.getFinishReason().isEmpty()) {
       this.finishReason = metadata.getFinishReason();
     }
   }

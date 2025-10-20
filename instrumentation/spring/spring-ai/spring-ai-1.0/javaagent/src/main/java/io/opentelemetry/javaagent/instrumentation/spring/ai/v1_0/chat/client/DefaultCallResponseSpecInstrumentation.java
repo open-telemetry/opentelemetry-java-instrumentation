@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.chat.client;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.spring.ai.v1_0.SpringAiSingletons.TELEMETRY;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
-import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.isPrivate;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.context.Context;
@@ -21,15 +21,16 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
 
 @AutoService(TypeInstrumentation.class)
 public class DefaultCallResponseSpecInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("org.springframework.ai.chat.client.DefaultChatClient$DefaultCallResponseSpec");
+    return hasClassesNamed(
+        "org.springframework.ai.chat.client.DefaultChatClient$DefaultCallResponseSpec");
   }
 
   @Override
@@ -40,8 +41,11 @@ public class DefaultCallResponseSpecInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("doGetObservableChatClientResponse")).and(takesArguments(2))
-        .and(isPrivate()).and(takesArgument(0, named("org.springframework.ai.chat.client.ChatClientRequest"))),
+        isMethod()
+            .and(named("doGetObservableChatClientResponse"))
+            .and(takesArguments(2))
+            .and(isPrivate())
+            .and(takesArgument(0, named("org.springframework.ai.chat.client.ChatClientRequest"))),
         this.getClass().getName() + "$DoGetObservableChatClientResponseAdvice");
   }
 
@@ -54,7 +58,7 @@ public class DefaultCallResponseSpecInstrumentation implements TypeInstrumentati
         @Advice.Local("otelContext") Context context,
         @Advice.Local("otelScope") Scope scope) {
       context = Context.current();
-      
+
       if (TELEMETRY.chatClientInstrumenter().shouldStart(context, request)) {
         context = TELEMETRY.chatClientInstrumenter().start(context, request);
       }
@@ -72,7 +76,7 @@ public class DefaultCallResponseSpecInstrumentation implements TypeInstrumentati
         return;
       }
       scope.close();
-      
+
       TELEMETRY.chatClientInstrumenter().end(context, request, response, throwable);
     }
   }

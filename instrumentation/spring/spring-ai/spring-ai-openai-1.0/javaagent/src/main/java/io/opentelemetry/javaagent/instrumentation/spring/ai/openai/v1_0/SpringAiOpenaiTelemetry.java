@@ -5,19 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.ai.openai.v1_0;
 
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
-import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.genai.MessageCaptureOptions;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletion;
+import org.springframework.ai.openai.api.OpenAiApi.ChatCompletionRequest;
 
-/**
- * Entrypoint for instrumenting Spring AI OpenAI clients.
- */
+/** Entrypoint for instrumenting Spring AI OpenAI clients. */
 public final class SpringAiOpenaiTelemetry {
 
   /**
-   * Returns a new {@link SpringAiOpenaiTelemetryBuilder} configured with the given {@link OpenTelemetry}.
+   * Returns a new {@link SpringAiOpenaiTelemetryBuilder} configured with the given {@link
+   * OpenTelemetry}.
    */
   public static SpringAiOpenaiTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new SpringAiOpenaiTelemetryBuilder(openTelemetry);
@@ -40,5 +39,4 @@ public final class SpringAiOpenaiTelemetry {
   public MessageCaptureOptions messageCaptureOptions() {
     return messageCaptureOptions;
   }
-
 }

@@ -36,7 +36,9 @@ public class OpenAiChatModelInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isMethod().and(named("internalStream")).and(takesArguments(2))
+        isMethod()
+            .and(named("internalStream"))
+            .and(takesArguments(2))
             .and(returns(named("reactor.core.publisher.Flux"))),
         this.getClass().getName() + "$StreamAdvice");
   }
