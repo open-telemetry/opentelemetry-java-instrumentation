@@ -13,6 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -163,7 +164,7 @@ public class MemcachedClientInstrumentation implements TypeInstrumentation {
 
         return new AdviceScope(
             callDepth,
-            SyncCompletionListener.create(currentContext(), client.getConnection(), methodName));
+            SyncCompletionListener.create(Context.current(), client.getConnection(), methodName));
       }
 
       public void end(@Nullable Throwable throwable) {
