@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.web;
+package io.opentelemetry.javaagent.instrumentation.springweb.v3_1;
 
 import static java.util.Collections.singletonList;
 
@@ -23,7 +23,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-public class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
+class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
