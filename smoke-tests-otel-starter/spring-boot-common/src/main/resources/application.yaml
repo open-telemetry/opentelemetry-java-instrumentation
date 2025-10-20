@@ -8,6 +8,8 @@ otel:
     logback-appender:
       experimental:
         capture-code-attributes: true
+    micrometer:
+      enabled: true
     http:
       client:
         emit-experimental-telemetry: true

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.datasource;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -22,6 +23,12 @@ public final class JdbcTelemetryBuilder {
   private boolean statementSanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
   private boolean captureQueryParameters = false;
+  private boolean sqlCommenterEnabled = false;
+
+  static {
+    Experimental.internalSetEnableSqlCommenter(
+        (builder, sqlCommenterEnabled) -> builder.sqlCommenterEnabled = sqlCommenterEnabled);
+  }
 
   JdbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -87,6 +94,7 @@ public final class JdbcTelemetryBuilder {
         dataSourceInstrumenter,
         statementInstrumenter,
         transactionInstrumenter,
-        captureQueryParameters);
+        captureQueryParameters,
+        sqlCommenterEnabled);
   }
 }
