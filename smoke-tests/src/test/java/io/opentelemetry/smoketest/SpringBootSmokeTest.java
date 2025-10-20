@@ -23,16 +23,14 @@ class SpringBootSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20251013.18455512027")
+        .springBoot("20251017.18602659902")
         .setServiceName(false)
         .env("OTEL_METRICS_EXPORTER", "otlp")
         .env("OTEL_RESOURCE_ATTRIBUTES", "foo=bar");
   }
 
   @ParameterizedTest
-  // restore after image update
-  // @ValueSource(ints = {8, 11, 17, 21, 25})
-  @ValueSource(ints = {8, 21, 25})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void springBootSmokeTest(int jdk) {
     SmokeTestOutput output = start(jdk);
 
