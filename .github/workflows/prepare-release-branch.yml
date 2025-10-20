@@ -31,6 +31,10 @@ jobs:
       - prereqs
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          # history is needed to allow fast-forward push below in case
+          # re-running this workflow after merging additional PRs to main
+          fetch-depth: 0
 
       - name: Create release branch
         run: |

@@ -2,6 +2,105 @@
 
 ## Unreleased
 
+## Version 2.21.0 (2025-10-17)
+
+## ⚠️ Breaking Changes
+
+- Hadoop JMX metrics have been renamed to align with semantic conventions.
+  If you are using Hadoop JMX metrics, you will need to update your dashboards and alerts.
+  ([#14411](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14411))
+- Lettuce 5.1 instrumentation now aligns with other instrumentations and no longer sets the
+  span status description.
+  ([#14886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14886))
+
+## 🚫 Deprecations
+
+- The following Logback appender configuration properties have been renamed for clarity.
+  The old property names have been deprecated and will be removed in a future release:
+  - Java agent: `otel.instrumentation.logback-appender.experimental.capture-logstash-attributes` →
+    `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes`
+  - Spring Boot starter`otel.instrumentation.logback-appender.experimental.capture-logstash-markers` →
+    `otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes`
+  - Logback appender configuration property: `captureLogstashAttributes` → `captureLogstashMarkerAttributes`
+  - Logback appender API: `setCaptureLogstashAttributes()` → `setCaptureLogstashMarkerAttributes()`
+  ([#14959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14959))
+
+### 🌟 New javaagent instrumentation
+
+- Add Helidon instrumentation
+  ([#13776](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13776))
+- Add NATS instrumentation
+  ([#13999](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13999))
+- OpenSearch Transport v3.0 Implementation
+  ([#14823](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14823))
+- Add Kafka Connect API instrumentation
+  ([#14478](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14478))
+
+### 🌟 New library instrumentation
+
+- Add Helidon Instrumentation
+  ([#13776](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13776))
+- Add NATS instrumentation
+  ([#13999](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13999))
+- [Failsafe](https://failsafe.dev/) 3.0 instrumentation introduced
+  ([#14057](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14057))
+
+### 📈 Enhancements
+
+- Add experimental sqlcommenter support for JDBC and R2DBC
+  ([#13714](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/13714))
+- Align Hadoop JMX metrics with semantic conventions
+  ([#14411](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14411))
+- Introduce experimental API for operation attributes to be passed only to OperationListeners
+  ([#14590](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14590))
+- Add span logging support for declarative configuration
+  ([#14591](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14591))
+- Add span logging support for Spring Boot starter
+  ([#14594](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14594))
+- Support capturing event names in logback, log4j, and jboss-logmanager appenders
+  ([#14649](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14649))
+- Include contrib sampler in java agent, e.g. for filtering health check endpoints
+  ([#14677](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14677))
+- Collect RPC metrics in Apache Dubbo instrumentation
+  ([#14690](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14690))
+- Add experimental option to disable noisy `redis.encode` span events in Lettuce instrumentation
+  ([#14750](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14750))
+- Support ListIterator in Kafka consumer instrumentation for Spark Structured Streaming
+  ([#14757](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14757))
+- Exclude wrapper classes in JDBC instrumentation
+  ([#14760](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14760))
+- Support JDBC URL parsing for OceanBase, PolarDB, and Lindorm databases
+  ([#14790](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14790))
+- Support context propagation in Guava AsyncEventBus
+  ([#14791](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14791))
+- Make `db.statement` attribute available during sampling in Lettuce instrumentation
+  ([#14856](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14856))
+- Add `code.namespace` and `code.function` attributes to Vaadin controller spans
+  ([#14882](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14882))
+- Add `code.namespace` and `code.function` attributes to Grails controller spans
+  ([#14885](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14885))
+- Support Hibernate 7.2.0.CR1
+  ([#14921](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14921))
+- Support capturing Logstash StructuredArguments as log record attributes
+  ([#14959](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14959))
+- Add gRPC request/response size metrics
+  ([#14342](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14342))
+
+### 🛠️ Bug fixes
+
+- Fix datasource instrumentation to support connection pools like Druid
+  ([#14602](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14602))
+- Fix Java HTTP client instrumentation to properly propagate request cancellation
+  ([#14747](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14747))
+- Fix Reactor Netty HTTP client instrumentation to handle IllegalStateException
+  ([#14778](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14778))
+- Fix executor context propagation when a stateless lambda instance is passed multiple times
+  ([#14841](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14841))
+- Remove span status description from Lettuce 5.1 instrumentation
+  ([#14886](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14886))
+- Fix Spring Boot autoconfiguration ordering for micrometer bridge
+  ([#15011](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15011))
+
 ## Version 2.20.1 (2025-09-22)
 
 ### 🛠️ Bug fixes
