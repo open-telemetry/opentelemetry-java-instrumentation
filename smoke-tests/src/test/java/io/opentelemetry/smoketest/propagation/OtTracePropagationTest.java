@@ -18,7 +18,7 @@ class OtTracePropagationTest extends AbstractSmokeTest<Integer> {
 
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
-    options.springBoot("20251011.18424653812").env("otel.propagators", "ottrace");
+    options.springBoot("20251017.18602659902").env("otel.propagators", "ottrace");
   }
 
   @Test

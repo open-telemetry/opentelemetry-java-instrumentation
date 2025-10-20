@@ -18,6 +18,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -42,35 +43,45 @@ public class MessageHandlerInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnMessageAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(0) Message message,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      Context parentContext = Context.current();
-      natsRequest = NatsRequest.create(message.getConnection(), message);
+    public static class AdviceScope {
+      private final NatsRequest request;
+      private final Context context;
+      private final Scope scope;
 
-      if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(parentContext, natsRequest)) {
-        return;
+      public AdviceScope(NatsRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
       }
 
-      otelContext = CONSUMER_PROCESS_INSTRUMENTER.start(parentContext, natsRequest);
-      otelScope = otelContext.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Message message) {
+        Context parentContext = Context.current();
+        NatsRequest request = NatsRequest.create(message.getConnection(), message);
+        if (!CONSUMER_PROCESS_INSTRUMENTER.shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = CONSUMER_PROCESS_INSTRUMENTER.start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        CONSUMER_PROCESS_INSTRUMENTER.end(context, request, null, throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(@Advice.Argument(0) Message message) {
+      return AdviceScope.start(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelContext") Context otelContext,
-        @Advice.Local("otelScope") Scope otelScope,
-        @Advice.Local("natsRequest") NatsRequest natsRequest) {
-      if (otelScope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-
-      otelScope.close();
-      CONSUMER_PROCESS_INSTRUMENTER.end(otelContext, natsRequest, null, throwable);
     }
   }
 }
