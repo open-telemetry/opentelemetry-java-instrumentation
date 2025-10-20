@@ -20,7 +20,6 @@ import com.twitter.finatra.http.internal.routing.Route;
 import com.twitter.util.Future;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -65,7 +64,7 @@ public class FinatraRouteInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(Route route, RouteInfo routeInfo, Class<?> controllerClass) {
 
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         updateServerSpanName(parentContext, routeInfo);
 
         Class<?> callbackClass = getCallbackClass(route);
