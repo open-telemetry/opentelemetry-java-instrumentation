@@ -209,7 +209,6 @@ testing {
       implementation("org.slf4j:log4j-over-slf4j")
       implementation("org.slf4j:jcl-over-slf4j")
       implementation("org.slf4j:jul-to-slf4j")
-      implementation("com.github.stefanbirkner:system-rules")
     }
   }
 }
@@ -438,7 +437,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "12.0.1"
+  toolVersion = "12.1.0"
   maxWarnings = 0
 }
 

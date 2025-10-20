@@ -7,6 +7,7 @@ description = "smoke-tests-otel-starter-spring-boot-2"
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
+  implementation("org.springframework.boot:spring-boot-starter-actuator")
   runtimeOnly("com.h2database:h2")
   implementation("org.apache.commons:commons-dbcp2")
   implementation("org.springframework.kafka:spring-kafka")

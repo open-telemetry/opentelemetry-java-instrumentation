@@ -1,0 +1,112 @@
+name: PR Automation Comments
+on:
+  pull_request_target:
+    types: [labeled]
+
+permissions:
+  pull-requests: write
+
+jobs:
+  comment-on-breaking-change:
+    if: contains(github.event.label.name, 'breaking change')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            // Check if we've already commented about breaking changes
+            const botComment = comments.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('⚠️ Breaking Change Documentation Required')
+            );
+
+            if (!botComment) {
+              const commentBody = [
+                "## ⚠️ Breaking Change Documentation Required",
+                "",
+                "This PR has been labeled as a **breaking change**. Please ensure you provide the following information:",
+                "",
+                "### Migration Notes Required",
+                "Please add detailed migration notes to help users understand:",
+                "- What is changing and why",
+                "- How to update their code/configuration", 
+                "- Any alternative approaches if applicable",
+                "- Code examples showing before/after usage",
+                "",
+                "### Checklist",
+                "- [ ] Migration notes added to the PR description",
+                "- [ ] Breaking change is documented in the changelog entry for the next release",
+                "- [ ] Consider if this change requires a major version bump",
+                "",
+                "Your migration notes will be included in the release notes to help users upgrade smoothly. The more detailed and helpful they are, the better the user experience will be.",
+                "",
+                "---",
+                "*This comment was automatically generated because the `breaking change` label was applied to this PR.*"
+              ].join("\n");
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }
+
+  comment-on-deprecation:
+    if: contains(github.event.label.name, 'deprecation')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment on PR
+        uses: actions/github-script@f28e40c7f34bde8b3046d885e986cb6290c5673b # v7.1.0
+        with:
+          script: |
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            // Check if we've already commented about deprecation
+            const botComment = comments.find(comment => 
+              comment.user.login === 'github-actions[bot]' && 
+              comment.body.includes('📋 Deprecation Notice')
+            );
+
+            if (!botComment) {
+              const commentBody = [
+                "## 📋 Deprecation Notice",
+                "",
+                "This PR has been labeled as a **deprecation**. Please ensure you provide the following information:",
+                "",
+                "### 📝 Deprecation Details Required",
+                "Please add details to help users understand:",
+                "- What is being deprecated and why",
+                "- What should be used instead (if applicable)",
+                "- Timeline for removal (if known)",
+                "- Any migration guidance",
+                "",
+                "### 📋 Checklist",
+                "- [ ] Deprecation details added to the PR description",
+                "- [ ] Deprecation is documented in the changelog entry for the next release",
+                "- [ ] Consider adding deprecation warnings in code/documentation",
+                "",
+                "Your deprecation notes will be included in the release notes to help users prepare for future changes.",
+                "",
+                "---",
+                "*This comment was automatically generated because the `deprecation` label was applied to this PR.*"
+              ].join("\n");
+
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: commentBody
+              });
+            }

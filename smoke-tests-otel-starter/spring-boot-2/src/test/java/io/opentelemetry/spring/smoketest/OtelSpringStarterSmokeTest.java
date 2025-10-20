@@ -5,6 +5,7 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import org.assertj.core.api.AbstractIterableAssert;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(
@@ -20,4 +21,11 @@ import org.springframework.boot.test.context.SpringBootTest;
       "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry=true",
       "otel.instrumentation.common.thread_details.enabled=true",
     })
-class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {}
+class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
+
+  @Override
+  protected void assertAdditionalMetrics() {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5", "disk.total", AbstractIterableAssert::isNotEmpty);
+  }
+}

@@ -52,7 +52,9 @@ class ElasticsearchRest6Test {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
     // limit memory usage
-    elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
+    elasticsearch.withEnv(
+        "ES_JAVA_OPTS",
+        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     elasticsearch.start();
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());

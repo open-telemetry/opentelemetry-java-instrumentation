@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.20"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
-    id("org.graalvm.buildtools.native") version "0.11.1"
+    id("org.graalvm.buildtools.native") version "0.11.2"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
   }
@@ -369,6 +369,8 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
+include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
+include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent")
@@ -592,7 +594,6 @@ include(":instrumentation:spring:spring-security-config-6.0:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:library")
 include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
-include(":instrumentation:spring:spring-web:spring-web-3.1:testing")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
