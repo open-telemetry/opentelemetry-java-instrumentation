@@ -14,7 +14,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -57,7 +56,7 @@ public class DefaultGrailsControllerClassInstrumentation implements TypeInstrume
       @Nullable
       public static AdviceScope start(
           Object controller, @Nullable String action, String defaultActionName) {
-        Context parentContext = Java8BytecodeBridge.currentContext();
+        Context parentContext = Context.current();
         HandlerData handlerData =
             new HandlerData(controller, action != null ? action : defaultActionName);
         if (!instrumenter().shouldStart(parentContext, handlerData)) {
