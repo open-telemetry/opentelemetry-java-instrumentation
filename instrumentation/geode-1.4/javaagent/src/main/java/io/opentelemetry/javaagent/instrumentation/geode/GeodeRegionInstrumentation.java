@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.geode.GeodeSingletons.instrumenter;
@@ -76,7 +75,7 @@ public class GeodeRegionInstrumentation implements TypeInstrumentation {
     @Nullable
     public static AdviceScope start(
         Region<?, ?> region, String methodName, @Nullable String query) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       GeodeRequest request = GeodeRequest.create(region, methodName, query);
       if (!instrumenter().shouldStart(parentContext, request)) {
         return null;
