@@ -155,7 +155,7 @@ tasks {
   }
 
   val generateReleaseBundle by registering(Zip::class) {
-    dependsOn(getTasksByName("publishAllPublicationToReleaseRepoRepository", true))
+    dependsOn(project.tasks.withType<PublishToMavenRepository>())
     from("releaseRepo")
 
     exclude("**/maven-metadata.*")
