@@ -101,8 +101,8 @@ if (project.findProperty("otel.stable") == "true") {
               ?: file("$rootDir/docs/apidiffs/current_vs_$baseVersionString/${base.archivesName.get()}.txt")
           )
         }
-        // have the jApiCmp task run every time the jar task is run, to make it more likely it will get used.
-        named("jar") {
+        // have the check task depend on the api comparison task, to make it more likely it will get used.
+        named("check") {
           finalizedBy(jApiCmp)
         }
       }
