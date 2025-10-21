@@ -54,55 +54,44 @@ val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 // if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
 val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
 
-if (useScansGradleCom) {
-  develocity {
+develocity {
+  if (useScansGradleCom) {
     buildScan {
       termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
       termsOfUseAgree = "yes"
-      uploadInBackground = !isCI
-
-      capture {
-        fileFingerprints = true
-      }
-
-      if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-        !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
-        buildScanPublished {
-          File("build-scan.txt").printWriter().use { writer ->
-            writer.println(buildScanUri)
-          }
-        }
-      }
     }
-  }
-} else {
-  develocity {
+  } else {
     server = develocityServer
     buildScan {
-      uploadInBackground = !isCI
       publishing.onlyIf { it.isAuthenticated }
-
-      capture {
-        fileFingerprints = true
-      }
 
       gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
       gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
       }
+    }
+  }
 
-      if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-        !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
-        buildScanPublished {
-          File("build-scan.txt").printWriter().use { writer ->
-            writer.println(buildScanUri)
-          }
+  buildScan {
+    uploadInBackground = !isCI
+
+    capture {
+      fileFingerprints = true
+    }
+
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
         }
       }
     }
   }
+}
 
+if (!useScansGradleCom) {
   buildCache {
     remote(develocity.buildCache) {
       isPush = isCI && develocityAccessKey.isNotEmpty()
