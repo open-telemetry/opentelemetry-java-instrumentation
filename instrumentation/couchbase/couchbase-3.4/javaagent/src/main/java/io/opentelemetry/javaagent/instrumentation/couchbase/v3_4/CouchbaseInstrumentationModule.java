@@ -3,10 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
+package io.opentelemetry.javaagent.instrumentation.couchbase.v3_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -20,18 +19,14 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class CouchbaseInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public CouchbaseInstrumentationModule() {
-    super("couchbase", "couchbase-3.2");
+    super("couchbase", "couchbase-3.4");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // New class introduced in 3.2.
-    // CoreTransactionRequest was introduced in 3.4.0.
-    return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")
-        .and(
-            not(
-                hasClassesNamed(
-                    "com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
+    // CoreTransactionRequest was introduced in 3.4.0 with integrated transactions support.
+    return hasClassesNamed(
+        "com.couchbase.client.core.transaction.components.CoreTransactionRequest");
   }
 
   @Override

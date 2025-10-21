@@ -41,7 +41,10 @@ class OpenTelemetryDataSourceTest {
   @ParameterizedTest
   @MethodSource("getConnectionMethodsArguments")
   void shouldEmitGetConnectionSpans(GetConnectionFunction getConnection) throws SQLException {
-    JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
+    JdbcTelemetry telemetry =
+        JdbcTelemetry.builder(testing.getOpenTelemetry())
+            .setDataSourceInstrumenterEnabled(true)
+            .build();
     DataSource dataSource = telemetry.wrap(new TestDataSource());
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
