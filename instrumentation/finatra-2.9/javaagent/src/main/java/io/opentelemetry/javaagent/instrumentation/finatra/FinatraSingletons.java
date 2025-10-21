@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.finatra;
 
+import com.twitter.finagle.http.Response;
 import com.twitter.finatra.http.contexts.RouteInfo;
 import com.twitter.finatra.http.internal.routing.Route;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -17,6 +18,9 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 
 public final class FinatraSingletons {
+
+  public static final VirtualField<Response, Throwable> THROWABLE =
+      VirtualField.find(Response.class, Throwable.class);
 
   private static final Instrumenter<FinatraRequest, Void> INSTRUMENTER;
 

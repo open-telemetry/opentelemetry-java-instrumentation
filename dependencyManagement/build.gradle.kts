@@ -6,11 +6,11 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.55.0"
-val otelContribVersion = "1.50.0-alpha"
+val otelContribVersion = "1.51.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.28"
+val groovyVersion = "4.0.29"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -32,7 +32,7 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:2.0.0"
+  "org.testcontainers:testcontainers-bom:2.0.1"
 )
 
 val autoServiceVersion = "1.1.1"

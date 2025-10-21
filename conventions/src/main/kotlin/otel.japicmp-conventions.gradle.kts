@@ -49,7 +49,7 @@ fun findArtifact(version: String): File {
 }
 
 // generate the api diff report for any module that is stable
-if (project.findProperty("otel.stable") == "true") {
+if (project.findProperty("otel.stable") == "true" && project.path != ":javaagent") {
   afterEvaluate {
     // Only apply japicmp to projects that have a jar task (i.e. not BOMs or platforms)
     tasks.findByName("jar")?.let {
@@ -101,8 +101,8 @@ if (project.findProperty("otel.stable") == "true") {
               ?: file("$rootDir/docs/apidiffs/current_vs_$baseVersionString/${base.archivesName.get()}.txt")
           )
         }
-        // have the jApiCmp task run every time the jar task is run, to make it more likely it will get used.
-        named("jar") {
+        // have the check task depend on the api comparison task, to make it more likely it will get used.
+        named("check") {
           finalizedBy(jApiCmp)
         }
       }

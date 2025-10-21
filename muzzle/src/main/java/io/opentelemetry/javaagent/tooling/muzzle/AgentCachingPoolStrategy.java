@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.tooling.muzzle;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;

@@ -5,9 +5,12 @@
 
 package io.opentelemetry.cassandra.v4.common;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -41,6 +44,7 @@ import java.time.Duration;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -62,6 +66,8 @@ public abstract class AbstractCassandraTest {
 
   protected abstract InstrumentationExtension testing();
 
+  protected abstract String getInstrumentationName();
+
   protected CqlSession wrap(CqlSession session) {
     return session;
   }
@@ -79,6 +85,25 @@ public abstract class AbstractCassandraTest {
     cassandraHost = cassandra.getHost();
     cassandraIp = InetAddress.getByName(cassandra.getHost()).getHostAddress();
     cassandraPort = cassandra.getMappedPort(9042);
+  }
+
+  @Test
+  void testMetrics() {
+    CqlSession session = getSession(null);
+
+    session.execute("DROP KEYSPACE IF EXISTS non_existent");
+
+    assertDurationMetric(
+        testing(),
+        getInstrumentationName(),
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+
+    session.close();
   }
 
   @AfterAll

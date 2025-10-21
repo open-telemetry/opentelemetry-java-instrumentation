@@ -13,11 +13,13 @@ jobs:
   common:
     uses: ./.github/workflows/build-common.yml
     secrets:
+      DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
       FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   test-latest-deps:
     uses: ./.github/workflows/reusable-test-latest-deps.yml
     secrets:
+      DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
       FLAKY_TEST_REPORTER_ACCESS_KEY: ${{ secrets.FLAKY_TEST_REPORTER_ACCESS_KEY }}
 
   muzzle:

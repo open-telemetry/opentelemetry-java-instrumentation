@@ -1322,6 +1322,8 @@ libraries:
     description: |
       Provides lightweight instrumentation of the Lambda core library, supporting all versions. It generates FaaS server spans with the `faas.invocation_id` attribute. Use this package if you only use `RequestStreamHandler` or know you don't use any event classes from `aws-lambda-java-events`. This also includes when you are using `aws-serverless-java-container` to run e.g., a Spring Boot application on Lambda.
       For custom wrappers when using library instrumentation, you can configure the `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` environment variable to contain your lambda handler method (in the format `package.ClassName::methodName`) and use one of wrappers as your lambda `Handler`.
+    semantic_conventions:
+    - FAAS_SERVER_SPANS
     library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
     source_path: instrumentation/aws-lambda/aws-lambda-core-1.0
     scope:
@@ -1345,7 +1347,10 @@ libraries:
           type: STRING
   - name: aws-lambda-events-2.2
     description: |
-      This version of the library instrumentation is deprecated, please use the `aws-lambda-events-3.11` library instrumentation instead. This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
+      This version of the library instrumentation is deprecated, please use `aws-lambda-events-3.11` instead. This instrumentation enables FaaS spans and messaging spans for AWS Lambda functions handling event types.
+    semantic_conventions:
+    - FAAS_SERVER_SPANS
+    - MESSAGING_SPANS
     library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
     source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
     scope:
@@ -1391,7 +1396,10 @@ libraries:
           type: STRING
   - name: aws-lambda-events-3.11
     description: |
-      This instrumentation builds on top of the `aws-lambda-core-1.0` instrumentation, expanding support to cover the Lambda library, including standard and custom event types.
+      This library instrumentation provides FaaS spans and messaging spans for AWS Lambda functions handling event types.
+    semantic_conventions:
+    - FAAS_SERVER_SPANS
+    - MESSAGING_SPANS
     library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
     source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
     scope:
@@ -1439,6 +1447,13 @@ libraries:
   - name: aws-sdk-1.11
     description: |
       This instrumentation covers the AWS SDK 1.11+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, secrets manager, SNS/SQS and step functions.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    - MESSAGING_SPANS
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRICS
     library_link: https://aws.amazon.com/sdk-for-java/
     source_path: instrumentation/aws-sdk/aws-sdk-1.11
     scope:
@@ -1667,6 +1682,13 @@ libraries:
   - name: aws-sdk-2.2
     description: |
       This instrumentation covers the AWS SDK 2.2+ client library, enabling messaging and client spans and metrics for calls to AWS services including DynamoDB, EC2, Kinesis, Lambda, RDS, S3, SNS/SQS and Bedrock.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    - MESSAGING_SPANS
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRICS
     library_link: https://aws.amazon.com/sdk-for-java/
     source_path: instrumentation/aws-sdk/aws-sdk-2.2
     scope:
@@ -2027,6 +2049,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.14
     scope:
       name: io.opentelemetry.azure-core-1.14
@@ -2037,6 +2062,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.19
     scope:
       name: io.opentelemetry.azure-core-1.19
@@ -2047,6 +2075,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.36
     scope:
       name: io.opentelemetry.azure-core-1.36
@@ -2057,6 +2088,8 @@ libraries:
   - name: c3p0-0.9
     description: The c3p0 instrumentation provides connection pool metrics for c3p0
       data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/swaldman/c3p0
     source_path: instrumentation/c3p0-0.9
     scope:
@@ -2110,7 +2143,14 @@ libraries:
   - name: camel-2.20
     description: |
       This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_SERVER_SPANS
+    - DATABASE_CLIENT_SPANS
+    - MESSAGING_SPANS
     library_link: https://camel.apache.org/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -2140,6 +2180,12 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: http.request.method
@@ -2149,6 +2195,10 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2176,6 +2226,14 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: camel.uri
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: camel.uri
@@ -2187,6 +2245,12 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: camel.uri
+          type: STRING
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2214,6 +2278,12 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: http.request.method
@@ -2223,6 +2293,10 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2235,7 +2309,10 @@ libraries:
   cassandra:
   - name: cassandra-3.0
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-3.0
     scope:
@@ -2274,6 +2351,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2299,7 +2394,10 @@ libraries:
           type: LONG
   - name: cassandra-4.0
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.0
     scope:
@@ -2350,6 +2448,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2387,7 +2503,10 @@ libraries:
           type: LONG
   - name: cassandra-4.4
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.4
     scope:
@@ -2440,6 +2559,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2477,8 +2614,11 @@ libraries:
           type: LONG
   clickhouse:
   - name: clickhouse-client-v1-0.5
-    description: This instrumentation enables database client spans and metrics for
-      the V1 ClickHouse client.
+    description: |
+      This instrumentation enables database client spans and database client metrics for the ClickHouse Java Client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/ClickHouse/clickhouse-java
     source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
     scope:
@@ -2545,8 +2685,11 @@ libraries:
         - name: server.port
           type: LONG
   - name: clickhouse-client-v2-0.8
-    description: This instrumentation enables database client spans and metrics for
-      the V2 ClickHouse client.
+    description: |
+      This instrumentation enables database client spans and database client metrics for the ClickHouse Java Client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/ClickHouse/clickhouse-java
     source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
     scope:
@@ -5149,6 +5292,11 @@ libraries:
         and ROLLBACK operations.
       type: boolean
       default: false
+    - name: otel.instrumentation.jdbc.experimental.sqlcommenter.enabled
+      description: |
+        Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling.
+      type: boolean
+      default: false
     - name: otel.instrumentation.common.peer-service-mapping
       description: Used to specify a mapping from host names or IP addresses to peer
         services.
@@ -5457,6 +5605,35 @@ libraries:
         Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
       type: boolean
       default: false
+  - name: kafka-connect-2.6
+    description: This instrumentation enables messaging spans for Kafka Connect sink
+      tasks.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://kafka.apache.org/documentation/#connect
+    source_path: instrumentation/kafka/kafka-connect-2.6
+    scope:
+      name: io.opentelemetry.kafka-connect-2.6
+    target_versions:
+      javaagent:
+      - org.apache.kafka:connect-api:[2.6.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: thread.id
+          type: LONG
+        - name: thread.name
+          type: STRING
   - name: kafka-streams-0.11
     library_link: https://kafka.apache.org/documentation/streams/
     source_path: instrumentation/kafka/kafka-streams-0.11
@@ -7584,9 +7761,9 @@ libraries:
       - org.springframework.security:spring-security-config:[6.0.0,]
       library:
       - io.projectreactor:reactor-core:3.5.0
+      - jakarta.servlet:jakarta.servlet-api:[6.0.0,6.1.0)
       - org.springframework.security:spring-security-config:6.0.0
       - org.springframework:spring-web:6.0.0
-      - jakarta.servlet:jakarta.servlet-api:6.0.0
       - org.springframework.security:spring-security-web:6.0.0
     configurations:
     - name: otel.instrumentation.common.enduser.id.enabled
@@ -7613,7 +7790,7 @@ libraries:
       default: SCOPE_
   - name: spring-web-3.1
     description: |
-      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate. The agent integration enriches HTTP server spans and metrics with route information.
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
@@ -7653,8 +7830,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: spring-web-6.0
-    description: This instrumentation enriches HTTP server spans and metrics with
-      route information.
+    description: |
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-6.0
     minimum_java_version: 17
