@@ -16,7 +16,7 @@ import org.junit.jupiter.api.Test;
 class AgentLoadedIntoBootstrapTest {
 
   @Test
-  void agentLoadsInWhenSeparateJvmIsLaunched() throws Exception {
+  void agentLoadsWhenSeparateJvmIsLaunched() throws Exception {
     int exitCode =
         IntegrationTestUtils.runOnSeparateJvm(
             AgentLoadedChecker.class.getName(),

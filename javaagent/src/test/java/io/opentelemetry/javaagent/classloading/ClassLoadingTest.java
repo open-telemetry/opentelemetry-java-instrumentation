@@ -58,8 +58,6 @@ class ClassLoadingTest {
     assertThat(ref.get()).isNull();
   }
 
-  // We are doing this because Groovy cannot properly resolve constructor argument types in
-  // anonymous classes
   static class CountingClassLoader extends URLClassLoader {
     public int count = 0;
 
