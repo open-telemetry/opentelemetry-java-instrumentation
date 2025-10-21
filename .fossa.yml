@@ -429,6 +429,9 @@ targets:
       target: ':instrumentation:couchbase:couchbase-3.2:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
     - type: gradle
       path: ./
