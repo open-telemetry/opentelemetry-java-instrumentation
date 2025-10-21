@@ -10,10 +10,6 @@ private admin repo.
 
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
-- `DEVELOCITY_ACCESS_KEY` - owned by [@trask](https://github.com/trask)
-  - Generated at https://develocity.opentelemetry.io > My settings > Access keys
-  - Format of env var is `develocity.opentelemetry.io=<access key>`,
-    see [docs](https://docs.gradle.com/enterprise/gradle-plugin/#via_environment_variable)
 - `GRADLE_PUBLISH_KEY`
 - `GRADLE_PUBLISH_SECRET`
 - `NVD_API_KEY` - stored in OpenTelemetry-Java 1Password
@@ -25,6 +21,7 @@ private admin repo.
 
 ### Organization secrets
 
+- `DEVELOCITY_ACCESS_KEY`
 - `FOSSA_API_KEY`
 - `OTELBOT_PRIVATE_KEY`
 - `OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY`
