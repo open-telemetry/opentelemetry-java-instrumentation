@@ -18,7 +18,7 @@ import javax.sql.DataSource;
 public final class JdbcTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
-  private boolean dataSourceInstrumenterEnabled = true;
+  private boolean dataSourceInstrumenterEnabled = false;
   private boolean statementInstrumenterEnabled = true;
   private boolean statementSanitizationEnabled = true;
   private boolean transactionInstrumenterEnabled = false;
@@ -34,7 +34,7 @@ public final class JdbcTelemetryBuilder {
     this.openTelemetry = openTelemetry;
   }
 
-  /** Configures whether spans are created for JDBC Connections. Enabled by default. */
+  /** Configures whether spans are created for JDBC Connections. Disabled by default. */
   @CanIgnoreReturnValue
   public JdbcTelemetryBuilder setDataSourceInstrumenterEnabled(boolean enabled) {
     this.dataSourceInstrumenterEnabled = enabled;

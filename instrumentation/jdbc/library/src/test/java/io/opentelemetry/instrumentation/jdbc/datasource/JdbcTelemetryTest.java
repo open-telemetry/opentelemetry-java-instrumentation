@@ -60,7 +60,6 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))));
@@ -164,6 +163,7 @@ class JdbcTelemetryTest {
   void buildWithStatementInstrumenterDisabled() throws SQLException {
     JdbcTelemetry telemetry =
         JdbcTelemetry.builder(testing.getOpenTelemetry())
+            .setDataSourceInstrumenterEnabled(true)
             .setStatementInstrumenterEnabled(false)
             .build();
 
@@ -180,10 +180,10 @@ class JdbcTelemetryTest {
   }
 
   @Test
-  void buildWithTransactionInstrumenterDisabled() throws SQLException {
+  void buildWithTransactionInstrumenterEnabled() throws SQLException {
     JdbcTelemetry telemetry =
         JdbcTelemetry.builder(testing.getOpenTelemetry())
-            .setTransactionInstrumenterEnabled(false)
+            .setTransactionInstrumenterEnabled(true)
             .build();
 
     DataSource dataSource = telemetry.wrap(new TestDataSource());
@@ -200,7 +200,8 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("TestDataSource.getConnection")));
+                span -> span.hasName("COMMIT"),
+                span -> span.hasName("ROLLBACK")));
   }
 
   @Test
@@ -219,7 +220,6 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName("SELECT dbname")
                         .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"))));
@@ -258,7 +258,6 @@ class JdbcTelemetryTest {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
-                span -> span.hasName("TestDataSource.getConnection"),
                 span ->
                     span.hasName(
                             SemconvStability.emitStableDatabaseSemconv()
