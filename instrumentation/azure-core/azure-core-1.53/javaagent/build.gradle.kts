@@ -6,33 +6,39 @@ muzzle {
   pass {
     group.set("com.azure")
     module.set("azure-core")
-    versions.set("[1.14.0,1.19.0)")
+    versions.set("[1.53.0,)")
     assertInverse.set(true)
   }
 }
 
 sourceSets {
   main {
-    val shadedDep = project(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded")
+    val shadedDep = project(":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded")
     output.dir(
       shadedDep.file("build/extracted/shadow"),
-      "builtBy" to ":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded:extractShadowJar"
+      "builtBy" to ":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded:extractShadowJar"
     )
   }
 }
 
 dependencies {
-  compileOnly(project(":instrumentation:azure-core:azure-core-1.14:library-instrumentation-shaded", configuration = "shadow"))
+  compileOnly(project(":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded", configuration = "shadow"))
 
-  library("com.azure:azure-core:1.14.0")
+  library("com.azure:azure-core:1.53.0")
 
   // Ensure no cross interference
+  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.14:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.19:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
-  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
+
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  }
+}
 
 testing {
   suites {
@@ -41,9 +47,11 @@ testing {
     val testAzure by registering(JvmTestSuite::class) {
       dependencies {
         if (latestDepTest) {
-          implementation("com.azure:azure-core:1.18.0") // see azure-core-1.19 module
+          implementation("com.azure:azure-core:latest.release")
+          implementation("com.azure:azure-core-test:latest.release")
         } else {
-          implementation("com.azure:azure-core:1.14.0")
+          implementation("com.azure:azure-core:1.53.0")
+          implementation("com.azure:azure-core-test:1.26.2")
         }
       }
     }
