@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.HTTP_URL_STATE;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.instrumenter;
@@ -76,7 +75,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
           return new AdviceScope(callDepth, null, null);
         }
 
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, connection)) {
           return new AdviceScope(callDepth, null, null);
         }
