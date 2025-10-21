@@ -27,7 +27,19 @@ val bootstrapLibs by configurations.creating {
 val baseJavaagentLibs by configurations.creating {
   isCanBeResolved = true
   isCanBeConsumed = false
+  attributes {
+    attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
+  }
 }
+// This compatibility rule allows to fall back to "regular jars" when a baseJavaagentLibs dependency doesn't have a "shadowed" bundling.
+abstract class ShadowedJarRule: AttributeCompatibilityRule<Bundling> {
+  override fun execute(details: CompatibilityCheckDetails<Bundling>) = details.run {
+    if (consumerValue?.name == Bundling.SHADOWED && producerValue?.name == Bundling.EXTERNAL) {
+      compatible()
+    }
+  }
+}
+
 // this configuration collects libs that will be placed in the agent classloader, isolated from the instrumented application code
 val javaagentLibs by configurations.creating {
   isCanBeResolved = true
@@ -54,6 +66,11 @@ val licenseReportDependencies by configurations.creating {
 }
 
 dependencies {
+  attributesSchema {
+    attribute(Bundling.BUNDLING_ATTRIBUTE) {
+      compatibilityRules.add(ShadowedJarRule::class.java)
+    }
+  }
   bootstrapLibs(project(":instrumentation-api"))
   // opentelemetry-api is an api dependency of :instrumentation-api, but opentelemetry-api-incubator is not
   bootstrapLibs("io.opentelemetry:opentelemetry-api-incubator")
@@ -74,7 +91,7 @@ dependencies {
 
   baseJavaagentLibs(project(":javaagent-tooling"))
   baseJavaagentLibs(project(":javaagent-internal-logging-application"))
-  baseJavaagentLibs(project(":javaagent-internal-logging-simple", configuration = "shadow"))
+  baseJavaagentLibs(project(":javaagent-internal-logging-simple"))
   baseJavaagentLibs(project(":muzzle"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.0:javaagent"))
   baseJavaagentLibs(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
@@ -94,7 +111,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shaded"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
