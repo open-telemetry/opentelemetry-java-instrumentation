@@ -6,8 +6,7 @@ plugins {
 group = "io.opentelemetry.javaagent.instrumentation"
 
 dependencies {
-  // first version of azure-core-tracing-opentelemetry that depends on LibraryTelemetryOptions (azure-core 1.53+)
-  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.50")
+  implementation("com.azure:azure-core-tracing-opentelemetry:1.0.0-beta.61")
 }
 
 tasks {
