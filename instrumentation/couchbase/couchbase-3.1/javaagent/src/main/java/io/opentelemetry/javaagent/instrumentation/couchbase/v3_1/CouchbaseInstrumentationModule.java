@@ -25,12 +25,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // New class introduced in 3.1, the minimum version we support.
-    // NB: Couchbase does not provide any API guarantees on their core IO artifact so reconsider
-    // instrumenting it instead of each individual JVM artifact if this becomes unmaintainable.
+    // introduced in java-client 3.1.0 (core-io 2.1.0)
     return hasClassesNamed("com.couchbase.client.core.cnc.TracingIdentifiers")
-        // added in 3.2
-        .and(not(hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")));
+        // introduced in java-client 3.1.6 (core-io 2.1.6)
+        .and(not(hasClassesNamed("com.couchbase.client.core.endpoint.EventingEndpoint")));
   }
 
   @Override
