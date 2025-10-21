@@ -16,6 +16,8 @@ on:
         type: boolean
         required: false
     secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
       FLAKY_TEST_REPORTER_ACCESS_KEY:
         required: false
 
@@ -43,6 +45,8 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Spotless
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: ./gradlew spotlessCheck ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
   license-check:
@@ -65,6 +69,8 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Generate license report
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         # with the build cache enabled occasionally produces outdated results
         run: ./gradlew generateLicenseReport --no-build-cache
 
@@ -192,6 +198,8 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: Build
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: ./gradlew check javadoc sourcesJar spdxSbom -x spotlessCheck -PskipTests=true ${{ inputs.no-build-cache && '--no-build-cache' || '' }}
 
       - name: Check for jApiCmp diffs
@@ -300,6 +308,8 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only || matrix.test-java-version != 11 || matrix.vm != 'hotspot' }}
 
       - name: List tests
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         # "check" is needed to activate all tests for listing purposes
         # listTestsInPartition writes test tasks that apply to the given partition to a file named
         # "test-tasks.txt" and then disables all tasks (including tests) after it runs
@@ -314,6 +324,8 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         # spotless is checked separately since it's a common source of failure
         run: >
           ./gradlew
@@ -436,11 +448,15 @@ jobs:
           cache-read-only: ${{ inputs.cache-read-only || matrix.smoke-test-suite != 'tomcat' }}
 
       - name: Build
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         # running suite "none" compiles everything needed by smoke tests without executing any tests
         # --no-daemon is used to free up the memory from the build step before running the test step below
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=none --no-daemon ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Test
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: ./gradlew :smoke-tests:test -PsmokeTestSuite=${{ matrix.smoke-test-suite }} ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
 
       - name: Build scan
