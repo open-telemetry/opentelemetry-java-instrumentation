@@ -1,4 +1,7 @@
-description: This instrumentation enables database client spans and database client metrics for Couchbase.
+description: >
+  This instrumentation enables database client spans and database client metrics for Couchbase 2.6
+  operations. It automatically traces key-value operations (get, upsert, replace, remove), view
+  queries, N1QL queries, and cluster management operations.
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS

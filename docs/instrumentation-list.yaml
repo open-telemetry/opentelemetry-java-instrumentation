@@ -2757,8 +2757,8 @@ libraries:
           type: LONG
   couchbase:
   - name: couchbase-2.0
-    description: This instrumentation enables database client spans and database client
-      metrics for Couchbase.
+    description: |
+      This instrumentation enables database client spans and database client metrics for Couchbase 2.0 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
     semantic_conventions:
     - DATABASE_CLIENT_SPANS
     - DATABASE_CLIENT_METRICS
@@ -2810,8 +2810,8 @@ libraries:
         - name: db.system.name
           type: STRING
   - name: couchbase-2.6
-    description: This instrumentation enables database client spans and database client
-      metrics for Couchbase.
+    description: |
+      This instrumentation enables database client spans and database client metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
     semantic_conventions:
     - DATABASE_CLIENT_SPANS
     - DATABASE_CLIENT_METRICS
@@ -2907,7 +2907,7 @@ libraries:
           type: STRING
   - name: couchbase-3.1
     description: |
-      This instrumentation automatically configures the OpenTelemetry instrumentation provided by the Couchbase library for versions 3.1 and above.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     semantic_conventions:
     - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
@@ -2954,7 +2954,7 @@ libraries:
           type: STRING
   - name: couchbase-3.1.6
     description: |
-      This instrumentation automatically configures the OpenTelemetry instrumentation provided by the Couchbase library for versions 3.1.6 and above.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     semantic_conventions:
     - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
@@ -3054,7 +3054,7 @@ libraries:
           type: STRING
   - name: couchbase-3.4
     description: |
-      This instrumentation automatically configures the OpenTelemetry instrumentation provided by the Couchbase library for versions 3.4 and above.
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
     semantic_conventions:
     - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client

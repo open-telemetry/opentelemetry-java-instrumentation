@@ -1,6 +1,6 @@
 description: >
-  This instrumentation automatically configures the OpenTelemetry instrumentation provided by the
-  Couchbase library for versions 3.4 and above.
+  Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation
+  automatically configures the instrumentation provided by the Couchbase library.
 library_link: https://github.com/couchbase/couchbase-java-client
 semantic_conventions:
   - DATABASE_CLIENT_SPANS
