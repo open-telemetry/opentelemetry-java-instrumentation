@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.HTTP_URL_STATE;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.HttpUrlConnectionSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -17,11 +18,11 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.net.HttpURLConnection;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -57,98 +58,110 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class HttpUrlConnectionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void methodEnter(
-        @Advice.This HttpURLConnection connection,
-        @Advice.FieldValue("connected") boolean connected,
-        @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      private final HttpUrlState httpUrlState;
+      private final Scope scope;
 
-      callDepth = CallDepth.forClass(HttpURLConnection.class);
-      if (callDepth.getAndIncrement() > 0) {
-        // only want the rest of the instrumentation rules (which are complex enough) to apply to
-        // top-level HttpURLConnection calls
-        return;
+      private AdviceScope(CallDepth callDepth, HttpUrlState httpUrlState, Scope scope) {
+        this.callDepth = callDepth;
+        this.httpUrlState = httpUrlState;
+        this.scope = scope;
       }
 
-      Context parentContext = currentContext();
-      if (!instrumenter().shouldStart(parentContext, connection)) {
-        return;
-      }
-
-      // using storage for a couple of reasons:
-      // - to start an operation in connect() and end it in getInputStream()
-      // - to avoid creating a new operation on multiple subsequent calls to getInputStream()
-      VirtualField<HttpURLConnection, HttpUrlState> storage =
-          VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
-      httpUrlState = storage.get(connection);
-
-      if (httpUrlState != null) {
-        if (!httpUrlState.finished) {
-          scope = httpUrlState.context.makeCurrent();
+      public static AdviceScope start(CallDepth callDepth, HttpURLConnection connection) {
+        if (callDepth.getAndIncrement() > 0) {
+          // only want the rest of the instrumentation rules (which are complex enough) to apply to
+          // top-level HttpURLConnection calls
+          return new AdviceScope(callDepth, null, null);
         }
-        return;
+
+        Context parentContext = currentContext();
+        if (!instrumenter().shouldStart(parentContext, connection)) {
+          return new AdviceScope(callDepth, null, null);
+        }
+
+        // using virtual field for a couple of reasons:
+        // - to start an operation in connect() and end it in getInputStream()
+        // - to avoid creating a new operation on multiple subsequent calls to getInputStream()
+        HttpUrlState httpUrlState = HTTP_URL_STATE.get(connection);
+
+        if (httpUrlState != null) {
+          if (!httpUrlState.finished) {
+            return new AdviceScope(callDepth, httpUrlState, httpUrlState.context.makeCurrent());
+          }
+          return new AdviceScope(callDepth, httpUrlState, null);
+        }
+
+        Context context = instrumenter().start(parentContext, connection);
+        httpUrlState = new HttpUrlState(context);
+        HTTP_URL_STATE.set(connection, httpUrlState);
+        return new AdviceScope(callDepth, httpUrlState, context.makeCurrent());
       }
 
-      Context context = instrumenter().start(parentContext, connection);
-      httpUrlState = new HttpUrlState(context);
-      storage.set(connection, httpUrlState);
-      scope = context.makeCurrent();
+      public void end(
+          HttpURLConnection connection,
+          int responseCode,
+          @Nullable Throwable throwable,
+          String methodName) {
+        if (callDepth.decrementAndGet() > 0 || scope == null) {
+          return;
+        }
+
+        // prevent infinite recursion in case end() captures response headers due to
+        // HttpUrlConnection.getHeaderField() calling HttpUrlConnection.getInputStream() which then
+        // enters this advice again
+        callDepth.getAndIncrement();
+        try {
+          scope.close();
+          Class<? extends HttpURLConnection> connectionClass = connection.getClass();
+
+          String requestMethod = connection.getRequestMethod();
+          GetOutputStreamContext.set(
+              httpUrlState.context, connectionClass, methodName, requestMethod);
+
+          if (throwable != null) {
+            if (responseCode >= 400) {
+              // HttpURLConnection unnecessarily throws exception on error response.
+              // None of the other http clients do this, so not recording the exception on the span
+              // to be consistent with the telemetry for other http clients.
+              instrumenter().end(httpUrlState.context, connection, responseCode, null);
+            } else {
+              instrumenter()
+                  .end(
+                      httpUrlState.context,
+                      connection,
+                      responseCode > 0 ? responseCode : httpUrlState.statusCode,
+                      throwable);
+            }
+            httpUrlState.finished = true;
+          } else if (methodName.equals("getInputStream") && responseCode > 0) {
+            // responseCode field is sometimes not populated.
+            // We can't call getResponseCode() due to some unwanted side-effects
+            // (e.g. breaks getOutputStream).
+            instrumenter().end(httpUrlState.context, connection, responseCode, null);
+            httpUrlState.finished = true;
+          }
+        } finally {
+          callDepth.decrementAndGet();
+        }
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope methodEnter(@Advice.This HttpURLConnection connection) {
+      CallDepth callDepth = CallDepth.forClass(HttpURLConnection.class);
+      return AdviceScope.start(callDepth, connection);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void methodExit(
         @Advice.This HttpURLConnection connection,
         @Advice.FieldValue("responseCode") int responseCode,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelHttpUrlState") HttpUrlState httpUrlState,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-      if (scope == null) {
-        return;
-      }
-      // prevent infinite recursion in case end() captures response headers due to
-      // HttpUrlConnection.getHeaderField() calling HttpUrlConnection.getInputStream() which then
-      // enters this advice again
-      callDepth.getAndIncrement();
-      try {
-        scope.close();
-        Class<? extends HttpURLConnection> connectionClass = connection.getClass();
-
-        String requestMethod = connection.getRequestMethod();
-        GetOutputStreamContext.set(
-            httpUrlState.context, connectionClass, methodName, requestMethod);
-
-        if (throwable != null) {
-          if (responseCode >= 400) {
-            // HttpURLConnection unnecessarily throws exception on error response.
-            // None of the other http clients do this, so not recording the exception on the span
-            // to be consistent with the telemetry for other http clients.
-            instrumenter().end(httpUrlState.context, connection, responseCode, null);
-          } else {
-            instrumenter()
-                .end(
-                    httpUrlState.context,
-                    connection,
-                    responseCode > 0 ? responseCode : httpUrlState.statusCode,
-                    throwable);
-          }
-          httpUrlState.finished = true;
-        } else if (methodName.equals("getInputStream") && responseCode > 0) {
-          // responseCode field is sometimes not populated.
-          // We can't call getResponseCode() due to some unwanted side-effects
-          // (e.g. breaks getOutputStream).
-          instrumenter().end(httpUrlState.context, connection, responseCode, null);
-          httpUrlState.finished = true;
-        }
-      } finally {
-        callDepth.decrementAndGet();
-      }
+        @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(connection, responseCode, throwable, methodName);
     }
   }
 
@@ -159,9 +172,7 @@ public class HttpUrlConnectionInstrumentation implements TypeInstrumentation {
     public static void methodExit(
         @Advice.This HttpURLConnection connection, @Advice.Return int returnValue) {
 
-      VirtualField<HttpURLConnection, HttpUrlState> storage =
-          VirtualField.find(HttpURLConnection.class, HttpUrlState.class);
-      HttpUrlState httpUrlState = storage.get(connection);
+      HttpUrlState httpUrlState = HTTP_URL_STATE.get(connection);
       if (httpUrlState != null) {
         httpUrlState.statusCode = returnValue;
       }
