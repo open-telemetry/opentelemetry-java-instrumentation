@@ -31,8 +31,9 @@ val baseJavaagentLibs by configurations.creating {
     attribute(Bundling.BUNDLING_ATTRIBUTE, objects.named(Bundling.SHADOWED))
   }
 }
+
 // This compatibility rule allows to fall back to "regular jars" when a baseJavaagentLibs dependency doesn't have a "shadowed" bundling.
-abstract class ShadowedJarRule: AttributeCompatibilityRule<Bundling> {
+abstract class ShadowedJarRule : AttributeCompatibilityRule<Bundling> {
   override fun execute(details: CompatibilityCheckDetails<Bundling>) = details.run {
     if (consumerValue?.name == Bundling.SHADOWED && producerValue?.name == Bundling.EXTERNAL) {
       compatible()
