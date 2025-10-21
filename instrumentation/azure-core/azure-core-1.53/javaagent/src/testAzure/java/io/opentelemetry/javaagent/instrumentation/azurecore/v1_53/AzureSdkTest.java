@@ -100,11 +100,11 @@ class AzureSdkTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasStatus(StatusData.unset())
                         .hasAttributes(Attributes.empty()),
-        span ->
-          span.hasKind(SpanKind.CLIENT)
-            .hasName("GET")
-            .hasStatus(StatusData.unset())
-            .hasAttribute(HTTP_RESPONSE_STATUS_CODE, 200L)));
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasName("GET")
+                        .hasStatus(StatusData.unset())
+                        .hasAttribute(HTTP_RESPONSE_STATUS_CODE, 200L)));
   }
 
   @Test
