@@ -13,6 +13,7 @@ muzzle {
 
 dependencies {
   library("com.datastax.oss:java-driver-core:4.0.0")
+  latestDepTestLibrary("com.datastax.oss:java-driver-core:4.3.+") // see cassandra-4.4 module
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

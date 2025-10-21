@@ -2309,7 +2309,10 @@ libraries:
   cassandra:
   - name: cassandra-3.0
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-3.0
     scope:
@@ -2348,6 +2351,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2373,7 +2394,10 @@ libraries:
           type: LONG
   - name: cassandra-4.0
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.0
     scope:
@@ -2424,6 +2448,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2461,7 +2503,10 @@ libraries:
           type: LONG
   - name: cassandra-4.4
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.4
     scope:
@@ -2514,6 +2559,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2551,8 +2614,11 @@ libraries:
           type: LONG
   clickhouse:
   - name: clickhouse-client-v1-0.5
-    description: This instrumentation enables database client spans and metrics for
-      the V1 ClickHouse client.
+    description: |
+      This instrumentation enables database client spans and database client metrics for the ClickHouse Java Client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/ClickHouse/clickhouse-java
     source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
     scope:
@@ -2619,8 +2685,11 @@ libraries:
         - name: server.port
           type: LONG
   - name: clickhouse-client-v2-0.8
-    description: This instrumentation enables database client spans and metrics for
-      the V2 ClickHouse client.
+    description: |
+      This instrumentation enables database client spans and database client metrics for the ClickHouse Java Client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/ClickHouse/clickhouse-java
     source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
     scope:
@@ -7721,7 +7790,7 @@ libraries:
       default: SCOPE_
   - name: spring-web-3.1
     description: |
-      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate. The agent integration enriches HTTP server spans and metrics with route information.
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
@@ -7761,8 +7830,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: spring-web-6.0
-    description: This instrumentation enriches HTTP server spans and metrics with
-      route information.
+    description: |
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-6.0
     minimum_java_version: 17
