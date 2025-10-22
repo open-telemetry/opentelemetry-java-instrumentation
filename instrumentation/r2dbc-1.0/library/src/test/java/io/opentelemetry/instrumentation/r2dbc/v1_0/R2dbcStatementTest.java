@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcNetAttributesGetter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -39,7 +42,18 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   @Override
   protected ConnectionFactory createProxyConnectionFactory(
       ConnectionFactoryOptions connectionFactoryOptions) {
-    return R2dbcTelemetry.create(testing.getOpenTelemetry())
+    // Create peer service mapping for testing
+    java.util.Map<String, String> peerServiceMapping = new java.util.HashMap<>();
+    peerServiceMapping.put("127.0.0.1", "test-peer-service");
+    peerServiceMapping.put("localhost", "test-peer-service");
+    peerServiceMapping.put("192.0.2.1", "test-peer-service");
+    
+    return R2dbcTelemetry.builder(testing.getOpenTelemetry())
+        .addAttributesExtractor(
+            PeerServiceAttributesExtractor.create(
+                R2dbcNetAttributesGetter.INSTANCE,
+                PeerServiceResolver.create(peerServiceMapping)))
+        .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
   }
