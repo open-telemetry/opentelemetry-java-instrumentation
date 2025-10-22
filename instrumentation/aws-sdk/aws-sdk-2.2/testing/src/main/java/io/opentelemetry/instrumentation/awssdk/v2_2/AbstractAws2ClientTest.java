@@ -13,10 +13,13 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_KINESIS_STREAM_NAME;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_LAMBDA_RESOURCE_MAPPING_ID;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SECRETSMANAGER_SECRET_ARN;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SNS_TOPIC_ARN;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_SQS_QUEUE_URL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_ACTIVITY_ARN;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -339,7 +342,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                           "http://localhost:"
                                               + server.httpPort()
                                               + "/somebucket"))),
-                  equalTo(stringKey("aws.bucket.name"), "somebucket"))));
+                  equalTo(AWS_S3_BUCKET, "somebucket"))));
     } else {
       attributes.addAll(
           new ArrayList<>(
@@ -350,7 +353,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
     }
 
     if (service.equals("Kinesis")) {
-      attributes.add(equalTo(stringKey("aws.stream.name"), "somestream"));
+      attributes.add(equalTo(AWS_KINESIS_STREAM_NAME, "somestream"));
     }
 
     if (service.equals("Sns")) {
@@ -380,7 +383,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
       attributes.addAll(
           new ArrayList<>(
               asList(
-                  equalTo(stringKey("aws.queue.url"), QUEUE_URL),
+                  equalTo(AWS_SQS_QUEUE_URL, QUEUE_URL),
                   equalTo(MESSAGING_DESTINATION_NAME, "somequeue"),
                   equalTo(MESSAGING_OPERATION, "publish"),
                   satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
@@ -926,7 +929,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
                                 equalTo(RPC_SERVICE, "S3"),
                                 equalTo(RPC_METHOD, "GetObject"),
                                 equalTo(stringKey("aws.agent"), "java-aws-sdk"),
-                                equalTo(stringKey("aws.bucket.name"), "somebucket"))));
+                                equalTo(AWS_S3_BUCKET, "somebucket"))));
   }
 
   // regression test for
