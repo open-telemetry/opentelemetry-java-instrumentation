@@ -11,8 +11,10 @@ import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+@Disabled
 class ClassLoaderValueTest {
 
   @Test

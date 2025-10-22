@@ -19,6 +19,7 @@ import net.bytebuddy.description.modifier.Visibility;
 
 class ClassLoaderMap {
   private static final Cache<ClassLoader, WeakReference<Map<Object, Object>>> data = Cache.weak();
+  private static final Map<Object, Object> bootLoaderData = new ConcurrentHashMap<>();
 
   public static Object get(ClassLoader classLoader, Object key) {
     return getClassLoaderData(classLoader, false).get(key);
@@ -35,7 +36,10 @@ class ClassLoaderMap {
 
   private static Map<Object, Object> getClassLoaderData(
       ClassLoader classLoader, boolean initialize) {
-    classLoader = maskNullClassLoader(classLoader);
+    if (classLoader == null) {
+      return bootLoaderData;
+    }
+
     WeakReference<Map<Object, Object>> weakReference = data.get(classLoader);
     Map<Object, Object> map = weakReference != null ? weakReference.get() : null;
     if (map == null) {
@@ -81,12 +85,6 @@ class ClassLoaderMap {
       throw new IllegalStateException(exception);
     }
     return map;
-  }
-
-  private static final ClassLoader BOOT_LOADER = new ClassLoader(null) {};
-
-  private static ClassLoader maskNullClassLoader(ClassLoader classLoader) {
-    return classLoader == null ? BOOT_LOADER : classLoader;
   }
 
   private ClassLoaderMap() {}
