@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
@@ -78,8 +78,7 @@ public final class SpringWebTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpRequest>, SpanNameExtractor<HttpRequest>>
-          spanNameExtractorTransformer) {
+      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }

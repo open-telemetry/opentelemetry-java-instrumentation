@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.javahttpclient.internal.JavaHttpClientIn
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class JavaHttpClientTelemetryBuilder {
 
@@ -91,8 +91,7 @@ public final class JavaHttpClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpRequest>, SpanNameExtractor<HttpRequest>>
-          spanNameExtractorTransformer) {
+      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }

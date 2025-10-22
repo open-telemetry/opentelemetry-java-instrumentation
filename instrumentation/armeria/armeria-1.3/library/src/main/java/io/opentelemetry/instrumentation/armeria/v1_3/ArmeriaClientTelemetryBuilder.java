@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumente
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class ArmeriaClientTelemetryBuilder {
 
@@ -39,10 +39,7 @@ public final class ArmeriaClientTelemetryBuilder {
   /** Sets the status extractor for client spans. */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setStatusExtractor(
-      Function<
-              SpanStatusExtractor<ClientRequestContext, RequestLog>,
-              SpanStatusExtractor<ClientRequestContext, RequestLog>>
-          statusExtractor) {
+      UnaryOperator<SpanStatusExtractor<ClientRequestContext, RequestLog>> statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
   }
@@ -104,8 +101,7 @@ public final class ArmeriaClientTelemetryBuilder {
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<ClientRequestContext>, SpanNameExtractor<ClientRequestContext>>
-          clientSpanNameExtractor) {
+      UnaryOperator<SpanNameExtractor<ClientRequestContext>> clientSpanNameExtractor) {
     builder.setSpanNameExtractor(clientSpanNameExtractor);
     return this;
   }

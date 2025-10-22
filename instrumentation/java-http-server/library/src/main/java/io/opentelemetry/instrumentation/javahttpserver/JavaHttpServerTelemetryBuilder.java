@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.javahttpserver.internal.Experimental;
 import io.opentelemetry.instrumentation.javahttpserver.internal.JavaHttpServerInstrumenterBuilderUtil;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class JavaHttpServerTelemetryBuilder {
 
@@ -42,10 +42,7 @@ public final class JavaHttpServerTelemetryBuilder {
   /** Sets the status extractor for server spans. */
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractor(
-      Function<
-              SpanStatusExtractor<HttpExchange, HttpExchange>,
-              SpanStatusExtractor<HttpExchange, HttpExchange>>
-          statusExtractor) {
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
   }
@@ -104,12 +101,11 @@ public final class JavaHttpServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpExchange>, SpanNameExtractor<HttpExchange>>
-          serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(serverSpanNameExtractor);
+      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
+    builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
 

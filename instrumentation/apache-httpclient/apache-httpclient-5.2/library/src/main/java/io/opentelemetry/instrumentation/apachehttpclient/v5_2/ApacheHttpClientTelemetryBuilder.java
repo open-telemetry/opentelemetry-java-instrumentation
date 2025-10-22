@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.apache.hc.core5.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClientTelemetry}. */
@@ -92,10 +92,7 @@ public final class ApacheHttpClientTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
-      Function<
-              SpanNameExtractor<ApacheHttpClientRequest>,
-              SpanNameExtractor<ApacheHttpClientRequest>>
-          spanNameExtractorTransformer) {
+      UnaryOperator<SpanNameExtractor<ApacheHttpClientRequest>> spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }

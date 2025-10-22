@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.restlet.v1_1.internal.Experimental;
 import io.opentelemetry.instrumentation.restlet.v1_1.internal.RestletTelemetryBuilderFactory;
 import java.util.Collection;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.restlet.data.Request;
 import org.restlet.data.Response;
 
@@ -87,8 +87,7 @@ public final class RestletTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<Request>, SpanNameExtractor<Request>>
-          spanNameExtractorTransformer) {
+      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }
