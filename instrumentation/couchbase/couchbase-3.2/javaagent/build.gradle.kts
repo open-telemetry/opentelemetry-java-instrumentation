@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.couchbase.client")
     module.set("java-client")
-    versions.set("[3.2.0,)")
+    versions.set("[3.2.0,3.4.0)")
     // these versions were released as ".bundle" instead of ".jar"
     skip("2.7.5", "2.7.8")
     assertInverse.set(true)
@@ -34,6 +34,14 @@ dependencies {
   library("com.couchbase.client:java-client:3.2.0")
 
   testImplementation("org.testcontainers:testcontainers-couchbase")
+
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
+
+  latestDepTestLibrary("com.couchbase.client:java-client:3.3.+") // see couchbase-3.4 module
 }
 
 tasks {

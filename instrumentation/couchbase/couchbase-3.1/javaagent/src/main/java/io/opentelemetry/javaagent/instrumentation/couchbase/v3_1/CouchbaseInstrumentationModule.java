@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -24,10 +25,10 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // New class introduced in 3.1, the minimum version we support.
-    // NB: Couchbase does not provide any API guarantees on their core IO artifact so reconsider
-    // instrumenting it instead of each individual JVM artifact if this becomes unmaintainable.
-    return hasClassesNamed("com.couchbase.client.core.cnc.TracingIdentifiers");
+    // introduced in java-client 3.1.0 (core-io 2.1.0)
+    return hasClassesNamed("com.couchbase.client.core.cnc.TracingIdentifiers")
+        // introduced in java-client 3.1.6 (core-io 2.1.6)
+        .and(not(hasClassesNamed("com.couchbase.client.core.endpoint.EventingEndpoint")));
   }
 
   @Override

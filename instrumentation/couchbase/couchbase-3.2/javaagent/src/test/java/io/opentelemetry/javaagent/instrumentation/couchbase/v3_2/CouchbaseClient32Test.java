@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
+import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+
 import com.couchbase.client.core.error.DocumentNotFoundException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
@@ -73,7 +75,8 @@ class CouchbaseClient32Test {
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> {
-                  span.hasName("get");
+                  span.hasKind(INTERNAL) // later version of couchbase gives correct behavior
+                      .hasName("get");
                   if (Boolean.getBoolean("testLatestDeps")) {
                     span.hasStatus(StatusData.error());
                   }
