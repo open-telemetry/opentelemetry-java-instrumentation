@@ -69,7 +69,7 @@ public record FileManager(String rootDir) {
     }
 
     if (filePath.matches(
-        ".*(/test/|/testing|/build/|-common/|-common-|common-|-testing|bootstrap/src).*")) {
+        ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src).*")) {
       return false;
     }
 
