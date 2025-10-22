@@ -102,6 +102,7 @@ class JavaagentTestArgumentsProvider(
     if (denyUnsafe) {
       list += "-Dsun.misc.unsafe.memory.access=deny"
       list += "-Dotel.instrumentation.deny-unsafe.enabled=true"
+      list += "-Dio.netty.noUnsafe=true"
     }
     return list
   }
