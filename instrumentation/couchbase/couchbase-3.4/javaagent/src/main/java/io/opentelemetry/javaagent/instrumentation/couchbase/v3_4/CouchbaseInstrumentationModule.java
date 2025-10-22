@@ -24,7 +24,7 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // CoreTransactionRequest was introduced in 3.4.0 with integrated transactions support.
+    // introduced in java-client 3.4.0 (core-io 2.4.0)
     return hasClassesNamed(
         "com.couchbase.client.core.transaction.components.CoreTransactionRequest");
   }
