@@ -52,7 +52,6 @@ readonly INSTRUMENTATIONS=(
   "couchbase:couchbase-2.6:javaagent:test"
   "couchbase:couchbase-2.6:javaagent:testExperimental"
   "couchbase:couchbase-2.6:javaagent:testStableSemconv"
-  # when running 3.x tests on macOs, switch to testcontainer couchbase/server:7.6.0
   "couchbase:couchbase-3.1:javaagent:test"
   "couchbase:couchbase-3.1.6:javaagent:test"
   "couchbase:couchbase-3.2:javaagent:test"
