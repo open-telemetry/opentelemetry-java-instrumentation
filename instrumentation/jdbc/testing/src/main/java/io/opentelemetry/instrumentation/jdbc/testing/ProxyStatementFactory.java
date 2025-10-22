@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc.test;
+package io.opentelemetry.instrumentation.jdbc.testing;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
@@ -59,10 +59,8 @@ public final class ProxyStatementFactory {
     // in the same package as the package private interface
     // by default we ignore jdk proxies, having the proxy in a different package ensures it gets
     // instrumented
-    if (!proxy
-        .getClass()
-        .getName()
-        .startsWith("io.opentelemetry.javaagent.instrumentation.jdbc.test")) {
+    String expectedPackage = TestInterface.class.getPackage().getName();
+    if (!proxy.getClass().getName().startsWith(expectedPackage)) {
       throw new IllegalStateException("proxy is in wrong package");
     }
 

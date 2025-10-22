@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc.test;
+package io.opentelemetry.instrumentation.jdbc.testing;
 
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import java.sql.DatabaseMetaData;
@@ -13,7 +13,11 @@ class DbCallingConnection extends TestConnection {
   final boolean usePreparedStatement;
 
   DbCallingConnection(boolean usePreparedStatement) {
-    super(false);
+    this(usePreparedStatement, null);
+  }
+
+  DbCallingConnection(boolean usePreparedStatement, String url) {
+    super(url, false);
     this.usePreparedStatement = usePreparedStatement;
   }
 

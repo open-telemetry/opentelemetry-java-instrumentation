@@ -244,18 +244,21 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
     delegate.setObject(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType, int scaleOrLength)
       throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+    putParameter(parameterIndex, x);
   }
 
   @Override
@@ -419,15 +422,26 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   public void setObject(int parameterIndex, Object x, SQLType targetSqlType, int scaleOrLength)
       throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType, scaleOrLength);
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public void setObject(int parameterIndex, Object x, SQLType targetSqlType) throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType);
+    putParameter(parameterIndex, x);
   }
 
   @Override
   public long executeLargeUpdate() throws SQLException {
-    return wrapCall(query, delegate::executeLargeUpdate);
+    return wrapCall(
+        query,
+        () -> {
+          try {
+            return delegate.executeLargeUpdate();
+          } catch (UnsupportedOperationException ignored) {
+            // Fallback for drivers that only implement executeUpdate
+            return (long) delegate.executeUpdate();
+          }
+        });
   }
 }

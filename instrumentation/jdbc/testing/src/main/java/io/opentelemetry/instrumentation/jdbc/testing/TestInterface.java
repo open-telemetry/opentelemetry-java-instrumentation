@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc.test;
+package io.opentelemetry.instrumentation.jdbc.testing;
 
 // Adding a package private interface to jdk proxy forces defining the proxy class in the package
 // of the package private class. Usually proxy classes are defined in a package that we exclude from

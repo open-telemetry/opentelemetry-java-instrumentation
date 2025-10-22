@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc.test;
+package io.opentelemetry.instrumentation.jdbc.testing;
 
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -23,7 +23,8 @@ public class TestClassLoader extends URLClassLoader {
     if (clazz != null) {
       return clazz;
     }
-    if (name.startsWith("io.opentelemetry.javaagent.instrumentation.jdbc.test")) {
+    String instrumentationPackage = TestInterface.class.getPackage().getName();
+    if (name.startsWith(instrumentationPackage)) {
       try {
         return findClass(name);
       } catch (ClassNotFoundException exception) {

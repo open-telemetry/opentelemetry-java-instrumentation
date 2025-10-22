@@ -33,6 +33,10 @@ public class TestConnection implements Connection {
 
   public TestConnection() {}
 
+  public TestConnection(String url) {
+    this.url = url;
+  }
+
   public TestConnection(Consumer<String> sqlConsumer) {
     this.sqlConsumer = sqlConsumer;
   }
@@ -41,6 +45,11 @@ public class TestConnection implements Connection {
     if (throwException) {
       throw new IllegalStateException("connection exception");
     }
+  }
+
+  public TestConnection(String url, boolean throwException) {
+    this(throwException);
+    this.url = url;
   }
 
   @Override
@@ -293,10 +302,6 @@ public class TestConnection implements Connection {
 
   @Override
   public void setTypeMap(Map<String, Class<?>> map) throws SQLException {}
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
 
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
