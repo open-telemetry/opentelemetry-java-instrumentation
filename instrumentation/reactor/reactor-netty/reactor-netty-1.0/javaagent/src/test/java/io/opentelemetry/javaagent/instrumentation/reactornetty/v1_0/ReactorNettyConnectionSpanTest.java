@@ -22,6 +22,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -88,6 +89,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort())),
                 span ->
@@ -97,10 +99,11 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, server.httpPort())),
                 span ->
                     span.hasName("GET")
                         .hasKind(CLIENT)
@@ -110,6 +113,7 @@ class ReactorNettyConnectionSpanTest {
                             equalTo(URL_FULL, uri),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
@@ -162,6 +166,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(URL_FULL, uri),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
                             equalTo(ERROR_TYPE, connectException.getClass().getName())),
@@ -170,6 +175,7 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT)),
                 span ->
@@ -179,8 +185,9 @@ class ReactorNettyConnectionSpanTest {
                         .hasStatus(StatusData.error())
                         .hasException(connectException)
                         .hasAttributesSatisfyingExactly(
+                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(null, "127.0.0.1")),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
-                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(null, "127.0.0.1")))));
+                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT))));
   }
 }
