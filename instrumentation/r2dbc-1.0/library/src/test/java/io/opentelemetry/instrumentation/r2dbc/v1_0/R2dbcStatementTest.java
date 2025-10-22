@@ -47,12 +47,11 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
     peerServiceMapping.put("127.0.0.1", "test-peer-service");
     peerServiceMapping.put("localhost", "test-peer-service");
     peerServiceMapping.put("192.0.2.1", "test-peer-service");
-    
+
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(
-                R2dbcNetAttributesGetter.INSTANCE,
-                PeerServiceResolver.create(peerServiceMapping)))
+                R2dbcNetAttributesGetter.INSTANCE, PeerServiceResolver.create(peerServiceMapping)))
         .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
