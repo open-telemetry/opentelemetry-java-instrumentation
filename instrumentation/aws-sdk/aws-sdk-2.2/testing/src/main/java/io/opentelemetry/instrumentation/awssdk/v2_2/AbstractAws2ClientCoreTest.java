@@ -53,7 +53,6 @@ import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.Reco
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -282,7 +281,7 @@ public abstract class AbstractAws2ClientCoreTest {
       SpanDataAssert span, String operation, List<AttributeAssertion> extraAttributes) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
-            Arrays.asList(
+            asList(
                 equalTo(SERVER_ADDRESS, "127.0.0.1"),
                 equalTo(SERVER_PORT, server.httpPort()),
                 equalTo(URL_FULL, server.httpUri() + "/"),

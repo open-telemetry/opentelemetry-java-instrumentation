@@ -22,7 +22,7 @@ enum AwsSdkRequestType {
   S3(request(AttributeKeys.AWS_S3_BUCKET, "Bucket")),
   SQS(
       request(AttributeKeys.AWS_SQS_QUEUE_URL, "QueueUrl"),
-      requestExperimental(AttributeKey.stringKey("aws.queue.name"), "QueueName")),
+      requestExperimental(stringKey("aws.queue.name"), "QueueName")),
   KINESIS(request(AttributeKeys.AWS_KINESIS_STREAM_NAME, "StreamName")),
   DYNAMODB(),
   BEDROCK_RUNTIME(),
@@ -74,6 +74,6 @@ enum AwsSdkRequestType {
 
     // copied from MessagingIncubatingAttributes
     static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
-        AttributeKey.stringKey("messaging.destination.name");
+        stringKey("messaging.destination.name");
   }
 }

@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_PROVISIONED_READ_CAPACITY;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -19,7 +20,6 @@ import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.Span;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,13 +71,13 @@ class FieldMapperTest {
     Map<String, Collection<WriteRequest>> items = new HashMap<>();
     BatchWriteItemRequest sdkRequest = BatchWriteItemRequest.builder().requestItems(items).build();
     when(serializer.serializeCollection(items.keySet()))
-        .thenReturn(Arrays.asList("firstTable", "secondTable"));
+        .thenReturn(asList("firstTable", "secondTable"));
 
     Span span = mock(Span.class);
     // when
     underTest.mapToAttributes(sdkRequest, awsSdkRequest, span);
     // then
-    verify(span).setAttribute(AWS_DYNAMODB_TABLE_NAMES, Arrays.asList("firstTable", "secondTable"));
+    verify(span).setAttribute(AWS_DYNAMODB_TABLE_NAMES, asList("firstTable", "secondTable"));
     verifyNoMoreInteractions(span);
   }
 
