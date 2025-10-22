@@ -20,15 +20,12 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  // jdbc unit testing
   testLibrary("com.h2database:h2:1.3.169")
-  // first version jdk 1.6 compatible
   testLibrary("org.apache.derby:derby:10.6.1.0")
   testLibrary("org.hsqldb:hsqldb:2.0.0")
 
   testLibrary("org.apache.tomcat:tomcat-jdbc:7.0.19")
-  // tomcat needs this to run
-  testLibrary("org.apache.tomcat:tomcat-juli:7.0.19")
+  testLibrary("org.apache.tomcat:tomcat-juli:7.0.19") // tomcat jdbc needs this
   testLibrary("com.zaxxer:HikariCP:2.4.0")
   testLibrary("com.mchange:c3p0:0.9.5")
   testLibrary("com.alibaba:druid:1.2.20")
@@ -42,7 +39,6 @@ dependencies {
   // these dependencies are for SlickTest
   testImplementation("org.scala-lang:scala-library:2.11.12")
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
-  testImplementation("com.h2database:h2:1.4.197")
 }
 
 sourceSets {

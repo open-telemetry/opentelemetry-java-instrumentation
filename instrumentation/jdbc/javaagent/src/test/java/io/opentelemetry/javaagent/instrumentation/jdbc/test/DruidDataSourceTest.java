@@ -29,7 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
-class DruicDataSourceTest {
+class DruidDataSourceTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -37,7 +37,7 @@ class DruicDataSourceTest {
   private DataSource dataSource;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws SQLException {
     DruidDataSource druidDataSource = new DruidDataSource();
     druidDataSource.setUrl("jdbc:h2:mem:test");
     druidDataSource.setDriverClassName("org.h2.Driver");
@@ -45,6 +45,11 @@ class DruicDataSourceTest {
     druidDataSource.setPassword("");
     druidDataSource.setMaxActive(1);
     this.dataSource = druidDataSource;
+
+    // Initialize the connection pool to trigger H2's internal schema setup
+    // This prevents internal H2 spans from appearing in the test assertions
+    dataSource.getConnection().close();
+    testing.clearData();
   }
 
   @AfterEach

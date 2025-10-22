@@ -244,12 +244,14 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType);
+    putParameter(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
     delegate.setObject(parameterIndex, x);
+    putParameter(parameterIndex, x);
   }
 
   @Override

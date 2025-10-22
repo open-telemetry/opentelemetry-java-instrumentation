@@ -60,6 +60,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         namedOneOf(
                 "setBoolean",
+                "setByte",
                 "setShort",
                 "setInt",
                 "setLong",
