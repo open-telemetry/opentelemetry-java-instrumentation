@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
   `java-library`
 
@@ -48,7 +50,8 @@ val testInstrumentation by configurations.creating {
   isCanBeResolved = true
 }
 
-tasks.shadowJar {
+val agentTestingShadowJar by tasks.registering(ShadowJar::class)  {
+  from(sourceSets.main.map { it.output })
   configurations = listOf(project.configurations.runtimeClasspath.get(), testInstrumentation)
 
   archiveFileName.set("agent-testing.jar")
@@ -101,10 +104,9 @@ class JavaagentTestArgumentsProvider(
 // need to run this after evaluate because testSets plugin adds new test tasks
 afterEvaluate {
   tasks.withType<Test>().configureEach {
-    val shadowJar = tasks.shadowJar.get()
     val agentShadowJar = agentForTesting.resolve().first()
 
-    dependsOn(shadowJar)
+    dependsOn(agentTestingShadowJar)
     // TODO: Figure out why dependsOn override is still needed in otel.javaagent-testing despite
     // this dependency.
     dependsOn(agentForTesting.buildDependencies)
@@ -112,7 +114,7 @@ afterEvaluate {
     jvmArgumentProviders.add(
       JavaagentTestArgumentsProvider(
         agentShadowJar,
-        shadowJar.archiveFile.get().asFile
+        agentTestingShadowJar.get().archiveFile.get().asFile
       )
     )
 

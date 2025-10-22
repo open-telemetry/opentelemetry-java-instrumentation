@@ -59,11 +59,11 @@
 
 **11** **Group:** `com.squareup.okio` **Name:** `okio` **Version:** `3.16.1`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
-> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+> - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 **12** **Group:** `com.squareup.okio` **Name:** `okio-jvm` **Version:** `3.16.1`
 > - **POM Project URL**: [https://github.com/square/okio/](https://github.com/square/okio/)
-> - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
+> - **POM License**: Apache License, Version 2.0 - [http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
 
 **13** **Group:** `io.opentelemetry` **Name:** `opentelemetry-api` **Version:** `1.55.0`
 > - **POM Project URL**: [https://github.com/open-telemetry/opentelemetry-java](https://github.com/open-telemetry/opentelemetry-java)
