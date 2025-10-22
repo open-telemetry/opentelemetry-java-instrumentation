@@ -305,6 +305,9 @@ public class HelperInjector implements Transformer {
     return result;
   }
 
+  // disable using unsafe for jdk 23+ where it prints a warning
+  private static final boolean canUseUnsafe =
+      Double.parseDouble(System.getProperty("java.specification.version")) < 23;
   private static final String virtualFieldPackage =
       VirtualFieldAccessorMarker.class.getPackage().getName() + ".";
 
@@ -347,10 +350,11 @@ public class HelperInjector implements Transformer {
       }
     }
 
-    // TODO by default, we use unsafe to define rest of the classes into boot loader
-    // can be disabled with -Dnet.bytebuddy.safe=true
-    // use -Dsun.misc.unsafe.memory.access=debug to check where unsafe is used
-    if (ClassInjector.UsingUnsafe.isAvailable() && !classnameToBytes.isEmpty()) {
+    if (classnameToBytes.isEmpty()) {
+      return;
+    }
+
+    if (canUseUnsafe && ClassInjector.UsingUnsafe.isAvailable()) {
       ClassInjector.UsingUnsafe.ofBootLoader().injectRaw(classnameToBytes);
       return;
     }
