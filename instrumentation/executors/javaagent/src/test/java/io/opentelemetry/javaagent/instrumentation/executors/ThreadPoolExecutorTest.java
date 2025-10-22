@@ -10,7 +10,7 @@ import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.FutureTask;
 import java.util.concurrent.LinkedBlockingQueue;

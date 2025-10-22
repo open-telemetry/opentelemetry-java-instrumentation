@@ -32,7 +32,7 @@ jobs:
         include:
           - language: actions
           - language: java
-    runs-on: oracle-8cpu-32gb-x86-64
+    runs-on: oracle-vm-8cpu-32gb-x86-64
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
@@ -63,7 +63,7 @@ jobs:
           cache-read-only: ${{ github.event_name == 'pull_request' }}
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
+        uses: github/codeql-action/init@16140ae1a102900babc80a33c44059580f687047 # v4.30.9
         with:
           languages: ${{ matrix.language }}
           # using "linked" helps to keep up with the linked Kotlin support
@@ -84,6 +84,6 @@ jobs:
           --no-build-cache --no-daemon
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@755f44910c12a3d7ca0d8c6e42c048b3362f7cec # v3.30.8
+        uses: github/codeql-action/analyze@16140ae1a102900babc80a33c44059580f687047 # v4.30.9
         with:
           category: "/language:${{matrix.language}}"

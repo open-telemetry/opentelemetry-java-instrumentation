@@ -47,19 +47,65 @@ dependencyResolutionManagement {
   }
 }
 
-develocity {
-  buildScan {
-    publishing.onlyIf { System.getenv("CI") != null }
-    termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
-    termsOfUseAgree.set("yes")
+val develocityServer = "https://develocity.opentelemetry.io"
+val isCI = System.getenv("CI") != null
+val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 
-    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
-      buildScanPublished {
-        File("build-scan.txt").printWriter().use { writer ->
-          writer.println(buildScanUri)
+// if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
+val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
+
+if (useScansGradleCom) {
+  develocity {
+    buildScan {
+      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+      termsOfUseAgree = "yes"
+      uploadInBackground = !isCI
+
+      capture {
+        fileFingerprints = true
+      }
+
+      if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+        !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+        buildScanPublished {
+          File("build-scan.txt").printWriter().use { writer ->
+            writer.println(buildScanUri)
+          }
         }
       }
+    }
+  }
+} else {
+  develocity {
+    server = develocityServer
+    buildScan {
+      uploadInBackground = !isCI
+      publishing.onlyIf { it.isAuthenticated }
+
+      capture {
+        fileFingerprints = true
+      }
+
+      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
+        value("Smoke test suite", it)
+      }
+
+      if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+        !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+        buildScanPublished {
+          File("build-scan.txt").printWriter().use { writer ->
+            writer.println(buildScanUri)
+          }
+        }
+      }
+    }
+  }
+
+  buildCache {
+    remote(develocity.buildCache) {
+      isPush = isCI && develocityAccessKey.isNotEmpty()
     }
   }
 }
@@ -267,6 +313,7 @@ include(":instrumentation:hystrix-1.4:javaagent")
 include(":instrumentation:influxdb-2.4:javaagent")
 include(":instrumentation:internal:internal-application-logger:bootstrap")
 include(":instrumentation:internal:internal-application-logger:javaagent")
+include(":instrumentation:internal:internal-class-loader:compile-stub")
 include(":instrumentation:internal:internal-class-loader:javaagent")
 include(":instrumentation:internal:internal-class-loader:javaagent-integration-tests")
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
@@ -593,7 +640,6 @@ include(":instrumentation:spring:spring-security-config-6.0:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:library")
 include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
-include(":instrumentation:spring:spring-web:spring-web-3.1:testing")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
