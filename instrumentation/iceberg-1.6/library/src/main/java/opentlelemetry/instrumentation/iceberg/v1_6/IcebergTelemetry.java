@@ -1,21 +1,17 @@
 package opentlelemetry.instrumentation.iceberg.v1_6;
 
-import org.omg.PortableInterceptor.Interceptor;
 
 import io.opentelemetry.api.OpenTelemetry;
 
 public class IcebergTelemetry {
+  private final OpenTelemetry openTelemetry;
+
   public static IcebergTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
+    return new IcebergTelemetry(openTelemetry);
   }
 
-  public static IcebergTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new IcebergTelemetryBuilder(openTelemetry);
+  IcebergTelemetry(OpenTelemetry openTelemetry) {
+    this.openTelemetry = openTelemetry;
   }
 
-  IcebergTelemetry() {}
-
-  public Interceptor newTracingInterceptor() {
-    return null;
-  }
 }

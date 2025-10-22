@@ -3,5 +3,5 @@ plugins {
 }
 
 dependencies {
-  implementation("org.apache.iceberg:iceberg-api:1.6.1")
+  implementation("org.apache.iceberg:iceberg-core:1.6.1")
 }
