@@ -297,6 +297,23 @@ public class HelperInjector implements Transformer {
     }
   }
 
+  public static void injectHelperClasses(
+      ClassLoader classLoader, Map<String, Supplier<byte[]>> classNameToBytes) {
+    if (isBootClassLoader(classLoader)) {
+      throw new UnsupportedOperationException("boot loader not supported");
+    }
+    if (classNameToBytes.isEmpty()) {
+      return;
+    }
+
+    Map<String, HelperClass> map =
+        helperClasses.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+    for (Map.Entry<String, Supplier<byte[]>> entry : classNameToBytes.entrySet()) {
+      HelperClass injector = new HelperClass(entry.getValue());
+      map.put(entry.getKey(), injector);
+    }
+  }
+
   private static Map<String, byte[]> resolve(Map<String, Supplier<byte[]>> classes) {
     Map<String, byte[]> result = new LinkedHashMap<>();
     for (Map.Entry<String, Supplier<byte[]>> entry : classes.entrySet()) {
