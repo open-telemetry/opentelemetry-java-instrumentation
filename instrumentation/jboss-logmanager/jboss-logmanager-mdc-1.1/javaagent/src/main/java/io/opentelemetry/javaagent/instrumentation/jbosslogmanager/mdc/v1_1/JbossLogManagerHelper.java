@@ -13,12 +13,19 @@ import org.jboss.logmanager.ExtLogRecord;
 
 public class JbossLogManagerHelper {
 
+  private static final VirtualField<ExtLogRecord, Context> CONTEXT =
+      VirtualField.find(ExtLogRecord.class, Context.class);
+
   public static SpanContext getSpanContext(ExtLogRecord record) {
-    Context context = VirtualField.find(ExtLogRecord.class, Context.class).get(record);
+    Context context = CONTEXT.get(record);
     if (context == null) {
       return SpanContext.getInvalid();
     }
     return Span.fromContext(context).getSpanContext();
+  }
+
+  public static void setSpanContext(ExtLogRecord record, Context context) {
+    CONTEXT.set(record, context);
   }
 
   private JbossLogManagerHelper() {}
