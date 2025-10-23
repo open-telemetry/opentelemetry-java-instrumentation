@@ -97,9 +97,6 @@ tasks {
     }
   }
 
-  withType<Test>().configureEach {
-  }
-
   check {
     dependsOn(testing.suites)
   }

@@ -185,9 +185,9 @@ class ReactorNettyConnectionSpanTest {
                         .hasStatus(StatusData.error())
                         .hasException(connectException)
                         .hasAttributesSatisfyingExactly(
-                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(null, "127.0.0.1")),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT))));
+                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
+                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(null, "127.0.0.1")),
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 }

@@ -153,10 +153,10 @@ class Netty41ClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("SSL handshake")
@@ -223,10 +223,10 @@ class Netty41ClientSslTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(SERVER_ADDRESS, uri.getHost()),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                             equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("SSL handshake")

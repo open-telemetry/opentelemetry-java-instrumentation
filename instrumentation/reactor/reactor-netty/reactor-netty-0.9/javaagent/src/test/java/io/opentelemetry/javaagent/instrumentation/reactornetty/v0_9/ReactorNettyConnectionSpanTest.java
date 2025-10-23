@@ -152,14 +152,14 @@ class ReactorNettyConnectionSpanTest {
                         .hasStatus(StatusData.error())
                         .hasException(connectException)
                         .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_TRANSPORT, "tcp"),
+                            satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4")),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
                             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn(null, "127.0.0.1")),
                             satisfies(
                                 NETWORK_PEER_PORT,
                                 val -> val.isIn(null, (long) PortUtils.UNUSABLE_PORT)),
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4")),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT))));
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 }

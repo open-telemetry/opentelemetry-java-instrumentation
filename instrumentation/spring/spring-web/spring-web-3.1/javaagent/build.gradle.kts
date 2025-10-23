@@ -20,6 +20,3 @@ dependencies {
 
   latestDepTestLibrary("org.springframework:spring-web:5.+") // see spring-web-6.0 module
 }
-
-tasks.withType<Test>().configureEach {
-}
