@@ -79,6 +79,7 @@ public interface InstrumenterCustomizer {
    * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
    */
   @Deprecated
+  @SuppressWarnings("FunctionalInterfaceClash")
   default InstrumenterCustomizer setSpanNameExtractor(
       Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
     return setSpanNameExtractor(

@@ -71,6 +71,7 @@ public final class DubboTelemetryBuilder {
    */
   @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // safe cast from Function to UnaryOperator
   public DubboTelemetryBuilder setClientSpanNameExtractor(
       Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
           clientSpanNameExtractor) {
@@ -94,6 +95,7 @@ public final class DubboTelemetryBuilder {
    */
   @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // safe cast from Function to UnaryOperator
   public DubboTelemetryBuilder setServerSpanNameExtractor(
       Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
           serverSpanNameExtractor) {

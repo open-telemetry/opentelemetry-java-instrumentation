@@ -102,6 +102,7 @@ public final class GrpcTelemetryBuilder {
    */
   @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // safe cast from Function to UnaryOperator
   public GrpcTelemetryBuilder setClientSpanNameExtractor(
       Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
           clientSpanNameExtractor) {
@@ -125,6 +126,7 @@ public final class GrpcTelemetryBuilder {
    */
   @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // safe cast from Function to UnaryOperator
   public GrpcTelemetryBuilder setServerSpanNameExtractor(
       Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
           serverSpanNameExtractor) {
