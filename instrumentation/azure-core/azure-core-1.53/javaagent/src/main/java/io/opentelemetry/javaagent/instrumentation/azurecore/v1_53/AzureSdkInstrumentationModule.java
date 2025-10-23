@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
+package io.opentelemetry.javaagent.instrumentation.azurecore.v1_53;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -26,38 +26,37 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AzureSdkInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AzureSdkInstrumentationModule() {
-    super("azure-core", "azure-core-1.36");
+    super("azure-core", "azure-core-1.53");
   }
 
   @Override
   public void registerHelperResources(HelperResourceBuilder helperResourceBuilder) {
     helperResourceBuilder.register(
         "META-INF/services/com.azure.core.util.tracing.TracerProvider",
-        "azure-core-1.36/META-INF/services/com.azure.core.util.tracing.TracerProvider");
+        "azure-core-1.53/META-INF/services/com.azure.core.util.tracing.TracerProvider");
     // some azure sdks (e.g. EventHubs) are still looking up Tracer via service loader
     // and not yet using the new TracerProvider
     helperResourceBuilder.register(
         "META-INF/services/com.azure.core.util.tracing.Tracer",
-        "azure-core-1.36/META-INF/services/com.azure.core.util.tracing.Tracer");
+        "azure-core-1.53/META-INF/services/com.azure.core.util.tracing.Tracer");
   }
 
   @Override
   public void injectClasses(ClassInjector injector) {
     injector
         .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")
+            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")
         .inject(InjectionMode.CLASS_ONLY);
     injector
         .proxyBuilder(
-            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_36.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracerProvider")
+            "io.opentelemetry.javaagent.instrumentation.azurecore.v1_53.shaded.com.azure.core.tracing.opentelemetry.OpenTelemetryTracerProvider")
         .inject(InjectionMode.CLASS_ONLY);
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // this class was introduced in azure-core 1.36
-    return hasClassesNamed("com.azure.core.util.tracing.TracerProvider")
-        .and(not(hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")))
+    // LibraryTelemetryOptions was introduced in azure-core 1.53
+    return hasClassesNamed("com.azure.core.util.LibraryTelemetryOptions")
         .and(not(hasClassesNamed("com.azure.core.tracing.opentelemetry.OpenTelemetryTracer")));
   }
 
