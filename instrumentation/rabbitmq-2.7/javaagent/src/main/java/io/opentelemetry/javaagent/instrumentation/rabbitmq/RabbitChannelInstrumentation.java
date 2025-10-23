@@ -41,6 +41,7 @@ import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -92,64 +93,84 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelMethodAdvice {
 
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+      @Nullable private final ChannelAndMethod request;
+
+      private AdviceScope(
+          CallDepth callDepth,
+          @Nullable Context context,
+          @Nullable Scope scope,
+          @Nullable ChannelAndMethod request) {
+        this.callDepth = callDepth;
+        this.context = context;
+        this.scope = scope;
+        this.request = request;
+      }
+
+      public static AdviceScope start(Channel channel, String method) {
+        CallDepth callDepth = CallDepth.forClass(Channel.class);
+        if (callDepth.getAndIncrement() > 0) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
+        Context parentContext = Context.current();
+        ChannelAndMethod request = ChannelAndMethod.create(channel, method);
+
+        if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
+          return new AdviceScope(callDepth, null, null, null);
+        }
+
+        Context context = channelInstrumenter(request).start(parentContext, request);
+        CURRENT_RABBIT_CONTEXT.set(context);
+        helper().setChannelAndMethod(context, request);
+
+        return new AdviceScope(callDepth, context, context.makeCurrent(), request);
+      }
+
+      public void end(Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+        if (scope == null) {
+          return;
+        }
+
+        scope.close();
+
+        CURRENT_RABBIT_CONTEXT.remove();
+        channelInstrumenter(request).end(context, request, null, throwable);
+      }
+    }
+
     @Advice.OnMethodEnter
-    public static void onEnter(
-        @Advice.This Channel channel,
-        @Advice.Origin("Channel.#m") String method,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelRequest") ChannelAndMethod request) {
-      callDepth = CallDepth.forClass(Channel.class);
-      if (callDepth.getAndIncrement() > 0) {
-        return;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = ChannelAndMethod.create(channel, method);
-
-      if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-        return;
-      }
-
-      context = channelInstrumenter(request).start(parentContext, request);
-      CURRENT_RABBIT_CONTEXT.set(context);
-      helper().setChannelAndMethod(context, request);
-      scope = context.makeCurrent();
+    public static AdviceScope onEnter(
+        @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
+      return AdviceScope.start(channel, method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Local("otelRequest") ChannelAndMethod request) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-      if (scope == null) {
-        return;
-      }
-
-      scope.close();
-
-      CURRENT_RABBIT_CONTEXT.remove();
-      channelInstrumenter(request).end(context, request, null, throwable);
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ChannelPublishAdvice {
 
+    @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(4))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void setSpanNameAddHeaders(
+    public static Object setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
-        @Advice.Argument(value = 4, readOnly = false) AMQP.BasicProperties props,
+        @Advice.Argument(4) AMQP.BasicProperties props,
         @Advice.Argument(5) byte[] body) {
       Context context = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(context);
+      AMQP.BasicProperties modifiedProps = props;
 
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
@@ -159,18 +180,18 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
-        if (props == null) {
-          props = MessageProperties.MINIMAL_BASIC;
+        if (modifiedProps == null) {
+          modifiedProps = MessageProperties.MINIMAL_BASIC;
         }
-        helper().onProps(context, span, props);
+        helper().onProps(context, span, modifiedProps);
 
         // We need to copy the BasicProperties and provide a header map we can modify
-        Map<String, Object> headers = props.getHeaders();
+        Map<String, Object> headers = modifiedProps.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
         helper().inject(context, headers, MapSetter.INSTANCE);
 
-        props =
+        modifiedProps =
             new AMQP.BasicProperties(
                 props.getContentType(),
                 props.getContentEncoding(),
@@ -187,19 +208,58 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
                 props.getAppId(),
                 props.getClusterId());
       }
+
+      return modifiedProps;
     }
   }
 
   @SuppressWarnings("unused")
   public static class ChannelGetAdvice {
 
+    public static class AdviceScope {
+      private final CallDepth callDepth;
+      private final Timer timer;
+
+      private AdviceScope(CallDepth callDepth, Timer timer) {
+        this.callDepth = callDepth;
+        this.timer = timer;
+      }
+
+      public static AdviceScope start() {
+        CallDepth callDepth = CallDepth.forClass(Channel.class);
+        callDepth.getAndIncrement();
+        Timer timer = Timer.start();
+        return new AdviceScope(callDepth, timer);
+      }
+
+      public void end(Channel channel, String queue, GetResponse response, Throwable throwable) {
+        if (callDepth.decrementAndGet() > 0) {
+          return;
+        }
+
+        Context parentContext = Context.current();
+        ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
+        if (!receiveInstrumenter().shouldStart(parentContext, request)) {
+          return;
+        }
+
+        // can't create span and put into scope in method enter above, because can't add parent
+        // after
+        // span creation
+        InstrumenterUtil.startAndEnd(
+            receiveInstrumenter(),
+            parentContext,
+            request,
+            null,
+            throwable,
+            timer.startTime(),
+            timer.now());
+      }
+    }
+
     @Advice.OnMethodEnter
-    public static void takeTimestamp(
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelTimer") Timer timer) {
-      callDepth = CallDepth.forClass(Channel.class);
-      callDepth.getAndIncrement();
-      timer = Timer.start();
+    public static AdviceScope takeTimestamp() {
+      return AdviceScope.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -208,43 +268,28 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String queue,
         @Advice.Return GetResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Local("otelCallDepth") CallDepth callDepth,
-        @Advice.Local("otelTimer") Timer timer) {
-      if (callDepth.decrementAndGet() > 0) {
-        return;
-      }
-
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      ReceiveRequest request = ReceiveRequest.create(queue, response, channel.getConnection());
-      if (!receiveInstrumenter().shouldStart(parentContext, request)) {
-        return;
-      }
-
-      // can't create span and put into scope in method enter above, because can't add parent after
-      // span creation
-      InstrumenterUtil.startAndEnd(
-          receiveInstrumenter(),
-          parentContext,
-          request,
-          null,
-          throwable,
-          timer.startTime(),
-          timer.now());
+        @Advice.Enter AdviceScope adviceScope) {
+      adviceScope.end(channel, queue, response, throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class ChannelConsumeAdvice {
 
+    @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(6))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void wrapConsumer(
+    public static Object wrapConsumer(
         @Advice.This Channel channel,
         @Advice.Argument(0) String queue,
-        @Advice.Argument(value = 6, readOnly = false) Consumer consumer) {
+        @Advice.Argument(6) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
-      if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
-        consumer = new TracedDelegatingConsumer(queue, consumer, channel.getConnection());
+      Consumer modifiedConsumer = consumer;
+      if (modifiedConsumer != null && !(modifiedConsumer instanceof TracedDelegatingConsumer)) {
+        modifiedConsumer =
+            new TracedDelegatingConsumer(queue, modifiedConsumer, channel.getConnection());
       }
+
+      return modifiedConsumer;
     }
   }
 }
