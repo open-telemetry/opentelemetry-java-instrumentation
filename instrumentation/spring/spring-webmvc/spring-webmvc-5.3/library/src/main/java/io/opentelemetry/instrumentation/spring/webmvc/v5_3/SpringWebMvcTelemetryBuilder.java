@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.SpringMvcBuilderUtil;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -73,6 +74,20 @@ public final class SpringWebMvcTelemetryBuilder {
       Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
+  }
+
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<HttpServletRequest>, SpanNameExtractor<HttpServletRequest>>
+          spanNameExtractor) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<HttpServletRequest>>) spanNameExtractor::apply);
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */

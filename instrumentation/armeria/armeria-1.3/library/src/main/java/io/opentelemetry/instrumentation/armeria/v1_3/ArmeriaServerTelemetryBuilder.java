@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumente
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumenterBuilderUtil;
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 public final class ArmeriaServerTelemetryBuilder {
@@ -32,6 +33,23 @@ public final class ArmeriaServerTelemetryBuilder {
 
   ArmeriaServerTelemetryBuilder(OpenTelemetry openTelemetry) {
     builder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
+  }
+
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setStatusExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setStatusExtractor(
+      Function<
+              SpanStatusExtractor<ServiceRequestContext, RequestLog>,
+              SpanStatusExtractor<ServiceRequestContext, RequestLog>>
+          statusExtractor) {
+    return setStatusExtractor(
+        (UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>>)
+            statusExtractor::apply);
   }
 
   /** Sets the status extractor for server spans. */
@@ -94,6 +112,20 @@ public final class ArmeriaServerTelemetryBuilder {
   public ArmeriaServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
+  }
+
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<ServiceRequestContext>, SpanNameExtractor<ServiceRequestContext>>
+          serverSpanNameExtractor) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<ServiceRequestContext>>) serverSpanNameExtractor::apply);
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */

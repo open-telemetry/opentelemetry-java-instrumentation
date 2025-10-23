@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.Experimental;
 import io.opentelemetry.instrumentation.jetty.httpclient.v9_2.internal.JettyHttpClientInstrumenterBuilderFactory;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.eclipse.jetty.client.HttpClientTransport;
 import org.eclipse.jetty.client.api.Request;
@@ -100,6 +101,20 @@ public final class JettyClientTelemetryBuilder {
   public JettyClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
+  }
+
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JettyClientTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<Request>, SpanNameExtractor<Request>>
+          spanNameExtractorTransformer) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<Request>>) spanNameExtractorTransformer::apply);
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */

@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyC
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.Experimental;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /** A builder of {@link NettyClientTelemetry}. */
@@ -91,6 +92,21 @@ public final class NettyClientTelemetryBuilder {
   public NettyClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
+  }
+
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setSpanNameExtractor(
+      Function<SpanNameExtractor<HttpRequestAndChannel>, SpanNameExtractor<HttpRequestAndChannel>>
+          spanNameExtractorTransformer) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<HttpRequestAndChannel>>)
+            spanNameExtractorTransformer::apply);
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */

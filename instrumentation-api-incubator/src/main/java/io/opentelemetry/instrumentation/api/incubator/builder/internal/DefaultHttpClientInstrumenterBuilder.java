@@ -112,6 +112,17 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  /**
+   * @deprecated Use {@link #setStatusExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
+      Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
+          statusExtractor) {
+    return setStatusExtractor((UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>>) statusExtractor::apply);
+  }
+
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
@@ -187,6 +198,20 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
       boolean redactQueryParameters) {
     Experimental.setRedactQueryParameters(httpAttributesExtractorBuilder, redactQueryParameters);
     return this;
+  }
+
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
+      Function<SpanNameExtractor<REQUEST>, SpanNameExtractor<REQUEST>>
+          spanNameExtractorTransformer) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<REQUEST>>) spanNameExtractorTransformer::apply);
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */

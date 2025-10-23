@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttr
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
@@ -94,12 +95,42 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setClientSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setClientSpanNameExtractor(
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+          clientSpanNameExtractor) {
+    return setClientSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<GrpcRequest>>)
+            input -> (SpanNameExtractor<GrpcRequest>) clientSpanNameExtractor.apply(input));
+  }
+
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractor) {
     this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
     return this;
+  }
+
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setServerSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setServerSpanNameExtractor(
+      Function<SpanNameExtractor<GrpcRequest>, ? extends SpanNameExtractor<? super GrpcRequest>>
+          serverSpanNameExtractor) {
+    return setServerSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<GrpcRequest>>)
+            input -> (SpanNameExtractor<GrpcRequest>) serverSpanNameExtractor.apply(input));
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */

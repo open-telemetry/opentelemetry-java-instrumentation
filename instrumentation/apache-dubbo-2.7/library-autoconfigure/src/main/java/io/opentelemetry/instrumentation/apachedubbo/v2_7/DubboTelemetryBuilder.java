@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
@@ -63,12 +64,42 @@ public final class DubboTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setClientSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setClientSpanNameExtractor(
+      Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          clientSpanNameExtractor) {
+    return setClientSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<DubboRequest>>)
+            input -> (SpanNameExtractor<DubboRequest>) clientSpanNameExtractor.apply(input));
+  }
+
   /** Sets custom client {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setClientSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
     this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
     return this;
+  }
+
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setServerSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setServerSpanNameExtractor(
+      Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          serverSpanNameExtractor) {
+    return setServerSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<DubboRequest>>)
+            input -> (SpanNameExtractor<DubboRequest>) serverSpanNameExtractor.apply(input));
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
