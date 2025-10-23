@@ -81,7 +81,7 @@ abstract class AbstractKtorClientTelemetryBuilder(
 
   @Deprecated("Use spanNameExtractor(UnaryOperator) instead", ReplaceWith("spanNameExtractor(spanNameExtractorTransformer as UnaryOperator<SpanNameExtractor<HttpRequestData>>)"))
   fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<HttpRequestData>, SpanNameExtractor<HttpRequestData>>) {
-    builder.setSpanNameExtractor(UnaryOperator { spanNameExtractorTransformer.apply(it) })
+    spanNameExtractor(spanNameExtractorTransformer as UnaryOperator<SpanNameExtractor<HttpRequestData>>)
   }
 
   fun spanNameExtractor(spanNameExtractorTransformer: UnaryOperator<SpanNameExtractor<HttpRequestData>>) {
