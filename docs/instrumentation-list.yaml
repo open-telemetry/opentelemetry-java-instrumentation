@@ -1468,7 +1468,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.aws-sdk.experimental-span-attributes
       description: |
-        Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`, `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
+        Enables the experimental span attributes `aws.agent`, `aws.queue.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
@@ -1487,10 +1487,10 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
         - name: aws.dynamodb.table_names
           type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
+          type: STRING
         - name: aws.lambda.function.arn
           type: STRING
         - name: aws.lambda.function.name
@@ -1499,19 +1499,17 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
           type: STRING
+        - name: aws.s3.bucket
+          type: STRING
         - name: aws.sns.topic.arn
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation
           type: STRING
@@ -1543,9 +1541,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1593,10 +1591,10 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
         - name: aws.dynamodb.table_names
           type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
+          type: STRING
         - name: aws.lambda.function.arn
           type: STRING
         - name: aws.lambda.function.name
@@ -1605,19 +1603,17 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
           type: STRING
+        - name: aws.s3.bucket
+          type: STRING
         - name: aws.sns.topic.arn
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation.name
           type: STRING
@@ -1649,9 +1645,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1768,17 +1764,29 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
+        - name: aws.dynamodb.consumed_capacity
+          type: STRING_ARRAY
+        - name: aws.dynamodb.count
+          type: LONG
         - name: aws.dynamodb.global_secondary_indexes
+          type: STRING_ARRAY
+        - name: aws.dynamodb.item_collection_metrics
           type: STRING
         - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
+          type: LONG
+        - name: aws.dynamodb.provisioned_read_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.provisioned_write_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.scanned_count
+          type: LONG
         - name: aws.dynamodb.select
+          type: STRING
+        - name: aws.dynamodb.table_count
+          type: LONG
+        - name: aws.dynamodb.table_names
+          type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
           type: STRING
         - name: aws.lambda.function.arn
           type: STRING
@@ -1788,21 +1796,19 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.s3.bucket
           type: STRING
         - name: aws.secretsmanager.secret.arn
           type: STRING
         - name: aws.sns.topic.arn
           type: STRING
+        - name: aws.sqs.queue.url
+          type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation
           type: STRING
@@ -1880,9 +1886,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1924,17 +1930,29 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
+        - name: aws.dynamodb.consumed_capacity
+          type: STRING_ARRAY
+        - name: aws.dynamodb.count
+          type: LONG
         - name: aws.dynamodb.global_secondary_indexes
+          type: STRING_ARRAY
+        - name: aws.dynamodb.item_collection_metrics
           type: STRING
         - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
+          type: LONG
+        - name: aws.dynamodb.provisioned_read_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.provisioned_write_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.scanned_count
+          type: LONG
         - name: aws.dynamodb.select
+          type: STRING
+        - name: aws.dynamodb.table_count
+          type: LONG
+        - name: aws.dynamodb.table_names
+          type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
           type: STRING
         - name: aws.lambda.function.arn
           type: STRING
@@ -1944,21 +1962,19 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.s3.bucket
           type: STRING
         - name: aws.secretsmanager.secret.arn
           type: STRING
         - name: aws.sns.topic.arn
           type: STRING
+        - name: aws.sqs.queue.url
+          type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation.name
           type: STRING
@@ -2016,9 +2032,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -4165,10 +4181,82 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: rpc.client.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.client.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
         type: HISTOGRAM
         unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: network.type
           type: STRING
@@ -4238,10 +4326,82 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: rpc.client.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.client.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
         type: HISTOGRAM
         unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: network.type
           type: STRING
