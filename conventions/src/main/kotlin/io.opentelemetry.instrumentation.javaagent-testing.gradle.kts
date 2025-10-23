@@ -101,9 +101,12 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2"
     )
     if (denyUnsafe) {
-      list += "-Dsun.misc.unsafe.memory.access=deny"
-      list += "-Dotel.instrumentation.deny-unsafe.enabled=true"
-      list += "-Dio.netty.noUnsafe=true"
+      list += listOf(
+        "-Dsun.misc.unsafe.memory.access=deny",
+        "-Dotel.instrumentation.deny-unsafe.enabled=true",
+        "-Dio.netty.noUnsafe=true",
+        "org.apache.rocketmq.shaded.io.grpc.netty.shaded.io.netty.noUnsafe"
+      )
     }
     return list
   }
