@@ -433,7 +433,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                                       satisfies(
                                           maybeStable(DB_STATEMENT),
                                           stringAssert ->
-                                              stringAssert.startsWith("CLIENT MAINT_NOTIFICATIONS"))))),
+                                              stringAssert.startsWith(
+                                                  "CLIENT MAINT_NOTIFICATIONS"))))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
