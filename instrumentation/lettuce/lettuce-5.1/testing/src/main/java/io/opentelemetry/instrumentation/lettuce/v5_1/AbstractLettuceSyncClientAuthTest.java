@@ -105,6 +105,23 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      satisfies(
+                                          maybeStable(DB_STATEMENT),
+                                          stringAssert ->
+                                              stringAssert.startsWith("CLIENT MAINT_NOTIFICATIONS"))))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
                           span.hasName("AUTH")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
