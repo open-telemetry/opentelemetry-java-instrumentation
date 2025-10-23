@@ -58,8 +58,8 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   @Override
   @SuppressWarnings("FunctionalInterfaceClash") // interface has deprecated overload
   public InstrumenterCustomizer setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<?>> spanNameExtractorTransformer) {
-    customizer.setSpanNameExtractor(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor) {
+    customizer.setSpanNameExtractor(spanNameExtractor);
     return this;
   }
 }

@@ -93,8 +93,8 @@ public final class SpringWebTelemetryBuilder {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public SpringWebTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<HttpRequest>> spanNameExtractor) {
+    builder.setSpanNameExtractor(spanNameExtractor);
     return this;
   }
 

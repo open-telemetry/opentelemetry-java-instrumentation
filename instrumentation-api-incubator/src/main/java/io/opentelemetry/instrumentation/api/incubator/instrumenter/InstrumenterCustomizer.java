@@ -90,9 +90,9 @@ public interface InstrumenterCustomizer {
    * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
    * customizing how span names are generated for the instrumented operations.
    *
-   * @param spanNameExtractorTransformer function that transforms the original span name extractor
+   * @param spanNameExtractor function that transforms the original span name extractor
    * @return this InstrumenterCustomizer for method chaining
    */
   InstrumenterCustomizer setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<?>> spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor);
 }
