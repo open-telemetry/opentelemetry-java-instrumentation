@@ -7,6 +7,7 @@ plugins {
 }
 
 val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
+extra["denyUnsafe"] = denyUnsafe
 
 dependencies {
   /*

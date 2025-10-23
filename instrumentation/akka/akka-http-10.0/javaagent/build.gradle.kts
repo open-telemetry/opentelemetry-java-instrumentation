@@ -81,4 +81,10 @@ if (findProperty("testLatestDeps") as Boolean) {
       exclude("com.typesafe.akka", "akka-stream_2.11")
     }
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    tasks.withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
