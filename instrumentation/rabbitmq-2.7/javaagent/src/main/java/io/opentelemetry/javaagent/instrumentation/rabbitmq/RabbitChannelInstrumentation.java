@@ -93,13 +93,13 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelMethodAdvice {
 
-    public static class AdviceScope {
+    public static class ChannelMethodAdviceScope {
       private final CallDepth callDepth;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
 
-      private AdviceScope(
+      private ChannelMethodAdviceScope(
           CallDepth callDepth,
           @Nullable Context context,
           @Nullable Scope scope,
@@ -110,24 +110,24 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         this.request = request;
       }
 
-      public static AdviceScope start(Channel channel, String method) {
+      public static ChannelMethodAdviceScope start(Channel channel, String method) {
         CallDepth callDepth = CallDepth.forClass(Channel.class);
         if (callDepth.getAndIncrement() > 0) {
-          return new AdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null);
         }
 
         Context parentContext = Context.current();
         ChannelAndMethod request = ChannelAndMethod.create(channel, method);
 
         if (!channelInstrumenter(request).shouldStart(parentContext, request)) {
-          return new AdviceScope(callDepth, null, null, null);
+          return new ChannelMethodAdviceScope(callDepth, null, null, null);
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
         CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
-        return new AdviceScope(callDepth, context, context.makeCurrent(), request);
+        return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
       }
 
       public void end(Throwable throwable) {
@@ -146,14 +146,15 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter
-    public static AdviceScope onEnter(
+    public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
-      return AdviceScope.start(channel, method);
+      return ChannelMethodAdviceScope.start(channel, method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter ChannelMethodAdviceScope adviceScope) {
       adviceScope.end(throwable);
     }
   }
@@ -193,20 +194,20 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         modifiedProps =
             new AMQP.BasicProperties(
-                props.getContentType(),
-                props.getContentEncoding(),
+                modifiedProps.getContentType(),
+                modifiedProps.getContentEncoding(),
                 headers,
-                props.getDeliveryMode(),
-                props.getPriority(),
-                props.getCorrelationId(),
-                props.getReplyTo(),
-                props.getExpiration(),
-                props.getMessageId(),
-                props.getTimestamp(),
-                props.getType(),
-                props.getUserId(),
-                props.getAppId(),
-                props.getClusterId());
+                modifiedProps.getDeliveryMode(),
+                modifiedProps.getPriority(),
+                modifiedProps.getCorrelationId(),
+                modifiedProps.getReplyTo(),
+                modifiedProps.getExpiration(),
+                modifiedProps.getMessageId(),
+                modifiedProps.getTimestamp(),
+                modifiedProps.getType(),
+                modifiedProps.getUserId(),
+                modifiedProps.getAppId(),
+                modifiedProps.getClusterId());
       }
 
       return modifiedProps;
@@ -216,20 +217,20 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ChannelGetAdvice {
 
-    public static class AdviceScope {
+    public static class ChannelGetAdviceScope {
       private final CallDepth callDepth;
       private final Timer timer;
 
-      private AdviceScope(CallDepth callDepth, Timer timer) {
+      private ChannelGetAdviceScope(CallDepth callDepth, Timer timer) {
         this.callDepth = callDepth;
         this.timer = timer;
       }
 
-      public static AdviceScope start() {
+      public static ChannelGetAdviceScope start() {
         CallDepth callDepth = CallDepth.forClass(Channel.class);
         callDepth.getAndIncrement();
         Timer timer = Timer.start();
-        return new AdviceScope(callDepth, timer);
+        return new ChannelGetAdviceScope(callDepth, timer);
       }
 
       public void end(Channel channel, String queue, GetResponse response, Throwable throwable) {
@@ -258,8 +259,8 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter
-    public static AdviceScope takeTimestamp() {
-      return AdviceScope.start();
+    public static ChannelGetAdviceScope takeTimestamp() {
+      return ChannelGetAdviceScope.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -268,7 +269,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String queue,
         @Advice.Return GetResponse response,
         @Advice.Thrown Throwable throwable,
-        @Advice.Enter AdviceScope adviceScope) {
+        @Advice.Enter ChannelGetAdviceScope adviceScope) {
       adviceScope.end(channel, queue, response, throwable);
     }
   }
