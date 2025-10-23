@@ -22,27 +22,27 @@ rules:
         unit: "{consumer}"
         type: updowncounter
         desc: The number of consumers subscribed to this destination
-      # activemq.memory.destination.usage
+      # activemq.destination.memory.usage
       MemoryUsageByteCount:
-        metric: memory.destination.usage
+        metric: destination.memory.usage
         unit: By
         type: updowncounter
         desc: The amount of used memory by this destination
-      # activemq.memory.destination.limit
+      # activemq.destination.memory.limit
       MemoryLimit:
-        metric: memory.destination.limit
+        metric: destination.memory.limit
         unit: By
         type: updowncounter
         desc: The amount of configured memory limit for this destination
-      # activemq.temp.destination.utilization
+      # activemq.destination.temp.utilization
       TempUsagePercentUsage:
-        metric: temp.destination.utilization
+        metric: destination.temp.utilization
         unit: "1"
         type: gauge
         desc: The percentage of non-persistent storage used by this destination
-      # activemq.temp.destination.limit
+      # activemq.destination.temp.limit
       TempUsageLimit:
-        metric: temp.destination.limit
+        metric: destination.temp.limit
         unit: By
         type: updowncounter
         desc: The amount of configured non-persistent storage limit for this destination

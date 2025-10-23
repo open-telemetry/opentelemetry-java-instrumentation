@@ -124,7 +124,7 @@ public class ActiveMqTest extends TargetSystemTest {
                     .hasDescription("The average time a message was held on this destination"))
         // destination memory/temp usage and limits
         .add(
-            "activemq.memory.destination.usage",
+            "activemq.destination.memory.usage",
             metric ->
                 metric
                     .isUpDownCounter()
@@ -132,7 +132,7 @@ public class ActiveMqTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription("The amount of used memory by this destination"))
         .add(
-            "activemq.memory.destination.limit",
+            "activemq.destination.memory.limit",
             metric ->
                 metric
                     .isUpDownCounter()
@@ -140,7 +140,7 @@ public class ActiveMqTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(topicAttributes)
                     .hasDescription("The amount of configured memory limit for this destination"))
         .add(
-            "activemq.temp.destination.utilization",
+            "activemq.destination.temp.utilization",
             metric ->
                 metric
                     .isGauge()
@@ -149,7 +149,7 @@ public class ActiveMqTest extends TargetSystemTest {
                     .hasDescription(
                         "The percentage of non-persistent storage used by this destination"))
         .add(
-            "activemq.temp.destination.limit",
+            "activemq.destination.temp.limit",
             metric ->
                 metric
                     .isUpDownCounter()
