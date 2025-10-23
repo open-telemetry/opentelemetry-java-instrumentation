@@ -7,8 +7,3 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:http-url-connection:javaagent"))
 }
-
-tasks {
-  withType<Test>().configureEach {
-  }
-}

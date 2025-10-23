@@ -153,10 +153,10 @@ class LettuceAsyncClientTest {
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 
   @Test
@@ -182,10 +182,10 @@ class LettuceAsyncClientTest {
                         .hasStatus(StatusData.error())
                         .hasException(exception)
                         .hasAttributesSatisfyingExactly(
-                            equalTo(maybeStable(DB_SYSTEM), "redis"),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, incorrectPort))));
+                            equalTo(SERVER_PORT, incorrectPort),
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 
   @Test

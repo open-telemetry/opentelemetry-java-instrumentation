@@ -82,21 +82,21 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpPort())),
+                            equalTo(SERVER_PORT, server.httpPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
                             equalTo(NETWORK_TRANSPORT, "tcp"),
                             equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpPort())),
+                            equalTo(SERVER_PORT, server.httpPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
@@ -142,9 +142,9 @@ class ReactorNettyConnectionSpanTest {
                         .hasKind(INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT)),
+                            equalTo(SERVER_PORT, PortUtils.UNUSABLE_PORT),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(INTERNAL)

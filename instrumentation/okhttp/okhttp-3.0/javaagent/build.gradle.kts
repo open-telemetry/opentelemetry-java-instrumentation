@@ -49,7 +49,4 @@ tasks {
   test {
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
-
-  withType<Test>().configureEach {
-  }
 }

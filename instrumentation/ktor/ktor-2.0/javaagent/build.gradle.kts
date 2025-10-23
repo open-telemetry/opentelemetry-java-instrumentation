@@ -59,8 +59,3 @@ kotlin {
     javaParameters = true
   }
 }
-
-tasks {
-  withType<Test>().configureEach {
-  }
-}

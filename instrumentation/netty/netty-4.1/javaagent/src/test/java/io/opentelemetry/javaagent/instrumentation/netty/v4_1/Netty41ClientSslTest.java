@@ -143,9 +143,9 @@ class Netty41ClientSslTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -213,9 +213,9 @@ class Netty41ClientSslTest {
                         .hasKind(SpanKind.INTERNAL)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())),
+                            equalTo(SERVER_PORT, uri.getPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service")),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
