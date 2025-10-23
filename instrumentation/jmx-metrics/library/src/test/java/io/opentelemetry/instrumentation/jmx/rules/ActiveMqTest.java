@@ -53,17 +53,14 @@ public class ActiveMqTest extends TargetSystemTest {
 
   private static MetricsVerifier createMetricsVerifier() {
 
-    AttributeMatcher messagingSystem = attribute("messaging.system", "activemq");
     // known attributes from the single topic available by default
     AttributeMatcher destinationName =
         attribute("messaging.destination.name", "ActiveMQ.Advisory.MasterBroker");
     AttributeMatcher topic = attribute("activemq.destination.type", "topic");
     AttributeMatcher broker = attribute("activemq.broker.name", "localhost");
 
-    AttributeMatcherGroup topicAttributes =
-        attributeGroup(messagingSystem, destinationName, topic, broker);
-
-    AttributeMatcherGroup brokerAttributes = attributeGroup(messagingSystem, broker);
+    AttributeMatcherGroup topicAttributes = attributeGroup(destinationName, topic, broker);
+    AttributeMatcherGroup brokerAttributes = attributeGroup(broker);
 
     return MetricsVerifier.create()
         // consumers and producers

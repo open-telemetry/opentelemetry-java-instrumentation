@@ -5,7 +5,6 @@ rules:
   - bean: org.apache.activemq:type=Broker,brokerName=*,destinationType=*,destinationName=*
     metricAttribute:
       messaging.destination.name: param(destinationName)
-      messaging.system: const(activemq)
       # 'topic' or 'queue'
       activemq.destination.type: lowercase(param(destinationType))
       activemq.broker.name: param(brokerName)
@@ -82,7 +81,6 @@ rules:
   # Broker-level metrics
   - bean: org.apache.activemq:type=Broker,brokerName=*
     metricAttribute:
-      messaging.system: const(activemq)
       activemq.broker.name: param(brokerName)
     prefix: activemq.
     mapping:
