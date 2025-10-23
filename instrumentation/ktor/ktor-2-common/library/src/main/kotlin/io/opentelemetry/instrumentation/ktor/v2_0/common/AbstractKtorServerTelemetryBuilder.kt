@@ -94,8 +94,8 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
     spanNameExtractor(spanNameExtractorTransformer as UnaryOperator<SpanNameExtractor<ApplicationRequest>>)
   }
 
-  fun spanNameExtractor(spanNameExtractorTransformer: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer)
+  fun spanNameExtractor(spanNameExtractor: UnaryOperator<SpanNameExtractor<ApplicationRequest>>) {
+    builder.setSpanNameExtractor(spanNameExtractor)
   }
 
   class ExtractorBuilder {

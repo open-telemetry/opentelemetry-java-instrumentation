@@ -84,8 +84,8 @@ abstract class AbstractKtorClientTelemetryBuilder(
     spanNameExtractor(spanNameExtractorTransformer as UnaryOperator<SpanNameExtractor<HttpRequestData>>)
   }
 
-  fun spanNameExtractor(spanNameExtractorTransformer: UnaryOperator<SpanNameExtractor<HttpRequestData>>) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer)
+  fun spanNameExtractor(spanNameExtractor: UnaryOperator<SpanNameExtractor<HttpRequestData>>) {
+    builder.setSpanNameExtractor(spanNameExtractor)
   }
 
   class ExtractorBuilder {
