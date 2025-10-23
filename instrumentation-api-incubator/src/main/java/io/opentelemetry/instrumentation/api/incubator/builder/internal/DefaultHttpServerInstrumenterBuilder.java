@@ -114,7 +114,8 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
       Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
           statusExtractor) {
-    return setStatusExtractor((UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>>) statusExtractor::apply);
+    return setStatusExtractor(
+        (UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>>) statusExtractor::apply);
   }
 
   @CanIgnoreReturnValue

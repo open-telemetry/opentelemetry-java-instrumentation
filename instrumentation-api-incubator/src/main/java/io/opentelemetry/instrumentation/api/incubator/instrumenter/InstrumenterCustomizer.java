@@ -81,7 +81,8 @@ public interface InstrumenterCustomizer {
   @Deprecated
   default InstrumenterCustomizer setSpanNameExtractor(
       Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
-    return setSpanNameExtractor((UnaryOperator<SpanNameExtractor<?>>) spanNameExtractorTransformer::apply);
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<?>>) spanNameExtractorTransformer::apply);
   }
 
   /**
