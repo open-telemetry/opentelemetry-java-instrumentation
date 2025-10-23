@@ -1468,7 +1468,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.aws-sdk.experimental-span-attributes
       description: |
-        Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`, `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
+        Enables the experimental span attributes `aws.agent`, `aws.queue.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
@@ -1487,10 +1487,10 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
         - name: aws.dynamodb.table_names
           type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
+          type: STRING
         - name: aws.lambda.function.arn
           type: STRING
         - name: aws.lambda.function.name
@@ -1499,19 +1499,17 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
           type: STRING
+        - name: aws.s3.bucket
+          type: STRING
         - name: aws.sns.topic.arn
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation
           type: STRING
@@ -1543,9 +1541,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1593,10 +1591,10 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
         - name: aws.dynamodb.table_names
           type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
+          type: STRING
         - name: aws.lambda.function.arn
           type: STRING
         - name: aws.lambda.function.name
@@ -1605,19 +1603,17 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
           type: STRING
+        - name: aws.s3.bucket
+          type: STRING
         - name: aws.sns.topic.arn
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation.name
           type: STRING
@@ -1649,9 +1645,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1768,17 +1764,29 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
+        - name: aws.dynamodb.consumed_capacity
+          type: STRING_ARRAY
+        - name: aws.dynamodb.count
+          type: LONG
         - name: aws.dynamodb.global_secondary_indexes
+          type: STRING_ARRAY
+        - name: aws.dynamodb.item_collection_metrics
           type: STRING
         - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
+          type: LONG
+        - name: aws.dynamodb.provisioned_read_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.provisioned_write_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.scanned_count
+          type: LONG
         - name: aws.dynamodb.select
+          type: STRING
+        - name: aws.dynamodb.table_count
+          type: LONG
+        - name: aws.dynamodb.table_names
+          type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
           type: STRING
         - name: aws.lambda.function.arn
           type: STRING
@@ -1788,21 +1796,19 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.s3.bucket
           type: STRING
         - name: aws.secretsmanager.secret.arn
           type: STRING
         - name: aws.sns.topic.arn
           type: STRING
+        - name: aws.sqs.queue.url
+          type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation
           type: STRING
@@ -1880,9 +1886,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1924,17 +1930,29 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
+        - name: aws.dynamodb.consumed_capacity
+          type: STRING_ARRAY
+        - name: aws.dynamodb.count
+          type: LONG
         - name: aws.dynamodb.global_secondary_indexes
+          type: STRING_ARRAY
+        - name: aws.dynamodb.item_collection_metrics
           type: STRING
         - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
+          type: LONG
+        - name: aws.dynamodb.provisioned_read_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.provisioned_write_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.scanned_count
+          type: LONG
         - name: aws.dynamodb.select
+          type: STRING
+        - name: aws.dynamodb.table_count
+          type: LONG
+        - name: aws.dynamodb.table_names
+          type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
           type: STRING
         - name: aws.lambda.function.arn
           type: STRING
@@ -1944,21 +1962,19 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.s3.bucket
           type: STRING
         - name: aws.secretsmanager.secret.arn
           type: STRING
         - name: aws.sns.topic.arn
           type: STRING
+        - name: aws.sqs.queue.url
+          type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation.name
           type: STRING
@@ -2016,9 +2032,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -2759,6 +2775,9 @@ libraries:
   - name: couchbase-2.0
     description: |
       This instrumentation enables database client spans and database client metrics for Couchbase 2.0 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-2.0
     scope:
@@ -2766,6 +2785,11 @@ libraries:
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[2,3)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -2804,6 +2828,9 @@ libraries:
   - name: couchbase-2.6
     description: |
       This instrumentation enables database client spans and database client metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-2.6
     scope:
@@ -2817,6 +2844,10 @@ libraries:
         Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -2893,33 +2924,201 @@ libraries:
   - name: couchbase-3.1
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[3.1,3.1.6)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
   - name: couchbase-3.1.6
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[3.1.6,3.2.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.retries
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
   - name: couchbase-3.2
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
     target_versions:
       javaagent:
-      - com.couchbase.client:java-client:[3.2.0,)
+      - com.couchbase.client:java-client:[3.2.0,3.4.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.document_id
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.retries
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
+  - name: couchbase-3.4
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
+    source_path: instrumentation/couchbase/couchbase-3.4
+    scope:
+      name: io.opentelemetry.couchbase-3.4
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[3.4.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.document_id
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.retries
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
   dropwizard:
   - name: dropwizard-metrics-4.0
     description: |
@@ -2939,9 +3138,11 @@ libraries:
       type: boolean
       default: false
   - name: dropwizard-views-0.7
-    description: This instrumentation enables the creation of spans for Dropwizard
-      views.
+    description: |
+      This instrumentation enables view spans for Dropwizard view template rendering (view spans are disabled by default).
     library_link: https://www.dropwizard.io/en/latest/manual/views.html
+    features:
+    - VIEW_SPANS
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2961,7 +3162,7 @@ libraries:
   elasticsearch:
   - name: elasticsearch-api-client-7.16
     description: |
-      This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to Elasticsearch database client spans. Versions 8.10 and later of the client have native support for OpenTelemetry.
+      This instrumentation enriches Elasticsearch database client spans generated by the elasticsearch-rest-7.0 instrumentation by adding `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes. It does not emit any telemetry on its own. Versions 8.10 and later of the Elasticsearch Java client have native OpenTelemetry support.
     library_link: https://www.elastic.co/docs/reference/elasticsearch/clients/java
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
@@ -3028,6 +3229,9 @@ libraries:
   - name: elasticsearch-rest-5.0
     description: This instrumentation enables database client spans and database client
       metrics for Elasticsearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
@@ -3091,6 +3295,9 @@ libraries:
   - name: elasticsearch-rest-6.4
     description: This instrumentation enables database client spans and database client
       metrics for Elasticsearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
@@ -3153,6 +3360,9 @@ libraries:
   - name: elasticsearch-rest-7.0
     description: This instrumentation enables database client spans and database client
       metrics for Elasticsearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
@@ -3217,6 +3427,9 @@ libraries:
   - name: elasticsearch-transport-5.0
     description: |
       This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
@@ -3310,6 +3523,9 @@ libraries:
   - name: elasticsearch-transport-5.3
     description: |
       This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
@@ -3408,6 +3624,9 @@ libraries:
   - name: elasticsearch-transport-6.0
     description: |
       This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
@@ -3962,10 +4181,82 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: rpc.client.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.client.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
         type: HISTOGRAM
         unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: network.type
           type: STRING
@@ -4035,10 +4326,82 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: rpc.client.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.client.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
         type: HISTOGRAM
         unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: network.type
           type: STRING

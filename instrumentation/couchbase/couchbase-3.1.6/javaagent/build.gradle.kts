@@ -33,6 +33,11 @@ dependencies {
 
   library("com.couchbase.client:java-client:3.1.6")
 
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-2.6:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.2:javaagent"))
+  testInstrumentation(project(":instrumentation:couchbase:couchbase-3.4:javaagent"))
   testImplementation("org.testcontainers:testcontainers-couchbase")
 
   latestDepTestLibrary("com.couchbase.client:java-client:3.1.+") // see couchbase-3.2 module
@@ -41,17 +46,7 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testStableSemconv by registering(Test::class) {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.opt-in=database")
-  }
-
-  check {
-    dependsOn(testStableSemconv)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   if (findProperty("denyUnsafe") as Boolean) {

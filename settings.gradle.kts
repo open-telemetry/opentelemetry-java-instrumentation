@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.20"
+    id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
     id("org.graalvm.buildtools.native") version "0.11.2"
@@ -54,55 +54,44 @@ val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 // if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
 val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
 
-if (useScansGradleCom) {
-  develocity {
+develocity {
+  if (useScansGradleCom) {
     buildScan {
       termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
       termsOfUseAgree = "yes"
-      uploadInBackground = !isCI
-
-      capture {
-        fileFingerprints = true
-      }
-
-      if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-        !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
-        buildScanPublished {
-          File("build-scan.txt").printWriter().use { writer ->
-            writer.println(buildScanUri)
-          }
-        }
-      }
     }
-  }
-} else {
-  develocity {
+  } else {
     server = develocityServer
     buildScan {
-      uploadInBackground = !isCI
       publishing.onlyIf { it.isAuthenticated }
-
-      capture {
-        fileFingerprints = true
-      }
 
       gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
       gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
       }
+    }
+  }
 
-      if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-        !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
-        buildScanPublished {
-          File("build-scan.txt").printWriter().use { writer ->
-            writer.println(buildScanUri)
-          }
+  buildScan {
+    uploadInBackground = !isCI
+
+    capture {
+      fileFingerprints = true
+    }
+
+    if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+      buildScanPublished {
+        File("build-scan.txt").printWriter().use { writer ->
+          writer.println(buildScanUri)
         }
       }
     }
   }
+}
 
+if (!useScansGradleCom) {
   buildCache {
     remote(develocity.buildCache) {
       isPush = isCI && develocityAccessKey.isNotEmpty()
@@ -225,6 +214,8 @@ include(":instrumentation:azure-core:azure-core-1.19:javaagent")
 include(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
 include(":instrumentation:azure-core:azure-core-1.36:javaagent")
 include(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
+include(":instrumentation:azure-core:azure-core-1.53:javaagent")
+include(":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded")
 include(":instrumentation:c3p0-0.9:javaagent")
 include(":instrumentation:c3p0-0.9:library")
 include(":instrumentation:c3p0-0.9:testing")
@@ -250,6 +241,8 @@ include(":instrumentation:couchbase:couchbase-3.1.6:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
 include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
+include(":instrumentation:couchbase:couchbase-3.4:javaagent")
+include(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common:testing")
 include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")

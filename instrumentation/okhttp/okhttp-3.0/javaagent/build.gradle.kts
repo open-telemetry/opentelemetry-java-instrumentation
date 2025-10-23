@@ -19,6 +19,8 @@ dependencies {
   library("com.squareup.okhttp3:okhttp:3.0.0")
 
   testImplementation(project(":instrumentation:okhttp:okhttp-3.0:testing"))
+
+  testInstrumentation(project(":instrumentation:okhttp:okhttp-2.2:javaagent"))
 }
 
 val testLatestDeps = findProperty("testLatestDeps") as Boolean

@@ -18,10 +18,6 @@ muzzle {
   }
 }
 
-otelJava {
-  maxJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 val grailsVersion = "3.0.6" // first version that the tests pass on
 val springBootVersion = "1.2.5.RELEASE"
 
@@ -57,7 +53,7 @@ if (!latestDepTest) {
       resolutionStrategy {
         eachDependency {
           if (requested.group == "org.codehaus.groovy") {
-            useVersion("3.0.9")
+            useVersion("3.0.25")
           }
         }
       }

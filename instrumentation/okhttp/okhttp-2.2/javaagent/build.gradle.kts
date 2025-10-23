@@ -20,6 +20,8 @@ dependencies {
 
   library("com.squareup.okhttp:okhttp:2.2.0")
 
+  testInstrumentation(project(":instrumentation:okhttp:okhttp-3.0:javaagent"))
+
   latestDepTestLibrary("com.squareup.okhttp:okhttp:2.+") // see okhttp-3.0 module
 }
 
