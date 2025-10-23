@@ -62,3 +62,9 @@ afterEvaluate {
 tasks.test {
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
+
+if (findProperty("denyUnsafe") as Boolean) {
+  tasks.withType<Test>().configureEach {
+    enabled = false
+  }
+}

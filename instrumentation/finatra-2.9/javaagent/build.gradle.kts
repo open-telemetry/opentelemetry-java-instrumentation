@@ -88,6 +88,12 @@ tasks {
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

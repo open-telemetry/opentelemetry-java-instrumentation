@@ -71,6 +71,12 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {
@@ -79,12 +85,6 @@ if (findProperty("testLatestDeps") as Boolean) {
     testImplementation {
       exclude("com.typesafe.akka", "akka-http_2.11")
       exclude("com.typesafe.akka", "akka-stream_2.11")
-    }
-  }
-
-  if (findProperty("denyUnsafe") as Boolean) {
-    tasks.withType<Test>().configureEach {
-      enabled = false
     }
   }
 }

@@ -104,8 +104,7 @@ class JavaagentTestArgumentsProvider(
       list += listOf(
         "-Dsun.misc.unsafe.memory.access=deny",
         "-Dotel.instrumentation.deny-unsafe.enabled=true",
-        "-Dio.netty.noUnsafe=true",
-        "-Dorg.apache.rocketmq.shaded.io.grpc.netty.shaded.io.netty.noUnsafe=true"
+        "-Dio.netty.noUnsafe=true"
       )
     }
     return list
