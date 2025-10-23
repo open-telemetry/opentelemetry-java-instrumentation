@@ -1,5 +1,5 @@
 [tools]
-lychee = "0.20.1"
+lychee = "0.21.0"
 
 [settings]
 # Only install tools explicitly defined in the [tools] section above
