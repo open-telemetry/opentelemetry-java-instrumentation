@@ -31,7 +31,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
@@ -106,18 +105,6 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /**
-   * @deprecated Use {@link #setStatusExtractor(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
-      Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
-          statusExtractor) {
-    return setStatusExtractor(
-        (UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>>) statusExtractor::apply);
-  }
-
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
@@ -182,20 +169,6 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
       setEmitExperimentalHttpServerTelemetry(boolean emitExperimentalHttpServerTelemetry) {
     this.emitExperimentalHttpServerTelemetry = emitExperimentalHttpServerTelemetry;
     return this;
-  }
-
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
-      Function<SpanNameExtractor<REQUEST>, SpanNameExtractor<REQUEST>>
-          spanNameExtractorTransformer) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<REQUEST>>) spanNameExtractorTransformer::apply);
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */
