@@ -27,14 +27,14 @@ public abstract class AbstractSqlCommenterTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected Connection createConnection(List<String> executedSql) throws SQLException {
-    return new TestConnection(executedSql::add);
+  protected Connection wrap(Connection connection) throws SQLException {
+    return connection;
   }
 
   @Test
   void testSqlCommenterStatement() throws SQLException {
     List<String> executedSql = new ArrayList<>();
-    Connection connection = createConnection(executedSql);
+    Connection connection = wrap(new TestConnection(executedSql::add));
     Statement statement = connection.createStatement();
 
     cleanup.deferCleanup(statement);
@@ -58,7 +58,7 @@ public abstract class AbstractSqlCommenterTest {
   @ValueSource(booleans = {true, false})
   void testSqlCommenterStatementUpdate(boolean largeUpdate) throws SQLException {
     List<String> executedSql = new ArrayList<>();
-    Connection connection = createConnection(executedSql);
+    Connection connection = wrap(new TestConnection(executedSql::add));
     Statement statement = connection.createStatement();
 
     cleanup.deferCleanup(statement);
@@ -91,7 +91,7 @@ public abstract class AbstractSqlCommenterTest {
   @ValueSource(booleans = {true, false})
   void testSqlCommenterStatementBatch(boolean largeUpdate) throws SQLException {
     List<String> executedSql = new ArrayList<>();
-    Connection connection = createConnection(executedSql);
+    Connection connection = wrap(new TestConnection(executedSql::add));
     Statement statement = connection.createStatement();
 
     cleanup.deferCleanup(statement);
@@ -130,7 +130,7 @@ public abstract class AbstractSqlCommenterTest {
   @Test
   void testSqlCommenterPreparedStatement() throws SQLException {
     List<String> executedSql = new ArrayList<>();
-    Connection connection = createConnection(executedSql);
+    Connection connection = wrap(new TestConnection(executedSql::add));
 
     String query = "SELECT 1";
     testing()
@@ -159,7 +159,7 @@ public abstract class AbstractSqlCommenterTest {
   @ValueSource(booleans = {true, false})
   void testSqlCommenterPreparedStatementUpdate(boolean largeUpdate) throws SQLException {
     List<String> executedSql = new ArrayList<>();
-    Connection connection = createConnection(executedSql);
+    Connection connection = wrap(new TestConnection(executedSql::add));
 
     String query = "INSERT INTO test VALUES(1)";
     testing()
