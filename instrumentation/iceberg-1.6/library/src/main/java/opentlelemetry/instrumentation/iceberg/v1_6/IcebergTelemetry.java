@@ -1,7 +1,12 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package opentlelemetry.instrumentation.iceberg.v1_6;
 
-
 import io.opentelemetry.api.OpenTelemetry;
+import org.apache.iceberg.TableScan;
 
 public class IcebergTelemetry {
   private final OpenTelemetry openTelemetry;
@@ -14,4 +19,7 @@ public class IcebergTelemetry {
     this.openTelemetry = openTelemetry;
   }
 
+  public TableScan wrapTableScan(TableScan tableScan) {
+    return tableScan.metricsReporter(new IcebergMetricsReporter(openTelemetry));
+  }
 }
