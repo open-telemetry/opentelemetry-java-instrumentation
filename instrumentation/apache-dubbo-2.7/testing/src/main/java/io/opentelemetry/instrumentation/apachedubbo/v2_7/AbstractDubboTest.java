@@ -144,11 +144,7 @@ public abstract class AbstractDubboTest {
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
                                 equalTo(RPC_METHOD, "$invoke"),
-                                satisfies(
-                                    PEER_SERVICE,
-                                    k ->
-                                        k.isEqualTo(
-                                            hasPeerService() ? "test-peer-service" : null)),
+                                equalTo(PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
@@ -280,11 +276,7 @@ public abstract class AbstractDubboTest {
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
                                 equalTo(RPC_METHOD, "$invokeAsync"),
-                                satisfies(
-                                    PEER_SERVICE,
-                                    k ->
-                                        k.isEqualTo(
-                                            hasPeerService() ? "test-peer-service" : null)),
+                                equalTo(PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
