@@ -14,9 +14,9 @@ import com.ibm.ws.http.dispatcher.internal.channel.HttpDispatcherLink;
 import com.ibm.wsspi.http.channel.values.StatusCodes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -50,50 +50,63 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
   @SuppressWarnings("unused")
   public static class SendResponseAdvice {
 
-    public static class AdviceLocals {
-      public LibertyRequest request;
-      public Context context;
-      public Scope scope;
+    public static class AdviceScope {
+      private final LibertyRequest request;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(LibertyRequest request, Context context, Scope scope) {
+        this.request = request;
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(HttpInboundServiceContextImpl isc) {
+        Context parentContext = Context.current();
+        LibertyRequest request =
+            new LibertyRequest(
+                isc.getRequest(),
+                isc.getLocalAddr(),
+                isc.getLocalPort(),
+                isc.getRemoteAddr(),
+                isc.getRemotePort());
+        if (!instrumenter().shouldStart(parentContext, request)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, request);
+        return new AdviceScope(request, context, context.makeCurrent());
+      }
+
+      public void end(
+          HttpDispatcherLink httpDispatcherLink,
+          @Nullable Throwable throwable,
+          StatusCodes statusCode,
+          @Nullable Exception failure) {
+        scope.close();
+
+        LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
+        Throwable t = failure != null ? failure : throwable;
+        instrumenter().end(context, request, response, t);
+      }
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceLocals onEnter(
-        @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
-
-      AdviceLocals locals = new AdviceLocals();
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      locals.request =
-          new LibertyRequest(
-              isc.getRequest(),
-              isc.getLocalAddr(),
-              isc.getLocalPort(),
-              isc.getRemoteAddr(),
-              isc.getRemotePort());
-      if (!instrumenter().shouldStart(parentContext, locals.request)) {
-        return locals;
-      }
-      locals.context = instrumenter().start(parentContext, locals.request);
-      locals.scope = locals.context.makeCurrent();
-      return locals;
+    public static AdviceScope onEnter(@Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
+      return AdviceScope.start(isc);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
         @Advice.This HttpDispatcherLink httpDispatcherLink,
-        @Advice.Thrown Throwable throwable,
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
         @Advice.Argument(value = 2) Exception failure,
-        @Advice.Enter AdviceLocals locals) {
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
 
-      if (locals.scope == null) {
-        return;
+      if (adviceScope != null) {
+        adviceScope.end(httpDispatcherLink, throwable, statusCode, failure);
       }
-      locals.scope.close();
-
-      LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
-
-      Throwable t = failure != null ? failure : throwable;
-      instrumenter().end(locals.context, locals.request, response, t);
     }
   }
 }
