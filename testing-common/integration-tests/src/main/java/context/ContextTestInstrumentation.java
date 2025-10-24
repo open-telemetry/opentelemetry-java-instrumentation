@@ -5,15 +5,17 @@
 
 package context;
 
+import static context.ContextTestSingletons.CONTEXT;
+import static context.ContextTestSingletons.INTEGER;
+import static context.ContextTestSingletons.INTERFACE_INTEGER;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import library.KeyClass;
-import library.KeyInterface;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -42,40 +44,35 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class MarkInstrumentedAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(@Advice.Return(readOnly = false) boolean isInstrumented) {
-      isInstrumented = true;
+    public static boolean methodExit() {
+      return true;
     }
   }
 
   @SuppressWarnings("unused")
   public static class StoreAndIncrementApiUsageAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-
-      VirtualField<KeyClass, Context> virtualField =
-          VirtualField.find(KeyClass.class, Context.class);
-
-      Context context = virtualField.get(thiz);
+    public static int methodExit(@Advice.This KeyClass thiz) {
+      Context context = CONTEXT.get(thiz);
       if (context == null) {
         context = new Context();
-        virtualField.set(thiz, context);
+        CONTEXT.set(thiz, context);
       }
 
-      contextCount = ++context.count;
+      return ++context.count;
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetApiUsageAdvice {
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit
-    public static void methodExit(
-        @Advice.This KeyClass thiz, @Advice.Return(readOnly = false) int contextCount) {
-      VirtualField<KeyClass, Context> virtualField =
-          VirtualField.find(KeyClass.class, Context.class);
-      Context context = virtualField.get(thiz);
-      contextCount = context == null ? 0 : context.count;
+    public static int methodExit(@Advice.This KeyClass thiz) {
+      Context context = CONTEXT.get(thiz);
+      return context == null ? 0 : context.count;
     }
   }
 
@@ -83,11 +80,9 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   public static class PutApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz, @Advice.Argument(0) int value) {
-      VirtualField<KeyClass, Context> virtualField =
-          VirtualField.find(KeyClass.class, Context.class);
       Context context = new Context();
       context.count = value;
-      virtualField.set(thiz, context);
+      CONTEXT.set(thiz, context);
     }
   }
 
@@ -95,9 +90,7 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   public static class RemoveApiUsageAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {
-      VirtualField<KeyClass, Context> virtualField =
-          VirtualField.find(KeyClass.class, Context.class);
-      virtualField.set(thiz, null);
+      CONTEXT.set(thiz, null);
     }
   }
 
@@ -105,15 +98,10 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
   public static class UseMultipleFieldsAdvice {
     @Advice.OnMethodExit
     public static void methodExit(@Advice.This KeyClass thiz) {
-      VirtualField<KeyClass, Context> field1 = VirtualField.find(KeyClass.class, Context.class);
-      VirtualField<KeyClass, Integer> field2 = VirtualField.find(KeyClass.class, Integer.class);
-      VirtualField<KeyInterface, Integer> interfaceField =
-          VirtualField.find(KeyInterface.class, Integer.class);
-
-      Context context = field1.get(thiz);
+      Context context = CONTEXT.get(thiz);
       int count = context == null ? 0 : context.count;
-      field2.set(thiz, count);
-      interfaceField.set(thiz, count);
+      INTEGER.set(thiz, count);
+      INTERFACE_INTEGER.set(thiz, count);
     }
   }
 }
