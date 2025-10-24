@@ -22,7 +22,37 @@ import javax.annotation.Nullable;
  * OpenTelemetry specification.
  */
 public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
+    extends DbClientAttributesGetter<REQUEST, RESPONSE> {
+
+  /**
+   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   */
+  @Override
+  @Nullable
+  default String getDbOperationName(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   */
+  @Override
+  @Nullable
+  default String getDbQueryText(REQUEST request) {
+    return null;
+  }
+
+  /**
+   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   */
+  @Override
+  @Nullable
+  default String getDbQuerySummary(REQUEST request) {
+    return null;
+  }
 
   /**
    * Get the raw SQL query texts. The values returned by this method is later sanitized by the
