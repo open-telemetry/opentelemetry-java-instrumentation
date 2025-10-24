@@ -110,8 +110,8 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         this.request = request;
       }
 
-      public static ChannelMethodAdviceScope start(Channel channel, String method) {
-        CallDepth callDepth = CallDepth.forClass(Channel.class);
+      public static ChannelMethodAdviceScope start(
+          CallDepth callDepth, Channel channel, String method) {
         if (callDepth.getAndIncrement() > 0) {
           return new ChannelMethodAdviceScope(callDepth, null, null, null);
         }
@@ -148,7 +148,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter
     public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
-      return ChannelMethodAdviceScope.start(channel, method);
+      return ChannelMethodAdviceScope.start(CallDepth.forClass(Channel.class), channel, method);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -164,7 +164,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
 
     @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(4))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object setSpanNameAddHeaders(
+    public static AMQP.BasicProperties setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
         @Advice.Argument(4) AMQP.BasicProperties props,
