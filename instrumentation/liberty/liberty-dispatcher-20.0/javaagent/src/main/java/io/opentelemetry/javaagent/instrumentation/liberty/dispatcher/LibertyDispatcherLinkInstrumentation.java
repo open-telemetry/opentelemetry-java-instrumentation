@@ -50,25 +50,31 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
   @SuppressWarnings("unused")
   public static class SendResponseAdvice {
 
+    public static class AdviceLocals {
+      public LibertyRequest request;
+      public Context context;
+      public Scope scope;
+    }
+
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc,
-        @Advice.Local("otelRequest") LibertyRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static AdviceLocals onEnter(
+        @Advice.FieldValue("isc") HttpInboundServiceContextImpl isc) {
+
+      AdviceLocals locals = new AdviceLocals();
       Context parentContext = Java8BytecodeBridge.currentContext();
-      request =
+      locals.request =
           new LibertyRequest(
               isc.getRequest(),
               isc.getLocalAddr(),
               isc.getLocalPort(),
               isc.getRemoteAddr(),
               isc.getRemotePort());
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      if (!instrumenter().shouldStart(parentContext, locals.request)) {
+        return locals;
       }
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      locals.context = instrumenter().start(parentContext, locals.request);
+      locals.scope = locals.context.makeCurrent();
+      return locals;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
@@ -77,18 +83,17 @@ public class LibertyDispatcherLinkInstrumentation implements TypeInstrumentation
         @Advice.Thrown Throwable throwable,
         @Advice.Argument(value = 0) StatusCodes statusCode,
         @Advice.Argument(value = 2) Exception failure,
-        @Advice.Local("otelRequest") LibertyRequest request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      if (scope == null) {
+        @Advice.Enter AdviceLocals locals) {
+
+      if (locals.scope == null) {
         return;
       }
-      scope.close();
+      locals.scope.close();
 
       LibertyResponse response = new LibertyResponse(httpDispatcherLink, statusCode);
 
       Throwable t = failure != null ? failure : throwable;
-      instrumenter().end(context, request, response, t);
+      instrumenter().end(locals.context, locals.request, response, t);
     }
   }
 }
