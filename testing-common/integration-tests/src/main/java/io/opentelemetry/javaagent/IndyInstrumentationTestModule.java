@@ -176,7 +176,6 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
         throw new RuntimeException("This exception should be suppressed");
       }
 
-      @Advice.AssignReturned.ToReturned
       @Advice.OnMethodExit(
           suppress = Throwable.class,
           onThrowable = Throwable.class,
