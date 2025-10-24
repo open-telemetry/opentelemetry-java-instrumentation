@@ -238,8 +238,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
     if (Boolean.getBoolean("testLatestDeps")) {
-      // ignore CLIENT SETINFO traces
-      testing().waitForTraces(2);
+      // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
+      testing().waitForTraces(3);
       testing().clearData();
     }
 
@@ -420,6 +420,24 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, containerConnection.port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      satisfies(
+                                          maybeStable(DB_STATEMENT),
+                                          stringAssert ->
+                                              stringAssert.startsWith(
+                                                  "CLIENT MAINT_NOTIFICATIONS"))))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
                           span.hasName("DEBUG")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
@@ -459,8 +477,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
     if (Boolean.getBoolean("testLatestDeps")) {
-      // ignore CLIENT SETINFO traces
-      testing().waitForTraces(2);
+      // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
+      testing().waitForTraces(3);
       testing().clearData();
     }
 

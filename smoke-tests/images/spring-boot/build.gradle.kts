@@ -5,7 +5,7 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "3.5.6"
+  id("org.springframework.boot") version "3.5.7"
 }
 
 dependencies {
