@@ -7,18 +7,25 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -31,10 +38,14 @@ import java.util.Map;
  * statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
+  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
+  private static final AttributeKey<String> DB_CONNECTION_STRING =
+      AttributeKey.stringKey("db.connection_string");
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
@@ -57,6 +68,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   private static final String SQL_CALL = "CALL";
 
+  private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
   private final boolean captureQueryParameters;
@@ -66,17 +78,32 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled,
       boolean captureQueryParameters) {
-    super(getter);
+    this.getter = getter;
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     // capturing query parameters disables statement sanitization
     this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
   }
 
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    super.onStart(attributes, parentContext, request);
+    // Common attributes
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      internalSet(
+          attributes,
+          DB_SYSTEM_NAME,
+          SemconvStability.stableDbSystemName(getter.getDbSystem(request)));
+      internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
+    }
+    if (SemconvStability.emitOldDatabaseSemconv()) {
+      internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
+      internalSet(attributes, DB_USER, getter.getUser(request));
+      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
+      internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
+    }
 
+    // SQL-specific attributes
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
     if (rawQueryTexts.isEmpty()) {
@@ -159,5 +186,31 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       builder.append(string);
     }
     return builder.toString();
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      if (error != null) {
+        internalSet(attributes, ERROR_TYPE, error.getClass().getName());
+      }
+      if (error != null || response != null) {
+        internalSet(attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatus(response, error));
+      }
+    }
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.DB_CLIENT;
   }
 }
