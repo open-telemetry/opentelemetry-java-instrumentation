@@ -6,14 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.PekkoHttpUtil;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
+import org.apache.pekko.http.scaladsl.server.PathMatcher;
 
 public final class PekkoHttpServerSingletons {
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
+  public static final VirtualField<PathMatcher<?>, String> PATH_MATCHER_FIELD =
+      VirtualField.find(PathMatcher.class, String.class);
 
   static {
     INSTRUMENTER =
