@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.ClassNames;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class FinatraSingletons {
 
@@ -35,6 +36,7 @@ public final class FinatraSingletons {
                         ? ClassNames.simpleName(request.controllerClass())
                         : "<unknown>")
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }
 
