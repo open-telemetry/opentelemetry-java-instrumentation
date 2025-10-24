@@ -38,14 +38,20 @@ class R2dbcInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FactoryAdvice {
 
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodExit(
-        @Advice.Return(readOnly = false) ConnectionFactory factory,
+    public static ConnectionFactory methodExit(
+        @Advice.Return ConnectionFactory factory,
         @Advice.Argument(0) ConnectionFactoryOptions factoryOptions) {
 
-      if (factory != null) {
-        factory = R2dbcSingletons.telemetry().wrapConnectionFactory(factory, factoryOptions);
+      ConnectionFactory modifiedFactory = factory;
+
+      if (modifiedFactory != null) {
+        modifiedFactory =
+            R2dbcSingletons.telemetry().wrapConnectionFactory(modifiedFactory, factoryOptions);
       }
+
+      return modifiedFactory;
     }
   }
 }
