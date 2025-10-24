@@ -35,7 +35,7 @@ public final class MetaDataCollector {
 
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
-      Pattern.compile("(.*?/instrumentation/.*?)(/javaagent/|/library/)");
+      Pattern.compile("(.*?/instrumentation/.*?)(/javaagent|/library|/testing)");
 
   public static void writeTelemetryToFiles(
       String path,

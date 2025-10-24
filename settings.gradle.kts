@@ -4,7 +4,7 @@ pluginManagement {
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.20"
+    id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
     id("org.graalvm.buildtools.native") version "0.11.2"
@@ -47,11 +47,38 @@ dependencyResolutionManagement {
   }
 }
 
+val develocityServer = "https://develocity.opentelemetry.io"
+val isCI = System.getenv("CI") != null
+val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
+
+// if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
+val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
+
 develocity {
+  if (useScansGradleCom) {
+    buildScan {
+      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+      termsOfUseAgree = "yes"
+    }
+  } else {
+    server = develocityServer
+    buildScan {
+      publishing.onlyIf { it.isAuthenticated }
+
+      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
+        value("Smoke test suite", it)
+      }
+    }
+  }
+
   buildScan {
-    publishing.onlyIf { System.getenv("CI") != null }
-    termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
-    termsOfUseAgree.set("yes")
+    uploadInBackground = !isCI
+
+    capture {
+      fileFingerprints = true
+    }
 
     if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
       !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
@@ -60,6 +87,14 @@ develocity {
           writer.println(buildScanUri)
         }
       }
+    }
+  }
+}
+
+if (!useScansGradleCom) {
+  buildCache {
+    remote(develocity.buildCache) {
+      isPush = isCI && develocityAccessKey.isNotEmpty()
     }
   }
 }
@@ -179,6 +214,8 @@ include(":instrumentation:azure-core:azure-core-1.19:javaagent")
 include(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
 include(":instrumentation:azure-core:azure-core-1.36:javaagent")
 include(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
+include(":instrumentation:azure-core:azure-core-1.53:javaagent")
+include(":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded")
 include(":instrumentation:c3p0-0.9:javaagent")
 include(":instrumentation:c3p0-0.9:library")
 include(":instrumentation:c3p0-0.9:testing")
@@ -204,6 +241,8 @@ include(":instrumentation:couchbase:couchbase-3.1.6:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
 include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
+include(":instrumentation:couchbase:couchbase-3.4:javaagent")
+include(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common:testing")
 include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
@@ -268,6 +307,7 @@ include(":instrumentation:iceberg-1.6:library")
 include(":instrumentation:influxdb-2.4:javaagent")
 include(":instrumentation:internal:internal-application-logger:bootstrap")
 include(":instrumentation:internal:internal-application-logger:javaagent")
+include(":instrumentation:internal:internal-class-loader:compile-stub")
 include(":instrumentation:internal:internal-class-loader:javaagent")
 include(":instrumentation:internal:internal-class-loader:javaagent-integration-tests")
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
@@ -594,7 +634,6 @@ include(":instrumentation:spring:spring-security-config-6.0:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:library")
 include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
-include(":instrumentation:spring:spring-web:spring-web-3.1:testing")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
