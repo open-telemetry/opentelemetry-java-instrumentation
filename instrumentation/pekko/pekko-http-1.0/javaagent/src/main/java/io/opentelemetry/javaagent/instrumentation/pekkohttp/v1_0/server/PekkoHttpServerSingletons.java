@@ -16,7 +16,7 @@ import org.apache.pekko.http.scaladsl.server.PathMatcher;
 public final class PekkoHttpServerSingletons {
 
   private static final Instrumenter<HttpRequest, HttpResponse> INSTRUMENTER;
-  public static final VirtualField<PathMatcher<?>, String> PATH_MATCHER_FIELD =
+  public static final VirtualField<PathMatcher<?>, String> PREFIX =
       VirtualField.find(PathMatcher.class, String.class);
 
   static {
