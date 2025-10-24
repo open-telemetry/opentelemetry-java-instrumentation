@@ -6,11 +6,11 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.PATH_MATCHER_FIELD;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -53,7 +53,7 @@ public class PathMatcherStaticInstrumentation implements TypeInstrumentation {
         PathMatcher.Matched<?> match = (PathMatcher.Matched<?>) result;
         // if present use the matched path that was remembered in PathMatcherInstrumentation,
         // otherwise just use a *
-        String prefix = VirtualField.find(PathMatcher.class, String.class).get(pathMatcher);
+        String prefix = PATH_MATCHER_FIELD.get(pathMatcher);
         if (prefix == null) {
           if (PathMatchers.Slash$.class == pathMatcher.getClass()) {
             prefix = "/";
