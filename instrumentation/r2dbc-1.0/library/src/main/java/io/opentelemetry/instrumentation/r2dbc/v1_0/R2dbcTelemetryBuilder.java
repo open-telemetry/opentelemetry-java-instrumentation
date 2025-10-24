@@ -58,7 +58,7 @@ public final class R2dbcTelemetryBuilder {
    */
   @Deprecated
   @CanIgnoreReturnValue
-  @SuppressWarnings("unchecked") // safe cast from Function to UnaryOperator
+  @SuppressWarnings("unchecked") // cast result to SpanNameExtractor<DbExecution>
   public R2dbcTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
           spanNameExtractorTransformer) {

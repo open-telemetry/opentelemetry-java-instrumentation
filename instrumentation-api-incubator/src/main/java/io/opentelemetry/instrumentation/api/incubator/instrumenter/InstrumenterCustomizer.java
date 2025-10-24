@@ -82,8 +82,7 @@ public interface InstrumenterCustomizer {
   @SuppressWarnings("FunctionalInterfaceClash")
   default InstrumenterCustomizer setSpanNameExtractor(
       Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<?>>) spanNameExtractorTransformer::apply);
+    return setSpanNameExtractor(spanNameExtractorTransformer::apply);
   }
 
   /**
