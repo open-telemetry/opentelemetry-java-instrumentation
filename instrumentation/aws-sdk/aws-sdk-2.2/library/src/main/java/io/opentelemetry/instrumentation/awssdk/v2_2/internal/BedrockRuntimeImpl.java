@@ -104,7 +104,7 @@ public final class BedrockRuntimeImpl {
   // used to approximate input/output token count for Cohere and Mistral AI models,
   // which don't provide these values in the response body.
   // https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-prepare.html
-  private static final Double CHARS_PER_TOKEN = 6.0;
+  private static final double CHARS_PER_TOKEN = 6.0;
 
   private enum ModelFamily {
     AMAZON_NOVA,

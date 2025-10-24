@@ -3,10 +3,11 @@ name: Build pull request
 on:
   pull_request:
     types:
-      - labeled
       - opened
       - synchronize
       - reopened
+  # called from rebuild-pull-request-on-label.yml
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
