@@ -16,6 +16,7 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
@@ -54,7 +55,10 @@ class MissingTypeTest {
                 })
             .type(named(MissingTypeTest.class.getName() + "$SomeClass"))
             .transform(
-                new AgentBuilder.Transformer.ForAdvice()
+                new AgentBuilder.Transformer.ForAdvice(
+                        Advice.withCustomMapping()
+                            // required for AssignReturned to work
+                            .with(new Advice.AssignReturned.Factory()))
                     .with(
                         new AgentBuilder.LocationStrategy.Simple(
                             ClassFileLocator.ForClassLoader.of(TestAdvice.class.getClassLoader())))
