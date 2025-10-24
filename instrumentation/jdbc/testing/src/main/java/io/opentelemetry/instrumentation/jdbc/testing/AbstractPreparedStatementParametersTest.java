@@ -53,7 +53,7 @@ public abstract class AbstractPreparedStatementParametersTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected Connection instrumentConnection(Connection connection) throws SQLException {
+  protected Connection wrap(Connection connection) throws SQLException {
     return connection;
   }
 
@@ -571,7 +571,7 @@ public abstract class AbstractPreparedStatementParametersTest {
       ThrowingConsumer<PreparedStatement, SQLException> setParameter,
       String expectedParameterValue)
       throws SQLException {
-    Connection instrumentedConnection = instrumentConnection(connection);
+    Connection instrumentedConnection = wrap(connection);
     PreparedStatement statement = instrumentedConnection.prepareStatement(query);
     cleanup.deferCleanup(statement);
 

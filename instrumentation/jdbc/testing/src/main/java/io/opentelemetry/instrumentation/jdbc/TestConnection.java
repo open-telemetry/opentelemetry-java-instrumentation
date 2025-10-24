@@ -28,7 +28,8 @@ import java.util.function.Consumer;
 
 /** A JDBC connection class that optionally throws an exception in the constructor, used to test */
 public class TestConnection implements Connection {
-  private String url;
+
+  private final String url;
   Consumer<String> sqlConsumer = unused -> {};
 
   public TestConnection() {}

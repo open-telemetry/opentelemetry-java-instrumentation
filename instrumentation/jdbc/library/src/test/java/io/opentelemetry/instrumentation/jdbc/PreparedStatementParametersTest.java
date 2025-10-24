@@ -26,7 +26,7 @@ class PreparedStatementParametersTest extends AbstractPreparedStatementParameter
   }
 
   @Override
-  protected Connection instrumentConnection(Connection connection) throws SQLException {
+  protected Connection wrap(Connection connection) throws SQLException {
     return telemetryHelper.instrumentConnectionWithQueryParameters(connection);
   }
 }

@@ -82,11 +82,11 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   protected abstract InstrumentationExtension testing();
 
-  protected Connection instrumentConnection(Connection connection) throws SQLException {
+  protected Connection wrap(Connection connection) throws SQLException {
     return connection;
   }
 
-  protected DataSource instrumentDataSource(DataSource dataSource) {
+  protected DataSource wrap(DataSource dataSource) {
     return dataSource;
   }
 
@@ -376,7 +376,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery(query));
@@ -505,7 +505,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
     ResultSet resultSet =
@@ -552,7 +552,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     PreparedStatement statement = connection.prepareStatement(query);
     cleanup.deferCleanup(statement);
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery());
@@ -592,7 +592,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     CallableStatement statement = connection.prepareCall(query);
     cleanup.deferCleanup(statement);
     ResultSet resultSet = testing().runWithSpan("parent", () -> statement.executeQuery());
@@ -731,7 +731,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String url,
       String table)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
     String sql = connection.nativeSQL(query);
@@ -909,7 +909,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String table,
       ThrowingConsumer<PreparedStatement> action)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     String sql = connection.nativeSQL(query);
     PreparedStatement statement = connection.prepareStatement(sql);
     cleanup.deferCleanup(statement);
@@ -1083,7 +1083,7 @@ public abstract class AbstractJdbcInstrumentationTest {
     if (init != null) {
       init.accept(datasource);
     }
-    DataSource instrumentedDatasource = instrumentDataSource(datasource);
+    DataSource instrumentedDatasource = wrap(datasource);
     instrumentedDatasource.getConnection().close();
     assertThat(testing().spans()).noneMatch(span -> span.getName().equals("database.connection"));
 
@@ -1126,7 +1126,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @ValueSource(strings = "testing 123")
   void testGetClientInfoException(String query) throws SQLException {
     TestConnection rawConnection = new TestConnection("jdbc:testdb://localhost", false);
-    Connection connection = instrumentConnection(rawConnection);
+    Connection connection = wrap(rawConnection);
     cleanup.deferCleanup(connection);
 
     Statement statement =
@@ -1214,7 +1214,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String table)
       throws SQLException {
     Driver driver = new TestDriver();
-    Connection connection = instrumentConnection(driver.connect(url, null));
+    Connection connection = wrap(driver.connect(url, null));
     cleanup.deferCleanup(connection);
 
     Connection finalConnection = connection;
@@ -1253,7 +1253,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   void testConnectionCached(String connectionPoolName) throws SQLException {
     String dbType = "hsqldb";
     DataSource rawDataSource = createDs(connectionPoolName, dbType, jdbcUrls.get(dbType));
-    DataSource dataSource = instrumentDataSource(rawDataSource);
+    DataSource dataSource = wrap(rawDataSource);
     DataSource finalDataSource = dataSource;
     cleanup.deferCleanup(
         () -> {
@@ -1347,7 +1347,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       throws Exception {
     DbCallingConnection rawConnection =
         new DbCallingConnection(usePreparedStatementInConnection, "jdbc:testdb://localhost");
-    Connection connection = instrumentConnection(rawConnection);
+    Connection connection = wrap(rawConnection);
 
     testing()
         .runWithSpan(
@@ -1382,7 +1382,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyStatement() throws Exception {
     Connection connection =
-        instrumentConnection(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+        wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
@@ -1410,7 +1410,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testProxyPreparedStatement() throws SQLException {
     Connection connection =
-        instrumentConnection(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+        wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     PreparedStatement statement = connection.prepareStatement("SELECT 3");
     cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);
@@ -1480,7 +1480,7 @@ public abstract class AbstractJdbcInstrumentationTest {
       String tableName,
       ThrowingConsumer<Statement> action)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     Statement createTable = connection.createStatement();
     createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
     cleanup.deferCleanup(createTable);
@@ -1534,7 +1534,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @MethodSource("batchStream")
   void testMultiBatch(String system, Connection connection, String username, String url)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     String tableName1 = "multi_batch_test_1";
     String tableName2 = "multi_batch_test_2";
     Statement createTable1 = connection.createStatement();
@@ -1594,7 +1594,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @MethodSource("batchStream")
   void testSingleItemBatch(String system, Connection connection, String username, String url)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     String tableName = "single_item_batch_test";
     Statement createTable = connection.createStatement();
     createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
@@ -1635,7 +1635,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @MethodSource("batchStream")
   void testPreparedBatch(String system, Connection connection, String username, String url)
       throws SQLException {
-    connection = instrumentConnection(connection);
+    connection = wrap(connection);
     String tableName = "prepared_batch_test";
     Statement createTable = connection.createStatement();
     createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
@@ -1709,7 +1709,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @MethodSource("transactionOperationsStream")
   void testCommitTransaction(String system, Connection connection, String username, String url)
       throws SQLException {
-    Connection instrumentedConnection = instrumentConnection(connection);
+    Connection instrumentedConnection = wrap(connection);
     Connection finalConnection = instrumentedConnection;
 
     String tableName = "TXN_COMMIT_TEST_" + system.toUpperCase(Locale.ROOT);
@@ -1771,7 +1771,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @MethodSource("transactionOperationsStream")
   void testRollbackTransaction(String system, Connection connection, String username, String url)
       throws SQLException {
-    Connection instrumentedConnection = instrumentConnection(connection);
+    Connection instrumentedConnection = wrap(connection);
     Connection finalConnection = instrumentedConnection;
 
     String tableName = "TXN_ROLLBACK_TEST_" + system.toUpperCase(Locale.ROOT);
@@ -1864,7 +1864,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testPreparedStatementWrapper() throws SQLException {
     Connection connection =
-        instrumentConnection(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+        wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     Connection proxyConnection =
         ProxyStatementFactory.proxy(
             Connection.class,
@@ -1905,7 +1905,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @Test
   void testStatementWrapper() throws SQLException {
     Connection connection =
-        instrumentConnection(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
+        wrap(new org.h2.Driver().connect(jdbcUrls.get("h2"), null));
     Statement statement = connection.createStatement();
     cleanup.deferCleanup(statement);
     cleanup.deferCleanup(connection);

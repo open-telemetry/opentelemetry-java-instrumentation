@@ -16,7 +16,6 @@ dependencies {
   api("org.hsqldb:hsqldb:2.0.0")
 
   api("org.apache.tomcat:tomcat-jdbc:7.0.19")
-  api("org.apache.tomcat:tomcat-juli:7.0.19")
   api("com.zaxxer:HikariCP:2.4.0")
   api("com.mchange:c3p0:0.9.5")
 }

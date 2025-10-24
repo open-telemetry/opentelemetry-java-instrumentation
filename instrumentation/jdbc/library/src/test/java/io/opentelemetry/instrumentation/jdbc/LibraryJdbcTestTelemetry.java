@@ -23,7 +23,7 @@ final class LibraryJdbcTestTelemetry {
     this.testing = testing;
   }
 
-  Connection instrumentConnection(Connection connection) throws SQLException {
+  Connection wrap(Connection connection) throws SQLException {
     return wrapConnection(connection, telemetry());
   }
 
@@ -40,7 +40,7 @@ final class LibraryJdbcTestTelemetry {
     return dataSource.getConnection();
   }
 
-  DataSource instrumentDataSource(DataSource dataSource) {
+  DataSource wrap(DataSource dataSource) {
     return wrapDataSource(dataSource, telemetry());
   }
 

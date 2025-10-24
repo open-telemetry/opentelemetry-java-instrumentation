@@ -38,13 +38,13 @@ class JdbcInstrumentationTest extends AbstractJdbcInstrumentationTest {
   }
 
   @Override
-  protected Connection instrumentConnection(Connection connection) throws SQLException {
-    return telemetryHelper.instrumentConnection(connection);
+  protected Connection wrap(Connection connection) throws SQLException {
+    return telemetryHelper.wrap(connection);
   }
 
   @Override
-  protected DataSource instrumentDataSource(DataSource dataSource) {
-    return telemetryHelper.instrumentDataSource(dataSource);
+  protected DataSource wrap(DataSource dataSource) {
+    return telemetryHelper.wrap(dataSource);
   }
 
   @Override
@@ -115,7 +115,7 @@ class JdbcInstrumentationTest extends AbstractJdbcInstrumentationTest {
         if (connection == null) {
           return null;
         }
-        return telemetryHelper.instrumentConnection(connection);
+        return telemetryHelper.wrap(connection);
       }
 
       @Override
