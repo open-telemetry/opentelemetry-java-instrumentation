@@ -3890,7 +3890,10 @@ libraries:
   google:
   - name: google-http-client-1.19
     description: This instrumentation enables HTTP client spans and HTTP client metrics
-      for Google HTTP Client requests.
+      for the Google HTTP Client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://github.com/googleapis/google-http-java-client
     source_path: instrumentation/google-http-client-1.19
     scope:
@@ -3960,8 +3963,11 @@ libraries:
   grails:
   - name: grails-3.0
     description: |
-      This instrumentation enriches existing HTTP server spans with HTTP route information, and optionally enables experimental controller spans for Grails applications.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Grails applications (controller spans are disabled by default).
     library_link: https://grails.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/grails-3.0
     scope:
       name: io.opentelemetry.grails-3.0
@@ -3984,7 +3990,9 @@ libraries:
           type: STRING
   graphql:
   - name: graphql-java-12.0
-    description: This instrumentation enables spans for GraphQL Java operations.
+    description: This instrumentation enables spans for GraphQL operations.
+    semantic_conventions:
+    - GRAPHQL_SERVER_SPANS
     library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
@@ -4017,7 +4025,9 @@ libraries:
         - name: graphql.operation.type
           type: STRING
   - name: graphql-java-20.0
-    description: This instrumentation enables spans for GraphQL Java operations.
+    description: This instrumentation enables spans for GraphQL operations.
+    semantic_conventions:
+    - GRAPHQL_SERVER_SPANS
     library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
@@ -4076,7 +4086,10 @@ libraries:
   grizzly:
   - name: grizzly-2.3
     description: This instrumentation enables HTTP server spans and HTTP server metrics
-      for Grizzly applications.
+      for Grizzly.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://javaee.github.io/grizzly/httpserverframework.html
     source_path: instrumentation/grizzly-2.3
     scope:
