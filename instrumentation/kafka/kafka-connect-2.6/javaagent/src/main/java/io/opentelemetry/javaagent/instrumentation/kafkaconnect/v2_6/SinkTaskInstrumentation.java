@@ -63,7 +63,7 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
         return new AdviceScope(task, context, context.makeCurrent());
       }
 
-      public void end(Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, task, null, throwable);
       }
