@@ -6,14 +6,12 @@
 package io.opentelemetry.javaagent.tooling.bytebuddy;
 
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
 
 @SuppressWarnings("unused")
 public class BadAdvice {
 
-  @AssignReturned.ToReturned
   @Advice.OnMethodExit(suppress = Throwable.class)
-  public static boolean throwAnException(@Advice.Return boolean originalReturnVal) {
+  public static boolean throwAnException() {
     throw new IllegalStateException("Test Exception");
   }
 
