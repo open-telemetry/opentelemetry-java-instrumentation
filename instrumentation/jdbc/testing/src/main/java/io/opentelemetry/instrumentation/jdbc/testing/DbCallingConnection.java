@@ -10,14 +10,10 @@ import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 
 class DbCallingConnection extends TestConnection {
-  final boolean usePreparedStatement;
-
-  DbCallingConnection(boolean usePreparedStatement) {
-    this(usePreparedStatement, null);
-  }
+  private final boolean usePreparedStatement;
 
   DbCallingConnection(boolean usePreparedStatement, String url) {
-    super(url, false);
+    super(url);
     this.usePreparedStatement = usePreparedStatement;
   }
 

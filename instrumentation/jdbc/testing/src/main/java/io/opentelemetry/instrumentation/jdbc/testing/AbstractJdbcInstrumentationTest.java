@@ -1125,7 +1125,7 @@ public abstract class AbstractJdbcInstrumentationTest {
   @DisplayName("test getClientInfo exception")
   @ValueSource(strings = "testing 123")
   void testGetClientInfoException(String query) throws SQLException {
-    TestConnection rawConnection = new TestConnection("jdbc:testdb://localhost", false);
+    TestConnection rawConnection = new TestConnection("jdbc:testdb://localhost");
     Connection connection = wrap(rawConnection);
     cleanup.deferCleanup(connection);
 

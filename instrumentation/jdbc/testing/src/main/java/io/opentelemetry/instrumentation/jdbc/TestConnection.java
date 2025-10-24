@@ -30,27 +30,30 @@ import java.util.function.Consumer;
 public class TestConnection implements Connection {
 
   private final String url;
-  Consumer<String> sqlConsumer = unused -> {};
+  private final Consumer<String> sqlConsumer;
 
-  public TestConnection() {}
+  public TestConnection() {
+    this(null, unused -> {});
+  }
 
   public TestConnection(String url) {
-    this.url = url;
+    this(url, unused -> {});
   }
 
   public TestConnection(Consumer<String> sqlConsumer) {
-    this.sqlConsumer = sqlConsumer;
+    this(null, sqlConsumer);
   }
 
   public TestConnection(boolean throwException) {
+    this(null, unused -> {});
     if (throwException) {
       throw new IllegalStateException("connection exception");
     }
   }
 
-  public TestConnection(String url, boolean throwException) {
-    this(throwException);
+  private TestConnection(String url, Consumer<String> sqlConsumer) {
     this.url = url;
+    this.sqlConsumer = sqlConsumer;
   }
 
   @Override
