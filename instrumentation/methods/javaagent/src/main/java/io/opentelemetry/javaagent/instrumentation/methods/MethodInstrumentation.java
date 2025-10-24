@@ -98,7 +98,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       private final Context context;
       private final Scope scope;
 
-      public AdviceScope(MethodAndType classAndMethod, Context context, Scope scope) {
+      private AdviceScope(MethodAndType classAndMethod, Context context, Scope scope) {
         this.classAndMethod = classAndMethod;
         this.context = context;
         this.scope = scope;
