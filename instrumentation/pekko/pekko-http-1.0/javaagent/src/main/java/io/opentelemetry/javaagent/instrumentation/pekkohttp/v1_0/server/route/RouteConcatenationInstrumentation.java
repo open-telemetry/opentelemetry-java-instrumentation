@@ -33,11 +33,11 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
+    @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false)
-            Function1<RequestContext, Future<RouteResult>> route) {
-      route = new PekkoRouteWrapper(route);
+    public static Object onEnter(
+        @Advice.Argument(0) Function1<RequestContext, Future<RouteResult>> route) {
+      return new PekkoRouteWrapper(route);
     }
   }
 }
