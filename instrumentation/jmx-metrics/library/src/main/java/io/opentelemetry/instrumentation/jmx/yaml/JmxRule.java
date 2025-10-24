@@ -207,7 +207,7 @@ public class JmxRule extends MetricStructure {
               metricInfo.getMetricName(),
               metricInfo.getDescription(),
               null,
-              "",
+              "1",
               MetricInfo.Type.UPDOWNCOUNTER);
 
       extractors.add(new MetricExtractor(extractor, stateMetricInfo, stateMetricAttributes));

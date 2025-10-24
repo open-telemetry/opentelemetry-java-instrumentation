@@ -229,6 +229,10 @@ The metric descriptions will remain undefined, unless they are provided by the q
 ### State Metrics
 
 Some JMX attributes expose current state as a non-numeric MBean attribute, in order to capture those as metrics it is recommended to use the special `state` metric type.
+
+This type of metric fits the [semantic conventions recommendations for state metric](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/how-to-write-conventions/status-metrics.md),
+using the `.status` suffix is compliant with the [naming recommendations](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/how-to-write-conventions/status-metrics.md#naming).
+
 For example, with Tomcat connector, the `Catalina:type=Connector,port=*` MBean has `stateName` (of type `String`), we can define the following rule:
 
 ```yaml
@@ -238,7 +242,7 @@ rules:
     mapping:
       stateName:
         type: state
-        metric: tomcat.connector
+        metric: tomcat.connector.status
         metricAttribute:
           port: param(port)
           connector_state:
@@ -247,26 +251,26 @@ rules:
             degraded: '*'
 ```
 
-For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.state` metric of type `updowncounter` with value `0` or `1` and the `state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
-For every sample, 3 metrics will be captured for each value of `state` depending on the value of `stateName`:
+For a given value of `port`, let's say `8080` This will capture the `tomcat.connector.status` metric of type `updowncounter` with value `0` or `1` and the `connector_state` metric attribute will have a value in [`ok`,`failed`,`degraded`].
+For every sample, 3 metrics will be captured for each value of `connector_state` depending on the value of `stateName`:
 
 When `stateName` = `STARTED`, we have:
 
-- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `ok`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
+- `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
 
 When `stateName` = `STOPPED` or `FAILED`, we have:
 
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
-- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `failed`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `connector_state` = `degraded`
 
 For other values of `stateName`, we have:
 
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
-- `tomcat.connector` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
-- `tomcat.connector` value = `1`, attributes `port` = `8080` and `connector_state` = `degraded`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `connector_state` = `ok`
+- `tomcat.connector.status` value = `0`, attributes `port` = `8080` and `connector_state` = `failed`
+- `tomcat.connector.status` value = `1`, attributes `port` = `8080` and `connector_state` = `degraded`
 
 Each state key can be mapped to one or more values of the MBean attribute using:
 - a string literal or a string array
