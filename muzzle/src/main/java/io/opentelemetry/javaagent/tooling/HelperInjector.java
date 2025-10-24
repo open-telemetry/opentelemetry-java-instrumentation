@@ -13,19 +13,23 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassInfo;
-import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
-import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldDetector;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldLookupSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
+import io.opentelemetry.javaagent.instrumentation.executors.ExecutorLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.internal.lambda.LambdaLookupSupplier;
+import io.opentelemetry.javaagent.instrumentation.internal.reflection.ReflectionLookupSupplier;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResource;
 import java.io.File;
 import java.io.IOException;
 import java.lang.instrument.Instrumentation;
+import java.lang.invoke.MethodHandles;
 import java.net.URL;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -325,31 +329,50 @@ public class HelperInjector implements Transformer {
   // disable using unsafe for jdk 23+ where it prints a warning
   private static final boolean canUseUnsafe =
       Double.parseDouble(System.getProperty("java.specification.version")) < 23;
-  private static final String virtualFieldPackage =
-      VirtualFieldAccessorMarker.class.getPackage().getName() + ".";
+  private static final Map<String, MethodHandles.Lookup> packageLookups = new HashMap<>();
+
+  static {
+    // add lookups for instrumentations that define classes in boot loader
+    addPackageLookup(new ExecutorLookupSupplier());
+    addPackageLookup(new LambdaLookupSupplier());
+    addPackageLookup(new ReflectionLookupSupplier());
+    // because all generated virtual field classes are in the same package we can use lookup to
+    // define them
+    addPackageLookup(new VirtualFieldLookupSupplier());
+  }
+
+  private static void addPackageLookup(Supplier<MethodHandles.Lookup> supplier) {
+    packageLookups.put(supplier.getClass().getPackage().getName(), supplier.get());
+  }
+
+  private static ClassInjector getClassInjector(String packageName) {
+    MethodHandles.Lookup lookup = packageLookups.get(packageName);
+    return lookup != null ? ClassInjector.UsingLookup.of(lookup) : null;
+  }
 
   private void injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject) throws IOException {
-
     Map<String, byte[]> classnameToBytes = resolve(inject);
     if (helperInjectorListener != null) {
       helperInjectorListener.onInjection(classnameToBytes);
     }
 
     if (ClassInjector.UsingLookup.isAvailable()) {
-      // because all generated virtual field classes are in the same package we can use lookup to
-      // define them
-      ClassInjector virtualFieldInjector =
-          ClassInjector.UsingLookup.of(VirtualFieldDetector.lookup());
-
       for (Iterator<Map.Entry<String, byte[]>> iterator = classnameToBytes.entrySet().iterator();
           iterator.hasNext(); ) {
         Map.Entry<String, byte[]> entry = iterator.next();
         String className = entry.getKey();
 
-        if (className.startsWith(virtualFieldPackage)) {
+        int dotIndex = className.lastIndexOf('.');
+        if (dotIndex == -1) {
+          continue;
+        }
+        String packageName = className.substring(0, dotIndex);
+        // if we have a lookup for this package we can use it to define the class
+        ClassInjector classInjector = getClassInjector(packageName);
+        if (classInjector != null) {
           iterator.remove();
           try {
-            virtualFieldInjector.injectRaw(Collections.singletonMap(className, entry.getValue()));
+            classInjector.injectRaw(Collections.singletonMap(className, entry.getValue()));
           } catch (LinkageError error) {
             // Unlike the ClassInjector.UsingUnsafe.ofBootLoader() ClassInjector.UsingLookup doesn't
             // check whether the class got loaded when there is an exception defining it.

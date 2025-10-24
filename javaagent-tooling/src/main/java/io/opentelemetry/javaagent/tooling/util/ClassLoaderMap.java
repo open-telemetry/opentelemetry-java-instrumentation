@@ -20,22 +20,33 @@ import net.bytebuddy.description.modifier.Visibility;
 class ClassLoaderMap {
   private static final Cache<ClassLoader, WeakReference<Map<Object, Object>>> data = Cache.weak();
   private static final Map<Object, Object> bootLoaderData = new ConcurrentHashMap<>();
+  static Injector defaultInjector =
+      (classLoader, className, bytes) -> {
+        HelperInjector.injectHelperClasses(
+            classLoader, Collections.singletonMap(className, () -> bytes));
+        return Class.forName(className, false, classLoader);
+      };
 
-  public static Object get(ClassLoader classLoader, Object key) {
-    return getClassLoaderData(classLoader, false).get(key);
+  public static Object get(ClassLoader classLoader, Injector classInjector, Object key) {
+    return getClassLoaderData(classLoader, classInjector, false).get(key);
   }
 
-  public static void put(ClassLoader classLoader, Object key, Object value) {
-    getClassLoaderData(classLoader, true).put(key, value);
+  public static void put(
+      ClassLoader classLoader, Injector classInjector, Object key, Object value) {
+    getClassLoaderData(classLoader, classInjector, true).put(key, value);
   }
 
   public static Object computeIfAbsent(
-      ClassLoader classLoader, Object key, Supplier<? extends Object> value) {
-    return getClassLoaderData(classLoader, true).computeIfAbsent(key, unused -> value.get());
+      ClassLoader classLoader,
+      Injector classInjector,
+      Object key,
+      Supplier<? extends Object> value) {
+    return getClassLoaderData(classLoader, classInjector, true)
+        .computeIfAbsent(key, unused -> value.get());
   }
 
   private static Map<Object, Object> getClassLoaderData(
-      ClassLoader classLoader, boolean initialize) {
+      ClassLoader classLoader, Injector classInjector, boolean initialize) {
     if (classLoader == null) {
       return bootLoaderData;
     }
@@ -47,14 +58,14 @@ class ClassLoaderMap {
       if (!initialize) {
         return Collections.emptyMap();
       }
-      map = createMap(classLoader);
+      map = createMap(classLoader, classInjector);
       data.put(classLoader, new WeakReference<>(map));
     }
     return map;
   }
 
   @SuppressWarnings("unchecked")
-  private static Map<Object, Object> createMap(ClassLoader classLoader) {
+  private static Map<Object, Object> createMap(ClassLoader classLoader, Injector classInjector) {
     String className =
         "io.opentelemetry.javaagent.ClassLoaderData$$"
             + Integer.toHexString(System.identityHashCode(classLoader));
@@ -67,11 +78,9 @@ class ClassLoaderMap {
             .defineField("data", Object.class, Ownership.STATIC, Visibility.PUBLIC)
             .make()
             .getBytes();
-    HelperInjector.injectHelperClasses(
-        classLoader, Collections.singletonMap(className, () -> bytes));
     Map<Object, Object> map;
     try {
-      Class<?> clazz = Class.forName(className, false, classLoader);
+      Class<?> clazz = classInjector.inject(classLoader, className, bytes);
 
       Field field = clazz.getField("data");
       synchronized (classLoader) {
@@ -85,6 +94,11 @@ class ClassLoaderMap {
       throw new IllegalStateException(exception);
     }
     return map;
+  }
+
+  @FunctionalInterface
+  interface Injector {
+    Class<?> inject(ClassLoader classLoader, String className, byte[] bytes) throws Exception;
   }
 
   private ClassLoaderMap() {}
