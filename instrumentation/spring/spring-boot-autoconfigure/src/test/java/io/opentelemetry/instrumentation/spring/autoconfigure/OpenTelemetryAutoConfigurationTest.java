@@ -12,6 +12,7 @@ import static org.mockito.Mockito.withSettings;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.exporter.otlp.internal.OtlpSpanExporterProvider;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
+import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.AutoConfigureListener;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
@@ -56,6 +57,27 @@ class OpenTelemetryAutoConfigurationTest {
                     .hasBean("customOpenTelemetry")
                     .doesNotHaveBean("openTelemetry")
                     .hasBean("otelProperties"));
+  }
+
+  private static class CustomAutoConfiguredSdkConfiguration {
+    @Bean
+    public AutoConfiguredOpenTelemetrySdk customAutoConfiguredSdk() {
+      return AutoConfiguredOpenTelemetrySdk.builder().build();
+    }
+  }
+
+  @Test
+  @DisplayName(
+      "when Application Context contains AutoConfiguredOpenTelemetrySdk bean should NOT use default")
+  void customAutoConfiguredOpenTelemetrySdk() {
+    this.contextRunner
+        .withUserConfiguration(CustomAutoConfiguredSdkConfiguration.class)
+        .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
+        .run(
+            context ->
+                assertThat(context)
+                    .hasBean("customAutoConfiguredSdk")
+                    .doesNotHaveBean("autoConfiguredOpenTelemetrySdk"));
   }
 
   @Test
