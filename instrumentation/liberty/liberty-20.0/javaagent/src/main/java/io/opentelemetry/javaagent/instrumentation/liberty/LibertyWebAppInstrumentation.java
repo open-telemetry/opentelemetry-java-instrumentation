@@ -62,7 +62,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       if (!handled
           || !(request instanceof HttpServletRequest)
           || !(response instanceof HttpServletResponse)) {
-        return handled;
+        return false;
       }
 
       HttpServletRequest httpServletRequest = (HttpServletRequest) request;
@@ -70,7 +70,7 @@ public class LibertyWebAppInstrumentation implements TypeInstrumentation {
       // some methods on HttpServletRequest will give a NPE
       // just remember the request and use it a bit later to start the span
       ThreadLocalContext.startRequest(httpServletRequest, (HttpServletResponse) response);
-      return handled;
+      return true;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
