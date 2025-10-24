@@ -69,6 +69,7 @@ public class SinkTaskInstrumentation implements TypeInstrumentation {
       }
     }
 
+    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter(@Advice.Argument(0) Collection<SinkRecord> records) {
       return AdviceScope.start(records);
