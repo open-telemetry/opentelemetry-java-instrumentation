@@ -26,7 +26,7 @@ public class JbossLogmanagerInstrumentationModule extends InstrumentationModule
     return asList(new JbossLoggerInstrumentation(), new JbossExtLogRecordInstrumentation());
   }
 
-  @java.lang.Override
+  @Override
   public boolean isIndyReady() {
     return true;
   }
