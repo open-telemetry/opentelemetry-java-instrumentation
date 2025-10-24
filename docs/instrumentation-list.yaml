@@ -2099,7 +2099,20 @@ libraries:
       name: io.opentelemetry.azure-core-1.36
     target_versions:
       javaagent:
-      - com.azure:azure-core:[1.36.0,)
+      - com.azure:azure-core:[1.36.0,1.53.0)
+  - name: azure-core-1.53
+    description: This instrumentation enables context propagation for the Azure Core
+      library, it does not emit any telemetry on its own.
+    library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
+    source_path: instrumentation/azure-core/azure-core-1.53
+    scope:
+      name: io.opentelemetry.azure-core-1.53
+    target_versions:
+      javaagent:
+      - com.azure:azure-core:[1.53.0,)
   c3p0:
   - name: c3p0-0.9
     description: The c3p0 instrumentation provides connection pool metrics for c3p0
