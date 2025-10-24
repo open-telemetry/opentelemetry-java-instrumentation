@@ -52,6 +52,8 @@ public abstract class AbstractDubboTest {
 
   protected abstract InstrumentationExtension testing();
 
+  protected abstract boolean hasPeerService();
+
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @BeforeAll
@@ -142,7 +144,11 @@ public abstract class AbstractDubboTest {
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
                                 equalTo(RPC_METHOD, "$invoke"),
-                                equalTo(PEER_SERVICE, "test-peer-service"),
+                                satisfies(
+                                    PEER_SERVICE,
+                                    k ->
+                                        k.isEqualTo(
+                                            hasPeerService() ? "test-peer-service" : null)),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
@@ -274,7 +280,11 @@ public abstract class AbstractDubboTest {
                                     RpcIncubatingAttributes.RpcSystemIncubatingValues.APACHE_DUBBO),
                                 equalTo(RPC_SERVICE, "org.apache.dubbo.rpc.service.GenericService"),
                                 equalTo(RPC_METHOD, "$invokeAsync"),
-                                equalTo(PEER_SERVICE, "test-peer-service"),
+                                satisfies(
+                                    PEER_SERVICE,
+                                    k ->
+                                        k.isEqualTo(
+                                            hasPeerService() ? "test-peer-service" : null)),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 satisfies(SERVER_PORT, k -> k.isInstanceOf(Long.class)),
                                 satisfies(
