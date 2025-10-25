@@ -126,6 +126,7 @@ public class TelemetryConverter {
                           // emptyToNull since they are the same at protobuf layer,
                           // and allows for simpler verification of InstrumentationScope
                           .setVersion(emptyToNull(instrumentationScope.getVersion()))
+                          .setSchemaUrl(emptyToNull(ilSpans.getSchemaUrl()))
                           .build())
                   .setName(span.getName())
                   .setStartEpochNanos(span.getStartTimeUnixNano())
