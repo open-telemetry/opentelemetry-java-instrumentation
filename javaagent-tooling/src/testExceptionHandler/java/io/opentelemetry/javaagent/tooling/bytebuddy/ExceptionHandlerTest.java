@@ -20,6 +20,7 @@ import java.util.logging.Logger;
 import net.bytebuddy.agent.ByteBuddyAgent;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.agent.builder.ResettableClassFileTransformer;
+import net.bytebuddy.asm.Advice;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -34,20 +35,24 @@ class ExceptionHandlerTest {
 
   @BeforeAll
   static void setUp() {
+    Advice.WithCustomMapping customMapping =
+        Advice.withCustomMapping()
+            // required for AssignReturned annotation and throwable suppression
+            .with(new Advice.AssignReturned.Factory().withSuppressed(Throwable.class));
     AgentBuilder builder =
         new AgentBuilder.Default()
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .type(named(ExceptionHandlerTest.class.getName() + "$SomeClass"))
             .transform(
-                new AgentBuilder.Transformer.ForAdvice()
+                new AgentBuilder.Transformer.ForAdvice(customMapping)
                     .with(
                         new AgentBuilder.LocationStrategy.Simple(
                             ClassFileLocator.ForClassLoader.of(BadAdvice.class.getClassLoader())))
                     .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
                     .advice(isMethod().and(named("isInstrumented")), BadAdvice.class.getName()))
             .transform(
-                new AgentBuilder.Transformer.ForAdvice()
+                new AgentBuilder.Transformer.ForAdvice(customMapping)
                     .with(
                         new AgentBuilder.LocationStrategy.Simple(
                             ClassFileLocator.ForClassLoader.of(BadAdvice.class.getClassLoader())))
@@ -80,7 +85,10 @@ class ExceptionHandlerTest {
     int initLogEvents = testHandler.getRecords().size();
 
     // Triggers classload and instrumentation
-    assertThat(SomeClass.isInstrumented()).isTrue();
+    assertThat(SomeClass.isInstrumented())
+        .describedAs("method return value should be preserved when exception is thrown in advice")
+        .isFalse();
+
     assertThat(testHandler.getRecords())
         .hasSize(initLogEvents + 1)
         .last()
