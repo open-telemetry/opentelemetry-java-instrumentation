@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.reactive.v2_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -304,7 +305,8 @@ public abstract class AbstractHibernateReactiveTest {
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(stringKey("peer.service"), "test-peer-service")),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)

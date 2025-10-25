@@ -18,4 +18,9 @@ class DubboTraceChainTest extends AbstractDubboTraceChainTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
+
+  @Override
+  protected boolean hasPeerService() {
+    return false;
+  }
 }

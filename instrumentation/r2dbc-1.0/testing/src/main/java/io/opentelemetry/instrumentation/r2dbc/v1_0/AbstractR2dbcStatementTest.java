@@ -17,6 +17,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -181,6 +182,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
                     span ->

@@ -15,6 +15,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -314,6 +315,7 @@ class HibernateReactiveTest {
                                 "select value0_.id as id1_0_0_, value0_.name as name2_0_0_ from Value value0_ where value0_.id=$1"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->

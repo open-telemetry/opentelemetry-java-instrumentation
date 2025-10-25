@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -200,7 +201,8 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                                     NETWORK_PEER_PORT,
                                     httpHost.getPort()), // Netty 4.1 Instrumentation collects
                                 // NETWORK_PEER_PORT
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                                equalTo(PEER_SERVICE, "test-peer-service")),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)

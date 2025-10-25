@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -119,6 +120,7 @@ class ReactorNettyBaseUrlOnlyTest {
                             equalTo(URL_FULL, uri + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, server.httpPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
