@@ -334,8 +334,7 @@ class TracerTest {
     linkedSpan.end();
     SpanContext linkedSpanContext = linkedSpan.getSpanContext();
 
-    Span testSpan =
-        tracer.spanBuilder("test").addLink(linkedSpanContext).startSpan();
+    Span testSpan = tracer.spanBuilder("test").addLink(linkedSpanContext).startSpan();
     testSpan.end();
 
     // Then
@@ -353,7 +352,6 @@ class TracerTest {
                             links -> {
                               assertThat(links).hasSize(1);
                               LinkData link = links.get(0);
-                              // Compare SpanContext fields individually due to classloader isolation
                               assertThat(link.getSpanContext().getTraceId())
                                   .isEqualTo(linkedSpanContext.getTraceId());
                               assertThat(link.getSpanContext().getSpanId())
@@ -364,7 +362,9 @@ class TracerTest {
                                   .isEqualTo(linkedSpanContext.isRemote());
                               assertThat(link.getAttributes().size()).isEqualTo(0);
                             })));
-  }  @Test
+  }
+
+  @Test
   @DisplayName("capture span link with attributes")
   void captureSpanLinkWithAttributes() {
     // When
@@ -381,10 +381,7 @@ class TracerTest {
             .put("boolean", true)
             .build();
     Span testSpan =
-        tracer
-            .spanBuilder("test")
-            .addLink(linkedSpanContext, linkAttributes)
-            .startSpan();
+        tracer.spanBuilder("test").addLink(linkedSpanContext, linkAttributes).startSpan();
     testSpan.end();
 
     // Then
