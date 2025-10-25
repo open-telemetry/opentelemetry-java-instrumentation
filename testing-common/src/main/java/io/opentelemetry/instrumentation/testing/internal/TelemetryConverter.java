@@ -307,8 +307,8 @@ public class TelemetryConverter {
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
                     bytesToHex(logRecord.getSpanId().toByteArray()),
-                    TraceFlags.getDefault(),
-                    TraceState.getDefault()))
+                    TraceFlags.fromByte((byte) logRecord.getFlags()),
+                    TraceState.getDefault())) // logs proto doesn't have trace state
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
             .setAttributes(fromProto(logRecord.getAttributesList()));
@@ -333,8 +333,8 @@ public class TelemetryConverter {
                 SpanContext.create(
                     bytesToHex(logRecord.getTraceId().toByteArray()),
                     bytesToHex(logRecord.getSpanId().toByteArray()),
-                    TraceFlags.getDefault(),
-                    TraceState.getDefault()))
+                    TraceFlags.fromByte((byte) logRecord.getFlags()),
+                    TraceState.getDefault())) // logs proto doesn't have trace state
             .setSeverity(fromProto(logRecord.getSeverityNumber()))
             .setSeverityText(logRecord.getSeverityText())
             .setEventName(logRecord.getEventName())
