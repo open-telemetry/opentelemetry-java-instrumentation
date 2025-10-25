@@ -169,8 +169,7 @@ tasks {
   }
 
   if (findProperty("denyUnsafe") as Boolean) {
-    // Aws2SqsTracingTest uses org.elasticmq:elasticmq-rest-sqs_2.13 that uses unsafe. Future
-    // versions are likely to fix this.
+    // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
     withType<Test>().configureEach {
       enabled = false
     }

@@ -1,5 +1,3 @@
-import org.gradle.kotlin.dsl.implementation
-
 plugins {
   id("com.gradleup.shadow")
   id("otel.java-conventions")
