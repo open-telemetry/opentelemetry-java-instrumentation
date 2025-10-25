@@ -109,7 +109,7 @@ public class TelemetryConverter {
                       SpanContext.create(
                           traceId,
                           bytesToHex(span.getSpanId().toByteArray()),
-                          TraceFlags.getDefault(),
+                          TraceFlags.fromByte((byte) span.getFlags()),
                           extractTraceState(span.getTraceState())))
                   // TODO is it ok to use default trace flags and default trace state here?
                   .setParentSpanContext(
@@ -152,7 +152,7 @@ public class TelemetryConverter {
                                       SpanContext.create(
                                           bytesToHex(link.getTraceId().toByteArray()),
                                           bytesToHex(link.getSpanId().toByteArray()),
-                                          TraceFlags.getDefault(),
+                                          TraceFlags.fromByte((byte) link.getFlags()),
                                           extractTraceState(link.getTraceState())),
                                       fromProto(link.getAttributesList()),
                                       link.getDroppedAttributesCount() + link.getAttributesCount()))
