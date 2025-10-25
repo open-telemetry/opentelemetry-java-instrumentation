@@ -50,7 +50,8 @@ public class ApplicationSpanBuilder implements SpanBuilder {
   @Override
   @CanIgnoreReturnValue
   public SpanBuilder addLink(SpanContext applicationSpanContext, Attributes applicationAttributes) {
-    agentBuilder.addLink(Bridging.toAgent(applicationSpanContext));
+    agentBuilder.addLink(
+        Bridging.toAgent(applicationSpanContext), Bridging.toAgent(applicationAttributes));
     return this;
   }
 
