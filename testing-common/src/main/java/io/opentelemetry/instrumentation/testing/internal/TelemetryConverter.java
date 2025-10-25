@@ -51,7 +51,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.ArrayValue;
-import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValueList;
 import io.opentelemetry.testing.internal.proto.logs.v1.LogRecord;
