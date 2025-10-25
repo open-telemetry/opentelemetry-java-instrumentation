@@ -104,6 +104,12 @@ tasks {
   check {
     dependsOn(testStableSemconv, testExperimental)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 configurations.testRuntimeClasspath {

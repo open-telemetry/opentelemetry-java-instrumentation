@@ -329,6 +329,7 @@ jobs:
           -PtestJavaVersion=${{ matrix.test-java-version }}
           -PtestJavaVM=${{ matrix.vm }}
           -PtestIndy=${{ matrix.test-indy }}
+          -PdenyUnsafe=${{ matrix.test-java-version >= 23 && 'true' || 'false' }}
           -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
           -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}

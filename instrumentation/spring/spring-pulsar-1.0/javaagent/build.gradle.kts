@@ -71,6 +71,12 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 // spring 6 requires java 17

@@ -71,4 +71,10 @@ tasks {
 
     systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.toString())
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }

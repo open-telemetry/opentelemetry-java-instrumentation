@@ -64,6 +64,12 @@ tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

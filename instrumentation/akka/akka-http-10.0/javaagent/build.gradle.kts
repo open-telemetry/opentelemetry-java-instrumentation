@@ -71,6 +71,12 @@ tasks {
   check {
     dependsOn(testing.suites)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
 
 if (findProperty("testLatestDeps") as Boolean) {

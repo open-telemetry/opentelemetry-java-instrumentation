@@ -57,4 +57,10 @@ tasks {
   check {
     dependsOn(testStableSemconv)
   }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
+  }
 }
