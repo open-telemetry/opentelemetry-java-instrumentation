@@ -29,7 +29,6 @@ class DubboHeadersGetterTest {
   @Test
   void testKeys() throws Exception {
     when(context.getUrl()).thenReturn(new URL("http", "localhost", 1));
-    when(context.getRemoteAddress()).thenReturn(new InetSocketAddress(1));
     when(context.getLocalAddress()).thenReturn(new InetSocketAddress(1));
 
     // for latest dep tests call getObjectAttachments, otherwise call getAttachments
