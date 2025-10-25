@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.SQLFeatureNotSupportedException;
 import java.sql.SQLWarning;
 import java.sql.Statement;
 import java.util.ArrayList;
@@ -329,7 +330,22 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
 
   @Override
   public long[] executeLargeBatch() throws SQLException {
-    return wrapBatchCall(delegate::executeLargeBatch);
+    return wrapBatchCall(
+        () -> {
+          try {
+            return delegate.executeLargeBatch();
+          } catch (UnsupportedOperationException
+              | SQLFeatureNotSupportedException
+              | AbstractMethodError ignored) {
+            // Older drivers rely on the default executeLargeBatch implementation, which throws.
+            int[] batchResult = delegate.executeBatch();
+            long[] converted = new long[batchResult.length];
+            for (int index = 0; index < batchResult.length; index++) {
+              converted[index] = batchResult[index];
+            }
+            return converted;
+          }
+        });
   }
 
   @Override
