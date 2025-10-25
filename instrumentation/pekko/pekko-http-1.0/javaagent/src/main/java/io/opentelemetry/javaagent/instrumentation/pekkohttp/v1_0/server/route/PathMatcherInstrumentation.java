@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -41,7 +41,7 @@ public class PathMatcherInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Uri.Path prefix, @Advice.Return PathMatcher<?> result) {
       // store the path being matched inside a VirtualField on the given matcher, so it can be used
       // for constructing the route
-      VirtualField.find(PathMatcher.class, String.class).set(result, prefix.toString());
+      PREFIX.set(result, prefix.toString());
     }
   }
 }
