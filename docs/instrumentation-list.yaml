@@ -4085,6 +4085,7 @@ libraries:
           type: STRING
   grizzly:
   - name: grizzly-2.3
+    display_name: Eclipse Grizzly
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for Grizzly.
     semantic_conventions:
@@ -4110,11 +4111,6 @@ libraries:
     - name: otel.instrumentation.http.server.capture-response-headers
       description: List of HTTP response headers to capture in HTTP server telemetry.
       type: list
-      default: ''
-    - name: otel.instrumentation.common.peer-service-mapping
-      description: Used to specify a mapping from host names or IP addresses to peer
-        services.
-      type: map
       default: ''
     - name: otel.instrumentation.http.server.emit-experimental-telemetry
       description: |
@@ -4170,8 +4166,14 @@ libraries:
           type: STRING
   grpc:
   - name: grpc-1.6
-    description: This instrumentation enables RPC client spans and metrics, and RPC
-      server spans and metrics for gRPC version 1.6 and above.
+    display_name: gRPC
+    description: This instrumentation enables RPC client and RPC server spans and
+      metrics for gRPC.
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_CLIENT_METRICS
+    - RPC_SERVER_SPANS
+    - RPC_SERVER_METRICS
     library_link: https://github.com/grpc/grpc-java
     source_path: instrumentation/grpc-1.6
     scope:
@@ -4513,7 +4515,10 @@ libraries:
       - com.google.guava:guava:10.0
   gwt:
   - name: gwt-2.0
+    display_name: GWT
     description: This instrumentation enables RPC server spans for GWT RPC requests.
+    semantic_conventions:
+    - RPC_SERVER_SPANS
     library_link: https://www.gwtproject.org/
     source_path: instrumentation/gwt-2.0
     scope:
@@ -4742,8 +4747,11 @@ libraries:
       - org.hibernate.reactive:hibernate-reactive-core:(,)
   hikaricp:
   - name: hikaricp-3.0
+    display_name: HikariCP
     description: |
-      This instrumentation provides database client metrics for HikariCP 3.0+ connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
+      This instrumentation generates database client metrics for HikariCP connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/brettwooldridge/HikariCP
     source_path: instrumentation/hikaricp-3.0
     scope:
@@ -4883,8 +4891,12 @@ libraries:
           type: STRING
   http:
   - name: http-url-connection
+    display_name: HttpURLConnection
     description: |
-      This instrumentation enables the generation of HTTP client spans and HTTP client metrics for requests made using `java.net.HttpURLConnection`.
+      This instrumentation enables HTTP client spans and HTTP client metrics for requests made using java.net.HttpURLConnection.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html
     source_path: instrumentation/http-url-connection
     scope:
@@ -4957,8 +4969,8 @@ libraries:
           type: STRING
   hystrix:
   - name: hystrix-1.4
-    description: This instrumentation enables the generation of spans for Hystrix
-      command executions and fallbacks.
+    description: This instrumentation enables spans for Hystrix command executions
+      and fallbacks.
     library_link: https://github.com/Netflix/Hystrix
     source_path: instrumentation/hystrix-1.4
     scope:
@@ -4989,8 +5001,12 @@ libraries:
           type: STRING
   influxdb:
   - name: influxdb-2.4
-    description: This instrumentation enables the generation of database client spans
-      and metrics for the InfluxDB Java client.
+    display_name: InfluxDB Client
+    description: This instrumentation enables database client spans and metrics for
+      the InfluxDB Java client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/influxdata/influxdb-java
     source_path: instrumentation/influxdb-2.4
     scope:
