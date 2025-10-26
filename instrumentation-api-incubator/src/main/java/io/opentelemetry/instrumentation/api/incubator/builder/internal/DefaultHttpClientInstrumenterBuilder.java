@@ -265,7 +265,9 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   public <BUILDERREQUEST, BUILDERRESPONSE>
       InstrumenterBuilder<BUILDERREQUEST, BUILDERRESPONSE> instrumenterBuilder(
           SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
-    return Instrumenter.builder(openTelemetry, instrumentationName, spanNameExtractor);
+    return Instrumenter.<BUILDERREQUEST, BUILDERRESPONSE>builder(
+            openTelemetry, instrumentationName, spanNameExtractor)
+        .setSchemaUrl(SchemaUrls.V1_37_0);
   }
 
   @CanIgnoreReturnValue
