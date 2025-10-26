@@ -3,19 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.kafkaclients.v2_6;
-
-import static java.util.Collections.emptyList;
+package io.opentelemetry.instrumentation.kafkaclients.v2_6.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -23,43 +20,36 @@ import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.common.TopicPartition;
 
 /**
- * A ConsumerInterceptor that adds tracing capability. Add this interceptor's class name or class
- * via ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Consumer's properties to get it
- * instantiated and used. See more details on ConsumerInterceptor usage in its Javadoc.
+ * A ConsumerInterceptor that adds OpenTelemetry instrumentation.
  *
- * @deprecated Use {@link KafkaTelemetry#consumerInterceptorConfigProperties()} instead.
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
-@Deprecated
-public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
+public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setMessagingReceiveInstrumentationEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
+  public static final String CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER =
+      "opentelemetry.kafka-consumer-telemetry.supplier";
 
+  @Nullable private KafkaConsumerTelemetry consumerTelemetry;
   private String consumerGroup;
   private String clientId;
 
   @Override
   @CanIgnoreReturnValue
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
+    if (consumerTelemetry == null) {
+      return records;
+    }
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
     Context receiveContext =
-        telemetry
-            .getConsumerTelemetry()
-            .buildAndFinishSpan(records, consumerGroup, clientId, timer);
+        consumerTelemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
         KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
-    return telemetry.getConsumerTelemetry().addTracing(records, consumerContext);
+    return consumerTelemetry.addTracing(records, consumerContext);
   }
 
   @Override
@@ -73,6 +63,24 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     consumerGroup = Objects.toString(configs.get(ConsumerConfig.GROUP_ID_CONFIG), null);
     clientId = Objects.toString(configs.get(ConsumerConfig.CLIENT_ID_CONFIG), null);
 
-    // TODO: support experimental attributes config
+    KafkaConsumerTelemetrySupplier supplier =
+        getProperty(
+            configs,
+            CONFIG_KEY_KAFKA_CONSUMER_TELEMETRY_SUPPLIER,
+            KafkaConsumerTelemetrySupplier.class);
+    this.consumerTelemetry = supplier.get();
+  }
+
+  @SuppressWarnings("unchecked")
+  private static <T> T getProperty(Map<String, ?> configs, String key, Class<T> requiredType) {
+    Object value = configs.get(key);
+    if (value == null) {
+      throw new IllegalStateException("Missing required configuration property: " + key);
+    }
+    if (!requiredType.isInstance(value)) {
+      throw new IllegalStateException(
+          "Configuration property " + key + " is not instance of " + requiredType.getSimpleName());
+    }
+    return (T) value;
   }
 }
