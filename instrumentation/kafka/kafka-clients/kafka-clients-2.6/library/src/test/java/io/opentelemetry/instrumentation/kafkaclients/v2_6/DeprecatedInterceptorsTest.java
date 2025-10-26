@@ -28,18 +28,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
-class InterceptorsTest extends AbstractInterceptorsTest {
-
-  private static final KafkaTelemetry kafkaTelemetry =
-      KafkaTelemetry.builder(testing.getOpenTelemetry())
-          .setMessagingReceiveInstrumentationEnabled(true)
-          .setCapturedHeaders(singletonList("Test-Message-Header"))
-          .build();
-
-  @Override
-  protected KafkaTelemetry kafkaTelemetry() {
-    return kafkaTelemetry;
-  }
+class DeprecatedInterceptorsTest extends AbstractDeprecatedInterceptorsTest {
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
