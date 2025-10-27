@@ -27,7 +27,6 @@ import javax.sql.DataSource;
  */
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
-  private static final JdbcAttributesGetter dbAttributesGetter = new JdbcAttributesGetter();
 
   public static boolean captureQueryParameters() {
     return ConfigPropertiesUtil.getBoolean(
@@ -68,9 +67,9 @@ public final class JdbcInstrumenterFactory {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry,
             INSTRUMENTATION_NAME,
-            DbClientSpanNameExtractor.create(dbAttributesGetter))
+            DbClientSpanNameExtractor.create(JdbcAttributesGetter.INSTANCE))
         .addAttributesExtractor(
-            SqlClientAttributesExtractor.builder(dbAttributesGetter)
+            SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE)
                 .setStatementSanitizationEnabled(statementSanitizationEnabled)
                 .setCaptureQueryParameters(captureQueryParameters)
                 .build())
@@ -110,7 +109,7 @@ public final class JdbcInstrumenterFactory {
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
-        .addAttributesExtractor(SqlClientAttributesExtractor.builder(dbAttributesGetter).build())
+        .addAttributesExtractor(SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
