@@ -1,5 +1,8 @@
+display_name: HikariCP
 description: >
-  This instrumentation provides database client metrics for HikariCP 3.0+ connection pools. It
+  This instrumentation generates database client metrics for HikariCP connection pools. It
   reports metrics like connection timeouts, creation time, wait time, and usage time, along with
   connection pool statistics such as the number of active, idle, and pending connections.
 library_link: https://github.com/brettwooldridge/HikariCP
+semantic_conventions:
+  - DATABASE_POOL_METRICS

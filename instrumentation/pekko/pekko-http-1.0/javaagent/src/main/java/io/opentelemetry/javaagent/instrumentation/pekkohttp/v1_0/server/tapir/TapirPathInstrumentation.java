@@ -35,11 +35,12 @@ public class TapirPathInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit(
+    public static Object onExit(
         @Advice.Argument(0) ServerEndpoint<?, ?> endpoint,
-        @Advice.Return(readOnly = false) Function1<RequestContext, Future<RouteResult>> route) {
-      route = new RouteWrapper(endpoint, route);
+        @Advice.Return Function1<RequestContext, Future<RouteResult>> route) {
+      return new RouteWrapper(endpoint, route);
     }
   }
 }
