@@ -20,6 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import co.elastic.clients.elasticsearch.ElasticsearchAsyncClient;
@@ -118,6 +119,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -159,6 +161,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "PUT"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(
                                 URL_FULL,
                                 httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
@@ -220,6 +223,7 @@ class ElasticsearchClientTest {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                 span ->

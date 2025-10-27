@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPER
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_REDIS_DATABASE_INDEX;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -226,6 +227,7 @@ class VertxRedisClientTest {
         equalTo(DB_NAMESPACE, "1"),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(PEER_SERVICE, "test-peer-service"),
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };
@@ -237,6 +239,7 @@ class VertxRedisClientTest {
         equalTo(DB_REDIS_DATABASE_INDEX, 1),
         equalTo(SERVER_ADDRESS, host),
         equalTo(SERVER_PORT, port),
+        equalTo(PEER_SERVICE, "test-peer-service"),
         equalTo(NETWORK_PEER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, ip)
       };

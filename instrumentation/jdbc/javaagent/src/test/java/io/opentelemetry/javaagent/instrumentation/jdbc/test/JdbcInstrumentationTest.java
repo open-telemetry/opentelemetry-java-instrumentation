@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static java.util.Arrays.asList;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -1108,6 +1109,7 @@ class JdbcInstrumentationTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "testdb://localhost"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1194,6 +1196,7 @@ class JdbcInstrumentationTest {
                             equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                             equalTo(maybeStable(DB_OPERATION), operation),
                             equalTo(maybeStable(DB_SQL_TABLE), table),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1317,6 +1320,7 @@ class JdbcInstrumentationTest {
                             equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM table"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "table"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
