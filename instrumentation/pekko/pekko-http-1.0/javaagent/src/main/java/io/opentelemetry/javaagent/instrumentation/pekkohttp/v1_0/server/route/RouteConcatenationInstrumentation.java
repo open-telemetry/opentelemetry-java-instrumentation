@@ -11,6 +11,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.scaladsl.server.RequestContext;
@@ -33,7 +35,7 @@ public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
-    @Advice.AssignReturned.ToArguments(@Advice.AssignReturned.ToArguments.ToArgument(0))
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object onEnter(
         @Advice.Argument(0) Function1<RequestContext, Future<RouteResult>> route) {
