@@ -1072,6 +1072,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
+              // Check for peer.service when running with javaagent instrumentation
+              String distroName =
+                  span.actual()
+                      .getResource()
+                      .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
+              if ("opentelemetry-java-instrumentation".equals(distroName)) {
+                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
+                if (expectedPeerService != null) {
+                  assertThat(attrs)
+                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
+                }
+              }
+
               // we're opting out of these attributes in the new semconv
               assertThat(attrs)
                   .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
@@ -1152,21 +1165,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                     .containsEntry(HttpAttributes.HTTP_REQUEST_RESEND_COUNT, (long) resendCount);
               } else {
                 assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
-              }
-            })
-        .satisfies(
-            spanData -> {
-              // Check for peer.service when running with javaagent instrumentation
-              String distroName =
-                  spanData
-                      .getResource()
-                      .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
-              if ("opentelemetry-java-instrumentation".equals(distroName)) {
-                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
-                if (expectedPeerService != null) {
-                  assertThat(spanData.getAttributes())
-                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
-                }
               }
             });
   }
