@@ -13,6 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.r2dbc.spi.ConnectionFactory;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -43,7 +45,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
   protected ConnectionFactory createProxyConnectionFactory(
       ConnectionFactoryOptions connectionFactoryOptions) {
     // Create peer service mapping for testing
-    java.util.Map<String, String> peerServiceMapping = new java.util.HashMap<>();
+    Map<String, String> peerServiceMapping = new HashMap<>();
     peerServiceMapping.put("127.0.0.1", "test-peer-service");
     peerServiceMapping.put("localhost", "test-peer-service");
     peerServiceMapping.put("192.0.2.1", "test-peer-service");
