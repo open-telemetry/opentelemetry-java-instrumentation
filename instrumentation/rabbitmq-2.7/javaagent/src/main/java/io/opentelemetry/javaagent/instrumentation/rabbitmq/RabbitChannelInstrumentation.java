@@ -167,11 +167,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
     public static AMQP.BasicProperties setSpanNameAddHeaders(
         @Advice.Argument(0) String exchange,
         @Advice.Argument(1) String routingKey,
-        @Advice.Argument(4) AMQP.BasicProperties props,
+        @Advice.Argument(4) AMQP.BasicProperties originalProps,
         @Advice.Argument(5) byte[] body) {
       Context context = Java8BytecodeBridge.currentContext();
       Span span = Java8BytecodeBridge.spanFromContext(context);
-      AMQP.BasicProperties modifiedProps = props;
+      AMQP.BasicProperties props = originalProps;
 
       if (span.getSpanContext().isValid()) {
         helper().onPublish(span, exchange, routingKey);
@@ -181,36 +181,36 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         // This is the internal behavior when props are null.  We're just doing it earlier now.
-        if (modifiedProps == null) {
-          modifiedProps = MessageProperties.MINIMAL_BASIC;
+        if (props == null) {
+          props = MessageProperties.MINIMAL_BASIC;
         }
-        helper().onProps(context, span, modifiedProps);
+        helper().onProps(context, span, props);
 
         // We need to copy the BasicProperties and provide a header map we can modify
-        Map<String, Object> headers = modifiedProps.getHeaders();
+        Map<String, Object> headers = props.getHeaders();
         headers = (headers == null) ? new HashMap<>() : new HashMap<>(headers);
 
         helper().inject(context, headers, MapSetter.INSTANCE);
 
-        modifiedProps =
+        props =
             new AMQP.BasicProperties(
-                modifiedProps.getContentType(),
-                modifiedProps.getContentEncoding(),
+                props.getContentType(),
+                props.getContentEncoding(),
                 headers,
-                modifiedProps.getDeliveryMode(),
-                modifiedProps.getPriority(),
-                modifiedProps.getCorrelationId(),
-                modifiedProps.getReplyTo(),
-                modifiedProps.getExpiration(),
-                modifiedProps.getMessageId(),
-                modifiedProps.getTimestamp(),
-                modifiedProps.getType(),
-                modifiedProps.getUserId(),
-                modifiedProps.getAppId(),
-                modifiedProps.getClusterId());
+                props.getDeliveryMode(),
+                props.getPriority(),
+                props.getCorrelationId(),
+                props.getReplyTo(),
+                props.getExpiration(),
+                props.getMessageId(),
+                props.getTimestamp(),
+                props.getType(),
+                props.getUserId(),
+                props.getAppId(),
+                props.getClusterId());
       }
 
-      return modifiedProps;
+      return props;
     }
   }
 
