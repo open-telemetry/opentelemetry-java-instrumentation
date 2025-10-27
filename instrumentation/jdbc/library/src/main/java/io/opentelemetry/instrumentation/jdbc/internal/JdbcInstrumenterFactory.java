@@ -109,7 +109,8 @@ public final class JdbcInstrumenterFactory {
       boolean enabled) {
     return Instrumenter.<DbRequest, Void>builder(
             openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
-        .addAttributesExtractor(SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
+        .addAttributesExtractor(
+            SqlClientAttributesExtractor.builder(JdbcAttributesGetter.INSTANCE).build())
         .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
         .addAttributesExtractors(extractors)
         .setEnabled(enabled)
