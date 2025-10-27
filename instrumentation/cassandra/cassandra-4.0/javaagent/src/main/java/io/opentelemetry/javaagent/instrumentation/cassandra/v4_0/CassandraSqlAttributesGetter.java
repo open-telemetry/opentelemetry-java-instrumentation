@@ -9,14 +9,11 @@ import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
-import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
-import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import java.net.InetAddress;
 import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
+import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -55,29 +52,17 @@ final class CassandraSqlAttributesGetter
   @Nullable
   @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      CassandraRequest request, @Nullable ExecutionInfo response) {
-    if (response == null) {
+      CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
+    if (executionInfo == null) {
       return null;
     }
-    Node coordinator = response.getCoordinator();
+    Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
     }
-    EndPoint endPoint = coordinator.getEndPoint();
-    if (endPoint instanceof DefaultEndPoint) {
-      InetSocketAddress address = ((DefaultEndPoint) endPoint).resolve();
-      if (address != null && address.getAddress() == null) {
-        // Address is unresolved, need to resolve it explicitly
-        try {
-          InetAddress resolved = InetAddress.getByName(address.getHostString());
-          return new InetSocketAddress(resolved, address.getPort());
-        } catch (UnknownHostException e) {
-          // If resolution fails, return the unresolved address anyway
-          return address;
-        }
-      }
-      return address;
-    }
-    return null;
+    // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
+    // at least in the only current EndPoint implementation (DefaultEndPoint)
+    SocketAddress address = coordinator.getEndPoint().resolve();
+    return address instanceof InetSocketAddress ? (InetSocketAddress) address : null;
   }
 }
