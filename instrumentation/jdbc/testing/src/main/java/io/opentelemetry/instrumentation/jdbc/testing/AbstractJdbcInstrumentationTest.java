@@ -25,6 +25,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -88,6 +89,10 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   protected DataSource wrap(DataSource dataSource) {
     return dataSource;
+  }
+
+  protected boolean hasPeerService() {
+    return true;
   }
 
   private static final String dbName = "jdbcUnitTest";
@@ -1166,6 +1171,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_CONNECTION_STRING,
                                     emitStableDatabaseSemconv() ? null : "testdb://localhost"),
+                                equalTo(PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1254,6 +1260,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(maybeStable(DB_STATEMENT), sanitizedQuery),
                                 equalTo(maybeStable(DB_OPERATION), operation),
                                 equalTo(maybeStable(DB_SQL_TABLE), table),
+                                equalTo(PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1379,6 +1386,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(maybeStable(DB_STATEMENT), "SELECT * FROM table"),
                                 equalTo(maybeStable(DB_OPERATION), "SELECT"),
                                 equalTo(maybeStable(DB_SQL_TABLE), "table"),
+                                equalTo(PEER_SERVICE, hasPeerService() ? "test-peer-service" : null),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 

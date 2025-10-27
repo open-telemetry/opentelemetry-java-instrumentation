@@ -39,4 +39,9 @@ class JdbcInstrumentationTest extends AbstractJdbcInstrumentationTest {
   protected DataSource wrap(DataSource dataSource) {
     return telemetry.wrap(dataSource);
   }
+
+  @Override
+  protected boolean hasPeerService() {
+    return false;
+  }
 }
