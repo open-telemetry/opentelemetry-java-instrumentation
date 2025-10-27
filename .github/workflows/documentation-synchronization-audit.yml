@@ -1,9 +1,7 @@
 name: Documentation Synchronization Audit (opentelemetry.io)
 
 on:
-  push:
-    tags:
-      - 'v*' # run on release tags
+  workflow_call:
   workflow_dispatch:
 
 permissions:

@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractorBuilder;
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import org.apache.http.HttpResponse;
 
 /** A builder for {@link ApacheHttpClientTelemetry}. */
@@ -89,13 +90,27 @@ public final class ApacheHttpClientTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
       Function<
               SpanNameExtractor<ApacheHttpClientRequest>,
               SpanNameExtractor<ApacheHttpClientRequest>>
           spanNameExtractorTransformer) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<ApacheHttpClientRequest>>)
+            spanNameExtractorTransformer::apply);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ApacheHttpClientTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<ApacheHttpClientRequest>> spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }

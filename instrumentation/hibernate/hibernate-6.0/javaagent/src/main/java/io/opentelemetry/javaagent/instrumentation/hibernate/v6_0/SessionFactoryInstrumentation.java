@@ -45,7 +45,8 @@ public class SessionFactoryInstrumentation implements TypeInstrumentation {
                     namedOneOf(
                         "org.hibernate.Session",
                         "org.hibernate.StatelessSession",
-                        "org.hibernate.internal.SessionImpl"))),
+                        "org.hibernate.internal.SessionImpl",
+                        "org.hibernate.engine.spi.SessionImplementor"))),
         SessionFactoryInstrumentation.class.getName() + "$SessionFactoryAdvice");
   }
 

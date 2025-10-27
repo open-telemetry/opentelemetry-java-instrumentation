@@ -1,5 +1,8 @@
 description: This instrumentation enables database client spans and database client metrics for Apache Geode cache operations.
 library_link: https://geode.apache.org/
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled
     description: Enables statement sanitization for database queries.

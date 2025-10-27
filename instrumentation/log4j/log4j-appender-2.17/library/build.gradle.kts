@@ -8,6 +8,7 @@ dependencies {
 
   implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure"))
 
+  testImplementation(project(":instrumentation:log4j:log4j-appender-2.17:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testLibrary("com.lmax:disruptor:3.3.4")
 

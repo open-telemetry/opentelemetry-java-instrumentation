@@ -148,7 +148,7 @@ testing {
         implementation("software.amazon.awssdk:s3:" + if (latestDepTest) "latest.release" else "2.27.21")
         implementation("software.amazon.awssdk.crt:aws-crt:" + if (latestDepTest) "latest.release" else "0.30.11")
         implementation(project(":instrumentation:aws-sdk:aws-sdk-2.2:library"))
-        implementation("org.testcontainers:localstack")
+        implementation("org.testcontainers:testcontainers-localstack")
       }
     }
 

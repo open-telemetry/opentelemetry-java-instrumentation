@@ -47,9 +47,9 @@ jobs:
           exempt-issue-labels: "needs author feedback"
           days-before-pr-stale: -1
           days-before-pr-close: -1
-          days-before-stale: 365
-          days-before-close: 0
-          close-issue-label: stale
+          days-before-issue-stale: 365
+          days-before-issue-close: 0
+          stale-issue-label: stale
           close-issue-message: >
             Since there has been no activity on this enhancement for the past year we are closing it to help maintain our backlog.
             Anyone who would like to work on it is still welcome to do so, and we can re-open it at that time.
