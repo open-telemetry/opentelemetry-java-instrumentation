@@ -21,7 +21,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.lang.reflect.Field;
@@ -31,7 +30,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -130,8 +128,7 @@ abstract class AbstractOpenTelemetryAppenderTest {
                   .hasSeverityText("INFO")
                   .hasAttributesSatisfyingExactly(assertions);
 
-              LogRecordData logRecordData = AssertAccess.getActual(logRecord);
-              assertThat(logRecordData.getTimestampEpochNanos())
+              assertThat(logRecord.actual().getTimestampEpochNanos())
                   .isGreaterThanOrEqualTo(TimeUnit.MILLISECONDS.toNanos(start.toEpochMilli()))
                   .isLessThanOrEqualTo(
                       TimeUnit.SECONDS.toNanos(now.getEpochSecond()) + now.getNano());
