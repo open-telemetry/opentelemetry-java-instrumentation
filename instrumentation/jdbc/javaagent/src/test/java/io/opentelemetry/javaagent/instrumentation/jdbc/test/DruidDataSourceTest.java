@@ -48,7 +48,7 @@ class DruidDataSourceTest {
 
     // Initialize the connection pool to trigger H2's internal schema setup
     // This prevents internal H2 spans from appearing in the test assertions
-    dataSource.getConnection().close();
+    testing.runWithSpan("parent", () -> dataSource.getConnection().close());
     testing.waitForTraces(1);
     testing.clearData();
   }
