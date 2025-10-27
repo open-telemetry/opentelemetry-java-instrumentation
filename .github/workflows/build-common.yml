@@ -247,6 +247,7 @@ jobs:
           - 17
           - 21
           - 25 # renovate: datasource=java-version
+          - 25-deny-unsafe
         vm:
           - hotspot
           - openj9
@@ -260,6 +261,8 @@ jobs:
           - true
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
+          - test-java-version: 25-deny-unsafe
+            vm: openj9
       fail-fast: false
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -273,7 +276,7 @@ jobs:
         with:
           # using zulu because new releases get published quickly
           distribution: ${{ matrix.vm == 'hotspot' && 'zulu' || 'adopt-openj9'}}
-          java-version: ${{ matrix.test-java-version }}
+          java-version: ${{ matrix.test-java-version != '25-deny-unsafe' && matrix.test-java-version || '25' }}
 
       - name: Set up JDK for running Gradle
         uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
@@ -329,7 +332,7 @@ jobs:
           -PtestJavaVersion=${{ matrix.test-java-version }}
           -PtestJavaVM=${{ matrix.vm }}
           -PtestIndy=${{ matrix.test-indy }}
-          -PdenyUnsafe=${{ matrix.test-java-version >= 23 && 'true' || 'false' }}
+          -PdenyUnsafe=${{ matrix.test-java-version == '25-deny-unsafe' && 'true' || 'false' }}
           -Porg.gradle.java.installations.paths=${{ steps.setup-test-java.outputs.path }}
           -Porg.gradle.java.installations.auto-download=false
           ${{ inputs.no-build-cache && ' --no-build-cache' || '' }}
