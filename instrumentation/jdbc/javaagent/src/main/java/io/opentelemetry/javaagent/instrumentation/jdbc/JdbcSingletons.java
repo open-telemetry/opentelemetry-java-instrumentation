@@ -39,7 +39,7 @@ public final class JdbcSingletons {
   static {
     AttributesExtractor<DbRequest, Void> peerServiceExtractor =
         PeerServiceAttributesExtractor.create(
-            new JdbcAttributesGetter(), AgentCommonConfig.get().getPeerServiceResolver());
+            JdbcAttributesGetter.INSTANCE, AgentCommonConfig.get().getPeerServiceResolver());
 
     CAPTURE_QUERY_PARAMETERS =
         AgentInstrumentationConfig.get()

@@ -18,6 +18,8 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
+  public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
+
   @Nullable
   @Override
   public String getDbSystem(DbRequest request) {

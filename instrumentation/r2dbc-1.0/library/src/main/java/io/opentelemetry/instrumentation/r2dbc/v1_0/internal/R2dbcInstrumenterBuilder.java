@@ -45,7 +45,6 @@ public final class R2dbcInstrumenterBuilder {
   public Instrumenter<DbExecution, Void> build(
       UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer,
       boolean statementSanitizationEnabled) {
-
     SpanNameExtractor<DbExecution> spanNameExtractor =
         spanNameExtractorTransformer.apply(
             DbClientSpanNameExtractor.create(R2dbcSqlAttributesGetter.INSTANCE));
