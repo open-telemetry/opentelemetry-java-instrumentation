@@ -283,13 +283,11 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String queue,
         @Advice.Argument(6) Consumer consumer) {
       // We have to save off the queue name here because it isn't available to the consumer later.
-      Consumer modifiedConsumer = consumer;
-      if (modifiedConsumer != null && !(modifiedConsumer instanceof TracedDelegatingConsumer)) {
-        modifiedConsumer =
-            new TracedDelegatingConsumer(queue, modifiedConsumer, channel.getConnection());
+      if (consumer != null && !(consumer instanceof TracedDelegatingConsumer)) {
+        return new TracedDelegatingConsumer(queue, consumer, channel.getConnection());
       }
 
-      return modifiedConsumer;
+      return consumer;
     }
   }
 }
