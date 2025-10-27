@@ -129,22 +129,14 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                         equalTo(
                                             AttributeKey.stringKey("exception.type"),
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
-                                        satisfies(
+                                        equalTo(
                                             AttributeKey.stringKey("exception.message"),
-                                            val ->
-                                                val.isIn(
                                                     "Connection refused: "
                                                         + host
                                                         + "/"
                                                         + ip
                                                         + ":"
-                                                        + incorrectPort,
-                                                    "Connection refused: getsockopt: "
-                                                        + host
-                                                        + "/"
-                                                        + ip
-                                                        + ":"
-                                                        + incorrectPort)),
+                                                + incorrectPort),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))));
