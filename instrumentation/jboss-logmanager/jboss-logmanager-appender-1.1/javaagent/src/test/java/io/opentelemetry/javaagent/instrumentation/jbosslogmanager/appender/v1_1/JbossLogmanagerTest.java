@@ -19,7 +19,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.time.Instant;
@@ -27,7 +26,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
-import org.assertj.core.api.AssertAccess;
 import org.jboss.logmanager.Level;
 import org.jboss.logmanager.LogContext;
 import org.jboss.logmanager.Logger;
@@ -166,8 +164,7 @@ class JbossLogmanagerTest {
             }
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
-            LogRecordData logRecordData = AssertAccess.getActual(logRecord);
-            assertThat(logRecordData.getTimestampEpochNanos())
+            assertThat(logRecord.actual().getTimestampEpochNanos())
                 .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
                 .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
           });
