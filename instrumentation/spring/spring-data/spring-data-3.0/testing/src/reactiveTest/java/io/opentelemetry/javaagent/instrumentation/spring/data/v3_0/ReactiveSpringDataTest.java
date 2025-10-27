@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
@@ -91,6 +92,7 @@ class ReactiveSpringDataTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "h2:mem://localhost"),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(stringKey("peer.service"), "test-peer-service"))));
   }
 }
