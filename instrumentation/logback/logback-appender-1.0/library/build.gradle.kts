@@ -40,6 +40,7 @@ dependencies {
     }
   }
 
+  testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 

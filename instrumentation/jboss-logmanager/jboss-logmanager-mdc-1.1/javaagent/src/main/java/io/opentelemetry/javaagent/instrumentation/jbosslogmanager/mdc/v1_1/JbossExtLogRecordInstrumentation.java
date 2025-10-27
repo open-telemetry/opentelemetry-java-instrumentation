@@ -12,14 +12,13 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.jboss.logmanager.ExtLogRecord;
@@ -50,63 +49,59 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetMdcAdvice {
 
+    @Nullable
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
+    public static String onExit(
         @Advice.This ExtLogRecord record,
         @Advice.Argument(0) String key,
-        @Advice.Return(readOnly = false) String value) {
-      if (AgentCommonConfig.get().getTraceIdKey().equals(key)
-          || AgentCommonConfig.get().getSpanIdKey().equals(key)
-          || AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
-        if (value != null) {
-          // Assume already instrumented event if traceId/spanId/sampled is present.
-          return;
-        }
+        @Advice.Return @Nullable String value) {
 
-        Context context = VirtualField.find(ExtLogRecord.class, Context.class).get(record);
-        if (context == null) {
-          return;
-        }
-        SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
-        if (!spanContext.isValid()) {
-          return;
-        }
+      boolean traceId = AgentCommonConfig.get().getTraceIdKey().equals(key);
+      boolean spanId = AgentCommonConfig.get().getSpanIdKey().equals(key);
+      boolean traceFlags = AgentCommonConfig.get().getTraceFlagsKey().equals(key);
 
-        if (AgentCommonConfig.get().getTraceIdKey().equals(key)) {
-          value = spanContext.getTraceId();
-        }
-        if (AgentCommonConfig.get().getSpanIdKey().equals(key)) {
-          value = spanContext.getSpanId();
-        }
-        if (AgentCommonConfig.get().getTraceFlagsKey().equals(key)) {
-          value = spanContext.getTraceFlags().asHex();
-        }
+      if (!traceId && !spanId && !traceFlags) {
+        return value;
       }
+      if (value != null) {
+        // Assume already instrumented event if traceId/spanId/sampled is present.
+        return value;
+      }
+
+      SpanContext spanContext = JbossLogManagerHelper.getSpanContext(record);
+      if (!spanContext.isValid()) {
+        return value;
+      }
+
+      if (traceId) {
+        return spanContext.getTraceId();
+      }
+      if (spanId) {
+        return spanContext.getSpanId();
+      }
+      // traceFlags == true
+      return spanContext.getTraceFlags().asHex();
     }
   }
 
   @SuppressWarnings("unused")
   public static class GetMdcCopyAdvice {
 
+    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(
-        @Advice.This ExtLogRecord record,
-        @Advice.Return(readOnly = false) Map<String, String> value) {
+    public static Map<String, String> onExit(
+        @Advice.This ExtLogRecord record, @Advice.Return Map<String, String> value) {
 
       if (value.containsKey(AgentCommonConfig.get().getTraceIdKey())
           && value.containsKey(AgentCommonConfig.get().getSpanIdKey())
           && value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
-        return;
+        return value;
       }
 
-      Context context = VirtualField.find(ExtLogRecord.class, Context.class).get(record);
-      if (context == null) {
-        return;
-      }
-
-      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      SpanContext spanContext = JbossLogManagerHelper.getSpanContext(record);
       if (!spanContext.isValid()) {
-        return;
+        return value;
       }
 
       if (!value.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
@@ -120,6 +115,7 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
       if (!value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
         value.put(AgentCommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
       }
+      return value;
     }
   }
 }
