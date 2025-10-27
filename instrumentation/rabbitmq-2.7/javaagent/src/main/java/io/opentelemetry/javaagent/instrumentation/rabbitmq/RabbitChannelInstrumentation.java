@@ -245,8 +245,7 @@ public class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         // can't create span and put into scope in method enter above, because can't add parent
-        // after
-        // span creation
+        // after span creation
         InstrumenterUtil.startAndEnd(
             receiveInstrumenter(),
             parentContext,
