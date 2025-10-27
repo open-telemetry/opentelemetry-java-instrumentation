@@ -43,13 +43,6 @@ final class ClickHouseAttributesGetter
     return DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
   }
 
-  @Deprecated
-  @Nullable
-  @Override
-  public String getUser(ClickHouseDbRequest request) {
-    return null;
-  }
-
   @Nullable
   @Override
   public String getDbNamespace(ClickHouseDbRequest request) {
@@ -58,13 +51,6 @@ final class ClickHouseAttributesGetter
       return null;
     }
     return dbName;
-  }
-
-  @Deprecated
-  @Nullable
-  @Override
-  public String getConnectionString(ClickHouseDbRequest request) {
-    return null;
   }
 
   @Nullable

@@ -22,6 +22,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
 import java.util.Map;
@@ -69,6 +71,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private static final String SQL_CALL = "CALL";
 
   private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
   private final boolean captureQueryParameters;
@@ -83,6 +87,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     // capturing query parameters disables statement sanitization
     this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
+    internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
+    serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
   @SuppressWarnings("deprecation") // until old db semconv are dropped
@@ -90,10 +96,10 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     // Common attributes
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(
-          attributes,
-          DB_SYSTEM_NAME,
-          SemconvStability.stableDbSystemName(getter.getDbSystem(request)));
+      String dbSystem = getter.getDbSystem(request);
+      if (dbSystem != null) {
+        internalSet(attributes, DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbSystem));
+      }
       internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
     }
     if (SemconvStability.emitOldDatabaseSemconv()) {
@@ -102,6 +108,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
       internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
     }
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
 
     // SQL-specific attributes
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
@@ -195,6 +202,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+    internalNetworkExtractor.onEnd(attributes, request, response);
     if (SemconvStability.emitStableDatabaseSemconv()) {
       if (error != null) {
         internalSet(attributes, ERROR_TYPE, error.getClass().getName());

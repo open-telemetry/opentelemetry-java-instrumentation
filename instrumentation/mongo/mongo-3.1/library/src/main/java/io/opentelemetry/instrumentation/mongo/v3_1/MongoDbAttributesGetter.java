@@ -55,13 +55,6 @@ class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStarted
     return MONGODB;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(CommandStartedEvent event) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(CommandStartedEvent event) {

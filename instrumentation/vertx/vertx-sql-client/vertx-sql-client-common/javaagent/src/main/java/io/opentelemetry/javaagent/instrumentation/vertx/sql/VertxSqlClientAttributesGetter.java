@@ -41,11 +41,16 @@ enum VertxSqlClientAttributesGetter
     return request.getDatabase();
   }
 
-  @Deprecated
-  @Override
   @Nullable
-  public String getConnectionString(VertxSqlClientRequest request) {
-    return null;
+  @Override
+  public String getServerAddress(VertxSqlClientRequest request) {
+    return request.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(VertxSqlClientRequest request) {
+    return request.getPort();
   }
 
   @Override
