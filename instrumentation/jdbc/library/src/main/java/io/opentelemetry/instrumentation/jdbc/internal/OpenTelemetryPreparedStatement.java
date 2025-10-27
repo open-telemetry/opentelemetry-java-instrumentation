@@ -71,6 +71,28 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
     }
   }
 
+  private void putParameterIfRecognizedType(int index, Object value) {
+    if (this.captureQueryParameters && value != null) {
+      String str = null;
+
+      if (value instanceof Boolean
+          // Byte, Short, Int, Long, Float, Double, BigDecimal
+          || value instanceof Number
+          || value instanceof String
+          || value instanceof Date
+          || value instanceof Time
+          || value instanceof Timestamp
+          || value instanceof URL
+          || value instanceof RowId) {
+        str = value.toString();
+      }
+
+      if (str != null) {
+        parameters.put(Integer.toString(index - 1), str);
+      }
+    }
+  }
+
   @Override
   public ResultSet executeQuery() throws SQLException {
     return OpenTelemetryResultSet.wrap(wrapCall(query, delegate::executeQuery), this);
@@ -244,14 +266,14 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType);
-    putParameter(parameterIndex, x);
+    putParameterIfRecognizedType(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
     delegate.setObject(parameterIndex, x);
-    putParameter(parameterIndex, x);
+    putParameterIfRecognizedType(parameterIndex, x);
   }
 
   @Override

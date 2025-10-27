@@ -156,7 +156,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       String str = null;
 
       if (value instanceof Boolean
-          // Short, Int, Long, Float, Double, BigDecimal
+          // Byte, Short, Int, Long, Float, Double, BigDecimal
           || value instanceof Number
           || value instanceof String
           || value instanceof Date
@@ -191,7 +191,7 @@ public class PreparedStatementInstrumentation implements TypeInstrumentation {
       String str = null;
 
       if (value instanceof Boolean
-          // Short, Int, Long, Float, Double, BigDecimal
+          // Byte, Short, Int, Long, Float, Double, BigDecimal
           || value instanceof Number
           || value instanceof String
           || value instanceof Date
