@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v3_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -24,8 +25,13 @@ public class CouchbaseInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // New class introduced in 3.2.
-    return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode");
+    // introduced in java-client 3.2.0 (core-io 2.2.0)
+    return hasClassesNamed("com.couchbase.client.core.cnc.RequestSpan$StatusCode")
+        // introduced in java-client 3.4.0 (core-io 2.4.0)
+        .and(
+            not(
+                hasClassesNamed(
+                    "com.couchbase.client.core.transaction.components.CoreTransactionRequest")));
   }
 
   @Override

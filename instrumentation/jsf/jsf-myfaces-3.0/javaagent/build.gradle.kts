@@ -17,7 +17,11 @@ otelJava {
 }
 
 dependencies {
-  library("jakarta.el:jakarta.el-api:4.0.0")
+  // can't use library for now because 6.1.0-M1 is latest and its POM referes to a missing parent POM
+  // switch back to library when a new version is released
+  // library("jakarta.el:jakarta.el-api:4.0.0")
+  compileOnly("jakarta.el:jakarta.el-api:4.0.0")
+  testImplementation("jakarta.el:jakarta.el-api:4.0.0")
   library("org.apache.myfaces.core:myfaces-api:3.0.2")
   testLibrary("org.apache.myfaces.core:myfaces-impl:3.0.2")
 

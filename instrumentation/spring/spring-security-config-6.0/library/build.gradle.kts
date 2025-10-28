@@ -7,7 +7,12 @@ dependencies {
   library("org.springframework.security:spring-security-web:6.0.0")
   library("org.springframework:spring-web:6.0.0")
   library("io.projectreactor:reactor-core:3.5.0")
-  library("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  // can't use library for now because 6.2.0-M1 is latest and its POM referes to a missing parent POM
+  // switch back to library when a new version is released
+  // library("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  compileOnly("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
+  latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 

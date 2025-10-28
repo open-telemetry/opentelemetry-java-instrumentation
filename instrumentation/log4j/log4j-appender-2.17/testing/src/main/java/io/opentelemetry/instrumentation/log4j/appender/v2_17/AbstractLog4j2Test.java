@@ -24,7 +24,6 @@ import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -37,7 +36,6 @@ import org.apache.logging.log4j.MarkerManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.message.StringMapMessage;
 import org.apache.logging.log4j.message.StructuredDataMessage;
-import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -132,8 +130,7 @@ public abstract class AbstractLog4j2Test {
                 }
                 logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
-                LogRecordData logRecordData = AssertAccess.getActual(logRecord);
-                assertThat(logRecordData.getTimestampEpochNanos())
+                assertThat(logRecord.actual().getTimestampEpochNanos())
                     .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
                     .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
               });

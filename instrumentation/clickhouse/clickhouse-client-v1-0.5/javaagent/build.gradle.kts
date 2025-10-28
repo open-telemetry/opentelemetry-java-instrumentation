@@ -19,6 +19,8 @@ dependencies {
   testLibrary("com.clickhouse:clickhouse-client:0.5.0")
   testLibrary("com.clickhouse:clickhouse-http-client:0.5.0")
   testLibrary("org.apache.httpcomponents.client5:httpclient5:5.2.3")
+
+  testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent"))
 }
 
 tasks {

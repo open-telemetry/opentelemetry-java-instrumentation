@@ -40,7 +40,7 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpasyncclient-4.1:javaagent"))
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
-  testImplementation("org.testcontainers:elasticsearch")
+  testImplementation("org.testcontainers:testcontainers-elasticsearch")
 
   latestDepTestLibrary("co.elastic.clients:elasticsearch-java:7.17.19") // native on-by-default instrumentation after this version
 }
@@ -60,7 +60,7 @@ testing {
         }
 
         implementation("com.fasterxml.jackson.core:jackson-databind:2.14.2")
-        implementation("org.testcontainers:elasticsearch")
+        implementation("org.testcontainers:testcontainers-elasticsearch")
 
         if (latestDepTest) {
           // 8.10+ has native, on-by-default opentelemetry instrumentation

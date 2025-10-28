@@ -95,7 +95,7 @@ dependencies {
   baseJavaagentLibs(project(":instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-incubator:javaagent"))
   baseJavaagentLibs(project(":instrumentation:executors:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-application-logger:javaagent"))
-  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent"))
+  baseJavaagentLibs(project(":instrumentation:internal:internal-class-loader:javaagent", configuration = "shaded"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-lambda:javaagent"))
   baseJavaagentLibs(project(":instrumentation:internal:internal-reflection:javaagent"))
@@ -127,7 +127,11 @@ project(":instrumentation").subprojects {
 
   plugins.withId("otel.javaagent-instrumentation") {
     javaagentDependencies.run {
-      add(javaagentLibs.name, project(subProj.path))
+      // exclude :instrumentation:internal:internal-class-loader:javaagent we added the shaded
+      // configuration from it to baseJavaagentLibs
+      if (!subProj.path.contains("internal-class-loader")) {
+        add(javaagentLibs.name, project(subProj.path))
+      }
     }
   }
 

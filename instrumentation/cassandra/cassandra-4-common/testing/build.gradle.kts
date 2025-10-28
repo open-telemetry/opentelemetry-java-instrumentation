@@ -5,6 +5,6 @@ plugins {
 dependencies {
   api(project(":testing-common"))
 
+  compileOnly("com.datastax.oss:java-driver-core:4.0.0")
   implementation("org.testcontainers:testcontainers")
-  implementation("com.datastax.oss:java-driver-core:4.0.0")
 }

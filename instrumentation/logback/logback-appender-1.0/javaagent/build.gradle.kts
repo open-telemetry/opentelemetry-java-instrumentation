@@ -46,8 +46,7 @@ dependencies {
 
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
-  testInstrumentation(project(":instrumentation:logback:logback-mdc-1.0:javaagent"))
-
+  testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
   testImplementation("org.awaitility:awaitility")
 }
 

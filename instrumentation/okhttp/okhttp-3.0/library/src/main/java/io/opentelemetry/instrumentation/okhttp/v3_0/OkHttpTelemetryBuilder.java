@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.okhttp.v3_0.internal.Experimental;
 import io.opentelemetry.instrumentation.okhttp.v3_0.internal.OkHttpClientInstrumenterBuilderFactory;
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import okhttp3.Interceptor;
 import okhttp3.Response;
 
@@ -86,11 +87,24 @@ public final class OkHttpTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<Interceptor.Chain>, SpanNameExtractor<Interceptor.Chain>>
           spanNameExtractorTransformer) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<Interceptor.Chain>>) spanNameExtractorTransformer::apply);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public OkHttpTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<Interceptor.Chain>> spanNameExtractorTransformer) {
     builder.setSpanNameExtractor(spanNameExtractorTransformer);
     return this;
   }

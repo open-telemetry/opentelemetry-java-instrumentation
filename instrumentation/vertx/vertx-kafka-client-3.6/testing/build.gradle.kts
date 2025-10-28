@@ -4,7 +4,7 @@ plugins {
 
 dependencies {
   implementation(project(":testing-common"))
-  implementation("org.testcontainers:kafka")
+  implementation("org.testcontainers:testcontainers-kafka")
 
   compileOnly("io.vertx:vertx-kafka-client:3.6.0")
   // vertx-codegen is needed for Xlint's annotation checking

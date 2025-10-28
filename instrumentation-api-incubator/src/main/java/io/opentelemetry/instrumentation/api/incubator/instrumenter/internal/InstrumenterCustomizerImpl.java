@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -56,9 +56,10 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   }
 
   @Override
+  @SuppressWarnings("FunctionalInterfaceClash") // interface has deprecated overload
   public InstrumenterCustomizer setSpanNameExtractor(
-      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
-    customizer.setSpanNameExtractor(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor) {
+    customizer.setSpanNameExtractor(spanNameExtractor);
     return this;
   }
 }

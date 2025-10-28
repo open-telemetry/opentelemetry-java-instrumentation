@@ -29,6 +29,7 @@ dependencies {
   // Ensure no cross interference
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.19:javaagent"))
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
+  testInstrumentation(project(":instrumentation:azure-core:azure-core-1.53:javaagent"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

@@ -59,7 +59,7 @@ dependencies {
   testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
 
   // needed for SNS
-  testImplementation("org.testcontainers:localstack")
+  testImplementation("org.testcontainers:testcontainers-localstack")
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")

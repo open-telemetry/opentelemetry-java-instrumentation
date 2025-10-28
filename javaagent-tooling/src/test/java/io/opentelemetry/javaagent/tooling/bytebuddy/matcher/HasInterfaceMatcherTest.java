@@ -1,0 +1,97 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.tooling.bytebuddy.matcher;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.A;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.B;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.E;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.F;
+import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
+import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
+import java.util.Iterator;
+import java.util.stream.Stream;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.description.type.TypeList;
+import net.bytebuddy.pool.TypePool;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
+
+class HasInterfaceMatcherTest {
+
+  private static TypePool typePool;
+
+  @BeforeAll
+  static void setUp() {
+    typePool =
+        AgentTooling.poolStrategy()
+            .typePool(
+                AgentTooling.locationStrategy()
+                    .classFileLocator(HasInterfaceMatcherTest.class.getClassLoader(), null),
+                HasInterfaceMatcherTest.class.getClassLoader());
+  }
+
+  private static Stream<Arguments> matcherParameters() {
+    return Stream.of(
+        Arguments.of(A.class, A.class, true),
+        Arguments.of(A.class, B.class, true),
+        Arguments.of(B.class, A.class, false),
+        Arguments.of(A.class, E.class, true),
+        Arguments.of(A.class, F.class, true),
+        Arguments.of(A.class, G.class, true),
+        Arguments.of(F.class, A.class, false),
+        Arguments.of(F.class, F.class, false),
+        Arguments.of(F.class, G.class, false));
+  }
+
+  @ParameterizedTest
+  @MethodSource("matcherParameters")
+  void testMatcher(Class<?> matcherClass, Class<?> typeClass, boolean expectedResult) {
+    TypeDescription argument = typePool.describe(typeClass.getName()).resolve();
+
+    boolean result = implementsInterface(named(matcherClass.getName())).matches(argument);
+
+    assertThat(result).isEqualTo(expectedResult);
+  }
+
+  @Test
+  @SuppressWarnings({"unchecked", "rawtypes"})
+  void testTraversalExceptions() {
+    TypeDescription type = mock(TypeDescription.class);
+    TypeDescription.Generic typeGeneric = mock(TypeDescription.Generic.class);
+    TypeList.Generic interfaces = mock(TypeList.Generic.class);
+    Iterator iterator = new ThrowOnFirstElement();
+
+    when(type.isInterface()).thenReturn(true);
+    when(type.asGenericType()).thenReturn(typeGeneric);
+    when(typeGeneric.asErasure()).thenThrow(new RuntimeException("asErasure exception"));
+    when(type.getInterfaces()).thenReturn(interfaces);
+    when(interfaces.iterator()).thenReturn(iterator);
+    when(type.getSuperClass()).thenThrow(new RuntimeException("getSuperClass exception"));
+
+    boolean result = implementsInterface(named(Object.class.getName())).matches(type);
+
+    assertThat(result).isFalse();
+    verify(type, times(1)).isInterface();
+    verify(type, times(1)).asGenericType();
+    verify(typeGeneric, times(1)).asErasure();
+    verify(type, times(1)).getInterfaces();
+    verify(interfaces, times(1)).iterator();
+    verify(type, times(1)).getSuperClass();
+    verifyNoMoreInteractions(type, typeGeneric, interfaces);
+  }
+}

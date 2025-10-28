@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldDetector;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldDetector;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
 import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;

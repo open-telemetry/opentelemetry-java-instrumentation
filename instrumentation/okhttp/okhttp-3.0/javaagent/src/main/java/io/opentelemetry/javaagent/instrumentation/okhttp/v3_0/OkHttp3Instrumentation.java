@@ -32,15 +32,15 @@ public class OkHttp3Instrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void trackCallDepth(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(OkHttpClient.Builder.class);
+    public static CallDepth trackCallDepth() {
+      CallDepth callDepth = CallDepth.forClass(OkHttpClient.Builder.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void addTracingInterceptor(
-        @Advice.This OkHttpClient.Builder builder,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
+        @Advice.This OkHttpClient.Builder builder, @Advice.Enter CallDepth callDepth) {
       // No-args constructor is automatically called by constructors with args, but we only want to
       // run once from the constructor with args because that is where the dedupe needs to happen.
       if (callDepth.decrementAndGet() > 0) {

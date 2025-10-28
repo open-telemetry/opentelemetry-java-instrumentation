@@ -46,56 +46,58 @@
     {
       groupName: 'quarkus packages',
       matchPackageNames: [
-        'io.quarkus{/,}**',
+        'io.quarkus:**',
       ],
     },
     {
       groupName: 'gradle develocity packages',
       matchPackageNames: [
-        'com.gradle.develocity{/,}**',
+        'com.gradle.develocity:**',
       ],
     },
     {
       groupName: 'armeria packages',
       matchPackageNames: [
-        'com.linecorp.armeria:{/,}**',
+        'com.linecorp.armeria:**',
       ],
     },
     {
       groupName: 'spotless packages',
       matchPackageNames: [
-        'com.diffplug.spotless{/,}**',
+        'com.diffplug.spotless',
+        'com.diffplug.spotless:**',
       ],
     },
     {
       groupName: 'byte buddy packages',
       matchPackageNames: [
-        'net.bytebuddy:{/,}**',
+        'net.bytebuddy:**',
       ],
     },
     {
       groupName: 'gradle shadow packages',
       matchPackageNames: [
-        'com.gradleup.shadow{/,}**',
+        'com.gradleup.shadow:**',
       ],
     },
     {
       groupName: 'guava packages',
       matchPackageNames: [
-        'com.google.guava{/,}**',
+        'com.google.guava:**',
       ],
     },
     {
       groupName: 'jackson packages',
       matchPackageNames: [
-        'com.fasterxml.jackson{/,}**',
+        'com.fasterxml.jackson:**',
+        'com.fasterxml.jackson.core:**',
       ],
     },
     {
       // prevent update to 2.4-groovy-4.0-SNAPSHOT
       allowedVersions: '!/\\-SNAPSHOT$/',
       matchPackageNames: [
-        'org.spockframework:{/,}**',
+        'org.spockframework:**',
       ],
     },
     {
@@ -109,7 +111,7 @@
       // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
       enabled: false,
       matchPackageNames: [
-        'io.opentelemetry:{/,}**',
+        'io.opentelemetry:**',
       ],
     },
     {
@@ -140,7 +142,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.mockito:{/,}**',
+        'org.mockito:**',
       ],
     },
     {
@@ -212,7 +214,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'ch.qos.logback:{/,}**',
+        'ch.qos.logback:**',
       ],
     },
     {
@@ -225,7 +227,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.slf4j:{/,}**',
+        'org.slf4j:**',
       ],
     },
     {
@@ -239,8 +241,8 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'com.google.inject:{/,}**',
-        'com.google.inject.extensions:{/,}**',
+        'com.google.inject:**',
+        'com.google.inject.extensions:**',
       ],
     },
     {
@@ -316,7 +318,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'ch.qos.logback:{/,}**',
+        'ch.qos.logback:**',
       ],
     },
     {
@@ -329,7 +331,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.springframework.boot:spring-boot-dependencies{/,}**',
+        'org.springframework.boot:spring-boot-dependencies:**',
       ],
     },
     {
@@ -342,7 +344,7 @@
       ],
       enabled: false,
       matchPackageNames: [
-        'org.eclipse.jetty:{/,}**',
+        'org.eclipse.jetty:**',
       ],
     },
   ],

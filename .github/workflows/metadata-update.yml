@@ -70,13 +70,7 @@ jobs:
         run: |
           BRANCH_NAME="otelbot/metadata-update-main"
           echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
-          if git ls-remote --exit-code --heads origin "$BRANCH_NAME"; then
-            git fetch origin "$BRANCH_NAME"
-            git checkout "$BRANCH_NAME"
-            git merge origin/main --no-edit
-          else
-            git checkout -b "$BRANCH_NAME" origin/main
-          fi
+          git checkout -B "$BRANCH_NAME"
 
       - name: Commit and push changes
         if: steps.diffcheck.outputs.has_diff == 'true'
@@ -85,7 +79,7 @@ jobs:
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
-          git push origin "$BRANCH_NAME"
+          git push --force origin "$BRANCH_NAME"
 
       - name: Create PR if needed
         if: steps.diffcheck.outputs.has_diff == 'true'
@@ -119,3 +113,14 @@ jobs:
           else
             echo "No open PR found for branch $BRANCH_NAME."
           fi
+
+  workflow-notification:
+    permissions:
+      contents: read
+      issues: write
+    needs:
+      - update
+    if: always()
+    uses: ./.github/workflows/reusable-workflow-notification.yml
+    with:
+      success: ${{ needs.update.result == 'success' }}
