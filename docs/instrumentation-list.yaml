@@ -220,6 +220,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -499,6 +501,8 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: peer.service
+          type: STRING
         - name: rpc.method
           type: STRING
         - name: rpc.service
@@ -594,6 +598,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -670,6 +676,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -750,6 +758,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -882,6 +892,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -1069,6 +1081,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1215,6 +1229,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1296,6 +1312,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -3954,6 +3972,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -4505,6 +4525,11 @@ libraries:
           type: LONG
   guava:
   - name: guava-10.0
+    description: |
+      This instrumentation enables context propagation for Guava ListenableFuture, it does not emit any telemetry on its own.
+    library_link: https://github.com/google/guava
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/guava-10.0
     scope:
       name: io.opentelemetry.guava-10.0
@@ -4513,6 +4538,12 @@ libraries:
       - com.google.guava:guava:[10.0,]
       library:
       - com.google.guava:guava:10.0
+    configurations:
+    - name: otel.instrumentation.guava.experimental-span-attributes
+      description: Enables experimental span attribute `guava.canceled` for cancelled
+        operations.
+      type: boolean
+      default: false
   gwt:
   - name: gwt-2.0
     display_name: GWT
@@ -4627,9 +4658,8 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
@@ -4638,8 +4668,7 @@ libraries:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4654,9 +4683,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-4.0
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
@@ -4665,8 +4693,7 @@ libraries:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4681,9 +4708,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-6.0
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
     scope:
@@ -4693,8 +4719,7 @@ libraries:
       - org.hibernate:hibernate-core:[6.0.0.Final,)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4709,9 +4734,9 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-procedure-call-4.3
-    description: This instrumentation enables the generation of spans for Hibernate
-      stored procedure calls.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate stored procedure
+      calls.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
       name: io.opentelemetry.hibernate-procedure-call-4.3
@@ -4720,8 +4745,7 @@ libraries:
       - org.hibernate:hibernate-core:[4.3.0.Final,)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4737,8 +4761,10 @@ libraries:
           type: STRING
   - name: hibernate-reactive-1.0
     description: |
-      This instrumentation does not emit any telemetry on its own. Instead, it enables context propagation for Hibernate Reactive asynchronous operations.
+      This instrumentation enables context propagation for Hibernate Reactive, it does not emit any telemetry on its own.
     library_link: https://hibernate.org/reactive/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/hibernate/hibernate-reactive-1.0
     scope:
       name: io.opentelemetry.hibernate-reactive-1.0
@@ -4748,8 +4774,8 @@ libraries:
   hikaricp:
   - name: hikaricp-3.0
     display_name: HikariCP
-    description: |
-      This instrumentation generates database client metrics for HikariCP connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
+    description: This instrumentation enables database connection pool metrics for
+      HikariCP.
     semantic_conventions:
     - DATABASE_POOL_METRICS
     library_link: https://github.com/brettwooldridge/HikariCP
@@ -4961,6 +4987,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5133,6 +5161,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5818,6 +5848,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5863,6 +5895,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5926,6 +5960,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6369,6 +6405,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6469,6 +6507,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6573,6 +6613,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6648,6 +6690,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6699,6 +6743,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -7234,6 +7280,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7322,6 +7370,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7368,6 +7418,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7413,6 +7465,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7566,6 +7620,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8302,6 +8358,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8745,6 +8803,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8792,6 +8852,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8842,6 +8904,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8879,6 +8943,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8919,6 +8985,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8952,6 +9020,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8987,6 +9057,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -9015,6 +9087,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -9050,6 +9124,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
