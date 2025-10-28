@@ -36,18 +36,6 @@ final class CassandraSqlAttributesGetter
 
   @Nullable
   @Override
-  public String getServerAddress(CassandraRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public Integer getServerPort(CassandraRequest request) {
-    return null;
-  }
-
-  @Nullable
-  @Override
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     return executionInfo == null ? null : executionInfo.getQueriedHost().getSocketAddress();
