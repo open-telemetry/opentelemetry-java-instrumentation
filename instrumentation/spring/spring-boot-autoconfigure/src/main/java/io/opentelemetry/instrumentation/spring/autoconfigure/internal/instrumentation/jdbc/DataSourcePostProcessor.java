@@ -72,15 +72,11 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
                   config.getBoolean(
                       "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
               .setDataSourceInstrumenterEnabled(
-                  configPropertiesProvider
-                      .getObject()
-                      .getBoolean(
-                          "otel.instrumentation.jdbc.experimental.datasource.enabled", false));
+                  config.getBoolean(
+                      "otel.instrumentation.jdbc.experimental.datasource.enabled", false));
       Experimental.setEnableSqlCommenter(
           builder,
-          configPropertiesProvider
-              .getObject()
-              .getBoolean("otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false));
+          config.getBoolean("otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false));
       DataSource otelDataSource = builder.build().wrap(dataSource);
 
       // wrap instrumented data source into a proxy that unwraps to the original data source
