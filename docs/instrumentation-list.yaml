@@ -4505,6 +4505,11 @@ libraries:
           type: LONG
   guava:
   - name: guava-10.0
+    description: |
+      This instrumentation enables context propagation for Guava ListenableFuture, it does not emit any telemetry on its own.
+    library_link: https://github.com/google/guava
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/guava-10.0
     scope:
       name: io.opentelemetry.guava-10.0
@@ -4513,6 +4518,12 @@ libraries:
       - com.google.guava:guava:[10.0,]
       library:
       - com.google.guava:guava:10.0
+    configurations:
+    - name: otel.instrumentation.guava.experimental-span-attributes
+      description: Enables experimental span attribute `guava.canceled` for cancelled
+        operations.
+      type: boolean
+      default: false
   gwt:
   - name: gwt-2.0
     display_name: GWT
