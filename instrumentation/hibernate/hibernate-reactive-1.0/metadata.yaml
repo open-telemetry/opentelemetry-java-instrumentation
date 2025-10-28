@@ -1,5 +1,5 @@
 description: >
-  This instrumentation provides context propagation for Hibernate Reactive, it does not emit any
+  This instrumentation enables context propagation for Hibernate Reactive, it does not emit any
   telemetry on its own.
 library_link: https://hibernate.org/reactive/
 features:

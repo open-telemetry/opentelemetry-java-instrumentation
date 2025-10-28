@@ -4730,7 +4730,7 @@ libraries:
           type: STRING
   - name: hibernate-reactive-1.0
     description: |
-      This instrumentation provides context propagation for Hibernate Reactive, it does not emit any telemetry on its own.
+      This instrumentation enables context propagation for Hibernate Reactive, it does not emit any telemetry on its own.
     library_link: https://hibernate.org/reactive/
     features:
     - CONTEXT_PROPAGATION
@@ -4743,7 +4743,7 @@ libraries:
   hikaricp:
   - name: hikaricp-3.0
     display_name: HikariCP
-    description: This instrumentation generates database connection pool metrics for
+    description: This instrumentation enables database connection pool metrics for
       HikariCP.
     semantic_conventions:
     - DATABASE_POOL_METRICS
