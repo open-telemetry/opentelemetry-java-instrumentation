@@ -220,6 +220,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -499,6 +501,8 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: peer.service
+          type: STRING
         - name: rpc.method
           type: STRING
         - name: rpc.service
@@ -594,6 +598,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -670,6 +676,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -750,6 +758,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -882,6 +892,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -1069,6 +1081,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1215,6 +1229,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1296,6 +1312,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -3954,6 +3972,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -4961,6 +4981,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5133,6 +5155,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5818,6 +5842,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5863,6 +5889,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5926,6 +5954,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6369,6 +6399,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6469,6 +6501,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6573,6 +6607,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6648,6 +6684,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6699,6 +6737,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -7234,6 +7274,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7322,6 +7364,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7368,6 +7412,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7413,6 +7459,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7566,6 +7614,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8302,6 +8352,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8745,6 +8797,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8792,6 +8846,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8842,6 +8898,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8879,6 +8937,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8919,6 +8979,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8952,6 +9014,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8987,6 +9051,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -9015,6 +9081,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -9050,6 +9118,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
