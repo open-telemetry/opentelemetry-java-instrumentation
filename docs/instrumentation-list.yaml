@@ -5044,6 +5044,11 @@ libraries:
     target_versions:
       javaagent:
       - org.influxdb:influxdb-java:[2.4,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables or disables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -5097,6 +5102,9 @@ libraries:
   - name: java-http-client
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for requests made using the Java HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html
     source_path: instrumentation/java-http-client
     minimum_java_version: 11
@@ -5175,6 +5183,9 @@ libraries:
   - name: java-http-server
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the Java HTTP server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html
     source_path: instrumentation/java-http-server
     scope:
@@ -5255,11 +5266,29 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+  - name: java-util-logging
+    display_name: Java Util Logging (JUL)
+    description: This instrumentation bridges Java Util Logging (JUL) log records
+      to OpenTelemetry logs.
+    library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html
+    features:
+    - LOGGING_BRIDGE
+    source_path: instrumentation/java-util-logging
+    scope:
+      name: io.opentelemetry.java-util-logging
+    configurations:
+    - name: otel.instrumentation.java-util-logging.experimental-log-attributes
+      description: Enables capturing the experimental `thread.name` and `thread.id`
+        log attributes.
+      type: boolean
+      default: false
   javalin:
   - name: javalin-5.0
     description: This instrumentation enriches existing HTTP server spans with route
       information, it does not emit any telemetry on its own.
     library_link: https://javalin.io/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11
     scope:
@@ -9257,10 +9286,6 @@ internal:
   source_path: instrumentation/internal/internal-class-loader
   scope:
     name: io.opentelemetry.internal-class-loader
-- name: java-util-logging
-  source_path: instrumentation/java-util-logging
-  scope:
-    name: io.opentelemetry.java-util-logging
 - name: internal-reflection
   source_path: instrumentation/internal/internal-reflection
   scope:
