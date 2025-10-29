@@ -30,6 +30,8 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHol
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizer;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
@@ -222,6 +224,7 @@ public class AgentInstaller {
     instrumentationInstalled = true;
 
     addHttpServerResponseCustomizers(extensionClassLoader);
+    addSqlCommenterCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
   }
@@ -345,6 +348,18 @@ public class AgentInstaller {
             for (HttpServerResponseCustomizer modifier : customizers) {
               modifier.customize(serverContext, response, responseMutator);
             }
+          }
+        });
+  }
+
+  private static void addSqlCommenterCustomizers(ClassLoader extensionClassLoader) {
+    List<SqlCommenterCustomizer> customizers =
+        load(SqlCommenterCustomizer.class, extensionClassLoader);
+
+    SqlCommenterCustomizerHolder.setCustomizer(
+        builder -> {
+          for (SqlCommenterCustomizer modifier : customizers) {
+            modifier.customize(builder);
           }
         });
   }

@@ -30,6 +30,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.OpenTelemetryConnection;
@@ -50,7 +51,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
   private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
-  private final boolean sqlCommenterEnabled;
+  private final SqlCommenter sqlCommenter;
   private volatile DbInfo cachedDbInfo;
 
   /**
@@ -77,7 +78,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
     this.statementInstrumenter = createStatementInstrumenter(openTelemetry);
     this.transactionInstrumenter = createTransactionInstrumenter(openTelemetry, false);
     this.captureQueryParameters = false;
-    this.sqlCommenterEnabled = false;
+    this.sqlCommenter = SqlCommenter.noop();
   }
 
   /**
@@ -86,7 +87,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
    * @param delegate the DataSource to wrap
    * @param dataSourceInstrumenter the DataSource Instrumenter to use
    * @param statementInstrumenter the Statement Instrumenter to use
-   * @param sqlCommenterEnabled whether to augment sql query with comment containing the tracing
+   * @param sqlCommenter helper class for augment sql queries with a comment containing the tracing
    *     information
    */
   OpenTelemetryDataSource(
@@ -95,13 +96,13 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
       Instrumenter<DbRequest, Void> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      boolean sqlCommenterEnabled) {
+      SqlCommenter sqlCommenter) {
     this.delegate = delegate;
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
+    this.sqlCommenter = sqlCommenter;
   }
 
   @Override
@@ -114,7 +115,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenterEnabled);
+        sqlCommenter);
   }
 
   @Override
@@ -127,7 +128,7 @@ public class OpenTelemetryDataSource implements DataSource, AutoCloseable {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenterEnabled);
+        sqlCommenter);
   }
 
   @Override
