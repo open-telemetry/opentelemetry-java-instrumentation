@@ -275,6 +275,7 @@ ruleset {
   JUnitUnnecessarySetUp
   JUnitUnnecessaryTearDown
   JUnitUnnecessaryThrowsException
+  SpockIgnoreRestUsed
   UnnecessaryFail
   UseAssertEqualsInsteadOfAssertTrue
   UseAssertFalseInsteadOfNegation

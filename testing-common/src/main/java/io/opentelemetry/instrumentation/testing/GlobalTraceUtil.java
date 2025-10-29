@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 
 /**
- * Can be useful when you need to start a span {@link
+ * Can be useful when you need to start a span and {@link
  * io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension} is not available.
  */
 public final class GlobalTraceUtil {
