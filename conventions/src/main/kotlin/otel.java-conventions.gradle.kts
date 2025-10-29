@@ -187,24 +187,6 @@ testing {
       implementation("org.mockito:mockito-junit-jupiter")
 
       implementation("org.objenesis:objenesis")
-      implementation("org.spockframework:spock-core") {
-        with(this as ExternalDependency) {
-          // exclude optional dependencies
-          exclude(group = "cglib", module = "cglib-nodep")
-          exclude(group = "net.bytebuddy", module = "byte-buddy")
-          exclude(group = "org.junit.platform", module = "junit-platform-testkit")
-          exclude(group = "org.jetbrains", module = "annotations")
-          exclude(group = "org.objenesis", module = "objenesis")
-          exclude(group = "org.ow2.asm", module = "asm")
-        }
-      }
-      implementation("org.spockframework:spock-junit4") {
-        with(this as ExternalDependency) {
-          // spock-core is already added as dependency
-          // exclude it here to avoid pulling in optional dependencies
-          exclude(group = "org.spockframework", module = "spock-core")
-        }
-      }
       implementation("ch.qos.logback:logback-classic")
       implementation("org.slf4j:log4j-over-slf4j")
       implementation("org.slf4j:jcl-over-slf4j")

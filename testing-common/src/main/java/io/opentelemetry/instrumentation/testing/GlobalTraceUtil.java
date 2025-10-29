@@ -5,28 +5,18 @@
 
 package io.opentelemetry.instrumentation.testing;
 
-import groovy.lang.Closure;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.testing.util.ThrowingRunnable;
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 
 /**
- * Can be useful when you need to start a span and neither {@link
- * io.opentelemetry.instrumentation.test.InstrumentationSpecification} nor {@link
- * io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension} are available.
+ * Can be useful when you need to start a span {@link
+ * io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension} is not available.
  */
 public final class GlobalTraceUtil {
 
   private static final TestInstrumenters testInstrumenters =
       new TestInstrumenters(GlobalOpenTelemetry.get());
-
-  /**
-   * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
-   * spanName}.
-   */
-  public static <T> T runWithSpan(String spanName, Closure<T> callback) {
-    return runWithSpan(spanName, (ThrowingSupplier<T, RuntimeException>) callback::call);
-  }
 
   /**
    * Runs the provided {@code callback} inside the scope of an INTERNAL span with name {@code
