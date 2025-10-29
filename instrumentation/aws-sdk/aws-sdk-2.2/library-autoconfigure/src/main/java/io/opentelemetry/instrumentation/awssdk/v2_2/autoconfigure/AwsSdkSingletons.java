@@ -23,7 +23,7 @@ public final class AwsSdkSingletons {
 
   private static class AwsSdkTelemetryFactory extends AbstractAwsSdkTelemetryFactory {
 
-    private SimpleConfigPropertiesBridge bridge =
+    private final SimpleConfigPropertiesBridge bridge =
         new SimpleConfigPropertiesBridge(GlobalOpenTelemetry.get());
 
     @Override
