@@ -122,8 +122,6 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
         InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
     if (config == null) {
       // there is no declarative config for this node
-      // this needs to be a different value than null to avoid confusion with
-      // the case when declarative config is not supported at all
       return empty();
     }
     return config;
