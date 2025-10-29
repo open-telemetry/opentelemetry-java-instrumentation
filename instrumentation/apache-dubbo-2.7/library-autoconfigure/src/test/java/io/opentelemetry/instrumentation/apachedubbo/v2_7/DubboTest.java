@@ -18,4 +18,9 @@ class DubboTest extends AbstractDubboTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
+
+  @Override
+  protected boolean hasPeerService() {
+    return false;
+  }
 }

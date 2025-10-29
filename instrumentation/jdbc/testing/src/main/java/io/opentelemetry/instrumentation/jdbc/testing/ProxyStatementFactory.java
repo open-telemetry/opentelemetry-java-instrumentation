@@ -3,9 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jdbc.test;
+package io.opentelemetry.instrumentation.jdbc.testing;
 
 import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.PreparedStatement;
 import java.sql.Statement;
@@ -19,7 +21,8 @@ public final class ProxyStatementFactory {
     if (testInterface.getClassLoader() != classLoader) {
       throw new IllegalStateException("wrong class loader");
     }
-    InvocationHandler invocationHandler = (proxy, method, args) -> method.invoke(statement, args);
+    InvocationHandler invocationHandler =
+        (proxy, method, args) -> invokeWithUnwrappedTarget(statement, method, args);
     return proxy(
         Statement.class,
         classLoader,
@@ -32,12 +35,27 @@ public final class ProxyStatementFactory {
   }
 
   public static PreparedStatement proxyPreparedStatement(PreparedStatement statement) {
-    InvocationHandler invocationHandler = (proxy, method, args) -> method.invoke(statement, args);
+    InvocationHandler invocationHandler =
+        (proxy, method, args) -> invokeWithUnwrappedTarget(statement, method, args);
     return proxyPreparedStatement(invocationHandler);
   }
 
   public static PreparedStatement proxyPreparedStatement(InvocationHandler invocationHandler) {
     return proxy(PreparedStatement.class, invocationHandler);
+  }
+
+  // need to unwrap in order to preserve SQLException behavior
+  private static Object invokeWithUnwrappedTarget(Object target, Method method, Object[] args)
+      throws Throwable {
+    try {
+      return method.invoke(target, args);
+    } catch (InvocationTargetException e) {
+      Throwable cause = e.getCause();
+      if (cause != null) {
+        throw cause;
+      }
+      throw e;
+    }
   }
 
   public static <T> T proxy(Class<T> clazz, InvocationHandler invocationHandler) {
@@ -59,10 +77,7 @@ public final class ProxyStatementFactory {
     // in the same package as the package private interface
     // by default we ignore jdk proxies, having the proxy in a different package ensures it gets
     // instrumented
-    if (!proxy
-        .getClass()
-        .getName()
-        .startsWith("io.opentelemetry.javaagent.instrumentation.jdbc.test")) {
+    if (!proxy.getClass().getName().startsWith("io.opentelemetry.instrumentation.jdbc.testing")) {
       throw new IllegalStateException("proxy is in wrong package");
     }
 
