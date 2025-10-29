@@ -16,7 +16,7 @@ dependencies {
   // 3+ doesn't work with Java 8, but that is fine since --sun-misc-unsafe-memory-access=deny
   // requires Java 23.
   if (denyUnsafe) {
-    implementation("com.github.ben-manes.caffeine:caffeine:3.2.2")
+    implementation("com.github.ben-manes.caffeine:caffeine:3.2.3")
   }
 }
 
