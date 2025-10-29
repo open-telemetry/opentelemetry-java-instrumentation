@@ -38,13 +38,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
-// testing-common pulls in groovy 4 and spock as dependencies, exclude them
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
-}
-
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 if (!latestDepTest) {

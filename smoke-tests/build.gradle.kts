@@ -8,13 +8,9 @@ plugins {
 description = "smoke-tests"
 
 otelJava {
-  // we only need to run the Spock test itself under a single Java version, and the Spock test in
-  // turn is parameterized and runs the test using different docker containers that run different
-  // Java versions
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
-
 val dockerJavaVersion = "3.6.0"
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
