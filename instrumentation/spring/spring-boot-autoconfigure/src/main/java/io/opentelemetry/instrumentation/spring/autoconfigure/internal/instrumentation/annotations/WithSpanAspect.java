@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttribute
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.core.ParameterNameDiscoverer;
+import javax.annotation.Nullable;
 
 /**
  * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link Span}.
@@ -64,6 +65,7 @@ abstract class WithSpanAspect {
     return request.inheritContext() ? parentContext : Context.root();
   }
 
+  @Nullable
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {
     JoinPointRequest request = requestFactory.create(pjp);
     Context parentContext = Context.current();

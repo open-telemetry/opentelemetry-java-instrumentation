@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
@@ -146,7 +148,7 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public ConfigProperties otelProperties(
           AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk) {
-        return AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk);
+        return requireNonNull(AutoConfigureUtil.getConfig(autoConfiguredOpenTelemetrySdk));
       }
     }
 

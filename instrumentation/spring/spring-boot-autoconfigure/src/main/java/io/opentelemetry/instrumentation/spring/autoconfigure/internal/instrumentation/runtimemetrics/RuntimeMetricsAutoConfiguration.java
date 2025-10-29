@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Instrument
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import java.util.Comparator;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.annotation.PreDestroy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class RuntimeMetricsAutoConfiguration {
   private static final Logger logger =
       LoggerFactory.getLogger(RuntimeMetricsAutoConfiguration.class);
 
+  @Nullable
   private AutoCloseable closeable;
 
   @PreDestroy
