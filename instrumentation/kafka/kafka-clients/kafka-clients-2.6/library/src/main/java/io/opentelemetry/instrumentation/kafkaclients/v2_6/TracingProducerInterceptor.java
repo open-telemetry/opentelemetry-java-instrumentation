@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.SimpleConfigPropertiesBridge;
+import io.opentelemetry.instrumentation.api.internal.ApiConfigProperties;
 import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -33,10 +33,10 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
 
   private static KafkaTelemetry buildTelemetry() {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    SimpleConfigPropertiesBridge bridge = new SimpleConfigPropertiesBridge(openTelemetry);
+    ApiConfigProperties config = new ApiConfigProperties(openTelemetry);
     return KafkaTelemetry.builder(openTelemetry)
         .setCapturedHeaders(
-            bridge.getList(
+            config.getList(
                 "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
         .build();
   }
