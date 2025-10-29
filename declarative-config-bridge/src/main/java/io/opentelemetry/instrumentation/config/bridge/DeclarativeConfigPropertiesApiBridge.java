@@ -17,14 +17,14 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
-public class SimpleDeclarativeConfigPropertiesBridge {
+public class DeclarativeConfigPropertiesApiBridge {
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
   protected final DeclarativeConfigProperties baseNode;
   // lookup order matters - we choose the first match
   protected final Map<String, String> mappings;
   protected final Map<String, Object> overrideValues;
 
-  public SimpleDeclarativeConfigPropertiesBridge(
+  public DeclarativeConfigPropertiesApiBridge(
       DeclarativeConfigProperties baseNode,
       Map<String, String> mappings,
       Map<String, Object> overrideValues) {

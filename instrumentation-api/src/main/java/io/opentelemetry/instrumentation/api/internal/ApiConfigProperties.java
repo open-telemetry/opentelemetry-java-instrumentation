@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.api.internal;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesApiBridge;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
-import io.opentelemetry.instrumentation.config.bridge.SimpleDeclarativeConfigPropertiesBridge;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,17 +19,17 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class SimpleConfigPropertiesBridge {
+public final class ApiConfigProperties {
 
-  @Nullable private final SimpleDeclarativeConfigPropertiesBridge bridge;
+  @Nullable private final DeclarativeConfigPropertiesApiBridge bridge;
 
-  public SimpleConfigPropertiesBridge(OpenTelemetry openTelemetry) {
+  public ApiConfigProperties(OpenTelemetry openTelemetry) {
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();
       this.bridge =
           new DeclarativeConfigPropertiesBridgeBuilder()
-              .buildSimpleFromInstrumentationConfig(configProvider.getInstrumentationConfig());
+               .buildApiBridgeFromInstrumentationConfig(configProvider.getInstrumentationConfig());
     } else {
       this.bridge = null;
     }

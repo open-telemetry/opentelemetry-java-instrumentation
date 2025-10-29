@@ -38,7 +38,7 @@ import java.util.Map;
  *         string_key: value
  * </pre>
  */
-final class DeclarativeConfigPropertiesBridge extends SimpleDeclarativeConfigPropertiesBridge
+final class DeclarativeConfigPropertiesBridge extends DeclarativeConfigPropertiesApiBridge
     implements ConfigProperties {
 
   DeclarativeConfigPropertiesBridge(

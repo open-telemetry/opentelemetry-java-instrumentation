@@ -90,9 +90,9 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
         node == null ? empty() : node, mappings, overrideValues);
   }
 
-  public SimpleDeclarativeConfigPropertiesBridge buildSimple(
+  public DeclarativeConfigPropertiesApiBridge buildApiBridge(
       @Nullable DeclarativeConfigProperties node) {
-    return new SimpleDeclarativeConfigPropertiesBridge(
+    return new DeclarativeConfigPropertiesApiBridge(
         node == null ? empty() : node, mappings, overrideValues);
   }
 
@@ -112,9 +112,9 @@ public class DeclarativeConfigPropertiesBridgeBuilder {
         instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
   }
 
-  public SimpleDeclarativeConfigPropertiesBridge buildSimpleFromInstrumentationConfig(
+  public DeclarativeConfigPropertiesApiBridge buildApiBridgeFromInstrumentationConfig(
       @Nullable DeclarativeConfigProperties instrumentationConfig) {
-    return buildSimple(
+    return buildApiBridge(
         instrumentationConfig == null ? null : instrumentationConfig.getStructured("java"));
   }
 }
