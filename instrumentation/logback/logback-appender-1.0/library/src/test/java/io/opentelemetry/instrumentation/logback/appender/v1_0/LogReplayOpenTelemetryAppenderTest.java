@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeAttributesLogCount;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.util.ContextInitializer;
@@ -76,6 +77,6 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(codeAttributesLogCount()));
+                .hasAttributesSatisfying(a -> assertThat(a).hasSize(codeAttributesLogCount())));
   }
 }
