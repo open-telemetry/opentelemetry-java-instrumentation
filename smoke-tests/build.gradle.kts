@@ -7,6 +7,10 @@ plugins {
 
 description = "smoke-tests"
 
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
+  maxJavaVersionForTests.set(JavaVersion.VERSION_11)
+}
 val dockerJavaVersion = "3.6.0"
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
