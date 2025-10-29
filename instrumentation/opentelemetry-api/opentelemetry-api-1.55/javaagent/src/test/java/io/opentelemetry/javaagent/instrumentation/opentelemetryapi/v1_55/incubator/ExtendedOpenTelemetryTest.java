@@ -30,7 +30,6 @@ class ExtendedOpenTelemetryTest {
   void getConfig() {
     DeclarativeConfigProperties instrumentationConfig =
         extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
-    // todo test for not null with declarative config present
     assertThat(instrumentationConfig).isNull();
   }
 }
