@@ -9,9 +9,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -19,9 +16,6 @@ import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 class LoggingExporterAutoConfigurationTest {
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
-          .withBean(
-              ConfigProperties.class,
-              () -> DefaultConfigProperties.createFromMap(Collections.emptyMap()))
           .withConfiguration(
               AutoConfigurations.of(
                   LoggingExporterAutoConfiguration.class, OpenTelemetryAutoConfiguration.class));
