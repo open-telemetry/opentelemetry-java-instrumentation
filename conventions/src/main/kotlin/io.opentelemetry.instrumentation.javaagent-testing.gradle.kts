@@ -6,6 +6,9 @@ plugins {
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
+val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
+extra["denyUnsafe"] = denyUnsafe
+
 dependencies {
   /*
     Dependencies added to this configuration will be found by the muzzle gradle plugin during code
@@ -72,31 +75,41 @@ class JavaagentTestArgumentsProvider(
   @PathSensitive(PathSensitivity.RELATIVE)
   val shadowJar: File,
 ) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> = listOf(
-    "-Dotel.javaagent.debug=true",
-    "-javaagent:${agentShadowJar.absolutePath}",
-    // make the path to the javaagent available to tests
-    "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
-    "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
-    "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
-    "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
-    // prevent sporadic gradle deadlocks, see SafeLogger for more details
-    "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
-    // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
-    // in smoke tests instead.
-    "-Dotel.javaagent.add-thread-details=false",
-    "-Dotel.javaagent.experimental.indy=${findProperty("testIndy") == "true"}",
-    // suppress repeated logging of "No metric data to export - skipping export."
-    // since PeriodicMetricReader is configured with a short interval
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
-    // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
-    "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2",
-    "-Dotel.instrumentation.common.peer-service-mapping=127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
-  )
+  override fun asArguments(): Iterable<String> {
+    val list = mutableListOf(
+      "-Dotel.javaagent.debug=true",
+      "-javaagent:${agentShadowJar.absolutePath}",
+      // make the path to the javaagent available to tests
+      "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
+      "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
+      "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
+      "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
+      // prevent sporadic gradle deadlocks, see SafeLogger for more details
+      "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
+      // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
+      // in smoke tests instead.
+      "-Dotel.javaagent.add-thread-details=false",
+      "-Dotel.javaagent.experimental.indy=${findProperty("testIndy") == "true"}",
+      // suppress repeated logging of "No metric data to export - skipping export."
+      // since PeriodicMetricReader is configured with a short interval
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
+      // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
+      "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2",
+      "-Dotel.instrumentation.common.peer-service-mapping=127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+    )
+    if (denyUnsafe) {
+      list += listOf(
+        "-Dsun.misc.unsafe.memory.access=deny",
+        "-Dotel.instrumentation.deny-unsafe.enabled=true",
+        "-Dio.netty.noUnsafe=true"
+      )
+    }
+    return list
+  }
 }
 
 // need to run this after evaluate because testSets plugin adds new test tasks
