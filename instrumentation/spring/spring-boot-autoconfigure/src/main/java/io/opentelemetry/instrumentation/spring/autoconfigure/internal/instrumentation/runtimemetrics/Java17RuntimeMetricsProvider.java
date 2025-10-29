@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsConfigUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import javax.annotation.Nullable;
 
 /**
  * Configures runtime metrics collection for Java 17+.
@@ -26,6 +27,7 @@ public class Java17RuntimeMetricsProvider implements RuntimeMetricsProvider {
     return 17;
   }
 
+  @Nullable
   @Override
   public AutoCloseable start(OpenTelemetry openTelemetry, InstrumentationConfig config) {
     logger.debug("Use runtime metrics instrumentation for Java 17+");

@@ -10,6 +10,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.ParameterNameDiscoverer;
+import javax.annotation.Nullable;
 
 @Aspect
 class InstrumentationWithSpanAspect extends WithSpanAspect {
@@ -24,6 +25,7 @@ class InstrumentationWithSpanAspect extends WithSpanAspect {
             .InstrumentationAnnotationAttributeNameSupplier());
   }
 
+  @Nullable
   @Override
   @Around("@annotation(io.opentelemetry.instrumentation.annotations.WithSpan)")
   public Object traceMethod(ProceedingJoinPoint pjp) throws Throwable {

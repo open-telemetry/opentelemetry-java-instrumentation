@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.SQLFeatureNotSupportedException;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import javax.sql.DataSource;
 import org.springframework.aop.SpringProxy;
 import org.springframework.aop.framework.AdvisedSupport;
@@ -27,6 +28,7 @@ import org.springframework.core.Ordered;
 
 final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
 
+  @Nullable
   private static final Class<?> ROUTING_DATA_SOURCE_CLASS = getRoutingDataSourceClass();
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
@@ -39,6 +41,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
     this.configProvider = configProvider;
   }
 
+  @Nullable
   private static Class<?> getRoutingDataSourceClass() {
     try {
       return Class.forName("org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource");

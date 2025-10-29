@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
+import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting Spring Kafka listeners. */
 public final class SpringKafkaTelemetry {
@@ -57,7 +58,7 @@ public final class SpringKafkaTelemetry {
    * {@link AbstractMessageListenerContainer#setRecordInterceptor(RecordInterceptor)} method.
    */
   public <K, V> RecordInterceptor<K, V> createRecordInterceptor(
-      RecordInterceptor<K, V> decoratedInterceptor) {
+      @Nullable RecordInterceptor<K, V> decoratedInterceptor) {
     return new InstrumentedRecordInterceptor<>(processInstrumenter, decoratedInterceptor);
   }
 
@@ -78,7 +79,7 @@ public final class SpringKafkaTelemetry {
    * {@link AbstractMessageListenerContainer#setBatchInterceptor(BatchInterceptor)} method.
    */
   public <K, V> BatchInterceptor<K, V> createBatchInterceptor(
-      BatchInterceptor<K, V> decoratedInterceptor) {
+      @Nullable BatchInterceptor<K, V> decoratedInterceptor) {
     return new InstrumentedBatchInterceptor<>(batchProcessInstrumenter, decoratedInterceptor);
   }
 }

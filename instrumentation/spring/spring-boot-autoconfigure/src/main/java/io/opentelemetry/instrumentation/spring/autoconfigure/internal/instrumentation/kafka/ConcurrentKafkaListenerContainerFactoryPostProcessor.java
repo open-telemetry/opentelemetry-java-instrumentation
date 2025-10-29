@@ -13,6 +13,7 @@ import org.springframework.kafka.config.AbstractKafkaListenerContainerFactory;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
+import javax.annotation.Nullable;
 
 class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostProcessor {
 
@@ -47,6 +48,7 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
     return listenerContainerFactory;
   }
 
+  @Nullable
   private static <T> T readField(Object container, String filedName, Class<T> fieldType) {
     try {
       Field field = AbstractKafkaListenerContainerFactory.class.getDeclaredField(filedName);
