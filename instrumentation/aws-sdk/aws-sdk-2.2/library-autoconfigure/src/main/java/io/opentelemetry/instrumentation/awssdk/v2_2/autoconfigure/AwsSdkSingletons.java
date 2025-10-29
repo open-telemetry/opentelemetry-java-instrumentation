@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
+import io.opentelemetry.instrumentation.api.internal.SimpleConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import java.util.List;
@@ -23,8 +23,8 @@ public final class AwsSdkSingletons {
 
   private static class AwsSdkTelemetryFactory extends AbstractAwsSdkTelemetryFactory {
 
-    private ConfigPropertiesSimpleBridge bridge =
-        new ConfigPropertiesSimpleBridge(GlobalOpenTelemetry.get());
+    private SimpleConfigPropertiesBridge bridge =
+        new SimpleConfigPropertiesBridge(GlobalOpenTelemetry.get());
 
     @Override
     protected List<String> getCapturedHeaders() {

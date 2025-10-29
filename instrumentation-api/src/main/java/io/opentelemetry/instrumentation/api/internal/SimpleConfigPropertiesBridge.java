@@ -19,11 +19,11 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public final class ConfigPropertiesSimpleBridge {
+public final class SimpleConfigPropertiesBridge {
 
   @Nullable private final SimpleDeclarativeConfigPropertiesBridge bridge;
 
-  public ConfigPropertiesSimpleBridge(OpenTelemetry openTelemetry) {
+  public SimpleConfigPropertiesBridge(OpenTelemetry openTelemetry) {
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();

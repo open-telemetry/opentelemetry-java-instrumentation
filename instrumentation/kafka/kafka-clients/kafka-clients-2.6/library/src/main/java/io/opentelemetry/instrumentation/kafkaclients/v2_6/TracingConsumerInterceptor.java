@@ -11,7 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
+import io.opentelemetry.instrumentation.api.internal.SimpleConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
@@ -37,7 +37,7 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   private static KafkaTelemetry buildTelemetry() {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    ConfigPropertiesSimpleBridge bridge = new ConfigPropertiesSimpleBridge(openTelemetry);
+    SimpleConfigPropertiesBridge bridge = new SimpleConfigPropertiesBridge(openTelemetry);
     return KafkaTelemetry.builder(openTelemetry)
         .setMessagingReceiveInstrumentationEnabled(
             bridge.getBoolean(

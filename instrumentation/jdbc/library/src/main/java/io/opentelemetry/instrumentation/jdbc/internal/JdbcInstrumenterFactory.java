@@ -16,7 +16,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
+import io.opentelemetry.instrumentation.api.internal.SimpleConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
@@ -33,7 +33,7 @@ public final class JdbcInstrumenterFactory {
       new JdbcNetworkAttributesGetter();
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
-    return new ConfigPropertiesSimpleBridge(openTelemetry)
+    return new SimpleConfigPropertiesBridge(openTelemetry)
         .getBoolean("otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
   }
 
@@ -48,7 +48,7 @@ public final class JdbcInstrumenterFactory {
         openTelemetry,
         emptyList(),
         true,
-        new ConfigPropertiesSimpleBridge(openTelemetry)
+        new SimpleConfigPropertiesBridge(openTelemetry)
             .getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true),
         captureQueryParameters);
   }
@@ -99,7 +99,7 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry) {
     return createTransactionInstrumenter(
         openTelemetry,
-        new ConfigPropertiesSimpleBridge(openTelemetry)
+        new SimpleConfigPropertiesBridge(openTelemetry)
             .getBoolean("otel.instrumentation.jdbc.experimental.transaction.enabled", false));
   }
 

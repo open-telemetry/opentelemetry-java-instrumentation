@@ -19,7 +19,6 @@ import io.opentelemetry.api.trace.TracerBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesSimpleBridge;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
@@ -28,6 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomi
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.internal.SimpleConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
@@ -370,7 +370,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanSuppressor buildSpanSuppressor() {
     return new SpanSuppressors.ByContextKey(
         SpanSuppressionStrategy.fromConfig(
-                new ConfigPropertiesSimpleBridge(openTelemetry)
+                new SimpleConfigPropertiesBridge(openTelemetry)
                     .getString("otel.instrumentation.experimental.span-suppression-strategy"))
             .create(getSpanKeysFromAttributesExtractors()));
   }
