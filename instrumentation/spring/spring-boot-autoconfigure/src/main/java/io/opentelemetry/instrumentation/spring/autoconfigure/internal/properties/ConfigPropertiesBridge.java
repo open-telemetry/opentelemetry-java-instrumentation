@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -129,7 +130,7 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
     DeclarativeConfigProperties config =
-        InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
+        InstrumentationConfigUtil.javaInstrumentationConfig(requireNonNull(configProvider), node);
     if (config == null) {
       // there is no declarative config for this node
       return empty();
