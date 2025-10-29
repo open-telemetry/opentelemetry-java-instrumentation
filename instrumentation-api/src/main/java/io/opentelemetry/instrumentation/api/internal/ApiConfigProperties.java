@@ -29,7 +29,7 @@ public final class ApiConfigProperties {
       ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();
       this.bridge =
           new DeclarativeConfigPropertiesBridgeBuilder()
-               .buildApiBridgeFromInstrumentationConfig(configProvider.getInstrumentationConfig());
+              .buildApiBridgeFromInstrumentationConfig(configProvider.getInstrumentationConfig());
     } else {
       this.bridge = null;
     }
