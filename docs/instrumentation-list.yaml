@@ -2560,9 +2560,11 @@ libraries:
       name: io.opentelemetry.cassandra-4.4
     target_versions:
       javaagent:
+      - org.apache.cassandra:java-driver-core:(,)
       - com.datastax.oss:java-driver-core:[4.4,]
       library:
       - com.datastax.oss:java-driver-core:4.4.0
+      - org.apache.cassandra:java-driver-core:4.18.0
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
