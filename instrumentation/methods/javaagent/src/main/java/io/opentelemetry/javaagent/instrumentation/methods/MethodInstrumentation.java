@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.getBootstrapLoader;
@@ -107,7 +106,7 @@ public class MethodInstrumentation implements TypeInstrumentation {
       @Nullable
       public static AdviceScope start(
           SpanKind spanKind, Class<?> declaringClass, String methodName) {
-        Context parentContext = currentContext();
+        Context parentContext = Context.current();
         MethodAndType methodAndType =
             MethodAndType.create(ClassAndMethod.create(declaringClass, methodName), spanKind);
 
