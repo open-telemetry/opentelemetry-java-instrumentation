@@ -5755,12 +5755,29 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: jaxws-metro-2.2
+    display_name: Metro JAX-WS
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Metro JAX-WS web services (controller spans are disabled by default).
+    library_link: https://javaee.github.io/metro/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:
       name: io.opentelemetry.jaxws-metro-2.2
     target_versions:
       javaagent:
       - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   jboss:
   - name: jboss-logmanager-appender-1.1
     source_path: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1

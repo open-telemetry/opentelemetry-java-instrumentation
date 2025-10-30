@@ -127,6 +127,7 @@ readonly INSTRUMENTATIONS=(
   "jaxws:jaxws-2.0-axis2-1.6:javaagent:test"
   "jaxws:jaxws-cxf-3.0:javaagent:test"
   "jaxws:jaxws-jws-api-1.1:javaagent:test"
+  "jaxws:jaxws-metro-2.2:javaagent:test"
   "jetty-httpclient:jetty-httpclient-12.0:javaagent:test"
   "jetty-httpclient:jetty-httpclient-9.2:javaagent:test"
   "jodd-http-4.2:javaagent:test"
