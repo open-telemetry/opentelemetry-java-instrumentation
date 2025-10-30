@@ -31,20 +31,31 @@ There are two options for capturing traces, either using interceptors or wrappin
 
 #### Using interceptors
 
-The Kafka clients API provides a way to "intercept" messages before they are sent to the brokers as well as messages received from the broker before being passed to the application.
-The OpenTelemetry instrumented Kafka library provides two interceptors to be configured to add tracing information automatically.
-The interceptor class has to be set in the properties bag used to create the Kafka client.
+The Kafka clients API provides a way to intercept messages before they are sent to the brokers as well as messages received from the broker before being passed to the application.
 
-Use the `TracingProducerInterceptor` for the producer in order to create a "send" span automatically, each time a message is sent.
+To intercept messages and emit telemetry for a `KafkaProducer`:
 
 ```java
-props.setProperty(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+
+Map<String, Object> props = new HashMap<>();
+props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.putAll(telemetry.producerInterceptorConfigProperties());
+
+Producer<String, String> producer = new KafkaProducer<>(props);
 ```
 
-Use the `TracingConsumerInterceptor` for the consumer in order to create a "receive" span automatically, each time a message is received.
+To intercept messages and emit telemetry for a `KafkaConsumer`:
 
 ```java
-props.setProperty(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+KafkaTelemetry telemetry = KafkaTelemetry.create(openTelemetry);
+
+Map<String, Object> props = new HashMap<>();
+props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
+props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-group");
+props.putAll(telemetry.consumerInterceptorConfigProperties());
+
+Consumer<String, String> consumer = new KafkaConsumer<>(props);
 ```
 
 #### Wrapping clients

@@ -32,8 +32,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import org.junit.Assume;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -187,7 +187,7 @@ public abstract class AbstractRedissonClientTest {
       // available since 3.7.2
       Class.forName("org.redisson.api.BatchOptions$ExecutionMode");
     } catch (ClassNotFoundException exception) {
-      Assume.assumeNoException(exception);
+      Assumptions.abort();
     }
 
     testing.runWithSpan(

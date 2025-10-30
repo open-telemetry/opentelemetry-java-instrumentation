@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil
 import java.util.function.Function
+import java.util.function.UnaryOperator
 
 abstract class AbstractKtorClientTelemetryBuilder(
   private val instrumentationName: String
@@ -78,8 +79,13 @@ abstract class AbstractKtorClientTelemetryBuilder(
     })
   }
 
+  @Deprecated("Use spanNameExtractor(UnaryOperator) instead", ReplaceWith("spanNameExtractor(spanNameExtractorTransformer::apply)"))
   fun spanNameExtractor(spanNameExtractorTransformer: Function<SpanNameExtractor<HttpRequestData>, SpanNameExtractor<HttpRequestData>>) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer)
+    spanNameExtractor(spanNameExtractorTransformer::apply)
+  }
+
+  fun spanNameExtractor(spanNameExtractor: UnaryOperator<SpanNameExtractor<HttpRequestData>>) {
+    builder.setSpanNameExtractor(spanNameExtractor)
   }
 
   class ExtractorBuilder {

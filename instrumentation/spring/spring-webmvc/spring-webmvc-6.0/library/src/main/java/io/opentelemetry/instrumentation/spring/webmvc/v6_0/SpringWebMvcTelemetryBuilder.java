@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
 public final class SpringWebMvcTelemetryBuilder {
@@ -74,11 +75,24 @@ public final class SpringWebMvcTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<HttpServletRequest>, SpanNameExtractor<HttpServletRequest>>
           spanNameExtractor) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<HttpServletRequest>>) spanNameExtractor::apply);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractor) {
     builder.setSpanNameExtractor(spanNameExtractor);
     return this;
   }

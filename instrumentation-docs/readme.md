@@ -142,6 +142,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
     * AUTO_INSTRUMENTATION_SHIM
     * CONTROLLER_SPANS
     * VIEW_SPANS
+    * LOGGING_BRIDGE
 * library_link
   * URL to the library or framework's main website or documentation, or if those don't exist, the
   GitHub repository.
