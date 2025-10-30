@@ -6,10 +6,12 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.Attributes;
@@ -36,7 +38,7 @@ class HttpClientPeerServiceAttributesExtractorTest {
         PeerServiceResolver.create(singletonMap("1.2.3.4", "myService"));
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new HttpClientPeerServiceAttributesExtractor<>(
+        HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
     Context context = Context.root();
@@ -57,7 +59,7 @@ class HttpClientPeerServiceAttributesExtractorTest {
         PeerServiceResolver.create(singletonMap("example.com", "myService"));
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new HttpClientPeerServiceAttributesExtractor<>(
+        HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
     when(httpAttributesExtractor.getServerAddress(any())).thenReturn("example2.com");
@@ -85,10 +87,40 @@ class HttpClientPeerServiceAttributesExtractorTest {
     PeerServiceResolver peerServiceResolver = PeerServiceResolver.create(peerServiceMapping);
 
     HttpClientPeerServiceAttributesExtractor<String, String> underTest =
-        new HttpClientPeerServiceAttributesExtractor<>(
+        HttpClientPeerServiceAttributesExtractor.create(
             httpAttributesExtractor, peerServiceResolver);
 
     when(httpAttributesExtractor.getServerAddress(any())).thenReturn("example.com");
+
+    Context context = Context.root();
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, "request");
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, "request", "response", null);
+
+    // then
+    assertThat(startAttributes.build()).isEmpty();
+    assertThat(endAttributes.build())
+        .containsOnly(entry(PeerIncubatingAttributes.PEER_SERVICE, "myService"));
+  }
+
+  @Test
+  void shouldFallbackToHostHeaderWhenServerAddressIsNull() {
+    // given
+    PeerServiceResolver peerServiceResolver =
+        PeerServiceResolver.create(singletonMap("example.com", "myService"));
+
+    HttpClientPeerServiceAttributesExtractor<String, String> underTest =
+        HttpClientPeerServiceAttributesExtractor.create(
+            httpAttributesExtractor, peerServiceResolver);
+
+    // server address is null, should fallback to Host header
+    when(httpAttributesExtractor.getServerAddress(any())).thenReturn(null);
+    when(httpAttributesExtractor.getServerPort(any())).thenReturn(null);
+    when(httpAttributesExtractor.getHttpRequestHeader(any(), eq("host")))
+        .thenReturn(singletonList("example.com:8080"));
 
     Context context = Context.root();
 

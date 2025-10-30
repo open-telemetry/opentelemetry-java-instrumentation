@@ -1,4 +1,7 @@
 description: This instrumentation enables HTTP client spans and HTTP client metrics for requests made using the Java HTTP client.
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
 library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html
 configurations:
   - name: otel.instrumentation.http.known-methods

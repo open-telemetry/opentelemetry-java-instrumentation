@@ -20,6 +20,8 @@ dependencies {
   testImplementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.1:javaagent"))
 
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
 }

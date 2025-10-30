@@ -31,7 +31,7 @@ muzzle {
 if (findProperty("testLatestDeps") as Boolean) {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
-    maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+    maxJavaVersionForTests.set(JavaVersion.VERSION_17)
   }
 }
 
@@ -95,5 +95,11 @@ tasks {
 
   check {
     dependsOn(testStableSemconv, testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
