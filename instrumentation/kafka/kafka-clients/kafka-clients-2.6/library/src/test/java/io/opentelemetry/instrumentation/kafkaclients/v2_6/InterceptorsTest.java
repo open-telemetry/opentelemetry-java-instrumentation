@@ -30,6 +30,17 @@ import org.assertj.core.api.AbstractStringAssert;
 
 class InterceptorsTest extends AbstractInterceptorsTest {
 
+  private static final KafkaTelemetry kafkaTelemetry =
+      KafkaTelemetry.builder(testing.getOpenTelemetry())
+          .setMessagingReceiveInstrumentationEnabled(true)
+          .setCapturedHeaders(singletonList("Test-Message-Header"))
+          .build();
+
+  @Override
+  protected KafkaTelemetry kafkaTelemetry() {
+    return kafkaTelemetry;
+  }
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Override
   void assertTraces() {

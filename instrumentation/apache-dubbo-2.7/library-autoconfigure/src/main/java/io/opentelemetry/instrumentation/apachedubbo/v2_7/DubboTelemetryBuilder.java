@@ -23,6 +23,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Result;
 
@@ -38,12 +39,10 @@ public final class DubboTelemetryBuilder {
   @Nullable private String peerService;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
-  private Function<
-          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-      clientSpanNameExtractorTransformer = Function.identity();
-  private Function<
-          SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-      serverSpanNameExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorTransformer =
+      UnaryOperator.identity();
+  private UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorTransformer =
+      UnaryOperator.identity();
 
   DubboTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -65,20 +64,50 @@ public final class DubboTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setClientSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // cast result to SpanNameExtractor<DubboRequest>
   public DubboTelemetryBuilder setClientSpanNameExtractor(
       Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
           clientSpanNameExtractor) {
+    return setClientSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<DubboRequest>>)
+            input -> (SpanNameExtractor<DubboRequest>) clientSpanNameExtractor.apply(input));
+  }
+
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setClientSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
     this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
     return this;
+  }
+
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setServerSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // cast result to SpanNameExtractor<DubboRequest>
+  public DubboTelemetryBuilder setServerSpanNameExtractor(
+      Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
+          serverSpanNameExtractor) {
+    return setServerSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<DubboRequest>>)
+            input -> (SpanNameExtractor<DubboRequest>) serverSpanNameExtractor.apply(input));
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setServerSpanNameExtractor(
-      Function<SpanNameExtractor<DubboRequest>, ? extends SpanNameExtractor<? super DubboRequest>>
-          serverSpanNameExtractor) {
+      UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractor) {
     this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
     return this;
   }
@@ -90,9 +119,9 @@ public final class DubboTelemetryBuilder {
     DubboRpcAttributesGetter rpcAttributesGetter = DubboRpcAttributesGetter.INSTANCE;
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
-    SpanNameExtractor<? super DubboRequest> clientSpanNameExtractor =
+    SpanNameExtractor<DubboRequest> clientSpanNameExtractor =
         clientSpanNameExtractorTransformer.apply(spanNameExtractor);
-    SpanNameExtractor<? super DubboRequest> serverSpanNameExtractor =
+    SpanNameExtractor<DubboRequest> serverSpanNameExtractor =
         serverSpanNameExtractorTransformer.apply(spanNameExtractor);
     DubboClientNetworkAttributesGetter netClientAttributesGetter =
         new DubboClientNetworkAttributesGetter();

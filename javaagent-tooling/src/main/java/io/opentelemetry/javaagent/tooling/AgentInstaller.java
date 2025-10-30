@@ -107,7 +107,6 @@ public class AgentInstaller {
 
     logVersionInfo();
     if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
-      setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
@@ -287,14 +286,6 @@ public class AgentInstaller {
       if (value != null) {
         System.setProperty(property, value);
       }
-    }
-  }
-
-  private static void setupUnsafe(Instrumentation inst) {
-    try {
-      UnsafeInitializer.initialize(inst, AgentInstaller.class.getClassLoader());
-    } catch (UnsupportedClassVersionError exception) {
-      // ignore
     }
   }
 

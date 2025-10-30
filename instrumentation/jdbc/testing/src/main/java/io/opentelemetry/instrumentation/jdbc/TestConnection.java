@@ -28,19 +28,32 @@ import java.util.function.Consumer;
 
 /** A JDBC connection class that optionally throws an exception in the constructor, used to test */
 public class TestConnection implements Connection {
-  private String url;
-  Consumer<String> sqlConsumer = unused -> {};
 
-  public TestConnection() {}
+  private final String url;
+  private final Consumer<String> sqlConsumer;
+
+  public TestConnection() {
+    this(null, unused -> {});
+  }
+
+  public TestConnection(String url) {
+    this(url, unused -> {});
+  }
 
   public TestConnection(Consumer<String> sqlConsumer) {
-    this.sqlConsumer = sqlConsumer;
+    this(null, sqlConsumer);
   }
 
   public TestConnection(boolean throwException) {
+    this(null, unused -> {});
     if (throwException) {
       throw new IllegalStateException("connection exception");
     }
+  }
+
+  private TestConnection(String url, Consumer<String> sqlConsumer) {
+    this.url = url;
+    this.sqlConsumer = sqlConsumer;
   }
 
   @Override
@@ -293,10 +306,6 @@ public class TestConnection implements Connection {
 
   @Override
   public void setTypeMap(Map<String, Class<?>> map) throws SQLException {}
-
-  public void setUrl(String url) {
-    this.url = url;
-  }
 
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
