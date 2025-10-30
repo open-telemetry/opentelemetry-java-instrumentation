@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package opentlelemetry.instrumentation.iceberg.v1_6;
+package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import io.opentelemetry.api.metrics.DoubleGauge;
 import io.opentelemetry.api.metrics.Meter;
 
-public class ScanMetricsBuilder {
+final class ScanMetricsBuilder {
   private static final String ROOT = "iceberg.scan";
   private static final String TOTAL_PLANNING_DURATION = ROOT + ".planning.duration";
   private static final String RESULT_DATA_FILES = ROOT + ".scanned.data_files.count";
@@ -28,6 +28,10 @@ public class ScanMetricsBuilder {
   private static final String POSITIONAL_DELETE_FILES =
       ROOT + ".scanned.positional_delete_files.count";
   private static final String DVS = ROOT + ".scanned.dvs.count";
+
+  private ScanMetricsBuilder() {
+    // prevents instantiation
+  }
 
   static DoubleGauge totalPlanningDuration(Meter meter) {
     return meter

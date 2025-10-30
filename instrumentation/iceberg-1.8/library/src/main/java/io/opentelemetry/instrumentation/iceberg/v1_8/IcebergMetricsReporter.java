@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package opentlelemetry.instrumentation.iceberg.v1_6;
+package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import org.apache.iceberg.metrics.CommitReport;
 import org.apache.iceberg.metrics.CounterResult;
@@ -64,7 +64,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       DoubleGauge metric =
-          ScanMetricsBuilder.scannedDataManifestsCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          ScanMetricsBuilder.scannedDataManifestsCount(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
 
@@ -72,7 +73,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       DoubleGauge metric =
-          ScanMetricsBuilder.scannedDeleteManifestsCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          ScanMetricsBuilder.scannedDeleteManifestsCount(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
 
@@ -88,7 +90,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       DoubleGauge metric =
-          ScanMetricsBuilder.totalDeleteManifestsCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          ScanMetricsBuilder.totalDeleteManifestsCount(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
 
@@ -171,7 +174,6 @@ public class IcebergMetricsReporter implements MetricsReporter {
           ScanMetricsBuilder.deletionVectorFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
-
   }
 
   void reportCommitMetrics(CommitReport commitReport) {}
