@@ -15,6 +15,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.net.URL;
 import java.net.URLClassLoader;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -85,9 +86,9 @@ class ExceptionHandlerTest {
     int initLogEvents = testHandler.getRecords().size();
 
     // Triggers classload and instrumentation
-    assertThat(SomeClass.isInstrumented())
-        .describedAs("method return value should be preserved when exception is thrown in advice")
-        .isFalse();
+    AtomicBoolean isInstrumented = new AtomicBoolean(false);
+    SomeClass.isInstrumented(isInstrumented);
+    assertThat(isInstrumented.get()).describedAs("method should have been instrumented").isTrue();
 
     assertThat(testHandler.getRecords())
         .hasSize(initLogEvents + 1)
@@ -128,8 +129,8 @@ class ExceptionHandlerTest {
 
   public static class SomeClass {
 
-    public static boolean isInstrumented() {
-      return false;
+    public static void isInstrumented(AtomicBoolean instrumented) {
+      instrumented.set(false);
     }
 
     public static void smallStack() {
