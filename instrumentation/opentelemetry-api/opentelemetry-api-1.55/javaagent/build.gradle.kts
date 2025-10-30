@@ -16,3 +16,9 @@ dependencies {
 
   testImplementation("io.opentelemetry:opentelemetry-api-incubator")
 }
+
+tasks.withType<Test>().configureEach {
+  jvmArgs(
+    "-Dotel.experimental.config.file=$projectDir/src/test/resources/declarative-config.yaml"
+  )
+}
