@@ -68,6 +68,13 @@ public class ContextTestInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetApiUsageAdvice {
+
+    @Advice.OnMethodEnter(skipOn = Advice.OnNonDefaultValue.class)
+    public static boolean methodEnter() {
+      // always skip original method body
+      return true;
+    }
+
     @AssignReturned.ToReturned
     @Advice.OnMethodExit
     public static int methodExit(@Advice.This KeyClass thiz) {
