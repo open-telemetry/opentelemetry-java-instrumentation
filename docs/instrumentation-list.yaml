@@ -5300,8 +5300,12 @@ libraries:
   - name: jaxrs-1.0
     display_name: JAX-RS 1.x
     description: |
-      This instrumentation enables spans for JAX-RS methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information and enables controller spans for JAX-RS annotated methods (this instrumentation is disabled by default).
     library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-1.0
     scope:
       name: io.opentelemetry.jaxrs-1.0
@@ -5325,8 +5329,12 @@ libraries:
   - name: jaxrs-2.0-annotations
     display_name: JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-2.0-annotations
@@ -5354,8 +5362,11 @@ libraries:
   - name: jaxrs-2.0-cxf-3.2
     display_name: Apache CXF JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Apache CXF, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Apache CXF (controller spans are disabled by default).
     library_link: https://cxf.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
     scope:
       name: io.opentelemetry.jaxrs-2.0-cxf-3.2
@@ -5394,8 +5405,11 @@ libraries:
   - name: jaxrs-2.0-jersey-2.0
     display_name: Eclipse Jersey JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Jersey (controller spans are disabled by default).
     library_link: https://eclipse-ee4j.github.io/jersey/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-jersey-2.0
@@ -5434,8 +5448,11 @@ libraries:
   - name: jaxrs-2.0-resteasy-3.0
     display_name: JBoss RESTEasy JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.0
@@ -5474,8 +5491,11 @@ libraries:
   - name: jaxrs-2.0-resteasy-3.1
     display_name: JBoss RESTEasy JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.1
@@ -5514,8 +5534,12 @@ libraries:
   - name: jaxrs-3.0-annotations
     display_name: JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://jakarta.ee/specifications/restful-ws/3.0/
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-3.0-annotations
@@ -5543,8 +5567,11 @@ libraries:
   - name: jaxrs-3.0-jersey-3.0
     display_name: Eclipse Jersey JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Jersey (controller spans are disabled by default).
     library_link: https://eclipse-ee4j.github.io/jersey/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
     minimum_java_version: 11
     scope:
@@ -5583,8 +5610,11 @@ libraries:
   - name: jaxrs-3.0-resteasy-6.0
     display_name: JBoss RESTEasy JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
     minimum_java_version: 11
     scope:
