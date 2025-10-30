@@ -66,7 +66,6 @@ import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import spock.util.environment.Jvm;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
@@ -158,7 +157,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
         Boolean.getBoolean("testLatestDeps")
-            || !Jvm.getCurrent().isJava21Compatible()
+            || Double.parseDouble(System.getProperty("java.specification.version")) < 21
             || Boolean.getBoolean("collectMetadata"));
   }
 

@@ -13,14 +13,15 @@ import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /** A builder of {@link R2dbcTelemetry}. */
 public final class R2dbcTelemetryBuilder {
 
   private final R2dbcInstrumenterBuilder instrumenterBuilder;
   private boolean statementSanitizationEnabled = true;
-  private Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
-      spanNameExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer =
+      UnaryOperator.identity();
   private boolean sqlCommenterEnabled;
 
   static {
@@ -50,12 +51,27 @@ public final class R2dbcTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // cast result to SpanNameExtractor<DbExecution>
   public R2dbcTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
           spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<DbExecution>>)
+            input -> (SpanNameExtractor<DbExecution>) spanNameExtractorTransformer.apply(input));
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public R2dbcTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractor) {
+    this.spanNameExtractorTransformer = spanNameExtractor;
     return this;
   }
 

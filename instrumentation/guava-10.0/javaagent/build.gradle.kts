@@ -12,11 +12,6 @@ muzzle {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental span attributes
-  jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
-}
-
 dependencies {
   bootstrap(project(":instrumentation:executors:bootstrap"))
 
@@ -47,7 +42,14 @@ tasks {
     jvmArgs("-Dotel.semconv-stability.opt-in=code/dup")
   }
 
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.guava.experimental-span-attributes=true")
+  }
+
   check {
-    dependsOn(testStableSemconv, testBothSemconv)
+    dependsOn(testStableSemconv, testBothSemconv, testExperimental)
   }
 }

@@ -26,7 +26,10 @@ import org.apache.kafka.common.TopicPartition;
  * A ConsumerInterceptor that adds tracing capability. Add this interceptor's class name or class
  * via ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG property to your Consumer's properties to get it
  * instantiated and used. See more details on ConsumerInterceptor usage in its Javadoc.
+ *
+ * @deprecated Use {@link KafkaTelemetry#consumerInterceptorConfigProperties()} instead.
  */
+@Deprecated
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
   private static final KafkaTelemetry telemetry =
@@ -47,13 +50,16 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
   public ConsumerRecords<K, V> onConsume(ConsumerRecords<K, V> records) {
     // timer should be started before fetching ConsumerRecords, but there is no callback for that
     Timer timer = Timer.start();
-    Context receiveContext = telemetry.buildAndFinishSpan(records, consumerGroup, clientId, timer);
+    Context receiveContext =
+        telemetry
+            .getConsumerTelemetry()
+            .buildAndFinishSpan(records, consumerGroup, clientId, timer);
     if (receiveContext == null) {
       receiveContext = Context.current();
     }
     KafkaConsumerContext consumerContext =
         KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId);
-    return telemetry.addTracing(records, consumerContext);
+    return telemetry.getConsumerTelemetry().addTracing(records, consumerContext);
   }
 
   @Override

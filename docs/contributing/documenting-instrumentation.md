@@ -209,6 +209,7 @@ List of possible options:
 * `AUTO_INSTRUMENTATION_SHIM`: Instrumentation that adapts or bridges instrumentation from upstream libraries or frameworks
 * `CONTROLLER_SPANS`: Instrumentation that generates controller-level spans for controller/handler methods in web frameworks (disabled by default, experimental)
 * `VIEW_SPANS`: Instrumentation that generates view-level spans for view rendering such as templates or JSP (disabled by default, experimental)
+* `LOGGING_BRIDGE`: Instrumentation that bridges logging framework events to the OpenTelemetry Logs API. These instrumentations capture log records from standard logging frameworks and emit them as OpenTelemetry log records.
 
 ### Library Link
 
