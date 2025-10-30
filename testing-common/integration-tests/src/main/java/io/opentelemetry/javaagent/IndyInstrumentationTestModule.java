@@ -180,7 +180,7 @@ public class IndyInstrumentationTestModule extends InstrumentationModule
           suppress = Throwable.class,
           onThrowable = Throwable.class,
           inline = false)
-      public static void onMethodExit(@Advice.Thrown Throwable throwable) {
+      public static void onMethodExit() {
         throw new RuntimeException("This exception should be suppressed");
       }
     }
