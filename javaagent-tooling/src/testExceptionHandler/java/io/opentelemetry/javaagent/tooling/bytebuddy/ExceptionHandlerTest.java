@@ -113,7 +113,8 @@ class ExceptionHandlerTest {
 
     Class<?> someClazz = loader.loadClass(SomeClass.class.getName());
     assertThat(someClazz.getClassLoader()).isSameAs(loader);
-    someClazz.getMethod("isInstrumented").invoke(null);
+    AtomicBoolean instrumented = new AtomicBoolean(false);
+    someClazz.getMethod("isInstrumented", AtomicBoolean.class).invoke(null, instrumented);
     assertThat(testHandler.getRecords()).hasSize(initLogEvents);
   }
 
