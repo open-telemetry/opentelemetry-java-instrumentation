@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongGauge;
 import org.apache.iceberg.metrics.CommitReport;
 import org.apache.iceberg.metrics.CounterResult;
@@ -46,132 +47,134 @@ public class IcebergMetricsReporter implements MetricsReporter {
     CounterResult current = metrics.resultDataFiles();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.scannedDataFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.resultDeleteFiles();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.scannedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.scannedDataManifests();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.scannedDataManifestsCount(
               openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.scannedDeleteManifests();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.scannedDeleteManifestsCount(
               openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.totalDataManifests();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.totalDataManifestsCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.totalDeleteManifests();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.totalDeleteManifestsCount(
               openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.totalFileSizeInBytes();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.scannedDataFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.totalDeleteFileSizeInBytes();
 
     if (current != null) {
-      LongGauge metric =
+      LongCounter metric =
           ScanMetricsBuilder.scannedDeleteFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      metric.add(current.value());
     }
 
     current = metrics.skippedDataManifests();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.skippedDataManifests(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.skippedDataManifestsCount(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.skippedDeleteManifests();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.skippedDeleteManifests(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.skippedDeleteManifestsCount(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.skippedDataFiles();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.skippedDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.skippedDataFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.skippedDeleteFiles();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.skippedDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.skippedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.indexedDeleteFiles();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.indexedDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.indexedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.equalityDeleteFiles();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.equalityDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.equalityDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.positionalDeleteFiles();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.positionDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.positionDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
 
     current = metrics.dvs();
 
     if (current != null) {
-      LongGauge metric =
-          ScanMetricsBuilder.deletionVectorFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(current.value());
+      LongCounter metric =
+          ScanMetricsBuilder.deletionVectorFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value());
     }
   }
 

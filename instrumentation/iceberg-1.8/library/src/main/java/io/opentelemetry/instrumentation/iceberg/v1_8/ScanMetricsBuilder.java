@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
+import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongGauge;
 import io.opentelemetry.api.metrics.Meter;
 
@@ -42,148 +43,132 @@ final class ScanMetricsBuilder {
         .build();
   }
 
-  static LongGauge scannedDataFilesCount(Meter meter) {
+  static LongCounter scannedDataFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(RESULT_DATA_FILES)
+        .counterBuilder(RESULT_DATA_FILES)
         .setDescription("The number of scanned data files.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge scannedDeleteFilesCount(Meter meter) {
+  static LongCounter scannedDeleteFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(RESULT_DELETE_FILES)
+        .counterBuilder(RESULT_DELETE_FILES)
         .setDescription("The number of scanned delete files.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge scannedDataManifestsCount(Meter meter) {
+  static LongCounter scannedDataManifestsCount(Meter meter) {
     return meter
-        .gaugeBuilder(SCANNED_DATA_MANIFESTS)
+        .counterBuilder(SCANNED_DATA_MANIFESTS)
         .setDescription("The number of scanned data manifests.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge scannedDeleteManifestsCount(Meter meter) {
+  static LongCounter scannedDeleteManifestsCount(Meter meter) {
     return meter
-        .gaugeBuilder(SCANNED_DELETE_MANIFESTS)
+        .counterBuilder(SCANNED_DELETE_MANIFESTS)
         .setDescription("The number of scanned delete manifests.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge totalDataManifestsCount(Meter meter) {
+  static LongCounter totalDataManifestsCount(Meter meter) {
     return meter
-        .gaugeBuilder(TOTAL_DATA_MANIFESTS)
+        .counterBuilder(TOTAL_DATA_MANIFESTS)
         .setDescription("The number of all data manifests.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge totalDeleteManifestsCount(Meter meter) {
+  static LongCounter totalDeleteManifestsCount(Meter meter) {
     return meter
-        .gaugeBuilder(TOTAL_DELETE_MANIFESTS)
+        .counterBuilder(TOTAL_DELETE_MANIFESTS)
         .setDescription("The number of all delete manifests.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge scannedDataFilesSize(Meter meter) {
+  static LongCounter scannedDataFilesSize(Meter meter) {
     return meter
-        .gaugeBuilder(TOTAL_FILE_SIZE_IN_BYTES)
+        .counterBuilder(TOTAL_FILE_SIZE_IN_BYTES)
         .setDescription("The total size of all scanned data files.")
         .setUnit("byte")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge scannedDeleteFilesSize(Meter meter) {
+  static LongCounter scannedDeleteFilesSize(Meter meter) {
     return meter
-        .gaugeBuilder(TOTAL_DELETE_FILE_SIZE_IN_BYTES)
+        .counterBuilder(TOTAL_DELETE_FILE_SIZE_IN_BYTES)
         .setDescription("The total size of all scanned delete files.")
         .setUnit("byte")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge skippedDataManifests(Meter meter) {
+  static LongCounter skippedDataManifestsCount(Meter meter) {
     return meter
-        .gaugeBuilder(SKIPPED_DATA_MANIFESTS)
+        .counterBuilder(SKIPPED_DATA_MANIFESTS)
         .setDescription("The number of data manifests that were skipped during the scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge skippedDeleteManifests(Meter meter) {
+  static LongCounter skippedDeleteManifestsCount(Meter meter) {
     return meter
-        .gaugeBuilder(SKIPPED_DELETE_MANIFESTS)
+        .counterBuilder(SKIPPED_DELETE_MANIFESTS)
         .setDescription("The number of delete manifests that were skipped during the scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge skippedDataFiles(Meter meter) {
+  static LongCounter skippedDataFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(SKIPPED_DATA_FILES)
+        .counterBuilder(SKIPPED_DATA_FILES)
         .setDescription("The number of data files that were skipped during the scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge skippedDeleteFiles(Meter meter) {
+  static LongCounter skippedDeleteFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(SKIPPED_DELETE_FILES)
+        .counterBuilder(SKIPPED_DELETE_FILES)
         .setDescription("The number of delete files that were skipped during the scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge indexedDeleteFiles(Meter meter) {
+  static LongCounter indexedDeleteFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(INDEXED_DELETE_FILES)
+        .counterBuilder(INDEXED_DELETE_FILES)
         .setDescription(
             "The number of delete files constituting the delete file index for this scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge equalityDeleteFiles(Meter meter) {
+  static LongCounter equalityDeleteFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(EQUALITY_DELETE_FILES)
+        .counterBuilder(EQUALITY_DELETE_FILES)
         .setDescription("The number of equality delete files relevant for the current scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge positionDeleteFiles(Meter meter) {
+  static LongCounter positionDeleteFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(POSITIONAL_DELETE_FILES)
+        .counterBuilder(POSITIONAL_DELETE_FILES)
         .setDescription("The number of position delete files relevant for the current scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 
-  static LongGauge deletionVectorFiles(Meter meter) {
+  static LongCounter deletionVectorFilesCount(Meter meter) {
     return meter
-        .gaugeBuilder(DVS)
+        .counterBuilder(DVS)
         .setDescription("The number of deletion vector (DV) files relevant for the current scan.")
         .setUnit("{file}")
-        .ofLongs()
         .build();
   }
 }
