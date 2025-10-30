@@ -1,24 +1,24 @@
 ----------------------------------------------------------
- Run at Wed Oct 29 05:16:31 UTC 2025
+ Run at Thu Oct 30 05:34:40 UTC 2025
  release : compares no agent, latest stable, and latest snapshot agents
  5 users, 5000 iterations
 ----------------------------------------------------------
 Agent               :              none           latest         snapshot
-Run duration        :          00:00:45         00:00:49         00:00:48
-Avg. CPU (user) %   :        0.38076293       0.37461615       0.37456822
-Max. CPU (user) %   :          0.471464       0.52839506        0.5472637
-Avg. mch tot cpu %  :        0.98662007        0.9859855        0.9834736
-Startup time (ms)   :             10705            12131            12096
-Total allocated MB  :          19271.65         24225.11         23279.51
-Min heap used (MB)  :            256.84           247.04           134.90
-Max heap used (MB)  :            693.27           691.00           485.62
-Thread switch rate  :          61859.94        60099.582        61862.824
-GC time (ms)        :               773              823              471
-GC pause time (ms)  :               773              823              471
-Req. mean (ms)      :              3.53             3.79             3.70
-Req. p95 (ms)       :              8.57             9.47             9.05
-Iter. mean (ms)     :             45.21            48.65            47.45
-Iter. p95 (ms)      :             64.75            73.62            71.27
-Net read avg (bps)  :       17213014.00      16132391.00      16603085.00
-Net write avg (bps) :       23220191.00      85425475.00      87838001.00
-Peak threads        :                39               52               51
+Run duration        :          00:00:43         00:00:47         00:00:47
+Avg. CPU (user) %   :        0.35931528       0.36645228        0.3662649
+Max. CPU (user) %   :        0.45925927       0.50247526        0.5234568
+Avg. mch tot cpu %  :         0.9775612       0.98755604        0.9841344
+Startup time (ms)   :              9744            11151            12076
+Total allocated MB  :          19980.72         24247.77         24242.13
+Min heap used (MB)  :            273.45           254.41           179.20
+Max heap used (MB)  :            703.59           601.42           528.70
+Thread switch rate  :          63335.53        61782.586        62063.055
+GC time (ms)        :               729              791              697
+GC pause time (ms)  :               729              791              697
+Req. mean (ms)      :              3.36             3.66             3.62
+Req. p95 (ms)       :              8.30             9.18             9.04
+Iter. mean (ms)     :             43.14            46.98            46.42
+Iter. p95 (ms)      :             61.25            68.96            67.80
+Net read avg (bps)  :       17723789.00      16706707.00      17023359.00
+Net write avg (bps) :       23917040.00      88298403.00      89974853.00
+Peak threads        :                39               50               50
