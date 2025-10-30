@@ -446,6 +446,7 @@ include(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:tes
 include(":instrumentation:log4j:log4j-mdc-1.2:javaagent")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
 include(":instrumentation:logback:logback-appender-1.0:library")
+include(":instrumentation:logback:logback-appender-1.0:testing")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")

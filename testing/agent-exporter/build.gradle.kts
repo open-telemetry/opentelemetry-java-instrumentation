@@ -15,6 +15,8 @@ dependencies {
   compileOnly(project(":javaagent-extension-api"))
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
+  // Used by byte-buddy but not brought in as a transitive dependency.
+  compileOnly("com.google.code.findbugs:annotations")
 
   implementation("io.opentelemetry:opentelemetry-exporter-otlp-common")
   compileOnly("io.opentelemetry:opentelemetry-api-incubator")

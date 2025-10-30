@@ -15,4 +15,5 @@ public enum InstrumentationFeature {
   AUTO_INSTRUMENTATION_SHIM,
   CONTROLLER_SPANS,
   VIEW_SPANS,
+  LOGGING_BRIDGE
 }
