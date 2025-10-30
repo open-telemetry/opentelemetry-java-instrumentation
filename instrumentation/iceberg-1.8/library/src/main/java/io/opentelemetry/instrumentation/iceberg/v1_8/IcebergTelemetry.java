@@ -5,9 +5,8 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
-import org.apache.iceberg.TableScan;
-
 import io.opentelemetry.api.OpenTelemetry;
+import org.apache.iceberg.TableScan;
 
 public class IcebergTelemetry {
   private final OpenTelemetry openTelemetry;

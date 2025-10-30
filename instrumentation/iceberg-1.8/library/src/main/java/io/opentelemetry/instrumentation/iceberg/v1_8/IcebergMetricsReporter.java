@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.metrics.LongGauge;
 import org.apache.iceberg.metrics.CommitReport;
 import org.apache.iceberg.metrics.CounterResult;
 import org.apache.iceberg.metrics.MetricsReport;
@@ -13,11 +15,8 @@ import org.apache.iceberg.metrics.ScanMetricsResult;
 import org.apache.iceberg.metrics.ScanReport;
 import org.apache.iceberg.metrics.TimerResult;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.metrics.DoubleGauge;
-
 public class IcebergMetricsReporter implements MetricsReporter {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg_1.6";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg_1.8";
 
   private final OpenTelemetry openTelemetry;
 
@@ -35,11 +34,11 @@ public class IcebergMetricsReporter implements MetricsReporter {
   }
 
   void reportScanMetrics(ScanReport scanReport) {
-    final ScanMetricsResult metrics = scanReport.scanMetrics();
+    ScanMetricsResult metrics = scanReport.scanMetrics();
     TimerResult duration = metrics.totalPlanningDuration();
 
     if (duration != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.totalPlanningDuration(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(duration.totalDuration().toMillis());
     }
@@ -47,7 +46,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     CounterResult current = metrics.resultDataFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.scannedDataFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -55,7 +54,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.resultDeleteFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.scannedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -63,7 +62,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.scannedDataManifests();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.scannedDataManifestsCount(
               openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
@@ -72,7 +71,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.scannedDeleteManifests();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.scannedDeleteManifestsCount(
               openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
@@ -81,7 +80,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.totalDataManifests();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.totalDataManifestsCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -89,7 +88,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.totalDeleteManifests();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.totalDeleteManifestsCount(
               openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
@@ -98,7 +97,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.totalFileSizeInBytes();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.scannedDataFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -106,7 +105,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.totalDeleteFileSizeInBytes();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.scannedDeleteFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -114,7 +113,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.skippedDataManifests();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.skippedDataManifests(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -122,7 +121,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.skippedDeleteManifests();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.skippedDeleteManifests(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -130,7 +129,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.skippedDataFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.skippedDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -138,7 +137,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.skippedDeleteFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.skippedDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -146,7 +145,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.indexedDeleteFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.indexedDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -154,7 +153,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.equalityDeleteFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.equalityDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -162,7 +161,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.positionalDeleteFiles();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.positionDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
@@ -170,7 +169,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
     current = metrics.dvs();
 
     if (current != null) {
-      DoubleGauge metric =
+      LongGauge metric =
           ScanMetricsBuilder.deletionVectorFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(current.value());
     }
