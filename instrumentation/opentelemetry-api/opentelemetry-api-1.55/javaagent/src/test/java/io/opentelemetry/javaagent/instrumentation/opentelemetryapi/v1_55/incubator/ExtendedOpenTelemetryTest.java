@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_55.incuba
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -19,17 +20,19 @@ class ExtendedOpenTelemetryTest {
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
 
-  private ExtendedOpenTelemetry extendedOpenTelemetry;
+  private OpenTelemetry openTelemetry;
 
   @BeforeEach
   void setup() {
-    extendedOpenTelemetry = (ExtendedOpenTelemetry) GlobalOpenTelemetry.get();
+    openTelemetry = GlobalOpenTelemetry.get();
   }
 
   @Test
   void getConfig() {
+    assertThat(openTelemetry).isInstanceOf(ExtendedOpenTelemetry.class);
+
     DeclarativeConfigProperties instrumentationConfig =
-        extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
-    assertThat(instrumentationConfig).isNull();
+        ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider().getInstrumentationConfig();
+    assertThat(instrumentationConfig).isNotNull();
   }
 }
