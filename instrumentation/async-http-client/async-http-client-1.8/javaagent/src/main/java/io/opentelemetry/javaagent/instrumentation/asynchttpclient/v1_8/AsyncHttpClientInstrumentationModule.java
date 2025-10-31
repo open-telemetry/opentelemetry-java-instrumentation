@@ -22,9 +22,7 @@ public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new AsyncHttpProviderInstrumentation(), 
-        new ResponseInstrumentation());
+    return asList(new AsyncHttpProviderInstrumentation(), new ResponseInstrumentation());
   }
 
   @Override

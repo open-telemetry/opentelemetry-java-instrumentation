@@ -25,9 +25,7 @@ public final class AsyncHttpClientSingletons {
 
     INSTRUMENTER =
         JavaagentHttpClientInstrumenters.create(
-            INSTRUMENTATION_NAME,
-            httpAttributesGetter,
-            HttpHeaderSetter.INSTANCE);
+            INSTRUMENTATION_NAME, httpAttributesGetter, HttpHeaderSetter.INSTANCE);
 
     ASYNC_HANDLER_DATA = VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
   }

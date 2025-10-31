@@ -5,14 +5,14 @@
 
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
+import static java.util.Collections.emptyList;
+
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.net.MalformedURLException;
 import java.util.List;
 import javax.annotation.Nullable;
-
-import static java.util.Collections.emptyList;
 
 final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {

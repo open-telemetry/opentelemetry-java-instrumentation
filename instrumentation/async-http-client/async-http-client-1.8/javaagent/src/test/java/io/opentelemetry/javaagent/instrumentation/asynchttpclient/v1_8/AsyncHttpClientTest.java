@@ -19,11 +19,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTes
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import java.io.IOException;
 import java.net.URI;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.io.IOException;
 import java.util.concurrent.ExecutionException;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
