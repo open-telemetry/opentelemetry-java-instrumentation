@@ -17,7 +17,7 @@ import java.util.Map;
 final class SqlCommenterUtil {
 
   /**
-   * Append comment containing tracing information at the end of the query. See <a
+   * Append comment containing tracing information to the query. See <a
    * href="https://google.github.io/sqlcommenter/spec/">sqlcommenter</a> for the description of the
    * algorithm.
    */

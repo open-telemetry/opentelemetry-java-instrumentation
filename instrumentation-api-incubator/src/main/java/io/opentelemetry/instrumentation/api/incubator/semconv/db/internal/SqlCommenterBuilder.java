@@ -70,11 +70,11 @@ public final class SqlCommenterBuilder {
    * Context propagator.
    *
    * @param propagator a function that receives the database connection and whether the query is
-   *     executed only once or could be reused. Connection may be a jdbc Connection, R2DBC
-   *     Connection, or any other connection type used by the data access framework performing the
+   *     executed only once or could be reused. Connection may be a JDBC connection, R2DBC
+   *     connection, or any other connection type used by the data access framework performing the
    *     operation. If the second argument to the function is true, the query is executed only once
-   *     (e.g. JDBC {@link Statement#execute(String)}). If false, the query could be reused (e.g.
-   *     JDBC {@link Connection#prepareStatement(String)}).
+   *     (e.g. JDBC {@link Statement#execute(String)}) immediately after processing. If false, the
+   *     query could be reused (e.g. JDBC {@link Connection#prepareStatement(String)}).
    */
   @CanIgnoreReturnValue
   public SqlCommenterBuilder setPropagator(

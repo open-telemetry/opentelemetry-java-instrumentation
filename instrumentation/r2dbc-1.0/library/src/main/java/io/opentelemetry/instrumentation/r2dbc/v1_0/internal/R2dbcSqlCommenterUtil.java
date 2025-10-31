@@ -30,7 +30,7 @@ public final class R2dbcSqlCommenterUtil {
           public String onCreateStatement(String query, StatementInfo info) {
             Connection connection =
                 unwapConnection(info.getConnectionInfo().getOriginalConnection());
-            String modifiedQuery = sqlCommenter.processQuery(connection, query, true);
+            String modifiedQuery = sqlCommenter.processQuery(connection, query, false);
             if (!modifiedQuery.equals(query)) {
               // We store mapping from the modified query to original query on the connection
               // the assumption here is that since the connection is not thread safe it won't be

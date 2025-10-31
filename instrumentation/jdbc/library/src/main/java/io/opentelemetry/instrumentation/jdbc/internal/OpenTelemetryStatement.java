@@ -71,7 +71,7 @@ class OpenTelemetryStatement<S extends Statement> implements Statement {
   }
 
   private String processQuery(String sql) {
-    return sqlCommenter.processQuery(connection.delegate, sql, false);
+    return sqlCommenter.processQuery(connection.delegate, sql, true);
   }
 
   @Override

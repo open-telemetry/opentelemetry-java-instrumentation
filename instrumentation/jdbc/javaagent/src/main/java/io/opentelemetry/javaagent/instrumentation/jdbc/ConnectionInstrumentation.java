@@ -104,7 +104,7 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
       Context context = Java8BytecodeBridge.currentContext();
       if (PrepareContext.get(context) == null) {
         // process sql only in the outermost prepare call and save the original sql in context
-        String processSql = JdbcSingletons.processSql(connection, sql, true);
+        String processSql = JdbcSingletons.processSql(connection, sql, false);
         Scope scope = PrepareContext.init(context, sql).makeCurrent();
         return new Object[] {processSql, scope};
       } else {

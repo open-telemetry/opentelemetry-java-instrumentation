@@ -69,7 +69,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
         return new Object[] {null, sql};
       }
 
-      String processedSql = JdbcSingletons.processSql(statement, sql, false);
+      String processedSql = JdbcSingletons.processSql(statement, sql, true);
       return new Object[] {
         JdbcAdviceScope.startStatement(CallDepth.forClass(Statement.class), sql, statement),
         processedSql
@@ -101,7 +101,7 @@ public class StatementInstrumentation implements TypeInstrumentation {
       }
 
       JdbcData.addStatementBatch(statement, sql);
-      return JdbcSingletons.processSql(statement, sql, false);
+      return JdbcSingletons.processSql(statement, sql, true);
     }
   }
 

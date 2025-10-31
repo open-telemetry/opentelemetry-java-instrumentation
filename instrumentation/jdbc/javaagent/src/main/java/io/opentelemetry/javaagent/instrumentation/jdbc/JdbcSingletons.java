@@ -114,7 +114,7 @@ public final class JdbcSingletons {
     return builder.build();
   }
 
-  public static String processSql(Statement statement, String sql, boolean safe) {
+  public static String processSql(Statement statement, String sql, boolean executed) {
     Connection connection;
     try {
       connection = statement.getConnection();
@@ -122,11 +122,11 @@ public final class JdbcSingletons {
       // connection was already closed
       return sql;
     }
-    return processSql(connection, sql, safe);
+    return processSql(connection, sql, executed);
   }
 
-  public static String processSql(Connection connection, String sql, boolean safe) {
-    return SQL_COMMENTER.processQuery(connection, sql, safe);
+  public static String processSql(Connection connection, String sql, boolean executed) {
+    return SQL_COMMENTER.processQuery(connection, sql, executed);
   }
 
   private JdbcSingletons() {}

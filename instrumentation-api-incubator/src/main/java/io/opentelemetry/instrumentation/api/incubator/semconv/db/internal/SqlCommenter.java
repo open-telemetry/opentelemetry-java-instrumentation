@@ -36,13 +36,24 @@ public final class SqlCommenter {
     return builder().build();
   }
 
-  public String processQuery(Object connection, String sql, boolean safe) {
+  /**
+   * Augments the given SQL query with comment containing tracing context.
+   *
+   * @param connection connection object, e.g. JDBC connection or R2DBC connection, that is used to
+   *     execute the query
+   * @param sql original query
+   * @param executed whether the query is immediately executed after being processed, e.g. {@link
+   *     java.sql.Statement#execute(String)}, or may be executed later, e.g. {@link
+   *     java.sql.Connection#prepareStatement(String)}
+   * @return modified query
+   */
+  public String processQuery(Object connection, String sql, boolean executed) {
     if (!enabled) {
       return sql;
     }
 
     return SqlCommenterUtil.processQuery(
-        sql, propagator.apply(connection, safe), prepend.test(connection));
+        sql, propagator.apply(connection, executed), prepend.test(connection));
   }
 
   public boolean isEnabled() {
