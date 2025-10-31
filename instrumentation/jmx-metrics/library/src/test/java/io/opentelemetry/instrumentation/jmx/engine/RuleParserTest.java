@@ -453,8 +453,8 @@ class RuleParserTest {
               assertThat(me.getInfo().getMetricName()).isEqualTo("state_metric");
               assertThat(me.getInfo().getType()).isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
               assertThat(me.getInfo().getUnit())
-                  .describedAs("state metric unit should be an empty string")
-                  .isEmpty();
+                  .describedAs("state metric unit should be 1")
+                  .isEqualTo("1");
 
               assertThat(me.getAttributes()).hasSize(1);
               MetricAttribute stateAttribute = me.getAttributes().get(0);

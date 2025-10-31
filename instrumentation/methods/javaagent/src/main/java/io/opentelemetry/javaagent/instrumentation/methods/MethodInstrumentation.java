@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.methods;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.methods.MethodSingletons.getBootstrapLoader;
@@ -25,7 +24,9 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
 import java.util.Map;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.enumeration.EnumerationDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
@@ -91,42 +92,60 @@ public class MethodInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class MethodAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @MethodSpanKind SpanKind spanKind,
-        @Advice.Origin("#t") Class<?> declaringClass,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelMethod") MethodAndType classAndMethod,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
-      Context parentContext = currentContext();
-      classAndMethod =
-          MethodAndType.create(ClassAndMethod.create(declaringClass, methodName), spanKind);
+    public static class AdviceScope {
+      private final MethodAndType classAndMethod;
+      private final Context context;
+      private final Scope scope;
 
-      if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
-        return;
+      private AdviceScope(MethodAndType classAndMethod, Context context, Scope scope) {
+        this.classAndMethod = classAndMethod;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, classAndMethod);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(
+          SpanKind spanKind, Class<?> declaringClass, String methodName) {
+        Context parentContext = Context.current();
+        MethodAndType methodAndType =
+            MethodAndType.create(ClassAndMethod.create(declaringClass, methodName), spanKind);
+
+        if (!instrumenter().shouldStart(parentContext, methodAndType)) {
+          return null;
+        }
+        Context context = instrumenter().start(parentContext, methodAndType);
+        return new AdviceScope(methodAndType, context, context.makeCurrent());
+      }
+
+      public Object end(
+          Class<?> methodReturnType, Object returnValue, @Nullable Throwable throwable) {
+        scope.close();
+        return AsyncOperationEndSupport.create(instrumenter(), Void.class, methodReturnType)
+            .asyncEnd(context, classAndMethod, returnValue, throwable);
+      }
     }
 
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void stopSpan(
-        @MethodReturnType Class<?> methodReturnType,
-        @Advice.Local("otelMethod") MethodAndType classAndMethod,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Return(typing = Assigner.Typing.DYNAMIC, readOnly = false) Object returnValue,
-        @Advice.Thrown Throwable throwable) {
-      if (scope == null) {
-        return;
-      }
-      scope.close();
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @MethodSpanKind SpanKind spanKind,
+        @Advice.Origin("#t") Class<?> declaringClass,
+        @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(spanKind, declaringClass, methodName);
+    }
 
-      returnValue =
-          AsyncOperationEndSupport.create(instrumenter(), Void.class, methodReturnType)
-              .asyncEnd(context, classAndMethod, returnValue, throwable);
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static Object stopSpan(
+        @MethodReturnType Class<?> methodReturnType,
+        @Advice.Return(typing = Assigner.Typing.DYNAMIC) Object returnValue,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+
+      if (adviceScope != null) {
+        return adviceScope.end(methodReturnType, returnValue, throwable);
+      }
+      return returnValue;
     }
   }
 }

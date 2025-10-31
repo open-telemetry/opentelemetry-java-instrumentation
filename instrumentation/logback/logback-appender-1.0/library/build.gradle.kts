@@ -64,13 +64,6 @@ tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
 
-// To be able to execute the tests as GraalVM native executables
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
-}
-
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 testing {
   suites {

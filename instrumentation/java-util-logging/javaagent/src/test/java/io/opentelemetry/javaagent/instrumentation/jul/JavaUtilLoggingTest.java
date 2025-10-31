@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
+import io.opentelemetry.testing.internal.armeria.common.annotation.Nullable;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -27,6 +28,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class JavaUtilLoggingTest {
+  private static final boolean isExperimentalAttributesEnabled =
+      Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental-log-attributes");
 
   private static final Logger logger = Logger.getLogger("abc");
 
@@ -117,8 +120,12 @@ class JavaUtilLoggingTest {
       if (logException) {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()),
+                equalTo(
+                    ThreadIncubatingAttributes.THREAD_NAME,
+                    experimental(Thread.currentThread().getName())),
+                equalTo(
+                    ThreadIncubatingAttributes.THREAD_ID,
+                    experimental(Thread.currentThread().getId())),
                 equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
                 equalTo(EXCEPTION_MESSAGE, "hello"),
                 satisfies(
@@ -126,8 +133,12 @@ class JavaUtilLoggingTest {
       } else {
         assertThat(log)
             .hasAttributesSatisfyingExactly(
-                equalTo(ThreadIncubatingAttributes.THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(ThreadIncubatingAttributes.THREAD_ID, Thread.currentThread().getId()));
+                equalTo(
+                    ThreadIncubatingAttributes.THREAD_NAME,
+                    experimental(Thread.currentThread().getName())),
+                equalTo(
+                    ThreadIncubatingAttributes.THREAD_ID,
+                    experimental(Thread.currentThread().getId())));
       }
 
       if (withParent) {
@@ -163,5 +174,21 @@ class JavaUtilLoggingTest {
   @FunctionalInterface
   interface LoggerMethod {
     void call(Logger logger, String msg);
+  }
+
+  @Nullable
+  public static String experimental(String value) {
+    if (isExperimentalAttributesEnabled) {
+      return value;
+    }
+    return null;
+  }
+
+  @Nullable
+  public static Long experimental(long value) {
+    if (isExperimentalAttributesEnabled) {
+      return value;
+    }
+    return null;
   }
 }

@@ -220,6 +220,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -499,6 +501,8 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: peer.service
+          type: STRING
         - name: rpc.method
           type: STRING
         - name: rpc.service
@@ -594,6 +598,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -670,6 +676,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -750,6 +758,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -882,6 +892,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -1069,6 +1081,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1215,6 +1229,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1296,6 +1312,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -2542,9 +2560,11 @@ libraries:
       name: io.opentelemetry.cassandra-4.4
     target_versions:
       javaagent:
+      - org.apache.cassandra:java-driver-core:(,)
       - com.datastax.oss:java-driver-core:[4.4,]
       library:
       - com.datastax.oss:java-driver-core:4.4.0
+      - org.apache.cassandra:java-driver-core:4.18.0
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
@@ -3954,6 +3974,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -4505,6 +4527,11 @@ libraries:
           type: LONG
   guava:
   - name: guava-10.0
+    description: |
+      This instrumentation enables context propagation for Guava ListenableFuture, it does not emit any telemetry on its own.
+    library_link: https://github.com/google/guava
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/guava-10.0
     scope:
       name: io.opentelemetry.guava-10.0
@@ -4513,6 +4540,12 @@ libraries:
       - com.google.guava:guava:[10.0,]
       library:
       - com.google.guava:guava:10.0
+    configurations:
+    - name: otel.instrumentation.guava.experimental-span-attributes
+      description: Enables experimental span attribute `guava.canceled` for cancelled
+        operations.
+      type: boolean
+      default: false
   gwt:
   - name: gwt-2.0
     display_name: GWT
@@ -4627,9 +4660,8 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
@@ -4638,8 +4670,7 @@ libraries:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4654,9 +4685,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-4.0
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
@@ -4665,8 +4695,7 @@ libraries:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4681,9 +4710,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-6.0
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
     scope:
@@ -4693,8 +4721,7 @@ libraries:
       - org.hibernate:hibernate-core:[6.0.0.Final,)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4709,9 +4736,9 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-procedure-call-4.3
-    description: This instrumentation enables the generation of spans for Hibernate
-      stored procedure calls.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate stored procedure
+      calls.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
       name: io.opentelemetry.hibernate-procedure-call-4.3
@@ -4720,8 +4747,7 @@ libraries:
       - org.hibernate:hibernate-core:[4.3.0.Final,)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4737,8 +4763,10 @@ libraries:
           type: STRING
   - name: hibernate-reactive-1.0
     description: |
-      This instrumentation does not emit any telemetry on its own. Instead, it enables context propagation for Hibernate Reactive asynchronous operations.
+      This instrumentation enables context propagation for Hibernate Reactive, it does not emit any telemetry on its own.
     library_link: https://hibernate.org/reactive/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/hibernate/hibernate-reactive-1.0
     scope:
       name: io.opentelemetry.hibernate-reactive-1.0
@@ -4748,8 +4776,8 @@ libraries:
   hikaricp:
   - name: hikaricp-3.0
     display_name: HikariCP
-    description: |
-      This instrumentation generates database client metrics for HikariCP connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
+    description: This instrumentation enables database connection pool metrics for
+      HikariCP.
     semantic_conventions:
     - DATABASE_POOL_METRICS
     library_link: https://github.com/brettwooldridge/HikariCP
@@ -4961,6 +4989,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5014,6 +5044,11 @@ libraries:
     target_versions:
       javaagent:
       - org.influxdb:influxdb-java:[2.4,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables or disables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -5067,6 +5102,9 @@ libraries:
   - name: java-http-client
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for requests made using the Java HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html
     source_path: instrumentation/java-http-client
     minimum_java_version: 11
@@ -5134,6 +5172,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5143,6 +5183,9 @@ libraries:
   - name: java-http-server
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the Java HTTP server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html
     source_path: instrumentation/java-http-server
     scope:
@@ -5223,11 +5266,29 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+  - name: java-util-logging
+    display_name: Java Util Logging (JUL)
+    description: This instrumentation bridges Java Util Logging (JUL) log records
+      to OpenTelemetry logs.
+    library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html
+    features:
+    - LOGGING_BRIDGE
+    source_path: instrumentation/java-util-logging
+    scope:
+      name: io.opentelemetry.java-util-logging
+    configurations:
+    - name: otel.instrumentation.java-util-logging.experimental-log-attributes
+      description: Enables capturing the experimental `thread.name` and `thread.id`
+        log attributes.
+      type: boolean
+      default: false
   javalin:
   - name: javalin-5.0
     description: This instrumentation enriches existing HTTP server spans with route
       information, it does not emit any telemetry on its own.
     library_link: https://javalin.io/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11
     scope:
@@ -5239,8 +5300,12 @@ libraries:
   - name: jaxrs-1.0
     display_name: JAX-RS 1.x
     description: |
-      This instrumentation enables spans for JAX-RS methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-1.0
     scope:
       name: io.opentelemetry.jaxrs-1.0
@@ -5264,8 +5329,12 @@ libraries:
   - name: jaxrs-2.0-annotations
     display_name: JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-2.0-annotations
@@ -5293,8 +5362,11 @@ libraries:
   - name: jaxrs-2.0-cxf-3.2
     display_name: Apache CXF JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Apache CXF, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Apache CXF (controller spans are disabled by default).
     library_link: https://cxf.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
     scope:
       name: io.opentelemetry.jaxrs-2.0-cxf-3.2
@@ -5333,8 +5405,11 @@ libraries:
   - name: jaxrs-2.0-jersey-2.0
     display_name: Eclipse Jersey JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Jersey (controller spans are disabled by default).
     library_link: https://eclipse-ee4j.github.io/jersey/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-jersey-2.0
@@ -5373,8 +5448,11 @@ libraries:
   - name: jaxrs-2.0-resteasy-3.0
     display_name: JBoss RESTEasy JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.0
@@ -5413,8 +5491,11 @@ libraries:
   - name: jaxrs-2.0-resteasy-3.1
     display_name: JBoss RESTEasy JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.1
@@ -5453,8 +5534,12 @@ libraries:
   - name: jaxrs-3.0-annotations
     display_name: JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://jakarta.ee/specifications/restful-ws/3.0/
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-3.0-annotations
@@ -5482,8 +5567,11 @@ libraries:
   - name: jaxrs-3.0-jersey-3.0
     display_name: Eclipse Jersey JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Jersey (controller spans are disabled by default).
     library_link: https://eclipse-ee4j.github.io/jersey/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
     minimum_java_version: 11
     scope:
@@ -5522,8 +5610,11 @@ libraries:
   - name: jaxrs-3.0-resteasy-6.0
     display_name: JBoss RESTEasy JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
     minimum_java_version: 11
     scope:
@@ -5818,6 +5909,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5863,6 +5956,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5926,6 +6021,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6369,6 +6466,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6469,6 +6568,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6573,6 +6674,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6648,6 +6751,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6699,6 +6804,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -7234,6 +7341,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7322,6 +7431,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7368,6 +7479,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7413,6 +7526,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7566,6 +7681,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8302,6 +8419,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8745,6 +8864,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8792,6 +8913,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8842,6 +8965,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8879,6 +9004,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8919,6 +9046,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8952,6 +9081,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8987,6 +9118,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -9015,6 +9148,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -9050,6 +9185,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -9179,10 +9316,6 @@ internal:
   source_path: instrumentation/internal/internal-class-loader
   scope:
     name: io.opentelemetry.internal-class-loader
-- name: java-util-logging
-  source_path: instrumentation/java-util-logging
-  scope:
-    name: io.opentelemetry.java-util-logging
 - name: internal-reflection
   source_path: instrumentation/internal/internal-reflection
   scope:
