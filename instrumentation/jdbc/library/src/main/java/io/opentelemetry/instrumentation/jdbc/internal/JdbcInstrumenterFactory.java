@@ -36,8 +36,24 @@ public final class JdbcInstrumenterFactory {
       new JdbcNetworkAttributesGetter();
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
-    return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+
+      DeclarativeConfigProperties instrumentationConfig =
+          extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+
+      if (instrumentationConfig == null) {
+        return false;
+      }
+
+      return instrumentationConfig
+          .getStructured("jdbc", empty())
+          .getStructured("experimental", empty())
+          .getBoolean("capture-query-parameters", false);
+    } else {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
+    }
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -51,8 +67,7 @@ public final class JdbcInstrumenterFactory {
         openTelemetry,
         emptyList(),
         true,
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
+        statementSanitizationEnabled(openTelemetry, true),
         captureQueryParameters);
   }
 
@@ -123,6 +138,28 @@ public final class JdbcInstrumenterFactory {
     } else {
       return ConfigPropertiesUtil.getBoolean(
           "otel.instrumentation.jdbc.experimental.transaction.enabled", defaultEnabled);
+    }
+  }
+
+  private static boolean statementSanitizationEnabled(
+      OpenTelemetry openTelemetry, boolean defaultEnabled) {
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+
+      DeclarativeConfigProperties instrumentationConfig =
+          extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+
+      if (instrumentationConfig == null) {
+        return defaultEnabled;
+      }
+
+      return instrumentationConfig
+          .getStructured("common", empty())
+          .getStructured("db-statement-sanitizer", empty())
+          .getBoolean("enabled", defaultEnabled);
+    } else {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.common.db-statement-sanitizer.enabled", defaultEnabled);
     }
   }
 
