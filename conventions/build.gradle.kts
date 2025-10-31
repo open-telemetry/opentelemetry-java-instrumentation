@@ -70,7 +70,7 @@ dependencies {
   implementation("net.ltgt.gradle:gradle-nullaway-plugin:2.3.0")
   implementation("me.champeau.gradle:japicmp-gradle-plugin:0.4.6")
 
-  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.0"))
+  testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testImplementation("org.assertj:assertj-core:3.27.6")
