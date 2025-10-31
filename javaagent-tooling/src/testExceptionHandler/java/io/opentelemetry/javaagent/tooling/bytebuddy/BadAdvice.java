@@ -12,7 +12,7 @@ import net.bytebuddy.asm.Advice;
 public class BadAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class)
-  public static void throwAnException(@Advice.Argument(0) AtomicBoolean isInstrumented) {
+  public static void throwAnException(@Advice.Return AtomicBoolean isInstrumented) {
     // mark that the advice has been executed
     isInstrumented.set(true);
     throw new IllegalStateException("Test Exception");

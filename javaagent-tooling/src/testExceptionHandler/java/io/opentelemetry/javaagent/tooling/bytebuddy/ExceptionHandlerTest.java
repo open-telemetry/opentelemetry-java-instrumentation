@@ -86,9 +86,9 @@ class ExceptionHandlerTest {
     int initLogEvents = testHandler.getRecords().size();
 
     // Triggers classload and instrumentation
-    AtomicBoolean isInstrumented = new AtomicBoolean(false);
-    SomeClass.isInstrumented(isInstrumented);
-    assertThat(isInstrumented.get()).describedAs("method should have been instrumented").isTrue();
+    assertThat(SomeClass.isInstrumented().get())
+        .describedAs("method should have been instrumented")
+        .isTrue();
 
     assertThat(testHandler.getRecords())
         .hasSize(initLogEvents + 1)
@@ -113,8 +113,7 @@ class ExceptionHandlerTest {
 
     Class<?> someClazz = loader.loadClass(SomeClass.class.getName());
     assertThat(someClazz.getClassLoader()).isSameAs(loader);
-    AtomicBoolean instrumented = new AtomicBoolean(false);
-    someClazz.getMethod("isInstrumented", AtomicBoolean.class).invoke(null, instrumented);
+    AtomicBoolean instrumented = (AtomicBoolean) someClazz.getMethod("isInstrumented").invoke(null);
     assertThat(testHandler.getRecords()).hasSize(initLogEvents);
     assertThat(instrumented.get()).describedAs("method should have been instrumented").isTrue();
   }
@@ -131,8 +130,8 @@ class ExceptionHandlerTest {
 
   public static class SomeClass {
 
-    public static void isInstrumented(AtomicBoolean instrumented) {
-      instrumented.set(false);
+    public static AtomicBoolean isInstrumented() {
+      return new AtomicBoolean();
     }
 
     public static void smallStack() {
