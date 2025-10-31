@@ -5,6 +5,11 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongGauge;
 import org.apache.iceberg.metrics.CommitMetricsResult;
 import org.apache.iceberg.metrics.CommitReport;
 import org.apache.iceberg.metrics.CounterResult;
@@ -14,19 +19,14 @@ import org.apache.iceberg.metrics.ScanMetricsResult;
 import org.apache.iceberg.metrics.ScanReport;
 import org.apache.iceberg.metrics.TimerResult;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.LongGauge;
-
 public class IcebergMetricsReporter implements MetricsReporter {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg_1.8";
   private static final AttributeKey<Long> SCHEMA_ID = AttributeKey.longKey("iceberg.schema.id");
   private static final AttributeKey<String> TABLE_NAME =
       AttributeKey.stringKey("iceberg.table.name");
   private static final AttributeKey<Long> SNAPHSOT_ID = AttributeKey.longKey("iceberg.snapshot.id");
-  private static final AttributeKey<Long> SEQUENCE_NUMBER = AttributeKey.longKey("iceberg.commit.sequence_number");
+  private static final AttributeKey<Long> SEQUENCE_NUMBER =
+      AttributeKey.longKey("iceberg.commit.sequence_number");
 
   private final OpenTelemetry openTelemetry;
 
@@ -197,7 +197,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
   void reportCommitMetrics(CommitReport commitReport) {
     Attributes commitAttributes =
-        Attributes.of(SEQUENCE_NUMBER,
+        Attributes.of(
+            SEQUENCE_NUMBER,
             Long.valueOf(commitReport.sequenceNumber()),
             TABLE_NAME,
             commitReport.tableName(),
@@ -207,7 +208,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
     TimerResult duration = metrics.totalDuration();
 
     if (duration != null) {
-      LongGauge metric =  CommitMetricsBuilder.duration(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      LongGauge metric =
+          CommitMetricsBuilder.duration(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.set(duration.totalDuration().toMillis(), commitAttributes);
     }
 
@@ -218,7 +220,7 @@ public class IcebergMetricsReporter implements MetricsReporter {
           CommitMetricsBuilder.attempts(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.add(current.value(), commitAttributes);
     }
-      
+
     current = metrics.addedDataFiles();
 
     if (current != null) {
@@ -255,7 +257,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       LongCounter metric =
-          CommitMetricsBuilder.addedEqualityDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          CommitMetricsBuilder.addedEqualityDeleteFiles(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.add(current.value(), commitAttributes);
     }
 
@@ -263,7 +266,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       LongCounter metric =
-          CommitMetricsBuilder.addedPositionDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          CommitMetricsBuilder.addedPositionDeleteFiles(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.add(current.value(), commitAttributes);
     }
 
@@ -279,7 +283,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       LongCounter metric =
-          CommitMetricsBuilder.removedPositionDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          CommitMetricsBuilder.removedPositionDeleteFiles(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.add(current.value(), commitAttributes);
     }
 
@@ -295,7 +300,8 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (current != null) {
       LongCounter metric =
-          CommitMetricsBuilder.removedEqualityDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          CommitMetricsBuilder.removedEqualityDeleteFiles(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.add(current.value(), commitAttributes);
     }
 
@@ -307,5 +313,108 @@ public class IcebergMetricsReporter implements MetricsReporter {
       metric.add(current.value(), commitAttributes);
     }
 
+    current = metrics.totalDataFiles();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.totalDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.addedRecords();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.addedRecords(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.removedRecords();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.removedRecords(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.totalRecords();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.totalRecords(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.addedFilesSizeInBytes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.addedFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.removedFilesSizeInBytes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.removedFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.totalFilesSizeInBytes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.totalFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.addedPositionalDeletes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.addedPositionDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.removedPositionalDeletes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.removedPositionDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.totalPositionalDeletes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.totalPositionDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.addedEqualityDeletes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.addedEqualityDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.removedEqualityDeletes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.removedEqualityDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
+
+    current = metrics.totalEqualityDeletes();
+
+    if (current != null) {
+      LongCounter metric =
+          CommitMetricsBuilder.totalEqualityDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+      metric.add(current.value(), commitAttributes);
+    }
   }
 }
