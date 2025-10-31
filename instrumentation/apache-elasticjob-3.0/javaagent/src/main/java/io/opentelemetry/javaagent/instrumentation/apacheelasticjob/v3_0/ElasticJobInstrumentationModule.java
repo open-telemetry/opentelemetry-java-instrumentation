@@ -8,13 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.Arrays;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class ElasticJobInstrumentationModule extends InstrumentationModule
-    implements ExperimentalInstrumentationModule {
+public class ElasticJobInstrumentationModule extends InstrumentationModule {
 
   public ElasticJobInstrumentationModule() {
     super("apache-elasticjob", "apache-elasticjob-3.0");
@@ -26,10 +24,5 @@ public class ElasticJobInstrumentationModule extends InstrumentationModule
         new ElasticJobExecutorInstrumentation(),
         new SimpleJobExecutorInstrumentation(),
         new DataflowJobExecutorInstrumentation());
-  }
-
-  @Override
-  public boolean isIndyReady() {
-    return true;
   }
 }

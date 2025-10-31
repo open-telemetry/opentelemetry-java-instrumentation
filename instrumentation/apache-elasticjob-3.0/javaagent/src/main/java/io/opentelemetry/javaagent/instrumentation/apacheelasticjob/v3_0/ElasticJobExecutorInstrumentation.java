@@ -40,11 +40,11 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
                 takesArgument(
                     3,
                     named("org.apache.shardingsphere.elasticjob.tracing.event.JobExecutionEvent"))),
-        ElasticJobExecutorInstrumentation.class.getName() + "$ElasticJobExecutorAdvice");
+        ElasticJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
-  public static class ElasticJobExecutorAdvice {
+  public static class ProcessAdvice {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
