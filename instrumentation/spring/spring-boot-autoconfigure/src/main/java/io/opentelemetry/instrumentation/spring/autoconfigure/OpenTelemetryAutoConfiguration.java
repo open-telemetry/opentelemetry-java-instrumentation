@@ -100,6 +100,7 @@ public class OpenTelemetryAutoConfiguration {
     }
 
     @Bean
+    @ConditionalOnMissingBean
     public AutoConfiguredOpenTelemetrySdk autoConfiguredOpenTelemetrySdk(
         Environment env,
         OtlpExporterProperties otlpExporterProperties,

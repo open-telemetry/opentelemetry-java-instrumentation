@@ -15,6 +15,9 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import javax.annotation.Nullable;
 import org.springframework.core.env.Environment;
 import org.springframework.expression.ExpressionParser;
@@ -33,6 +36,23 @@ public class SpringConfigProperties implements ConfigProperties {
   private final ConfigProperties otelSdkProperties;
   private final ConfigProperties customizedListProperties;
   private final Map<String, List<String>> listPropertyValues;
+
+  private final ConcurrentHashMap<String, Optional<String>> cachedStringValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<Boolean>> cachedBooleanValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<Integer>> cachedIntValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<Long>> cachedLongValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<Double>> cachedDoubleValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<List<String>>> cachedListValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<Duration>> cachedDurationValues =
+      new ConcurrentHashMap<>();
+  private final ConcurrentHashMap<String, Optional<Map<String, String>>> cachedMapValues =
+      new ConcurrentHashMap<>();
 
   static final String DISABLED_KEY = "otel.java.disabled.resource.providers";
   static final String ENABLED_KEY = "otel.java.enabled.resource.providers";
@@ -149,88 +169,154 @@ public class SpringConfigProperties implements ConfigProperties {
   }
 
   @Nullable
+  private static <T> T getCachedValue(
+      ConcurrentHashMap<String, Optional<T>> cache,
+      String name,
+      Function<String, T> valueFunction) {
+    return cache
+        .computeIfAbsent(name, key -> Optional.ofNullable(valueFunction.apply(key)))
+        .orElse(null);
+  }
+
+  @Nullable
   @Override
   public String getString(String name) {
-    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
-    String value = environment.getProperty(normalizedName, String.class);
-    if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
-      // SDK autoconfigure module defaults to `grpc`, but this module aligns with recommendation
-      // in specification to default to `http/protobuf`
-      return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
-    }
-    return or(value, otelSdkProperties.getString(name));
+    return getCachedValue(
+        cachedStringValues,
+        name,
+        key -> {
+          String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(key);
+          String value = environment.getProperty(normalizedName, String.class);
+          if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
+            // SDK autoconfigure module defaults to `grpc`, but this module aligns with
+            // recommendation in specification to default to `http/protobuf`
+            return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
+          }
+          return or(value, otelSdkProperties.getString(key));
+        });
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    return or(
-        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Boolean.class),
-        otelSdkProperties.getBoolean(name));
+    return getCachedValue(
+        cachedBooleanValues,
+        name,
+        key ->
+            or(
+                environment.getProperty(
+                    ConfigUtil.normalizeEnvironmentVariableKey(key), Boolean.class),
+                otelSdkProperties.getBoolean(key)));
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
-    return or(
-        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Integer.class),
-        otelSdkProperties.getInt(name));
+    return getCachedValue(
+        cachedIntValues,
+        name,
+        key ->
+            or(
+                environment.getProperty(
+                    ConfigUtil.normalizeEnvironmentVariableKey(key), Integer.class),
+                otelSdkProperties.getInt(key)));
   }
 
   @Nullable
   @Override
   public Long getLong(String name) {
-    return or(
-        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Long.class),
-        otelSdkProperties.getLong(name));
+    return getCachedValue(
+        cachedLongValues,
+        name,
+        key ->
+            or(
+                environment.getProperty(
+                    ConfigUtil.normalizeEnvironmentVariableKey(key), Long.class),
+                otelSdkProperties.getLong(key)));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return or(
-        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Double.class),
-        otelSdkProperties.getDouble(name));
+    return getCachedValue(
+        cachedDoubleValues,
+        name,
+        key ->
+            or(
+                environment.getProperty(
+                    ConfigUtil.normalizeEnvironmentVariableKey(key), Double.class),
+                otelSdkProperties.getDouble(key)));
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
+    return getCachedValue(
+        cachedListValues,
+        name,
+        key -> {
+          String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(key);
 
-    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
+          List<String> list = listPropertyValues.get(normalizedName);
+          if (list != null) {
+            List<String> c = customizedListProperties.getList(key);
+            if (!c.isEmpty()) {
+              return c;
+            }
+            if (!list.isEmpty()) {
+              return list;
+            }
+          }
 
-    List<String> list = listPropertyValues.get(normalizedName);
-    if (list != null) {
-      List<String> c = customizedListProperties.getList(name);
-      if (!c.isEmpty()) {
-        return c;
-      }
-      if (!list.isEmpty()) {
-        return list;
-      }
-    }
-
-    return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
+          List<String> envValue =
+              (List<String>) environment.getProperty(normalizedName, List.class);
+          return or(envValue, otelSdkProperties.getList(key));
+        });
   }
 
   @Nullable
   @Override
   public Duration getDuration(String name) {
-    String value = getString(name);
-    if (value == null) {
-      return otelSdkProperties.getDuration(name);
-    }
-    return DefaultConfigProperties.createFromMap(Collections.singletonMap(name, value))
-        .getDuration(name);
+    return getCachedValue(
+        cachedDurationValues,
+        name,
+        key -> {
+          String value = getString(key);
+          if (value == null) {
+            return otelSdkProperties.getDuration(key);
+          }
+          return DefaultConfigProperties.createFromMap(Collections.singletonMap(key, value))
+              .getDuration(key);
+        });
   }
 
   @SuppressWarnings("unchecked")
   @Override
   public Map<String, String> getMap(String name) {
-    Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
+    return getCachedValue(
+        cachedMapValues,
+        name,
+        key -> {
+          Map<String, String> otelSdkMap = otelSdkProperties.getMap(key);
 
-    String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
-    // maps from config properties are not supported by Environment, so we have to fake it
+          String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(key);
+          // maps from config properties are not supported by Environment, so we have to fake it
+          Map<String, String> specialMap = getSpecialMapProperty(normalizedName, otelSdkMap);
+          if (specialMap != null) {
+            return specialMap;
+          }
+
+          String value = environment.getProperty(normalizedName);
+          if (value == null) {
+            return otelSdkMap;
+          }
+          return (Map<String, String>) parser.parseExpression(value).getValue();
+        });
+  }
+
+  @Nullable
+  private Map<String, String> getSpecialMapProperty(
+      String normalizedName, Map<String, String> otelSdkMap) {
     switch (normalizedName) {
       case "otel.resource.attributes":
         return mergeWithOtel(resourceProperties.getAttributes(), otelSdkMap);
@@ -243,14 +329,8 @@ public class SpringConfigProperties implements ConfigProperties {
       case "otel.exporter.otlp.traces.headers":
         return mergeWithOtel(otlpExporterProperties.getTraces().getHeaders(), otelSdkMap);
       default:
-        break;
+        return null;
     }
-
-    String value = environment.getProperty(normalizedName);
-    if (value == null) {
-      return otelSdkMap;
-    }
-    return (Map<String, String>) parser.parseExpression(value).getValue();
   }
 
   /**
