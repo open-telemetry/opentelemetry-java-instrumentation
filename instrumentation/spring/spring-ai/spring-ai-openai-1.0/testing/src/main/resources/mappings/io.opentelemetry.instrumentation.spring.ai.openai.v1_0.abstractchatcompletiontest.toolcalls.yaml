@@ -1,0 +1,159 @@
+---
+id: 9738f87e-fdf1-435a-a1bd-9b5565c0efdf
+name: v1_chat_completions
+request:
+  url: /v1/chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "You are a helpful assistant providing weather updates.",
+          "role" : "system"
+        }, {
+          "content" : "What is the weather in New York City and London?",
+          "role" : "user"
+        } ],
+        "model" : "qwen3-coder-flash",
+        "stream" : false,
+        "temperature" : 0.7,
+        "tools" : [ {
+          "type" : "function",
+          "function" : {
+            "description" : "The location to get the current temperature for",
+            "name" : "get_weather",
+            "parameters" : {
+              "$schema" : "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties" : false,
+              "type" : "object",
+              "properties" : {
+                "location" : {
+                  "type" : "string"
+                }
+              },
+              "required" : [ "location" ]
+            }
+          }
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"choices\":[{\"message\":{\"content\":\"\",\"role\":\"assistant\",\"tool_calls\"\
+    :[{\"function\":{\"arguments\":\"{\\\"location\\\": \\\"New York City\\\"}\",\"\
+    name\":\"get_weather\"},\"id\":\"call_69db468ee59a4613a15e7ae4\",\"index\":0,\"\
+    type\":\"function\"},{\"function\":{\"arguments\":\"{\\\"location\\\": \\\"London\\\
+    \"}\",\"name\":\"get_weather\"},\"id\":\"call_4941c4a1092340ceb42d6804\",\"index\"\
+    :1,\"type\":\"function\"}]},\"finish_reason\":\"tool_calls\",\"index\":0,\"logprobs\"\
+    :null}],\"object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":311,\"completion_tokens\"\
+    :45,\"total_tokens\":356},\"created\":1758165572,\"system_fingerprint\":null,\"\
+    model\":\"qwen3-coder-flash\",\"id\":\"chatcmpl-b861091d-874d-4a2d-a9f8-0e96dd81955f\"\
+    }"
+  headers:
+    vary: "Origin,Access-Control-Request-Method,Access-Control-Request-Headers, Accept-Encoding"
+    x-request-id: b861091d-874d-4a2d-a9f8-0e96dd81955f
+    x-dashscope-call-gateway: "true"
+    content-type: application/json
+    req-cost-time: "714"
+    req-arrive-time: "1758165571689"
+    resp-start-time: "1758165572403"
+    x-envoy-upstream-service-time: "713"
+    set-cookie: test_set_cookie
+    date: "Thu, 18 Sep 2025 03:19:32 GMT"
+    server: istio-envoy
+uuid: 9738f87e-fdf1-435a-a1bd-9b5565c0efdf
+persistent: true
+insertionIndex: 24
+---
+id: 230c9b97-cf95-4d49-b2c1-50cf33df6458
+name: v1_chat_completions
+request:
+  url: /v1/chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "You are a helpful assistant providing weather updates.",
+          "role" : "system"
+        }, {
+          "content" : "What is the weather in New York City and London?",
+          "role" : "user"
+        }, {
+          "content" : "",
+          "role" : "assistant",
+          "tool_calls" : [ {
+            "id" : "call_69db468ee59a4613a15e7ae4",
+            "type" : "function",
+            "function" : {
+              "name" : "get_weather",
+              "arguments" : "{\"location\": \"New York City\"}"
+            }
+          }, {
+            "id" : "call_4941c4a1092340ceb42d6804",
+            "type" : "function",
+            "function" : {
+              "name" : "get_weather",
+              "arguments" : "{\"location\": \"London\"}"
+            }
+          } ]
+        }, {
+          "content" : "25 degrees and sunny",
+          "role" : "tool",
+          "name" : "get_weather",
+          "tool_call_id" : "call_69db468ee59a4613a15e7ae4"
+        }, {
+          "content" : "15 degrees and sunny",
+          "role" : "tool",
+          "name" : "get_weather",
+          "tool_call_id" : "call_4941c4a1092340ceb42d6804"
+        } ],
+        "model" : "qwen3-coder-flash",
+        "stream" : false,
+        "temperature" : 0.7,
+        "tools" : [ {
+          "type" : "function",
+          "function" : {
+            "description" : "The location to get the current temperature for",
+            "name" : "get_weather",
+            "parameters" : {
+              "$schema" : "https://json-schema.org/draft/2020-12/schema",
+              "additionalProperties" : false,
+              "type" : "object",
+              "properties" : {
+                "location" : {
+                  "type" : "string"
+                }
+              },
+              "required" : [ "location" ]
+            }
+          }
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"choices\":[{\"message\":{\"content\":\"The current weather is as follows:\\\
+    n- **New York City**: 25 degrees and sunny.\\n- **London**: 15 degrees and sunny.\"\
+    ,\"role\":\"assistant\"},\"finish_reason\":\"stop\",\"index\":0,\"logprobs\":null}],\"\
+    object\":\"chat.completion\",\"usage\":{\"prompt_tokens\":386,\"completion_tokens\"\
+    :31,\"total_tokens\":417},\"created\":1758165573,\"system_fingerprint\":null,\"\
+    model\":\"qwen3-coder-flash\",\"id\":\"chatcmpl-9f138fc5-3b65-4888-84b1-552113825783\"\
+    }"
+  headers:
+    vary: "Origin,Access-Control-Request-Method,Access-Control-Request-Headers, Accept-Encoding"
+    x-request-id: 9f138fc5-3b65-4888-84b1-552113825783
+    x-dashscope-call-gateway: "true"
+    content-type: application/json
+    req-cost-time: "630"
+    req-arrive-time: "1758165572714"
+    resp-start-time: "1758165573344"
+    x-envoy-upstream-service-time: "629"
+    set-cookie: test_set_cookie
+    date: "Thu, 18 Sep 2025 03:19:32 GMT"
+    server: istio-envoy
+uuid: 230c9b97-cf95-4d49-b2c1-50cf33df6458
+persistent: true
+insertionIndex: 25
