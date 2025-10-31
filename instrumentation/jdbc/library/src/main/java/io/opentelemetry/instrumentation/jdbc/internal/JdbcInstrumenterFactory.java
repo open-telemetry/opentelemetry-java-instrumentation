@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -32,14 +35,14 @@ public final class JdbcInstrumenterFactory {
   private static final JdbcNetworkAttributesGetter netAttributesGetter =
       new JdbcNetworkAttributesGetter();
 
-  public static boolean captureQueryParameters() {
+  public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return ConfigPropertiesUtil.getBoolean(
         "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry) {
-    return createStatementInstrumenter(openTelemetry, captureQueryParameters());
+    return createStatementInstrumenter(openTelemetry, captureQueryParameters(openTelemetry));
   }
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -97,10 +100,30 @@ public final class JdbcInstrumenterFactory {
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
       OpenTelemetry openTelemetry) {
-    return createTransactionInstrumenter(
-        openTelemetry,
-        ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+
+    return createTransactionInstrumenter(openTelemetry, transactionEnabled(openTelemetry, false));
+  }
+
+  private static boolean transactionEnabled(OpenTelemetry openTelemetry, boolean defaultEnabled) {
+    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+      ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
+
+      DeclarativeConfigProperties instrumentationConfig =
+          extendedOpenTelemetry.getConfigProvider().getInstrumentationConfig();
+
+      if (instrumentationConfig == null) {
+        return defaultEnabled;
+      }
+
+      return instrumentationConfig
+          .getStructured("jdbc", empty())
+          .getStructured("experimental", empty())
+          .getStructured("transaction", empty())
+          .getBoolean("enabled", defaultEnabled);
+    } else {
+      return ConfigPropertiesUtil.getBoolean(
+          "otel.instrumentation.jdbc.experimental.transaction.enabled", defaultEnabled);
+    }
   }
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
