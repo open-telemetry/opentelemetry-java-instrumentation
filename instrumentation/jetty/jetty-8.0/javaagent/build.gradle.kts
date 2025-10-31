@@ -38,3 +38,7 @@ if (latestDepTest) {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
 }
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+}
