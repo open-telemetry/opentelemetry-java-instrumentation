@@ -11,7 +11,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("com.google.protobuf:protobuf-java-util:4.33.0")
   implementation("com.github.tomakehurst:wiremock-jre8:2.35.2")
-  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.20.0")
+  implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
   // we'll replace caffeine shaded in armeria with a later version that doesn't use Unsafe. Caffeine
   // 3+ doesn't work with Java 8, but that is fine since --sun-misc-unsafe-memory-access=deny
   // requires Java 23.

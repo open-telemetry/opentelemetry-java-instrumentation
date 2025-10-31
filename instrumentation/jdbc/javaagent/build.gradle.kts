@@ -41,8 +41,6 @@ dependencies {
   testImplementation("com.typesafe.slick:slick_2.11:3.2.0")
 }
 
-val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
-
 sourceSets {
   main {
     val shadedDep = project(":instrumentation:jdbc:library")
@@ -83,8 +81,6 @@ tasks {
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
     jvmArgs("-Dotel.semconv-stability.opt-in=database")
-    systemProperty("collectMetadata", collectMetadata)
-    systemProperty("metadataConfig", "otel.semconv-stability.opt-in=database")
   }
 
   val testSlickStableSemconv by registering(Test::class) {
@@ -115,7 +111,6 @@ tasks {
       excludeTestsMatching("PreparedStatementParametersTest")
     }
     jvmArgs("-Dotel.instrumentation.jdbc-datasource.enabled=true")
-    systemProperty("collectMetadata", collectMetadata)
   }
 
   check {
@@ -130,6 +125,6 @@ tasks {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-//    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
+    jvmArgs("-Dotel.instrumentation.jdbc.experimental.transaction.enabled=true")
   }
 }
