@@ -3,11 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.MalformedURLException;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -23,7 +24,11 @@ final class AsyncHttpClientHttpAttributesGetter
 
   @Override
   public String getUrlFull(Request request) {
-    return request.getUri().toUrl();
+    try {
+      return request.getURI().toURL().toString();
+    } catch (MalformedURLException e) {
+      return null;
+    }
   }
 
   @Override
@@ -44,11 +49,11 @@ final class AsyncHttpClientHttpAttributesGetter
 
   @Override
   public String getServerAddress(Request request) {
-    return request.getUri().getHost();
+    return request.getOriginalURI().getHost();
   }
 
   @Override
   public Integer getServerPort(Request request) {
-    return request.getUri().getPort();
+    return request.getOriginalURI().getPort();
   }
 }
