@@ -24,15 +24,9 @@ dependencies {
   compileOnly("javax.xml.ws:jaxws-api:2.0")
   compileOnly("jakarta.xml.ws:jakarta.xml.ws-api:3.0.0")
 
-  testLibrary("com.sun.xml.ws:jaxws-rt:2.2.0.1")
-  // early versions of streambuffer depend on latest release of org.jvnet.staxex:stax-ex
-  // which doesn't work with java 8
-  testLibrary("com.sun.xml.stream.buffer:streambuffer:1.4")
-
   testImplementation("javax.servlet:javax.servlet-api:3.0.1")
   testImplementation(project(":instrumentation:jaxws:jaxws-2.0-common-testing"))
 
-  testInstrumentation(project(":instrumentation:jaxws:jaxws-metro-2.2:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxws:jaxws-jws-api-1.1:javaagent"))
 
