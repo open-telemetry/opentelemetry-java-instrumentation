@@ -116,6 +116,7 @@ class ExceptionHandlerTest {
     AtomicBoolean instrumented = new AtomicBoolean(false);
     someClazz.getMethod("isInstrumented", AtomicBoolean.class).invoke(null, instrumented);
     assertThat(testHandler.getRecords()).hasSize(initLogEvents);
+    assertThat(instrumented.get()).describedAs("method should have been instrumented").isTrue();
   }
 
   @Test
