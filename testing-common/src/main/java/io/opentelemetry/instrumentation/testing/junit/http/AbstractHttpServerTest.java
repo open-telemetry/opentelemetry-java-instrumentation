@@ -41,6 +41,7 @@ import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
@@ -827,7 +828,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String expectedRoute = options.expectedHttpRoute.apply(endpoint, method);
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
 
-    span.hasName(name).hasKind(SpanKind.SERVER);
+    span.hasName(name)
+        .hasKind(SpanKind.SERVER)
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                    .isEqualTo(SchemaUrls.V1_37_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }

@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.netty.common.internal.NettyErrorHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.semconv.SchemaUrls;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpResponse;
 
@@ -45,6 +46,7 @@ public final class NettyClientSingletons {
                 HttpClientPeerServiceAttributesExtractor.create(
                     NettyConnectHttpAttributesGetter.INSTANCE,
                     AgentCommonConfig.get().getPeerServiceResolver()))
+            .setSchemaUrl(SchemaUrls.V1_37_0)
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
