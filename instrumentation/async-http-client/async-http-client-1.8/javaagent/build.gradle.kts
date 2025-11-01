@@ -20,9 +20,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
-  
-  // For testLatestDeps, use the latest 1.8.x version to maintain API compatibility
-  latestDepTestLibrary("com.ning:async-http-client:1.8.+")
+
+  latestDepTestLibrary("com.ning:async-http-client:1.8.+") // see async-http-client-1.9 module
 }
 
 tasks {
