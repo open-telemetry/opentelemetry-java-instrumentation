@@ -8,8 +8,6 @@ muzzle {
     module.set("async-http-client")
     versions.set("[1.8.0,1.9.0)")
     assertInverse.set(true)
-    extraDependency("org.glassfish.grizzly:grizzly-http:2.3")
-    extraDependency("commons-httpclient:commons-httpclient:3.1")
   }
 }
 
@@ -20,6 +18,11 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
+  
+  // For testLatestDeps, use the latest 1.8.x version to maintain API compatibility
+  latestDepTestLibrary("com.ning:async-http-client:1.8.+")
 }
 
 tasks {
@@ -27,7 +30,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
     systemProperty("async.https.skip", "true")

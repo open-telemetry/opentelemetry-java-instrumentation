@@ -18,6 +18,7 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.8:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
 }
 
