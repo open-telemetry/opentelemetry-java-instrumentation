@@ -67,6 +67,13 @@ public class InstrumentationModule {
     return instrumentationName;
   }
 
+  public String getResolvedName() {
+    if (metadata != null && metadata.getDisplayName() != null) {
+      return metadata.getDisplayName();
+    }
+    return instrumentationName;
+  }
+
   public String getNamespace() {
     return namespace;
   }
