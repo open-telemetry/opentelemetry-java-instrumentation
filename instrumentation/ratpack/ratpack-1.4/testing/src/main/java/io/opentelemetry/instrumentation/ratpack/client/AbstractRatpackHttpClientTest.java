@@ -1,8 +1,3 @@
-/*
- * Copyright The OpenTelemetry Authors
- * SPDX-License-Identifier: Apache-2.0
- */
-
 package io.opentelemetry.instrumentation.ratpack.client;
 
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -10,20 +5,22 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.netty.channel.ConnectTimeoutException;
+import io.netty.handler.codec.PrematureChannelClosureException;
 import io.netty.handler.timeout.ReadTimeoutException;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.condition.OS;
 import ratpack.exec.Operation;
 import ratpack.exec.Promise;
 import ratpack.func.Action;
@@ -169,15 +166,25 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   }
 
   private static Throwable nettyClientSpanErrorMapper(URI uri, Throwable exception) {
+    // For read timeout, map to ReadTimeoutException
+    if (uri.getPath().equals("/read-timeout")) {
+      return ReadTimeoutException.INSTANCE;
+    }
     if (uri.toString().equals("https://192.0.2.1/")) {
+      if (isWindows()) {
+        Throwable rootCause = unwrapConnectionException(exception);
+        if (rootCause instanceof ClosedChannelException) {
+          return new PrematureChannelClosureException();
+        }
+        return exception;
+      }
       return new ConnectTimeoutException(
           "connection timed out"
               + (Boolean.getBoolean("testLatestDeps") ? " after 2000 ms" : "")
               + ": /192.0.2.1:443");
-    } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
+    }
+    if (isWindows() && uri.toString().equals("http://localhost:61/")) {
       return new ConnectTimeoutException("connection timed out: localhost/127.0.0.1:61");
-    } else if (uri.getPath().equals("/read-timeout")) {
-      return ReadTimeoutException.INSTANCE;
     }
     return exception;
   }
@@ -185,10 +192,32 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
   private static String nettyExpectedClientSpanNameMapper(URI uri, String method) {
     switch (uri.toString()) {
       case "http://localhost:61/": // unopened port
+        return "CONNECT";
       case "https://192.0.2.1/": // non routable address
+        // On Windows, non-routable addresses don't fail at CONNECT level.
+        // The connection proceeds far enough to start HTTP processing before
+        // the channel closes, resulting in an HTTP span instead of CONNECT.
+        if (isWindows()) {
+          return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+        }
         return "CONNECT";
       default:
         return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
     }
+  }
+
+  private static boolean isWindows() {
+    return System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("win");
+  }
+
+  private static Throwable unwrapConnectionException(Throwable exception) {
+    if (exception == null) {
+      return null;
+    }
+    Throwable current = exception;
+    while (current.getCause() != null && current.getCause() != current) {
+      current = current.getCause();
+    }
+    return current;
   }
 }

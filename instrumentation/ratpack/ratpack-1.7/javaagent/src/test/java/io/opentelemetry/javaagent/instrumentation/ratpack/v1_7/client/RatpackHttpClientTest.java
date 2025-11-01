@@ -25,5 +25,7 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
     optionsBuilder.setClientSpanErrorMapper(RatpackTestUtils::ratpackClientSpanErrorMapper);
+    optionsBuilder.setExpectedClientSpanNameMapper(
+        RatpackTestUtils::ratpackExpectedClientSpanNameMapper);
   }
 }

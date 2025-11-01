@@ -30,6 +30,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 
 public abstract class AbstractNetty41ClientTest
     extends AbstractHttpClientTest<DefaultFullHttpRequest> {
@@ -113,6 +114,11 @@ public abstract class AbstractNetty41ClientTest
 
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
+    // On Windows, non-routable addresses behave differently (SSL handshake vs CONNECT span,
+    // or no error thrown), causing platform-specific test failures.
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.disableTestRemoteConnection();
+    }
   }
 
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {

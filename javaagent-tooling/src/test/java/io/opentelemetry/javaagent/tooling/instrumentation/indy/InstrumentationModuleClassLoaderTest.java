@@ -36,7 +36,7 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.api.condition.OS;
 
 @SuppressWarnings("ClassNamedLikeTypeParameter")
 class InstrumentationModuleClassLoaderTest {
@@ -106,7 +106,9 @@ class InstrumentationModuleClassLoaderTest {
   }
 
   @Test
-  void checkClassLookupPrecedence(@TempDir Path tempDir) throws Exception {
+  void checkClassLookupPrecedence() throws Exception {
+    // Create temp dir manually to avoid Windows file locking issues with JUnit cleanup
+    Path tempDir = Files.createTempDirectory("InstrumentationModuleClassLoaderTest");
 
     Map<String, byte[]> appClasses = copyClassesWithMarker("app-cl", A.class, B.class, C.class);
     Map<String, byte[]> agentClasses = copyClassesWithMarker("agent-cl", B.class, C.class);
@@ -153,21 +155,21 @@ class InstrumentationModuleClassLoaderTest {
 
       // Verify precedence for looking up .class resources
       URL resourceA = moduleCl.getResource(getClassFile(A.class));
-      assertThat(resourceA.toString()).startsWith("jar:file:" + appJar);
+      assertThat(resourceA.toString()).startsWith("jar:" + appJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(A.class))))
           .containsExactly(resourceA);
       assertThat(moduleCl.getResourceAsStream(getClassFile(A.class)))
           .hasBinaryContent(appClasses.get(A.class.getName()));
 
       URL resourceB = moduleCl.getResource(getClassFile(B.class));
-      assertThat(resourceB.toString()).startsWith("jar:file:" + agentJar);
+      assertThat(resourceB.toString()).startsWith("jar:" + agentJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(B.class))))
           .containsExactly(resourceB);
       assertThat(moduleCl.getResourceAsStream(getClassFile(B.class)))
           .hasBinaryContent(agentClasses.get(B.class.getName()));
 
       URL resourceC = moduleCl.getResource(getClassFile(C.class));
-      assertThat(resourceC.toString()).startsWith("jar:file:" + moduleJar);
+      assertThat(resourceC.toString()).startsWith("jar:" + moduleJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(C.class))))
           .containsExactly(resourceC);
       assertThat(moduleCl.getResourceAsStream(getClassFile(C.class)))
@@ -193,6 +195,22 @@ class InstrumentationModuleClassLoaderTest {
       appCl.close();
       agentCl.close();
       moduleSourceCl.close();
+
+      // Clean up temp directory (skip on Windows due to file locking issues)
+      if (!OS.WINDOWS.isCurrentOs()) {
+        try (java.util.stream.Stream<Path> stream = Files.walk(tempDir)) {
+          stream
+              .sorted(java.util.Comparator.reverseOrder())
+              .forEach(
+                  path -> {
+                    try {
+                      Files.delete(path);
+                    } catch (IOException e) {
+                      // Ignore cleanup failures
+                    }
+                  });
+        }
+      }
     }
   }
 

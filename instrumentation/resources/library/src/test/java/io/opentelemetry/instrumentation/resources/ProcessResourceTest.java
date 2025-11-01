@@ -11,21 +11,16 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
+import java.util.Locale;
 import org.junit.jupiter.api.Test;
-import org.junitpioneer.jupiter.SetSystemProperty;
 
 class ProcessResourceTest {
 
   @Test
-  @SetSystemProperty(key = "os.name", value = "Linux 4.12")
-  void notWindows() {
-    assertResource(false);
-  }
-
-  @Test
-  @SetSystemProperty(key = "os.name", value = "Windows 10")
-  void windows() {
-    assertResource(true);
+  void testCurrentPlatform() {
+    String osName = System.getProperty("os.name");
+    boolean windows = osName != null && osName.toLowerCase(Locale.ROOT).startsWith("windows");
+    assertResource(windows);
   }
 
   private static void assertResource(boolean windows) {
@@ -39,15 +34,18 @@ class ProcessResourceTest {
 
     // With Java 9+ and a compiled jar, ResourceAttributes.PROCESS_COMMAND_ARGS
     // will be set instead of ResourceAttributes.PROCESS_COMMAND_LINE
-    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
-    if (java8) {
-      assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_LINE))
+    // However, on Java 9+ when the command line is too long, the argument array
+    // may be empty and PROCESS_COMMAND_LINE will be set instead.
+    if (attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS) != null) {
+      // Java 9+ with short command line
+      assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS))
           .contains(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")
           .contains("-DtestNotRedacted=test");
     } else {
-      assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_ARGS))
+      // Java 8 or Java 9+ with long command line
+      assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_LINE))
           .contains(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")
           .contains("-DtestPassword=***")

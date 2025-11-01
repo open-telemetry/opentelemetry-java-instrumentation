@@ -42,7 +42,6 @@ class ResourceDeclarativeConfigTest {
             + "      - host:\n"
             + "      - process:\n";
 
-    boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
     OpenTelemetrySdk openTelemetrySdk =
         DeclarativeConfiguration.parseAndCreate(
             new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
@@ -68,8 +67,11 @@ class ResourceDeclarativeConfigTest {
               assertThat(attributeKeys).contains("os.description");
               assertThat(attributeKeys).contains("os.type");
               // ProcessResourceComponentProvider
+              // With Java 9+ and a compiled jar, process.command_args will be set instead of
+              // process.command_line. However, on Java 9+ when the command line is too long,
+              // the argument array may be empty and process.command_line will be set instead.
               assertThat(attributeKeys)
-                  .contains(java8 ? "process.command_line" : "process.command_args");
+                  .containsAnyOf("process.command_line", "process.command_args");
               assertThat(attributeKeys).contains("process.executable.path");
               assertThat(attributeKeys).contains("process.pid");
               // ProcessRuntimeResourceComponentProvider

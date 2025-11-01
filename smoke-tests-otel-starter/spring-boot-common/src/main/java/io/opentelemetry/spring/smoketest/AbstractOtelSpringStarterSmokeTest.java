@@ -41,6 +41,7 @@ import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.OS;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -223,7 +224,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
-    if (javaVersion < 23) {
+    // Also not available on Windows (getSystemLoadAverage returns -1)
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
       jmxMetrics.add("jvm.system.cpu.load_1m");
     }
 

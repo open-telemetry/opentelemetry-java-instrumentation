@@ -56,6 +56,7 @@ import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceAsyncClientTest extends AbstractLettuceClientTest {
@@ -149,6 +150,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
 
     assertThat(exception).isInstanceOf(ExecutionException.class);
 
+    // Windows includes "getsockopt: " in the connection refused message
+    String windowsGetsockopt = OS.WINDOWS.isCurrentOs() ? "getsockopt: " : "";
+    String expectedMessage =
+        "Connection refused: " + windowsGetsockopt + host + "/" + ip + ":" + incorrectPort;
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -171,12 +177,7 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
                                         equalTo(
                                             AttributeKey.stringKey("exception.message"),
-                                            "Connection refused: "
-                                                + host
-                                                + "/"
-                                                + ip
-                                                + ":"
-                                                + incorrectPort),
+                                            expectedMessage),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))));

@@ -26,6 +26,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientRequest>> {
@@ -100,6 +101,11 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
     optionsBuilder.setExpectedClientSpanNameMapper(VertxHttpClientTest::getExpectedClientSpanName);
 
     optionsBuilder.setSingleConnectionFactory(VertxSingleConnection::new);
+
+    // Disable remote connection tests on Windows due to vertx creating extra spans
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.setTestRemoteConnection(false);
+    }
   }
 
   private static Set<AttributeKey<?>> getHttpAttributes(URI uri) {

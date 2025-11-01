@@ -13,17 +13,19 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInitializer;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryExecInterceptor;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
 import java.net.URI;
+import java.nio.channels.ClosedChannelException;
 import java.time.Duration;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.condition.OS;
 import ratpack.exec.Operation;
 import ratpack.exec.Promise;
 import ratpack.exec.internal.DefaultExecController;
@@ -35,6 +37,9 @@ import ratpack.http.client.ReceivedResponse;
 import ratpack.test.exec.ExecHarness;
 
 abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void> {
+
+  private static final boolean IS_WINDOWS =
+      System.getProperty("os.name", "").toLowerCase(Locale.ROOT).contains("win");
 
   final ExecHarness exec = ExecHarness.harness();
 
@@ -139,17 +144,11 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
             });
 
     optionsBuilder.setClientSpanErrorMapper(
-        (uri, exception) -> {
-          if (uri.toString().equals("https://192.0.2.1/")) {
-            return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
-          } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
-            return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
-          } else if (uri.getPath().equals("/read-timeout")) {
-            return new HttpClientReadTimeoutException(
-                "Read timeout (PT2S) waiting on HTTP server at " + uri);
-          }
-          return exception;
-        });
+        AbstractRatpackHttpClientTest::nettyClientSpanErrorMapper);
+
+    optionsBuilder.setExpectedClientSpanNameMapper(
+        AbstractRatpackHttpClientTest::nettyExpectedClientSpanNameMapper);
+
     optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
     optionsBuilder.disableTestRedirects();
@@ -159,9 +158,55 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
     optionsBuilder.spanEndsAfterBody();
   }
 
+  private static Throwable nettyClientSpanErrorMapper(URI uri, Throwable exception) {
+    // For read timeout, map to HttpClientReadTimeoutException
+    if (uri.getPath().equals("/read-timeout")) {
+      return new HttpClientReadTimeoutException(
+          "Read timeout (PT2S) waiting on HTTP server at " + uri);
+    }
+    if (isNonRoutableAddress(uri)) {
+      if (exception instanceof ClosedChannelException && IS_WINDOWS) {
+        return exception;
+      }
+      return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
+    }
+    if (IS_WINDOWS && isUnopenedPort(uri)) {
+      return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
+    }
+    return exception;
+  }
+
+  private static String nettyExpectedClientSpanNameMapper(URI uri, String method) {
+    if (isUnopenedPort(uri)) {
+      if (IS_WINDOWS) {
+        return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+      }
+      return "CONNECT";
+    }
+    if (isNonRoutableAddress(uri)) {
+      // On Windows, non-routable addresses don't fail at CONNECT level.
+      // The connection proceeds far enough to start HTTP processing before
+      // the channel closes, resulting in an HTTP span instead of CONNECT.
+      if (IS_WINDOWS) {
+        return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+      }
+      return "CONNECT";
+    }
+    return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+  }
+
   protected Set<AttributeKey<?>> computeHttpAttributes(URI uri) {
     Set<AttributeKey<?>> attributes = new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
     attributes.remove(NETWORK_PROTOCOL_VERSION);
     return attributes;
   }
+
+  private static boolean isNonRoutableAddress(URI uri) {
+    return "192.0.2.1".equals(uri.getHost());
+  }
+
+  private static boolean isUnopenedPort(URI uri) {
+    return "localhost".equals(uri.getHost()) && uri.getPort() == PortUtils.UNUSABLE_PORT;
+  }
+
 }

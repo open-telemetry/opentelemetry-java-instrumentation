@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class Netty38ClientTest extends AbstractHttpClientTest<Request> {
@@ -138,6 +139,11 @@ class Netty38ClientTest extends AbstractHttpClientTest<Request> {
     optionsBuilder.disableTestRedirects();
     optionsBuilder.disableTestHttps();
     optionsBuilder.disableTestReadTimeout();
+
+    // On Windows, non-routable addresses behave differently, causing test failures.
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.disableTestRemoteConnection();
+    }
 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> {

@@ -9,7 +9,6 @@ import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.collectingAndThen;
 import static java.util.stream.Collectors.toMap;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.math.BigInteger;
@@ -93,7 +92,7 @@ class JarDetails {
   @Nullable
   String packagePath() {
     String path = url.getFile();
-    int start = path.lastIndexOf(File.separator);
+    int start = path.lastIndexOf('/');
     if (start > -1) {
       return path.substring(start + 1);
     }
