@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlCommenterUtil;
@@ -31,18 +32,18 @@ public final class R2dbcTelemetry {
   }
 
   private final Instrumenter<DbExecution, Void> instrumenter;
-  private final boolean sqlCommenterEnabled;
+  private final SqlCommenter sqlCommenter;
 
-  R2dbcTelemetry(Instrumenter<DbExecution, Void> instrumenter, boolean sqlCommenterEnabled) {
+  R2dbcTelemetry(Instrumenter<DbExecution, Void> instrumenter, SqlCommenter sqlCommenter) {
     this.instrumenter = instrumenter;
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
+    this.sqlCommenter = sqlCommenter;
   }
 
   public ConnectionFactory wrapConnectionFactory(
       ConnectionFactory originalFactory, ConnectionFactoryOptions factoryOptions) {
     ProxyConfig proxyConfig = new ProxyConfig();
-    if (sqlCommenterEnabled) {
-      R2dbcSqlCommenterUtil.configure(proxyConfig);
+    if (sqlCommenter.isEnabled()) {
+      R2dbcSqlCommenterUtil.configure(proxyConfig, sqlCommenter);
     }
     proxyConfig.addListener(new TraceProxyListener(instrumenter, factoryOptions));
     return ProxyConnectionFactory.builder(originalFactory, proxyConfig).build();

@@ -23,6 +23,7 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -62,12 +63,14 @@ public final class OpenTelemetryDriver implements Driver {
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
-  // XXX value proeprty?
-  private static final boolean sqlCommenterEnabled =
-      ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
-          ConfigPropertiesUtil.getBoolean(
-              "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false));
+  private static final SqlCommenter sqlCommenter =
+      SqlCommenter.builder()
+          .setEnabled(
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+                  ConfigPropertiesUtil.getBoolean(
+                      "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false)))
+          .build();
 
   static {
     try {
@@ -263,7 +266,7 @@ public final class OpenTelemetryDriver implements Driver {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenterEnabled);
+        sqlCommenter);
   }
 
   @Override

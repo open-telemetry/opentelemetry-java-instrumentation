@@ -11,12 +11,16 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
+import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.cartesian.CartesianTest;
 
 class SqlCommenterUtilTest {
+  private static final TextMapPropagator propagator = W3CTraceContextPropagator.getInstance();
 
   @ParameterizedTest
   @ValueSource(strings = {"SELECT /**/ 1", "SELECT 1 --", "SELECT '/*'"})
@@ -32,13 +36,14 @@ class SqlCommenterUtilTest {
                         TraceState.getDefault())));
 
     try (Scope ignore = parent.makeCurrent()) {
-      assertThat(SqlCommenterUtil.processQuery(query)).isEqualTo(query);
+      assertThat(SqlCommenterUtil.processQuery(query, propagator, false)).isEqualTo(query);
     }
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {true, false})
-  void sqlCommenter(boolean hasTraceState) {
+  @CartesianTest
+  void sqlCommenter(
+      @CartesianTest.Values(booleans = {true, false}) boolean hasTraceState,
+      @CartesianTest.Values(booleans = {true, false}) boolean prepend) {
     TraceState state =
         hasTraceState ? TraceState.builder().put("test", "test'").build() : TraceState.getDefault();
     Context parent =
@@ -52,11 +57,12 @@ class SqlCommenterUtilTest {
                         state)));
 
     try (Scope ignore = parent.makeCurrent()) {
-      assertThat(SqlCommenterUtil.processQuery("SELECT 1"))
-          .isEqualTo(
-              hasTraceState
-                  ? "SELECT 1 /*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01', tracestate='test%3Dtest%27'*/"
-                  : "SELECT 1 /*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01'*/");
+      String fragment =
+          hasTraceState
+              ? "/*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01', tracestate='test%3Dtest%27'*/"
+              : "/*traceparent='00-ff01020304050600ff0a0b0c0d0e0f00-090a0b0c0d0e0f00-01'*/";
+      assertThat(SqlCommenterUtil.processQuery("SELECT 1", propagator, prepend))
+          .isEqualTo(prepend ? fragment + " SELECT 1" : "SELECT 1 " + fragment);
     }
   }
 }

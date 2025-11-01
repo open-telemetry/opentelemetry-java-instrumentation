@@ -22,7 +22,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.Array;
@@ -57,7 +57,7 @@ public class OpenTelemetryConnection implements Connection {
   protected final Instrumenter<DbRequest, Void> statementInstrumenter;
   protected final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
-  protected final boolean sqlCommenterEnabled;
+  protected final SqlCommenter sqlCommenter;
 
   protected OpenTelemetryConnection(
       Connection delegate,
@@ -65,13 +65,13 @@ public class OpenTelemetryConnection implements Connection {
       Instrumenter<DbRequest, Void> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      boolean sqlCommenterEnabled) {
+      SqlCommenter sqlCommenter) {
     this.delegate = delegate;
     this.dbInfo = dbInfo;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
-    this.sqlCommenterEnabled = sqlCommenterEnabled;
+    this.sqlCommenter = sqlCommenter;
   }
 
   // visible for testing
@@ -90,7 +90,7 @@ public class OpenTelemetryConnection implements Connection {
       Instrumenter<DbRequest, Void> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
-      boolean sqlCommenterEnabled) {
+      SqlCommenter sqlCommenter) {
     if (hasJdbc43) {
       return new OpenTelemetryConnectionJdbc43(
           delegate,
@@ -98,7 +98,7 @@ public class OpenTelemetryConnection implements Connection {
           statementInstrumenter,
           transactionInstrumenter,
           captureQueryParameters,
-          sqlCommenterEnabled);
+          sqlCommenter);
     }
     return new OpenTelemetryConnection(
         delegate,
@@ -106,26 +106,39 @@ public class OpenTelemetryConnection implements Connection {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenterEnabled);
+        sqlCommenter);
   }
 
   private String processQuery(String sql) {
-    return sqlCommenterEnabled ? SqlCommenterUtil.processQuery(sql) : sql;
+    return sqlCommenter.processQuery(delegate, sql, false);
+  }
+
+  private Statement wrapStatement(Statement statement) {
+    return new OpenTelemetryStatement<>(
+        statement, this, dbInfo, statementInstrumenter, sqlCommenter);
+  }
+
+  private PreparedStatement wrapPreparedStatement(PreparedStatement statement, String sql) {
+    return new OpenTelemetryPreparedStatement<>(
+        statement, this, dbInfo, sql, statementInstrumenter, captureQueryParameters, sqlCommenter);
+  }
+
+  private CallableStatement wrapCallableStatement(CallableStatement statement, String sql) {
+    return new OpenTelemetryCallableStatement<>(
+        statement, this, dbInfo, sql, statementInstrumenter, captureQueryParameters, sqlCommenter);
   }
 
   @Override
   public Statement createStatement() throws SQLException {
     Statement statement = delegate.createStatement();
-    return new OpenTelemetryStatement<>(
-        statement, this, dbInfo, statementInstrumenter, sqlCommenterEnabled);
+    return wrapStatement(statement);
   }
 
   @Override
   public Statement createStatement(int resultSetType, int resultSetConcurrency)
       throws SQLException {
     Statement statement = delegate.createStatement(resultSetType, resultSetConcurrency);
-    return new OpenTelemetryStatement<>(
-        statement, this, dbInfo, statementInstrumenter, sqlCommenterEnabled);
+    return wrapStatement(statement);
   }
 
   @Override
@@ -133,22 +146,14 @@ public class OpenTelemetryConnection implements Connection {
       int resultSetType, int resultSetConcurrency, int resultSetHoldability) throws SQLException {
     Statement statement =
         delegate.createStatement(resultSetType, resultSetConcurrency, resultSetHoldability);
-    return new OpenTelemetryStatement<>(
-        statement, this, dbInfo, statementInstrumenter, sqlCommenterEnabled);
+    return wrapStatement(statement);
   }
 
   @Override
   public PreparedStatement prepareStatement(String sql) throws SQLException {
     String processedSql = processQuery(sql);
     PreparedStatement statement = delegate.prepareStatement(processedSql);
-    return new OpenTelemetryPreparedStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapPreparedStatement(statement, sql);
   }
 
   @Override
@@ -157,14 +162,7 @@ public class OpenTelemetryConnection implements Connection {
     String processedSql = processQuery(sql);
     PreparedStatement statement =
         delegate.prepareStatement(processedSql, resultSetType, resultSetConcurrency);
-    return new OpenTelemetryPreparedStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapPreparedStatement(statement, sql);
   }
 
   @Override
@@ -175,70 +173,35 @@ public class OpenTelemetryConnection implements Connection {
     PreparedStatement statement =
         delegate.prepareStatement(
             processedSql, resultSetType, resultSetConcurrency, resultSetHoldability);
-    return new OpenTelemetryPreparedStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapPreparedStatement(statement, sql);
   }
 
   @Override
   public PreparedStatement prepareStatement(String sql, int autoGeneratedKeys) throws SQLException {
     String processedSql = processQuery(sql);
     PreparedStatement statement = delegate.prepareStatement(processedSql, autoGeneratedKeys);
-    return new OpenTelemetryPreparedStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapPreparedStatement(statement, sql);
   }
 
   @Override
   public PreparedStatement prepareStatement(String sql, int[] columnIndexes) throws SQLException {
     String processedSql = processQuery(sql);
     PreparedStatement statement = delegate.prepareStatement(processedSql, columnIndexes);
-    return new OpenTelemetryPreparedStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapPreparedStatement(statement, sql);
   }
 
   @Override
   public PreparedStatement prepareStatement(String sql, String[] columnNames) throws SQLException {
     String processedSql = processQuery(sql);
     PreparedStatement statement = delegate.prepareStatement(processedSql, columnNames);
-    return new OpenTelemetryPreparedStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapPreparedStatement(statement, sql);
   }
 
   @Override
   public CallableStatement prepareCall(String sql) throws SQLException {
     String processedSql = processQuery(sql);
     CallableStatement statement = delegate.prepareCall(processedSql);
-    return new OpenTelemetryCallableStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapCallableStatement(statement, sql);
   }
 
   @Override
@@ -247,14 +210,7 @@ public class OpenTelemetryConnection implements Connection {
     String processedSql = processQuery(sql);
     CallableStatement statement =
         delegate.prepareCall(processedSql, resultSetType, resultSetConcurrency);
-    return new OpenTelemetryCallableStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+    return wrapCallableStatement(statement, sql);
   }
 
   @Override
@@ -266,13 +222,7 @@ public class OpenTelemetryConnection implements Connection {
         delegate.prepareCall(
             processedSql, resultSetType, resultSetConcurrency, resultSetHoldability);
     return new OpenTelemetryCallableStatement<>(
-        statement,
-        this,
-        dbInfo,
-        sql,
-        statementInstrumenter,
-        captureQueryParameters,
-        sqlCommenterEnabled);
+        statement, this, dbInfo, sql, statementInstrumenter, captureQueryParameters, sqlCommenter);
   }
 
   @Override
@@ -502,14 +452,14 @@ public class OpenTelemetryConnection implements Connection {
         Instrumenter<DbRequest, Void> statementInstrumenter,
         Instrumenter<DbRequest, Void> transactionInstrumenter,
         boolean captureQueryParameters,
-        boolean sqlCommenterEnabled) {
+        SqlCommenter sqlCommenter) {
       super(
           delegate,
           dbInfo,
           statementInstrumenter,
           transactionInstrumenter,
           captureQueryParameters,
-          sqlCommenterEnabled);
+          sqlCommenter);
     }
 
     @SuppressWarnings("Since15")
