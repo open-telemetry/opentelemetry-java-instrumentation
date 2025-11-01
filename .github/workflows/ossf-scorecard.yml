@@ -8,7 +8,8 @@ on:
     - cron: "43 6 * * 5" # weekly at 06:43 (UTC) on Friday
   workflow_dispatch:
 
-permissions: read-all
+permissions:
+  contents: read
 
 jobs:
   analysis:
