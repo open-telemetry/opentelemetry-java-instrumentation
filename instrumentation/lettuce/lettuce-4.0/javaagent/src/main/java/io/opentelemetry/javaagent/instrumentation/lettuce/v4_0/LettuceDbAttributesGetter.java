@@ -19,23 +19,9 @@ final class LettuceDbAttributesGetter
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(RedisCommand<?, ?, ?> request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(RedisCommand<?, ?, ?> request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(RedisCommand<?, ?, ?> request) {
     return null;
   }
 

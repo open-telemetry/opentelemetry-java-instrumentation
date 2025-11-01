@@ -20,23 +20,9 @@ final class OpenSearchRestAttributesGetter
     return DbIncubatingAttributes.DbSystemIncubatingValues.OPENSEARCH;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(OpenSearchRestRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(OpenSearchRestRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(OpenSearchRestRequest request) {
     return null;
   }
 

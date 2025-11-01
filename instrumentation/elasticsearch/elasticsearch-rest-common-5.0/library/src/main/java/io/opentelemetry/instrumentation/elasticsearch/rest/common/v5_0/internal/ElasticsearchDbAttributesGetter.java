@@ -43,23 +43,9 @@ final class ElasticsearchDbAttributesGetter
     return ELASTICSEARCH;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(ElasticsearchRestRequest request) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(ElasticsearchRestRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(ElasticsearchRestRequest request) {
     return null;
   }
 
