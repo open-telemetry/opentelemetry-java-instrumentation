@@ -288,7 +288,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@2028fbc5c25fe9cf00d9f06a71cc4710d4507903 # v6.0.0
         with:
-          node-version: 16
+          node-version: 24
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
