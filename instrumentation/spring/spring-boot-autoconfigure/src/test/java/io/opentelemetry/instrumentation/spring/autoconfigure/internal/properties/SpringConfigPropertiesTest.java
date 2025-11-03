@@ -196,7 +196,21 @@ class SpringConfigPropertiesTest {
             "otel.traces.sampler.arg=0.5",
             Double.class,
             (Consumer<SpringConfigProperties>)
-                config -> assertThat(config.getDouble("otel.traces.sampler.arg")).isEqualTo(0.5)));
+                config -> assertThat(config.getDouble("otel.traces.sampler.arg")).isEqualTo(0.5)),
+        Arguments.of(
+            "otel.bsp.export.timeout=30s",
+            String.class,
+            (Consumer<SpringConfigProperties>)
+                config ->
+                    assertThat(config.getDuration("otel.bsp.export.timeout"))
+                        .isEqualByComparingTo(java.time.Duration.ofSeconds(30))),
+        Arguments.of(
+            "otel.attribute.value.length.limit=256",
+            List.class,
+            (Consumer<SpringConfigProperties>)
+                config ->
+                    assertThat(config.getList("otel.attribute.value.length.limit"))
+                        .containsExactly("256")));
   }
 
   @ParameterizedTest
@@ -227,6 +241,42 @@ class SpringConfigPropertiesTest {
               }
 
               verify(spyEnvironment, times(1)).getProperty(eq(propertyName), eq(typeClass));
+            });
+  }
+
+  @Test
+  @DisplayName("should cache map property lookups and call Environment.getProperty() only once")
+  void mapPropertyCaching() {
+    this.contextRunner
+        .withSystemProperties(
+            "otel.instrumentation.common.peer-service-mapping={'host1':'serviceA','host2':'serviceB'}")
+        .run(
+            context -> {
+              Environment realEnvironment = context.getBean("environment", Environment.class);
+              Environment spyEnvironment = spy(realEnvironment);
+
+              SpringConfigProperties config =
+                  new SpringConfigProperties(
+                      spyEnvironment,
+                      new SpelExpressionParser(),
+                      context.getBean(OtlpExporterProperties.class),
+                      context.getBean(OtelResourceProperties.class),
+                      context.getBean(OtelSpringProperties.class),
+                      DefaultConfigProperties.createFromMap(emptyMap()));
+
+              for (int i = 0; i < 100; i++) {
+                Map<String, String> mapping =
+                    config.getMap("otel.instrumentation.common.peer-service-mapping");
+                assertThat(mapping)
+                    .containsEntry("host1", "serviceA")
+                    .containsEntry("host2", "serviceB");
+              }
+
+              // Map properties call getProperty(name) which delegates to getProperty(name,
+              // String.class)
+              verify(spyEnvironment, times(1))
+                  .getProperty(
+                      eq("otel.instrumentation.common.peer-service-mapping"), eq(String.class));
             });
   }
 
