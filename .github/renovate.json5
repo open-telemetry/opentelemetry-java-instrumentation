@@ -162,7 +162,7 @@
     {
       // vaadin 14 tests require node 16
       matchPackageNames: [
-        'node',
+        'actions/node-versions',
       ],
       matchUpdateTypes: [
         'major',
