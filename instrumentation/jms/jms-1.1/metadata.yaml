@@ -1,3 +1,4 @@
+display_name: JMS (Java Message Service)
 description: >
   This instrumentation enables messaging spans for JMS (Java Message Service) message producers and
   consumers.

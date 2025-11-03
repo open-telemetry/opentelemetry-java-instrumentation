@@ -6470,6 +6470,7 @@ libraries:
           type: STRING
   jms:
   - name: jms-1.1
+    display_name: JMS (Java Message Service)
     description: |
       This instrumentation enables messaging spans for JMS (Java Message Service) message producers and consumers.
     semantic_conventions:
@@ -6522,6 +6523,7 @@ libraries:
         - name: messaging.system
           type: STRING
   - name: jms-3.0
+    display_name: JMS (Java Message Service)
     description: |
       This instrumentation enables messaging spans for Jakarta JMS (Java Message Service) message producers and consumers.
     semantic_conventions:
@@ -6572,6 +6574,7 @@ libraries:
           type: STRING
   jodd:
   - name: jodd-http-4.2
+    display_name: Jodd HTTP
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for Jodd HTTP.
     semantic_conventions:
@@ -6653,6 +6656,7 @@ libraries:
           type: STRING
   jsf:
   - name: jsf-mojarra-1.2
+    display_name: JSF
     description: |
       This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
     library_link: https://github.com/eclipse-ee4j/mojarra
@@ -6670,7 +6674,7 @@ libraries:
       - javax.faces:jsf-impl:[1.2,2)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables controller spans for JSF action listeners.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:
@@ -6679,6 +6683,7 @@ libraries:
       - span_kind: INTERNAL
         attributes: []
   - name: jsf-mojarra-3.0
+    display_name: JSF
     description: |
       This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
     library_link: https://github.com/eclipse-ee4j/mojarra
@@ -6693,7 +6698,7 @@ libraries:
       - org.glassfish:jakarta.faces:[3,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables controller spans for JSF action listeners.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:
@@ -6702,6 +6707,7 @@ libraries:
       - span_kind: INTERNAL
         attributes: []
   - name: jsf-myfaces-1.2
+    display_name: JSF
     description: |
       This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
     library_link: https://myfaces.apache.org/
@@ -6715,7 +6721,7 @@ libraries:
       - org.apache.myfaces.core:myfaces-impl:[1.2,3)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables controller spans for JSF action listeners.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:
@@ -6724,6 +6730,7 @@ libraries:
       - span_kind: INTERNAL
         attributes: []
   - name: jsf-myfaces-3.0
+    display_name: JSF
     description: |
       This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
     library_link: https://myfaces.apache.org/
@@ -6738,7 +6745,7 @@ libraries:
       - org.apache.myfaces.core:myfaces-impl:[3,)
     configurations:
     - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
-      description: Enables controller spans for JSF action listeners.
+      description: Enables the creation of experimental controller spans.
       type: boolean
       default: false
     telemetry:

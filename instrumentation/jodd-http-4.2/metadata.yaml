@@ -1,3 +1,4 @@
+display_name: Jodd HTTP
 description: This instrumentation enables HTTP client spans and HTTP client metrics for Jodd HTTP.
 semantic_conventions:
   - HTTP_CLIENT_SPANS
