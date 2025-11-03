@@ -1,0 +1,2 @@
+description: This standalone instrumentation enables metrics for Apache Iceberg scans and commits.
+library_link: https://iceberg.apache.org/
