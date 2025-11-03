@@ -119,6 +119,25 @@ public final class JdbcInstrumenterFactory {
     return createTransactionInstrumenter(openTelemetry, transactionEnabled(openTelemetry, false));
   }
 
+  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
+      OpenTelemetry openTelemetry, boolean enabled) {
+    return createTransactionInstrumenter(openTelemetry, emptyList(), enabled);
+  }
+
+  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
+      OpenTelemetry openTelemetry,
+      List<AttributesExtractor<DbRequest, Void>> extractors,
+      boolean enabled) {
+    return Instrumenter.<DbRequest, Void>builder(
+            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
+        .addAttributesExtractor(SqlClientAttributesExtractor.builder(dbAttributesGetter).build())
+        .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
+        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+        .addAttributesExtractors(extractors)
+        .setEnabled(enabled)
+        .buildInstrumenter(SpanKindExtractor.alwaysClient());
+  }
+
   private static boolean transactionEnabled(OpenTelemetry openTelemetry, boolean defaultEnabled) {
     if (openTelemetry instanceof ExtendedOpenTelemetry) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
@@ -161,25 +180,6 @@ public final class JdbcInstrumenterFactory {
       return ConfigPropertiesUtil.getBoolean(
           "otel.instrumentation.common.db-statement-sanitizer.enabled", defaultEnabled);
     }
-  }
-
-  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
-      OpenTelemetry openTelemetry, boolean enabled) {
-    return createTransactionInstrumenter(openTelemetry, emptyList(), enabled);
-  }
-
-  public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
-      OpenTelemetry openTelemetry,
-      List<AttributesExtractor<DbRequest, Void>> extractors,
-      boolean enabled) {
-    return Instrumenter.<DbRequest, Void>builder(
-            openTelemetry, INSTRUMENTATION_NAME, DbRequest::getOperation)
-        .addAttributesExtractor(SqlClientAttributesExtractor.builder(dbAttributesGetter).build())
-        .addAttributesExtractor(TransactionAttributeExtractor.INSTANCE)
-        .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
-        .addAttributesExtractors(extractors)
-        .setEnabled(enabled)
-        .buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
   private JdbcInstrumenterFactory() {}
