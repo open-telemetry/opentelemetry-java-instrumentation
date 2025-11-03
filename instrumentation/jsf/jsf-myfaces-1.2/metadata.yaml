@@ -1,0 +1,11 @@
+description: >
+  This instrumentation enables controller spans for Apache MyFaces action listeners (controller
+  spans are disabled by default).
+features:
+  - CONTROLLER_SPANS
+library_link: https://myfaces.apache.org/
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables controller spans for JSF action listeners.
+    type: boolean
+    default: false

@@ -6470,6 +6470,11 @@ libraries:
           type: STRING
   jms:
   - name: jms-1.1
+    description: |
+      This instrumentation enables messaging spans for JMS (Java Message Service) message producers and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html
     source_path: instrumentation/jms/jms-1.1
     scope:
       name: io.opentelemetry.jms-1.1
@@ -6478,7 +6483,50 @@ libraries:
       - javax.jms:javax.jms-api:(,)
       - jakarta.jms:jakarta.jms-api:(,3)
       - javax.jms:jms-api:(,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: jms-3.0
+    description: |
+      This instrumentation enables messaging spans for Jakarta JMS (Java Message Service) message producers and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://jakarta.ee/specifications/messaging/3.0/
     source_path: instrumentation/jms/jms-3.0
     minimum_java_version: 11
     scope:
@@ -6486,14 +6534,84 @@ libraries:
     target_versions:
       javaagent:
       - jakarta.jms:jakarta.jms-api:[3.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   jodd:
   - name: jodd-http-4.2
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Jodd HTTP.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://http.jodd.org/
     source_path: instrumentation/jodd-http-4.2
     scope:
       name: io.opentelemetry.jodd-http-4.2
     target_versions:
       javaagent:
       - org.jodd:jodd-http:[4.2.0,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -6535,6 +6653,11 @@ libraries:
           type: STRING
   jsf:
   - name: jsf-mojarra-1.2
+    description: |
+      This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
+    library_link: https://github.com/eclipse-ee4j/mojarra
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-mojarra-1.2
     scope:
       name: io.opentelemetry.jsf-mojarra-1.2
@@ -6545,7 +6668,22 @@ libraries:
       - com.sun.faces:jsf-impl:[2.0,2.1)
       - org.glassfish:javax.faces:[2.0.7,3)
       - javax.faces:jsf-impl:[1.2,2)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables controller spans for JSF action listeners.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jsf-mojarra-3.0
+    description: |
+      This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
+    library_link: https://github.com/eclipse-ee4j/mojarra
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-mojarra-3.0
     minimum_java_version: 11
     scope:
@@ -6553,14 +6691,44 @@ libraries:
     target_versions:
       javaagent:
       - org.glassfish:jakarta.faces:[3,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables controller spans for JSF action listeners.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jsf-myfaces-1.2
+    description: |
+      This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
+    library_link: https://myfaces.apache.org/
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-myfaces-1.2
     scope:
       name: io.opentelemetry.jsf-myfaces-1.2
     target_versions:
       javaagent:
       - org.apache.myfaces.core:myfaces-impl:[1.2,3)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables controller spans for JSF action listeners.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jsf-myfaces-3.0
+    description: |
+      This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
+    library_link: https://myfaces.apache.org/
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-myfaces-3.0
     minimum_java_version: 11
     scope:
@@ -6568,6 +6736,16 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.myfaces.core:myfaces-impl:[3,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables controller spans for JSF action listeners.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   jsp:
   - name: jsp-2.3
     source_path: instrumentation/jsp-2.3

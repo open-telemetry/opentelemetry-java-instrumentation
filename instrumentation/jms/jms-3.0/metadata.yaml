@@ -1,0 +1,19 @@
+description: >
+  This instrumentation enables messaging spans for Jakarta JMS (Java Message Service) message
+  producers and consumers.
+semantic_conventions:
+  - MESSAGING_SPANS
+library_link: https://jakarta.ee/specifications/messaging/3.0/
+configurations:
+  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+    description: >
+      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
+      only a span link connecting it to the producer trace.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.messaging.experimental.capture-headers
+    description: >
+      Enables capturing messaging headers as span attributes. Provide a comma-separated list of
+      header names to capture.
+    type: list
+    default: ''
