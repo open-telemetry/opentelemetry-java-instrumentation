@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
@@ -65,13 +66,11 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
     }
 
-    String urlTemplate = HttpClientUrlTemplate.get(context);
-    if (urlTemplate != null) {
+    if (getter instanceof HttpClientAttributesGetter) {
+      HttpClientAttributesGetter<REQUEST, RESPONSE> clientGetter =
+          (HttpClientAttributesGetter<REQUEST, RESPONSE>) getter;
+      String urlTemplate = HttpClientUrlTemplateUtil.getUrlTemplate(context, request, clientGetter);
       internalSet(attributes, URL_TEMPLATE, urlTemplate);
-    } else if (getter instanceof HttpClientExperimentalAttributesGetter) {
-      HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalGetter =
-          (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) getter;
-      internalSet(attributes, URL_TEMPLATE, experimentalGetter.getUrlTemplate(request));
     }
   }
 
