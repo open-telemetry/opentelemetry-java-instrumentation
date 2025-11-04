@@ -5,12 +5,11 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
-import org.apache.iceberg.TableScan;
-import org.junit.jupiter.api.extension.RegisterExtension;
-
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.apache.iceberg.TableScan;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 class IcebergTest extends AbstractIcebergTest {
   @RegisterExtension
