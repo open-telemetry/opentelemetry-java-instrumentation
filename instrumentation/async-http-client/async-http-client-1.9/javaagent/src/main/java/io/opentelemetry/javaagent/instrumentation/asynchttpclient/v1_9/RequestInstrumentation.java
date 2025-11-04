@@ -19,7 +19,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHandlerData;
-import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.InstrumenterContextKey;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -55,9 +54,7 @@ public class RequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      // Store instrumenter in context so ResponseInstrumentation can access it
-      Context contextWithInstrumenter = context.with(InstrumenterContextKey.KEY, instrumenter());
-      ASYNC_HANDLER_DATA.set(handler, AsyncHandlerData.create(parentContext, contextWithInstrumenter, request));
+      ASYNC_HANDLER_DATA.set(handler, AsyncHandlerData.create(parentContext, context, request, instrumenter()));
       return context.makeCurrent();
     }
 
