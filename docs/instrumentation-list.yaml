@@ -220,6 +220,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -499,6 +501,8 @@ libraries:
       spans:
       - span_kind: CLIENT
         attributes:
+        - name: peer.service
+          type: STRING
         - name: rpc.method
           type: STRING
         - name: rpc.service
@@ -594,6 +598,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -670,6 +676,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -750,6 +758,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -882,6 +892,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -1069,6 +1081,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1215,6 +1229,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -1296,6 +1312,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -1468,7 +1486,7 @@ libraries:
     configurations:
     - name: otel.instrumentation.aws-sdk.experimental-span-attributes
       description: |
-        Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`, `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
+        Enables the experimental span attributes `aws.agent`, `aws.queue.name`, `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
       type: boolean
       default: false
     - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
@@ -1487,10 +1505,10 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
         - name: aws.dynamodb.table_names
           type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
+          type: STRING
         - name: aws.lambda.function.arn
           type: STRING
         - name: aws.lambda.function.name
@@ -1499,19 +1517,17 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
           type: STRING
+        - name: aws.s3.bucket
+          type: STRING
         - name: aws.sns.topic.arn
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation
           type: STRING
@@ -1543,9 +1559,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1593,10 +1609,10 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
         - name: aws.dynamodb.table_names
           type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
+          type: STRING
         - name: aws.lambda.function.arn
           type: STRING
         - name: aws.lambda.function.name
@@ -1605,19 +1621,17 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
           type: STRING
+        - name: aws.s3.bucket
+          type: STRING
         - name: aws.sns.topic.arn
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation.name
           type: STRING
@@ -1649,9 +1663,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1768,17 +1782,29 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
+        - name: aws.dynamodb.consumed_capacity
+          type: STRING_ARRAY
+        - name: aws.dynamodb.count
+          type: LONG
         - name: aws.dynamodb.global_secondary_indexes
+          type: STRING_ARRAY
+        - name: aws.dynamodb.item_collection_metrics
           type: STRING
         - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
+          type: LONG
+        - name: aws.dynamodb.provisioned_read_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.provisioned_write_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.scanned_count
+          type: LONG
         - name: aws.dynamodb.select
+          type: STRING
+        - name: aws.dynamodb.table_count
+          type: LONG
+        - name: aws.dynamodb.table_names
+          type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
           type: STRING
         - name: aws.lambda.function.arn
           type: STRING
@@ -1788,21 +1814,19 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.s3.bucket
           type: STRING
         - name: aws.secretsmanager.secret.arn
           type: STRING
         - name: aws.sns.topic.arn
           type: STRING
+        - name: aws.sqs.queue.url
+          type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation
           type: STRING
@@ -1880,9 +1904,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -1924,17 +1948,29 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.bucket.name
-          type: STRING
+        - name: aws.dynamodb.consumed_capacity
+          type: STRING_ARRAY
+        - name: aws.dynamodb.count
+          type: LONG
         - name: aws.dynamodb.global_secondary_indexes
+          type: STRING_ARRAY
+        - name: aws.dynamodb.item_collection_metrics
           type: STRING
         - name: aws.dynamodb.limit
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.read_capacity_units
-          type: STRING
-        - name: aws.dynamodb.provisioned_throughput.write_capacity_units
-          type: STRING
+          type: LONG
+        - name: aws.dynamodb.provisioned_read_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.provisioned_write_capacity
+          type: DOUBLE
+        - name: aws.dynamodb.scanned_count
+          type: LONG
         - name: aws.dynamodb.select
+          type: STRING
+        - name: aws.dynamodb.table_count
+          type: LONG
+        - name: aws.dynamodb.table_names
+          type: STRING_ARRAY
+        - name: aws.kinesis.stream_name
           type: STRING
         - name: aws.lambda.function.arn
           type: STRING
@@ -1944,21 +1980,19 @@ libraries:
           type: STRING
         - name: aws.queue.name
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.s3.bucket
           type: STRING
         - name: aws.secretsmanager.secret.arn
           type: STRING
         - name: aws.sns.topic.arn
           type: STRING
+        - name: aws.sqs.queue.url
+          type: STRING
         - name: aws.step_functions.activity.arn
           type: STRING
         - name: aws.step_functions.state_machine.arn
-          type: STRING
-        - name: aws.stream.name
-          type: STRING
-        - name: aws.table.name
           type: STRING
         - name: db.operation.name
           type: STRING
@@ -2016,9 +2050,9 @@ libraries:
         attributes:
         - name: aws.agent
           type: STRING
-        - name: aws.queue.url
-          type: STRING
         - name: aws.request_id
+          type: STRING
+        - name: aws.sqs.queue.url
           type: STRING
         - name: http.request.method
           type: STRING
@@ -2049,6 +2083,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.14
     scope:
       name: io.opentelemetry.azure-core-1.14
@@ -2059,6 +2096,9 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.19
     scope:
       name: io.opentelemetry.azure-core-1.19
@@ -2069,16 +2109,34 @@ libraries:
     description: This instrumentation enables context propagation for the Azure Core
       library, it does not emit any telemetry on its own.
     library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/azure-core/azure-core-1.36
     scope:
       name: io.opentelemetry.azure-core-1.36
     target_versions:
       javaagent:
-      - com.azure:azure-core:[1.36.0,)
+      - com.azure:azure-core:[1.36.0,1.53.0)
+  - name: azure-core-1.53
+    description: This instrumentation enables context propagation for the Azure Core
+      library, it does not emit any telemetry on its own.
+    library_link: https://learn.microsoft.com/en-us/java/api/overview/azure/core-readme?view=azure-java-stable
+    features:
+    - CONTEXT_PROPAGATION
+    - AUTO_INSTRUMENTATION_SHIM
+    source_path: instrumentation/azure-core/azure-core-1.53
+    scope:
+      name: io.opentelemetry.azure-core-1.53
+    target_versions:
+      javaagent:
+      - com.azure:azure-core:[1.53.0,)
   c3p0:
   - name: c3p0-0.9
     description: The c3p0 instrumentation provides connection pool metrics for c3p0
       data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/swaldman/c3p0
     source_path: instrumentation/c3p0-0.9
     scope:
@@ -2132,7 +2190,14 @@ libraries:
   - name: camel-2.20
     description: |
       This instrumentation enables tracing for Apache Camel 2.x applications by generating spans for each route execution. For Camel versions 3.5 and newer, users should instead use the native 'camel-opentelemetry' component provided directly by the Camel project.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_SERVER_SPANS
+    - DATABASE_CLIENT_SPANS
+    - MESSAGING_SPANS
     library_link: https://camel.apache.org/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/camel-2.20
     scope:
       name: io.opentelemetry.camel-2.20
@@ -2162,6 +2227,12 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: http.request.method
@@ -2171,6 +2242,10 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2198,6 +2273,14 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: camel.uri
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: camel.uri
@@ -2209,6 +2292,12 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: camel.uri
+          type: STRING
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2236,6 +2325,12 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
       - span_kind: INTERNAL
         attributes:
         - name: http.request.method
@@ -2245,6 +2340,10 @@ libraries:
         - name: messaging.message.id
           type: STRING
         - name: url.full
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
           type: STRING
       - span_kind: SERVER
         attributes:
@@ -2257,7 +2356,10 @@ libraries:
   cassandra:
   - name: cassandra-3.0
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-3.0
     scope:
@@ -2296,6 +2398,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2321,7 +2441,10 @@ libraries:
           type: LONG
   - name: cassandra-4.0
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.0
     scope:
@@ -2372,6 +2495,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2409,16 +2550,21 @@ libraries:
           type: LONG
   - name: cassandra-4.4
     description: |
-      Instruments the Cassandra database client, providing database client spans and metrics for Cassandra queries.
+      This instrumentation enables database client spans and database client metrics for the DataStax Cassandra Driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/apache/cassandra-java-driver
     source_path: instrumentation/cassandra/cassandra-4.4
     scope:
       name: io.opentelemetry.cassandra-4.4
     target_versions:
       javaagent:
+      - org.apache.cassandra:java-driver-core:(,)
       - com.datastax.oss:java-driver-core:[4.4,]
       library:
       - com.datastax.oss:java-driver-core:4.4.0
+      - org.apache.cassandra:java-driver-core:4.18.0
     configurations:
     - name: otel.instrumentation.common.db-statement-sanitizer.enabled
       description: Enables statement sanitization for database queries.
@@ -2462,6 +2608,24 @@ libraries:
         - name: server.port
           type: LONG
     - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -2499,8 +2663,11 @@ libraries:
           type: LONG
   clickhouse:
   - name: clickhouse-client-v1-0.5
-    description: This instrumentation enables database client spans and metrics for
-      the V1 ClickHouse client.
+    description: |
+      This instrumentation enables database client spans and database client metrics for the ClickHouse Java Client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/ClickHouse/clickhouse-java
     source_path: instrumentation/clickhouse/clickhouse-client-v1-0.5
     scope:
@@ -2567,8 +2734,11 @@ libraries:
         - name: server.port
           type: LONG
   - name: clickhouse-client-v2-0.8
-    description: This instrumentation enables database client spans and metrics for
-      the V2 ClickHouse client.
+    description: |
+      This instrumentation enables database client spans and database client metrics for the ClickHouse Java Client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/ClickHouse/clickhouse-java
     source_path: instrumentation/clickhouse/clickhouse-client-v2-0.8
     scope:
@@ -2638,6 +2808,9 @@ libraries:
   - name: couchbase-2.0
     description: |
       This instrumentation enables database client spans and database client metrics for Couchbase 2.0 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-2.0
     scope:
@@ -2645,6 +2818,11 @@ libraries:
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[2,3)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -2683,6 +2861,9 @@ libraries:
   - name: couchbase-2.6
     description: |
       This instrumentation enables database client spans and database client metrics for Couchbase 2.6 operations. It automatically traces key-value operations (get, upsert, replace, remove), view queries, N1QL queries, and cluster management operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/couchbase/couchbase-java-client
     source_path: instrumentation/couchbase/couchbase-2.6
     scope:
@@ -2696,6 +2877,10 @@ libraries:
         Enables experimental span attributes `couchbase.operation_id` and `couchbase.local.address`. Different operation types receive different experimental attributes.
       type: boolean
       default: false
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -2772,33 +2957,201 @@ libraries:
   - name: couchbase-3.1
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/couchbase/couchbase-3.1
     scope:
       name: io.opentelemetry.couchbase-3.1
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[3.1,3.1.6)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
   - name: couchbase-3.1.6
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/couchbase/couchbase-3.1.6
     scope:
       name: io.opentelemetry.couchbase-3.1.6
     target_versions:
       javaagent:
       - com.couchbase.client:java-client:[3.1.6,3.2.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.retries
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
   - name: couchbase-3.2
     description: |
       Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
     library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
     source_path: instrumentation/couchbase/couchbase-3.2
     scope:
       name: io.opentelemetry.couchbase-3.2
     target_versions:
       javaagent:
-      - com.couchbase.client:java-client:[3.2.0,)
+      - com.couchbase.client:java-client:[3.2.0,3.4.0)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.document_id
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.retries
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
+  - name: couchbase-3.4
+    description: |
+      Couchbase instrumentation is owned by the Couchbase project for versions 3+. This instrumentation automatically configures the instrumentation provided by the Couchbase library.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    library_link: https://github.com/couchbase/couchbase-java-client
+    features:
+    - AUTO_INSTRUMENTATION_SHIM
+    source_path: instrumentation/couchbase/couchbase-3.4
+    scope:
+      name: io.opentelemetry.couchbase-3.4
+    target_versions:
+      javaagent:
+      - com.couchbase.client:java-client:[3.4.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.couchbase.collection
+          type: STRING
+        - name: db.couchbase.document_id
+          type: STRING
+        - name: db.couchbase.local_id
+          type: STRING
+        - name: db.couchbase.operation_id
+          type: LONG
+        - name: db.couchbase.retries
+          type: LONG
+        - name: db.couchbase.scope
+          type: STRING
+        - name: db.couchbase.server_duration
+          type: LONG
+        - name: db.couchbase.service
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: net.host.name
+          type: STRING
+        - name: net.host.port
+          type: LONG
+        - name: net.peer.name
+          type: STRING
+        - name: net.peer.port
+          type: LONG
+        - name: net.transport
+          type: STRING
   dropwizard:
   - name: dropwizard-metrics-4.0
     description: |
@@ -2818,9 +3171,11 @@ libraries:
       type: boolean
       default: false
   - name: dropwizard-views-0.7
-    description: This instrumentation enables the creation of spans for Dropwizard
-      views.
+    description: |
+      This instrumentation enables view spans for Dropwizard view template rendering (view spans are disabled by default).
     library_link: https://www.dropwizard.io/en/latest/manual/views.html
+    features:
+    - VIEW_SPANS
     source_path: instrumentation/dropwizard/dropwizard-views-0.7
     scope:
       name: io.opentelemetry.dropwizard-views-0.7
@@ -2840,7 +3195,7 @@ libraries:
   elasticsearch:
   - name: elasticsearch-api-client-7.16
     description: |
-      This instrumentation extends the elasticsearch-rest-7.0 instrumentation by adding additional `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes to Elasticsearch database client spans. Versions 8.10 and later of the client have native support for OpenTelemetry.
+      This instrumentation enriches Elasticsearch database client spans generated by the elasticsearch-rest-7.0 instrumentation by adding `db.elasticsearch.path_parts.id` and `db.elasticsearch.path_parts.index` attributes. It does not emit any telemetry on its own. Versions 8.10 and later of the Elasticsearch Java client have native OpenTelemetry support.
     library_link: https://www.elastic.co/docs/reference/elasticsearch/clients/java
     source_path: instrumentation/elasticsearch/elasticsearch-api-client-7.16
     scope:
@@ -2907,6 +3262,9 @@ libraries:
   - name: elasticsearch-rest-5.0
     description: This instrumentation enables database client spans and database client
       metrics for Elasticsearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-5.0
     scope:
@@ -2970,6 +3328,9 @@ libraries:
   - name: elasticsearch-rest-6.4
     description: This instrumentation enables database client spans and database client
       metrics for Elasticsearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-6.4
     scope:
@@ -3032,6 +3393,9 @@ libraries:
   - name: elasticsearch-rest-7.0
     description: This instrumentation enables database client spans and database client
       metrics for Elasticsearch REST clients.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-rest
     source_path: instrumentation/elasticsearch/elasticsearch-rest-7.0
     scope:
@@ -3096,6 +3460,9 @@ libraries:
   - name: elasticsearch-transport-5.0
     description: |
       This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.0
     scope:
@@ -3189,6 +3556,9 @@ libraries:
   - name: elasticsearch-transport-5.3
     description: |
       This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-5.3
     scope:
@@ -3287,6 +3657,9 @@ libraries:
   - name: elasticsearch-transport-6.0
     description: |
       This instrumentation enables database client spans and database client metrics for Elasticsearch transport client requests. Each call produces a span named after the Elasticsearch action, enriched with transport-specific attributes.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://www.elastic.co/guide/en/elasticsearch/client/java-api/
     source_path: instrumentation/elasticsearch/elasticsearch-transport-6.0
     scope:
@@ -3382,9 +3755,12 @@ libraries:
           type: STRING
   executors:
   - name: executors
+    display_name: Java Executors
     description: |
       The executor instrumentation ensures that context is automatically propagated when using common Java executors (e.g., ThreadPoolExecutor, ScheduledThreadPoolExecutor, ForkJoinPool). When a task is submitted, the current context is captured and bound to the task. Then, when the task eventually runs, even if it’s on a different thread, the instrumentation reactivates that context, enabling consistent correlation across concurrent and asynchronous workflows.
     library_link: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/Executor.html
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/executors
     scope:
       name: io.opentelemetry.executors
@@ -3437,6 +3813,8 @@ libraries:
     description: |
       This instrumentation for Finagle HTTP clients and servers ensures that telemetry is correctly generated by the underlying Netty instrumentation. It augments existing telemetry by bridging the gap between Finagle's abstractions and Netty's pipeline, primarily for context propagation.
     library_link: https://github.com/twitter/finagle
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/finagle-http-23.11
     scope:
       name: io.opentelemetry.finagle-http-23.11
@@ -3446,10 +3824,12 @@ libraries:
       - com.twitter:finagle-http_2.12:[23.11.0,]
   finatra:
   - name: finatra-2.9
-    description: This instrumentation for the Finatra web framework augments the telemetry
-      generated by the underlying Netty instrumentation. It provides more specific,
-      high-level context, such as route information, to the spans generated by Netty.
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for the Finatra web framework (controller spans are disabled by default).
     library_link: https://github.com/twitter/finatra
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/finatra-2.9
     scope:
       name: io.opentelemetry.finatra-2.9
@@ -3457,8 +3837,13 @@ libraries:
       javaagent:
       - com.twitter:finatra-http_2.11:[2.9.0,]
       - com.twitter:finatra-http_2.12:[2.9.0,]
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
     telemetry:
-    - when: default
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
       spans:
       - span_kind: INTERNAL
         attributes:
@@ -3470,6 +3855,9 @@ libraries:
   - name: geode-1.4
     description: This instrumentation enables database client spans and database client
       metrics for Apache Geode cache operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://geode.apache.org/
     source_path: instrumentation/geode-1.4
     scope:
@@ -3522,7 +3910,10 @@ libraries:
   google:
   - name: google-http-client-1.19
     description: This instrumentation enables HTTP client spans and HTTP client metrics
-      for Google HTTP Client requests.
+      for the Google HTTP Client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://github.com/googleapis/google-http-java-client
     source_path: instrumentation/google-http-client-1.19
     scope:
@@ -3583,6 +3974,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -3592,8 +3985,11 @@ libraries:
   grails:
   - name: grails-3.0
     description: |
-      This instrumentation enriches existing HTTP server spans with HTTP route information, and optionally enables experimental controller spans for Grails applications.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Grails applications (controller spans are disabled by default).
     library_link: https://grails.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/grails-3.0
     scope:
       name: io.opentelemetry.grails-3.0
@@ -3616,7 +4012,9 @@ libraries:
           type: STRING
   graphql:
   - name: graphql-java-12.0
-    description: This instrumentation enables spans for GraphQL Java operations.
+    description: This instrumentation enables spans for GraphQL operations.
+    semantic_conventions:
+    - GRAPHQL_SERVER_SPANS
     library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-12.0
     scope:
@@ -3649,7 +4047,9 @@ libraries:
         - name: graphql.operation.type
           type: STRING
   - name: graphql-java-20.0
-    description: This instrumentation enables spans for GraphQL Java operations.
+    description: This instrumentation enables spans for GraphQL operations.
+    semantic_conventions:
+    - GRAPHQL_SERVER_SPANS
     library_link: https://www.graphql-java.com/
     source_path: instrumentation/graphql-java/graphql-java-20.0
     minimum_java_version: 11
@@ -3707,8 +4107,12 @@ libraries:
           type: STRING
   grizzly:
   - name: grizzly-2.3
+    display_name: Eclipse Grizzly
     description: This instrumentation enables HTTP server spans and HTTP server metrics
-      for Grizzly applications.
+      for Grizzly.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://javaee.github.io/grizzly/httpserverframework.html
     source_path: instrumentation/grizzly-2.3
     scope:
@@ -3729,11 +4133,6 @@ libraries:
     - name: otel.instrumentation.http.server.capture-response-headers
       description: List of HTTP response headers to capture in HTTP server telemetry.
       type: list
-      default: ''
-    - name: otel.instrumentation.common.peer-service-mapping
-      description: Used to specify a mapping from host names or IP addresses to peer
-        services.
-      type: map
       default: ''
     - name: otel.instrumentation.http.server.emit-experimental-telemetry
       description: |
@@ -3789,8 +4188,14 @@ libraries:
           type: STRING
   grpc:
   - name: grpc-1.6
-    description: This instrumentation enables RPC client spans and metrics, and RPC
-      server spans and metrics for gRPC version 1.6 and above.
+    display_name: gRPC
+    description: This instrumentation enables RPC client and RPC server spans and
+      metrics for gRPC.
+    semantic_conventions:
+    - RPC_CLIENT_SPANS
+    - RPC_CLIENT_METRICS
+    - RPC_SERVER_SPANS
+    - RPC_SERVER_METRICS
     library_link: https://github.com/grpc/grpc-java
     source_path: instrumentation/grpc-1.6
     scope:
@@ -3841,10 +4246,82 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: rpc.client.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.client.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
         type: HISTOGRAM
         unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: network.type
           type: STRING
@@ -3914,10 +4391,82 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: rpc.client.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.client.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       - name: rpc.server.duration
         description: The duration of an inbound RPC invocation.
         type: HISTOGRAM
         unit: ms
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.request.size
+        description: Measures the size of RPC request messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
+        attributes:
+        - name: network.type
+          type: STRING
+        - name: rpc.grpc.status_code
+          type: LONG
+        - name: rpc.method
+          type: STRING
+        - name: rpc.service
+          type: STRING
+        - name: rpc.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      - name: rpc.server.response.size
+        description: Measures the size of RPC response messages (uncompressed).
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: network.type
           type: STRING
@@ -3978,6 +4527,11 @@ libraries:
           type: LONG
   guava:
   - name: guava-10.0
+    description: |
+      This instrumentation enables context propagation for Guava ListenableFuture, it does not emit any telemetry on its own.
+    library_link: https://github.com/google/guava
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/guava-10.0
     scope:
       name: io.opentelemetry.guava-10.0
@@ -3986,9 +4540,18 @@ libraries:
       - com.google.guava:guava:[10.0,]
       library:
       - com.google.guava:guava:10.0
+    configurations:
+    - name: otel.instrumentation.guava.experimental-span-attributes
+      description: Enables experimental span attribute `guava.canceled` for cancelled
+        operations.
+      type: boolean
+      default: false
   gwt:
   - name: gwt-2.0
+    display_name: GWT
     description: This instrumentation enables RPC server spans for GWT RPC requests.
+    semantic_conventions:
+    - RPC_SERVER_SPANS
     library_link: https://www.gwtproject.org/
     source_path: instrumentation/gwt-2.0
     scope:
@@ -4097,9 +4660,8 @@ libraries:
           type: STRING
   hibernate:
   - name: hibernate-3.3
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-3.3
     scope:
       name: io.opentelemetry.hibernate-3.3
@@ -4108,8 +4670,7 @@ libraries:
       - org.hibernate:hibernate-core:[3.3.0.GA,4.0.0.Final)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4124,9 +4685,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-4.0
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-4.0
     scope:
       name: io.opentelemetry.hibernate-4.0
@@ -4135,8 +4695,7 @@ libraries:
       - org.hibernate:hibernate-core:[4.0.0.Final,6)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4151,9 +4710,8 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-6.0
-    description: |
-      This instrumentation enables the generation of spans for Hibernate operations, including session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate ORM operations.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-6.0
     minimum_java_version: 11
     scope:
@@ -4163,8 +4721,7 @@ libraries:
       - org.hibernate:hibernate-core:[6.0.0.Final,)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4179,9 +4736,9 @@ libraries:
         - name: hibernate.session_id
           type: STRING
   - name: hibernate-procedure-call-4.3
-    description: This instrumentation enables the generation of spans for Hibernate
-      stored procedure calls.
-    library_link: https://github.com/hibernate/hibernate-orm
+    description: This instrumentation enables spans for Hibernate stored procedure
+      calls.
+    library_link: https://hibernate.org/
     source_path: instrumentation/hibernate/hibernate-procedure-call-4.3
     scope:
       name: io.opentelemetry.hibernate-procedure-call-4.3
@@ -4190,8 +4747,7 @@ libraries:
       - org.hibernate:hibernate-core:[4.3.0.Final,)
     configurations:
     - name: otel.instrumentation.hibernate.experimental-span-attributes
-      description: Enables the addition of the experimental `hibernate.session_id`
-        span attribute.
+      description: Enables the experimental `hibernate.session_id` span attribute.
       type: boolean
       default: false
     telemetry:
@@ -4207,8 +4763,10 @@ libraries:
           type: STRING
   - name: hibernate-reactive-1.0
     description: |
-      This instrumentation does not emit any telemetry on its own. Instead, it enables context propagation for Hibernate Reactive asynchronous operations.
+      This instrumentation enables context propagation for Hibernate Reactive, it does not emit any telemetry on its own.
     library_link: https://hibernate.org/reactive/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/hibernate/hibernate-reactive-1.0
     scope:
       name: io.opentelemetry.hibernate-reactive-1.0
@@ -4217,8 +4775,11 @@ libraries:
       - org.hibernate.reactive:hibernate-reactive-core:(,)
   hikaricp:
   - name: hikaricp-3.0
-    description: |
-      This instrumentation provides database client metrics for HikariCP 3.0+ connection pools. It reports metrics like connection timeouts, creation time, wait time, and usage time, along with connection pool statistics such as the number of active, idle, and pending connections.
+    display_name: HikariCP
+    description: This instrumentation enables database connection pool metrics for
+      HikariCP.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://github.com/brettwooldridge/HikariCP
     source_path: instrumentation/hikaricp-3.0
     scope:
@@ -4358,8 +4919,12 @@ libraries:
           type: STRING
   http:
   - name: http-url-connection
+    display_name: HttpURLConnection
     description: |
-      This instrumentation enables the generation of HTTP client spans and HTTP client metrics for requests made using `java.net.HttpURLConnection`.
+      This instrumentation enables HTTP client spans and HTTP client metrics for requests made using java.net.HttpURLConnection.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/net/HttpURLConnection.html
     source_path: instrumentation/http-url-connection
     scope:
@@ -4424,6 +4989,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -4432,8 +4999,8 @@ libraries:
           type: STRING
   hystrix:
   - name: hystrix-1.4
-    description: This instrumentation enables the generation of spans for Hystrix
-      command executions and fallbacks.
+    description: This instrumentation enables spans for Hystrix command executions
+      and fallbacks.
     library_link: https://github.com/Netflix/Hystrix
     source_path: instrumentation/hystrix-1.4
     scope:
@@ -4464,8 +5031,12 @@ libraries:
           type: STRING
   influxdb:
   - name: influxdb-2.4
-    description: This instrumentation enables the generation of database client spans
-      and metrics for the InfluxDB Java client.
+    display_name: InfluxDB Client
+    description: This instrumentation enables database client spans and metrics for
+      the InfluxDB Java client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
     library_link: https://github.com/influxdata/influxdb-java
     source_path: instrumentation/influxdb-2.4
     scope:
@@ -4473,6 +5044,11 @@ libraries:
     target_versions:
       javaagent:
       - org.influxdb:influxdb-java:[2.4,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables or disables statement sanitization for database queries.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       spans:
@@ -4526,6 +5102,9 @@ libraries:
   - name: java-http-client
     description: This instrumentation enables HTTP client spans and HTTP client metrics
       for requests made using the Java HTTP client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.net.http/java/net/http/package-summary.html
     source_path: instrumentation/java-http-client
     minimum_java_version: 11
@@ -4593,6 +5172,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -4602,6 +5183,9 @@ libraries:
   - name: java-http-server
     description: This instrumentation enables HTTP server spans and HTTP server metrics
       for the Java HTTP server.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
     library_link: https://docs.oracle.com/en/java/javase/21/docs/api/jdk.httpserver/module-summary.html
     source_path: instrumentation/java-http-server
     scope:
@@ -4682,11 +5266,29 @@ libraries:
           type: STRING
         - name: user_agent.original
           type: STRING
+  - name: java-util-logging
+    display_name: Java Util Logging (JUL)
+    description: This instrumentation bridges Java Util Logging (JUL) log records
+      to OpenTelemetry logs.
+    library_link: https://docs.oracle.com/en/java/javase/11/docs/api/java.logging/java/util/logging/package-summary.html
+    features:
+    - LOGGING_BRIDGE
+    source_path: instrumentation/java-util-logging
+    scope:
+      name: io.opentelemetry.java-util-logging
+    configurations:
+    - name: otel.instrumentation.java-util-logging.experimental-log-attributes
+      description: Enables capturing the experimental `thread.name` and `thread.id`
+        log attributes.
+      type: boolean
+      default: false
   javalin:
   - name: javalin-5.0
     description: This instrumentation enriches existing HTTP server spans with route
       information, it does not emit any telemetry on its own.
     library_link: https://javalin.io/
+    features:
+    - HTTP_ROUTE
     source_path: instrumentation/javalin-5.0
     minimum_java_version: 11
     scope:
@@ -4698,8 +5300,12 @@ libraries:
   - name: jaxrs-1.0
     display_name: JAX-RS 1.x
     description: |
-      This instrumentation enables spans for JAX-RS methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-1.0
     scope:
       name: io.opentelemetry.jaxrs-1.0
@@ -4723,8 +5329,12 @@ libraries:
   - name: jaxrs-2.0-annotations
     display_name: JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://javaee.github.io/javaee-spec/javadocs/javax/ws/rs/package-summary.html
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-2.0-annotations
@@ -4752,8 +5362,11 @@ libraries:
   - name: jaxrs-2.0-cxf-3.2
     display_name: Apache CXF JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Apache CXF, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Apache CXF (controller spans are disabled by default).
     library_link: https://cxf.apache.org/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-cxf-3.2
     scope:
       name: io.opentelemetry.jaxrs-2.0-cxf-3.2
@@ -4792,8 +5405,11 @@ libraries:
   - name: jaxrs-2.0-jersey-2.0
     display_name: Eclipse Jersey JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Jersey (controller spans are disabled by default).
     library_link: https://eclipse-ee4j.github.io/jersey/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-jersey-2.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-jersey-2.0
@@ -4832,8 +5448,11 @@ libraries:
   - name: jaxrs-2.0-resteasy-3.0
     display_name: JBoss RESTEasy JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.0
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.0
@@ -4872,8 +5491,11 @@ libraries:
   - name: jaxrs-2.0-resteasy-3.1
     display_name: JBoss RESTEasy JAX-RS 2.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-resteasy-3.1
     scope:
       name: io.opentelemetry.jaxrs-2.0-resteasy-3.1
@@ -4912,8 +5534,12 @@ libraries:
   - name: jaxrs-3.0-annotations
     display_name: JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS annotated methods (controller spans are disabled by default).
     library_link: https://jakarta.ee/specifications/restful-ws/3.0/
+    disabled_by_default: true
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
     scope:
       name: io.opentelemetry.jaxrs-3.0-annotations
@@ -4941,8 +5567,11 @@ libraries:
   - name: jaxrs-3.0-jersey-3.0
     display_name: Eclipse Jersey JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using Jersey, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using Jersey (controller spans are disabled by default).
     library_link: https://eclipse-ee4j.github.io/jersey/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-jersey-3.0
     minimum_java_version: 11
     scope:
@@ -4981,8 +5610,11 @@ libraries:
   - name: jaxrs-3.0-resteasy-6.0
     display_name: JBoss RESTEasy JAX-RS 3.x
     description: |
-      This instrumentation enables spans for JAX-RS methods when using RESTEasy, and enriches existing HTTP server spans with route information.
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JAX-RS methods when using RESTEasy (controller spans are disabled by default).
     library_link: https://resteasy.dev/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-resteasy-6.0
     minimum_java_version: 11
     scope:
@@ -5123,12 +5755,29 @@ libraries:
         - name: code.namespace
           type: STRING
   - name: jaxws-metro-2.2
+    display_name: Metro JAX-WS
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Metro JAX-WS web services (controller spans are disabled by default).
+    library_link: https://javaee.github.io/metro/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:
       name: io.opentelemetry.jaxws-metro-2.2
     target_versions:
       javaagent:
       - com.sun.xml.ws:jaxws-rt:[2.2.0.1,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   jboss:
   - name: jboss-logmanager-appender-1.1
     source_path: instrumentation/jboss-logmanager/jboss-logmanager-appender-1.1
@@ -5193,28 +5842,234 @@ libraries:
       default: false
   jedis:
   - name: jedis-1.4
+    description: This instrumentation enables database client spans and database client
+      metrics for Jedis Redis operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/redis/jedis
     source_path: instrumentation/jedis/jedis-1.4
     scope:
       name: io.opentelemetry.jedis-1.4
     target_versions:
       javaagent:
       - redis.clients:jedis:[1.4.0,3.0.0)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: jedis-3.0
+    description: This instrumentation enables database client spans and database client
+      metrics for Jedis Redis operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/redis/jedis
     source_path: instrumentation/jedis/jedis-3.0
     scope:
       name: io.opentelemetry.jedis-3.0
     target_versions:
       javaagent:
       - redis.clients:jedis:[3.0.0,4)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: jedis-4.0
+    description: This instrumentation enables database client spans and database client
+      metrics for Jedis Redis operations.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/redis/jedis
     source_path: instrumentation/jedis/jedis-4.0
     scope:
       name: io.opentelemetry.jedis-4.0
     target_versions:
       javaagent:
       - redis.clients:jedis:[4.0.0-beta1,)
+    configurations:
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
   jetty:
   - name: jetty-11.0
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Jetty.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://eclipse.dev/jetty/
     source_path: instrumentation/jetty/jetty-11.0
     minimum_java_version: 11
     scope:
@@ -5222,7 +6077,79 @@ libraries:
     target_versions:
       javaagent:
       - org.eclipse.jetty:jetty-server:[11, 12)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: jetty-12.0
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Jetty.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://eclipse.dev/jetty/
     source_path: instrumentation/jetty/jetty-12.0
     minimum_java_version: 17
     scope:
@@ -5230,14 +6157,160 @@ libraries:
     target_versions:
       javaagent:
       - org.eclipse.jetty:jetty-server:[12,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: jetty-8.0
+    description: This instrumentation enables HTTP server spans and HTTP server metrics
+      for Jetty.
+    semantic_conventions:
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://eclipse.dev/jetty/
+    features:
+    - CONTEXT_PROPAGATION
     source_path: instrumentation/jetty/jetty-8.0
     scope:
       name: io.opentelemetry.jetty-8.0
     target_versions:
       javaagent:
       - org.eclipse.jetty:jetty-server:[8.0.0.v20110901,11)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      metrics:
+      - name: http.server.request.duration
+        description: Duration of HTTP server requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      spans:
+      - span_kind: SERVER
+        attributes:
+        - name: client.address
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.request.method_original
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.protocol.version
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.path
+          type: STRING
+        - name: url.query
+          type: STRING
+        - name: url.scheme
+          type: STRING
+        - name: user_agent.original
+          type: STRING
   - name: jetty-httpclient-12.0
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Jetty HTTP Client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://eclipse.dev/jetty/
     source_path: instrumentation/jetty-httpclient/jetty-httpclient-12.0
     minimum_java_version: 17
     scope:
@@ -5247,6 +6320,34 @@ libraries:
       - org.eclipse.jetty:jetty-client:[12,)
       library:
       - org.eclipse.jetty:jetty-client:12.0.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -5277,6 +6378,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5285,6 +6388,12 @@ libraries:
         - name: url.full
           type: STRING
   - name: jetty-httpclient-9.2
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Jetty HTTP Client.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://eclipse.dev/jetty/
     source_path: instrumentation/jetty-httpclient/jetty-httpclient-9.2
     scope:
       name: io.opentelemetry.jetty-httpclient-9.2
@@ -5293,6 +6402,34 @@ libraries:
       - org.eclipse.jetty:jetty-client:[9.2,10)
       library:
       - org.eclipse.jetty:jetty-client:[9.2.0.v20140526,9.+)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -5323,6 +6460,8 @@ libraries:
         - name: http.response.status_code
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -5332,6 +6471,12 @@ libraries:
           type: STRING
   jms:
   - name: jms-1.1
+    display_name: JMS (Java Message Service)
+    description: |
+      This instrumentation enables messaging spans for JMS (Java Message Service) message producers and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html
     source_path: instrumentation/jms/jms-1.1
     scope:
       name: io.opentelemetry.jms-1.1
@@ -5340,7 +6485,51 @@ libraries:
       - javax.jms:javax.jms-api:(,)
       - jakarta.jms:jakarta.jms-api:(,3)
       - javax.jms:jms-api:(,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: jms-3.0
+    display_name: JMS (Java Message Service)
+    description: |
+      This instrumentation enables messaging spans for Jakarta JMS (Java Message Service) message producers and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://jakarta.ee/specifications/messaging/3.0/
     source_path: instrumentation/jms/jms-3.0
     minimum_java_version: 11
     scope:
@@ -5348,14 +6537,85 @@ libraries:
     target_versions:
       javaagent:
       - jakarta.jms:jakarta.jms-api:[3.0.0,)
+    configurations:
+    - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
+      description: |
+        Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.messaging.experimental.capture-headers
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
+      type: list
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.temporary
+          type: BOOLEAN
+        - name: messaging.message.id
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   jodd:
   - name: jodd-http-4.2
+    display_name: Jodd HTTP
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Jodd HTTP.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://http.jodd.org/
     source_path: instrumentation/jodd-http-4.2
     scope:
       name: io.opentelemetry.jodd-http-4.2
     target_versions:
       javaagent:
       - org.jodd:jodd-http:[4.2.0,)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -5387,6 +6647,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5395,6 +6657,12 @@ libraries:
           type: STRING
   jsf:
   - name: jsf-mojarra-1.2
+    display_name: JSF
+    description: |
+      This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
+    library_link: https://github.com/eclipse-ee4j/mojarra
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-mojarra-1.2
     scope:
       name: io.opentelemetry.jsf-mojarra-1.2
@@ -5405,7 +6673,23 @@ libraries:
       - com.sun.faces:jsf-impl:[2.0,2.1)
       - org.glassfish:javax.faces:[2.0.7,3)
       - javax.faces:jsf-impl:[1.2,2)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jsf-mojarra-3.0
+    display_name: JSF
+    description: |
+      This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
+    library_link: https://github.com/eclipse-ee4j/mojarra
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-mojarra-3.0
     minimum_java_version: 11
     scope:
@@ -5413,14 +6697,46 @@ libraries:
     target_versions:
       javaagent:
       - org.glassfish:jakarta.faces:[3,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jsf-myfaces-1.2
+    display_name: JSF
+    description: |
+      This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
+    library_link: https://myfaces.apache.org/
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-myfaces-1.2
     scope:
       name: io.opentelemetry.jsf-myfaces-1.2
     target_versions:
       javaagent:
       - org.apache.myfaces.core:myfaces-impl:[1.2,3)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: jsf-myfaces-3.0
+    display_name: JSF
+    description: |
+      This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
+    library_link: https://myfaces.apache.org/
+    features:
+    - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-myfaces-3.0
     minimum_java_version: 11
     scope:
@@ -5428,6 +6744,16 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.myfaces.core:myfaces-impl:[3,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   jsp:
   - name: jsp-2.3
     source_path: instrumentation/jsp-2.3
@@ -5486,12 +6812,34 @@ libraries:
       type: boolean
       default: false
   - name: kafka-connect-2.6
+    description: This instrumentation enables messaging spans for Kafka Connect sink
+      tasks.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://kafka.apache.org/documentation/#connect
     source_path: instrumentation/kafka/kafka-connect-2.6
     scope:
       name: io.opentelemetry.kafka-connect-2.6
     target_versions:
       javaagent:
       - org.apache.kafka:connect-api:[2.6.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+        - name: thread.id
+          type: LONG
+        - name: thread.name
+          type: STRING
   - name: kafka-streams-0.11
     library_link: https://kafka.apache.org/documentation/streams/
     source_path: instrumentation/kafka/kafka-streams-0.11
@@ -5807,6 +7155,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -5907,6 +7257,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6011,6 +7363,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6086,6 +7440,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6137,6 +7493,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -6672,6 +8030,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6760,6 +8120,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6806,6 +8168,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -6851,6 +8215,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -7004,6 +8370,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -7648,7 +9016,7 @@ libraries:
       default: SCOPE_
   - name: spring-web-3.1
     description: |
-      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate. The agent integration enriches HTTP server spans and metrics with route information.
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-3.1
     scope:
@@ -7688,8 +9056,8 @@ libraries:
         - name: url.full
           type: STRING
   - name: spring-web-6.0
-    description: This instrumentation enriches HTTP server spans and metrics with
-      route information.
+    description: |
+      This instrumentation provides a library integration that enables capturing HTTP client spans and metrics for Spring's RestTemplate.
     library_link: https://github.com/spring-projects/spring-framework
     source_path: instrumentation/spring/spring-web/spring-web-6.0
     minimum_java_version: 17
@@ -7740,6 +9108,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8183,6 +9553,8 @@ libraries:
           type: STRING
         - name: http.response.status_code
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8230,6 +9602,8 @@ libraries:
         - name: network.peer.port
           type: LONG
         - name: network.protocol.version
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8280,6 +9654,8 @@ libraries:
           type: LONG
         - name: network.protocol.version
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8317,6 +9693,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8357,6 +9735,8 @@ libraries:
           type: STRING
         - name: network.peer.port
           type: LONG
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8390,6 +9770,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8425,6 +9807,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8453,6 +9837,8 @@ libraries:
           type: STRING
         - name: db.user
           type: STRING
+        - name: peer.service
+          type: STRING
         - name: server.address
           type: STRING
         - name: server.port
@@ -8488,6 +9874,8 @@ libraries:
         - name: db.response.status_code
           type: STRING
         - name: error.type
+          type: STRING
+        - name: peer.service
           type: STRING
         - name: server.address
           type: STRING
@@ -8617,10 +10005,6 @@ internal:
   source_path: instrumentation/internal/internal-class-loader
   scope:
     name: io.opentelemetry.internal-class-loader
-- name: java-util-logging
-  source_path: instrumentation/java-util-logging
-  scope:
-    name: io.opentelemetry.java-util-logging
 - name: internal-reflection
   source_path: instrumentation/internal/internal-reflection
   scope:
@@ -8717,6 +10101,17 @@ custom:
   target_versions:
     javaagent:
     - Java 8+
+  configurations:
+  - name: otel.instrumentation.external-annotations.include
+    description: Configuration for trace annotations, in the form of a pattern that
+      matches `'package.Annotation$Name;*'`.
+    type: string
+    default: ''
+  - name: otel.instrumentation.external-annotations.exclude-methods
+    description: All methods to be excluded from auto-instrumentation by annotation-based
+      advices.
+    type: string
+    default: ''
 - name: opentelemetry-extension-annotations-1.0
   description: |
     Instruments methods annotated with OpenTelemetry extension annotations, such as @WithSpan and @SpanAttribute.

@@ -16,9 +16,6 @@ import muzzle.TestClasses.MethodBodyAdvice;
 
 public class MuzzleWeakReferenceTestUtil {
 
-  // Spock holds strong references to all local variables. For weak reference testing we must create
-  // our strong references away from Spock in this java class.
-  // Even returning a WeakReference<ClassLoader> is enough for spock to create a strong ref.
   public static boolean classLoaderRefIsGarbageCollected()
       throws InterruptedException, TimeoutException {
     ClassLoader loader = new URLClassLoader(new URL[0], null);

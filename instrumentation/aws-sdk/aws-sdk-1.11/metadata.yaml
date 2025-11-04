@@ -13,8 +13,7 @@ semantic_conventions:
 configurations:
   - name: otel.instrumentation.aws-sdk.experimental-span-attributes
     description: >
-      Enables the experimental span attributes `aws.agent`, `aws.bucket.name`, `aws.queue.url`,
-      `aws.queue.name`, `aws.stream.name`, `aws.table.name`, `aws.lambda.function.arn` and
+      Enables the experimental span attributes `aws.agent`, `aws.queue.name`, `aws.lambda.function.arn` and
       `aws.lambda.function.name` for AWS SDK instrumentation.
     type: boolean
     default: false

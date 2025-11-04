@@ -63,7 +63,6 @@ tasks {
 
         // TODO (trask) use animal sniffer
         disable("Java8ApiChecker")
-        disable("AndroidJdkLibsChecker")
 
         // apparently disabling android doesn't disable this
         disable("StaticOrDefaultInterfaceMethod")

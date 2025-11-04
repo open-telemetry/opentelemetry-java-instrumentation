@@ -10,11 +10,13 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class MyBatisInstrumentationModule extends InstrumentationModule {
+public class MyBatisInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public MyBatisInstrumentationModule() {
     super("mybatis", "mybatis-3.2");
@@ -28,5 +30,10 @@ public class MyBatisInstrumentationModule extends InstrumentationModule {
   @Override
   public boolean defaultEnabled(ConfigProperties config) {
     return false;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

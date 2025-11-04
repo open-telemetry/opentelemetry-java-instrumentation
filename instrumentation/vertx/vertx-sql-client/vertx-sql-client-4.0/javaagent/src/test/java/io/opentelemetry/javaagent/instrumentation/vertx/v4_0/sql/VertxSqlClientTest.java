@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_RESP
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SQL_TABLE;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -149,6 +150,7 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port)),
                 span ->
@@ -184,6 +186,7 @@ class VertxSqlClientTest {
                 equalTo(maybeStable(DB_NAME), DB),
                 equalTo(DB_USER, emitStableDatabaseSemconv() ? null : USER_DB),
                 equalTo(maybeStable(DB_STATEMENT), "invalid"),
+                equalTo(PEER_SERVICE, "test-peer-service"),
                 equalTo(SERVER_ADDRESS, host),
                 equalTo(SERVER_PORT, port)));
 
@@ -254,6 +257,7 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -286,6 +290,7 @@ class VertxSqlClientTest {
                                 "insert into test values ($1, $2) returning *"),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port))));
   }
@@ -372,6 +377,7 @@ class VertxSqlClientTest {
                                 equalTo(maybeStable(DB_STATEMENT), "select * from test"),
                                 equalTo(maybeStable(DB_OPERATION), "SELECT"),
                                 equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->
@@ -438,6 +444,7 @@ class VertxSqlClientTest {
                                     maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                                 equalTo(maybeStable(DB_OPERATION), "SELECT"),
                                 equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),
                     span ->

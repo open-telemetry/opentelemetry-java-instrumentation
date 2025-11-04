@@ -1,6 +1,9 @@
 description: >
-  This instrumentation enriches existing HTTP server spans with HTTP route information, and
-  optionally enables experimental controller spans for Grails applications.
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for Grails applications (controller spans are disabled by default).
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
 library_link: https://grails.apache.org/
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled

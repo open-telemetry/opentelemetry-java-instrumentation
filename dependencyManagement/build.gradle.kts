@@ -6,11 +6,11 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.55.0"
-val otelContribVersion = "1.50.0-alpha"
+val otelContribVersion = "1.51.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.28"
+val groovyVersion = "4.0.29"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -27,7 +27,7 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.20.0",
+  "com.fasterxml.jackson:jackson-bom:2.20.1",
   "com.google.guava:guava-bom:33.5.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
@@ -37,7 +37,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.42.0"
+val errorProneVersion = "2.43.0"
 val byteBuddyVersion = "1.17.8"
 val asmVersion = "9.9"
 val jmhVersion = "1.37"
@@ -80,14 +80,12 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.14.0",
-  "org.spockframework:spock-core:2.4-M6-groovy-4.0",
-  "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
+  "org.junit.jupiter:junit-jupiter-api:5.14.1",
 
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
-  "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
+  "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.10",
+  "com.uber.nullaway:nullaway:0.12.11",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.10.0",
   "commons-codec:commons-codec:1.19.0",

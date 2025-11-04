@@ -1,0 +1,10 @@
+description: This instrumentation enables database client spans and database client metrics for Jedis Redis operations.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
+library_link: https://github.com/redis/jedis
+configurations:
+  - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+    description: Enables statement sanitization for database queries.
+    type: boolean
+    default: true

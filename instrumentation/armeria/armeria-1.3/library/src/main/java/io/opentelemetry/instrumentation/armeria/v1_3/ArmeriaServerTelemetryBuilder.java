@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.armeria.v1_3.internal.ArmeriaInstrumente
 import io.opentelemetry.instrumentation.armeria.v1_3.internal.Experimental;
 import java.util.Collection;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 public final class ArmeriaServerTelemetryBuilder {
 
@@ -34,13 +35,27 @@ public final class ArmeriaServerTelemetryBuilder {
     builder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setStatusExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setStatusExtractor(
       Function<
               SpanStatusExtractor<ServiceRequestContext, RequestLog>,
               SpanStatusExtractor<ServiceRequestContext, RequestLog>>
           statusExtractor) {
+    return setStatusExtractor(
+        (UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>>)
+            statusExtractor::apply);
+  }
+
+  /** Sets the status extractor for server spans. */
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setStatusExtractor(
+      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractor) {
     builder.setStatusExtractor(statusExtractor);
     return this;
   }
@@ -99,11 +114,24 @@ public final class ArmeriaServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<ServiceRequestContext>, SpanNameExtractor<ServiceRequestContext>>
           serverSpanNameExtractor) {
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<ServiceRequestContext>>) serverSpanNameExtractor::apply);
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<ServiceRequestContext>> serverSpanNameExtractor) {
     builder.setSpanNameExtractor(serverSpanNameExtractor);
     return this;
   }

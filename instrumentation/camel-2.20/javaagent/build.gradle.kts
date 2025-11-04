@@ -43,6 +43,8 @@ dependencies {
   testImplementation("org.apache.camel:camel-undertow:$camelversion")
   testImplementation("org.apache.camel:camel-aws:$camelversion")
   testImplementation("org.apache.camel:camel-cassandraql:$camelversion")
+  testImplementation("org.apache.camel:camel-jms:$camelversion")
+  testImplementation("org.apache.activemq:activemq-broker:5.16.5")
 
   testImplementation("org.springframework.boot:spring-boot-starter-test:1.5.17.RELEASE")
   testImplementation("org.springframework.boot:spring-boot-starter:1.5.17.RELEASE")
@@ -101,6 +103,12 @@ tasks {
 
   check {
     dependsOn(testStableSemconv, testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 
