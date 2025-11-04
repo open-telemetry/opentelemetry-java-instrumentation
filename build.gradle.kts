@@ -68,22 +68,71 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       group = "Help"
       description = "List test tasks in given partition"
 
-      // total of 4 partitions (see modulo 4 below)
+      // total of 6 partitions (see modulo 6 below)
       var testPartition = (project.findProperty("testPartition") as String?)?.toInt()
       if (testPartition == null) {
         throw GradleException("Test partition must be specified")
-      } else if (testPartition < 0 || testPartition >= 4) {
+      } else if (testPartition < 0 || testPartition >= 6) {
         throw GradleException("Invalid test partition")
       }
 
-      val partitionTasks = ArrayList<Test>()
-      var testPartitionCounter = 0
+      val totalPartitions = 6
+
+      // Helper function to extract group name from project path
+      fun getGroupName(projectPath: String, projectName: String): String {
+        val pathSegments = projectPath.split(":")
+        return if (pathSegments.contains("instrumentation") && pathSegments.size > 2) {
+          val instrumentationIndex = pathSegments.indexOf("instrumentation")
+          pathSegments.getOrNull(instrumentationIndex + 1) ?: projectName
+        } else {
+          pathSegments.getOrNull(1) ?: projectName
+        }
+      }
+
+      // First pass: count tasks per subproject and determine groups
+      data class SubprojectInfo(val project: Project, val groupName: String, val taskCount: Int)
+      val subprojectInfos = mutableListOf<SubprojectInfo>()
+
       subprojects {
-        // relying on predictable ordering of subprojects
-        // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
-        // since we are splitting these tasks across different github action jobs
-        val enabled = testPartitionCounter++ % 4 == testPartition
-        if (enabled) {
+        val groupName = getGroupName(path, name)
+        // Force task realization to get accurate count
+        val testTasks = tasks.withType(Test::class.java)
+        val taskCount = testTasks.size
+        subprojectInfos.add(SubprojectInfo(this, groupName, taskCount))
+      }
+
+      // Sort by group name to keep related modules together
+      subprojectInfos.sortBy { it.groupName }
+
+      // Calculate target tasks per partition
+      val totalTasks = subprojectInfos.sumOf { it.taskCount }
+      val targetTasksPerPartition = (totalTasks + totalPartitions - 1) / totalPartitions
+
+      // Second pass: assign subprojects to partitions using bin-packing
+      val subprojectPartitions = mutableMapOf<String, Int>()
+      val partitionTaskCounts = IntArray(totalPartitions)
+      var currentPartition = 0
+      var lastGroupName = ""
+
+      subprojectInfos.forEach { info ->
+        // If we've switched to a new group and current partition has exceeded target,
+        // move to next partition (unless we're on the last partition)
+        if (info.groupName != lastGroupName &&
+          partitionTaskCounts[currentPartition] >= targetTasksPerPartition &&
+          currentPartition < totalPartitions - 1) {
+          currentPartition++
+        }
+        lastGroupName = info.groupName
+
+        subprojectPartitions[info.project.path] = currentPartition
+        partitionTaskCounts[currentPartition] += info.taskCount
+      }
+
+      // Third pass: collect tasks for the requested partition
+      val partitionTasks = ArrayList<Test>()
+      subprojects {
+        val assignedPartition = subprojectPartitions[path]
+        if (assignedPartition == testPartition) {
           tasks.withType<Test>().configureEach {
             partitionTasks.add(this)
           }
