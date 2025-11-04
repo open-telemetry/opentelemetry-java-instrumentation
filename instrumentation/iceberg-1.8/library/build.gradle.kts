@@ -8,8 +8,6 @@ dependencies {
   testImplementation(project(":instrumentation:iceberg-1.8:testing"))
 }
 
-tasks {
-  test {
-    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
-  }
+otelJava {
+  minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
