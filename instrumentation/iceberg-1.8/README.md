@@ -28,15 +28,16 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-iceberg-1.8:OPENT
 
 ### Usage
 
-The instrumentation library allows creating instrumented `Scan` (e.g., `TableScan`) instances for collecting
-OpenTelemetry-based metrics for scans and commits. For example:
+The instrumentation library allows creating instrumented `Scan` (e.g., `TableScan`) instances for collecting and reporting OpenTelemetry-based sacn metrics. For example:
 
 ```java
-OpenTelemetry openTelemetry = ...
+OpenTelemetry openTelemetry = // ...
 IcebergTelemetry icebergTelemetry = IcebergTelemetry.create(openTelemetry);
 TableScan tableScan = icebergTelemetry.wrapScan(table.newScan());
 
 try (CloseableIterable<FileScanTask> fileScanTasks = tableScan.planFiles()) {
-  // ...
+  // Process the scan tasks
 }
+
+// The metrics will be reported after the scan tasks iterable is closed
 ```

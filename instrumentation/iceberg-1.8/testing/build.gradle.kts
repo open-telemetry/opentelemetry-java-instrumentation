@@ -9,6 +9,5 @@ dependencies {
       classifier = "tests"
     }
   }
-  implementation("org.apache.commons:commons-compress:1.26.2")
   api(project(":testing-common"))
 }

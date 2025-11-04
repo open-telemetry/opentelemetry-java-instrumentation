@@ -11,8 +11,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongGauge;
 import java.util.Locale;
-import org.apache.iceberg.metrics.CommitMetricsResult;
-import org.apache.iceberg.metrics.CommitReport;
 import org.apache.iceberg.metrics.CounterResult;
 import org.apache.iceberg.metrics.MetricsReport;
 import org.apache.iceberg.metrics.MetricsReporter;
@@ -26,8 +24,6 @@ public class IcebergMetricsReporter implements MetricsReporter {
   private static final AttributeKey<String> TABLE_NAME =
       AttributeKey.stringKey("iceberg.table.name");
   private static final AttributeKey<Long> SNAPHSOT_ID = AttributeKey.longKey("iceberg.snapshot.id");
-  private static final AttributeKey<Long> SEQUENCE_NUMBER =
-      AttributeKey.longKey("iceberg.commit.sequence_number");
 
   private final OpenTelemetry openTelemetry;
 
@@ -39,8 +35,6 @@ public class IcebergMetricsReporter implements MetricsReporter {
   public void report(MetricsReport report) {
     if (report instanceof ScanReport) {
       reportScanMetrics((ScanReport) report);
-    } else if (report instanceof CommitReport) {
-      reportCommitMetrics((CommitReport) report);
     }
   }
 
@@ -195,229 +189,6 @@ public class IcebergMetricsReporter implements MetricsReporter {
       LongCounter metric =
           ScanMetricsBuilder.deletionVectorFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
       metric.add(current.value(), scanAttributes);
-    }
-  }
-
-  void reportCommitMetrics(CommitReport commitReport) {
-    Attributes commitAttributes =
-        Attributes.of(
-            SEQUENCE_NUMBER,
-            Long.valueOf(commitReport.sequenceNumber()),
-            TABLE_NAME,
-            commitReport.tableName(),
-            SNAPHSOT_ID,
-            commitReport.snapshotId());
-    CommitMetricsResult metrics = commitReport.commitMetrics();
-    TimerResult duration = metrics.totalDuration();
-
-    if (duration != null) {
-      LongGauge metric =
-          CommitMetricsBuilder.duration(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.set(duration.totalDuration().toMillis(), commitAttributes);
-    }
-
-    CounterResult current = metrics.attempts();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.attempts(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedDataFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedDataFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.totalDataFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.totalDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedEqualityDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedEqualityDeleteFiles(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedPositionalDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedPositionDeleteFiles(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedDVs();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedDeletionVectors(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedPositionalDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedPositionDeleteFiles(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedDVs();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedDeletionVectors(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedEqualityDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedEqualityDeleteFiles(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedDeleteFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.totalDataFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.totalDataFiles(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedRecords();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedRecords(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedRecords();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedRecords(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.totalRecords();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.totalRecords(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedFilesSizeInBytes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedFilesSizeInBytes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.totalFilesSizeInBytes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.totalFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedPositionalDeletes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedPositionDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedPositionalDeletes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedPositionDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.totalPositionalDeletes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.totalPositionDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.addedEqualityDeletes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.addedEqualityDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.removedEqualityDeletes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.removedEqualityDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
-    }
-
-    current = metrics.totalEqualityDeletes();
-
-    if (current != null) {
-      LongCounter metric =
-          CommitMetricsBuilder.totalEqualityDeletes(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), commitAttributes);
     }
   }
 }
