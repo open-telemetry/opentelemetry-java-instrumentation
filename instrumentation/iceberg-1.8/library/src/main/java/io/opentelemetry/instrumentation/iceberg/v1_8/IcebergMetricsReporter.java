@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongGauge;
+import java.util.Locale;
 import org.apache.iceberg.metrics.CommitMetricsResult;
 import org.apache.iceberg.metrics.CommitReport;
 import org.apache.iceberg.metrics.CounterResult;
@@ -57,7 +58,9 @@ public class IcebergMetricsReporter implements MetricsReporter {
 
     if (duration != null) {
       LongGauge metric =
-          ScanMetricsBuilder.totalPlanningDuration(openTelemetry.getMeter(INSTRUMENTATION_NAME));
+          ScanMetricsBuilder.totalPlanningDuration(
+              openTelemetry.getMeter(INSTRUMENTATION_NAME),
+              duration.timeUnit().name().toLowerCase(Locale.getDefault()));
       metric.set(duration.totalDuration().toMillis(), scanAttributes);
     }
 

@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
+import io.opentelemetry.api.OpenTelemetry;
 import org.apache.iceberg.Scan;
 import org.apache.iceberg.ScanTask;
 import org.apache.iceberg.ScanTaskGroup;
-
-import io.opentelemetry.api.OpenTelemetry;
 
 public class IcebergTelemetry {
   private final OpenTelemetry openTelemetry;
@@ -22,7 +21,8 @@ public class IcebergTelemetry {
     this.openTelemetry = openTelemetry;
   }
 
-  public <ThisT, T extends ScanTask, G extends ScanTaskGroup<T>> ThisT wrapScan(Scan<ThisT, T, G> scan) {
+  public <ThisT, T extends ScanTask, G extends ScanTaskGroup<T>> ThisT wrapScan(
+      Scan<ThisT, T, G> scan) {
     return scan.metricsReporter(new IcebergMetricsReporter(openTelemetry));
   }
 }

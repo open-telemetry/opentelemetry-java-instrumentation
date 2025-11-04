@@ -1,11 +1,15 @@
-package io.opentelemetry.instrumentation.iceberg.v1_8;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
-import org.apache.iceberg.TableScan;
-import org.junit.jupiter.api.extension.RegisterExtension;
+package io.opentelemetry.instrumentation.iceberg.v1_8;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.apache.iceberg.TableScan;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public class IcebergLibraryTest extends AbstractIcebergTest {
   @RegisterExtension

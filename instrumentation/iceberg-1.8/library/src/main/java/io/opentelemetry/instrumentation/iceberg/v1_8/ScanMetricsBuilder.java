@@ -19,7 +19,7 @@ final class ScanMetricsBuilder {
   private static final String TOTAL_DATA_MANIFESTS = ROOT + ".total.data_manifests.count";
   private static final String TOTAL_DELETE_MANIFESTS = ROOT + ".total.delete_manifests.count";
   private static final String TOTAL_FILE_SIZE_IN_BYTES = ROOT + ".scanned.data_files.size";
-  private static final String TOTAL_DELETE_FILE_SIZE_IN_BYTES = ROOT + "scanned.delete_files.size";
+  private static final String TOTAL_DELETE_FILE_SIZE_IN_BYTES = ROOT + ".scanned.delete_files.size";
   private static final String SKIPPED_DATA_MANIFESTS = ROOT + ".skipped.data_manifests.count";
   private static final String SKIPPED_DELETE_MANIFESTS = ROOT + ".skipped.delete_manifests.count";
   private static final String SKIPPED_DATA_FILES = ROOT + ".skipped.data_files.count";
@@ -34,11 +34,11 @@ final class ScanMetricsBuilder {
     // prevents instantiation
   }
 
-  static LongGauge totalPlanningDuration(Meter meter) {
+  static LongGauge totalPlanningDuration(Meter meter, String unit) {
     return meter
         .gaugeBuilder(TOTAL_PLANNING_DURATION)
         .setDescription("The total duration needed to plan the scan.")
-        .setUnit("ms")
+        .setUnit(unit)
         .ofLongs()
         .build();
   }
