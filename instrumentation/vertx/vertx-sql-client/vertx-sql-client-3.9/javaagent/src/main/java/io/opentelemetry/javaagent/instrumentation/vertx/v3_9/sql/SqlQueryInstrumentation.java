@@ -52,8 +52,8 @@ public class SqlQueryInstrumentation implements TypeInstrumentation {
       }
       
       Tracer tracer = GlobalOpenTelemetry.get().getTracer("vertx-sql-client");
-      String sanitizedSql = SanitizeSQLString.sanitize(sql);
-      String spanName = sanitizedSql.length() > 100 ? sanitizedSql.substring(0, 100) + "..." : sql;
+      String sanitizedSql = SanitizeSqlString.sanitize(sql);
+      String spanName = sanitizedSql.length() > 100 ? sanitizedSql.substring(0, 100) + "..." : sanitizedSql;
       
       // Try to get context from Vert.x context first
       Context parentContext = Context.current();

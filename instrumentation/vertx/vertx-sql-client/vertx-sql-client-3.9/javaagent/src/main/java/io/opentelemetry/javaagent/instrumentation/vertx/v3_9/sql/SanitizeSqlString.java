@@ -4,8 +4,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-public class SanitizeSQLString {
-  private static final Logger logger = Logger.getLogger(SanitizeSQLString.class.getName());
+public class SanitizeSqlString {
+  private static final Logger logger = Logger.getLogger(SanitizeSqlString.class.getName());
+
+  private SanitizeSqlString() {}
   // Replace single-quoted string literals: 'foo', with ?
   private static final Pattern SINGLE_QUOTE_STRING =
       Pattern.compile("'([^'\\\\]|\\\\.)*'");
@@ -55,7 +57,7 @@ public class SanitizeSQLString {
       // 5) Normalize whitespace: collapse multiple spaces/newlines into single space
       s = s.replaceAll("\\s+", " ").trim();
 
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       logger.log(Level.WARNING, "failed to sanitize SQL string: " + sql, e);
       s = "mysql ??";
     }
