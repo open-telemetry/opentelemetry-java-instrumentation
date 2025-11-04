@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import io.opentelemetry.api.common.Attributes;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.annotation.Nullable;
 
@@ -40,11 +40,11 @@ public class EmittedScope {
     @Nullable private String name;
     @Nullable private String version;
     @Nullable private String schemaUrl;
-    @Nullable private Attributes attributes;
+    @Nullable private Map<String, Object> attributes;
 
     public Scope() {}
 
-    public Scope(String name, String version, String schemaUrl, Attributes attributes) {
+    public Scope(String name, String version, String schemaUrl, Map<String, Object> attributes) {
       this.name = name;
       this.version = version;
       this.schemaUrl = schemaUrl;
@@ -79,11 +79,11 @@ public class EmittedScope {
     }
 
     @Nullable
-    public Attributes getAttributes() {
+    public Map<String, Object> getAttributes() {
       return attributes;
     }
 
-    public void setAttributes(Attributes attributes) {
+    public void setAttributes(Map<String, Object> attributes) {
       this.attributes = attributes;
     }
 
@@ -102,15 +102,15 @@ public class EmittedScope {
       if (!Objects.equals(version, scope.version)) {
         return false;
       }
-      return Objects.equals(schemaUrl, scope.schemaUrl);
+      if (!Objects.equals(schemaUrl, scope.schemaUrl)) {
+        return false;
+      }
+      return Objects.equals(attributes, scope.attributes);
     }
 
     @Override
     public int hashCode() {
-      int result = name != null ? name.hashCode() : 0;
-      result = 31 * result + (version != null ? version.hashCode() : 0);
-      result = 31 * result + (schemaUrl != null ? schemaUrl.hashCode() : 0);
-      return result;
+      return Objects.hash(name, version, schemaUrl, attributes);
     }
   }
 }

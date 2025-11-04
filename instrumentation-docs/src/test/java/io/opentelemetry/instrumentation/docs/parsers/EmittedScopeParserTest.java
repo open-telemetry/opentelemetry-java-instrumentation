@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -283,5 +285,155 @@ class EmittedScopeParserTest {
     assertThat(scopeInfo).isNotNull();
     assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.hibernate-6.0");
     assertThat(scopeInfo.getSchemaUrl()).isEqualTo("https://opentelemetry.io/schemas/1.21.0");
+  }
+
+  @Test
+  void testGetScopeWithStringAttributes(@TempDir Path tempDir) throws IOException {
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent =
+        """
+        scopes:
+          - name: io.opentelemetry.jdbc
+            version: 2.14.0
+            schemaUrl: null
+            attributes:
+              test.key: test-value
+              another.key: another-value
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-with-attrs.yaml"), scopeContent);
+
+    FileManager fileManager = new FileManager(tempDir + "/");
+    InstrumentationModule module =
+        new InstrumentationModule.Builder()
+            .srcPath("test-instrumentation")
+            .instrumentationName("jdbc")
+            .namespace("jdbc")
+            .group("jdbc")
+            .build();
+
+    InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
+
+    assertThat(scopeInfo).isNotNull();
+    assertThat(scopeInfo.getName()).isEqualTo("io.opentelemetry.jdbc");
+    assertThat(scopeInfo.getAttributes()).isNotNull();
+    assertThat(scopeInfo.getAttributes().get(stringKey("test.key"))).isEqualTo("test-value");
+    assertThat(scopeInfo.getAttributes().get(stringKey("another.key"))).isEqualTo("another-value");
+  }
+
+  @Test
+  void testGetScopeWithMixedTypeAttributes(@TempDir Path tempDir) throws IOException {
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent =
+        """
+        scopes:
+          - name: io.opentelemetry.test-lib
+            version: 1.0.0
+            schemaUrl: null
+            attributes:
+              string.key: string-value
+              int.key: 123
+              long.key: 9876543210
+              double.key: 3.14
+              bool.key: true
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-mixed-attrs.yaml"), scopeContent);
+
+    FileManager fileManager = new FileManager(tempDir + "/");
+    InstrumentationModule module =
+        new InstrumentationModule.Builder()
+            .srcPath("test-instrumentation")
+            .instrumentationName("test-lib")
+            .namespace("test-lib")
+            .group("test-lib")
+            .build();
+
+    InstrumentationScopeInfo scopeInfo = EmittedScopeParser.getScope(fileManager, module);
+
+    assertThat(scopeInfo).isNotNull();
+    assertThat(scopeInfo.getAttributes()).isNotNull();
+    assertThat(scopeInfo.getAttributes().get(stringKey("string.key"))).isEqualTo("string-value");
+    assertThat(scopeInfo.getAttributes().get(AttributeKey.longKey("int.key"))).isEqualTo(123L);
+    assertThat(scopeInfo.getAttributes().get(AttributeKey.longKey("long.key")))
+        .isEqualTo(9876543210L);
+    assertThat(scopeInfo.getAttributes().get(AttributeKey.doubleKey("double.key"))).isEqualTo(3.14);
+    assertThat(scopeInfo.getAttributes().get(AttributeKey.booleanKey("bool.key"))).isTrue();
+  }
+
+  @Test
+  void testScopeEqualityWithAttributes(@TempDir Path tempDir) throws IOException {
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent1 =
+        """
+        scopes:
+          - name: io.opentelemetry.test
+            version: 1.0.0
+            schemaUrl: null
+            attributes:
+              key1: value1
+        """;
+
+    String scopeContent2 =
+        """
+        scopes:
+          - name: io.opentelemetry.test
+            version: 1.0.0
+            schemaUrl: null
+            attributes:
+              key1: value1
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-1.yaml"), scopeContent1);
+    Files.writeString(telemetryDir.resolve("scope-2.yaml"), scopeContent2);
+
+    Set<EmittedScope.Scope> scopes =
+        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+
+    assertThat(scopes).hasSize(1);
+  }
+
+  @Test
+  void testScopeInequalityWithDifferentAttributes(@TempDir Path tempDir) throws IOException {
+    Path instrumentationDir = tempDir.resolve("test-instrumentation");
+    Path telemetryDir = instrumentationDir.resolve(".telemetry");
+    Files.createDirectories(telemetryDir);
+
+    String scopeContent1 =
+        """
+        scopes:
+          - name: io.opentelemetry.test
+            version: 1.0.0
+            schemaUrl: null
+            attributes:
+              key1: value1
+        """;
+
+    String scopeContent2 =
+        """
+        scopes:
+          - name: io.opentelemetry.test
+            version: 1.0.0
+            schemaUrl: null
+            attributes:
+              key1: value2
+        """;
+
+    Files.writeString(telemetryDir.resolve("scope-1.yaml"), scopeContent1);
+    Files.writeString(telemetryDir.resolve("scope-2.yaml"), scopeContent2);
+
+    Set<EmittedScope.Scope> scopes =
+        EmittedScopeParser.getScopesFromFiles(tempDir.toString(), "test-instrumentation");
+
+    assertThat(scopes).hasSize(2);
   }
 }

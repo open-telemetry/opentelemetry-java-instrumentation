@@ -232,6 +232,15 @@ public class YamlHelper {
     if (module.getScopeInfo().getSchemaUrl() != null) {
       scopeMap.put("schema_url", module.getScopeInfo().getSchemaUrl());
     }
+    if (module.getScopeInfo().getAttributes() != null
+        && !module.getScopeInfo().getAttributes().isEmpty()) {
+      Map<String, Object> attributesMap = new LinkedHashMap<>();
+      module
+          .getScopeInfo()
+          .getAttributes()
+          .forEach((key, value) -> attributesMap.put(key.getKey(), value));
+      scopeMap.put("attributes", attributesMap);
+    }
     return scopeMap;
   }
 

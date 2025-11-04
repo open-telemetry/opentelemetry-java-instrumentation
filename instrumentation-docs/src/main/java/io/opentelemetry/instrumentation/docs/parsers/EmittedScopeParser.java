@@ -5,6 +5,13 @@
 
 package io.opentelemetry.instrumentation.docs.parsers;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.doubleKey;
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
@@ -17,6 +24,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
 import java.util.stream.Stream;
@@ -63,9 +71,37 @@ public class EmittedScopeParser {
       builder.setSchemaUrl(scope.getSchemaUrl());
     }
     if (scope.getAttributes() != null) {
-      builder.setAttributes(scope.getAttributes());
+      builder.setAttributes(convertMapToAttributes(scope.getAttributes()));
     }
 
+    return builder.build();
+  }
+
+  /**
+   * Converts a {@code Map<String, Object>} to Attributes.
+   *
+   * @param attributeMap the map of attributes from YAML
+   * @return Attributes
+   */
+  private static Attributes convertMapToAttributes(Map<String, Object> attributeMap) {
+    AttributesBuilder builder = Attributes.builder();
+    for (Map.Entry<String, Object> entry : attributeMap.entrySet()) {
+      Object value = entry.getValue();
+      if (value instanceof String string) {
+        builder.put(stringKey(entry.getKey()), string);
+      } else if (value instanceof Long longValue) {
+        builder.put(longKey(entry.getKey()), longValue);
+      } else if (value instanceof Integer intValue) {
+        builder.put(longKey(entry.getKey()), intValue.longValue());
+      } else if (value instanceof Double doubleValue) {
+        builder.put(doubleKey(entry.getKey()), doubleValue);
+      } else if (value instanceof Boolean boolValue) {
+        builder.put(booleanKey(entry.getKey()), boolValue);
+      } else {
+        // Fallback to string representation for unknown types
+        builder.put(stringKey(entry.getKey()), String.valueOf(value));
+      }
+    }
     return builder.build();
   }
 
@@ -80,16 +116,6 @@ public class EmittedScopeParser {
       String rootDir, String instrumentationDirectory) {
     Path telemetryDir = Paths.get(rootDir + "/" + instrumentationDirectory, ".telemetry");
 
-    return parseAllScopeFiles(telemetryDir);
-  }
-
-  /**
-   * Parses all scope-*.yaml files in the .telemetry directory and collects all unique scopes.
-   *
-   * @param telemetryDir the path to the .telemetry directory
-   * @return a set of unique scopes
-   */
-  private static Set<EmittedScope.Scope> parseAllScopeFiles(Path telemetryDir) {
     Set<EmittedScope.Scope> allScopes = new HashSet<>();
 
     if (Files.exists(telemetryDir) && Files.isDirectory(telemetryDir)) {
