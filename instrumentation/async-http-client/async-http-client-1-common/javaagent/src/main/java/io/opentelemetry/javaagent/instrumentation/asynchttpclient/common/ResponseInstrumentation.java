@@ -6,18 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.asynchttpclient.common;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.VirtualFieldHelper.ASYNC_HANDLER_DATA;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.AsyncHandler;
 import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -55,13 +54,11 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      VirtualField<AsyncHandler<?>, AsyncHandlerData> asyncHandlerDataField =
-          VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
-      AsyncHandlerData data = asyncHandlerDataField.get(handler);
+      AsyncHandlerData data = ASYNC_HANDLER_DATA.get(handler);
       if (data == null) {
         return null;
       }
-      asyncHandlerDataField.set(handler, null);
+      ASYNC_HANDLER_DATA.set(handler, null);
 
       Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
       if (instrumenter != null) {
@@ -85,13 +82,11 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      VirtualField<AsyncHandler<?>, AsyncHandlerData> asyncHandlerDataField =
-          VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
-      AsyncHandlerData data = asyncHandlerDataField.get(handler);
+      AsyncHandlerData data = ASYNC_HANDLER_DATA.get(handler);
       if (data == null) {
         return null;
       }
-      asyncHandlerDataField.set(handler, null);
+      ASYNC_HANDLER_DATA.set(handler, null);
 
       Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
       if (instrumenter != null) {
