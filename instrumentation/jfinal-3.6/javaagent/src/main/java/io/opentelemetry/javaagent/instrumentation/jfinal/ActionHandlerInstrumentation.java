@@ -1,0 +1,88 @@
+package io.opentelemetry.javaagent.instrumentation.jfinal;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+
+
+import javax.annotation.Nullable;
+
+import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.instrumentation.jfinal.JFinalSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
+import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
+public class ActionHandlerInstrumentation implements TypeInstrumentation {
+  @Override
+  public ElementMatcher<ClassLoader> classLoaderOptimization() {
+    return hasClassesNamed("com.jfinal.core.ActionHandler");
+  }
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("com.jfinal.core.ActionHandler");
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("handle").and(takesArguments(4)
+            .and(takesArgument(0, String.class))
+            .and(takesArgument(1, named("javax.servlet.http.HttpServletRequest")))
+            .and(takesArgument(2, named("javax.servlet.http.HttpServletResponse")))
+            .and(takesArgument(3, boolean[].class))),
+        this.getClass().getName() + "$HandleAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class HandleAdvice {
+
+    public static class AdviceScope {
+      private final Context context;
+      private final Scope scope;
+
+      public AdviceScope(Context context, Scope scope) {
+        this.context = context;
+        this.scope = scope;
+      }
+
+      @Nullable
+      public static AdviceScope start(Context parentContext) {
+        if (!instrumenter().shouldStart(parentContext, null)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, null);
+        return new AdviceScope(context, context.makeCurrent());
+      }
+
+      public void end(
+          @Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, null, null, throwable);
+      }
+    }
+
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static HandleAdvice.AdviceScope onEnter() {
+      return HandleAdvice.AdviceScope.start(currentContext());
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
+    public static void stopTraceOnResponse(
+        @Advice.Thrown Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope actionScope) {
+      if (actionScope == null) {
+        return;
+      }
+      actionScope.end(throwable);
+    }
+  }
+}
