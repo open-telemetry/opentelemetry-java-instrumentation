@@ -23,6 +23,8 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
@@ -172,6 +174,7 @@ class PowerJobBasicProcessorTest {
         });
   }
 
+  @DisabledOnOs(value = OS.WINDOWS, disabledReason = "ShellProcessor requires /bin/sh")
   @Test
   void testShellProcessor() throws Exception {
     long jobId = 1;

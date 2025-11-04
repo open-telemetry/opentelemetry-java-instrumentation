@@ -13,6 +13,8 @@ import java.lang.reflect.Method;
 import java.net.URL;
 import java.util.concurrent.Phaser;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 
 class AgentClassLoaderTest {
   private static final Method getClassLoadingLockMethod;
@@ -82,6 +84,9 @@ class AgentClassLoaderTest {
   }
 
   @Test
+  @DisabledOnOs(
+      value = OS.WINDOWS,
+      disabledReason = "Windows reports empty process arguments even on Java 9+")
   void multiReleaseJar() throws Exception {
     boolean jdk8 = "1.8".equals(System.getProperty("java.specification.version"));
     Class<?> mrJarClass =
