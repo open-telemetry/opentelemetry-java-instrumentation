@@ -201,7 +201,8 @@ the relevant functionality descriptions.
 
 List of possible options:
 
-* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information
+* `HTTP_ROUTE`: Instrumentation that enriches HTTP spans with route information (e.g., `/users/{id}`). Sets both the span name and the `http.route` attribute.
+* `SERVER_SPAN_NAME`: Instrumentation that enriches the HTTP server span name with controller, view, or operation information. This feature applies to instrumentations that update the server span name based on framework-specific information (like JSF view IDs or JAX-WS operation names) without setting the `http.route` attribute. The key distinction from `HTTP_ROUTE` is that `SERVER_SPAN_NAME` only updates the span name, while `HTTP_ROUTE` updates both the span name and the `http.route` attribute.
 * `CONTEXT_PROPAGATION`: Instrumentation that propagates OpenTelemetry context across application or thread boundaries. This applies to:
   * Inter-process/application context propagation: Passing context through headers between applications (HTTP, gRPC, messaging, etc.)
   * Inter-thread context propagation: Passing context from one thread to another (executors, actors, reactive streams, etc.)

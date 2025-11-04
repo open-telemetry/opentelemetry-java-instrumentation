@@ -5681,10 +5681,10 @@ libraries:
   - name: jaxws-2.0-axis2-1.6
     display_name: Apache Axis2 1.6 JAX-WS 2.x
     description: |
-      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache Axis2 JAX-WS web services (controller spans are disabled by default).
+      This instrumentation enriches server span names with web service operation information, and enables controller spans for Apache Axis2 JAX-WS web services (controller spans are disabled by default).
     library_link: https://axis.apache.org/axis2/java/core/
     features:
-    - HTTP_ROUTE
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-2.0-axis2-1.6
     scope:
@@ -5705,10 +5705,10 @@ libraries:
   - name: jaxws-cxf-3.0
     display_name: Apache CXF 3.x JAX-WS
     description: |
-      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default).
+      This instrumentation enriches server span names with web service operation information, and enables controller spans for Apache CXF JAX-WS web services (controller spans are disabled by default).
     library_link: https://cxf.apache.org/
     features:
-    - HTTP_ROUTE
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-cxf-3.0
     scope:
@@ -5757,10 +5757,10 @@ libraries:
   - name: jaxws-metro-2.2
     display_name: Metro JAX-WS
     description: |
-      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Metro JAX-WS web services (controller spans are disabled by default).
+      This instrumentation enriches server span names with web service operation information, and enables controller spans for Metro JAX-WS web services (controller spans are disabled by default).
     library_link: https://javaee.github.io/metro/
     features:
-    - HTTP_ROUTE
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jaxws/jaxws-metro-2.2
     scope:
@@ -6659,9 +6659,10 @@ libraries:
   - name: jsf-mojarra-1.2
     display_name: JSF
     description: |
-      This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
+      This instrumentation enriches server span names with JSF view information, and enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
     library_link: https://github.com/eclipse-ee4j/mojarra
     features:
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-mojarra-1.2
     scope:
@@ -6686,9 +6687,10 @@ libraries:
   - name: jsf-mojarra-3.0
     display_name: JSF
     description: |
-      This instrumentation enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
+      This instrumentation enriches server span names with JSF view information, and enables controller spans for Mojarra JSF action listeners (controller spans are disabled by default).
     library_link: https://github.com/eclipse-ee4j/mojarra
     features:
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-mojarra-3.0
     minimum_java_version: 11
@@ -6710,9 +6712,10 @@ libraries:
   - name: jsf-myfaces-1.2
     display_name: JSF
     description: |
-      This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
+      This instrumentation enriches server span names with JSF view information, and enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
     library_link: https://myfaces.apache.org/
     features:
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-myfaces-1.2
     scope:
@@ -6733,9 +6736,10 @@ libraries:
   - name: jsf-myfaces-3.0
     display_name: JSF
     description: |
-      This instrumentation enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
+      This instrumentation enriches server span names with JSF view information, and enables controller spans for Apache MyFaces action listeners (controller spans are disabled by default).
     library_link: https://myfaces.apache.org/
     features:
+    - SERVER_SPAN_NAME
     - CONTROLLER_SPANS
     source_path: instrumentation/jsf/jsf-myfaces-3.0
     minimum_java_version: 11

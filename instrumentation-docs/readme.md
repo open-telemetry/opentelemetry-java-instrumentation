@@ -138,6 +138,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * The specific functionality that the instrumentation provides
   * Options are:
     * HTTP_ROUTE
+    * SERVER_SPAN_NAME
     * CONTEXT_PROPAGATION
     * AUTO_INSTRUMENTATION_SHIM
     * CONTROLLER_SPANS
