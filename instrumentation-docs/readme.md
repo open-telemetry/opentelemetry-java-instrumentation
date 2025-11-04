@@ -155,10 +155,11 @@ public class SpringWebInstrumentationModule extends InstrumentationModule
   * Short description of what the instrumentation does
 * target_versions
   * List of supported versions by the module, broken down by `library` or `javaagent` support
-* scope (https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
+* scope (See [instrumentation-scope](https://opentelemetry.io/docs/specs/otel/common/instrumentation-scope/)
+  docs)
   * name: The scope name of the instrumentation, `io.opentelemetry.{instrumentation name}`
   * schema_url: Location of the telemetry schema that the instrumentation’s emitted telemetry
-    conforms to. See https://opentelemetry.io/docs/specs/otel/schemas/#schema-url
+    conforms to. (See [telemetry schema docs](https://opentelemetry.io/docs/specs/otel/schemas/#schema-url))
   * attributes: The instrumentation scope’s optional attributes provide additional information
     about the scope.
 * configuration settings
