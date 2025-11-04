@@ -30,8 +30,10 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
@@ -52,6 +54,7 @@ public abstract class InstrumentationTestRunner {
 
   private final TestInstrumenters testInstrumenters;
   protected Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope = new HashMap<>();
+  protected Set<InstrumentationScopeInfo> instrumentationScopes = new HashSet<>();
 
   /**
    * Stores traces by scope, where each scope contains a map of span kinds to a map of attribute
@@ -212,6 +215,11 @@ public abstract class InstrumentationTestRunner {
       if (!scopeMap.containsKey(metric.getName())) {
         scopeMap.put(metric.getName(), metric);
       }
+
+      InstrumentationScopeInfo scopeInfo = metric.getInstrumentationScopeInfo();
+      if (!scopeInfo.getName().equals("test")) {
+        instrumentationScopes.add(scopeInfo);
+      }
     }
   }
 
@@ -234,6 +242,11 @@ public abstract class InstrumentationTestRunner {
           if (!spanKindMap.containsKey(keyImpl)) {
             spanKindMap.put(keyImpl, key.getValue() != null ? key.getKey().getType() : null);
           }
+        }
+
+        InstrumentationScopeInfo scopeInfo = span.getInstrumentationScopeInfo();
+        if (!scopeInfo.getName().equals("test")) {
+          instrumentationScopes.add(scopeInfo);
         }
       }
     }

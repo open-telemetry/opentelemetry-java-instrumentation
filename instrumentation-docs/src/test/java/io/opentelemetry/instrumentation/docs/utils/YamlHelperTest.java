@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -54,6 +55,11 @@ class YamlHelperTest {
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
+            .scope(
+                InstrumentationScopeInfo.builder("io.opentelemetry.spring-web-6.0")
+                    .setVersion("2.14.0")
+                    .setSchemaUrl("http:://www.schema.org")
+                    .build())
             .namespace("spring")
             .group("spring")
             .targetVersions(targetVersions1)
@@ -96,6 +102,7 @@ class YamlHelperTest {
                 minimum_java_version: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
+                  schema_url: http:://www.schema.org
                 target_versions:
                   javaagent:
                   - org.springframework:spring-web:[6.0.0,)
