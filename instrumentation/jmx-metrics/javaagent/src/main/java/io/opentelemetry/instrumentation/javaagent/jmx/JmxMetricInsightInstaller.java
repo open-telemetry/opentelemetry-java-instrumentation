@@ -13,11 +13,16 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.nio.file.Paths;
 import java.time.Duration;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /** An {@link AgentListener} that enables JMX metrics during agent startup. */
 @AutoService(AgentListener.class)
 public class JmxMetricInsightInstaller implements AgentListener {
+
+  private static final Logger logger = Logger.getLogger(JmxMetricInsightInstaller.class.getName());
 
   @Override
   public void afterAgent(AutoConfiguredOpenTelemetrySdk autoConfiguredSdk) {
@@ -28,10 +33,13 @@ public class JmxMetricInsightInstaller implements AgentListener {
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
               .beanDiscoveryDelay(beanDiscoveryDelay(config).toMillis());
 
-      config.getList("otel.jmx.config").forEach(jmx::addCustomRules);
-      config
-          .getList("otel.jmx.target.system")
-          .forEach(system -> jmx.addClasspathRules(JmxMetricInsightInstaller.class, system));
+      try {
+        config.getList("otel.jmx.config").stream().map(Paths::get).forEach(jmx::addCustomRules);
+        config.getList("otel.jmx.target.system").forEach(jmx::addClasspathRules);
+      } catch (IllegalArgumentException e) {
+        // for now only log JMX errors as they do not prevent agent startup
+        logger.log(Level.SEVERE, "Error while loading JMX configuration", e);
+      }
 
       jmx.build().startLocal();
     }

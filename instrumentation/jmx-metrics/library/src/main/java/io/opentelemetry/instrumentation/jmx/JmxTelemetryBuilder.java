@@ -6,15 +6,15 @@
 package io.opentelemetry.instrumentation.jmx;
 
 import static java.util.logging.Level.FINE;
-import static java.util.logging.Level.INFO;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.logging.Logger;
 
 public class JmxTelemetryBuilder {
@@ -31,40 +31,57 @@ public class JmxTelemetryBuilder {
     this.metricConfiguration = new MetricConfiguration();
   }
 
+  /**
+   * Sets initial delay for MBean discovery
+   *
+   * @param delayMs delay in milliseconds
+   * @return builder instance
+   */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder beanDiscoveryDelay(long delayMs) {
     this.discoveryDelayMs = delayMs;
     return this;
   }
 
-  // TODO: can we use classloader as argument instead of baseClass?
+  /**
+   * Adds built-in JMX rules from classpath resource
+   *
+   * @param target name of target in /jmx/rules/{target}.yaml classpath resource
+   * @return builder instance
+   * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addClasspathRules(Class<?> baseClass, String targetId) {
-    String yamlResource = String.format("/jmx/rules/%s.yaml", targetId);
-    try (InputStream inputStream = baseClass.getResourceAsStream(yamlResource)) {
-      if (inputStream != null) {
-        logger.log(FINE, "Adding JMX config from classpath for {0}", yamlResource);
-        RuleParser parserInstance = RuleParser.get();
-        parserInstance.addMetricDefsTo(metricConfiguration, inputStream, targetId);
-      } else {
-        logger.log(INFO, "No support found for {0}", targetId);
+  public JmxTelemetryBuilder addClasspathRules(String target) {
+    String yamlResource = String.format("/jmx/rules/%s.yaml", target);
+    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+    try (InputStream inputStream = classLoader.getResourceAsStream(yamlResource)) {
+      if (inputStream == null) {
+        throw new IllegalArgumentException("JMX rules not found in classpath: " + yamlResource);
       }
+      logger.log(FINE, "Adding JMX config from classpath for {0}", yamlResource);
+      RuleParser parserInstance = RuleParser.get();
+      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, target);
     } catch (Exception e) {
-      logger.warning(e.getMessage());
+      throw new IllegalArgumentException("Unable to load JMX rules from classpath: " + yamlResource, e);
     }
     return this;
   }
 
+  /**
+   * Adds custom JMX rules from file system path
+   *
+   * @param path path to yaml file
+   * @return builder instance
+   * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addCustomRules(String path) {
+  public JmxTelemetryBuilder addCustomRules(Path path) {
     logger.log(FINE, "Adding JMX config from file: {0}", path);
     RuleParser parserInstance = RuleParser.get();
-    try (InputStream inputStream = Files.newInputStream(Paths.get(path))) {
-      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, path);
-    } catch (Exception e) {
-      // yaml parsing errors are caught and logged inside of addMetricDefsTo
-      // only file access related exceptions are expected here
-      logger.warning(e.toString());
+    try (InputStream inputStream = Files.newInputStream(path)) {
+      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, path.toString());
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to load JMX rules in path: " + path, e);
     }
     return this;
   }

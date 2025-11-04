@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -39,7 +38,7 @@ class JmxMetricInsightInstallerTest {
     assertThat(parser).isNotNull();
 
     Path path = Paths.get(PATH_TO_ALL_EXISTING_RULES);
-    assertThat(Files.exists(path)).isTrue();
+    assertThat(path).isNotEmptyDirectory();
 
     File existingRulesDir = path.toFile();
     File[] existingRules = existingRulesDir.listFiles();
