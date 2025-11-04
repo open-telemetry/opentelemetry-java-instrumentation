@@ -35,5 +35,4 @@ public class JmxTelemetry {
   public void startLocal() {
     service.startLocal(metricConfiguration);
   }
-
 }

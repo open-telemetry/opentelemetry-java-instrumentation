@@ -39,6 +39,9 @@ public class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder beanDiscoveryDelay(long delayMs) {
+    if (delayMs < 0) {
+      throw new IllegalArgumentException("delay must be greater than 0");
+    }
     this.discoveryDelayMs = delayMs;
     return this;
   }
@@ -62,7 +65,8 @@ public class JmxTelemetryBuilder {
       RuleParser parserInstance = RuleParser.get();
       parserInstance.addMetricDefsTo(metricConfiguration, inputStream, target);
     } catch (Exception e) {
-      throw new IllegalArgumentException("Unable to load JMX rules from classpath: " + yamlResource, e);
+      throw new IllegalArgumentException(
+          "Unable to load JMX rules from classpath: " + yamlResource, e);
     }
     return this;
   }
