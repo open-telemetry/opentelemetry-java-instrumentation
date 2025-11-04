@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
@@ -25,13 +26,26 @@ public class JmxTelemetryTest {
   @Test
   void missingClasspathTarget() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addClasspathRules("should-not-exist"))
+    assertThatThrownBy(() -> builder.addClassPathRules("should-not-exist"))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void invalidClasspathTarget() {
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    assertThatThrownBy(() -> builder.addClassPathRules("invalid"))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void knownClassPathTarget() {
+    JmxTelemetry.builder(OpenTelemetry.noop()).addClassPathRules("jvm").build();
   }
 
   @Test
   void invalidExternalYaml(@TempDir Path dir) throws Exception {
     Path invalid = Files.createTempFile(dir, "invalid", ".yaml");
+    Files.write(invalid, ":this !is /not YAML".getBytes(StandardCharsets.UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     assertThatThrownBy(() -> builder.addCustomRules(invalid))
         .isInstanceOf(IllegalArgumentException.class);

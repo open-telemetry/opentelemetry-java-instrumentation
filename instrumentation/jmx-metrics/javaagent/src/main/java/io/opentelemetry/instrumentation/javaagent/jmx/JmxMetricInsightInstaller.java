@@ -35,7 +35,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       try {
         config.getList("otel.jmx.config").stream().map(Paths::get).forEach(jmx::addCustomRules);
-        config.getList("otel.jmx.target.system").forEach(jmx::addClasspathRules);
+        config.getList("otel.jmx.target.system").forEach(jmx::addClassPathRules);
       } catch (IllegalArgumentException e) {
         // for now only log JMX errors as they do not prevent agent startup
         logger.log(Level.SEVERE, "Error while loading JMX configuration", e);
