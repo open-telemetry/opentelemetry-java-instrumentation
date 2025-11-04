@@ -93,7 +93,6 @@ public class ResponseInstrumentation implements TypeInstrumentation {
       }
       asyncHandlerDataField.set(handler, null);
 
-      // Get instrumenter directly from data - much cleaner!
       Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
       if (instrumenter != null) {
         instrumenter.end(data.getContext(), data.getRequest(), null, throwable);

@@ -8,10 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.common;
 import com.ning.http.client.Request;
 import javax.annotation.Nullable;
 
-/**
- * Helper interface to abstract away differences between AsyncHttpClient versions. This allows
- * sharing common instrumentation code while handling version-specific API differences.
- */
 public interface AsyncHttpClientHelper {
 
   /**
