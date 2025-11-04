@@ -54,7 +54,8 @@ public class RequestInstrumentation implements TypeInstrumentation {
       }
 
       Context context = instrumenter().start(parentContext, request);
-      ASYNC_HANDLER_DATA.set(handler, AsyncHandlerData.create(parentContext, context, request, instrumenter()));
+      ASYNC_HANDLER_DATA.set(
+          handler, AsyncHandlerData.create(parentContext, context, request, instrumenter()));
       return context.makeCurrent();
     }
 

@@ -15,9 +15,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 public abstract class AsyncHandlerData {
 
   public static AsyncHandlerData create(
-      Context parentContext, 
-      Context context, 
-      Request request, 
+      Context parentContext,
+      Context context,
+      Request request,
       Instrumenter<Request, Response> instrumenter) {
     return new AutoValue_AsyncHandlerData(parentContext, context, request, instrumenter);
   }

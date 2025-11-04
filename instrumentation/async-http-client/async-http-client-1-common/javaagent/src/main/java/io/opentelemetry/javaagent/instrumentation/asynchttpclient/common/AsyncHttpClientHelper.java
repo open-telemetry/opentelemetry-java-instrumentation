@@ -9,14 +9,14 @@ import com.ning.http.client.Request;
 import javax.annotation.Nullable;
 
 /**
- * Helper interface to abstract away differences between AsyncHttpClient versions.
- * This allows sharing common instrumentation code while handling version-specific API differences.
+ * Helper interface to abstract away differences between AsyncHttpClient versions. This allows
+ * sharing common instrumentation code while handling version-specific API differences.
  */
 public interface AsyncHttpClientHelper {
 
   /**
    * Get the full URL from the request.
-   * 
+   *
    * @param request the HTTP request
    * @return the full URL as a string, or null if it cannot be determined
    */
@@ -25,7 +25,7 @@ public interface AsyncHttpClientHelper {
 
   /**
    * Get the server address (host) from the request.
-   * 
+   *
    * @param request the HTTP request
    * @return the server address
    */
@@ -33,7 +33,7 @@ public interface AsyncHttpClientHelper {
 
   /**
    * Get the server port from the request.
-   * 
+   *
    * @param request the HTTP request
    * @return the server port
    */
@@ -41,7 +41,7 @@ public interface AsyncHttpClientHelper {
 
   /**
    * Set a header on the request.
-   * 
+   *
    * @param request the HTTP request
    * @param key the header name
    * @param value the header value

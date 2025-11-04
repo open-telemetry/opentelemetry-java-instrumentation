@@ -55,14 +55,14 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Response response) {
 
-      VirtualField<AsyncHandler<?>, AsyncHandlerData> asyncHandlerDataField = 
+      VirtualField<AsyncHandler<?>, AsyncHandlerData> asyncHandlerDataField =
           VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
       AsyncHandlerData data = asyncHandlerDataField.get(handler);
       if (data == null) {
         return null;
       }
       asyncHandlerDataField.set(handler, null);
-      
+
       Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
       if (instrumenter != null) {
         instrumenter.end(data.getContext(), data.getRequest(), response, null);
@@ -85,14 +85,14 @@ public class ResponseInstrumentation implements TypeInstrumentation {
     public static Scope onEnter(
         @Advice.This AsyncCompletionHandler<?> handler, @Advice.Argument(0) Throwable throwable) {
 
-      VirtualField<AsyncHandler<?>, AsyncHandlerData> asyncHandlerDataField = 
+      VirtualField<AsyncHandler<?>, AsyncHandlerData> asyncHandlerDataField =
           VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
       AsyncHandlerData data = asyncHandlerDataField.get(handler);
       if (data == null) {
         return null;
       }
       asyncHandlerDataField.set(handler, null);
-      
+
       // Get instrumenter directly from data - much cleaner!
       Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
       if (instrumenter != null) {
