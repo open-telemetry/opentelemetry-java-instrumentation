@@ -19,7 +19,7 @@ import org.apache.iceberg.metrics.ScanReport;
 import org.apache.iceberg.metrics.TimerResult;
 
 public class IcebergMetricsReporter implements MetricsReporter {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg_1.8";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg-1.8";
   private static final AttributeKey<Long> SCHEMA_ID = AttributeKey.longKey("iceberg.schema.id");
   private static final AttributeKey<String> TABLE_NAME =
       AttributeKey.stringKey("iceberg.table.name");
