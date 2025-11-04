@@ -17,7 +17,7 @@ public class IcebergLibraryTest extends AbstractIcebergTest {
 
   @Override
   protected InstrumentationExtension testing() {
-    return this.testing;
+    return testing;
   }
 
   @Override
