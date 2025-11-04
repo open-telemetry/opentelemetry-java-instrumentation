@@ -1,15 +1,9 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jfinal;
-
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import net.bytebuddy.asm.Advice;
-import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.matcher.ElementMatcher;
-
-
-import javax.annotation.Nullable;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
@@ -17,6 +11,15 @@ import static io.opentelemetry.javaagent.instrumentation.jfinal.JFinalSingletons
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
 
 public class ActionHandlerInstrumentation implements TypeInstrumentation {
   @Override
@@ -32,11 +35,13 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("handle").and(takesArguments(4)
-            .and(takesArgument(0, String.class))
-            .and(takesArgument(1, named("javax.servlet.http.HttpServletRequest")))
-            .and(takesArgument(2, named("javax.servlet.http.HttpServletResponse")))
-            .and(takesArgument(3, boolean[].class))),
+        named("handle")
+            .and(
+                takesArguments(4)
+                    .and(takesArgument(0, String.class))
+                    .and(takesArgument(1, named("javax.servlet.http.HttpServletRequest")))
+                    .and(takesArgument(2, named("javax.servlet.http.HttpServletResponse")))
+                    .and(takesArgument(3, boolean[].class))),
         this.getClass().getName() + "$HandleAdvice");
   }
 
@@ -62,13 +67,11 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
         return new AdviceScope(context, context.makeCurrent());
       }
 
-      public void end(
-          @Nullable Throwable throwable) {
+      public void end(@Nullable Throwable throwable) {
         scope.close();
         instrumenter().end(context, null, null, throwable);
       }
     }
-
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static HandleAdvice.AdviceScope onEnter() {
@@ -77,8 +80,7 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopTraceOnResponse(
-        @Advice.Thrown Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope actionScope) {
+        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope actionScope) {
       if (actionScope == null) {
         return;
       }

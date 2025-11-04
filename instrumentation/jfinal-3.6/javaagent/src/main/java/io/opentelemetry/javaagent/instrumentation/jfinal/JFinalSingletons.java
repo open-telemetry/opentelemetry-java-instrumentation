@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jfinal;
 
 import com.jfinal.core.Action;
@@ -23,7 +28,7 @@ public final class JFinalSingletons {
           .buildInstrumenter();
 
   static {
-    //see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465
+    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465
     excludeOtAttrs();
   }
 
