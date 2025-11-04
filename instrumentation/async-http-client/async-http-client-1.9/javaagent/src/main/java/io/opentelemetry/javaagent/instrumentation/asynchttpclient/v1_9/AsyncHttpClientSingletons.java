@@ -11,6 +11,9 @@ import com.ning.http.client.Response;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHandlerData;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHttpClientHttpAttributesGetter;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.HttpHeaderSetter;
 
 public final class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-1.9";
@@ -20,11 +23,13 @@ public final class AsyncHttpClientSingletons {
   public static final VirtualField<AsyncHandler<?>, AsyncHandlerData> ASYNC_HANDLER_DATA;
 
   static {
+    AsyncHttpClientHttpAttributesGetter httpAttributesGetter =
+        new AsyncHttpClientHttpAttributesGetter(AsyncHttpClient19Helper.INSTANCE);
+    HttpHeaderSetter headerSetter = new HttpHeaderSetter(AsyncHttpClient19Helper.INSTANCE);
+
     INSTRUMENTER =
         JavaagentHttpClientInstrumenters.create(
-            INSTRUMENTATION_NAME,
-            new AsyncHttpClientHttpAttributesGetter(),
-            HttpHeaderSetter.INSTANCE);
+            INSTRUMENTATION_NAME, httpAttributesGetter, headerSetter);
 
     ASYNC_HANDLER_DATA = VirtualField.find(AsyncHandler.class, AsyncHandlerData.class);
   }

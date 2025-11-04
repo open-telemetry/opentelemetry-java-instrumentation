@@ -12,6 +12,7 @@ import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
+import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.ResponseInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 

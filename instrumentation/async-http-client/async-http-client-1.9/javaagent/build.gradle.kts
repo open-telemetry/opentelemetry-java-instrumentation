@@ -12,6 +12,8 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:async-http-client:async-http-client-1-common:javaagent"))
+  
   library("com.ning:async-http-client:1.9.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")

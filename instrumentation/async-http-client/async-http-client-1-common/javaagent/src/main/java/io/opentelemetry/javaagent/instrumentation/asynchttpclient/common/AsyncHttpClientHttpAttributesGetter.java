@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.common;
 
 import static java.util.Collections.emptyList;
 
@@ -13,8 +13,14 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-final class AsyncHttpClientHttpAttributesGetter
+public final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {
+
+  private final AsyncHttpClientHelper helper;
+
+  public AsyncHttpClientHttpAttributesGetter(AsyncHttpClientHelper helper) {
+    this.helper = helper;
+  }
 
   @Override
   public String getHttpRequestMethod(Request request) {
@@ -23,7 +29,7 @@ final class AsyncHttpClientHttpAttributesGetter
 
   @Override
   public String getUrlFull(Request request) {
-    return request.getUri().toUrl();
+    return helper.getUrlFull(request);
   }
 
   @Override
@@ -44,11 +50,11 @@ final class AsyncHttpClientHttpAttributesGetter
 
   @Override
   public String getServerAddress(Request request) {
-    return request.getUri().getHost();
+    return helper.getServerAddress(request);
   }
 
   @Override
   public Integer getServerPort(Request request) {
-    return request.getUri().getPort();
+    return helper.getServerPort(request);
   }
 }
