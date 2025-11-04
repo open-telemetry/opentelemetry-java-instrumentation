@@ -7,17 +7,13 @@ package io.opentelemetry.instrumentation.javaagent.jmx;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
-import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 
@@ -40,32 +36,13 @@ class JmxMetricInsightInstallerTest {
     Path path = Paths.get(PATH_TO_ALL_EXISTING_RULES);
     assertThat(path).isNotEmptyDirectory();
 
-    File existingRulesDir = path.toFile();
-    File[] existingRules = existingRulesDir.listFiles();
-    Set<String> filesChecked = new HashSet<>();
+    for (String file : FILES_TO_BE_TESTED) {
+      Path filePath = path.resolve(file);
+      assertThat(filePath).isRegularFile();
 
-    for (File file : existingRules) {
-      // make sure we only test the files that we supposed to test
-      String fileName = file.getName();
-      if (FILES_TO_BE_TESTED.contains(fileName)) {
-        testRulesAreValid(file, parser);
-        filesChecked.add(fileName);
-      }
-    }
-    // make sure we checked all the files that are supposed to be here
-    assertThat(filesChecked).isEqualTo(FILES_TO_BE_TESTED);
-  }
-
-  void testRulesAreValid(File file, RuleParser parser) throws Exception {
-    try (InputStream inputStream = new FileInputStream(file)) {
-      JmxConfig config = parser.loadConfig(inputStream);
-      assertThat(config).isNotNull();
-
-      List<JmxRule> defs = config.getRules();
-      // make sure all the rules in that file are valid
-      for (JmxRule rule : defs) {
-        rule.buildMetricDef();
-      }
+      String target = file.substring(0, file.indexOf("."));
+      // loading rules from direct file access
+      JmxTelemetry.builder(OpenTelemetry.noop()).addCustomRules(filePath);
     }
   }
 }

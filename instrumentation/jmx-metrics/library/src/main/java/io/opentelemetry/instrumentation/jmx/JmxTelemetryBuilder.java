@@ -55,8 +55,9 @@ public class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathRules(String target) {
-    String yamlResource = String.format("/jmx/rules/%s.yaml", target);
-    try (InputStream inputStream = JmxTelemetryBuilder.class.getResourceAsStream(yamlResource)) {
+    String yamlResource = String.format("jmx/rules/%s.yaml", target);
+    try (InputStream inputStream =
+        JmxTelemetryBuilder.class.getClassLoader().getResourceAsStream(yamlResource)) {
       if (inputStream == null) {
         throw new IllegalArgumentException("JMX rules not found in classpath: " + yamlResource);
       }
