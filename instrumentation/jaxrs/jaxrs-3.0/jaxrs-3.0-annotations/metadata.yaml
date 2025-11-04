@@ -1,8 +1,12 @@
 display_name: JAX-RS 3.x
 description: >
-  This instrumentation enables spans for JAX-RS annotated methods, and enriches existing HTTP server
-  spans with route information.
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for JAX-RS annotated methods (controller spans are disabled by default).
 library_link: https://jakarta.ee/specifications/restful-ws/3.0/
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+disabled_by_default: true
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
     description: Enables the creation of experimental controller spans.

@@ -80,7 +80,7 @@ public class MetricStructureTest {
         "param()", // missing parameter
         "param( )", // missing parameter with empty string
         "param(name)a", // something after parenthesis
-        "lowercase()", // misng target in modifier
+        "lowercase()", // missing target in modifier
         "lowercase(param(name)", // missing parenthesis for modifier
         "lowercase(missing(name))", // non-existing target within modifier
         "lowercase(param())", // missing parameter in modifier

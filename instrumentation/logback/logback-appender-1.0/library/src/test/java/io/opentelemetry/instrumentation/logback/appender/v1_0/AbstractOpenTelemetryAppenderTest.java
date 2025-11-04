@@ -42,8 +42,12 @@ abstract class AbstractOpenTelemetryAppenderTest {
     LoggerContext loggerContext = (LoggerContext) LoggerFactory.getILoggerFactory();
     loggerContext.putProperty("test-property", "test-value");
 
-    logger.info("log message 1");
-    executeAfterLogsExecution();
+    try {
+      logger.info("log message 1");
+      executeAfterLogsExecution();
+    } finally {
+      Helper.resetLoggerContext();
+    }
 
     getTesting()
         .waitAndAssertLogRecords(
