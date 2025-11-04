@@ -25,7 +25,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * any time.
  */
 public class SpringConfigProperties implements ConfigProperties {
-  private final CachedPropertyResolver cachedEnvironment;
+  private final CachedPropertyResolver environment;
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
@@ -44,7 +44,7 @@ public class SpringConfigProperties implements ConfigProperties {
       OtelResourceProperties resourceProperties,
       OtelSpringProperties otelSpringProperties,
       ConfigProperties otelSdkProperties) {
-    this.cachedEnvironment = new CachedPropertyResolver(environment);
+    this.environment = new CachedPropertyResolver(environment);
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
@@ -152,7 +152,7 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public String getString(String name) {
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
-    String value = cachedEnvironment.getProperty(normalizedName, String.class);
+    String value = environment.getProperty(normalizedName, String.class);
     if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
       // SDK autoconfigure module defaults to `grpc`, but this module aligns with
       // recommendation in specification to default to `http/protobuf`
@@ -165,8 +165,7 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public Boolean getBoolean(String name) {
     return or(
-        cachedEnvironment.getProperty(
-            ConfigUtil.normalizeEnvironmentVariableKey(name), Boolean.class),
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Boolean.class),
         otelSdkProperties.getBoolean(name));
   }
 
@@ -174,8 +173,7 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public Integer getInt(String name) {
     return or(
-        cachedEnvironment.getProperty(
-            ConfigUtil.normalizeEnvironmentVariableKey(name), Integer.class),
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Integer.class),
         otelSdkProperties.getInt(name));
   }
 
@@ -183,7 +181,7 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public Long getLong(String name) {
     return or(
-        cachedEnvironment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Long.class),
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Long.class),
         otelSdkProperties.getLong(name));
   }
 
@@ -191,8 +189,7 @@ public class SpringConfigProperties implements ConfigProperties {
   @Override
   public Double getDouble(String name) {
     return or(
-        cachedEnvironment.getProperty(
-            ConfigUtil.normalizeEnvironmentVariableKey(name), Double.class),
+        environment.getProperty(ConfigUtil.normalizeEnvironmentVariableKey(name), Double.class),
         otelSdkProperties.getDouble(name));
   }
 
@@ -212,8 +209,7 @@ public class SpringConfigProperties implements ConfigProperties {
       }
     }
 
-    List<String> envValue =
-        (List<String>) cachedEnvironment.getProperty(normalizedName, List.class);
+    List<String> envValue = (List<String>) environment.getProperty(normalizedName, List.class);
     return or(envValue, otelSdkProperties.getList(name));
   }
 
@@ -240,7 +236,7 @@ public class SpringConfigProperties implements ConfigProperties {
       return specialMap;
     }
 
-    String value = cachedEnvironment.getProperty(normalizedName);
+    String value = environment.getProperty(normalizedName);
     if (value == null) {
       return otelSdkMap;
     }
