@@ -117,13 +117,17 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   void testGetCommandWithLambdaFunction() throws Exception {
     CompletableFuture<String> future = new CompletableFuture<>();
 
-    reactiveCommands
-        .get("TESTKEY")
-        .subscribe(
-            res -> {
-              assertThat(res).isEqualTo("TESTVAL");
-              future.complete(res);
-            });
+    testing()
+        .runWithSpan(
+            "parent",
+            () ->
+                reactiveCommands
+                    .get("TESTKEY")
+                    .subscribe(
+                        res -> {
+                          assertThat(res).isEqualTo("TESTVAL");
+                          future.complete(res);
+                        }));
 
     assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
 
@@ -131,9 +135,11 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
