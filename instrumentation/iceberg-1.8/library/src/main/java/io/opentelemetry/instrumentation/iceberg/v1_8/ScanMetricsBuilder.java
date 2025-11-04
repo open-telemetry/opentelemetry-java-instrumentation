@@ -95,7 +95,7 @@ final class ScanMetricsBuilder {
     return meter
         .counterBuilder(TOTAL_FILE_SIZE_IN_BYTES)
         .setDescription("The total size of all scanned data files.")
-        .setUnit("byte")
+        .setUnit("By")
         .build();
   }
 
@@ -103,7 +103,7 @@ final class ScanMetricsBuilder {
     return meter
         .counterBuilder(TOTAL_DELETE_FILE_SIZE_IN_BYTES)
         .setDescription("The total size of all scanned delete files.")
-        .setUnit("byte")
+        .setUnit("By")
         .build();
   }
 

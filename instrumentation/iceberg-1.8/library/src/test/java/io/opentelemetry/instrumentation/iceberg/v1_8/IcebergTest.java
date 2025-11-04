@@ -5,13 +5,14 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.apache.iceberg.TableScan;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class IcebergLibraryTest extends AbstractIcebergTest {
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+
+class IcebergTest extends AbstractIcebergTest {
   @RegisterExtension
   final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 

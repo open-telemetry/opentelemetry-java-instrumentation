@@ -9,12 +9,11 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Locale;
+
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileScanTask;
@@ -37,6 +36,9 @@ import org.assertj.core.api.Condition;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+
+import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 
 public abstract class AbstractIcebergTest {
   protected static final int FORMAT_VERSION = 2;
@@ -172,7 +174,7 @@ public abstract class AbstractIcebergTest {
 
     if (currentExpectedMetric != null) {
       assertIcebergCounterMetric(
-          "iceberg.scan.scanned.data_files.size", "byte", expected, currentExpectedMetric.value());
+          "iceberg.scan.scanned.data_files.size", "By", expected, currentExpectedMetric.value());
     } else {
       assertIcebergMetricNotReported("iceberg.scan.scanned.data_files.size");
     }
@@ -182,7 +184,7 @@ public abstract class AbstractIcebergTest {
     if (currentExpectedMetric != null) {
       assertIcebergCounterMetric(
           "iceberg.scan.scanned.delete_files.size",
-          "byte",
+          "By",
           expected,
           currentExpectedMetric.value());
     } else {
@@ -310,7 +312,7 @@ public abstract class AbstractIcebergTest {
       String otelMetricName, String expectedUnit, ScanReport expectedReport, long expectedValue) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg_1.8",
+            "io.opentelemetry.iceberg-1.8",
             metricAssert ->
                 metricAssert
                     .hasName(otelMetricName)
@@ -342,7 +344,7 @@ public abstract class AbstractIcebergTest {
       String otelMetricName, String expectedUnit, ScanReport expectedReport, long expectedValue) {
     testing()
         .waitAndAssertMetrics(
-            "io.opentelemetry.iceberg_1.8",
+            "io.opentelemetry.iceberg-1.8",
             metricAssert ->
                 metricAssert
                     .hasName(otelMetricName)
