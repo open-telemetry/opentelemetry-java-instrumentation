@@ -33,10 +33,11 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
 
-    boolean isWindows = OS.WINDOWS.isCurrentOs();
-
-    // Only run single connection tests on Linux due to networking stack differences
-    if (!isWindows) {
+    if (OS.WINDOWS.isCurrentOs()) {
+      // Disable remote connection tests on Windows due to reactor-netty creating extra spans
+      optionsBuilder.setTestRemoteConnection(false);
+    } else {
+      // Only run single connection tests on Linux due to networking stack differences
       optionsBuilder.setSingleConnectionFactory(
           (host, port) -> {
             HttpClient httpClient =
@@ -59,11 +60,6 @@ class ReactorNettyHttpClientTest extends AbstractReactorNettyHttpClientTest {
                     .status()
                     .code();
           });
-    }
-
-    // Disable remote connection tests on Windows due to reactor-netty creating extra spans
-    if (isWindows) {
-      optionsBuilder.setTestRemoteConnection(false);
     }
   }
 
