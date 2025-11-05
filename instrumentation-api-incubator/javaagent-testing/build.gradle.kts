@@ -10,5 +10,5 @@ dependencies {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.http.client.emit-experimental-telemetry=true")
-  jvmArgs("-Dotel.instrumentation.http-client-url-template-rules=http://localhost:.*/hello/.*,/hello/*")
+  jvmArgs("-Dotel.instrumentation.http.client.url-template-rules=http://localhost:.*/hello/.*,/hello/*")
 }

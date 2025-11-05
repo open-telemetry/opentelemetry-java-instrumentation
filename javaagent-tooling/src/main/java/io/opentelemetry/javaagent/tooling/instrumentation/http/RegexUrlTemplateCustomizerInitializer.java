@@ -33,7 +33,7 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
     if (!urlTemplateEnabled) {
       return;
     }
-    String rules = config.getString("otel.instrumentation.http-client-url-template-rules");
+    String rules = config.getString("otel.instrumentation.http.client.url-template-rules");
     if (rules != null && !rules.isEmpty()) {
       parse(rules);
     }
