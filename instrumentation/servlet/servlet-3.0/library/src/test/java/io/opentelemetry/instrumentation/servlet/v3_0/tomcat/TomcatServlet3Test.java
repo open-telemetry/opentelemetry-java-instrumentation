@@ -125,7 +125,8 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
         .setErrorReportValveClass(ErrorHandlerValve.class.getName());
     tomcatServer.getHost().getPipeline().addValve(accessLogValue);
 
-    StandardEngine engine = (StandardEngine) tomcatServer.getServer().findService("Tomcat").getContainer();
+    StandardEngine engine =
+        (StandardEngine) tomcatServer.getServer().findService("Tomcat").getContainer();
     Container container = engine.findChild(engine.getDefaultHost());
     StandardContext context = (StandardContext) container.findChild(getContextPath());
 

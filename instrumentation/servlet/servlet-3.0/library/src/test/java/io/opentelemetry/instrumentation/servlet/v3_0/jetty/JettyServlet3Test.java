@@ -94,7 +94,8 @@ public abstract class JettyServlet3Test
             writer.write(th != null ? th.getMessage() : message);
           }
         });
-    servletContext.addFilter(OpenTelemetryServletFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+    servletContext.addFilter(
+        OpenTelemetryServletFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
     setupServlets(servletContext);
     jettyServer.setHandler(servletContext);
 

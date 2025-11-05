@@ -28,7 +28,7 @@ public class AsyncRunnableWrapper<REQUEST> implements Runnable {
 
   @Override
   public void run() {
-    try(Scope scope = context.makeCurrent()) {
+    try (Scope scope = context.makeCurrent()) {
       runnable.run();
     } catch (Throwable throwable) {
       helper.recordAsyncException(context, throwable);
