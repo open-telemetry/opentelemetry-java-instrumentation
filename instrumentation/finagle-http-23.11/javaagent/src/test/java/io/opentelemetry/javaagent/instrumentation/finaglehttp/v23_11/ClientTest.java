@@ -34,6 +34,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import io.opentelemetry.javaagent.instrumentation.finaglehttp.v23_11.Utils.ClientType;
 import java.net.ConnectException;
 import java.net.URI;
+import java.nio.channels.ClosedChannelException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Locale;
@@ -143,7 +144,12 @@ class ClientTest extends AbstractHttpClientTest<Request> {
                 .cause()
                 .isInstanceOf(ConnectionFailedException.class)
                 .cause()
-                .isInstanceOf(ConnectException.class);
+                // On Linux: ConnectException, On Windows: ClosedChannelException
+                .satisfies(
+                    cause -> {
+                      assertThat(cause)
+                          .isInstanceOfAny(ConnectException.class, ClosedChannelException.class);
+                    });
             error = error.getCause().getCause().getCause();
           } else if (uri.getPath().endsWith("/read-timeout")) {
             // not a connect() exception like the above, so is not wrapped as above;
