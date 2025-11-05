@@ -80,7 +80,8 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopTraceOnResponse(
-        @Advice.Thrown  @Nullable Throwable throwable, @Advice.Enter @Nullable AdviceScope actionScope) {
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope actionScope) {
       if (actionScope != null) {
         actionScope.end(throwable);
       }
