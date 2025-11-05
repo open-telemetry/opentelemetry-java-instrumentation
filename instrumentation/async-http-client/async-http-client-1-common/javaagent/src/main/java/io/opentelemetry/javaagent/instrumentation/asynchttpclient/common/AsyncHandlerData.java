@@ -29,4 +29,11 @@ public abstract class AsyncHandlerData {
   public abstract Request getRequest();
 
   public abstract Instrumenter<Request, Response> getInstrumenter();
+
+  public void end(Response response, Throwable throwable) {
+    Instrumenter<Request, Response> instrumenter = getInstrumenter();
+    if (instrumenter != null) {
+      instrumenter.end(getContext(), getRequest(), response, throwable);
+    }
+  }
 }

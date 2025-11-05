@@ -33,7 +33,6 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-    systemProperty("async.https.skip", "true")
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }

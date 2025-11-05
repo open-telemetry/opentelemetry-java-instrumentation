@@ -13,10 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.ning.http.client.AsyncCompletionHandler;
-import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -60,10 +58,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
       }
       ASYNC_HANDLER_DATA.set(handler, null);
 
-      Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
-      if (instrumenter != null) {
-        instrumenter.end(data.getContext(), data.getRequest(), response, null);
-      }
+      data.end(response, null);
       return data.getParentContext().makeCurrent();
     }
 
@@ -88,10 +83,7 @@ public class ResponseInstrumentation implements TypeInstrumentation {
       }
       ASYNC_HANDLER_DATA.set(handler, null);
 
-      Instrumenter<Request, Response> instrumenter = data.getInstrumenter();
-      if (instrumenter != null) {
-        instrumenter.end(data.getContext(), data.getRequest(), null, throwable);
-      }
+      data.end(null, throwable);
       return data.getParentContext().makeCurrent();
     }
 

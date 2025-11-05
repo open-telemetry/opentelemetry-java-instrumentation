@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.asynchttpclient.common;
 import com.ning.http.client.Request;
 import io.opentelemetry.context.propagation.TextMapSetter;
 
-public final class HttpHeaderSetter implements TextMapSetter<Request> {
+final class HttpHeaderSetter implements TextMapSetter<Request> {
 
   private final AsyncHttpClientHelper helper;
 
-  public HttpHeaderSetter(AsyncHttpClientHelper helper) {
+  HttpHeaderSetter(AsyncHttpClientHelper helper) {
     this.helper = helper;
   }
 

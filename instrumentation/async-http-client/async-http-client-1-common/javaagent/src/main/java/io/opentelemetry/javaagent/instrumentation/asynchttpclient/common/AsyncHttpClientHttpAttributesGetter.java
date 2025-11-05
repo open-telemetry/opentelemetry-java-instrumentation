@@ -13,12 +13,12 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGet
 import java.util.List;
 import javax.annotation.Nullable;
 
-public final class AsyncHttpClientHttpAttributesGetter
+final class AsyncHttpClientHttpAttributesGetter
     implements HttpClientAttributesGetter<Request, Response> {
 
   private final AsyncHttpClientHelper helper;
 
-  public AsyncHttpClientHttpAttributesGetter(AsyncHttpClientHelper helper) {
+  AsyncHttpClientHttpAttributesGetter(AsyncHttpClientHelper helper) {
     this.helper = helper;
   }
 
