@@ -1,10 +1,8 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.FILTER_MAPPING_RESOLVER;
 
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -12,6 +10,7 @@ import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -21,10 +20,13 @@ import javax.servlet.http.HttpServletResponse;
  * will miss anything that happens earlier in the filter stack or problems handled directly by the
  * app server. For this reason, Java Agent instrumentation is preferred when possible.
  */
+ @WebFilter("/*")
 public class OpenTelemetryServletFilter implements Filter {
 
   @Override
-  public void init(FilterConfig filterConfig) throws ServletException {}
+  public void init(FilterConfig filterConfig) throws ServletException {
+    FILTER_MAPPING_RESOLVER.set(this, new Servlet3FilterMappingResolverFactory(filterConfig));
+  }
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
@@ -37,30 +39,19 @@ public class OpenTelemetryServletFilter implements Filter {
 
     HttpServletRequest httpRequest = (HttpServletRequest) request;
     HttpServletResponse httpResponse = (HttpServletResponse) response;
-    ServletRequestContext<HttpServletRequest> requestContext =
-        new ServletRequestContext<>(httpRequest, this);
 
-    // Bail if we shouldn't start a new span.
-    if (!helper().shouldStart(Context.current(), requestContext)) {
-      chain.doFilter(request, response);
-      return;
-    }
-
-    Context spanContext = helper().start(Context.current(), requestContext);
-    helper().setAsyncListenerResponse(spanContext, (HttpServletResponse) response);
-
-    // Not using try-with-resources to match the api usage of Servlet3Advice.
-    // (helper().end is responsible for closing the scope.)
-    Scope scope = spanContext.makeCurrent();
     Throwable throwable = null;
+    Servlet3RequestAdviceScope adviceScope =
+        new Servlet3RequestAdviceScope(
+            CallDepth.forClass(OpenTelemetryServletFilter.class), httpRequest, httpResponse, this);
     try {
       chain.doFilter(
-          new OtelHttpServletRequest((HttpServletRequest) request), response);
+          new OtelHttpServletRequest(httpRequest), new OtelHttpServletResponse(httpResponse));
     } catch (Throwable e) {
       throwable = e;
       throw e;
     } finally {
-      helper().end(requestContext, httpRequest, httpResponse, throwable, true, spanContext, scope);
+      adviceScope.exit(throwable, httpRequest, httpResponse);
     }
   }
 

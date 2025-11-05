@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.FILTER_MAPPING_RESOLVER_FACTORY;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.FILTER_MAPPING_RESOLVER;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
@@ -20,7 +20,7 @@ public class Servlet3FilterInitAdvice {
     if (filterConfig == null) {
       return;
     }
-    FILTER_MAPPING_RESOLVER_FACTORY.set(
+    FILTER_MAPPING_RESOLVER.set(
         filter, new Servlet3FilterMappingResolverFactory(filterConfig));
   }
 }
