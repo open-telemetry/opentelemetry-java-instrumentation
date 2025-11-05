@@ -1134,11 +1134,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
                 assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
               }
-              if (options.getHasUrlTemplate()) {
+              String expectedUrlTemplate = options.getExpectedUrlTemplateMapper().apply(uri);
+              if (expectedUrlTemplate != null) {
                 assertThat(attrs)
-                    .containsEntry(
-                        UrlIncubatingAttributes.URL_TEMPLATE,
-                        options.getExpectedUrlTemplateMapper().apply(uri));
+                    .containsEntry(UrlIncubatingAttributes.URL_TEMPLATE, expectedUrlTemplate);
               }
               if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
                 assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
