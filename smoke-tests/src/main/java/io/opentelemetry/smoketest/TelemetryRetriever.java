@@ -5,6 +5,8 @@
 
 package io.opentelemetry.smoketest;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.instrumentation.testing.internal.TelemetryConverter;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -26,10 +28,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class TelemetryRetriever {
+public class TelemetryRetriever implements AutoCloseable {
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private final WebClient client;
   private final Duration telemetryTimeout;
+  private boolean closed;
 
   public TelemetryRetriever(int backendPort, Duration telemetryTimeout) {
     client = WebClient.of("http://localhost:" + backendPort);
@@ -37,6 +40,10 @@ public class TelemetryRetriever {
   }
 
   public void clearTelemetry() {
+    if (closed) {
+      return;
+    }
+
     client.get("/clear").aggregate().join();
   }
 
@@ -70,6 +77,10 @@ public class TelemetryRetriever {
   @SuppressWarnings({"unchecked", "rawtypes"})
   private <T extends GeneratedMessage, B extends GeneratedMessage.Builder>
       Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {
+    if (closed) {
+      return emptyList();
+    }
+
     try {
       return OBJECT_MAPPER
           .readTree(waitForContent(path))
@@ -116,5 +127,10 @@ public class TelemetryRetriever {
 
   public final WebClient getClient() {
     return client;
+  }
+
+  @Override
+  public void close() {
+    closed = true;
   }
 }

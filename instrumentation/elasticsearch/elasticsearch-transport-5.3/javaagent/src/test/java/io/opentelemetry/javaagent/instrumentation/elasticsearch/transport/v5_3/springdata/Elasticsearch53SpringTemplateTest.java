@@ -18,6 +18,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.elasticsearch.cluster.ClusterName.CLUSTER_NAME_SETTING;
 
+import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -65,8 +66,6 @@ import org.springframework.data.elasticsearch.core.ResultsExtractor;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQuery;
 import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
-import org.testcontainers.shaded.com.google.common.collect.ImmutableMap;
-import spock.util.environment.Jvm;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
@@ -158,7 +157,7 @@ class Elasticsearch53SpringTemplateTest extends ElasticsearchSpringTest {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
         Boolean.getBoolean("testLatestDeps")
-            || !Jvm.getCurrent().isJava21Compatible()
+            || Double.parseDouble(System.getProperty("java.specification.version")) < 21
             || Boolean.getBoolean("collectMetadata"));
   }
 

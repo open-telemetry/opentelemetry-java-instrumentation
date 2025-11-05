@@ -22,7 +22,7 @@ plugins {
 
 buildscript {
   dependencies {
-    classpath("com.squareup.okhttp3:okhttp:5.2.0")
+    classpath("com.squareup.okhttp3:okhttp:5.3.0")
   }
 }
 
@@ -155,7 +155,7 @@ tasks {
   }
 
   val generateReleaseBundle by registering(Zip::class) {
-    dependsOn(getTasksByName("publishAllPublicationToReleaseRepoRepository", true))
+    dependsOn(project.tasks.withType<PublishToMavenRepository>())
     from("releaseRepo")
 
     exclude("**/maven-metadata.*")

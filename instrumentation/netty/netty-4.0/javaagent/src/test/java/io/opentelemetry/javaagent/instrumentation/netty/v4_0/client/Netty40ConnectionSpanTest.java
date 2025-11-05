@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -108,6 +109,7 @@ class Netty40ConnectionSpanTest {
                   span.hasAttributesSatisfyingExactly(
                       equalTo(NETWORK_TRANSPORT, "tcp"),
                       equalTo(NETWORK_TYPE, "ipv4"),
+                      equalTo(PEER_SERVICE, "test-peer-service"),
                       equalTo(SERVER_ADDRESS, uri.getHost()),
                       equalTo(SERVER_PORT, uri.getPort()),
                       equalTo(NETWORK_PEER_PORT, uri.getPort()),

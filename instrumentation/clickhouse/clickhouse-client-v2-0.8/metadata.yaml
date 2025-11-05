@@ -1,4 +1,9 @@
-description: This instrumentation enables database client spans and metrics for the V2 ClickHouse client.
+description: >
+  This instrumentation enables database client spans and database client metrics for the ClickHouse
+  Java Client.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
 library_link: https://github.com/ClickHouse/clickhouse-java
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled

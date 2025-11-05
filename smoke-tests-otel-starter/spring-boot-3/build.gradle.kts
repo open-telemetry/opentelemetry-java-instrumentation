@@ -21,9 +21,9 @@ dependencies {
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-  testImplementation("org.testcontainers:junit-jupiter")
-  testImplementation("org.testcontainers:kafka")
-  testImplementation("org.testcontainers:mongodb")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-kafka")
+  testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
 
   val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
@@ -62,13 +62,6 @@ tasks {
   bootJar {
     enabled = false
   }
-}
-
-// To be able to execute the tests as GraalVM native executables
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
 }
 
 graalvmNative {

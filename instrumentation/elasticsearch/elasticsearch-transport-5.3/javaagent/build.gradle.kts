@@ -31,7 +31,7 @@ muzzle {
 if (findProperty("testLatestDeps") as Boolean) {
   // when running on jdk 21 Elasticsearch53SpringRepositoryTest occasionally fails with timeout
   otelJava {
-    maxJavaVersionSupported.set(JavaVersion.VERSION_17)
+    maxJavaVersionForTests.set(JavaVersion.VERSION_17)
   }
 }
 
@@ -53,6 +53,7 @@ dependencies {
   testImplementation(project(":instrumentation:elasticsearch:elasticsearch-transport-common:testing"))
   testImplementation("org.apache.logging.log4j:log4j-core:2.11.0")
   testImplementation("org.apache.logging.log4j:log4j-api:2.11.0")
+  testImplementation("com.google.guava:guava")
 
   // Unfortunately spring-data-elasticsearch requires 5.5.0
   testLibrary("org.elasticsearch.client:transport:5.5.0")
@@ -94,5 +95,11 @@ tasks {
 
   check {
     dependsOn(testStableSemconv, testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

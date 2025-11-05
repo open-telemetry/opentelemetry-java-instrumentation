@@ -27,6 +27,8 @@ dependencies {
   compileOnly("javax.jms:jms-api:1.1-rev-1")
 
   testImplementation("org.apache.activemq:activemq-client:5.16.5")
+
+  testInstrumentation(project(":instrumentation:jms:jms-3.0:javaagent"))
 }
 
 testing {
@@ -51,6 +53,7 @@ testing {
 tasks {
   withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

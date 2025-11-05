@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.kubernetes.client.openapi.ApiCallback;
@@ -89,6 +90,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name"))));
@@ -136,6 +138,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
@@ -190,6 +193,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),
                             equalTo(AttributeKey.stringKey("kubernetes-client.name"), "name")),
@@ -251,6 +255,7 @@ class KubernetesClientTest {
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 451),
                             equalTo(SERVER_ADDRESS, "127.0.0.1"),
                             equalTo(SERVER_PORT, mockWebServer.httpPort()),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(ERROR_TYPE, "451"),
                             equalTo(
                                 AttributeKey.stringKey("kubernetes-client.namespace"), "namespace"),

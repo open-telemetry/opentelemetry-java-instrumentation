@@ -11,9 +11,9 @@ package io.opentelemetry.instrumentation.docs.internal;
  */
 public enum InstrumentationFeature {
   HTTP_ROUTE,
-  EXPERIMENTAL_ONLY,
   CONTEXT_PROPAGATION,
   AUTO_INSTRUMENTATION_SHIM,
   CONTROLLER_SPANS,
   VIEW_SPANS,
+  LOGGING_BRIDGE
 }

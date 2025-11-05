@@ -370,6 +370,18 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.jdbc.experimental.datasource.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental instrumentation to create spans for <code>DataSource.getConnection</code> calls.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables augmenting queries with a comment containing the tracing information. See [sqlcommenter](https://google.github.io/sqlcommenter/) for more info. WARNING: augmenting queries with tracing context will make query texts unique, which may have adverse impact on database performance. Consult with database experts before enabling.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.kafka.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the Kafka instrumentation.",
@@ -442,9 +454,15 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
       "type": "java.lang.Boolean",
-      "description": "Enable the capture of Logstash attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
+      "description": "Enable the capture of Logstash marker attributes, supported are those added to logs via `Markers.append()`, `Markers.appendEntries()`, `Markers.appendArray()` and `Markers.appendRaw()` methods.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of Logstash StructuredArguments as attributes (e.g., `StructuredArguments.v()` and `StructuredArguments.keyValue()`).",
       "defaultValue": false
     },
     {

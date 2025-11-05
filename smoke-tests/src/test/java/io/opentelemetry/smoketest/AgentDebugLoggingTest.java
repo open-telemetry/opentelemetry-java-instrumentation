@@ -16,7 +16,7 @@ class AgentDebugLoggingTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20250915.17728045097")
+        .springBoot("20251017.18602659902")
         .waitStrategy(
             new TargetWaitStrategy.Log(
                 Duration.ofMinutes(1),

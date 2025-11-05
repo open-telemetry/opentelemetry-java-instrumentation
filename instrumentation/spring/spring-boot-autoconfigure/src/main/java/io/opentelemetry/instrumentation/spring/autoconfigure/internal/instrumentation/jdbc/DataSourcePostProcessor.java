@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
+import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetryBuilder;
+import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.PrintWriter;
@@ -57,7 +59,7 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
         && !isRoutingDatasource(bean)
         && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
-      DataSource otelDataSource =
+      JdbcTelemetryBuilder builder =
           JdbcTelemetry.builder(openTelemetryProvider.getObject())
               .setStatementSanitizationEnabled(
                   InstrumentationConfigUtil.isStatementSanitizationEnabled(
@@ -73,8 +75,17 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
                       .getObject()
                       .getBoolean(
                           "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
-              .build()
-              .wrap(dataSource);
+              .setDataSourceInstrumenterEnabled(
+                  configPropertiesProvider
+                      .getObject()
+                      .getBoolean(
+                          "otel.instrumentation.jdbc.experimental.datasource.enabled", false));
+      Experimental.setEnableSqlCommenter(
+          builder,
+          configPropertiesProvider
+              .getObject()
+              .getBoolean("otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false));
+      DataSource otelDataSource = builder.build().wrap(dataSource);
 
       // wrap instrumented data source into a proxy that unwraps to the original data source
       // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13512

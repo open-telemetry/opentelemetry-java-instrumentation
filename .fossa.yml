@@ -138,6 +138,12 @@ targets:
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:helidon-4.3:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:helidon-4.3:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:hikaricp-3.0:javaagent'
     - type: gradle
       path: ./
@@ -387,6 +393,9 @@ targets:
       target: ':instrumentation:azure-core:azure-core-1.36:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:azure-core:azure-core-1.53:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:cassandra:cassandra-3.0:javaagent'
     - type: gradle
       path: ./
@@ -424,6 +433,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.2:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
@@ -618,6 +630,9 @@ targets:
       target: ':instrumentation:jsf:jsf-myfaces-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:kafka:kafka-connect-2.6:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:kafka:kafka-streams-0.11:javaagent'
     - type: gradle
       path: ./
@@ -754,6 +769,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:openai:openai-java-1.1:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opensearch:opensearch-java-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opensearch:opensearch-rest-1.0:javaagent'

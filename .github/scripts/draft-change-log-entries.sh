@@ -15,7 +15,7 @@ if [[ $minor == 0 ]]; then
   prior_minor=$(sed -n "s/^## Version $prior_major\.\([0-9]\+\)\..*/\1/p" CHANGELOG.md | head -1)
   if [[ -z $prior_minor ]]; then
     # assuming this is the first release
-    range=
+    range=HEAD
   else
     range="v$prior_major.$prior_minor.0..HEAD"
   fi
@@ -23,22 +23,20 @@ else
   range="v$major.$((minor - 1)).0..HEAD"
 fi
 
+echo "# Changelog"
+echo
 echo "## Unreleased"
 echo
-echo "### Migration notes"
-echo
-echo
+
+"$(dirname "$0")/extract-labeled-prs.sh" "$range"
+
 echo "### 🌟 New javaagent instrumentation"
-echo
 echo
 echo "### 🌟 New library instrumentation"
 echo
-echo
 echo "### 📈 Enhancements"
 echo
-echo
 echo "### 🛠️ Bug fixes"
-echo
 echo
 echo "### 🧰 Tooling"
 echo
@@ -48,4 +46,5 @@ git log --reverse \
         --author='^(?!renovate\[bot\] )' \
         --pretty=format:"- %s" \
         "$range" \
-  | sed -E 's,\(#([0-9]+)\)$,\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
+  | sed -E 's, *\(#([0-9]+)\)$,\n  ([#\1](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/\1)),'
+echo

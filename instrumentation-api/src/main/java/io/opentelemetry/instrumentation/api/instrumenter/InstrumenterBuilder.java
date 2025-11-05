@@ -33,7 +33,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -427,8 +427,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
             @Override
             public void setSpanNameExtractor(
-                Function<SpanNameExtractor<? super REQUEST>, SpanNameExtractor<? super REQUEST>>
-                    spanNameExtractorTransformer) {
+                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
               builder.spanNameExtractor =
                   spanNameExtractorTransformer.apply(builder.spanNameExtractor);
             }

@@ -1,7 +1,7 @@
 ARG jdkImage
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:92659de869382c14a0276a5e93215d88cb182dc22f1ff3ada1f1b68b8648f3b2 as builder
+FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:f51004008a2017ce3905fe7e1985d5aff62e596c4ab4111caad6d3cf33aa5cf1 as builder
 ARG sourceVersion
 
 ADD https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/${sourceVersion}/jetty-home-${sourceVersion}.zip /server.zip

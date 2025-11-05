@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Provides customizations for instrumentation, including operation metrics, attributes extraction,
@@ -75,7 +76,22 @@ public interface InstrumenterCustomizer {
    *
    * @param spanNameExtractorTransformer function that transforms the original span name extractor
    * @return this InstrumenterCustomizer for method chaining
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @SuppressWarnings("FunctionalInterfaceClash")
+  default InstrumenterCustomizer setSpanNameExtractor(
+      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
+    return setSpanNameExtractor(spanNameExtractorTransformer::apply);
+  }
+
+  /**
+   * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
+   * customizing how span names are generated for the instrumented operations.
+   *
+   * @param spanNameExtractor function that transforms the original span name extractor
+   * @return this InstrumenterCustomizer for method chaining
    */
   InstrumenterCustomizer setSpanNameExtractor(
-      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor);
 }

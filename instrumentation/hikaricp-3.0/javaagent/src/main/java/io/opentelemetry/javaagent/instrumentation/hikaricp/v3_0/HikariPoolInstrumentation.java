@@ -13,6 +13,8 @@ import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -37,9 +39,10 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SetMetricsTrackerFactoryAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Argument(value = 0, readOnly = false) MetricsTrackerFactory userMetricsTracker,
+    public static MetricsTrackerFactory onEnter(
+        @Advice.Argument(0) MetricsTrackerFactory userMetricsTracker,
         @Advice.FieldValue("metricsTracker") AutoCloseable existingMetricsTracker)
         throws Exception {
 
@@ -49,7 +52,7 @@ public class HikariPoolInstrumentation implements TypeInstrumentation {
         // about duplicate metrics
         existingMetricsTracker.close();
       }
-      userMetricsTracker = HikariSingletons.createMetricsTrackerFactory(userMetricsTracker);
+      return HikariSingletons.createMetricsTrackerFactory(userMetricsTracker);
     }
   }
 }

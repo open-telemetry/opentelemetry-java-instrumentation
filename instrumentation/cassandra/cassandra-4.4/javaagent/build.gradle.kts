@@ -9,12 +9,23 @@ muzzle {
     versions.set("[4.4,]")
     assertInverse.set(true)
   }
+  pass {
+    group.set("org.apache.cassandra")
+    module.set("java-driver-core")
+    versions.set("(,)")
+    assertInverse.set(true)
+  }
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
 dependencies {
   implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
 
-  library("com.datastax.oss:java-driver-core:4.4.0")
+  if (latestDepTest) {
+    library("org.apache.cassandra:java-driver-core:4.18.0")
+  } else {
+    library("com.datastax.oss:java-driver-core:4.4.0")
+  }
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")

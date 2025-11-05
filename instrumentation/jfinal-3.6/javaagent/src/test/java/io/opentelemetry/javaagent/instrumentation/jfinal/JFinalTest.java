@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent.instrumentation.jfinal;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
@@ -62,13 +67,13 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
   protected Server setupServer() throws Exception {
     Server server = new Server(port);
 
-    ServletContextHandler context = new ServletContextHandler(
-        ServletContextHandler.SESSIONS);
+    ServletContextHandler context = new ServletContextHandler(ServletContextHandler.SESSIONS);
     context.setContextPath("/");
     ServletHandler handler = new ServletHandler();
 
-    FilterHolder fh = handler.addFilterWithMapping(
-        JFinalFilter.class.getName(), "/*", EnumSet.of(DispatcherType.REQUEST));
+    FilterHolder fh =
+        handler.addFilterWithMapping(
+            JFinalFilter.class.getName(), "/*", EnumSet.of(DispatcherType.REQUEST));
     fh.setInitParameter("configClass", TestConfig.class.getName());
 
     context.addFilter(fh, "/*", EnumSet.of(DispatcherType.REQUEST));

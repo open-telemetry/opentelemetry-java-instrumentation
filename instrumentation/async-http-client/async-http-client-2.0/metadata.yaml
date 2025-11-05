@@ -1,2 +1,35 @@
 description: This instrumentation enables HTTP client spans and HTTP client metrics for version 2 of the AsyncHttpClient (AHC) HTTP client.
 library_link: https://github.com/AsyncHttpClient/async-http-client
+semantic_conventions:
+  - HTTP_CLIENT_SPANS
+  - HTTP_CLIENT_METRICS
+configurations:
+  - name: otel.instrumentation.http.known-methods
+    description: >
+      Configures the instrumentation to recognize an alternative set of HTTP request methods. All
+      other methods will be treated as `_OTHER`.
+    type: list
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+  - name: otel.instrumentation.http.client.capture-request-headers
+    description: List of HTTP request headers to capture in HTTP client telemetry.
+    type: list
+    default: ""
+  - name: otel.instrumentation.http.client.capture-response-headers
+    description: List of HTTP response headers to capture in HTTP client telemetry.
+    type: list
+    default: ""
+  - name: otel.instrumentation.common.peer-service-mapping
+    description: Used to specify a mapping from host names or IP addresses to peer services.
+    type: map
+    default: ""
+  - name: otel.instrumentation.http.client.emit-experimental-telemetry
+    description: >
+      Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size`
+      and `http.response.body.size` attributes to spans, and records `http.client.request.size` and
+      `http.client.response.size` metrics.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+    description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+    type: boolean
+    default: true

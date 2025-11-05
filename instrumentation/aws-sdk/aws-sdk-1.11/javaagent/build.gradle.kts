@@ -59,7 +59,7 @@ dependencies {
   testImplementation("com.fasterxml.jackson.dataformat:jackson-dataformat-cbor")
 
   // needed for SNS
-  testImplementation("org.testcontainers:localstack")
+  testImplementation("org.testcontainers:testcontainers-localstack")
 
   // needed by S3
   testImplementation("javax.xml.bind:jaxb-api:2.3.1")
@@ -166,6 +166,13 @@ tasks {
 
   check {
     dependsOn(testStableSemconv)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    // org.elasticmq:elasticmq-rest-sqs_2.13 uses unsafe. Future versions are likely to fix this.
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 
