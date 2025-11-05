@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -21,7 +20,6 @@ import org.springframework.context.annotation.Configuration;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnBean(OpenTelemetry.class)
 @ConditionalOnClass({MongoClientSettings.class, MongoClientSettingsBuilderCustomizer.class})
 @ConditionalOnEnabledInstrumentation(module = "mongo")
 @Configuration

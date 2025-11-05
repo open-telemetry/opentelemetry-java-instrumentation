@@ -1,4 +1,6 @@
-description: This instrumentation enables spans for GraphQL Java operations.
+description: This instrumentation enables spans for GraphQL operations.
+semantic_conventions:
+  - GRAPHQL_SERVER_SPANS
 library_link: https://www.graphql-java.com/
 configurations:
   - name: otel.instrumentation.graphql.query-sanitizer.enabled

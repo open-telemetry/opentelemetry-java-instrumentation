@@ -8,13 +8,9 @@ plugins {
 description = "smoke-tests"
 
 otelJava {
-  // we only need to run the Spock test itself under a single Java version, and the Spock test in
-  // turn is parameterized and runs the test using different docker containers that run different
-  // Java versions
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
-
 val dockerJavaVersion = "3.6.0"
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
@@ -28,7 +24,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.32.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.33.0")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")

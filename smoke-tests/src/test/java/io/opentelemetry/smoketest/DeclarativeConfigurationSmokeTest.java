@@ -22,13 +22,13 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20241021.11448062567")
+        .springBoot("20251017.18602659902")
         .env("OTEL_EXPERIMENTAL_CONFIG_FILE", "declarative-config.yaml")
         .extraResources(ResourceMapping.of("declarative-config.yaml", "/declarative-config.yaml"));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17})
+  @ValueSource(ints = {8, 11, 17, 21, 25})
   void springBootSmokeTest(int jdk) {
     start(jdk);
 

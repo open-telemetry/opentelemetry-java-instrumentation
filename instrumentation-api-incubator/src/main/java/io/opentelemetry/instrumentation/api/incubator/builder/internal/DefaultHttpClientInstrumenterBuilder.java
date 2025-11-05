@@ -38,6 +38,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
 /**
@@ -54,16 +55,16 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
-  private Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
-      statusExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractorTransformer =
+      UnaryOperator.identity();
   private final HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
   private final HttpClientAttributesGetter<REQUEST, RESPONSE> attributesGetter;
   private final HttpSpanNameExtractorBuilder<REQUEST> httpSpanNameExtractorBuilder;
 
   @Nullable private final TextMapSetter<REQUEST> headerSetter;
-  private Function<SpanNameExtractor<REQUEST>, ? extends SpanNameExtractor<REQUEST>>
-      spanNameExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractorTransformer =
+      UnaryOperator.identity();
   private boolean emitExperimentalHttpClientTelemetry = false;
   private Consumer<InstrumenterBuilder<REQUEST, RESPONSE>> builderCustomizer = b -> {};
 
@@ -113,8 +114,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
 
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
-      Function<SpanStatusExtractor<REQUEST, RESPONSE>, SpanStatusExtractor<REQUEST, RESPONSE>>
-          statusExtractor) {
+      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
     this.statusExtractorTransformer = statusExtractor;
     return this;
   }
@@ -192,9 +192,8 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   /** Sets custom {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
-      Function<SpanNameExtractor<REQUEST>, SpanNameExtractor<REQUEST>>
-          spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+      UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractor) {
+    this.spanNameExtractorTransformer = spanNameExtractor;
     return this;
   }
 

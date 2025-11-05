@@ -58,8 +58,9 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       DbInfo dbInfo,
       String query,
       Instrumenter<DbRequest, Void> instrumenter,
-      boolean captureQueryParameters) {
-    super(delegate, connection, dbInfo, query, instrumenter);
+      boolean captureQueryParameters,
+      boolean sqlCommenterEnabled) {
+    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenterEnabled);
     this.captureQueryParameters = captureQueryParameters;
     this.parameters = new HashMap<>();
   }
@@ -67,6 +68,28 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   private void putParameter(int index, Object value) {
     if (this.captureQueryParameters && value != null) {
       parameters.put(Integer.toString(index - 1), value.toString());
+    }
+  }
+
+  private void putParameterIfRecognizedType(int index, Object value) {
+    if (this.captureQueryParameters && value != null) {
+      String str = null;
+
+      if (value instanceof Boolean
+          // Byte, Short, Int, Long, Float, Double, BigDecimal
+          || value instanceof Number
+          || value instanceof String
+          || value instanceof Date
+          || value instanceof Time
+          || value instanceof Timestamp
+          || value instanceof URL
+          || value instanceof RowId) {
+        str = value.toString();
+      }
+
+      if (str != null) {
+        parameters.put(Integer.toString(index - 1), str);
+      }
     }
   }
 
@@ -243,12 +266,14 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
   @Override
   public void setObject(int parameterIndex, Object x, int targetSqlType) throws SQLException {
     delegate.setObject(parameterIndex, x, targetSqlType);
+    putParameterIfRecognizedType(parameterIndex, x);
   }
 
   @SuppressWarnings("UngroupedOverloads")
   @Override
   public void setObject(int parameterIndex, Object x) throws SQLException {
     delegate.setObject(parameterIndex, x);
+    putParameterIfRecognizedType(parameterIndex, x);
   }
 
   @Override

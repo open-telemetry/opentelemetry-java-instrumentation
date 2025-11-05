@@ -33,6 +33,10 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
       stringKey("aws.step_functions.activity.arn");
   private static final AttributeKey<String> AWS_STEP_FUNCTIONS_STATE_MACHINE_ARN =
       stringKey("aws.step_functions.state_machine.arn");
+  private static final AttributeKey<String> AWS_S3_BUCKET = stringKey("aws.s3.bucket");
+  private static final AttributeKey<String> AWS_SQS_QUEUE_URL = stringKey("aws.sqs.queue.url");
+  private static final AttributeKey<String> AWS_KINESIS_STREAM_NAME =
+      stringKey("aws.kinesis.stream_name");
 
   // AmazonWebServiceResult is only available in v1.11.33 and later
   private static boolean canGetResponseMetadata() {
@@ -64,6 +68,10 @@ class AwsSdkAttributesExtractor implements AttributesExtractor<Request<?>, Respo
         AWS_STEP_FUNCTIONS_ACTIVITY_ARN,
         originalRequest,
         RequestAccess::getStepFunctionsActivityArn);
+    setAttribute(attributes, AWS_S3_BUCKET, originalRequest, RequestAccess::getBucketName);
+    setAttribute(attributes, AWS_SQS_QUEUE_URL, originalRequest, RequestAccess::getQueueUrl);
+    setAttribute(
+        attributes, AWS_KINESIS_STREAM_NAME, originalRequest, RequestAccess::getStreamName);
   }
 
   @Override

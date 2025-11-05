@@ -9,8 +9,8 @@ dependencies {
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing"))
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.10.2")
 
-  testImplementation("org.testcontainers:kafka")
-  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-kafka")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
 
   testCompileOnly("com.google.auto.value:auto-value-annotations")
   testAnnotationProcessor("com.google.auto.value:auto-value")
@@ -22,27 +22,32 @@ tasks {
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 
-  val testReceiveSpansDisabled by registering(Test::class) {
+  test {
+    filter {
+      excludeTestsMatching("*Deprecated*")
+    }
+  }
+
+  val testDeprecated by registering(Test::class) {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
     filter {
-      includeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      includeTestsMatching("WrapperSuppressReceiveSpansTest")
+      includeTestsMatching("*DeprecatedInterceptorsTest")
     }
-    include("**/InterceptorsSuppressReceiveSpansTest.*", "**/WrapperSuppressReceiveSpansTest.*")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("InterceptorsSuppressReceiveSpansTest")
-      excludeTestsMatching("WrapperSuppressReceiveSpansTest")
-    }
-    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+    systemProperty("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", "true")
     systemProperty("otel.instrumentation.messaging.experimental.capture-headers", "Test-Message-Header")
   }
 
+  val testDeprecatedSuppressReceiveSpans by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    filter {
+      includeTestsMatching("*DeprecatedInterceptorsSuppressReceiveSpansTest")
+    }
+  }
+
   check {
-    dependsOn(testReceiveSpansDisabled)
+    dependsOn(testDeprecated, testDeprecatedSuppressReceiveSpans)
   }
 }
 

@@ -142,7 +142,7 @@ abstract class NettyAlignmentRule : ComponentMetadataRule {
     with(ctx.details) {
       if (id.group == "io.netty" && id.name != "netty") {
         if (id.version.startsWith("4.1.")) {
-          belongsTo("io.netty:netty-bom:4.1.127.Final", false)
+          belongsTo("io.netty:netty-bom:4.1.128.Final", false)
         } else if (id.version.startsWith("4.0.")) {
           belongsTo("io.netty:netty-bom:4.0.56.Final", false)
         }
@@ -187,29 +187,10 @@ testing {
       implementation("org.mockito:mockito-junit-jupiter")
 
       implementation("org.objenesis:objenesis")
-      implementation("org.spockframework:spock-core") {
-        with(this as ExternalDependency) {
-          // exclude optional dependencies
-          exclude(group = "cglib", module = "cglib-nodep")
-          exclude(group = "net.bytebuddy", module = "byte-buddy")
-          exclude(group = "org.junit.platform", module = "junit-platform-testkit")
-          exclude(group = "org.jetbrains", module = "annotations")
-          exclude(group = "org.objenesis", module = "objenesis")
-          exclude(group = "org.ow2.asm", module = "asm")
-        }
-      }
-      implementation("org.spockframework:spock-junit4") {
-        with(this as ExternalDependency) {
-          // spock-core is already added as dependency
-          // exclude it here to avoid pulling in optional dependencies
-          exclude(group = "org.spockframework", module = "spock-core")
-        }
-      }
       implementation("ch.qos.logback:logback-classic")
       implementation("org.slf4j:log4j-over-slf4j")
       implementation("org.slf4j:jcl-over-slf4j")
       implementation("org.slf4j:jul-to-slf4j")
-      implementation("com.github.stefanbirkner:system-rules")
     }
   }
 }
@@ -343,7 +324,10 @@ tasks.withType<Test>().configureEach {
   val useJ9 = gradle.startParameter.projectProperties["testJavaVM"]?.run { this == "openj9" }
     ?: false
   if (useJ9 && testJavaVersion != null && testJavaVersion.isJava8) {
-    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*},exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*},exclude={io/opentelemetry/testing/internal/io/netty/buffer/AbstractByteBuf.*}")
+    jvmArgs("-Xjit:exclude={io/opentelemetry/testing/internal/io/netty/buffer/HeapByteBufUtil.*}," +
+        "exclude={io/opentelemetry/testing/internal/io/netty/buffer/UnpooledHeapByteBuf.*}," +
+        "exclude={io/opentelemetry/testing/internal/io/netty/buffer/AbstractByteBuf.*}," +
+        "exclude={io/opentelemetry/testing/internal/io/netty/handler/codec/base64/Base64.*}")
   }
 
   // There's no real harm in setting this for all tests even if any happen to not be using context
@@ -438,7 +422,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "11.1.0"
+  toolVersion = "12.1.1"
   maxWarnings = 0
 }
 

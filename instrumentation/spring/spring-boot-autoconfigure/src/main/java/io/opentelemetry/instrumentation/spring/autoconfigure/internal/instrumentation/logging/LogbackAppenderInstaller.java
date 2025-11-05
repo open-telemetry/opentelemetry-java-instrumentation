@@ -9,6 +9,7 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.Appender;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.DeprecatedConfigProperties;
 import java.util.Iterator;
 import java.util.Optional;
 import org.slf4j.ILoggerFactory;
@@ -143,12 +144,23 @@ class LogbackAppenderInstaller {
       openTelemetryAppender.setCaptureArguments(captureArguments.booleanValue());
     }
 
-    Boolean captureLogstashAttributes =
+    Boolean captureLogstashMarkerAttributes =
+        DeprecatedConfigProperties.getBoolean(
+            applicationEnvironmentPreparedEvent,
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-markers",
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes");
+    if (captureLogstashMarkerAttributes != null) {
+      openTelemetryAppender.setCaptureLogstashMarkerAttributes(
+          captureLogstashMarkerAttributes.booleanValue());
+    }
+
+    Boolean captureLogstashStructuredArguments =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes");
-    if (captureLogstashAttributes != null) {
-      openTelemetryAppender.setCaptureLogstashAttributes(captureLogstashAttributes.booleanValue());
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments");
+    if (captureLogstashStructuredArguments != null) {
+      openTelemetryAppender.setCaptureLogstashStructuredArguments(
+          captureLogstashStructuredArguments.booleanValue());
     }
 
     String mdcAttributeProperty =

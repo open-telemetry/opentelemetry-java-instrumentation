@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
  * This test creates the specified number of traces with three spans: 1) Outer (root) span 2) Middle
  * span, child of outer, created in success handler of the chain subscribed to in the context of the
  * outer span (with some delay and map thrown in for good measure) 3) Inner span, child of middle,
- * created in the success handler of a new chain started and subscribed to in the the middle span
+ * created in the success handler of a new chain started and subscribed to in the middle span
  *
  * <p>The varying delays between the stages where each span is created should guarantee that
  * scheduler threads handling various stages of the chain will have to alternate between contexts

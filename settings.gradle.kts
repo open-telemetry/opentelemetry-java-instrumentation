@@ -1,13 +1,13 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.9"
+    id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
-    id("org.jetbrains.kotlin.jvm") version "2.2.20"
+    id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
-    id("org.graalvm.buildtools.native") version "0.11.1"
+    id("org.graalvm.buildtools.native") version "0.11.2"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
   }
@@ -21,8 +21,8 @@ plugins {
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
-  id("com.gradle.develocity") version "4.2.1"
+  id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
+  id("com.gradle.develocity") version "4.2.2"
 }
 
 dependencyResolutionManagement {
@@ -47,11 +47,38 @@ dependencyResolutionManagement {
   }
 }
 
+val develocityServer = "https://develocity.opentelemetry.io"
+val isCI = System.getenv("CI") != null
+val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
+
+// if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
+val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
+
 develocity {
+  if (useScansGradleCom) {
+    buildScan {
+      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+      termsOfUseAgree = "yes"
+    }
+  } else {
+    server = develocityServer
+    buildScan {
+      publishing.onlyIf { it.isAuthenticated }
+
+      gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
+      gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
+        value("Smoke test suite", it)
+      }
+    }
+  }
+
   buildScan {
-    publishing.onlyIf { System.getenv("CI") != null }
-    termsOfUseUrl.set("https://gradle.com/help/legal-terms-of-use")
-    termsOfUseAgree.set("yes")
+    uploadInBackground = !isCI
+
+    capture {
+      fileFingerprints = true
+    }
 
     if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
       !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
@@ -60,6 +87,14 @@ develocity {
           writer.println(buildScanUri)
         }
       }
+    }
+  }
+}
+
+if (!useScansGradleCom) {
+  buildCache {
+    remote(develocity.buildCache) {
+      isPush = isCI && develocityAccessKey.isNotEmpty()
     }
   }
 }
@@ -179,6 +214,8 @@ include(":instrumentation:azure-core:azure-core-1.19:javaagent")
 include(":instrumentation:azure-core:azure-core-1.19:library-instrumentation-shaded")
 include(":instrumentation:azure-core:azure-core-1.36:javaagent")
 include(":instrumentation:azure-core:azure-core-1.36:library-instrumentation-shaded")
+include(":instrumentation:azure-core:azure-core-1.53:javaagent")
+include(":instrumentation:azure-core:azure-core-1.53:library-instrumentation-shaded")
 include(":instrumentation:c3p0-0.9:javaagent")
 include(":instrumentation:c3p0-0.9:library")
 include(":instrumentation:c3p0-0.9:testing")
@@ -204,6 +241,8 @@ include(":instrumentation:couchbase:couchbase-3.1.6:javaagent")
 include(":instrumentation:couchbase:couchbase-3.1.6:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-3.2:javaagent")
 include(":instrumentation:couchbase:couchbase-3.2:tracing-opentelemetry-shaded")
+include(":instrumentation:couchbase:couchbase-3.4:javaagent")
+include(":instrumentation:couchbase:couchbase-3.4:tracing-opentelemetry-shaded")
 include(":instrumentation:couchbase:couchbase-common:testing")
 include(":instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent")
 include(":instrumentation:dropwizard:dropwizard-testing")
@@ -247,6 +286,9 @@ include(":instrumentation:grpc-1.6:testing")
 include(":instrumentation:guava-10.0:javaagent")
 include(":instrumentation:guava-10.0:library")
 include(":instrumentation:gwt-2.0:javaagent")
+include(":instrumentation:helidon-4.3:javaagent")
+include(":instrumentation:helidon-4.3:library")
+include(":instrumentation:helidon-4.3:testing")
 include(":instrumentation:hibernate:hibernate-3.3:javaagent")
 include(":instrumentation:hibernate:hibernate-4.0:javaagent")
 include(":instrumentation:hibernate:hibernate-6.0:javaagent")
@@ -264,6 +306,7 @@ include(":instrumentation:hystrix-1.4:javaagent")
 include(":instrumentation:influxdb-2.4:javaagent")
 include(":instrumentation:internal:internal-application-logger:bootstrap")
 include(":instrumentation:internal:internal-application-logger:javaagent")
+include(":instrumentation:internal:internal-class-loader:compile-stub")
 include(":instrumentation:internal:internal-class-loader:javaagent")
 include(":instrumentation:internal:internal-class-loader:javaagent-integration-tests")
 include(":instrumentation:internal:internal-eclipse-osgi-3.6:javaagent")
@@ -307,9 +350,7 @@ include(":instrumentation:jaxrs-client:jaxrs-client-2.0-testing")
 include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
-include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6-testing")
 include(":instrumentation:jaxws:jaxws-2.0-common-testing")
-include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
 include(":instrumentation:jaxws:jaxws-2.0-wildfly-testing")
 include(":instrumentation:jaxws:jaxws-3.0-axis2-2.0-testing")
@@ -366,6 +407,8 @@ include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:testing")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
 include(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library")
+include(":instrumentation:kafka:kafka-connect-2.6:javaagent")
+include(":instrumentation:kafka:kafka-connect-2.6:testing")
 include(":instrumentation:kafka:kafka-streams-0.11:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-1.0:javaagent")
 include(":instrumentation:kotlinx-coroutines:kotlinx-coroutines-flow-1.3:javaagent")
@@ -393,6 +436,7 @@ include(":instrumentation:liberty:liberty-dispatcher-20.0:javaagent")
 include(":instrumentation:log4j:log4j-appender-1.2:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.17:javaagent")
 include(":instrumentation:log4j:log4j-appender-2.17:library")
+include(":instrumentation:log4j:log4j-appender-2.17:testing")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.7:javaagent")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaagent")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure")
@@ -400,6 +444,7 @@ include(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:tes
 include(":instrumentation:log4j:log4j-mdc-1.2:javaagent")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
 include(":instrumentation:logback:logback-appender-1.0:library")
+include(":instrumentation:logback:logback-appender-1.0:testing")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")
@@ -435,6 +480,7 @@ include(":instrumentation:openai:openai-java-1.1:library")
 include(":instrumentation:openai:openai-java-1.1:testing")
 include(":instrumentation:openai:openai-java-1.1:openai3-testing")
 include(":instrumentation:opencensus-shim:testing")
+include(":instrumentation:opensearch:opensearch-java-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-1.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-3.0:javaagent")
 include(":instrumentation:opensearch:opensearch-rest-common:javaagent")
@@ -587,7 +633,6 @@ include(":instrumentation:spring:spring-security-config-6.0:javaagent")
 include(":instrumentation:spring:spring-security-config-6.0:library")
 include(":instrumentation:spring:spring-web:spring-web-3.1:javaagent")
 include(":instrumentation:spring:spring-web:spring-web-3.1:library")
-include(":instrumentation:spring:spring-web:spring-web-3.1:testing")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")

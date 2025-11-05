@@ -13,10 +13,8 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Map;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -28,19 +26,19 @@ abstract class AbstractInterceptorsTest extends KafkaClientBaseTest {
 
   static final String greeting = "Hello Kafka!";
 
+  protected abstract KafkaTelemetry kafkaTelemetry();
+
   @Override
   public Map<String, Object> producerProps() {
     Map<String, Object> props = super.producerProps();
-    props.put(
-        ProducerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingProducerInterceptor.class.getName());
+    props.putAll(kafkaTelemetry().producerInterceptorConfigProperties());
     return props;
   }
 
   @Override
   public Map<String, Object> consumerProps() {
     Map<String, Object> props = super.consumerProps();
-    props.put(
-        ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG, TracingConsumerInterceptor.class.getName());
+    props.putAll(kafkaTelemetry().consumerInterceptorConfigProperties());
     return props;
   }
 

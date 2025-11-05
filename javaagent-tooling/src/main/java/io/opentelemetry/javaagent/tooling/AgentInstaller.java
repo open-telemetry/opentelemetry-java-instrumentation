@@ -107,7 +107,6 @@ public class AgentInstaller {
 
     logVersionInfo();
     if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
-      setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
@@ -132,7 +131,7 @@ public class AgentInstaller {
     ThreadLocalRandom.current();
 
     AgentBuilder agentBuilder =
-        new AgentBuilder.Default(
+        newAgentBuilder(
                 // default method graph compiler inspects the class hierarchy, we don't need it, so
                 // we use a simpler and faster strategy instead
                 new ByteBuddy()
@@ -147,6 +146,7 @@ public class AgentInstaller {
             .with(AgentTooling.poolStrategy())
             .with(AgentTooling.transformListener())
             .with(AgentTooling.locationStrategy());
+
     if (JavaModule.isSupported()) {
       agentBuilder = agentBuilder.with(new ExposeAgentBootstrapListener(inst));
     }
@@ -225,6 +225,29 @@ public class AgentInstaller {
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
   }
 
+  private static AgentBuilder newAgentBuilder(ByteBuddy byteBuddy) {
+    // AgentBuilder.Default constructor triggers sun.misc.Unsafe::objectFieldOffset called warning
+    // AgentBuilder$Default.<init>
+    // -> NexusAccessor.<clinit>
+    // -> ClassInjector$UsingReflection.<clinit>
+    // -> ClassInjector$UsingUnsafe.<clinit>
+    // -> WARNING: sun.misc.Unsafe::objectFieldOffset called by
+    // net.bytebuddy.dynamic.loading.ClassInjector$UsingUnsafe$Dispatcher$CreationAction
+    // we don't use byte-buddy nexus so we disable it and later restore the original value for the
+    // system property
+    String originalNexusDisabled = System.setProperty("net.bytebuddy.nexus.disabled", "true");
+    try {
+      return new AgentBuilder.Default(byteBuddy);
+    } finally {
+      // restore the original value for the nexus disabled property
+      if (originalNexusDisabled != null) {
+        System.setProperty("net.bytebuddy.nexus.disabled", originalNexusDisabled);
+      } else {
+        System.clearProperty("net.bytebuddy.nexus.disabled");
+      }
+    }
+  }
+
   private static void installEarlyInstrumentation(
       AgentBuilder agentBuilder, Instrumentation instrumentation) {
     // We are only going to install the virtual fields here. Installing virtual field changes class
@@ -263,14 +286,6 @@ public class AgentInstaller {
       if (value != null) {
         System.setProperty(property, value);
       }
-    }
-  }
-
-  private static void setupUnsafe(Instrumentation inst) {
-    try {
-      UnsafeInitializer.initialize(inst, AgentInstaller.class.getClassLoader());
-    } catch (UnsupportedClassVersionError exception) {
-      // ignore
     }
   }
 
