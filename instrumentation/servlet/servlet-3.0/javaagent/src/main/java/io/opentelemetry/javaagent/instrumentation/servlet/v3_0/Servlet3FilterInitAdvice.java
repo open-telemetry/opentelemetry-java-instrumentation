@@ -20,7 +20,6 @@ public class Servlet3FilterInitAdvice {
     if (filterConfig == null) {
       return;
     }
-    FILTER_MAPPING_RESOLVER.set(
-        filter, new Servlet3FilterMappingResolverFactory(filterConfig));
+    FILTER_MAPPING_RESOLVER.set(filter, new Servlet3FilterMappingResolverFactory(filterConfig));
   }
 }

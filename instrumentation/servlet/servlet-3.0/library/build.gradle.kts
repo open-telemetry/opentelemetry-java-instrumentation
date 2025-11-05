@@ -19,7 +19,6 @@ dependencies {
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
 }
 
-
 tasks {
   withType<Test>().configureEach {
     // required on jdk17 to allow tomcat to shutdown properly.

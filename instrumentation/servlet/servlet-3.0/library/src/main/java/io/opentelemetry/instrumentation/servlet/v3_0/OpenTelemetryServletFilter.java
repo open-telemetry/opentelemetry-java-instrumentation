@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.FILTER_MAPPING_RESOLVER;
@@ -22,7 +27,7 @@ import javax.servlet.http.HttpServletResponse;
  * will miss anything that happens earlier in the filter stack or problems handled directly by the
  * app server. For this reason, Java Agent instrumentation is preferred when possible.
  */
- @WebFilter("/*")
+@WebFilter("/*")
 public class OpenTelemetryServletFilter implements Filter {
 
   @Override

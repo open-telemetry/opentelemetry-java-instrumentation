@@ -20,7 +20,6 @@ public class Servlet3InitAdvice {
     if (servletConfig == null) {
       return;
     }
-    SERVLET_MAPPING_RESOLVER.set(
-        servlet, new Servlet3MappingResolverFactory(servletConfig));
+    SERVLET_MAPPING_RESOLVER.set(servlet, new Servlet3MappingResolverFactory(servletConfig));
   }
 }

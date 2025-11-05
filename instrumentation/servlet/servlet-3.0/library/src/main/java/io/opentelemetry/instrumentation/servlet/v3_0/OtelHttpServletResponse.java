@@ -1,5 +1,9 @@
-package io.opentelemetry.instrumentation.servlet.v3_0;
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
 
+package io.opentelemetry.instrumentation.servlet.v3_0;
 
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3ResponseAdviceScope;
@@ -9,7 +13,7 @@ import javax.servlet.http.HttpServletResponseWrapper;
 
 /// Wrapper around [HttpServletResponse].
 public class OtelHttpServletResponse extends HttpServletResponseWrapper {
-  
+
   public OtelHttpServletResponse(HttpServletResponse response) {
     super(response);
   }
