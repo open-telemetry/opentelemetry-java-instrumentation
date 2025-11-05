@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.FILTER_MAPPING_RESOLVER;
+import static io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3Singletons.FILTER_MAPPING_RESOLVER;
 
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3FilterMappingResolverFactory;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3RequestAdviceScope;
+import io.opentelemetry.instrumentation.servlet.v3_0.copied.CallDepth;
+import io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3FilterMappingResolverFactory;
+import io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3RequestAdviceScope;
 import java.io.IOException;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;

@@ -3,15 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
+package io.opentelemetry.instrumentation.servlet.v3_0.copied;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.responseInstrumenter;
+import static io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3Singletons.responseInstrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
 import javax.annotation.Nullable;
 
 public class Servlet3ResponseAdviceScope {
