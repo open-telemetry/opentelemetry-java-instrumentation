@@ -134,7 +134,8 @@ public final class LibraryTestRunner extends InstrumentationTestRunner {
     if (Boolean.getBoolean("collectMetadata")) {
       String path = new File("").getAbsolutePath();
 
-      MetaDataCollector.writeTelemetryToFiles(path, metricsByScope, tracesByScope);
+      MetaDataCollector.writeTelemetryToFiles(
+          path, metricsByScope, tracesByScope, instrumentationScopes);
     }
   }
 
