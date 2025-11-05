@@ -9,7 +9,6 @@ import static io.opentelemetry.semconv.incubating.UrlIncubatingAttributes.URL_TE
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestServer;
@@ -23,8 +22,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class HttpClientUrlTemplateCustomizerTest {
   private static HttpClientTestServer server;
-
-  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @RegisterExtension
   static InstrumentationExtension testing = AgentInstrumentationExtension.create();
