@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_PRINT_WRITER;
 import static io.opentelemetry.instrumentation.servlet.v3_0.AbstractServlet3Test.HTML_SERVLET_OUTPUT_STREAM;
+import static io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3Singletons.SERVLET_MAPPING_RESOLVER;
 import static io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest.controller;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
@@ -16,11 +17,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.SERVLET_MAPPING_RESOLVER;
 
 import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3MappingResolverFactory;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;

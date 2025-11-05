@@ -5,23 +5,67 @@
 
 package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.responseInstrumenter;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseAdviceHelper;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletResponse;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
 public class Servlet3ResponseSendAdvice {
 
+  public static class AdviceScope {
+    private final CallDepth callDepth;
+    private final ClassAndMethod classAndMethod;
+    private final Context context;
+    private final Scope scope;
+
+    public AdviceScope(CallDepth callDepth, Class<?> declaringClass, String methodName) {
+      this.callDepth = callDepth;
+      if (callDepth.getAndIncrement() > 0) {
+        this.classAndMethod = null;
+        this.context = null;
+        this.scope = null;
+        return;
+      }
+      HttpServletResponseAdviceHelper.StartResult result =
+          HttpServletResponseAdviceHelper.startSpan(
+              responseInstrumenter(), declaringClass, methodName);
+      if (result != null) {
+        classAndMethod = result.getClassAndMethod();
+        context = result.getContext();
+        scope = result.getScope();
+      } else {
+        classAndMethod = null;
+        context = null;
+        scope = null;
+      }
+    }
+
+    public void exit(@Nullable Throwable throwable) {
+      if (callDepth.decrementAndGet() > 0) {
+        return;
+      }
+      HttpServletResponseAdviceHelper.stopSpan(
+          responseInstrumenter(), throwable, context, scope, classAndMethod);
+    }
+  }
+
   @Advice.OnMethodEnter(suppress = Throwable.class)
-  public static Servlet3ResponseAdviceScope start(
+  public static AdviceScope start(
       @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
-    return new Servlet3ResponseAdviceScope(
+    return new AdviceScope(
         CallDepth.forClass(HttpServletResponse.class), declaringClass, methodName);
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
   public static void stopSpan(
-      @Advice.Thrown Throwable throwable, @Advice.Enter Servlet3ResponseAdviceScope adviceScope) {
+      @Advice.Thrown Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
     adviceScope.exit(throwable);
   }
 }

@@ -18,10 +18,10 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.servlet.v3_0.copied.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import javax.servlet.Servlet;

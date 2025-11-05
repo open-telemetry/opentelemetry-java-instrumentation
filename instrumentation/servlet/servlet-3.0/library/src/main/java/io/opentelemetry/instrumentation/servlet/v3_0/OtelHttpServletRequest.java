@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
+import static io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import javax.servlet.AsyncContext;

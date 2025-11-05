@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.servlet.v3_0;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
-import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
+import io.opentelemetry.instrumentation.servlet.v3_0.copied.HttpServerResponseCustomizer;
+import io.opentelemetry.instrumentation.servlet.v3_0.copied.HttpServerResponseMutator;
 
 public class TestAgentHttpResponseCustomizer implements HttpServerResponseCustomizer {
 
