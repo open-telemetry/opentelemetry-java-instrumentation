@@ -14,13 +14,11 @@ import com.jfinal.config.Routes;
 import com.jfinal.template.Engine;
 
 public class TestConfig extends JFinalConfig {
-  // 配置常量值
   @Override
   public void configConstant(Constants me) {
     me.setDevMode(true);
   }
 
-  // 配置路由
   @Override
   public void configRoute(Routes me) {
     me.add("/", TestController.class);

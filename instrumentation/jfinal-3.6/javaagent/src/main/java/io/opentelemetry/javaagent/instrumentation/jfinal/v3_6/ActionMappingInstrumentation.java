@@ -36,7 +36,7 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
   public static class GetActionAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void exitGetAction(@Advice.Return(readOnly = false) Action action) {
+    public static void exitGetAction(@Advice.Return Action action) {
       JFinalSingletons.updateSpan(action);
     }
   }
