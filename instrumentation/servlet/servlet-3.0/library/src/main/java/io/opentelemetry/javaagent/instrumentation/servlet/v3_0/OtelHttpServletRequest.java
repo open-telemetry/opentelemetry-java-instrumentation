@@ -23,19 +23,18 @@ public class OtelHttpServletRequest extends HttpServletRequestWrapper {
   }
 
   @Override
-  public AsyncContext startAsync() throws IllegalStateException {
+  public AsyncContext startAsync() {
     try {
-      return super.startAsync();
+      return new OtelAsyncContext(super.startAsync());
     } finally {
       helper().attachAsyncListener(this, Context.current());
     }
   }
 
   @Override
-  public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse)
-      throws IllegalStateException {
+  public AsyncContext startAsync(ServletRequest servletRequest, ServletResponse servletResponse) {
     try {
-      return super.startAsync(servletRequest, servletResponse);
+      return new OtelAsyncContext(super.startAsync(servletRequest, servletResponse));
     } finally {
       helper().attachAsyncListener(this, Context.current());
     }
