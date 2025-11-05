@@ -383,6 +383,7 @@ include(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:javaagent")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:library")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing")
+include(":instrumentation:jfinal-3.6:javaagent")
 include(":instrumentation:jms:jms-1.1:javaagent")
 include(":instrumentation:jms:jms-3.0:javaagent")
 include(":instrumentation:jms:jms-common:bootstrap")
@@ -691,7 +692,7 @@ include(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
-include(":instrumentation:jfinal-3.6:javaagent")
+
 
 // benchmark
 include(":benchmark-overhead-jmh")

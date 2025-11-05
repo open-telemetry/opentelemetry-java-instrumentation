@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 
@@ -17,7 +17,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JFinalInstrumentationModule extends InstrumentationModule {
   public JFinalInstrumentationModule() {
-    super("jfinal");
+    super("jfinal", "jfinal-3.6");
   }
 
   @Override

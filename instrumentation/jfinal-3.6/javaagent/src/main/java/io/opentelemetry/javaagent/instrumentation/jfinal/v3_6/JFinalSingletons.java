@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
 import com.jfinal.core.Action;
 import com.jfinal.render.JsonRender;

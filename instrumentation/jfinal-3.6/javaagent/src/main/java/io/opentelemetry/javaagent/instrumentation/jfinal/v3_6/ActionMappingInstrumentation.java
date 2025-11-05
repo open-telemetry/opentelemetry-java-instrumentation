@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -36,7 +36,7 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
   public static class GetActionAdvice {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void existGetAction(@Advice.Return(readOnly = false) Action action) {
+    public static void exitGetAction(@Advice.Return(readOnly = false) Action action) {
       JFinalSingletons.updateSpan(action);
     }
   }

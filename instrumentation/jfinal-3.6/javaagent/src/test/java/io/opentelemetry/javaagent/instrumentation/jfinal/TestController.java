@@ -35,7 +35,6 @@ public class TestController extends Controller {
       GlobalTraceUtil.runWithSpan(
           "controller",
           () -> {
-            //        renderError(500, new TextRender(ServerEndpoint.EXCEPTION.getBody()));
             throw new IllegalStateException(EXCEPTION.getBody());
           });
     } catch (Throwable t) {

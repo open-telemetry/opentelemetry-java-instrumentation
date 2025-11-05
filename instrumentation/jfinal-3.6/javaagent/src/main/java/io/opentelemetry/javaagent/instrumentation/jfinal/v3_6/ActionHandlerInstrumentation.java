@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.jfinal.JFinalSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jfinal.v3_6.JFinalSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -74,17 +74,16 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static HandleAdvice.AdviceScope onEnter() {
-      return HandleAdvice.AdviceScope.start(currentContext());
+    public static AdviceScope onEnter() {
+      return AdviceScope.start(currentContext());
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopTraceOnResponse(
-        @Advice.Thrown Throwable throwable, @Advice.Enter @Nullable AdviceScope actionScope) {
-      if (actionScope == null) {
-        return;
+        @Advice.Thrown  @Nullable Throwable throwable, @Advice.Enter @Nullable AdviceScope actionScope) {
+      if (actionScope != null) {
+        actionScope.end(throwable);
       }
-      actionScope.end(throwable);
     }
   }
 }

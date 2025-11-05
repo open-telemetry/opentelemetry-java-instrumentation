@@ -7,6 +7,7 @@ muzzle {
     group.set("com.jfinal")
     module.set("jfinal")
     versions.set("[3.6,)")
+    assertInverse.set(true)
   }
 }
 
@@ -18,7 +19,6 @@ otelJava {
 dependencies {
   library("com.jfinal:jfinal:3.6")
   testLibrary("com.jfinal:jetty-server:2019.3")
-  testLibrary("com.jfinal:jfinal:3.6")
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-common:javaagent"))
