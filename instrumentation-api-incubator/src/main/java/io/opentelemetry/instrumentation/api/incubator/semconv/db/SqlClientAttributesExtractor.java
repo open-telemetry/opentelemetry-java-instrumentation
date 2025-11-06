@@ -195,14 +195,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      if (error != null) {
-        internalSet(attributes, ERROR_TYPE, error.getClass().getName());
-      }
-      if (error != null || response != null) {
-        internalSet(attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatus(response, error));
-      }
-    }
+    DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
   }
 
   /**

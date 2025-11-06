@@ -85,6 +85,14 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+    onEndCommon(attributes, getter, response, error);
+  }
+
+  static <REQUEST, RESPONSE> void onEndCommon(
+      AttributesBuilder attributes,
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
       if (error != null) {
         internalSet(attributes, ERROR_TYPE, error.getClass().getName());
