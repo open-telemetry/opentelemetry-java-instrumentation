@@ -88,27 +88,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    // Common attributes
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      internalSet(
-          attributes,
-          DB_SYSTEM_NAME,
-          SemconvStability.stableDbSystemName(getter.getDbSystem(request)));
-      internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
-    }
-    if (SemconvStability.emitOldDatabaseSemconv()) {
-      internalSet(attributes, DB_SYSTEM, getter.getDbSystem(request));
-      internalSet(attributes, DB_USER, getter.getUser(request));
-      internalSet(attributes, DB_NAME, getter.getDbNamespace(request));
-      internalSet(attributes, DB_CONNECTION_STRING, getter.getConnectionString(request));
-    }
-
-    // SQL-specific attributes
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
-
-    if (rawQueryTexts.isEmpty()) {
-      return;
-    }
 
     Long batchSize = getter.getBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
@@ -145,7 +125,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
-      } else {
+      } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getStatements()));
@@ -163,6 +143,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
     Map<String, String> queryParameters = getter.getQueryParameters(request);
     setQueryParameters(attributes, isBatch, queryParameters);
+
+    // calling this last so explicit getDbOperationName(), getDbCollectionName(),
+    // getDbQueryText(), and getDbQuerySummary() implementations can override
+    // the parsed values from above
+    DbClientAttributesExtractor.onStartCommon(attributes, getter, request);
   }
 
   private void setQueryParameters(

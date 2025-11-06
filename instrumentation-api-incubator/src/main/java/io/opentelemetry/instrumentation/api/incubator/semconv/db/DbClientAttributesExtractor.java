@@ -58,6 +58,14 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    onStartCommon(attributes, getter, request);
+  }
+
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
+  static <REQUEST, RESPONSE> void onStartCommon(
+      AttributesBuilder attributes,
+      DbClientAttributesGetter<REQUEST, RESPONSE> getter,
+      REQUEST request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
       internalSet(
           attributes,
