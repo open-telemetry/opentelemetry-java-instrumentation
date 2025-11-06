@@ -10,6 +10,7 @@ import com.ning.http.client.Request;
 import com.ning.http.client.Response;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class AsyncHandlerData {
@@ -30,10 +31,8 @@ public abstract class AsyncHandlerData {
 
   public abstract Instrumenter<Request, Response> getInstrumenter();
 
-  public void end(Response response, Throwable throwable) {
+  public void end(@Nullable Response response, @Nullable Throwable throwable) {
     Instrumenter<Request, Response> instrumenter = getInstrumenter();
-    if (instrumenter != null) {
-      instrumenter.end(getContext(), getRequest(), response, throwable);
-    }
+    instrumenter.end(getContext(), getRequest(), response, throwable);
   }
 }
