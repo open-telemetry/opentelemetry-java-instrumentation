@@ -7,10 +7,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import com.mongodb.MongoClientSettings;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -27,7 +27,7 @@ public class MongoClientInstrumentationAutoConfiguration {
 
   @Bean
   MongoClientSettingsBuilderCustomizer customizer(
-      OpenTelemetry openTelemetry, ConfigProperties config) {
+      OpenTelemetry openTelemetry, InstrumentationConfig config) {
     return builder ->
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
