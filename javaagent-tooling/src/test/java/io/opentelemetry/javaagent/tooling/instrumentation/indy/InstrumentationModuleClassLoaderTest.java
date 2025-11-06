@@ -36,6 +36,8 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("ClassNamedLikeTypeParameter")
@@ -105,6 +107,9 @@ class InstrumentationModuleClassLoaderTest {
     assertThat(classPackage).isSameAs(clPackage);
   }
 
+  // Windows holds open handles to jars loaded through URLClassLoader even after the loader is
+  // closed, which keeps the temp directory locked and causes test cleanup to fail.
+  @DisabledOnOs(value = OS.WINDOWS, disabledReason = "temp directory cleanup fails on Windows")
   @Test
   void checkClassLookupPrecedence(@TempDir Path tempDir) throws Exception {
 
@@ -153,21 +158,21 @@ class InstrumentationModuleClassLoaderTest {
 
       // Verify precedence for looking up .class resources
       URL resourceA = moduleCl.getResource(getClassFile(A.class));
-      assertThat(resourceA.toString()).startsWith("jar:file:" + appJar);
+      assertThat(resourceA.toString()).startsWith("jar:" + appJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(A.class))))
           .containsExactly(resourceA);
       assertThat(moduleCl.getResourceAsStream(getClassFile(A.class)))
           .hasBinaryContent(appClasses.get(A.class.getName()));
 
       URL resourceB = moduleCl.getResource(getClassFile(B.class));
-      assertThat(resourceB.toString()).startsWith("jar:file:" + agentJar);
+      assertThat(resourceB.toString()).startsWith("jar:" + agentJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(B.class))))
           .containsExactly(resourceB);
       assertThat(moduleCl.getResourceAsStream(getClassFile(B.class)))
           .hasBinaryContent(agentClasses.get(B.class.getName()));
 
       URL resourceC = moduleCl.getResource(getClassFile(C.class));
-      assertThat(resourceC.toString()).startsWith("jar:file:" + moduleJar);
+      assertThat(resourceC.toString()).startsWith("jar:" + moduleJar.toUri().toURL());
       assertThat(Collections.list(moduleCl.getResources(getClassFile(C.class))))
           .containsExactly(resourceC);
       assertThat(moduleCl.getResourceAsStream(getClassFile(C.class)))

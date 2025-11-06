@@ -11,6 +11,7 @@ import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
@@ -21,6 +22,7 @@ import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -54,6 +56,16 @@ class YamlHelperTest {
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
+            .scope(
+                InstrumentationScopeInfo.builder("io.opentelemetry.spring-web-6.0")
+                    .setVersion("2.14.0")
+                    .setSchemaUrl("http:://www.schema.org")
+                    .setAttributes(
+                        Attributes.builder()
+                            .put("instrumentation.type", "library")
+                            .put("version.major", 6L)
+                            .build())
+                    .build())
             .namespace("spring")
             .group("spring")
             .targetVersions(targetVersions1)
@@ -96,6 +108,10 @@ class YamlHelperTest {
                 minimum_java_version: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
+                  schema_url: http:://www.schema.org
+                  attributes:
+                    instrumentation.type: library
+                    version.major: 6
                 target_versions:
                   javaagent:
                   - org.springframework:spring-web:[6.0.0,)

@@ -94,13 +94,6 @@
       ],
     },
     {
-      // prevent update to 2.4-groovy-4.0-SNAPSHOT
-      allowedVersions: '!/\\-SNAPSHOT$/',
-      matchPackageNames: [
-        'org.spockframework:**',
-      ],
-    },
-    {
       // prevent 3.0.1u2 -> 3.0.1
       matchPackageNames: [
         'com.google.code.findbugs:annotations',
@@ -165,6 +158,16 @@
       matchPackageNames: [
         'com.github.tomakehurst:wiremock-jre8'
       ],
+    },
+    {
+      // vaadin 14 tests require node 16
+      matchPackageNames: [
+        'actions/node-versions',
+      ],
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
     },
     {
       // intentionally using Spring Boot 2 in this smoke tests

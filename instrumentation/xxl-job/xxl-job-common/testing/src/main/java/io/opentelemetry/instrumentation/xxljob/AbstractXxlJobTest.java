@@ -25,6 +25,8 @@ import java.util.List;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractXxlJobTest {
@@ -53,6 +55,7 @@ public abstract class AbstractXxlJobTest {
     jobThread.toStop("Test finish");
   }
 
+  @DisabledOnOs(value = OS.WINDOWS, disabledReason = "Shell scripts require /bin/sh")
   @Test
   void testScriptJob() {
     JobThread jobThread = new JobThread(2, getScriptJobHandler());

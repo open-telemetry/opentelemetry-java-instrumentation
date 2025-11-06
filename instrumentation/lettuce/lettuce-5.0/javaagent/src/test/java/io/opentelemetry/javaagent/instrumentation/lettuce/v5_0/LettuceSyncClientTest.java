@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
@@ -31,6 +32,7 @@ import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class LettuceSyncClientTest extends AbstractLettuceClientTest {
@@ -95,7 +97,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"))));
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(PEER_SERVICE, "test-peer-service"))));
   }
 
   @Test
@@ -107,6 +110,11 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
     assertThat(exception).isInstanceOf(RedisConnectionException.class);
 
+    // Windows includes "getsockopt: " in the connection refused message
+    String windowsGetsockopt = OS.WINDOWS.isCurrentOs() ? "getsockopt: " : "";
+    String expectedMessage =
+        "Connection refused: " + windowsGetsockopt + host + "/" + ip + ":" + incorrectPort;
+
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
@@ -117,7 +125,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, incorrectPort),
-                            equalTo(maybeStable(DB_SYSTEM), "redis"))
+                            equalTo(maybeStable(DB_SYSTEM), "redis"),
+                            equalTo(PEER_SERVICE, "test-peer-service"))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -128,12 +137,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                                             "io.netty.channel.AbstractChannel.AnnotatedConnectException"),
                                         equalTo(
                                             AttributeKey.stringKey("exception.message"),
-                                            "Connection refused: "
-                                                + host
-                                                + "/"
-                                                + ip
-                                                + ":"
-                                                + incorrectPort),
+                                            expectedMessage),
                                         satisfies(
                                             AttributeKey.stringKey("exception.stacktrace"),
                                             val -> val.isNotNull())))));
