@@ -9,6 +9,9 @@ import com.example.javaagent.bootstrap.AgentApi;
 
 public final class DemoServlet3HelperClass {
 
+  public final VirtualField<ServletResponse, AtomicInteger> VIRTUAL_FIELD =
+      VirtualField.find(ServletResponse.class, AtomicInteger.class);
+
   public static void doSomething(int number) {
     // call the api in bootstrap class loader
     AgentApi.doSomething(number);
