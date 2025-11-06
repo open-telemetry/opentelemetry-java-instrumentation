@@ -40,13 +40,11 @@ final class CachedPropertyResolver {
   @Nullable
   <T> T getProperty(String name, Class<T> targetType) {
     CacheKey key = new CacheKey(name, targetType);
-    // CacheKey includes targetType, ensuring type match
-    @SuppressWarnings("unchecked")
-    Optional<T> result =
-        (Optional<T>)
-            cache.computeIfAbsent(
-                key, k -> Optional.ofNullable(environment.getProperty(name, targetType)));
-    return result.orElse(null);
+    return targetType.cast(
+        cache
+            .computeIfAbsent(
+                key, k -> Optional.ofNullable(environment.getProperty(name, targetType)))
+            .orElse(null));
   }
 
   /**
