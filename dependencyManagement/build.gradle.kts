@@ -85,10 +85,10 @@ val DEPENDENCIES = listOf(
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
   "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.11",
+  "com.uber.nullaway:nullaway:0.12.12",
   "commons-beanutils:commons-beanutils:1.11.0",
   "commons-cli:commons-cli:1.10.0",
-  "commons-codec:commons-codec:1.19.0",
+  "commons-codec:commons-codec:1.20.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",

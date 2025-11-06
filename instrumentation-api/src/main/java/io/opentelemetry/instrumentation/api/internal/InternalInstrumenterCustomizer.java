@@ -19,6 +19,8 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   String getInstrumentationName();
 
+  boolean hasType(SpanKey type);
+
   void addAttributesExtractor(AttributesExtractor<REQUEST, RESPONSE> extractor);
 
   void addAttributesExtractors(
