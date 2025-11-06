@@ -22,6 +22,7 @@ readonly INSTRUMENTATIONS=(
   "apache-httpclient:apache-httpclient-5.2:library:test"
   "armeria:armeria-1.3:javaagent:test"
   "armeria:armeria-grpc-1.14:javaagent:test"
+  "async-http-client:async-http-client-1.8:javaagent:test"
   "async-http-client:async-http-client-1.9:javaagent:test"
   "async-http-client:async-http-client-2.0:javaagent:test"
   "aws-lambda:aws-lambda-core-1.0:javaagent:test"
