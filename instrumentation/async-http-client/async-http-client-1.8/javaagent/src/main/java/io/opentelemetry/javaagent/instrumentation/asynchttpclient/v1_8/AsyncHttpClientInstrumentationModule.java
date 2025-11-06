@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_8;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -20,18 +20,18 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class AsyncHttpClientInstrumentationModule extends InstrumentationModule
     implements ExperimentalInstrumentationModule {
   public AsyncHttpClientInstrumentationModule() {
-    super("async-http-client", "async-http-client-1.9");
+    super("async-http-client", "async-http-client-1.8");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    // Uri class was added in 1.9.0, not present in 1.8.x
-    return hasClassesNamed("com.ning.http.client.uri.Uri");
+    // TimeoutsHolder class was added in 1.8.0, not present in 1.7.x
+    return hasClassesNamed("com.ning.http.client.providers.netty.timeout.TimeoutsHolder");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new RequestInstrumentation(), new ResponseInstrumentation());
+    return asList(new AsyncHttpProviderInstrumentation(), new ResponseInstrumentation());
   }
 
   @Override
