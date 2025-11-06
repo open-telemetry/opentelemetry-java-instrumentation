@@ -8,84 +8,117 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import org.snakeyaml.engine.v2.api.Dump;
 import org.snakeyaml.engine.v2.api.DumpSettings;
-import org.snakeyaml.engine.v2.api.Load;
-import org.snakeyaml.engine.v2.api.LoadSettings;
-import org.springframework.boot.env.OriginTrackedMapPropertySource;
 import org.springframework.core.env.ConfigurableEnvironment;
+import org.springframework.core.env.EnumerablePropertySource;
+import org.springframework.core.env.MutablePropertySources;
 import org.springframework.core.env.PropertySource;
 
 class EmbeddedConfigFile {
+
+  static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)\\]");
 
   private EmbeddedConfigFile() {
     // Utility class
   }
 
-  private static final Pattern PATTERN =
-      Pattern.compile(
-          "^Config resource 'class path resource \\[(.+)]' via location 'optional:classpath:/'$");
+  static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
+    MutablePropertySources propertySources = environment.getPropertySources();
 
-  static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment)
-      throws IOException {
-    for (PropertySource<?> propertySource : environment.getPropertySources()) {
-      if (propertySource instanceof OriginTrackedMapPropertySource) {
-        return getModel(environment, (OriginTrackedMapPropertySource) propertySource);
-      }
-    }
-    throw new IllegalStateException("No application.yaml file found.");
-  }
-
-  private static OpenTelemetryConfigurationModel getModel(
-      ConfigurableEnvironment environment, OriginTrackedMapPropertySource source)
-      throws IOException {
-    Matcher matcher = PATTERN.matcher(source.getName());
-    if (matcher.matches()) {
-      String file = matcher.group(1);
-
-      try (InputStream resourceAsStream =
-          environment.getClass().getClassLoader().getResourceAsStream(file)) {
-        if (resourceAsStream != null) {
-          return extractOtelConfigFile(resourceAsStream);
-        } else {
-          throw new IllegalStateException("Unable to load " + file + " in the classpath.");
+    Map<String, Object> props = new HashMap<>();
+    for (PropertySource<?> propertySource : propertySources) {
+      if (propertySource instanceof EnumerablePropertySource<?>) {
+        for (String propertyName :
+            ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
+          if (propertyName.startsWith("otel.")) {
+            props.put(
+                propertyName.substring("otel.".length()), environment.getProperty(propertyName));
+          }
         }
       }
+    }
+
+    Map<String, Object> nestedProps = convertFlatPropsToNested(props);
+    if (nestedProps.isEmpty()) {
+      throw new IllegalStateException("No application.yaml file found.");
     } else {
-      throw new IllegalStateException(
-          "No OpenTelemetry configuration found in the application.yaml file.");
+      Dump dump = new Dump(DumpSettings.builder().build());
+      return DeclarativeConfiguration.parse(
+          new ByteArrayInputStream(
+              dump.dumpToString(nestedProps).getBytes(StandardCharsets.UTF_8)));
     }
   }
 
-  @Nullable
+  /**
+   * Convert flat property map to nested structure. e.g. "otel.instrumentation.java.list[0]" = "one"
+   * and "otel.instrumentation.java.list[1]" = "two" becomes: {otel: {instrumentation: {java: {list:
+   * ["one", "two"]}}}}
+   */
   @SuppressWarnings("unchecked")
-  private static String parseOtelNode(InputStream in) {
-    Load load = new Load(LoadSettings.builder().build());
-    Dump dump = new Dump(DumpSettings.builder().build());
-    for (Object o : load.loadAllFromInputStream(in)) {
-      Map<String, Object> data = (Map<String, Object>) o;
-      Map<String, Map<String, Object>> otel = (Map<String, Map<String, Object>>) data.get("otel");
-      if (otel != null) {
-        return dump.dumpToString(otel);
+  static Map<String, Object> convertFlatPropsToNested(Map<String, Object> flatProps) {
+    Map<String, Object> result = new HashMap<>();
+
+    for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
+      String key = entry.getKey();
+      Object value = entry.getValue();
+
+      // Split the key by dots
+      String[] parts = key.split("\\.");
+      Map<String, Object> current = result;
+
+      for (int i = 0; i < parts.length; i++) {
+        String part = parts[i];
+        boolean isLast = (i == parts.length - 1);
+
+        // Check if this part contains an array index like "list[0]"
+        Matcher matcher = ARRAY_PATTERN.matcher(part);
+        if (matcher.matches()) {
+          String arrayName = matcher.group(1);
+          int index = Integer.parseInt(matcher.group(2));
+
+          // Get or create the list
+          if (!current.containsKey(arrayName)) {
+            current.put(arrayName, new ArrayList<>());
+          }
+          List<Object> list = (List<Object>) current.get(arrayName);
+
+          // Ensure the list is large enough
+          while (list.size() <= index) {
+            list.add(null);
+          }
+
+          if (isLast) {
+            list.set(index, value);
+          } else {
+            // Need to create a nested map at this index
+            if (list.get(index) == null) {
+              list.set(index, new HashMap<String, Object>());
+            }
+            current = (Map<String, Object>) list.get(index);
+          }
+        } else {
+          // Regular property (not an array)
+          if (isLast) {
+            current.put(part, value);
+          } else {
+            // Need to create a nested map
+            if (!current.containsKey(part)) {
+              current.put(part, new HashMap<String, Object>());
+            }
+            current = (Map<String, Object>) current.get(part);
+          }
+        }
       }
     }
-    throw new IllegalStateException("No 'otel' configuration found in the YAML file.");
-  }
 
-  private static OpenTelemetryConfigurationModel extractOtelConfigFile(InputStream content) {
-    String node = parseOtelNode(content);
-    if (node == null || node.isEmpty()) {
-      throw new IllegalStateException("otel node is empty or null in the YAML file.");
-    }
-
-    return DeclarativeConfiguration.parse(
-        new ByteArrayInputStream(node.getBytes(StandardCharsets.UTF_8)));
+    return result;
   }
 }
