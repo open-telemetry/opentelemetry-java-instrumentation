@@ -13,13 +13,9 @@ import io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.AsyncHt
 public final class AsyncHttpClientSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.async-http-client-1.9";
 
-  private static final Instrumenter<Request, Response> INSTRUMENTER;
-
-  static {
-    INSTRUMENTER =
-        AsyncHttpClientInstrumenterFactory.create(
-            INSTRUMENTATION_NAME, AsyncHttpClient19Helper.INSTANCE);
-  }
+  private static final Instrumenter<Request, Response> INSTRUMENTER =
+      AsyncHttpClientInstrumenterFactory.create(
+          INSTRUMENTATION_NAME, AsyncHttpClient19Helper.INSTANCE);
 
   public static Instrumenter<Request, Response> instrumenter() {
     return INSTRUMENTER;
