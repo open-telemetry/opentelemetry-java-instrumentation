@@ -35,8 +35,8 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
-   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   * SqlClientAttributesExtractor will try to populate db.query.text based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the query text.
    */
   @Override
   @Nullable
@@ -45,8 +45,8 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * SqlClientAttributesExtractor will try to populate db.operation.name based on {@link
-   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the operation name.
+   * SqlClientAttributesExtractor will try to populate db.query.summary based on {@link
+   * #getRawQueryTexts(REQUEST)}, but this can be used to explicitly provide the query summary.
    */
   @Override
   @Nullable
@@ -55,7 +55,7 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
   }
 
   /**
-   * Get the raw SQL query texts. The values returned by this method is later sanitized by the
+   * Get the raw SQL query texts. The values returned by this method are later sanitized by the
    * {@link SqlClientAttributesExtractor} before being set as span attribute.
    *
    * <p>If {@code request} is not a batch query, then this method should return a collection with a
