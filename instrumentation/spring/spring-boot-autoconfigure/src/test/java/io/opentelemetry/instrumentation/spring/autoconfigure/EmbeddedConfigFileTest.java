@@ -54,6 +54,29 @@ class EmbeddedConfigFileTest {
   }
 
   @Test
+  void convertFlatPropsToNested_booleansAndNumbersPreserveTypes() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("feature.enabled", true);
+    flatProps.put("limits.maxRetries", 5);
+    flatProps.put("threshold", 3.14);
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result).containsOnlyKeys("feature", "limits", "threshold");
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> feature = (Map<String, Object>) result.get("feature");
+    assertThat(feature).containsEntry("enabled", true);
+
+    @SuppressWarnings("unchecked")
+    Map<String, Object> limits = (Map<String, Object>) result.get("limits");
+    assertThat(limits).containsEntry("maxRetries", 5);
+
+    // top-level numeric value
+    assertThat(result.get("threshold")).isEqualTo(3.14);
+  }
+
+  @Test
   void convertFlatPropsToNested_arrayProperties() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("instrumentation.java.list[0]", "one");
