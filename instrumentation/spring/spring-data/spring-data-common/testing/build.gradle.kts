@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   compileOnly("org.hibernate:hibernate-core:4.3.0.Final")
   compileOnly("org.springframework.data:spring-data-commons:1.8.0.RELEASE")
