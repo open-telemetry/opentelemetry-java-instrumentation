@@ -35,7 +35,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * </ul>
  *
  * <p>The customizer will be automatically applied to instrumenters that match the specified
- * instrumentation name and span kind.
+ * instrumentation name or type.
  *
  * @see InstrumenterCustomizerProvider
  * @see InstrumenterCustomizer
