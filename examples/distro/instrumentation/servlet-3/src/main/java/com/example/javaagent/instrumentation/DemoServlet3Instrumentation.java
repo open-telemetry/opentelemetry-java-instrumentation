@@ -47,7 +47,7 @@ public class DemoServlet3Instrumentation implements TypeInstrumentation {
       AtomicInteger counter = DemoServlet3HelperClass.VIRTUAL_FIELD.get(response);
       if (counter == null) {
         counter = new AtomicInteger();
-        virtualField.set(response, counter);
+        DemoServlet3HelperClass.VIRTUAL_FIELD.set(response, counter);
       }
       DemoServlet3HelperClass.doSomething(counter.incrementAndGet());
 
