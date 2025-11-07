@@ -3,8 +3,8 @@ plugins {
 }
 
 dependencies {
-  library("javax.servlet:javax.servlet-api:3.0.1")
-  library("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
+  compileOnly("javax.servlet:javax.servlet-api:3.0.1")
+  implementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
 
   testLibrary("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
   testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
