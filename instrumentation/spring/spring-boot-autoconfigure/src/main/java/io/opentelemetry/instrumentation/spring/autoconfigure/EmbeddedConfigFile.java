@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.snakeyaml.engine.v2.api.Dump;
@@ -39,8 +40,12 @@ class EmbeddedConfigFile {
         for (String propertyName :
             ((EnumerablePropertySource<?>) propertySource).getPropertyNames()) {
           if (propertyName.startsWith("otel.")) {
+            String property = environment.getProperty(propertyName);
+            if (Objects.equals(property, "")) {
+              property = null; // spring returns empty string for yaml null
+            }
             props.put(
-                propertyName.substring("otel.".length()), environment.getProperty(propertyName));
+                propertyName.substring("otel.".length()), property);
           }
         }
       }
@@ -50,10 +55,9 @@ class EmbeddedConfigFile {
     if (nestedProps.isEmpty()) {
       throw new IllegalStateException("No application.yaml file found.");
     } else {
-      Dump dump = new Dump(DumpSettings.builder().build());
+      String string = new Dump(DumpSettings.builder().build()).dumpToString(nestedProps);
       return DeclarativeConfiguration.parse(
-          new ByteArrayInputStream(
-              dump.dumpToString(nestedProps).getBytes(StandardCharsets.UTF_8)));
+          new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8)));
     }
   }
 
