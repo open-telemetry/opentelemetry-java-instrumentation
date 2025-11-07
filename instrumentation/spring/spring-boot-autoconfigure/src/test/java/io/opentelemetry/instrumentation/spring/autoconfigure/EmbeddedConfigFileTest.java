@@ -8,119 +8,229 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import org.junit.jupiter.api.Test;
 
 class EmbeddedConfigFileTest {
 
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModel_simpleProperties() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //    flatProps.put("resource.service.name", "my-service");
-  //    flatProps.put("traces.exporter", "otlp");
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //    assertThat(yaml)
-  //        .isEqualTo("resource:\n  service: {name: my-service}\ntraces: {exporter: otlp}\n");
-  //  }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModel_booleansAndNumbersPreserveTypes() {
-  //    Map<String, Object> flatProps = new LinkedHashMap<>();
-  //    flatProps.put("feature.enabled", true);
-  //    flatProps.put("limits.maxRetries", 5);
-  //    flatProps.put("threshold", 3.14);
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //
-  //    assertThat(yaml)
-  //        .isEqualTo(
-  //            "feature:\n"
-  //                + "  enabled: true\n"
-  //                + "limits:\n"
-  //                + "  maxRetries: 5\n"
-  //                + "threshold: 3.14\n");
-  //  }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModel_arrayProperties() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //    flatProps.put("instrumentation.java.list[0]", "one");
-  //    flatProps.put("instrumentation.java.list[1]", "two");
-  //    flatProps.put("instrumentation.java.list[2]", "three");
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //    assertThat(yaml).isEqualTo("instrumentation:\n  java:\n    list: [one, two, three]\n");
-  //  }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModel_mixedPropertiesAndArrays() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //    flatProps.put("resource.service.name", "test-service");
-  //    flatProps.put("resource.attributes[0]", "key1=value1");
-  //    flatProps.put("resource.attributes[1]", "key2=value2");
-  //    flatProps.put("traces.exporter", "otlp");
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //    assertThat(yaml)
-  //        .isEqualTo(
-  //            "resource:\n"
-  //                + "  service: {name: test-service}\n"
-  //                + "  attributes: [key1=value1, key2=value2]\n"
-  //                + "traces: {exporter: otlp}\n");
-  //  }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModel_emptyMap() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //    assertThat(yaml).isEmpty();
-  //  }
-  //
   @Test
-  void convertToOpenTelemetryConfigurationModel_singleLevelProperty() {
+  void convertFlatPropsToNested_simpleProperties() {
     Map<String, Object> flatProps = new HashMap<>();
-    flatProps.put("instrumentation/development.java.enabled", true);
+    flatProps.put("resource.service.name", "my-service");
+    flatProps.put("traces.exporter", "otlp");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result)
+        .containsOnlyKeys("resource", "traces")
+        .satisfies(
+            map -> {
+              assertThat(map.get("resource"))
+                  .isInstanceOf(Map.class)
+                  .satisfies(
+                      resource -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> resourceMap = (Map<String, Object>) resource;
+                        assertThat(resourceMap)
+                            .containsOnlyKeys("service")
+                            .satisfies(
+                                m -> {
+                                  @SuppressWarnings("unchecked")
+                                  Map<String, Object> serviceMap =
+                                      (Map<String, Object>) m.get("service");
+                                  assertThat(serviceMap).containsEntry("name", "my-service");
+                                });
+                      });
+              assertThat(map.get("traces"))
+                  .isInstanceOf(Map.class)
+                  .satisfies(
+                      traces -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> tracesMap = (Map<String, Object>) traces;
+                        assertThat(tracesMap).containsEntry("exporter", "otlp");
+                      });
+            });
+  }
+
+  @Test
+  void convertFlatPropsToNested_arrayProperties() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("instrumentation.java.list[0]", "one");
+    flatProps.put("instrumentation.java.list[1]", "two");
+    flatProps.put("instrumentation.java.list[2]", "three");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result)
+        .containsOnlyKeys("instrumentation")
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              Map<String, Object> instrumentation =
+                  (Map<String, Object>) map.get("instrumentation");
+              assertThat(instrumentation)
+                  .containsOnlyKeys("java")
+                  .satisfies(
+                      m -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> javaMap = (Map<String, Object>) m.get("java");
+                        assertThat(javaMap)
+                            .containsOnlyKeys("list")
+                            .satisfies(
+                                java -> {
+                                  @SuppressWarnings("unchecked")
+                                  List<Object> list = (List<Object>) java.get("list");
+                                  assertThat(list).containsExactly("one", "two", "three");
+                                });
+                      });
+            });
+  }
+
+  @Test
+  void convertFlatPropsToNested_mixedPropertiesAndArrays() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("resource.service.name", "test-service");
+    flatProps.put("resource.attributes[0]", "key1=value1");
+    flatProps.put("resource.attributes[1]", "key2=value2");
+    flatProps.put("traces.exporter", "otlp");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result)
+        .containsOnlyKeys("resource", "traces")
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              Map<String, Object> resource = (Map<String, Object>) map.get("resource");
+              assertThat(resource)
+                  .containsKeys("service", "attributes")
+                  .satisfies(
+                      r -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> service = (Map<String, Object>) r.get("service");
+                        assertThat(service).containsEntry("name", "test-service");
+
+                        @SuppressWarnings("unchecked")
+                        List<Object> attributes = (List<Object>) r.get("attributes");
+                        assertThat(attributes).containsExactly("key1=value1", "key2=value2");
+                      });
+
+              @SuppressWarnings("unchecked")
+              Map<String, Object> traces = (Map<String, Object>) map.get("traces");
+              assertThat(traces).containsEntry("exporter", "otlp");
+            });
+  }
+
+  @Test
+  void convertFlatPropsToNested_emptyMap() {
+    Map<String, Object> flatProps = new HashMap<>();
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void convertFlatPropsToNested_singleLevelProperty() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("enabled", "true");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result).containsEntry("enabled", "true");
+  }
+
+  @Test
+  void convertFlatPropsToNested_arrayWithGaps() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("list[0]", "first");
+    flatProps.put("list[2]", "third");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result)
+        .containsOnlyKeys("list")
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              List<Object> list = (List<Object>) map.get("list");
+              assertThat(list).hasSize(3).containsExactly("first", null, "third");
+            });
+  }
+
+  @Test
+  void convertFlatPropsToNested_deeplyNestedProperties() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("a.b.c.d.e", "deep-value");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result).containsOnlyKeys("a");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> a = (Map<String, Object>) result.get("a");
+    assertThat(a).containsOnlyKeys("b");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> b = (Map<String, Object>) a.get("b");
+    assertThat(b).containsOnlyKeys("c");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> c = (Map<String, Object>) b.get("c");
+    assertThat(c).containsOnlyKeys("d");
+    @SuppressWarnings("unchecked")
+    Map<String, Object> d = (Map<String, Object>) c.get("d");
+    assertThat(d).containsEntry("e", "deep-value");
+  }
+
+  @Test
+  void convertFlatPropsToNested_nestedArrays() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("outer[0].inner[0]", "value1");
+    flatProps.put("outer[0].inner[1]", "value2");
+    flatProps.put("outer[1].inner[0]", "value3");
+
+    Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+
+    assertThat(result)
+        .containsOnlyKeys("outer")
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              List<Object> outer = (List<Object>) map.get("outer");
+              assertThat(outer).hasSize(2);
+
+              @SuppressWarnings("unchecked")
+              Map<String, Object> firstElement = (Map<String, Object>) outer.get(0);
+              @SuppressWarnings("unchecked")
+              List<Object> firstInner = (List<Object>) firstElement.get("inner");
+              assertThat(firstInner).containsExactly("value1", "value2");
+
+              @SuppressWarnings("unchecked")
+              Map<String, Object> secondElement = (Map<String, Object>) outer.get(1);
+              @SuppressWarnings("unchecked")
+              List<Object> secondInner = (List<Object>) secondElement.get("inner");
+              assertThat(secondInner).containsExactly("value3");
+            });
+  }
+
+  @Test
+  void convertToOpenTelemetryConfigurationModel_typeIsPreserved() {
+    Map<String, Object> flatProps = new HashMap<>();
+    flatProps.put("instrumentation/development.java.bool", true);
+    flatProps.put("instrumentation/development.java.string", "test");
+    flatProps.put("instrumentation/development.java.number", 42);
+    flatProps.put("instrumentation/development.java.double", 3.14);
 
     OpenTelemetryConfigurationModel model =
         EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
 
-    assertThat(SdkConfigProvider.create(model)
-        .getInstrumentationConfig()
-        .getStructured("java")
-        .getBoolean("enabled")).isTrue();
+    DeclarativeConfigProperties java =
+        SdkConfigProvider.create(model).getInstrumentationConfig().getStructured("java");
+    assertThat(java.getBoolean("bool")).isTrue();
+    assertThat(java.getString("string")).isEqualTo("test");
+    assertThat(java.getLong("number")).isEqualTo(42L);
+    assertThat(java.getDouble("double")).isEqualTo(3.14);
   }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModel_arrayWithGaps() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //    flatProps.put("list[0]", "first");
-  //    flatProps.put("list[2]", "third");
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //    assertThat(yaml).isEqualTo("list: [first, null, third]\n");
-  //  }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModelProperties() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //    flatProps.put("a.b.c.d.e", "deep-value");
-  //
-  //    String yaml = EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-  //    assertThat(yaml).isEqualTo("a:\n  b:\n    c:\n      d: {e: deep-value}\n");
-  //  }
-  //
-  //  @Test
-  //  void convertToOpenTelemetryConfigurationModelArrays() {
-  //    Map<String, Object> flatProps = new HashMap<>();
-  //    flatProps.put("outer[0].inner[0]", "value1");
-  //    flatProps.put("outer[0].inner[1]", "value2");
-  //    flatProps.put("outer[1].inner[0]", "value3");
-  //
-  //    assertThat(EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps))
-  //        .isEqualTo("outer:\n- inner: [value1, value2]\n- inner: [value3]\n");
-  //  }
 }

@@ -62,7 +62,7 @@ class EmbeddedConfigFile {
 
   static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(
       Map<String, Object> flatProps) {
-    Map<String, Object> nested = covertToNested(flatProps);
+    Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
     try {
       Field field = DeclarativeConfiguration.class.getDeclaredField("MAPPER");
@@ -80,7 +80,7 @@ class EmbeddedConfigFile {
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  private static Map<String, Object> covertToNested(Map<String, Object> flatProps) {
+  static Map<String, Object> convertFlatPropsToNested(Map<String, Object> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
     for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
