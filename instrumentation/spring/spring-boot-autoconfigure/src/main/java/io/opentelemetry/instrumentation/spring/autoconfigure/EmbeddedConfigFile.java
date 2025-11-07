@@ -51,11 +51,10 @@ class EmbeddedConfigFile {
       }
     }
 
-    Map<String, Object> nestedProps = convertFlatPropsToNested(props);
-    if (nestedProps.isEmpty()) {
+    String yaml = convertFlatPropsToNested(props);
+    if (yaml.isEmpty()) {
       throw new IllegalStateException("No application.yaml file found.");
     } else {
-      String string = new Dump(DumpSettings.builder().build()).dumpToString(nestedProps);
       return DeclarativeConfiguration.parse(
           new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
     }
