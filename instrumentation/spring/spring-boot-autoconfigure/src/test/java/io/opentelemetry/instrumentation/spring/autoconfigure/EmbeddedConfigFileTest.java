@@ -21,7 +21,8 @@ class EmbeddedConfigFileTest {
     flatProps.put("traces.exporter", "otlp");
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(yaml)
+        .isEqualTo("resource:\n  service: {name: my-service}\ntraces: {exporter: otlp}\n");
   }
 
   @Test
@@ -33,14 +34,13 @@ class EmbeddedConfigFileTest {
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
 
-    String expected =
-        "feature:\n"
-            + "  enabled: true\n"
-            + "limits:\n"
-            + "  maxRetries: 5\n"
-            + "threshold: 3.14\n";
-
-    assertThat(yaml).isEqualTo(expected);
+    assertThat(yaml)
+        .isEqualTo(
+            "feature:\n"
+                + "  enabled: true\n"
+                + "limits:\n"
+                + "  maxRetries: 5\n"
+                + "threshold: 3.14\n");
   }
 
   @Test
@@ -51,7 +51,7 @@ class EmbeddedConfigFileTest {
     flatProps.put("instrumentation.java.list[2]", "three");
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(yaml).isEqualTo("instrumentation:\n  java:\n    list: [one, two, three]\n");
   }
 
   @Test
@@ -63,7 +63,12 @@ class EmbeddedConfigFileTest {
     flatProps.put("traces.exporter", "otlp");
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(yaml)
+        .isEqualTo(
+            "resource:\n"
+                + "  service: {name: test-service}\n"
+                + "  attributes: [key1=value1, key2=value2]\n"
+                + "traces: {exporter: otlp}\n");
   }
 
   @Test
@@ -72,7 +77,6 @@ class EmbeddedConfigFileTest {
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
     assertThat(yaml).isEqualTo("");
-
   }
 
   @Test
@@ -81,7 +85,7 @@ class EmbeddedConfigFileTest {
     flatProps.put("enabled", "true");
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(yaml).isEqualTo("{enabled: true}");
   }
 
   @Test
@@ -91,7 +95,7 @@ class EmbeddedConfigFileTest {
     flatProps.put("list[2]", "third");
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(yaml).isEqualTo("list: [first, null, third]\n");
   }
 
   @Test
@@ -100,7 +104,7 @@ class EmbeddedConfigFileTest {
     flatProps.put("a.b.c.d.e", "deep-value");
 
     String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(yaml).isEqualTo("a:\n  b:\n    c:\n      d: {e: deep-value}\n");
   }
 
   @Test
@@ -110,7 +114,7 @@ class EmbeddedConfigFileTest {
     flatProps.put("outer[0].inner[1]", "value2");
     flatProps.put("outer[1].inner[0]", "value3");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    assertThat(EmbeddedConfigFile.convertFlatPropsToNested(flatProps))
+        .isEqualTo("outer:\n- inner: [value1, value2]\n- inner: [value3]\n");
   }
 }
