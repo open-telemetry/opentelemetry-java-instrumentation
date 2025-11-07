@@ -17,9 +17,9 @@ public final class EmbedZookeeperServer {
     try {
       testingServer =
           new TestingServer(
-              port, new File(String.format("target/test_zk_data/%s/", System.nanoTime())));
-    } catch (Exception ex) {
-      throw new RuntimeException("Failed to start embedded ZooKeeper server", ex);
+              port, new File(String.format("build/test_zk_data/%s/", System.nanoTime())));
+    } catch (Exception e) {
+      throw new RuntimeException("Failed to start embedded ZooKeeper server", e);
     }
   }
 
@@ -27,8 +27,8 @@ public final class EmbedZookeeperServer {
     if (testingServer != null) {
       try {
         testingServer.close();
-      } catch (IOException ex) {
-        throw new RuntimeException("Failed to stop embedded ZooKeeper server", ex);
+      } catch (IOException e) {
+        throw new RuntimeException("Failed to stop embedded ZooKeeper server", e);
       }
     }
   }

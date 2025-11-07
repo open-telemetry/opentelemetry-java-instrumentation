@@ -12,7 +12,6 @@ public class TestFailedJob implements SimpleJob {
 
   @Override
   public void execute(ShardingContext context) {
-    // Simulate a failed job by throwing an exception
     throw new RuntimeException("Simulated job failure for testing");
   }
 }

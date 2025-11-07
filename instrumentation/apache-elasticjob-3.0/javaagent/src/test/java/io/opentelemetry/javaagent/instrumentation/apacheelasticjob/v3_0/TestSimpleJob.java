@@ -12,7 +12,6 @@ public class TestSimpleJob implements SimpleJob {
 
   @Override
   public void execute(ShardingContext context) {
-    // Simulate some work
     try {
       Thread.sleep(100);
     } catch (InterruptedException e) {
