@@ -10,9 +10,8 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.resources.Resource;
 
-@SuppressWarnings("rawtypes")
 @AutoService(ComponentProvider.class)
-public class DistroComponentProvider implements ComponentProvider<Resource> {
+public class DistroComponentProvider implements ComponentProvider {
 
   @Override
   public Class<Resource> getType() {
