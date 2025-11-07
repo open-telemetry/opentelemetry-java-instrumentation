@@ -21,13 +21,13 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
- * Spring implementation of {@link DeclarativeConfigProperties} which uses a file configuration
- * model as a source.
+ * Spring flavor of {@link
+ * io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties}, that tries
+ * to coerce types, because spring doesn't tell what the original type was.
  */
 final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
@@ -169,7 +169,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
     if (value instanceof Long) {
       return ((Long) value).intValue();
     }
-    return null;
+    return Integer.parseInt(value.toString());
   }
 
   @Nullable
@@ -231,52 +231,49 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
 
   @Nullable
   private static String stringOrNull(@Nullable Object value, String name) {
-    if (value instanceof String) {
-      return (String) value;
+    if (value == null) {
+      return null;
     }
-    if (value != null) {
-      logTypeWarning(name, value, String.class);
-    }
-    return null;
+    return value.toString();
   }
 
   @Nullable
   private static Boolean booleanOrNull(@Nullable Object value, String name) {
+    if (value == null) {
+      return null;
+    }
     if (value instanceof Boolean) {
       return (Boolean) value;
     }
-    if (value != null) {
-      logTypeWarning(name, value, Boolean.class);
-    }
-    return null;
+    return Boolean.parseBoolean(value.toString());
   }
 
   @Nullable
   private static Long longOrNull(@Nullable Object value, String name) {
+    if (value == null) {
+      return null;
+    }
     if (value instanceof Integer) {
       return ((Integer) value).longValue();
     }
     if (value instanceof Long) {
       return (Long) value;
     }
-    if (value != null) {
-      logTypeWarning(name, value, Long.class);
-    }
-    return null;
+    return Long.parseLong(value.toString());
   }
 
   @Nullable
   private static Double doubleOrNull(@Nullable Object value, String name) {
+    if (value == null) {
+      return null;
+    }
     if (value instanceof Float) {
       return ((Float) value).doubleValue();
     }
     if (value instanceof Double) {
       return (Double) value;
     }
-    if (value != null) {
-      logTypeWarning(name, value, Double.class);
-    }
-    return null;
+    return Double.parseDouble(value.toString());
   }
 
   @Nullable
@@ -319,10 +316,4 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
     return componentLoader;
   }
 
-  private static void logTypeWarning(String key, Object value, Class<?> expected) {
-    logger.log(
-        Level.WARNING,
-        "Ignoring value for key [{0}] because it is {1} instead of {2}: {3}",
-        new Object[] {key, value.getClass().getSimpleName(), expected.getSimpleName(), value});
-  }
 }

@@ -15,8 +15,8 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 /**
- * Spring implementation of {@link ConfigProvider} that tries to coerce types, because spring
- * doesn't tell what the original type was.
+ * Spring flavor of {@link io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider}
+ * that tries to coerce types, because spring doesn't tell what the original type was.
  */
 final class SpringConfigProvider implements ConfigProvider {
 
