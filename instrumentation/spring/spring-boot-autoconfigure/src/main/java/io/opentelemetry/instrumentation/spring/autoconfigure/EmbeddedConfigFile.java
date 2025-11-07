@@ -51,7 +51,7 @@ class EmbeddedConfigFile {
       }
     }
 
-    String yaml = convertFlatPropsToNested(props);
+    String yaml = convertFlatPropsYaml(props);
     if (yaml.isEmpty()) {
       throw new IllegalStateException("No application.yaml file found.");
     } else {
@@ -66,7 +66,7 @@ class EmbeddedConfigFile {
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  static String convertFlatPropsToNested(Map<String, Object> flatProps) {
+  static String convertFlatPropsYaml(Map<String, Object> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
     for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
@@ -126,6 +126,7 @@ class EmbeddedConfigFile {
       return "";
     }
 
-    return new Dump(DumpSettings.builder().build()).dumpToString(result);
+    return new Dump(DumpSettings.builder()
+        .build()).dumpToString(result);
   }
 }

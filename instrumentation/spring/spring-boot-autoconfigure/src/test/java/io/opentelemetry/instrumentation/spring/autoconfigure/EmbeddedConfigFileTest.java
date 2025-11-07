@@ -15,24 +15,24 @@ import org.junit.jupiter.api.Test;
 class EmbeddedConfigFileTest {
 
   @Test
-  void convertFlatPropsToNested_simpleProperties() {
+  void convertFlatPropsYaml_simpleProperties() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("resource.service.name", "my-service");
     flatProps.put("traces.exporter", "otlp");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
     assertThat(yaml)
         .isEqualTo("resource:\n  service: {name: my-service}\ntraces: {exporter: otlp}\n");
   }
 
   @Test
-  void convertFlatPropsToNested_booleansAndNumbersPreserveTypes() {
+  void convertFlatPropsYaml_booleansAndNumbersPreserveTypes() {
     Map<String, Object> flatProps = new LinkedHashMap<>();
     flatProps.put("feature.enabled", true);
     flatProps.put("limits.maxRetries", 5);
     flatProps.put("threshold", 3.14);
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
 
     assertThat(yaml)
         .isEqualTo(
@@ -44,25 +44,25 @@ class EmbeddedConfigFileTest {
   }
 
   @Test
-  void convertFlatPropsToNested_arrayProperties() {
+  void convertFlatPropsYaml_arrayProperties() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("instrumentation.java.list[0]", "one");
     flatProps.put("instrumentation.java.list[1]", "two");
     flatProps.put("instrumentation.java.list[2]", "three");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
     assertThat(yaml).isEqualTo("instrumentation:\n  java:\n    list: [one, two, three]\n");
   }
 
   @Test
-  void convertFlatPropsToNested_mixedPropertiesAndArrays() {
+  void convertFlatPropsYaml_mixedPropertiesAndArrays() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("resource.service.name", "test-service");
     flatProps.put("resource.attributes[0]", "key1=value1");
     flatProps.put("resource.attributes[1]", "key2=value2");
     flatProps.put("traces.exporter", "otlp");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
     assertThat(yaml)
         .isEqualTo(
             "resource:\n"
@@ -72,49 +72,49 @@ class EmbeddedConfigFileTest {
   }
 
   @Test
-  void convertFlatPropsToNested_emptyMap() {
+  void convertFlatPropsYaml_emptyMap() {
     Map<String, Object> flatProps = new HashMap<>();
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
-    assertThat(yaml).isEqualTo("");
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
+    assertThat(yaml).isEmpty();
   }
 
   @Test
-  void convertFlatPropsToNested_singleLevelProperty() {
+  void convertFlatPropsYaml_singleLevelProperty() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("enabled", "true");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
     assertThat(yaml).isEqualTo("{enabled: true}");
   }
 
   @Test
-  void convertFlatPropsToNested_arrayWithGaps() {
+  void convertFlatPropsYaml_arrayWithGaps() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("list[0]", "first");
     flatProps.put("list[2]", "third");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
     assertThat(yaml).isEqualTo("list: [first, null, third]\n");
   }
 
   @Test
-  void convertFlatPropsToNested_deeplyNestedProperties() {
+  void convertFlatPropsYamlProperties() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("a.b.c.d.e", "deep-value");
 
-    String yaml = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
+    String yaml = EmbeddedConfigFile.convertFlatPropsYaml(flatProps);
     assertThat(yaml).isEqualTo("a:\n  b:\n    c:\n      d: {e: deep-value}\n");
   }
 
   @Test
-  void convertFlatPropsToNested_nestedArrays() {
+  void convertFlatPropsYamlArrays() {
     Map<String, Object> flatProps = new HashMap<>();
     flatProps.put("outer[0].inner[0]", "value1");
     flatProps.put("outer[0].inner[1]", "value2");
     flatProps.put("outer[1].inner[0]", "value3");
 
-    assertThat(EmbeddedConfigFile.convertFlatPropsToNested(flatProps))
+    assertThat(EmbeddedConfigFile.convertFlatPropsYaml(flatProps))
         .isEqualTo("outer:\n- inner: [value1, value2]\n- inner: [value3]\n");
   }
 }
