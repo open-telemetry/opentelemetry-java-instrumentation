@@ -1,4 +1,7 @@
-description: This instrumentation enables HTTP client spans and HTTP client metrics for version 1.9 of the AsyncHttpClient (AHC) HTTP client.
+display_name: AsyncHttpClient
+description: >
+  This instrumentation enables HTTP client spans and HTTP client metrics for the AsyncHttpClient
+  HTTP client.
 library_link: https://github.com/AsyncHttpClient/async-http-client
 semantic_conventions:
   - HTTP_CLIENT_SPANS
