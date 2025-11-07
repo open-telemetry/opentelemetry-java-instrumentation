@@ -16,7 +16,7 @@ import play.libs.ws.StandaloneWSClient;
 import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.ahc.StandaloneAhcWSClient;
 
-class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
+public class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;
@@ -26,8 +26,6 @@ class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest>
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-    // autoCleanup.deferCleanup(wsClient);
-    // autoCleanup.deferCleanup(wsClientWithReadTimeout);
   }
 
   @AfterAll
