@@ -21,7 +21,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -30,9 +29,6 @@ import javax.annotation.Nullable;
  * to coerce types, because spring doesn't tell what the original type was.
  */
 final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigProperties {
-
-  private static final Logger logger =
-      Logger.getLogger(SpringYamlDeclarativeConfigProperties.class.getName());
 
   private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
       Collections.unmodifiableSet(
@@ -150,19 +146,22 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   @Nullable
   @Override
   public String getString(String name) {
-    return stringOrNull(simpleEntries.get(name), name);
+    return stringOrNull(simpleEntries.get(name));
   }
 
   @Nullable
   @Override
   public Boolean getBoolean(String name) {
-    return booleanOrNull(simpleEntries.get(name), name);
+    return booleanOrNull(simpleEntries.get(name));
   }
 
   @Nullable
   @Override
   public Integer getInt(String name) {
     Object value = simpleEntries.get(name);
+    if (value == null) {
+      return null;
+    }
     if (value instanceof Integer) {
       return (Integer) value;
     }
@@ -175,13 +174,13 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   @Nullable
   @Override
   public Long getLong(String name) {
-    return longOrNull(simpleEntries.get(name), name);
+    return longOrNull(simpleEntries.get(name));
   }
 
   @Nullable
   @Override
   public Double getDouble(String name) {
-    return doubleOrNull(simpleEntries.get(name), name);
+    return doubleOrNull(simpleEntries.get(name));
   }
 
   @Nullable
@@ -209,13 +208,13 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
                   .map(
                       entry -> {
                         if (scalarType == String.class) {
-                          return stringOrNull(entry, name);
+                          return stringOrNull(entry);
                         } else if (scalarType == Boolean.class) {
-                          return booleanOrNull(entry, name);
+                          return booleanOrNull(entry);
                         } else if (scalarType == Long.class) {
-                          return longOrNull(entry, name);
+                          return longOrNull(entry);
                         } else if (scalarType == Double.class) {
-                          return doubleOrNull(entry, name);
+                          return doubleOrNull(entry);
                         }
                         return null;
                       })
@@ -230,7 +229,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   }
 
   @Nullable
-  private static String stringOrNull(@Nullable Object value, String name) {
+  private static String stringOrNull(@Nullable Object value) {
     if (value == null) {
       return null;
     }
@@ -238,7 +237,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   }
 
   @Nullable
-  private static Boolean booleanOrNull(@Nullable Object value, String name) {
+  private static Boolean booleanOrNull(@Nullable Object value) {
     if (value == null) {
       return null;
     }
@@ -249,7 +248,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   }
 
   @Nullable
-  private static Long longOrNull(@Nullable Object value, String name) {
+  private static Long longOrNull(@Nullable Object value) {
     if (value == null) {
       return null;
     }
@@ -263,7 +262,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   }
 
   @Nullable
-  private static Double doubleOrNull(@Nullable Object value, String name) {
+  private static Double doubleOrNull(@Nullable Object value) {
     if (value == null) {
       return null;
     }
@@ -315,5 +314,4 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   public ComponentLoader getComponentLoader() {
     return componentLoader;
   }
-
 }
