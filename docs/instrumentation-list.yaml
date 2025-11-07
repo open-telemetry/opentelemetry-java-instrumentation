@@ -1170,9 +1170,19 @@ libraries:
         - name: server.port
           type: LONG
   async:
+  - name: async-http-client-1.8
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for version 1.8 of the AsyncHttpClient (AHC) HTTP client.
+    library_link: https://github.com/AsyncHttpClient/async-http-client
+    source_path: instrumentation/async-http-client/async-http-client-1.8
+    scope:
+      name: io.opentelemetry.async-http-client-1.8
+    target_versions:
+      javaagent:
+      - com.ning:async-http-client:[1.8.0,1.9.0)
   - name: async-http-client-1.9
     description: This instrumentation enables HTTP client spans and HTTP client metrics
-      for version 1 of the AsyncHttpClient (AHC) HTTP client.
+      for version 1.9 of the AsyncHttpClient (AHC) HTTP client.
     semantic_conventions:
     - HTTP_CLIENT_SPANS
     - HTTP_CLIENT_METRICS
