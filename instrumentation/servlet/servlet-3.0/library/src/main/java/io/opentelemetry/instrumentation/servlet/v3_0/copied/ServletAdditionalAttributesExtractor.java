@@ -6,12 +6,12 @@
 package io.opentelemetry.instrumentation.servlet.v3_0.copied;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import javax.annotation.Nullable;
 
@@ -22,6 +22,9 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.servlet.experimental-span-attributes", false);
   private static final AttributeKey<Long> SERVLET_TIMEOUT = longKey("servlet.timeout");
+
+  // copied from EnduserIncubatingAttributes
+  static final AttributeKey<String> ENDUSER_ID = stringKey("enduser.id");
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
 
@@ -48,7 +51,7 @@ public class ServletAdditionalAttributesExtractor<REQUEST, RESPONSE>
       if (principal != null) {
         String name = principal.getName();
         if (name != null) {
-          attributes.put(EnduserIncubatingAttributes.ENDUSER_ID, name);
+          attributes.put(ENDUSER_ID, name);
         }
       }
     }

@@ -14,7 +14,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
-import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
 import java.util.function.Function;
 
@@ -132,7 +131,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   /**
-   * Capture {@link EnduserIncubatingAttributes#ENDUSER_ID} as span attributes when SERVER span is
+   * Capture {@link ServletAdditionalAttributesExtractor#ENDUSER_ID} as span attributes when SERVER span is
    * not create by servlet instrumentation.
    *
    * <p>When SERVER span is created by servlet instrumentation we register {@link
@@ -148,7 +147,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     if (principal != null) {
       String name = principal.getName();
       if (name != null) {
-        serverSpan.setAttribute(EnduserIncubatingAttributes.ENDUSER_ID, name);
+        serverSpan.setAttribute(ServletAdditionalAttributesExtractor.ENDUSER_ID, name);
       }
     }
   }
