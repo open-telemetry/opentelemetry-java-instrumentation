@@ -18,7 +18,7 @@ import play.libs.ws.StandaloneWSRequest;
 import play.libs.ws.StandaloneWSResponse;
 import play.libs.ws.ahc.StandaloneAhcWSClient;
 
-public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
+class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;

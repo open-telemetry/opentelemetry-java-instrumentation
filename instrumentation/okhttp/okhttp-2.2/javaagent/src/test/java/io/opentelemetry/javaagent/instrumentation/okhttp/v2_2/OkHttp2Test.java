@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class OkHttp2Test extends AbstractHttpClientTest<Request> {
+class OkHttp2Test extends AbstractHttpClientTest<Request> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

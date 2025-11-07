@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class RxJava3InstrumentationWithSpanTest extends AbstractRxJava3WithSpanTest {
+class RxJava3InstrumentationWithSpanTest extends AbstractRxJava3WithSpanTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

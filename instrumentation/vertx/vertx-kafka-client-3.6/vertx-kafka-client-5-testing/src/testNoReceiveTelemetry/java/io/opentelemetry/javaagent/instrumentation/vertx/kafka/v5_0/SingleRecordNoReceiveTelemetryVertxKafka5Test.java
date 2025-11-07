@@ -17,7 +17,7 @@ import io.vertx.kafka.client.producer.KafkaProducerRecord;
 import io.vertx.kafka.client.producer.RecordMetadata;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class SingleRecordNoReceiveTelemetryVertxKafka5Test
+class SingleRecordNoReceiveTelemetryVertxKafka5Test
     extends AbstractSingleRecordNoReceiveTelemetryVertxKafkaTest {
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

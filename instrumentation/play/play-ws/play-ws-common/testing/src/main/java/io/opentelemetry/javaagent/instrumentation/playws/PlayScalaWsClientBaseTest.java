@@ -25,7 +25,7 @@ import scala.concurrent.Future;
 import scala.concurrent.duration.Duration;
 import scala.util.Try;
 
-public class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
+class PlayScalaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
 
   private static StandaloneWSClient wsClient;
   private static StandaloneWSClient wsClientWithReadTimeout;
