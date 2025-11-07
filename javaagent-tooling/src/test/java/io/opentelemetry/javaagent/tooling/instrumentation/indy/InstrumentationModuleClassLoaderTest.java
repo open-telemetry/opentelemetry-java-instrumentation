@@ -36,12 +36,25 @@ import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.matcher.ElementMatchers;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
 @SuppressWarnings("ClassNamedLikeTypeParameter")
 class InstrumentationModuleClassLoaderTest {
+
+  static {
+    // Windows holds open handles to JAR files loaded through URLClassLoader even after the
+    // class loader is closed. Disabling URLConnection caching on Windows to prevent this.
+    // Without this, instrumentation-module.jar cannot be deleted during test cleanup.
+    if (OS.WINDOWS.isCurrentOs()) {
+      try {
+        // Must call setDefaultUseCaches on a jar: URL connection before any JARs are opened
+        new URL("jar:file://dummy.jar!/").openConnection().setDefaultUseCaches(false);
+      } catch (Exception e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
 
   @Test
   void checkLookup() throws Throwable {
@@ -107,9 +120,6 @@ class InstrumentationModuleClassLoaderTest {
     assertThat(classPackage).isSameAs(clPackage);
   }
 
-  // Windows holds open handles to jars loaded through URLClassLoader even after the loader is
-  // closed, which keeps the temp directory locked and causes test cleanup to fail.
-  @DisabledOnOs(value = OS.WINDOWS, disabledReason = "temp directory cleanup fails on Windows")
   @Test
   void checkClassLookupPrecedence(@TempDir Path tempDir) throws Exception {
 
@@ -198,6 +208,14 @@ class InstrumentationModuleClassLoaderTest {
       appCl.close();
       agentCl.close();
       moduleSourceCl.close();
+
+      // On Windows, force garbage collection to release file handles to JAR files.
+      // Without this, all three JAR files (dummy-app.jar, dummy-agent.jar,
+      // instrumentation-module.jar) cannot be deleted during test cleanup, even with
+      // setDefaultUseCaches(false) above.
+      if (OS.WINDOWS.isCurrentOs()) {
+        System.gc();
+      }
     }
   }
 
