@@ -48,6 +48,10 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
     if (isHttpServerInstrumentation(instrumentationName)) {
       customizeHttpServer(customizer);
     }
+
+    if (customizer.hasType(InstrumenterCustomizer.InstrumentationType.HTTP_CLIENT)) {
+      customizeHttpClient(customizer);
+    }
   }
 
   private boolean isHttpServerInstrumentation(String instrumentationName) {
@@ -64,6 +68,31 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
     customizer.addContextCustomizer(new DemoContextCustomizer());
     customizer.setSpanNameExtractor(
         unused -> (SpanNameExtractor<Object>) object -> "CustomHTTP/" + object.toString());
+  }
+
+  private void customizeHttpClient(InstrumenterCustomizer customizer) {
+    // Simple customization for HTTP client instrumentations
+    customizer.addAttributesExtractor(new DemoHttpClientAttributesExtractor());
+  }
+
+  /** Custom attributes extractor for HTTP client instrumentations. */
+  private static class DemoHttpClientAttributesExtractor
+      implements AttributesExtractor<Object, Object> {
+    private static final AttributeKey<String> CLIENT_ATTR =
+        AttributeKey.stringKey("demo.client.type");
+
+    @Override
+    public void onStart(AttributesBuilder attributes, Context context, Object request) {
+      attributes.put(CLIENT_ATTR, "demo-http-client");
+    }
+
+    @Override
+    public void onEnd(
+        AttributesBuilder attributes,
+        Context context,
+        Object request,
+        Object response,
+        Throwable error) {}
   }
 
   /** Custom attributes extractor that adds demo-specific attributes. */
