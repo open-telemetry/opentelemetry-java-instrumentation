@@ -20,7 +20,8 @@ public final class SpymemcachedSingletons {
 
   static {
     SpymemcachedAttributesGetter dbAttributesGetter = new SpymemcachedAttributesGetter();
-    SpymemcachedNetworkAttributesGetter netAttributesGetter = new SpymemcachedNetworkAttributesGetter();
+    SpymemcachedNetworkAttributesGetter netAttributesGetter =
+        new SpymemcachedNetworkAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.builder(
