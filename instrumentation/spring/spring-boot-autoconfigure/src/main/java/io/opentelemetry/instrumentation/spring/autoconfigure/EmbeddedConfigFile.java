@@ -57,7 +57,7 @@ class EmbeddedConfigFile {
     } else {
       String string = new Dump(DumpSettings.builder().build()).dumpToString(nestedProps);
       return DeclarativeConfiguration.parse(
-          new ByteArrayInputStream(string.getBytes(StandardCharsets.UTF_8)));
+          new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
     }
   }
 
@@ -67,7 +67,7 @@ class EmbeddedConfigFile {
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  static Map<String, Object> convertFlatPropsToNested(Map<String, Object> flatProps) {
+  static String convertFlatPropsToNested(Map<String, Object> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
     for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
@@ -123,6 +123,10 @@ class EmbeddedConfigFile {
       }
     }
 
-    return result;
+    if (result.isEmpty()) {
+      return "";
+    }
+
+    return new Dump(DumpSettings.builder().build()).dumpToString(result);
   }
 }
