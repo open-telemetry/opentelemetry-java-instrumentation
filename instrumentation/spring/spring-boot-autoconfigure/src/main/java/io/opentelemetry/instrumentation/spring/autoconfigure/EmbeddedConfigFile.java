@@ -64,13 +64,16 @@ class EmbeddedConfigFile {
       Map<String, Object> flatProps) {
     Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
+    return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
+  }
+
+  static ObjectMapper getObjectMapper() {
     try {
       Field field = DeclarativeConfiguration.class.getDeclaredField("MAPPER");
       field.setAccessible(true);
-      ObjectMapper mapper = (ObjectMapper) field.get(null);
-      return mapper.convertValue(nested, OpenTelemetryConfigurationModel.class);
+      return (ObjectMapper) field.get(null);
     } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new DeclarativeConfigException("Failed to convert configuration", e);
+      throw new DeclarativeConfigException("Failed to access ObjectMapper", e);
     }
   }
 
