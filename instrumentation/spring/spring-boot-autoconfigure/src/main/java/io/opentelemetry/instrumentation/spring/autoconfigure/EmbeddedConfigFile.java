@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.io.ByteArrayInputStream;
-import java.nio.charset.StandardCharsets;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -16,8 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.snakeyaml.engine.v2.api.Dump;
-import org.snakeyaml.engine.v2.api.DumpSettings;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -32,6 +31,11 @@ class EmbeddedConfigFile {
   }
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
+    Map<String, Object> props = extractSpringProperties(environment);
+    return convertToOpenTelemetryConfigurationModel(props);
+  }
+
+  private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
     Map<String, Object> props = new HashMap<>();
@@ -44,19 +48,29 @@ class EmbeddedConfigFile {
             if (Objects.equals(property, "")) {
               property = null; // spring returns empty string for yaml null
             }
-            props.put(
-                propertyName.substring("otel.".length()), property);
+            props.put(propertyName.substring("otel.".length()), property);
           }
         }
       }
     }
 
-    String yaml = convertFlatPropsYaml(props);
-    if (yaml.isEmpty()) {
+    if (props.isEmpty()) {
       throw new IllegalStateException("No application.yaml file found.");
-    } else {
-      return DeclarativeConfiguration.parse(
-          new ByteArrayInputStream(yaml.getBytes(StandardCharsets.UTF_8)));
+    }
+    return props;
+  }
+
+  static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(
+      Map<String, Object> flatProps) {
+    Map<String, Object> nested = covertToNested(flatProps);
+
+    try {
+      Field field = DeclarativeConfiguration.class.getDeclaredField("MAPPER");
+      field.setAccessible(true);
+      ObjectMapper mapper = (ObjectMapper) field.get(null);
+      return mapper.convertValue(nested, OpenTelemetryConfigurationModel.class);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new DeclarativeConfigException("Failed to convert configuration", e);
     }
   }
 
@@ -66,7 +80,7 @@ class EmbeddedConfigFile {
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  static String convertFlatPropsYaml(Map<String, Object> flatProps) {
+  private static Map<String, Object> covertToNested(Map<String, Object> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
     for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
@@ -121,12 +135,6 @@ class EmbeddedConfigFile {
         }
       }
     }
-
-    if (result.isEmpty()) {
-      return "";
-    }
-
-    return new Dump(DumpSettings.builder()
-        .build()).dumpToString(result);
+    return result;
   }
 }
