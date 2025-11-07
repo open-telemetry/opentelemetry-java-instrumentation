@@ -51,7 +51,7 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
     if (isHttpServerInstrumentation(instrumentationName)) {
       customizeHttpServer(customizer);
     }
-    
+
     if (customizer.hasType(InstrumenterCustomizer.InstrumentationType.HTTP_CLIENT)) {
       customizeHttpClient(customizer);
     }
@@ -79,8 +79,10 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
   }
 
   /** Custom attributes extractor for HTTP client instrumentations. */
-  private static class DemoHttpClientAttributesExtractor implements AttributesExtractor<Object, Object> {
-    private static final AttributeKey<String> CLIENT_ATTR = AttributeKey.stringKey("demo.client.type");
+  private static class DemoHttpClientAttributesExtractor
+      implements AttributesExtractor<Object, Object> {
+    private static final AttributeKey<String> CLIENT_ATTR =
+        AttributeKey.stringKey("demo.client.type");
 
     @Override
     public void onStart(AttributesBuilder attributes, Context context, Object request) {
@@ -93,8 +95,7 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
         Context context,
         Object request,
         Object response,
-        Throwable error) {
-    }
+        Throwable error) {}
   }
 
   /** Custom attributes extractor that adds demo-specific attributes. */
