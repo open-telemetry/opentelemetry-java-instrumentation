@@ -12,7 +12,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 
-class AbstractVaadin14Test extends AbstractVaadinTest {
+public class AbstractVaadin14Test extends AbstractVaadinTest {
   @Override
   void assertFirstRequest() {
     await()
