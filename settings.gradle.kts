@@ -139,6 +139,7 @@ include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
 include(":testing-common")
+include(":testing-common:with-shaded-dependencies")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
