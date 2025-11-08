@@ -90,8 +90,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
       }
       if (isMap(value)) {
         SpringDeclarativeConfigProperties configProperties =
-            SpringDeclarativeConfigProperties.create(
-                (Map<String, Object>) value, componentLoader);
+            SpringDeclarativeConfigProperties.create((Map<String, Object>) value, componentLoader);
         mapEntries.put(key, configProperties);
         continue;
       }

@@ -31,14 +31,14 @@ class EmbeddedConfigFile {
   }
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
-    Map<String, Object> props = extractSpringProperties(environment);
+    Map<String, String> props = extractSpringProperties(environment);
     return convertToOpenTelemetryConfigurationModel(props);
   }
 
-  private static Map<String, Object> extractSpringProperties(ConfigurableEnvironment environment) {
+  private static Map<String, String> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
-    Map<String, Object> props = new HashMap<>();
+    Map<String, String> props = new HashMap<>();
     for (PropertySource<?> propertySource : propertySources) {
       if (propertySource instanceof EnumerablePropertySource<?>) {
         for (String propertyName :
@@ -61,7 +61,7 @@ class EmbeddedConfigFile {
   }
 
   static OpenTelemetryConfigurationModel convertToOpenTelemetryConfigurationModel(
-      Map<String, Object> flatProps) {
+      Map<String, String> flatProps) {
     Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
     return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
@@ -83,12 +83,12 @@ class EmbeddedConfigFile {
    * ["one", "two"]}}}}
    */
   @SuppressWarnings("unchecked")
-  static Map<String, Object> convertFlatPropsToNested(Map<String, Object> flatProps) {
+  static Map<String, Object> convertFlatPropsToNested(Map<String, String> flatProps) {
     Map<String, Object> result = new HashMap<>();
 
-    for (Map.Entry<String, Object> entry : flatProps.entrySet()) {
+    for (Map.Entry<String, String> entry : flatProps.entrySet()) {
       String key = entry.getKey();
-      Object value = entry.getValue();
+      String value = entry.getValue();
 
       // Split the key by dots
       String[] parts = key.split("\\.");
