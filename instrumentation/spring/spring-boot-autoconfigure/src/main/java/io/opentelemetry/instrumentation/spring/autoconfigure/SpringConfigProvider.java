@@ -28,7 +28,7 @@ final class SpringConfigProvider implements ConfigProvider {
     this.instrumentationConfig = configProperties.getStructured("instrumentation/development");
   }
 
-  static DeclarativeConfigProperties toConfigProperties(
+  private static DeclarativeConfigProperties toConfigProperties(
       Object model, ComponentLoader componentLoader) {
     Map<String, Object> configurationMap =
         EmbeddedConfigFile.getObjectMapper()
@@ -36,7 +36,7 @@ final class SpringConfigProvider implements ConfigProvider {
     if (configurationMap == null) {
       configurationMap = Collections.emptyMap();
     }
-    return SpringYamlDeclarativeConfigProperties.create(configurationMap, componentLoader);
+    return SpringDeclarativeConfigProperties.create(configurationMap, componentLoader);
   }
 
   /**
@@ -46,20 +46,8 @@ final class SpringConfigProvider implements ConfigProvider {
    * @return the {@link SpringConfigProvider}
    */
   static SpringConfigProvider create(OpenTelemetryConfigurationModel model) {
-    return create(
+    return new SpringConfigProvider(
         model, ComponentLoader.forClassLoader(SpringConfigProvider.class.getClassLoader()));
-  }
-
-  /**
-   * Create a {@link SpringConfigProvider} from the {@code model}.
-   *
-   * @param model the configuration model
-   * @param componentLoader the component loader used to load SPIs
-   * @return the {@link SpringConfigProvider}
-   */
-  static SpringConfigProvider create(
-      OpenTelemetryConfigurationModel model, ComponentLoader componentLoader) {
-    return new SpringConfigProvider(model, componentLoader);
   }
 
   @Nullable

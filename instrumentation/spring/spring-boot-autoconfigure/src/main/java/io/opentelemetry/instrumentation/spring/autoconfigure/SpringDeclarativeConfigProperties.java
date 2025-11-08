@@ -28,7 +28,7 @@ import javax.annotation.Nullable;
  * io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties}, that tries
  * to coerce types, because spring doesn't tell what the original type was.
  */
-final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigProperties {
+final class SpringDeclarativeConfigProperties implements DeclarativeConfigProperties {
 
   private static final Set<Class<?>> SUPPORTED_SCALAR_TYPES =
       Collections.unmodifiableSet(
@@ -38,14 +38,14 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   /** Values are {@link #isPrimitive(Object)}, {@link List} of scalars. */
   private final Map<String, Object> simpleEntries;
 
-  private final Map<String, List<SpringYamlDeclarativeConfigProperties>> listEntries;
-  private final Map<String, SpringYamlDeclarativeConfigProperties> mapEntries;
+  private final Map<String, List<SpringDeclarativeConfigProperties>> listEntries;
+  private final Map<String, SpringDeclarativeConfigProperties> mapEntries;
   private final ComponentLoader componentLoader;
 
-  private SpringYamlDeclarativeConfigProperties(
+  private SpringDeclarativeConfigProperties(
       Map<String, Object> simpleEntries,
-      Map<String, List<SpringYamlDeclarativeConfigProperties>> listEntries,
-      Map<String, SpringYamlDeclarativeConfigProperties> mapEntries,
+      Map<String, List<SpringDeclarativeConfigProperties>> listEntries,
+      Map<String, SpringDeclarativeConfigProperties> mapEntries,
       ComponentLoader componentLoader) {
     this.simpleEntries = simpleEntries;
     this.listEntries = listEntries;
@@ -54,7 +54,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   }
 
   /**
-   * Create a {@link SpringYamlDeclarativeConfigProperties} from the {@code properties} map.
+   * Create a {@link SpringDeclarativeConfigProperties} from the {@code properties} map.
    *
    * <p>{@code properties} is expected to be the output of YAML parsing (i.e. with Jackson {@code
    * com.fasterxml.jackson.databind.ObjectMapper}), and have values which are scalars, lists of
@@ -63,11 +63,11 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
    * @see DeclarativeConfiguration#toConfigProperties(Object)
    */
   @SuppressWarnings("unchecked")
-  public static SpringYamlDeclarativeConfigProperties create(
+  public static SpringDeclarativeConfigProperties create(
       Map<String, Object> properties, ComponentLoader componentLoader) {
     Map<String, Object> simpleEntries = new LinkedHashMap<>();
-    Map<String, List<SpringYamlDeclarativeConfigProperties>> listEntries = new LinkedHashMap<>();
-    Map<String, SpringYamlDeclarativeConfigProperties> mapEntries = new LinkedHashMap<>();
+    Map<String, List<SpringDeclarativeConfigProperties>> listEntries = new LinkedHashMap<>();
+    Map<String, SpringDeclarativeConfigProperties> mapEntries = new LinkedHashMap<>();
     for (Map.Entry<String, Object> entry : properties.entrySet()) {
       String key = entry.getKey();
       Object value = entry.getValue();
@@ -80,17 +80,17 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
         continue;
       }
       if (isListOfMaps(value)) {
-        List<SpringYamlDeclarativeConfigProperties> list =
+        List<SpringDeclarativeConfigProperties> list =
             ((List<Map<String, Object>>) value)
                 .stream()
-                    .map(map -> SpringYamlDeclarativeConfigProperties.create(map, componentLoader))
+                    .map(map -> SpringDeclarativeConfigProperties.create(map, componentLoader))
                     .collect(toList());
         listEntries.put(key, list);
         continue;
       }
       if (isMap(value)) {
-        SpringYamlDeclarativeConfigProperties configProperties =
-            SpringYamlDeclarativeConfigProperties.create(
+        SpringDeclarativeConfigProperties configProperties =
+            SpringDeclarativeConfigProperties.create(
                 (Map<String, Object>) value, componentLoader);
         mapEntries.put(key, configProperties);
         continue;
@@ -101,14 +101,14 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
               + "\" has unrecognized object type "
               + value.getClass().getName());
     }
-    return new SpringYamlDeclarativeConfigProperties(
+    return new SpringDeclarativeConfigProperties(
         simpleEntries, listEntries, mapEntries, componentLoader);
   }
 
   private static boolean isPrimitiveList(Object object) {
     if (object instanceof List) {
       List<?> list = (List<?>) object;
-      return list.stream().allMatch(SpringYamlDeclarativeConfigProperties::isPrimitive);
+      return list.stream().allMatch(SpringDeclarativeConfigProperties::isPrimitive);
     }
     return false;
   }
@@ -284,7 +284,7 @@ final class SpringYamlDeclarativeConfigProperties implements DeclarativeConfigPr
   @Nullable
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
-    List<SpringYamlDeclarativeConfigProperties> value = listEntries.get(name);
+    List<SpringDeclarativeConfigProperties> value = listEntries.get(name);
     if (value != null) {
       return Collections.unmodifiableList(value);
     }
