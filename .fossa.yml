@@ -828,7 +828,7 @@ targets:
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.55:javaagent'
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:pekko:pekko-actor-1.0:javaagent'

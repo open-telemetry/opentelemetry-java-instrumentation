@@ -19,7 +19,7 @@ public class ApplicationOpenTelemetry implements OpenTelemetry {
   public static final OpenTelemetry INSTANCE;
 
   static {
-    OpenTelemetry instance = getOpenTelemetry155();
+    OpenTelemetry instance = getOpenTelemetry156();
     if (instance == null) {
       instance = getOpenTelemetry127();
     }
@@ -56,12 +56,12 @@ public class ApplicationOpenTelemetry implements OpenTelemetry {
   }
 
   @Nullable
-  private static OpenTelemetry getOpenTelemetry155() {
+  private static OpenTelemetry getOpenTelemetry156() {
     try {
-      // this class is defined in opentelemetry-api-1.55
+      // this class is defined in opentelemetry-api-1.56
       Class<?> clazz =
           Class.forName(
-              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_55.incubator.ApplicationOpenTelemetry155Incubator");
+              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.ApplicationOpenTelemetry156Incubator");
       return (OpenTelemetry) clazz.getField("INSTANCE").get(null);
     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
       return null;
