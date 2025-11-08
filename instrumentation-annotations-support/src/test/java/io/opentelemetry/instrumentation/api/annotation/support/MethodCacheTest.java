@@ -20,7 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-public class MethodCacheTest {
+class MethodCacheTest {
 
   @Mock private Function<Method, String> fn;
 
