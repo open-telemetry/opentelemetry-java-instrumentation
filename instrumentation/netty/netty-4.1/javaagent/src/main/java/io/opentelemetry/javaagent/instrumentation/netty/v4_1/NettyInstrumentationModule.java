@@ -44,4 +44,9 @@ public class NettyInstrumentationModule extends InstrumentationModule
         new AbstractChannelHandlerContextInstrumentation(),
         new SingleThreadEventExecutorInstrumentation());
   }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
+  }
 }

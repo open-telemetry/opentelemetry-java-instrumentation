@@ -89,6 +89,7 @@ public final class RuntimeMetrics implements AutoCloseable {
     private final List<RecordedEventHandler> recordedEventHandlers;
     private final RecordingStream recordingStream;
     private final CountDownLatch startUpLatch = new CountDownLatch(1);
+    private volatile boolean closed = false;
 
     private JfrRuntimeMetrics(OpenTelemetry openTelemetry, Predicate<JfrFeature> featurePredicate) {
       this.recordedEventHandlers = HandlerRegistry.getHandlers(openTelemetry, featurePredicate);
@@ -101,10 +102,26 @@ public final class RuntimeMetrics implements AutoCloseable {
             recordingStream.onEvent(handler.getEventName(), handler);
           });
       recordingStream.onMetadata(event -> startUpLatch.countDown());
-      Thread daemonRunner = new Thread(recordingStream::start, "OpenTelemetry JFR-Metrics-Runner");
+      Thread daemonRunner =
+          new Thread(this::startRecordingStream, "OpenTelemetry JFR-Metrics-Runner");
       daemonRunner.setDaemon(true);
       daemonRunner.setContextClassLoader(null);
       daemonRunner.start();
+    }
+
+    private void startRecordingStream() {
+      if (closed) {
+        return;
+      }
+
+      try {
+        recordingStream.start();
+      } catch (IllegalStateException exception) {
+        // Can happen when close is called at the same time as start
+        if (!closed) {
+          throw exception;
+        }
+      }
     }
 
     static JfrRuntimeMetrics build(
@@ -117,6 +134,7 @@ public final class RuntimeMetrics implements AutoCloseable {
 
     @Override
     public void close() {
+      closed = true;
       recordingStream.close();
       recordedEventHandlers.forEach(RecordedEventHandler::close);
     }

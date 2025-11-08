@@ -22,6 +22,12 @@ public class Agent {
       new Agent("latest", "latest mainstream release", OTEL_LATEST);
   public static final Agent LATEST_SNAPSHOT =
       new Agent("snapshot", "latest available snapshot version from main");
+  public static final Agent LATEST_SNAPSHOT_INDY =
+      new Agent(
+          "snapshot-indy",
+          "latest available snapshot version from main with indy enabled",
+          null,
+          Collections.singletonList("-Dotel.javaagent.experimental.indy=true"));
 
   private final String name;
   private final String description;

@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("io.reactivex.rxjava3:rxjava:3.0.12")
 
