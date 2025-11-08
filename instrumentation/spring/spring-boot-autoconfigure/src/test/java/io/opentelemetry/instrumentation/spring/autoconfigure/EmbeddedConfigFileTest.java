@@ -7,9 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +16,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_simpleProperties() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("resource.service.name", "my-service");
     flatProps.put("traces.exporter", "otlp");
 
@@ -58,7 +55,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_arrayProperties() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("instrumentation.java.list[0]", "one");
     flatProps.put("instrumentation.java.list[1]", "two");
     flatProps.put("instrumentation.java.list[2]", "three");
@@ -92,7 +89,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_mixedPropertiesAndArrays() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("resource.service.name", "test-service");
     flatProps.put("resource.attributes[0]", "key1=value1");
     flatProps.put("resource.attributes[1]", "key2=value2");
@@ -127,7 +124,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_emptyMap() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
 
@@ -136,7 +133,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_singleLevelProperty() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("enabled", "true");
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
@@ -146,7 +143,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_arrayWithGaps() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("list[0]", "first");
     flatProps.put("list[2]", "third");
 
@@ -164,7 +161,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_deeplyNestedProperties() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("a.b.c.d.e", "deep-value");
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
@@ -186,7 +183,7 @@ class EmbeddedConfigFileTest {
 
   @Test
   void convertFlatPropsToNested_nestedArrays() {
-    Map<String, Object> flatProps = new HashMap<>();
+    Map<String, String> flatProps = new HashMap<>();
     flatProps.put("outer[0].inner[0]", "value1");
     flatProps.put("outer[0].inner[1]", "value2");
     flatProps.put("outer[1].inner[0]", "value3");
@@ -213,24 +210,5 @@ class EmbeddedConfigFileTest {
               List<Object> secondInner = (List<Object>) secondElement.get("inner");
               assertThat(secondInner).containsExactly("value3");
             });
-  }
-
-  @Test
-  void convertToOpenTelemetryConfigurationModel_typeIsPreserved() {
-    Map<String, Object> flatProps = new HashMap<>();
-    flatProps.put("instrumentation/development.java.bool", true);
-    flatProps.put("instrumentation/development.java.string", "test");
-    flatProps.put("instrumentation/development.java.number", 42);
-    flatProps.put("instrumentation/development.java.double", 3.14);
-
-    OpenTelemetryConfigurationModel model =
-        EmbeddedConfigFile.convertToOpenTelemetryConfigurationModel(flatProps);
-
-    DeclarativeConfigProperties java =
-        SdkConfigProvider.create(model).getInstrumentationConfig().getStructured("java");
-    assertThat(java.getBoolean("bool")).isTrue();
-    assertThat(java.getString("string")).isEqualTo("test");
-    assertThat(java.getLong("number")).isEqualTo(42L);
-    assertThat(java.getDouble("double")).isEqualTo(3.14);
   }
 }
