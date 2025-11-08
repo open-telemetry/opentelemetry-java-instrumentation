@@ -16,7 +16,7 @@ public class ApplicationComponentLoader155 implements ComponentLoader {
   }
 
   @Override
-  public <T> Iterable<T> load(Class<T> aClass) {
-    return componentLoader.load(aClass);
+  public <T> Iterable<T> load(Class<T> type) {
+    return componentLoader.load(type);
   }
 }
