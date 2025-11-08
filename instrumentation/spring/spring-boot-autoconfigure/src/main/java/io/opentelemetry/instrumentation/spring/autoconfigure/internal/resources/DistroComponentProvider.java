@@ -14,7 +14,7 @@ import io.opentelemetry.sdk.resources.Resource;
  * any time.
  */
 @SuppressWarnings("rawtypes")
-public class DistroComponentProvider implements ComponentProvider<Resource> {
+public class DistroComponentProvider implements ComponentProvider {
 
   @Override
   public Class<Resource> getType() {
