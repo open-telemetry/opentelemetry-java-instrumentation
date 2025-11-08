@@ -12,6 +12,7 @@ import io.opentelemetry.context.Context;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.MemcachedNode;
 
 public class SyncCompletionListener extends CompletionListener<Void> {
 
@@ -23,12 +24,25 @@ public class SyncCompletionListener extends CompletionListener<Void> {
 
   @Nullable
   public static SyncCompletionListener create(
-      Context parentContext, MemcachedConnection connection, String methodName) {
-    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName);
+      Context parentContext, MemcachedConnection connection, String methodName, String key) {
+    // For sync operations, determine the handling node based on the key
+    MemcachedNode handlingNode = getHandlingNodeForKey(connection, key);
+    SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, handlingNode);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
     }
     return new SyncCompletionListener(parentContext, request);
+  }
+
+  @Nullable
+  private static MemcachedNode getHandlingNodeForKey(MemcachedConnection connection, String key) {
+    try {
+      // Use the connection's locator to find the primary node for this key
+      return connection.getLocator().getPrimary(key);
+    } catch (RuntimeException e) {
+      // If we can't determine the node, return null
+      return null;
+    }
   }
 
   @Override

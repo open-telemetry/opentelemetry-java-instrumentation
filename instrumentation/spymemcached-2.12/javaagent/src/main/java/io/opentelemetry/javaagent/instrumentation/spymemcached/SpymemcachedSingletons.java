@@ -11,12 +11,21 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
+import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.Operation;
 
 public final class SpymemcachedSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spymemcached-2.12";
 
   private static final Instrumenter<SpymemcachedRequest, Object> INSTRUMENTER;
+
+  public static final VirtualField<OperationFuture<?>, Operation> OPERATION_FUTURE_OPERATION;
+
+  public static final VirtualField<GetFuture<?>, Operation> GET_FUTURE_OPERATION;
 
   static {
     SpymemcachedAttributesGetter dbAttributesGetter = new SpymemcachedAttributesGetter();
@@ -30,8 +39,12 @@ public final class SpymemcachedSingletons {
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(NetworkAttributesExtractor.create(netAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
+
+    OPERATION_FUTURE_OPERATION = VirtualField.find(OperationFuture.class, Operation.class);
+    GET_FUTURE_OPERATION = VirtualField.find(GetFuture.class, Operation.class);
   }
 
   public static Instrumenter<SpymemcachedRequest, Object> instrumenter() {
