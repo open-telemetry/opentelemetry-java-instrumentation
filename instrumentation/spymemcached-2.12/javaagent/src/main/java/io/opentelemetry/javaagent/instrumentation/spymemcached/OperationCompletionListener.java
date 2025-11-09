@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
-import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.OPERATION_FUTURE_OPERATION;
+import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.FUTURE_OPERATION;
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
 import io.opentelemetry.api.trace.Span;
@@ -30,7 +30,6 @@ public class OperationCompletionListener extends CompletionListener<OperationFut
       MemcachedConnection connection,
       String methodName,
       OperationFuture<?> future) {
-    // Extract handling node from future before creating span
     MemcachedNode handlingNode = extractHandlingNodeFromFuture(future);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, handlingNode);
     if (!instrumenter().shouldStart(parentContext, request)) {
@@ -41,7 +40,7 @@ public class OperationCompletionListener extends CompletionListener<OperationFut
 
   @Nullable
   private static MemcachedNode extractHandlingNodeFromFuture(OperationFuture<?> future) {
-    Operation operation = OPERATION_FUTURE_OPERATION.get(future);
+    Operation operation = FUTURE_OPERATION.get(future);
     if (operation != null) {
       return operation.getHandlingNode();
     }

@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.spymemcached.Spymemcach
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
@@ -39,13 +40,12 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
       // Strategy: Get the "most representative" node for bulk operations
       // We choose the last active node in the list, which often represents
       // the most recently added or most stable node in the cluster
-      java.util.Collection<net.spy.memcached.MemcachedNode> allNodes =
-          connection.getLocator().getAll();
+      Collection<MemcachedNode> allNodes = connection.getLocator().getAll();
 
       MemcachedNode lastActiveNode = null;
       MemcachedNode fallbackNode = null;
 
-      for (net.spy.memcached.MemcachedNode node : allNodes) {
+      for (MemcachedNode node : allNodes) {
         if (fallbackNode == null) {
           fallbackNode = node;
         }
