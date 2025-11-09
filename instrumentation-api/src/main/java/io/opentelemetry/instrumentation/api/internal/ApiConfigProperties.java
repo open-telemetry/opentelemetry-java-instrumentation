@@ -21,10 +21,22 @@ import javax.annotation.Nullable;
  */
 public final class ApiConfigProperties {
 
+  static boolean isIncubator = isIncubator();
+
   @Nullable private final DeclarativeConfigPropertiesApiBridge bridge;
 
+  private static boolean isIncubator() {
+    try {
+      Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
+      return true;
+    } catch (ClassNotFoundException e) {
+      // incubator module is not available
+      return false;
+    }
+  }
+
   public ApiConfigProperties(OpenTelemetry openTelemetry) {
-    if (openTelemetry instanceof ExtendedOpenTelemetry) {
+    if (isIncubator && openTelemetry instanceof ExtendedOpenTelemetry) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();
       this.bridge =
