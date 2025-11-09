@@ -28,7 +28,9 @@ public class OpenTelemetryApiInstrumentationModule extends InstrumentationModule
     return hasClassesNamed("application.io.opentelemetry.api.common.Value")
         .and(
             // disable when incubating api is present
-            not(hasClassesNamed("io.opentelemetry.api.incubator.ExtendedOpenTelemetry")));
+            not(
+                hasClassesNamed(
+                    "application.io.opentelemetry.api.incubator.ExtendedOpenTelemetry")));
   }
 
   @Override
