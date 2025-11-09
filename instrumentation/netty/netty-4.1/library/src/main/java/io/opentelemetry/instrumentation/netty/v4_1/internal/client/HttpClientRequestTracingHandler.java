@@ -17,6 +17,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
+import io.vertx.core.Vertx;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -42,10 +43,19 @@ public class HttpClientRequestTracingHandler extends ChannelOutboundHandlerAdapt
     }
 
     Context parentContext = ctx.channel().attr(AttributeKeys.CLIENT_PARENT_CONTEXT).get();
-    if (parentContext == null) {
+    if (parentContext == null||parentContext==Context.root()) {
       parentContext = Context.current();
     }
-
+    if (parentContext == null||parentContext==Context.root()) {
+      io.vertx.core.Context vertxContext = Vertx.currentContext();
+      if (vertxContext != null) {
+        Context storedOtelContext =
+            vertxContext.get("otel.context");
+        if (storedOtelContext != null && storedOtelContext!=Context.root()) {
+          parentContext = storedOtelContext;
+        }
+      }
+    }
     HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, ctx.channel());
     if (!instrumenter.shouldStart(parentContext, request) || isAwsRequest(request)) {
       super.write(ctx, msg, prm);
