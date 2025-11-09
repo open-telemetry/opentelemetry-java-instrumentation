@@ -1,0 +1,5 @@
+description: >
+  This instrumentation enables Redis client spans and Redis client metrics for the Vert.x Redis client 3.9.
+  Each Redis command produces a client span named after the Redis command, enriched with standard database
+  attributes (system, operation, statement), network attributes, and error details if an exception occurs.
+
