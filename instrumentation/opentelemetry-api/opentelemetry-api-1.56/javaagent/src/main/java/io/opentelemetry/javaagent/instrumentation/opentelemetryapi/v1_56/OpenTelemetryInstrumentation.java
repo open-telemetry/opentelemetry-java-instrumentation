@@ -10,9 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.ApplicationOpenTelemetry156Incubator;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationConfigProvider156Incubator;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationDeclarativeConfigProperties156Incubator;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,12 +30,6 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
   @SuppressWarnings({"ReturnValueIgnored", "unused"})
   public static class InitAdvice {
     @Advice.OnMethodEnter
-    public static void init() {
-      // the sole purpose of this advice is to ensure that the classes are
-      // recognized as helper class and injected into class loader
-      ApplicationOpenTelemetry156Incubator.class.getName();
-      ApplicationDeclarativeConfigProperties156Incubator.class.getName();
-      ApplicationConfigProvider156Incubator.class.getName();
-    }
+    public static void init() {}
   }
 }

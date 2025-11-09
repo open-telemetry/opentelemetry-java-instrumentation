@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.none;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.common.ApplicationComponentLoader156;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationConfigProvider156Incubator;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationDeclarativeConfigProperties156Incubator;
 import net.bytebuddy.asm.Advice;
@@ -38,6 +39,7 @@ public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentatio
       ApplicationOpenTelemetry156Incubator.class.getName();
       ApplicationDeclarativeConfigProperties156Incubator.class.getName();
       ApplicationConfigProvider156Incubator.class.getName();
+      ApplicationComponentLoader156.class.getName();
     }
   }
 }
