@@ -40,7 +40,6 @@ public class SyncCompletionListener extends CompletionListener<Void> {
       // Use the connection's locator to find the primary node for this key
       return connection.getLocator().getPrimary(key);
     } catch (RuntimeException e) {
-      // If we can't determine the node, return null
       return null;
     }
   }
