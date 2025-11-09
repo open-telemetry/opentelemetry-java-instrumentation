@@ -31,7 +31,7 @@ class JspSpanAssertions {
     this.port = port;
   }
 
-  SpanDataAssert assertServerSpan(SpanDataAssert span, JspSpan spanData) {
+  void assertServerSpan(SpanDataAssert span, JspSpan spanData) {
     if (spanData.getExceptionClass() != null) {
       span.hasStatus(StatusData.error())
           .hasEventsSatisfyingExactly(
@@ -58,7 +58,7 @@ class JspSpanAssertions {
                               val -> val.isInstanceOf(String.class))));
     }
 
-    return span.hasName(spanData.getMethod() + " " + spanData.getRoute())
+    span.hasName(spanData.getMethod() + " " + spanData.getRoute())
         .hasNoParent()
         .hasKind(SpanKind.SERVER)
         .hasAttributesSatisfyingExactly(
@@ -83,7 +83,7 @@ class JspSpanAssertions {
                         v -> assertThat(v).isEqualTo("500"))));
   }
 
-  SpanDataAssert assertCompileSpan(SpanDataAssert span, JspSpan spanData) {
+  void assertCompileSpan(SpanDataAssert span, JspSpan spanData) {
     if (spanData.getExceptionClass() != null) {
       span.hasStatus(StatusData.error())
           .hasEventsSatisfyingExactly(
@@ -102,7 +102,7 @@ class JspSpanAssertions {
                               val -> val.isInstanceOf(String.class))));
     }
 
-    return span.hasName("Compile " + spanData.getRoute())
+    span.hasName("Compile " + spanData.getRoute())
         .hasParent(spanData.getParent())
         .hasAttributesSatisfyingExactly(
             equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp." + spanData.getClassName()),
