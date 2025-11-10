@@ -85,7 +85,6 @@ dependencies {
   testRuntimeOnly("com.h2database:h2:1.4.197")
   testRuntimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
 
-  testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation(project(":instrumentation:resources:library"))
@@ -125,7 +124,6 @@ testing {
     val testLogbackAppender by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        implementation(project(":testing-common"))
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation("org.mockito:mockito-inline")

@@ -28,7 +28,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
-public class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<String>> {
+class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();

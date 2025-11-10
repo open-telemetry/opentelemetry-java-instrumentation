@@ -17,7 +17,7 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapter {
@@ -38,7 +38,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     Context parentContext = parentContextAttr.get();
 
     if (msg instanceof FullHttpResponse) {
-      HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+      NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
       instrumenter().end(context, request, (HttpResponse) msg, null);
       contextAttr.remove();
       parentContextAttr.remove();
@@ -48,7 +48,7 @@ public class HttpClientResponseTracingHandler extends ChannelInboundHandlerAdapt
     } else if (msg instanceof LastHttpContent) {
       // Not a FullHttpResponse so this is content that has been received after headers.
       // Finish the span using what we stored in attrs.
-      HttpRequestAndChannel request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
+      NettyRequest request = ctx.channel().attr(HTTP_CLIENT_REQUEST).getAndSet(null);
       HttpResponse response = ctx.channel().attr(HTTP_CLIENT_RESPONSE).getAndRemove();
       instrumenter().end(context, request, response, null);
       contextAttr.remove();
