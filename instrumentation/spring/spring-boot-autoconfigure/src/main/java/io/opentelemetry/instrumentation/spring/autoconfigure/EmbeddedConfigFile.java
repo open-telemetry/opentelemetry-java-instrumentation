@@ -13,7 +13,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -87,8 +86,8 @@ class EmbeddedConfigFile {
         boolean isLast = (i == parts.length - 1);
 
         // Check if this part contains an array index like "list[0]"
-        Matcher matcher = getArrayMatcher(part, isLast);
-        if (matcher != null) {
+        Matcher matcher = ARRAY_PATTERN.matcher(part);
+        if (matcher.matches()) {
           String arrayName = matcher.group(1);
           int index = Integer.parseInt(matcher.group(2));
 
@@ -127,12 +126,4 @@ class EmbeddedConfigFile {
     return result;
   }
 
-  @Nullable
-  private static Matcher getArrayMatcher(String part, boolean isLast) {
-    if (!isLast) {
-      return null;
-    }
-    Matcher matcher = ARRAY_PATTERN.matcher(part);
-    return matcher.matches() ? matcher : null;
-  }
 }
