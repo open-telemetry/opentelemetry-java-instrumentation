@@ -9,7 +9,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurat
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
@@ -21,11 +20,9 @@ import org.springframework.core.env.PropertySource;
 
 class EmbeddedConfigFile {
 
-  static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)\\]");
+  private static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)]");
 
-  private EmbeddedConfigFile() {
-    // Utility class
-  }
+  private EmbeddedConfigFile() {}
 
   static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
     Map<String, String> props = extractSpringProperties(environment);
@@ -92,16 +89,10 @@ class EmbeddedConfigFile {
           String arrayName = matcher.group(1);
           int index = Integer.parseInt(matcher.group(2));
 
-          // Get or create the list
-          if (!current.containsKey(arrayName)) {
-            current.put(arrayName, new ArrayList<>());
-          }
-          List<Object> list = (List<Object>) current.get(arrayName);
+          ArrayList<Object> list =
+              (ArrayList<Object>) current.computeIfAbsent(arrayName, k -> new ArrayList<>());
 
-          // Ensure the list is large enough
-          while (list.size() <= index) {
-            list.add(null);
-          }
+          list.ensureCapacity(index + 1);
 
           if (isLast) {
             list.set(index, value);
