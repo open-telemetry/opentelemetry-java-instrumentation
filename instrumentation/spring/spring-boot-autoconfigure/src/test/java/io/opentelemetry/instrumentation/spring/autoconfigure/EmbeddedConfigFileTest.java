@@ -17,7 +17,7 @@ class EmbeddedConfigFileTest {
   @Test
   void convertFlatPropsToNested_simpleProperties() {
     Map<String, String> flatProps = new HashMap<>();
-    flatProps.put("resource.service.name", "my-service");
+    flatProps.put("resource.service[0].name", "my-service");
     flatProps.put("traces.exporter", "otlp");
 
     Map<String, Object> result = EmbeddedConfigFile.convertFlatPropsToNested(flatProps);
@@ -33,12 +33,12 @@ class EmbeddedConfigFileTest {
                         @SuppressWarnings("unchecked")
                         Map<String, Object> resourceMap = (Map<String, Object>) resource;
                         assertThat(resourceMap)
-                            .containsOnlyKeys("service")
+                            .containsOnlyKeys("service[0]")
                             .satisfies(
                                 m -> {
                                   @SuppressWarnings("unchecked")
                                   Map<String, Object> serviceMap =
-                                      (Map<String, Object>) m.get("service");
+                                      (Map<String, Object>) m.get("service[0]");
                                   assertThat(serviceMap).containsEntry("name", "my-service");
                                 });
                       });

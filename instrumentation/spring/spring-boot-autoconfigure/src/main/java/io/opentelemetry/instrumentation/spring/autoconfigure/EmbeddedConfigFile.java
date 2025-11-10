@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -20,7 +21,7 @@ import org.springframework.core.env.PropertySource;
 
 class EmbeddedConfigFile {
 
-  private static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)]");
+  private static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)]$");
 
   private EmbeddedConfigFile() {}
 
@@ -84,15 +85,19 @@ class EmbeddedConfigFile {
         boolean isLast = (i == parts.length - 1);
 
         // Check if this part contains an array index like "list[0]"
-        Matcher matcher = ARRAY_PATTERN.matcher(part);
-        if (matcher.matches()) {
+        Matcher matcher = getArrayMatcher(part, isLast);
+        if (matcher != null) {
           String arrayName = matcher.group(1);
           int index = Integer.parseInt(matcher.group(2));
 
           ArrayList<Object> list =
               (ArrayList<Object>) current.computeIfAbsent(arrayName, k -> new ArrayList<>());
 
+          // Ensure the list is large enough
           list.ensureCapacity(index + 1);
+          while (list.size() <= index) {
+            list.add(null);
+          }
 
           if (isLast) {
             list.set(index, value);
@@ -118,5 +123,14 @@ class EmbeddedConfigFile {
       }
     }
     return result;
+  }
+
+  @Nullable
+  private static Matcher getArrayMatcher(String part, boolean isLast) {
+    if (!isLast) {
+      return null;
+    }
+    Matcher matcher = ARRAY_PATTERN.matcher(part);
+    return matcher.matches() ? matcher : null;
   }
 }
