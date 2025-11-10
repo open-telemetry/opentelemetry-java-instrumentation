@@ -20,7 +20,7 @@ public class DistroComponentProvider implements ComponentProvider {
 
   @Override
   public String getName() {
-    return "opentelemetry_javaagent_distribution";
+    return "opentelemetry-javaagent-distribution";
   }
 
   @Override
