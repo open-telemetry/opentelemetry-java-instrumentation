@@ -6859,12 +6859,45 @@ libraries:
         attributes: []
   jsp:
   - name: jsp-2.3
+    display_name: JSP (JavaServer Pages)
+    description: |
+      This instrumentation enables view spans for JSP page rendering and compilation (view spans are disabled by default).
+    library_link: https://jakarta.ee/specifications/pages/
+    features:
+    - VIEW_SPANS
     source_path: instrumentation/jsp-2.3
     scope:
       name: io.opentelemetry.jsp-2.3
     target_versions:
       javaagent:
       - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
+    configurations:
+    - name: otel.instrumentation.common.experimental.view-telemetry.enabled
+      description: Enables the creation of experimental view spans.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.jsp.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`, and `jsp.classFQCN`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
+    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: jsp.classFQCN
+          type: STRING
+        - name: jsp.compiler
+          type: STRING
+        - name: jsp.forwardOrigin
+          type: STRING
+        - name: jsp.requestURL
+          type: STRING
   kafka:
   - name: kafka-clients-0.11
     description: |

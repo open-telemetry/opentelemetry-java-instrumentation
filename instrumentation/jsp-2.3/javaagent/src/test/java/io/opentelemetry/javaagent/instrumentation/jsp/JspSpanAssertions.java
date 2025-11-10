@@ -21,14 +21,26 @@ import io.opentelemetry.semconv.NetworkAttributes;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
+import javax.annotation.Nullable;
 
 class JspSpanAssertions {
+  static final boolean isExperimentalEnabled =
+      Boolean.getBoolean("otel.instrumentation.jsp.experimental-span-attributes");
+
   private final String baseUrl;
   private final int port;
 
   JspSpanAssertions(String baseUrl, int port) {
     this.baseUrl = baseUrl;
     this.port = port;
+  }
+
+  @Nullable
+  public static String experimental(String value) {
+    if (isExperimentalEnabled) {
+      return value;
+    }
+    return null;
   }
 
   void assertServerSpan(SpanDataAssert span, JspSpan spanData) {
@@ -105,11 +117,14 @@ class JspSpanAssertions {
     span.hasName("Compile " + spanData.getRoute())
         .hasParent(spanData.getParent())
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("jsp.classFQCN"), "org.apache.jsp." + spanData.getClassName()),
-            equalTo(stringKey("jsp.compiler"), "org.apache.jasper.compiler.JDTCompiler"));
+            equalTo(
+                stringKey("jsp.classFQCN"),
+                experimental("org.apache.jsp." + spanData.getClassName())),
+            equalTo(
+                stringKey("jsp.compiler"), experimental("org.apache.jasper.compiler.JDTCompiler")));
   }
 
-  SpanDataAssert assertRenderSpan(SpanDataAssert span, JspSpan spanData) {
+  void assertRenderSpan(SpanDataAssert span, JspSpan spanData) {
     String requestUrl = spanData.getRoute();
     if (spanData.getRequestUrlOverride() != null) {
       requestUrl = spanData.getRequestUrlOverride();
@@ -141,15 +156,17 @@ class JspSpanAssertions {
                               val -> val.isInstanceOf(String.class))));
     }
 
-    return span.hasName("Render " + spanData.getRoute())
-        .hasParent(spanData.getParent())
-        .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("jsp.requestURL"), baseUrl + requestUrl),
-            satisfies(
-                stringKey("jsp.forwardOrigin"),
-                val ->
-                    val.satisfiesAnyOf(
-                        v -> assertThat(spanData.getForwardOrigin()).isNull(),
-                        v -> assertThat(v).isEqualTo(spanData.getForwardOrigin()))));
+    span.hasName("Render " + spanData.getRoute()).hasParent(spanData.getParent());
+
+    if (isExperimentalEnabled) {
+      span.hasAttributesSatisfyingExactly(
+          equalTo(stringKey("jsp.requestURL"), baseUrl + requestUrl),
+          satisfies(
+              stringKey("jsp.forwardOrigin"),
+              val ->
+                  val.satisfiesAnyOf(
+                      v -> assertThat(spanData.getForwardOrigin()).isNull(),
+                      v -> assertThat(v).isEqualTo(spanData.getForwardOrigin()))));
+    }
   }
 }
