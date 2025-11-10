@@ -25,6 +25,7 @@ import io.opentelemetry.javaagent.tooling.config.AgentConfig;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstallerFactory;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
@@ -134,7 +135,7 @@ public final class InstrumentationModuleInstaller {
           return helpers;
         };
 
-    AgentBuilder.Transformer helperInjector =
+    HelperInjector helperInjector =
         new HelperInjector(
             instrumentationModule.instrumentationName(),
             helperGenerator,
@@ -145,18 +146,24 @@ public final class InstrumentationModuleInstaller {
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
+    boolean allowClassVersionChange =
+        config.getBoolean("otel.javaagent.experimental.allow-class-version-change", false);
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
-      AgentBuilder.Identified.Extendable extendableAgentBuilder =
+      AgentBuilder.Identified.Extendable extendableAgentBuilder;
+      AgentBuilder.Identified.Narrowable narrowableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
-              .and(muzzleMatcher)
-              .transform(new PatchByteCodeVersionTransformer());
+              .and(muzzleMatcher);
+      if (allowClassVersionChange) {
+        extendableAgentBuilder =
+            narrowableAgentBuilder.transform(new PatchByteCodeVersionTransformer());
+      } else {
+        extendableAgentBuilder =
+            narrowableAgentBuilder
+                .transform(ConstantAdjuster.instance())
+                .transform(new ForwardIndyAdviceTransformer(helperInjector));
+      }
 
-      // TODO (Jonas): we are not calling
-      // contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder) anymore
-      // As a result the advices should store `VirtualFields` as static variables instead of having
-      // the lookup inline
-      // We need to update our documentation on that
       extendableAgentBuilder =
           IndyModuleRegistry.initializeModuleLoaderOnMatch(
               instrumentationModule, extendableAgentBuilder);
@@ -166,7 +173,6 @@ public final class InstrumentationModuleInstaller {
           new IndyTypeTransformerImpl(extendableAgentBuilder, instrumentationModule);
       typeInstrumentation.transform(typeTransformer);
       extendableAgentBuilder = typeTransformer.getAgentBuilder();
-      // TODO (Jonas): make instrumentation of bytecode older than 1.4 opt-in via a config option
       extendableAgentBuilder = contextProvider.injectFields(extendableAgentBuilder);
 
       agentBuilder = extendableAgentBuilder;
