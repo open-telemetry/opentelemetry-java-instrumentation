@@ -70,7 +70,7 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
 
       StatefulConnection<?, ?> connection = asyncCommands.getConnection();
-      RedisURI redisUri = CONNECTION_URI.get(connection);
+      RedisURI redisUri = connection != null ? CONNECTION_URI.get(connection) : null;
 
       if (redisUri != null) {
         COMMAND_CONNECTION_INFO.set(command, redisUri);

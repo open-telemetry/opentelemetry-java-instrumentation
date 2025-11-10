@@ -16,6 +16,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.lettuce.core.AbstractRedisReactiveCommands;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
@@ -64,14 +65,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       RedisCommand<K, V, T> command = supplier.get();
 
-      // Get connection from reactive commands object
       StatefulConnection<?, ?> connection = null;
-      if (reactiveCommands instanceof io.lettuce.core.AbstractRedisReactiveCommands) {
-        connection = ((io.lettuce.core.AbstractRedisReactiveCommands<?, ?>) reactiveCommands).getConnection();
+      if (reactiveCommands instanceof AbstractRedisReactiveCommands) {
+        connection = ((AbstractRedisReactiveCommands<?, ?>) reactiveCommands).getConnection();
       }
 
-      // Set connection info BEFORE creating the span (similar to
-      // LettuceAsyncCommandsInstrumentation)
       RedisURI redisUri = connection != null ? CONNECTION_URI.get(connection) : null;
 
       if (redisUri != null) {
@@ -109,14 +107,11 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
       RedisCommand<K, V, T> command = supplier.get();
 
-      // Get connection from reactive commands object
       StatefulConnection<?, ?> connection = null;
-      if (reactiveCommands instanceof io.lettuce.core.AbstractRedisReactiveCommands) {
-        connection = ((io.lettuce.core.AbstractRedisReactiveCommands<?, ?>) reactiveCommands).getConnection();
+      if (reactiveCommands instanceof AbstractRedisReactiveCommands) {
+        connection = ((AbstractRedisReactiveCommands<?, ?>) reactiveCommands).getConnection();
       }
 
-      // Set connection info BEFORE creating the span (similar to
-      // LettuceAsyncCommandsInstrumentation)
       RedisURI redisUri = connection != null ? CONNECTION_URI.get(connection) : null;
 
       if (redisUri != null) {

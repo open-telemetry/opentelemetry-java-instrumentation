@@ -36,8 +36,8 @@ public final class LettuceSingletons {
       VirtualField.find(AsyncCommand.class, Context.class);
   public static final VirtualField<StatefulConnection<?, ?>, RedisURI> CONNECTION_URI =
       VirtualField.find(StatefulConnection.class, RedisURI.class);
-  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI>
-      COMMAND_CONNECTION_INFO = VirtualField.find(RedisCommand.class, RedisURI.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI> COMMAND_CONNECTION_INFO =
+      VirtualField.find(RedisCommand.class, RedisURI.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
