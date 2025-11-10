@@ -55,6 +55,8 @@ abstract class AbstractLettuceClientTest {
 
   protected static String embeddedDbUri;
 
+  protected static int serverPort;
+
   protected static StatefulRedisConnection<String, String> newContainerConnection() {
     GenericContainer<?> server =
         new GenericContainer<>(containerImage)
@@ -64,7 +66,7 @@ abstract class AbstractLettuceClientTest {
     server.start();
     cleanup.deferCleanup(server::stop);
 
-    long serverPort = server.getMappedPort(6379);
+    serverPort = server.getMappedPort(6379);
 
     RedisClient client = RedisClient.create("redis://" + host + ":" + serverPort + "/" + DB_INDEX);
     client.setOptions(CLIENT_OPTIONS);

@@ -5,9 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.connectInstrumenter;
 
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulConnection;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
@@ -40,6 +42,10 @@ public class EndConnectAsyncBiFunction<T, U extends Throwable, R>
 
   @Override
   public R apply(T t, Throwable throwable) {
+    if (t instanceof StatefulConnection) {
+      CONNECTION_URI.set((StatefulConnection<?, ?>) t, redisUri);
+    }
+
     if (throwable instanceof CancellationException) {
       if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
         Span.fromContext(context).setAttribute("lettuce.command.cancelled", true);

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
 import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -33,9 +34,14 @@ public final class LettuceSingletons {
 
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
+  public static final VirtualField<StatefulConnection<?, ?>, RedisURI> CONNECTION_URI =
+      VirtualField.find(StatefulConnection.class, RedisURI.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI>
+      COMMAND_CONNECTION_INFO = VirtualField.find(RedisCommand.class, RedisURI.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    LettuceNetworkAttributesGetter netAttributesGetter = new LettuceNetworkAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
@@ -43,6 +49,7 @@ public final class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import com.lambdaworks.redis.RedisURI;
+import com.lambdaworks.redis.api.StatefulConnection;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -33,9 +34,14 @@ public final class LettuceSingletons {
 
   public static final VirtualField<AsyncCommand<?, ?, ?>, Context> CONTEXT =
       VirtualField.find(AsyncCommand.class, Context.class);
+  public static final VirtualField<StatefulConnection<?, ?>, RedisURI> CONNECTION_URI =
+      VirtualField.find(StatefulConnection.class, RedisURI.class);
+  public static final VirtualField<RedisCommand<?, ?, ?>, RedisURI>
+      COMMAND_CONNECTION_INFO = VirtualField.find(RedisCommand.class, RedisURI.class);
 
   static {
     LettuceDbAttributesGetter dbAttributesGetter = new LettuceDbAttributesGetter();
+    LettuceNetworkAttributesGetter netAttributesGetter = new LettuceNetworkAttributesGetter();
 
     INSTRUMENTER =
         Instrumenter.<RedisCommand<?, ?, ?>, Void>builder(
@@ -43,19 +49,20 @@ public final class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addOperationMetrics(DbClientMetrics.get())
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
 
-    LettuceConnectNetworkAttributesGetter netAttributesGetter =
+    LettuceConnectNetworkAttributesGetter connectNetAttributesGetter =
         new LettuceConnectNetworkAttributesGetter();
 
     CONNECT_INSTRUMENTER =
         Instrumenter.<RedisURI, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, redisUri -> "CONNECT")
-            .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
+            .addAttributesExtractor(ServerAttributesExtractor.create(connectNetAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
+                    connectNetAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setEnabled(
                 AgentInstrumentationConfig.get()

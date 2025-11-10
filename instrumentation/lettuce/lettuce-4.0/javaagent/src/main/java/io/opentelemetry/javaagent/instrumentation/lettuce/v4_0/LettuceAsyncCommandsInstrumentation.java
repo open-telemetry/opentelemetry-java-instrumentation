@@ -6,11 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONNECTION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.CONNECTION_URI;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import com.lambdaworks.redis.AbstractRedisAsyncCommands;
+import com.lambdaworks.redis.RedisURI;
+import com.lambdaworks.redis.api.StatefulConnection;
 import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
@@ -60,7 +65,16 @@ public class LettuceAsyncCommandsInstrumentation implements TypeInstrumentation 
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static AdviceScope onEnter(@Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+    public static AdviceScope onEnter(
+        @Advice.This AbstractRedisAsyncCommands<?, ?> asyncCommands,
+        @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
+
+      StatefulConnection<?, ?> connection = asyncCommands.getConnection();
+      RedisURI redisUri = CONNECTION_URI.get(connection);
+
+      if (redisUri != null) {
+        COMMAND_CONNECTION_INFO.set(command, redisUri);
+      }
 
       Context parentContext = currentContext();
       if (!instrumenter().shouldStart(parentContext, command)) {

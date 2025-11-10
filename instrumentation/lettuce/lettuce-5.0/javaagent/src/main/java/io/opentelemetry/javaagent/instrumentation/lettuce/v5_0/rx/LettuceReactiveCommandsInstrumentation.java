@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.rx;
 
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceInstrumentationUtil.expectsResponse;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.COMMAND_CONNECTION_INFO;
+import static io.opentelemetry.javaagent.instrumentation.lettuce.v5_0.LettuceSingletons.CONNECTION_URI;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.nameEndsWith;
@@ -14,6 +16,8 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulConnection;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -56,8 +60,25 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
+        @Advice.This Object reactiveCommands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      return supplier.get();
+      RedisCommand<K, V, T> command = supplier.get();
+
+      // Get connection from reactive commands object
+      StatefulConnection<?, ?> connection = null;
+      if (reactiveCommands instanceof io.lettuce.core.AbstractRedisReactiveCommands) {
+        connection = ((io.lettuce.core.AbstractRedisReactiveCommands<?, ?>) reactiveCommands).getConnection();
+      }
+
+      // Set connection info BEFORE creating the span (similar to
+      // LettuceAsyncCommandsInstrumentation)
+      RedisURI redisUri = connection != null ? CONNECTION_URI.get(connection) : null;
+
+      if (redisUri != null) {
+        COMMAND_CONNECTION_INFO.set(command, redisUri);
+      }
+
+      return command;
     }
 
     // throwables wouldn't matter here, because no spans have been started due to redis command not
@@ -84,8 +105,25 @@ public class LettuceReactiveCommandsInstrumentation implements TypeInstrumentati
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static <K, V, T> RedisCommand<K, V, T> extractCommandName(
+        @Advice.This Object reactiveCommands,
         @Advice.Argument(0) Supplier<RedisCommand<K, V, T>> supplier) {
-      return supplier.get();
+      RedisCommand<K, V, T> command = supplier.get();
+
+      // Get connection from reactive commands object
+      StatefulConnection<?, ?> connection = null;
+      if (reactiveCommands instanceof io.lettuce.core.AbstractRedisReactiveCommands) {
+        connection = ((io.lettuce.core.AbstractRedisReactiveCommands<?, ?>) reactiveCommands).getConnection();
+      }
+
+      // Set connection info BEFORE creating the span (similar to
+      // LettuceAsyncCommandsInstrumentation)
+      RedisURI redisUri = connection != null ? CONNECTION_URI.get(connection) : null;
+
+      if (redisUri != null) {
+        COMMAND_CONNECTION_INFO.set(command, redisUri);
+      }
+
+      return command;
     }
 
     // if there is an exception thrown, then don't make spans
