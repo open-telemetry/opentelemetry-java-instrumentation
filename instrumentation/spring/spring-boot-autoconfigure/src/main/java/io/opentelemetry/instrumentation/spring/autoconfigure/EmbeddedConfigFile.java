@@ -50,7 +50,9 @@ class EmbeddedConfigFile {
     }
 
     if (props.isEmpty()) {
-      throw new IllegalStateException("No application.yaml file found.");
+      throw new IllegalStateException(
+          "No properties found with prefix 'otel.' - this should not happen, because we checked "
+              + "'environment.getProperty(\"otel.file_format\", String.class) != null' earlier");
     }
     return props;
   }
