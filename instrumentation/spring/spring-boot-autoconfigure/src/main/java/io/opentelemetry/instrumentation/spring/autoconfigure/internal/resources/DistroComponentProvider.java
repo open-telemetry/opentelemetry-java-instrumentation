@@ -13,7 +13,6 @@ import io.opentelemetry.sdk.resources.Resource;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@SuppressWarnings("rawtypes")
 public class DistroComponentProvider implements ComponentProvider {
 
   @Override
@@ -23,7 +22,7 @@ public class DistroComponentProvider implements ComponentProvider {
 
   @Override
   public String getName() {
-    return "opentelemetry-spring-boot-starter";
+    return "opentelemetry_spring_boot_starter";
   }
 
   @Override

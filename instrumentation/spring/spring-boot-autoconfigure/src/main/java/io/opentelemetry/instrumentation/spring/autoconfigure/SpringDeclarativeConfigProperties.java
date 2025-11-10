@@ -301,7 +301,7 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Override
   public String toString() {
-    StringJoiner joiner = new StringJoiner(", ", "YamlDeclarativeConfigProperties{", "}");
+    StringJoiner joiner = new StringJoiner(", ", "SpringDeclarativeConfigProperties{", "}");
     simpleEntries.forEach((key, value) -> joiner.add(key + "=" + value));
     listEntries.forEach((key, value) -> joiner.add(key + "=" + value));
     mapEntries.forEach((key, value) -> joiner.add(key + "=" + value));

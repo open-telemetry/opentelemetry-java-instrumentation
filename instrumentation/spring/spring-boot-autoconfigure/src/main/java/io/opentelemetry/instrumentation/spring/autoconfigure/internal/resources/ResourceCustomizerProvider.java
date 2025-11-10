@@ -25,7 +25,7 @@ public class ResourceCustomizerProvider implements DeclarativeConfigurationCusto
   // opentelemetry-javaagent-distribution: adds "distro.name" and "distro.version" attributes
   // (DistroComponentProvider in this package)
   private static final List<String> REQUIRED_DETECTORS =
-      Collections.singletonList("opentelemetry-spring-boot-starter");
+      Collections.singletonList("opentelemetry_spring_boot_starter");
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
