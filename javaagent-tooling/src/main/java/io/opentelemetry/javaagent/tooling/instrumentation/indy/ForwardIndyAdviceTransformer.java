@@ -62,12 +62,9 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
       JavaModule javaModule,
       ProtectionDomain protectionDomain) {
 
-    // temporarily disable version check for testing
-    if (false) {
-      // java 7+ class files already support invokedynamic
-      if (isAtLeastJava7(typeDescription)) {
-        return builder;
-      }
+    // java 7+ class files already support invokedynamic
+    if (isAtLeastJava7(typeDescription)) {
+      return builder;
     }
 
     return builder.visit(
@@ -90,6 +87,7 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
               public void visitEnd() {
                 super.visitEnd();
 
+                // inject helper classes that forward to the advice using invokedynamic
                 if (!injectedClasses.isEmpty()) {
                   helperInjector.injectHelperClasses(classLoader, injectedClasses);
                 }
@@ -130,6 +128,8 @@ public class ForwardIndyAdviceTransformer implements AgentBuilder.Transformer {
                               bootstrapMethodArguments);
                       injectedClasses.put(forwardClassDotName, forwardClassBytes);
 
+                      // replace invokedynamic with invokestatic to the generated forwarder class
+                      // the forwarder class will contain the original invokedynamic instruction
                       super.visitMethodInsn(
                           Opcodes.INVOKESTATIC, forwardClassSlasName, name, descriptor, false);
                       return;
