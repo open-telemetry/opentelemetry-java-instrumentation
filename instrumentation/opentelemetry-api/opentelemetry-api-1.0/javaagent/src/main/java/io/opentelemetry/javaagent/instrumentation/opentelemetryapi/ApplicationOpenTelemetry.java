@@ -57,37 +57,25 @@ public class ApplicationOpenTelemetry implements OpenTelemetry {
 
   @Nullable
   private static OpenTelemetry getOpenTelemetry156() {
-    try {
-      // this class is defined in opentelemetry-api-1.56
-      Class<?> clazz =
-          Class.forName(
-              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.ApplicationOpenTelemetry156Incubator");
-      return (OpenTelemetry) clazz.getField("INSTANCE").get(null);
-    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
-      return null;
-    }
+    return getOpenTelemetry(
+        "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.ApplicationOpenTelemetry156Incubator");
   }
 
   @Nullable
   private static OpenTelemetry getOpenTelemetry127() {
-    try {
-      // this class is defined in opentelemetry-api-1.27
-      Class<?> clazz =
-          Class.forName(
-              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.ApplicationOpenTelemetry127");
-      return (OpenTelemetry) clazz.getField("INSTANCE").get(null);
-    } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
-      return null;
-    }
+    return getOpenTelemetry(
+        "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.ApplicationOpenTelemetry127");
   }
 
   @Nullable
   private static OpenTelemetry getOpenTelemetry110() {
+    return getOpenTelemetry(
+        "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.ApplicationOpenTelemetry110");
+  }
+
+  private static OpenTelemetry getOpenTelemetry(String className) {
     try {
-      // this class is defined in opentelemetry-api-1.10
-      Class<?> clazz =
-          Class.forName(
-              "io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.ApplicationOpenTelemetry110");
+      Class<?> clazz = Class.forName(className);
       return (OpenTelemetry) clazz.getField("INSTANCE").get(null);
     } catch (ClassNotFoundException | NoSuchFieldException | IllegalAccessException exception) {
       return null;
