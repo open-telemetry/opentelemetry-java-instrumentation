@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config;
 
+import application.io.opentelemetry.api.incubator.config.DeclarativeConfigException;
 import application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import application.io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.common.ApplicationComponentLoader156;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -117,6 +117,8 @@ public final class ApplicationDeclarativeConfigProperties156Incubator
 
   @Override
   public ComponentLoader getComponentLoader() {
-    return new ApplicationComponentLoader156(instrumentationConfig.getComponentLoader());
+    throw new DeclarativeConfigException(
+        "getComponentLoader is not supported in application code. "
+            + "It is only used to set up the OpenTelemetry SDK in the agent.");
   }
 }
