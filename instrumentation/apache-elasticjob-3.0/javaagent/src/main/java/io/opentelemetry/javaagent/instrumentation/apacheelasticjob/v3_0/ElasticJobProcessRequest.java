@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 public final class ElasticJobProcessRequest {
   private String jobName;
   private String taskId;
-  private int item;
+  private int shardingItemIndex;
   private int shardingTotalCount;
   private String shardingItemParameters;
   private boolean failed;
@@ -19,14 +19,14 @@ public final class ElasticJobProcessRequest {
   public static ElasticJobProcessRequest create(
       String jobName,
       String taskId,
-      int item,
+      int shardingItemIndex,
       int shardingTotalCount,
       String shardingItemParameters,
       String jobType) {
     ElasticJobProcessRequest request = new ElasticJobProcessRequest();
     request.jobName = jobName;
     request.taskId = taskId;
-    request.item = item;
+    request.shardingItemIndex = shardingItemIndex;
     request.shardingTotalCount = shardingTotalCount;
     request.shardingItemParameters = shardingItemParameters;
     request.jobType = jobType;
@@ -36,7 +36,7 @@ public final class ElasticJobProcessRequest {
   public static ElasticJobProcessRequest createWithUserJobInfo(
       String jobName,
       String taskId,
-      int item,
+      int shardingItemIndex,
       int shardingTotalCount,
       String shardingItemParameters,
       String jobType,
@@ -45,7 +45,7 @@ public final class ElasticJobProcessRequest {
     ElasticJobProcessRequest request = new ElasticJobProcessRequest();
     request.jobName = jobName;
     request.taskId = taskId;
-    request.item = item;
+    request.shardingItemIndex = shardingItemIndex;
     request.shardingTotalCount = shardingTotalCount;
     request.shardingItemParameters = shardingItemParameters;
     request.jobType = jobType;
@@ -70,8 +70,8 @@ public final class ElasticJobProcessRequest {
     return this.taskId;
   }
 
-  public int getItem() {
-    return this.item;
+  public int getShardingItemIndex() {
+    return this.shardingItemIndex;
   }
 
   public int getShardingTotalCount() {

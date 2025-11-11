@@ -94,7 +94,7 @@ class ElasticJobTest {
       bootstrap.schedule();
 
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.item")),
+          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -140,7 +140,7 @@ class ElasticJobTest {
       bootstrap.schedule();
 
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.item")),
+          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -188,7 +188,7 @@ class ElasticJobTest {
       bootstrap.schedule();
 
       testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.item")),
+          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
           trace ->
               trace.hasSpansSatisfyingExactly(
                   span ->
@@ -335,7 +335,7 @@ class ElasticJobTest {
     List<AttributeAssertion> assertions = new ArrayList<>();
     assertions.add(equalTo(stringKey("job.system"), "elasticjob"));
     assertions.add(equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName));
-    assertions.add(equalTo(longKey("scheduling.apache-elasticjob.item"), item));
+    assertions.add(equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item));
     assertions.add(
         equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount));
     assertions.add(
