@@ -48,9 +48,6 @@ import org.junit.jupiter.api.Test;
 
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
-  private static final boolean isExperimental =
-      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
-
   @SuppressWarnings("deprecation") // using deprecated semconv
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
