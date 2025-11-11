@@ -48,6 +48,9 @@ import org.junit.jupiter.api.Test;
 
 class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
 
+  private static final boolean isExperimental =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+
   @SuppressWarnings("deprecation") // using deprecated semconv
   @DisplayName("test kafka produce and consume with streams in-between")
   @Test
@@ -156,10 +159,14 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                                 k -> k.isInstanceOf(String.class)),
                             equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                             equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                            satisfies(
-                                longKey("kafka.record.queue_time_ms"),
-                                k -> k.isGreaterThanOrEqualTo(0)),
                             equalTo(stringKey("asdf"), "testing")));
+
+                if (isExperimental) {
+                  assertions.add(
+                      satisfies(
+                          longKey("kafka.record.queue_time_ms"), k -> k.isGreaterThanOrEqualTo(0)));
+                }
+
                 if (Boolean.getBoolean("testLatestDeps")) {
                   assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test-application"));
                 }
@@ -224,10 +231,14 @@ class KafkaStreamsDefaultTest extends KafkaStreamsBaseTest {
                                   k -> k.isInstanceOf(String.class)),
                               equalTo(MESSAGING_KAFKA_MESSAGE_OFFSET, 0),
                               equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                              satisfies(
-                                  longKey("kafka.record.queue_time_ms"),
-                                  k -> k.isGreaterThanOrEqualTo(0)),
                               equalTo(longKey("testing"), 123)));
+                  if (isExperimental) {
+                    assertions.add(
+                        satisfies(
+                            longKey("kafka.record.queue_time_ms"),
+                            k -> k.isGreaterThanOrEqualTo(0)));
+                  }
+
                   if (Boolean.getBoolean("testLatestDeps")) {
                     assertions.add(equalTo(MESSAGING_KAFKA_CONSUMER_GROUP, "test"));
                   }
