@@ -37,9 +37,6 @@ public class OpenTelemetryIncubatorInstrumentation implements TypeInstrumentatio
       // the sole purpose of this advice is to ensure that the classes are
       // recognized as helper class and injected into class loader
       ApplicationOpenTelemetry156Incubator.class.getName();
-      ApplicationDeclarativeConfigProperties156Incubator.class.getName();
-      ApplicationConfigProvider156Incubator.class.getName();
-      ApplicationComponentLoader156.class.getName();
     }
   }
 }
