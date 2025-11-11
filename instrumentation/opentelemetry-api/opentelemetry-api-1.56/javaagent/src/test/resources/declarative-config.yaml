@@ -5,3 +5,9 @@ tracer_provider:
     - simple:
         exporter:
           console:
+
+instrumentation/development:
+  java:
+    foo:
+      bar: baz
+
