@@ -13,11 +13,11 @@ import javax.annotation.Nullable;
 
 /** A tuple of an {@link HttpRequest} and a {@link Channel}. */
 @AutoValue
-public abstract class HttpRequestAndChannel {
+public abstract class NettyRequest {
 
-  /** Create a new {@link HttpRequestAndChannel}. */
-  public static HttpRequestAndChannel create(HttpRequest request, Channel channel) {
-    return new AutoValue_HttpRequestAndChannel(request, channel, channel.remoteAddress());
+  /** Create a new {@link NettyRequest}. */
+  public static NettyRequest create(HttpRequest request, Channel channel) {
+    return new AutoValue_NettyRequest(request, channel, channel.remoteAddress());
   }
 
   /** Returns the {@link HttpRequest}. */
@@ -27,8 +27,7 @@ public abstract class HttpRequestAndChannel {
   public abstract Channel channel();
 
   /**
-   * Return the {@link Channel#remoteAddress()} present when this {@link HttpRequestAndChannel} was
-   * created.
+   * Return the {@link Channel#remoteAddress()} present when this {@link NettyRequest} was created.
    *
    * <p>We capture the remote address early because netty may return null when calling {@link
    * Channel#remoteAddress()} at the end of processing in cases of timeouts or other connection
