@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_27.Applica
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.incubator.config.ApplicationConfigProvider156Incubator;
 import javax.annotation.Nullable;
 
-public class ApplicationOpenTelemetry156Incubator extends ApplicationOpenTelemetry127
+public final class ApplicationOpenTelemetry156Incubator extends ApplicationOpenTelemetry127
     implements ExtendedOpenTelemetry {
 
   // Accessed with reflection

@@ -9,7 +9,7 @@ import application.io.opentelemetry.api.incubator.config.ConfigProvider;
 import application.io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import javax.annotation.Nullable;
 
-public class ApplicationConfigProvider156Incubator implements ConfigProvider {
+public final class ApplicationConfigProvider156Incubator implements ConfigProvider {
 
   private final DeclarativeConfigProperties declarativeConfigProperties;
 

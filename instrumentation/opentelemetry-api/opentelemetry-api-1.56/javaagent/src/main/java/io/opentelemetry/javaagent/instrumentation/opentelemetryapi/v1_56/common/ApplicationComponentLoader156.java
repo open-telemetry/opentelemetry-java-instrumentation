@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_56.common
 
 import application.io.opentelemetry.common.ComponentLoader;
 
-public class ApplicationComponentLoader156 implements ComponentLoader {
+public final class ApplicationComponentLoader156 implements ComponentLoader {
 
   private final io.opentelemetry.common.ComponentLoader componentLoader;
 
