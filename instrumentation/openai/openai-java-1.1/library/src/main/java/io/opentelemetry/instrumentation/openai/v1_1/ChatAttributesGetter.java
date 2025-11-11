@@ -26,6 +26,11 @@ enum ChatAttributesGetter
   }
 
   @Override
+  public String getOperationTarget(ChatCompletionCreateParams request) {
+    return getRequestModel(request);
+  }
+
+  @Override
   public String getSystem(ChatCompletionCreateParams request) {
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
