@@ -98,7 +98,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
       return true;
     } catch (ClassNotFoundException e) {
-      // incubator module is not available
+      // The incubator module is not available.
+      // This only happens in OpenTelemetry API instrumentation tests, where an older version of
+      // OpenTelemetry API is used that does not have ExtendedOpenTelemetry.
+      // Having the incubator module without ExtendedOpenTelemetry class should still return false
+      // for those tests to avoid a ClassNotFoundException.
       return false;
     }
   }
