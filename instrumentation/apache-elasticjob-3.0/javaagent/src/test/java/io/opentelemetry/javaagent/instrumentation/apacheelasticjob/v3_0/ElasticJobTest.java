@@ -17,6 +17,7 @@ import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -46,19 +47,23 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ElasticJobTest {
 
-  private static final int EMBED_ZOOKEEPER_PORT = 4181;
-  private static final String ZOOKEEPER_CONNECTION_STRING = "localhost:" + EMBED_ZOOKEEPER_PORT;
+  private static int embedZookeeperPort;
+  private static String zookeeperConnectionString;
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static CoordinatorRegistryCenter regCenter;
   private static int port;
   private static HttpServer httpServer;
 
   @BeforeAll
-  static void init() throws IOException {
-    EmbedZookeeperServer.start(EMBED_ZOOKEEPER_PORT);
+  static void init() throws Exception {
+    embedZookeeperPort = PortUtils.findOpenPort();
+    zookeeperConnectionString = "localhost:" + embedZookeeperPort;
+    EmbedZookeeperServer.start(embedZookeeperPort);
     regCenter = setUpRegistryCenter();
     port = PortUtils.findOpenPort();
     httpServer = HttpServer.create(new InetSocketAddress(port), 0);
@@ -77,7 +82,7 @@ class ElasticJobTest {
   }
 
   @AfterAll
-  static void stop() {
+  static void stop() throws Exception {
     if (httpServer != null) {
       httpServer.stop(0);
     }
@@ -90,38 +95,35 @@ class ElasticJobTest {
   @Test
   void testHttpJob() {
     ScheduleJobBootstrap bootstrap = setUpHttpJob(regCenter);
-    try {
-      bootstrap.schedule();
+    cleanup.deferCleanup(bootstrap::shutdown);
+    bootstrap.schedule();
 
-      testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("HTTP")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobBaseAttributes(
-                                  "javaHttpJob", 0L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("HTTP")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobBaseAttributes(
-                                  "javaHttpJob", 1L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("HTTP")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobBaseAttributes(
-                                  "javaHttpJob", 2L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))));
-    } finally {
-      bootstrap.shutdown();
-    }
+    testing.waitAndAssertSortedTraces(
+        comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("HTTP")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobBaseAttributes(
+                                "javaHttpJob", 0L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("HTTP")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobBaseAttributes(
+                                "javaHttpJob", 1L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("HTTP")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobBaseAttributes(
+                                "javaHttpJob", 2L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))));
   }
 
   @Test
@@ -136,40 +138,37 @@ class ElasticJobTest {
                 .shardingItemParameters("0=A,1=B")
                 .build());
 
-    try {
-      bootstrap.schedule();
+    cleanup.deferCleanup(bootstrap::shutdown);
+    bootstrap.schedule();
 
-      testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("TestSimpleJob.execute")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobWithCodeAttributes(
-                                  "simpleElasticJob",
-                                  0L,
-                                  2L,
-                                  "A",
-                                  "execute",
-                                  "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.TestSimpleJob"))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("TestSimpleJob.execute")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobWithCodeAttributes(
-                                  "simpleElasticJob",
-                                  1L,
-                                  2L,
-                                  "B",
-                                  "execute",
-                                  "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.TestSimpleJob"))));
-    } finally {
-      bootstrap.shutdown();
-    }
+    testing.waitAndAssertSortedTraces(
+        comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("TestSimpleJob.execute")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobWithCodeAttributes(
+                                "simpleElasticJob",
+                                0L,
+                                2L,
+                                "A",
+                                "execute",
+                                TestSimpleJob.class.getName()))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("TestSimpleJob.execute")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobWithCodeAttributes(
+                                "simpleElasticJob",
+                                1L,
+                                2L,
+                                "B",
+                                "execute",
+                                TestSimpleJob.class.getName()))));
   }
 
   @Test
@@ -184,57 +183,51 @@ class ElasticJobTest {
                 .shardingItemParameters("0=X,1=Y")
                 .build());
 
-    try {
-      bootstrap.schedule();
+    cleanup.deferCleanup(bootstrap::shutdown);
+    bootstrap.schedule();
 
-      testing.waitAndAssertSortedTraces(
-          comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("TestDataflowJob.processData")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobWithCodeAttributes(
-                                  "dataflowElasticJob",
-                                  0L,
-                                  2L,
-                                  "X",
-                                  "processData",
-                                  "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.TestDataflowJob"))),
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("TestDataflowJob.processData")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobWithCodeAttributes(
-                                  "dataflowElasticJob",
-                                  1L,
-                                  2L,
-                                  "Y",
-                                  "processData",
-                                  "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.TestDataflowJob"))));
-    } finally {
-      bootstrap.shutdown();
-    }
+    testing.waitAndAssertSortedTraces(
+        comparingRootSpanAttribute(longKey("scheduling.apache-elasticjob.sharding.item.index")),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("TestDataflowJob.processData")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobWithCodeAttributes(
+                                "dataflowElasticJob",
+                                0L,
+                                2L,
+                                "X",
+                                "processData",
+                                TestDataflowJob.class.getName()))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("TestDataflowJob.processData")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobWithCodeAttributes(
+                                "dataflowElasticJob",
+                                1L,
+                                2L,
+                                "Y",
+                                "processData",
+                                TestDataflowJob.class.getName()))));
   }
 
   @Test
   void testScriptJob() throws IOException {
     ScheduleJobBootstrap bootstrap = setUpScriptJob(regCenter);
-    try {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("SCRIPT")
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobBaseAttributes("scriptElasticJob", 0L, 1L, "{0=null}"))));
-    } finally {
-      bootstrap.shutdown();
-    }
+    cleanup.deferCleanup(bootstrap::shutdown);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("SCRIPT")
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobBaseAttributes("scriptElasticJob", 0L, 1L, "{0=null}"))));
   }
 
   @Test
@@ -249,33 +242,30 @@ class ElasticJobTest {
                 .shardingItemParameters("0=failed")
                 .build());
 
-    try {
-      bootstrap.schedule();
+    cleanup.deferCleanup(bootstrap::shutdown);
+    bootstrap.schedule();
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(SpanKind.INTERNAL)
-                          .hasName("TestFailedJob.execute")
-                          .hasStatus(StatusData.error())
-                          .hasException(new RuntimeException("Simulated job failure for testing"))
-                          .hasAttributesSatisfyingExactly(
-                              elasticJobWithCodeAttributes(
-                                  "failedElasticJob",
-                                  0L,
-                                  1L,
-                                  "failed",
-                                  "execute",
-                                  "io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.TestFailedJob"))));
-    } finally {
-      bootstrap.shutdown();
-    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("TestFailedJob.execute")
+                        .hasStatus(StatusData.error())
+                        .hasException(new RuntimeException("Simulated job failure for testing"))
+                        .hasAttributesSatisfyingExactly(
+                            elasticJobWithCodeAttributes(
+                                "failedElasticJob",
+                                0L,
+                                1L,
+                                "failed",
+                                "execute",
+                                TestFailedJob.class.getName()))));
   }
 
   private static CoordinatorRegistryCenter setUpRegistryCenter() {
     ZookeeperConfiguration zkConfig =
-        new ZookeeperConfiguration(ZOOKEEPER_CONNECTION_STRING, "elasticjob-example-lite-java");
+        new ZookeeperConfiguration(zookeeperConnectionString, "elasticjob-example-lite-java");
     CoordinatorRegistryCenter result = new ZookeeperRegistryCenter(zkConfig);
     result.init();
     return result;

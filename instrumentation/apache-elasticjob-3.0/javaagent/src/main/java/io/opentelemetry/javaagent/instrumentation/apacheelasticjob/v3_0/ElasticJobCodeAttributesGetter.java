@@ -24,6 +24,6 @@ class ElasticJobCodeAttributesGetter implements CodeAttributesGetter<ElasticJobP
     if (request.isScriptJob() || request.isHttpJob()) {
       return null;
     }
-    return request.getUserMethodName() != null ? request.getUserMethodName() : "process";
+    return request.getUserMethodName();
   }
 }

@@ -5,23 +5,29 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobType.DATAFLOW;
+import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobType.HTTP;
+import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobType.SCRIPT;
+import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobType.SIMPLE;
+import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobType.UNKNOWN;
+
 public final class JobTypeHelper {
 
-  public static String determineJobTypeFromExecutor(Object jobItemExecutor) {
+  public static ElasticJobType determineJobTypeFromExecutor(Object jobItemExecutor) {
     if (jobItemExecutor == null) {
-      return "UNKNOWN";
+      return UNKNOWN;
     } else {
       switch (jobItemExecutor.getClass().getSimpleName()) {
         case "HttpJobExecutor":
-          return "HTTP";
+          return HTTP;
         case "ScriptJobExecutor":
-          return "SCRIPT";
+          return SCRIPT;
         case "SimpleJobExecutor":
-          return "SIMPLE";
+          return SIMPLE;
         case "DataflowJobExecutor":
-          return "DATAFLOW";
+          return DATAFLOW;
         default:
-          return "UNKNOWN";
+          return UNKNOWN;
       }
     }
   }

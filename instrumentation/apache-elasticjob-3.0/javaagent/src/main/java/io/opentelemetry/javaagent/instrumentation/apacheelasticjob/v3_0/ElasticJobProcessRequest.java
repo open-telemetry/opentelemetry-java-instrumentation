@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
+import org.apache.shardingsphere.elasticjob.api.ShardingContext;
+
 public final class ElasticJobProcessRequest {
   private String jobName;
   private String taskId;
@@ -14,7 +16,7 @@ public final class ElasticJobProcessRequest {
   private boolean failed;
   private String jobType;
   private Class<?> userJobClass;
-  private String userMethodName;
+  private String userMethodName = "process";
 
   public static ElasticJobProcessRequest create(
       String jobName,
@@ -52,6 +54,22 @@ public final class ElasticJobProcessRequest {
     request.userJobClass = userJobClass;
     request.userMethodName = userMethodName;
     return request;
+  }
+
+  public static ElasticJobProcessRequest createFromShardingContext(
+      ShardingContext shardingContext,
+      String jobType,
+      Class<?> userJobClass,
+      String userMethodName) {
+    return createWithUserJobInfo(
+        shardingContext.getJobName(),
+        shardingContext.getTaskId(),
+        shardingContext.getShardingItem(),
+        shardingContext.getShardingTotalCount(),
+        shardingContext.getShardingParameter(),
+        jobType,
+        userJobClass,
+        userMethodName);
   }
 
   public void setFailed() {

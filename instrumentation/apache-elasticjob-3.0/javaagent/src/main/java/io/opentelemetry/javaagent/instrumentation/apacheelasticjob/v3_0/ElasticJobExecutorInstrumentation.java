@@ -53,8 +53,8 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) ShardingContexts shardingContexts,
         @Advice.Argument(2) int item) {
 
-      String jobType = determineJobTypeFromExecutor(jobItemExecutor);
-      if (!"SCRIPT".equals(jobType) && !"HTTP".equals(jobType)) {
+      ElasticJobType jobType = determineJobTypeFromExecutor(jobItemExecutor);
+      if (jobType != ElasticJobType.SCRIPT && jobType != ElasticJobType.HTTP) {
         return null;
       }
       ElasticJobProcessRequest request =
@@ -66,7 +66,7 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
               shardingContexts.getShardingItemParameters() == null
                   ? ""
                   : shardingContexts.getShardingItemParameters().toString(),
-              jobType);
+              jobType.getValue());
       return helper().startSpan(request);
     }
 
