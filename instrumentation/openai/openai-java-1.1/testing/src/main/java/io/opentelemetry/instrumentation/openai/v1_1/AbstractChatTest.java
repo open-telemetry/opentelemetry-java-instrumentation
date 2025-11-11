@@ -8,7 +8,9 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OUTPUT_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_CHOICE_COUNT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_FREQUENCY_PENALTY;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MAX_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
@@ -24,6 +26,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.CHAT;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOutputTypeIncubatingValues.TEXT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.OPENAI;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
@@ -349,6 +352,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                equalTo(GEN_AI_OUTPUT_TYPE, TEXT),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
                                     reasons -> reasons.containsExactly("stop")),
@@ -450,6 +454,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                equalTo(GEN_AI_REQUEST_CHOICE_COUNT, 2L),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
                                     reasons -> reasons.containsExactly("stop", "stop")),
@@ -1181,6 +1186,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                equalTo(GEN_AI_REQUEST_CHOICE_COUNT, 2L),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
                                     reasons -> reasons.containsExactly("stop", "stop"))))));

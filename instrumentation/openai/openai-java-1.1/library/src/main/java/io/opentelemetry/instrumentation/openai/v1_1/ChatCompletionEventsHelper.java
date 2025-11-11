@@ -24,6 +24,7 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -43,7 +44,13 @@ final class ChatCompletionEventsHelper {
       Context context,
       Logger eventLogger,
       ChatCompletionCreateParams request,
-      boolean captureMessageContent) {
+      CaptureMessageOptions captureMessageOptions) {
+    if (captureMessageOptions.emitExperimentalConventions()) {
+      // According to https://opentelemetry.io/docs/specs/semconv/gen-ai/openai/
+      // skip if experimental conventions are not enabled
+      return;
+    }
+    boolean captureMessageContent = captureMessageOptions.captureMessageContent();
     for (ChatCompletionMessageParam msg : request.messages()) {
       String eventType;
       Map<String, Value<?>> body = new HashMap<>();
@@ -170,7 +177,13 @@ final class ChatCompletionEventsHelper {
       Context context,
       Logger eventLogger,
       ChatCompletion completion,
-      boolean captureMessageContent) {
+      CaptureMessageOptions captureMessageOptions) {
+    if (captureMessageOptions.emitExperimentalConventions()) {
+      // According to https://opentelemetry.io/docs/specs/semconv/gen-ai/openai/
+      // skip if experimental conventions are not enabled
+      return;
+    }
+    boolean captureMessageContent = captureMessageOptions.captureMessageContent();
     for (ChatCompletion.Choice choice : completion.choices()) {
       ChatCompletionMessage choiceMsg = choice.message();
       Map<String, Value<?>> message = new HashMap<>();

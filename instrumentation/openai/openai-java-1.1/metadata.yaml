@@ -8,3 +8,10 @@ configurations:
       Enables including the full content of user and assistant messages in emitted log events.
       Note that full content can have data privacy and size concerns, and care should be taken when
       enabling this.
+  - name: otel.semconv-stability.opt-in
+    type: string
+    default: ""
+    description: >
+      A comma-separated list of category-specific values. Once the list include
+      `gen_ai_latest_experimental`, the instrumentation will emit the latest experimental version
+      of GenAI conventions and do not emit the old one (v1.36.0 or prior).
