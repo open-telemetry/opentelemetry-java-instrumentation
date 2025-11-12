@@ -26,7 +26,7 @@ public final class JFinalSingletons {
   private static final String SPAN_NAME = "jfinal.handle";
   private static final Instrumenter<Void, Void> INSTRUMENTER =
       Instrumenter.<Void, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.jfinal-3.6", s -> SPAN_NAME)
+              GlobalOpenTelemetry.get(), "io.opentelemetry.jfinal-3.2", s -> SPAN_NAME)
           .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
           .buildInstrumenter();
 

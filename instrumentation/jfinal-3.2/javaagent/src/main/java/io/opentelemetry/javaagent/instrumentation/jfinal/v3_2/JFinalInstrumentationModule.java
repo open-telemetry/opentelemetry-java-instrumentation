@@ -18,13 +18,12 @@ import net.bytebuddy.matcher.ElementMatcher;
 @AutoService(InstrumentationModule.class)
 public class JFinalInstrumentationModule extends InstrumentationModule {
   public JFinalInstrumentationModule() {
-    super("jfinal", "jfinal-3.6");
+    super("jfinal", "jfinal-3.2");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.jfinal.core.ActionMapping")
-        .and(not(hasClassesNamed("com.jfinal.core.TypeConverter")));
+    return not(hasClassesNamed("com.jfinal.core.TypeConverter"));
   }
 
   @Override
