@@ -23,7 +23,8 @@ public class JFinalInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.jfinal.core.ActionMapping").and(not(hasClassesNamed("com.jfinal.core.TypeConverter")));
+    return hasClassesNamed("com.jfinal.core.ActionMapping")
+        .and(not(hasClassesNamed("com.jfinal.core.TypeConverter")));
   }
 
   @Override
