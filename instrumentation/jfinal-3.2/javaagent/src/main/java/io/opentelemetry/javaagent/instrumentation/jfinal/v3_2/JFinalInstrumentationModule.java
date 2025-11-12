@@ -3,10 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_2;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
@@ -22,7 +23,7 @@ public class JFinalInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.jfinal.core.ActionMapping");
+    return hasClassesNamed("com.jfinal.core.ActionMapping").and(not(hasClassesNamed("com.jfinal.core.TypeConverter")));
   }
 
   @Override

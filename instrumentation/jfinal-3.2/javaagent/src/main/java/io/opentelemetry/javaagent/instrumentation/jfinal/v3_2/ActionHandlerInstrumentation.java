@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_2;
 
-import static io.opentelemetry.javaagent.instrumentation.jfinal.v3_6.JFinalSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jfinal.v3_2.JFinalSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
@@ -40,7 +40,7 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  private static class HandleAdvice {
+  public static class HandleAdvice {
 
     public static class AdviceScope {
       private final Context context;

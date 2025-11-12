@@ -6,7 +6,7 @@ muzzle {
   pass {
     group.set("com.jfinal")
     module.set("jfinal")
-    versions.set("[3.6,)")
+    versions.set("[3.2,)")
     assertInverse.set(true)
   }
 }

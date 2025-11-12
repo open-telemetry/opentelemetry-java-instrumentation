@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
+package io.opentelemetry.javaagent.instrumentation.jfinal.v3_2;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
