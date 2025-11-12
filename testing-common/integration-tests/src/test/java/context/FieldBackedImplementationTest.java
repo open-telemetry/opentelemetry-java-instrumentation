@@ -140,7 +140,7 @@ class FieldBackedImplementationTest {
     KeyClass instance2 = keyClass.getConstructor().newInstance();
 
     // correct api usage stores state in map
-    instance1.incrementContextCount();
+    assertThat(instance1.incrementContextCount()).isEqualTo(1);
 
     assertThat(instance1.incrementContextCount()).isEqualTo(2);
     assertThat(instance2.incrementContextCount()).isEqualTo(1);
@@ -159,7 +159,10 @@ class FieldBackedImplementationTest {
   @MethodSource("provideKeyClassParameters")
   void removeInstanceState(Class<KeyClass> keyClass) throws Exception {
     KeyClass instance1 = keyClass.getConstructor().newInstance();
+
     instance1.putContextCount(10);
+    assertThat(instance1.getContextCount()).isEqualTo(10);
+
     instance1.removeContextCount();
 
     assertThat(instance1.getContextCount()).isEqualTo(0);

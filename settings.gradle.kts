@@ -1,6 +1,6 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.9"
+    id("com.github.jk1.dependency-license-report") version "3.0.1"
     id("com.google.cloud.tools.jib") version "3.4.5"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
@@ -139,6 +139,7 @@ include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
 include(":testing-common")
+include(":testing-common:with-shaded-dependencies")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
@@ -189,7 +190,9 @@ include(":instrumentation:armeria:armeria-1.3:javaagent")
 include(":instrumentation:armeria:armeria-1.3:library")
 include(":instrumentation:armeria:armeria-1.3:testing")
 include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
+include(":instrumentation:async-http-client:async-http-client-1.8:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
+include(":instrumentation:async-http-client:async-http-client-1-common:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
 include(":instrumentation:avaje-jex-3.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")

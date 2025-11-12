@@ -13,7 +13,7 @@ import io.opentelemetry.sdk.testing.assertj.TracesAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
 
-public class VaadinLatestTest extends AbstractVaadinTest {
+class VaadinLatestTest extends AbstractVaadinTest {
 
   @Override
   void assertFirstRequest() {

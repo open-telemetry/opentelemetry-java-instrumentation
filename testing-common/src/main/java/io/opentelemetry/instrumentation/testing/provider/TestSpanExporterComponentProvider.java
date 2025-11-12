@@ -10,7 +10,7 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Objects;
 
-public class TestSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
+public class TestSpanExporterComponentProvider implements ComponentProvider {
 
   private static SpanExporter spanExporter;
 

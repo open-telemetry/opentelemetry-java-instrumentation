@@ -3,11 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9;
+package io.opentelemetry.javaagent.instrumentation.asynchttpclient.common;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.ASYNC_HANDLER_DATA;
-import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.v1_9.AsyncHttpClientSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.asynchttpclient.common.VirtualFieldHelper.ASYNC_HANDLER_DATA;
 import static net.bytebuddy.matcher.ElementMatchers.hasSuperClass;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -58,7 +57,8 @@ public class ResponseInstrumentation implements TypeInstrumentation {
         return null;
       }
       ASYNC_HANDLER_DATA.set(handler, null);
-      instrumenter().end(data.getContext(), data.getRequest(), response, null);
+
+      data.end(response, null);
       return data.getParentContext().makeCurrent();
     }
 
@@ -82,7 +82,8 @@ public class ResponseInstrumentation implements TypeInstrumentation {
         return null;
       }
       ASYNC_HANDLER_DATA.set(handler, null);
-      instrumenter().end(data.getContext(), data.getRequest(), null, throwable);
+
+      data.end(null, throwable);
       return data.getParentContext().makeCurrent();
     }
 

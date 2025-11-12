@@ -71,7 +71,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -95,7 +94,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -125,7 +123,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -155,7 +152,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")

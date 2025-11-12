@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.util;
 
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import org.jboss.netty.channel.ChannelHandler;
 
 public final class HttpSchemeUtil {
@@ -25,11 +25,11 @@ public final class HttpSchemeUtil {
     }
   }
 
-  public static String getScheme(HttpRequestAndChannel requestAndChannel) {
+  public static String getScheme(NettyRequest requestAndChannel) {
     return isHttps(requestAndChannel) ? "https" : "http";
   }
 
-  private static boolean isHttps(HttpRequestAndChannel requestAndChannel) {
+  private static boolean isHttps(NettyRequest requestAndChannel) {
     return sslHandlerClass != null
         && requestAndChannel.channel().getPipeline().get(sslHandlerClass) != null;
   }

@@ -51,7 +51,6 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.proto.common.v1.AnyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.ArrayValue;
-import io.opentelemetry.testing.internal.proto.common.v1.InstrumentationScope;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValue;
 import io.opentelemetry.testing.internal.proto.common.v1.KeyValueList;
 import io.opentelemetry.testing.internal.proto.logs.v1.LogRecord;
@@ -100,7 +99,6 @@ public class TelemetryConverter {
     for (ResourceSpans resourceSpans : allResourceSpans) {
       Resource resource = resourceSpans.getResource();
       for (ScopeSpans ilSpans : resourceSpans.getScopeSpansList()) {
-        InstrumentationScope instrumentationScope = ilSpans.getScope();
         for (Span span : ilSpans.getSpansList()) {
           String traceId = bytesToHex(span.getTraceId().toByteArray());
           spans.add(
@@ -122,10 +120,11 @@ public class TelemetryConverter {
                       io.opentelemetry.sdk.resources.Resource.create(
                           fromProto(resource.getAttributesList())))
                   .setInstrumentationScopeInfo(
-                      InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                      InstrumentationScopeInfo.builder(ilSpans.getScope().getName())
                           // emptyToNull since they are the same at protobuf layer,
                           // and allows for simpler verification of InstrumentationScope
-                          .setVersion(emptyToNull(instrumentationScope.getVersion()))
+                          .setVersion(emptyToNull(ilSpans.getScope().getVersion()))
+                          .setSchemaUrl(emptyToNull(ilSpans.getSchemaUrl()))
                           .build())
                   .setName(span.getName())
                   .setStartEpochNanos(span.getStartTimeUnixNano())
@@ -175,17 +174,17 @@ public class TelemetryConverter {
     for (ResourceMetrics resourceMetrics : allResourceMetrics) {
       Resource resource = resourceMetrics.getResource();
       for (ScopeMetrics ilMetrics : resourceMetrics.getScopeMetricsList()) {
-        InstrumentationScope instrumentationScope = ilMetrics.getScope();
         for (Metric metric : ilMetrics.getMetricsList()) {
           metrics.add(
               createMetricData(
                   metric,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                  InstrumentationScopeInfo.builder(ilMetrics.getScope().getName())
                       // emptyToNull since they are the same at protobuf layer,
                       // and allows for simpler verification of InstrumentationScope
-                      .setVersion(emptyToNull(instrumentationScope.getVersion()))
+                      .setVersion(emptyToNull(ilMetrics.getScope().getVersion()))
+                      .setSchemaUrl(emptyToNull(ilMetrics.getSchemaUrl()))
                       .build()));
         }
       }
@@ -198,17 +197,17 @@ public class TelemetryConverter {
     for (ResourceLogs resourceLogs : allResourceLogs) {
       Resource resource = resourceLogs.getResource();
       for (ScopeLogs ilLogs : resourceLogs.getScopeLogsList()) {
-        InstrumentationScope instrumentationScope = ilLogs.getScope();
         for (LogRecord logRecord : ilLogs.getLogRecordsList()) {
           logs.add(
               createLogData(
                   logRecord,
                   io.opentelemetry.sdk.resources.Resource.create(
                       fromProto(resource.getAttributesList())),
-                  InstrumentationScopeInfo.builder(instrumentationScope.getName())
+                  InstrumentationScopeInfo.builder(ilLogs.getScope().getName())
                       // emptyToNull since they are the same at protobuf layer,
                       // and allows for simpler verification of InstrumentationScope
-                      .setVersion(emptyToNull(instrumentationScope.getVersion()))
+                      .setVersion(emptyToNull(ilLogs.getScope().getVersion()))
+                      .setSchemaUrl(emptyToNull(ilLogs.getSchemaUrl()))
                       .build()));
         }
       }

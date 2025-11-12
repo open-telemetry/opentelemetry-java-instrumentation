@@ -73,7 +73,7 @@ import server.TestController;
       SpringWebFluxTestApplication.class,
       SpringWebfluxTest.ForceNettyAutoConfiguration.class
     })
-public class SpringWebfluxTest {
+class SpringWebfluxTest {
   @TestConfiguration
   static class ForceNettyAutoConfiguration {
     @Bean

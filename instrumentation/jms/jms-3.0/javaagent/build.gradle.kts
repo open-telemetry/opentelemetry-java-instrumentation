@@ -38,6 +38,7 @@ otelJava {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
