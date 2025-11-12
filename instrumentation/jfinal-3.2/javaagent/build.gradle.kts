@@ -11,12 +11,10 @@ muzzle {
   }
 }
 
-
-
 if (!(findProperty("testLatestDeps") as Boolean)) {
   otelJava {
-  //jfinal 3.6 doesn't work with Java 9+
-  maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
+    // jfinal 3.6 doesn't work with Java 9+
+    maxJavaVersionForTests.set(JavaVersion.VERSION_1_8)
   }
 }
 
