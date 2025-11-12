@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.jfinal.core.Action;
@@ -16,10 +15,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ActionMappingInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.jfinal.core.ActionMapping");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

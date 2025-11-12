@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
 import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.instrumentation.jfinal.v3_6.JFinalSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -22,10 +21,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 public class ActionHandlerInstrumentation implements TypeInstrumentation {
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed("com.jfinal.core.ActionHandler");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {

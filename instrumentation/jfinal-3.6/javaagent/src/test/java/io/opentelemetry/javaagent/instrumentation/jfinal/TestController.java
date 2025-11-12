@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jfinal;
 
+import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 
 import com.jfinal.core.ActionKey;
@@ -17,22 +18,22 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 public class TestController extends Controller {
 
   public void success() {
-    GlobalTraceUtil.runWithSpan("controller", () -> renderText(ServerEndpoint.SUCCESS.getBody()));
+    runWithSpan("controller", () -> renderText(ServerEndpoint.SUCCESS.getBody()));
   }
 
   public void redirect() {
-    GlobalTraceUtil.runWithSpan("controller", () -> redirect(ServerEndpoint.REDIRECT.getBody()));
+    runWithSpan("controller", () -> redirect(ServerEndpoint.REDIRECT.getBody()));
   }
 
   @ActionKey("error-status")
   public void error() throws Exception {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller", () -> renderError(500, new TextRender(ServerEndpoint.ERROR.getBody())));
   }
 
   public void exception() throws Throwable {
     try {
-      GlobalTraceUtil.runWithSpan(
+      runWithSpan(
           "controller",
           () -> {
             throw new IllegalStateException(EXCEPTION.getBody());
@@ -44,7 +45,7 @@ public class TestController extends Controller {
   }
 
   public void captureHeaders() {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           String header = getHeader("X-Test-Request");
@@ -54,7 +55,7 @@ public class TestController extends Controller {
   }
 
   public void captureParameters() {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           renderText(ServerEndpoint.CAPTURE_PARAMETERS.getBody());
@@ -63,7 +64,7 @@ public class TestController extends Controller {
 
   public void query() {
 
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           renderText(ServerEndpoint.QUERY_PARAM.getBody());
@@ -72,7 +73,7 @@ public class TestController extends Controller {
 
   @ActionKey("path/123/param")
   public void pathVar() {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           renderText(ServerEndpoint.PATH_PARAM.getBody());
@@ -80,7 +81,7 @@ public class TestController extends Controller {
   }
 
   public void authRequired() {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           renderText(ServerEndpoint.AUTH_REQUIRED.getBody());
@@ -88,7 +89,7 @@ public class TestController extends Controller {
   }
 
   public void login() {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           redirect(ServerEndpoint.LOGIN.getBody());
@@ -101,7 +102,7 @@ public class TestController extends Controller {
   }
 
   public void child() {
-    GlobalTraceUtil.runWithSpan(
+    runWithSpan(
         "controller",
         () -> {
           ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(

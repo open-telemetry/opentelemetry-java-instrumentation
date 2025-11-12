@@ -6,13 +6,17 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
 import com.jfinal.core.Action;
+import com.jfinal.core.Controller;
 import com.jfinal.render.JsonRender;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+
+import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -28,7 +32,7 @@ public final class JFinalSingletons {
           .buildInstrumenter();
 
   static {
-    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465
+    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465#issuecomment-2137294837
     excludeOtAttrs();
   }
 
@@ -41,17 +45,20 @@ public final class JFinalSingletons {
       return;
     }
     String route = action.getActionKey();
-    if (route == null) {
-      return;
-    }
     Context context = Context.current();
-    HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
+    if (route != null) {
+      HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
+    }
+    Class<? extends Controller> clazz = action.getControllerClass();
+    Method method = action.getMethod();
+    if (clazz != null && method != null) {
+        Span.fromContext(context).updateName(clazz.getSimpleName() + '.' + method.getName());
+    }
   }
 
   private static void excludeOtAttrs() {
     try {
       JsonRender.addExcludedAttrs(
-          "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.AsyncListenerResponse",
           "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.Context",
           "trace_id",
           "span_id");

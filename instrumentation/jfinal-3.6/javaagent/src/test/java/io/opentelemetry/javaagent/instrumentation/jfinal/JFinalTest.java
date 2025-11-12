@@ -6,8 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jfinal.core.JFinalFilter;
@@ -50,7 +54,7 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
     options.setHasHandlerSpan(unused -> true);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
-          if (endpoint == ServerEndpoint.PATH_PARAM) {
+          if (endpoint == PATH_PARAM) {
             return "/path/123/param";
           }
           if (HttpConstants._OTHER.equals(method)) {
@@ -101,7 +105,18 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
   @Override
   public SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    span.hasName("jfinal.handle").hasKind(INTERNAL);
+    span.hasName(getHandlerSpanName(endpoint)).hasKind(INTERNAL);
     return span;
+  }
+
+  private static String getHandlerSpanName(ServerEndpoint endpoint) {
+    if (PATH_PARAM.equals(endpoint)) {
+      return "TestController.pathParam";
+    } else if (NOT_FOUND.equals(endpoint)) {
+      return "jfinal.handle";
+    } else if (ERROR.equals(endpoint)) {
+      return "TestController.error";
+    }
+    return "TestController." + endpoint.getPath().replace("/", "");
   }
 }
