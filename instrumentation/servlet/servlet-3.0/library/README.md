@@ -7,7 +7,7 @@ Provides OpenTelemetry instrumentation for Java Servlets through a servlet filte
 ### Add these dependencies to your project
 
 Replace `OPENTELEMETRY_VERSION` with
-the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-lettuce-5.1).
+the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-servlet-3.0).
 
 For Maven, add to your `pom.xml` dependencies:
 
