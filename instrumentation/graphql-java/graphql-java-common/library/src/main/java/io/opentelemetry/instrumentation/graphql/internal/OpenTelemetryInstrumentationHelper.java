@@ -148,7 +148,7 @@ public final class OpenTelemetryInstrumentationHelper {
 
     return (DataFetcher<Object>)
         environment -> {
-          try (Scope scope = context.makeCurrent()) {
+          try (Scope ignore = context.makeCurrent()) {
             return dataFetcher.get(environment);
           }
         };
@@ -158,7 +158,7 @@ public final class OpenTelemetryInstrumentationHelper {
     return astTransformer.transform(node, sanitizingVisitor);
   }
 
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("rawtypes") // super class uses Node without type parameter
   private static class SanitizingVisitor extends NodeVisitorStub {
 
     @Override

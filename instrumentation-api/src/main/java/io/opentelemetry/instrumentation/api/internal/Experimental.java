@@ -55,7 +55,7 @@ public final class Experimental {
     }
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"rawtypes", "unchecked"}) // we loose the generic type information
   public static <REQUEST> void internalSetUrlTemplateExtractor(
       BiConsumer<HttpSpanNameExtractorBuilder<REQUEST>, Function<REQUEST, String>>
           urlTemplateExtractorSetter) {
@@ -76,7 +76,7 @@ public final class Experimental {
     }
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings({"rawtypes", "unchecked"}) // we loose the generic type information
   public static <REQUEST, RESPONSE> void internalAddOperationListenerAttributesExtractor(
       BiConsumer<
               InstrumenterBuilder<REQUEST, RESPONSE>,

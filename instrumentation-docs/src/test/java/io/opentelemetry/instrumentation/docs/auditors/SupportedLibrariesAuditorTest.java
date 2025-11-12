@@ -24,7 +24,7 @@ import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked") // to allow mocking of generic HttpResponse
 class SupportedLibrariesAuditorTest {
 
   @Test
