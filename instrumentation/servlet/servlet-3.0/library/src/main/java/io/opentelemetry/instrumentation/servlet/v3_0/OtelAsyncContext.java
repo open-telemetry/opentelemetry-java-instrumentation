@@ -14,7 +14,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-/// Delegates all methods except [#start(Runnable) which wraps the [Runnable].
+/// Delegates all methods except [#start(Runnable)] which wraps the [Runnable].
 public class OtelAsyncContext implements AsyncContext {
   private final AsyncContext delegate;
 
