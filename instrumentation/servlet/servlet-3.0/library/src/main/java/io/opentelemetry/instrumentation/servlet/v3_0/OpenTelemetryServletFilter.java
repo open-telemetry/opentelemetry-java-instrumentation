@@ -23,7 +23,7 @@ import javax.servlet.http.HttpServletResponse;
 
 /**
  * OpenTelemetry Library instrumentation for Java Servlet based applications that can't use a Java
- * Agent. Due to inherit limitations in the servlet filter API, instrumenting at the filter level
+ * Agent. Due to inherent limitations in the servlet filter API, instrumenting at the filter level
  * will miss anything that happens earlier in the filter stack or problems handled directly by the
  * app server. For this reason, Java Agent instrumentation is preferred when possible.
  */
