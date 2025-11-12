@@ -27,6 +27,7 @@ muzzle {
     group.set("co.elastic.clients")
     module.set("elasticsearch-java")
     versions.set("[8.10,)")
+    skip("9.2.1") // depends on elasticsearch-rest5-client-9.2.1 that is missing from central
   }
 }
 
