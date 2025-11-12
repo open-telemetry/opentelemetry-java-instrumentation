@@ -189,7 +189,7 @@ targets:
       target: ':instrumentation:jdbc:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:jfinal-3.6:javaagent'
+      target: ':instrumentation:jfinal-3.2:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jmx-metrics:javaagent'
