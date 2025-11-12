@@ -147,7 +147,8 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
 
   @Test
   void testSetCommandUsingFutureGetWithTimeout() throws Exception {
-    RedisFuture<String> redisFuture = asyncCommands.set("TESTSETKEY", "TESTSETVAL");
+    RedisFuture<String> redisFuture =
+        testing().runWithSpan("parent", () -> asyncCommands.set("TESTSETKEY", "TESTSETVAL"));
     String res = redisFuture.get(3, TimeUnit.SECONDS);
 
     assertThat(res).isEqualTo("OK");
@@ -156,9 +157,11 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),

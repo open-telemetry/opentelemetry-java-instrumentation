@@ -11,7 +11,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
-import java.util.function.Function;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.UnaryOperator;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -19,6 +22,19 @@ import java.util.function.Function;
  */
 @SuppressWarnings({"unchecked", "rawtypes"})
 public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer {
+  private static final Map<InstrumentationType, SpanKey> typeToSpanKey = new HashMap<>();
+
+  static {
+    typeToSpanKey.put(InstrumentationType.HTTP_CLIENT, SpanKey.HTTP_CLIENT);
+    typeToSpanKey.put(InstrumentationType.HTTP_SERVER, SpanKey.HTTP_SERVER);
+    typeToSpanKey.put(InstrumentationType.DB_CLIENT, SpanKey.DB_CLIENT);
+    typeToSpanKey.put(InstrumentationType.RPC_CLIENT, SpanKey.RPC_CLIENT);
+    typeToSpanKey.put(InstrumentationType.RPC_SERVER, SpanKey.RPC_SERVER);
+    typeToSpanKey.put(InstrumentationType.MESSAGING_PRODUCER, SpanKey.PRODUCER);
+    typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_RECEIVE, SpanKey.CONSUMER_RECEIVE);
+    typeToSpanKey.put(InstrumentationType.MESSAGING_CONSUMER_PROCESS, SpanKey.CONSUMER_RECEIVE);
+  }
+
   private final InternalInstrumenterCustomizer customizer;
 
   public InstrumenterCustomizerImpl(InternalInstrumenterCustomizer customizer) {
@@ -28,6 +44,15 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   @Override
   public String getInstrumentationName() {
     return customizer.getInstrumentationName();
+  }
+
+  @Override
+  public boolean hasType(InstrumentationType type) {
+    SpanKey spanKey = typeToSpanKey.get(type);
+    if (spanKey == null) {
+      throw new IllegalArgumentException("unexpected instrumentation type: " + type);
+    }
+    return customizer.hasType(spanKey);
   }
 
   @Override
@@ -56,9 +81,10 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   }
 
   @Override
+  @SuppressWarnings("FunctionalInterfaceClash") // interface has deprecated overload
   public InstrumenterCustomizer setSpanNameExtractor(
-      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
-    customizer.setSpanNameExtractor(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor) {
+    customizer.setSpanNameExtractor(spanNameExtractor);
     return this;
   }
 }

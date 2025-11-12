@@ -11,7 +11,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Provides customizations for instrumentation, including operation metrics, attributes extraction,
@@ -31,6 +33,16 @@ public interface InstrumenterCustomizer {
    * @return the name of the instrumentation this customizer targets
    */
   String getInstrumentationName();
+
+  /**
+   * Tests whether given instrumenter produces telemetry of specified type. Instrumentation type is
+   * detected based on the standard {@link AttributesExtractor} implementations used by this
+   * instrumenter e.g. instrumenters that use {@link HttpClientAttributesExtractor} have {@link
+   * InstrumentationType#HTTP_CLIENT} type.
+   *
+   * @return the name of the instrumentation this customizer targets
+   */
+  boolean hasType(InstrumentationType type);
 
   /**
    * Adds a single {@link AttributesExtractor} to the instrumenter. This extractor will be used to
@@ -75,7 +87,34 @@ public interface InstrumenterCustomizer {
    *
    * @param spanNameExtractorTransformer function that transforms the original span name extractor
    * @return this InstrumenterCustomizer for method chaining
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
+  @SuppressWarnings("FunctionalInterfaceClash")
+  default InstrumenterCustomizer setSpanNameExtractor(
+      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer) {
+    return setSpanNameExtractor(spanNameExtractorTransformer::apply);
+  }
+
+  /**
+   * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
+   * customizing how span names are generated for the instrumented operations.
+   *
+   * @param spanNameExtractor function that transforms the original span name extractor
+   * @return this InstrumenterCustomizer for method chaining
    */
   InstrumenterCustomizer setSpanNameExtractor(
-      Function<SpanNameExtractor<?>, SpanNameExtractor<?>> spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor);
+
+  /** Types of instrumentation. */
+  enum InstrumentationType {
+    HTTP_CLIENT,
+    HTTP_SERVER,
+    DB_CLIENT,
+    RPC_CLIENT,
+    RPC_SERVER,
+    MESSAGING_PRODUCER,
+    MESSAGING_CONSUMER_RECEIVE,
+    MESSAGING_CONSUMER_PROCESS
+  }
 }

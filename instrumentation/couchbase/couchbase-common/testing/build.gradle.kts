@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("com.couchbase.mock:CouchbaseMock:1.5.19")
   // Earliest version that seems to allow queries with CouchbaseMock:

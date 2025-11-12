@@ -55,13 +55,6 @@ tasks {
   }
 }
 
-// To be able to execute the tests as GraalVM native executables
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
-}
-
 graalvmNative {
   // See https://github.com/graalvm/native-build-tools/issues/572
   metadataRepository {

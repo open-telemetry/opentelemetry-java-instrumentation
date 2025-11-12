@@ -12,7 +12,7 @@ val agentShadowJar = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
 
 dependencies {
   testImplementation(project(":smoke-tests"))
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.apache.kafka:kafka-clients:3.6.1")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")
@@ -35,4 +35,5 @@ dependencies {
 tasks.withType<Test>().configureEach {
   dependsOn(agentShadowJar)
   systemProperty("io.opentelemetry.smoketest.agent.shadowJar.path", agentShadowJar.get().archiveFile.get().toString())
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

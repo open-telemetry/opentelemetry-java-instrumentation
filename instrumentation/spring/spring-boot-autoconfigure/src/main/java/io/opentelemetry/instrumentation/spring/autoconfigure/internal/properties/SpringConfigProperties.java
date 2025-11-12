@@ -25,7 +25,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
  * any time.
  */
 public class SpringConfigProperties implements ConfigProperties {
-  private final Environment environment;
+  private final CachedPropertyResolver environment;
 
   private final ExpressionParser parser;
   private final OtlpExporterProperties otlpExporterProperties;
@@ -44,7 +44,7 @@ public class SpringConfigProperties implements ConfigProperties {
       OtelResourceProperties resourceProperties,
       OtelSpringProperties otelSpringProperties,
       ConfigProperties otelSdkProperties) {
-    this.environment = environment;
+    this.environment = new CachedPropertyResolver(environment);
     this.parser = parser;
     this.otlpExporterProperties = otlpExporterProperties;
     this.resourceProperties = resourceProperties;
@@ -154,8 +154,8 @@ public class SpringConfigProperties implements ConfigProperties {
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
     String value = environment.getProperty(normalizedName, String.class);
     if (value == null && normalizedName.equals("otel.exporter.otlp.protocol")) {
-      // SDK autoconfigure module defaults to `grpc`, but this module aligns with recommendation
-      // in specification to default to `http/protobuf`
+      // SDK autoconfigure module defaults to `grpc`, but this module aligns with
+      // recommendation in specification to default to `http/protobuf`
       return OtlpConfigUtil.PROTOCOL_HTTP_PROTOBUF;
     }
     return or(value, otelSdkProperties.getString(name));
@@ -196,7 +196,6 @@ public class SpringConfigProperties implements ConfigProperties {
   @SuppressWarnings("unchecked")
   @Override
   public List<String> getList(String name) {
-
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
 
     List<String> list = listPropertyValues.get(normalizedName);
@@ -210,7 +209,8 @@ public class SpringConfigProperties implements ConfigProperties {
       }
     }
 
-    return or(environment.getProperty(normalizedName, List.class), otelSdkProperties.getList(name));
+    List<String> envValue = (List<String>) environment.getProperty(normalizedName, List.class);
+    return or(envValue, otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -231,6 +231,21 @@ public class SpringConfigProperties implements ConfigProperties {
 
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
     // maps from config properties are not supported by Environment, so we have to fake it
+    Map<String, String> specialMap = getSpecialMapProperty(normalizedName, otelSdkMap);
+    if (specialMap != null) {
+      return specialMap;
+    }
+
+    String value = environment.getProperty(normalizedName);
+    if (value == null) {
+      return otelSdkMap;
+    }
+    return (Map<String, String>) parser.parseExpression(value).getValue();
+  }
+
+  @Nullable
+  private Map<String, String> getSpecialMapProperty(
+      String normalizedName, Map<String, String> otelSdkMap) {
     switch (normalizedName) {
       case "otel.resource.attributes":
         return mergeWithOtel(resourceProperties.getAttributes(), otelSdkMap);
@@ -243,14 +258,8 @@ public class SpringConfigProperties implements ConfigProperties {
       case "otel.exporter.otlp.traces.headers":
         return mergeWithOtel(otlpExporterProperties.getTraces().getHeaders(), otelSdkMap);
       default:
-        break;
+        return null;
     }
-
-    String value = environment.getProperty(normalizedName);
-    if (value == null) {
-      return otelSdkMap;
-    }
-    return (Map<String, String>) parser.parseExpression(value).getValue();
   }
 
   /**

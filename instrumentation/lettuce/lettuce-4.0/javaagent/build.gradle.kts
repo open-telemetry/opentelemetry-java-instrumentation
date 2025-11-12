@@ -14,6 +14,9 @@ muzzle {
 dependencies {
   library("biz.paluch.redis:lettuce:4.0.Final")
 
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.0:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.1:javaagent"))
+
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
 

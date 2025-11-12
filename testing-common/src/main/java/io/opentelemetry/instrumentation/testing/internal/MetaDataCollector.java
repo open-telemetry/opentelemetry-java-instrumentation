@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,18 +36,20 @@ public final class MetaDataCollector {
 
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
-      Pattern.compile("(.*?/instrumentation/.*?)(/javaagent/|/library/)");
+      Pattern.compile("(.*?/instrumentation/.*?)(/javaagent|/library|/testing)");
 
   public static void writeTelemetryToFiles(
       String path,
       Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope,
       Map<InstrumentationScopeInfo, Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
-          spansByScopeAndKind)
+          spansByScopeAndKind,
+      java.util.Set<InstrumentationScopeInfo> instrumentationScopes)
       throws IOException {
 
     String moduleRoot = extractInstrumentationPath(path);
     writeMetricData(moduleRoot, metricsByScope);
     writeSpanData(moduleRoot, spansByScopeAndKind);
+    writeScopeData(moduleRoot, instrumentationScopes);
   }
 
   private static String extractInstrumentationPath(String path) {
@@ -171,6 +174,39 @@ public final class MetaDataCollector {
                     try {
                       writer.write("          - name: " + key.getKey() + "\n");
                       writer.write("            type: " + key.getType().toString() + "\n");
+                    } catch (IOException e) {
+                      throw new IllegalStateException(e);
+                    }
+                  });
+        }
+      }
+    }
+  }
+
+  private static void writeScopeData(
+      String instrumentationPath, Set<InstrumentationScopeInfo> instrumentationScopes)
+      throws IOException {
+
+    if (instrumentationScopes == null || instrumentationScopes.isEmpty()) {
+      return;
+    }
+
+    Path outputPath =
+        Paths.get(instrumentationPath, TMP_DIR, "scope-" + UUID.randomUUID() + ".yaml");
+    try (BufferedWriter writer = Files.newBufferedWriter(outputPath.toFile().toPath(), UTF_8)) {
+      writer.write("scopes:\n");
+      for (InstrumentationScopeInfo scope : instrumentationScopes) {
+        writer.write("  - name: " + scope.getName() + "\n");
+        writer.write("    version: " + scope.getVersion() + "\n");
+        writer.write("    schemaUrl: " + scope.getSchemaUrl() + "\n");
+        if (scope.getAttributes() != null && !scope.getAttributes().isEmpty()) {
+          writer.write("    attributes:\n");
+          scope
+              .getAttributes()
+              .forEach(
+                  (key, value) -> {
+                    try {
+                      writer.write("        " + key + ": " + value + "\n");
                     } catch (IOException e) {
                       throw new IllegalStateException(e);
                     }

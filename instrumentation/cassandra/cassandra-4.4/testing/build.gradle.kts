@@ -3,9 +3,9 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation("com.datastax.oss:java-driver-core:4.4.0")
+  compileOnly("com.datastax.oss:java-driver-core:4.4.0")
   implementation("io.projectreactor:reactor-core:3.5.3")
 
   api(project(":instrumentation:cassandra:cassandra-4-common:testing"))

@@ -119,16 +119,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testSetCommand() {
-    String res = syncCommands.set("TESTSETKEY", "TESTSETVAL");
+    String res =
+        testing().runWithSpan("parent", () -> syncCommands.set("TESTSETKEY", "TESTSETVAL"));
     assertThat(res).isEqualTo("OK");
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("SET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -161,16 +164,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testGetCommand() {
-    String res = syncCommands.get("TESTKEY");
+    String res = testing().runWithSpan("parent", () -> syncCommands.get("TESTKEY"));
     assertThat(res).isEqualTo("TESTVAL");
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -185,16 +190,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testGetNonExistentKeyCommand() {
-    String res = syncCommands.get("NON_EXISTENT_KEY");
+    String res = testing().runWithSpan("parent", () -> syncCommands.get("NON_EXISTENT_KEY"));
     assertThat(res).isNull();
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -209,16 +216,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testCommandWithNoArguments() {
-    String res = syncCommands.randomkey();
+    String res = testing().runWithSpan("parent", () -> syncCommands.randomkey());
     assertThat(res).isNotNull();
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("RANDOMKEY")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -238,21 +247,24 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
     if (Boolean.getBoolean("testLatestDeps")) {
-      // ignore CLIENT SETINFO traces
-      testing().waitForTraces(2);
+      // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
+      testing().waitForTraces(3);
       testing().clearData();
     }
 
-    long res = commands.lpush("TESTLIST", "TESTLIST ELEMENT");
+    long res =
+        testing().runWithSpan("parent", () -> commands.lpush("TESTLIST", "TESTLIST ELEMENT"));
     assertThat(res).isEqualTo(1);
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("LPUSH")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -267,16 +279,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testHashSetCommand() {
-    String res = syncCommands.hmset("user", testHashMap);
+    String res = testing().runWithSpan("parent", () -> syncCommands.hmset("user", testHashMap));
     assertThat(res).isEqualTo("OK");
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("HMSET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -293,16 +307,18 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
   @Test
   void testHashGetallCommand() {
-    Map<String, String> res = syncCommands.hgetall("TESTHM");
+    Map<String, String> res = testing().runWithSpan("parent", () -> syncCommands.hgetall("TESTHM"));
     assertThat(res).isEqualTo(testHashMap);
 
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("HGETALL")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -321,8 +337,12 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         "redis.call('lpush', KEYS[1], ARGV[1], ARGV[2]); return redis.call('llen', KEYS[1])";
 
     Long result =
-        syncCommands.eval(
-            script, ScriptOutputType.INTEGER, new String[] {"TESTLIST"}, "abc", "def");
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    syncCommands.eval(
+                        script, ScriptOutputType.INTEGER, new String[] {"TESTLIST"}, "abc", "def"));
     assertThat(result).isEqualTo(2);
 
     String b64Script = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
@@ -331,9 +351,11 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("EVAL")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -420,6 +442,24 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
+                          span.hasName("CLIENT")
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  addExtraAttributes(
+                                      equalTo(NETWORK_TYPE, "ipv4"),
+                                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                      equalTo(SERVER_ADDRESS, host),
+                                      equalTo(SERVER_PORT, containerConnection.port),
+                                      equalTo(maybeStable(DB_SYSTEM), "redis"),
+                                      satisfies(
+                                          maybeStable(DB_STATEMENT),
+                                          stringAssert ->
+                                              stringAssert.startsWith(
+                                                  "CLIENT MAINT_NOTIFICATIONS"))))),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
                           span.hasName("DEBUG")
                               .hasKind(SpanKind.CLIENT)
                               .hasAttributesSatisfyingExactly(
@@ -459,8 +499,8 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     RedisCommands<String, String> commands = containerConnection.connection.sync();
 
     if (Boolean.getBoolean("testLatestDeps")) {
-      // ignore CLIENT SETINFO traces
-      testing().waitForTraces(2);
+      // ignore CLIENT SETINFO and MAINT_NOTIFICATIONS traces
+      testing().waitForTraces(3);
       testing().clearData();
     }
 

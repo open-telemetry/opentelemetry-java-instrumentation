@@ -20,7 +20,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -32,6 +31,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.ByteCodeElement;
 import net.bytebuddy.description.NamedElement;
@@ -168,36 +168,48 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ExternalAnnotationAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(
-        @Advice.Origin("#t") Class<?> declaringClass,
-        @Advice.Origin("#m") String methodName,
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope) {
+    public static class AdviceScope {
+      private final ClassAndMethod classAndMethod;
+      private final Context context;
+      private final Scope scope;
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
-      request = ClassAndMethod.create(declaringClass, methodName);
-      if (!instrumenter().shouldStart(parentContext, request)) {
-        return;
+      private AdviceScope(ClassAndMethod classAndMethod, Context context, Scope scope) {
+        this.classAndMethod = classAndMethod;
+        this.context = context;
+        this.scope = scope;
       }
 
-      context = instrumenter().start(parentContext, request);
-      scope = context.makeCurrent();
+      @Nullable
+      public static AdviceScope start(Class<?> declaringClass, String methodName) {
+        Context parentContext = Context.current();
+        ClassAndMethod classAndMethod = ClassAndMethod.create(declaringClass, methodName);
+        if (!instrumenter().shouldStart(parentContext, classAndMethod)) {
+          return null;
+        }
+
+        Context context = instrumenter().start(parentContext, classAndMethod);
+        return new AdviceScope(classAndMethod, context, context.makeCurrent());
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, classAndMethod, null, throwable);
+      }
+    }
+
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static AdviceScope onEnter(
+        @Advice.Origin("#t") Class<?> declaringClass, @Advice.Origin("#m") String methodName) {
+      return AdviceScope.start(declaringClass, methodName);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void stopSpan(
-        @Advice.Local("otelRequest") ClassAndMethod request,
-        @Advice.Local("otelContext") Context context,
-        @Advice.Local("otelScope") Scope scope,
-        @Advice.Thrown Throwable throwable) {
-
-      if (scope == null) {
-        return;
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
       }
-      scope.close();
-      instrumenter().end(context, request, null, throwable);
     }
   }
 }

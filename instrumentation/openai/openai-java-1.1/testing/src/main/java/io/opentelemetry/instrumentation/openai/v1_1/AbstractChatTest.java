@@ -63,6 +63,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.openai.TestHelper;
+import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -73,14 +74,18 @@ import java.util.Optional;
 import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 public abstract class AbstractChatTest extends AbstractOpenAiTest {
+
   protected static final AttributeKey<String> EVENT_NAME = AttributeKey.stringKey("event.name");
 
   protected static final String TEST_CHAT_MODEL = "gpt-4o-mini";
   protected static final String TEST_CHAT_RESPONSE_MODEL = "gpt-4o-mini-2024-07-18";
   protected static final String TEST_CHAT_INPUT =
       "Answer in up to 3 words: Which ocean contains Bouvet Island?";
+
+  @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected final ChatCompletion doCompletions(ChatCompletionCreateParams params) {
     return doCompletions(params, getClient(), getClientAsync());
@@ -878,6 +883,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
+    cleanup.deferCleanup(client::close);
+    cleanup.deferCleanup(clientAsync::close);
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()
@@ -1583,6 +1590,8 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                 .apiKey("testing")
                 .maxRetries(0)
                 .build());
+    cleanup.deferCleanup(client::close);
+    cleanup.deferCleanup(clientAsync::close);
 
     ChatCompletionCreateParams params =
         ChatCompletionCreateParams.builder()

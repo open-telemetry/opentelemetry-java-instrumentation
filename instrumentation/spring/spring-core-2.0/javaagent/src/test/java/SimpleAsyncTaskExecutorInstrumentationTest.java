@@ -15,7 +15,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.function.ThrowingConsumer;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 
-public class SimpleAsyncTaskExecutorInstrumentationTest {
+class SimpleAsyncTaskExecutorInstrumentationTest {
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

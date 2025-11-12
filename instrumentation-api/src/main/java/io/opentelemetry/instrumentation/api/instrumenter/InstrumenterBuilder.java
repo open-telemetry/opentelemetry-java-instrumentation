@@ -33,7 +33,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -395,13 +395,24 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static <REQUEST, RESPONSE> void applyCustomizers(
       InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    for (InternalInstrumenterCustomizerProvider provider :
-        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders()) {
+    List<InternalInstrumenterCustomizerProvider> customizerProviders =
+        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
+    if (customizerProviders.isEmpty()) {
+      return;
+    }
+
+    Set<SpanKey> spanKeys = builder.getSpanKeysFromAttributesExtractors();
+    for (InternalInstrumenterCustomizerProvider provider : customizerProviders) {
       provider.customize(
           new InternalInstrumenterCustomizer<REQUEST, RESPONSE>() {
             @Override
             public String getInstrumentationName() {
               return builder.instrumentationName;
+            }
+
+            @Override
+            public boolean hasType(SpanKey type) {
+              return spanKeys.contains(type);
             }
 
             @Override
@@ -427,8 +438,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
             @Override
             public void setSpanNameExtractor(
-                Function<SpanNameExtractor<? super REQUEST>, SpanNameExtractor<? super REQUEST>>
-                    spanNameExtractorTransformer) {
+                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
               builder.spanNameExtractor =
                   spanNameExtractorTransformer.apply(builder.spanNameExtractor);
             }

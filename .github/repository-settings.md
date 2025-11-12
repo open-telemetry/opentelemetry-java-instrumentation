@@ -8,6 +8,7 @@ private admin repo.
 
 ### Repository secrets
 
+- `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
 - `GPG_PASSWORD` - stored in OpenTelemetry-Java 1Password
 - `GPG_PRIVATE_KEY` - stored in OpenTelemetry-Java 1Password
 - `GRADLE_PUBLISH_KEY`
@@ -17,13 +18,13 @@ private admin repo.
   - Key is associated with [@trask](https://github.com/trask)'s gmail address
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
-- `FLAKY_TEST_REPORTER_ACCESS_KEY` - owned by [@laurit](https://github.com/laurit)
 
 ### Organization secrets
 
+- `DEVELOCITY_ACCESS_KEY` (scoped only to Java repos)
 - `FOSSA_API_KEY`
+- `OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY` (scoped only to this repo)
 - `OTELBOT_PRIVATE_KEY`
-- `OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY`
 
 ### Organization variables
 

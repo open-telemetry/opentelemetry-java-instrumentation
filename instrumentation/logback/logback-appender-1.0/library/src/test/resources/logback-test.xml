@@ -19,6 +19,9 @@
     <captureEventName>true</captureEventName>
   </appender>
 
+  <logger name="abc" level="INFO"/>
+  <logger name="def" level="WARN"/>
+
   <root level="INFO">
     <appender-ref ref="console"/>
     <appender-ref ref="OpenTelemetry"/>

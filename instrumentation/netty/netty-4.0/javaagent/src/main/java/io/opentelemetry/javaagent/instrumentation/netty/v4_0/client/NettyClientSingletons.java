@@ -11,7 +11,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
@@ -28,12 +28,12 @@ public final class NettyClientSingletons {
       AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.netty.ssl-telemetry.enabled", false);
 
-  private static final Instrumenter<HttpRequestAndChannel, HttpResponse> INSTRUMENTER;
+  private static final Instrumenter<NettyRequest, HttpResponse> INSTRUMENTER;
   private static final NettyConnectionInstrumenter CONNECTION_INSTRUMENTER;
   private static final NettySslInstrumenter SSL_INSTRUMENTER;
 
   static {
-    DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder =
+    DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder =
         NettyClientInstrumenterBuilderFactory.create(
                 "io.opentelemetry.netty-4.0", GlobalOpenTelemetry.get())
             .configure(AgentCommonConfig.get());
@@ -44,11 +44,12 @@ public final class NettyClientSingletons {
             enabledOrErrorOnly(connectionTelemetryEnabled),
             enabledOrErrorOnly(sslTelemetryEnabled));
     INSTRUMENTER = factory.instrumenter();
-    CONNECTION_INSTRUMENTER = factory.createConnectionInstrumenter();
+    CONNECTION_INSTRUMENTER =
+        factory.createConnectionInstrumenter(AgentCommonConfig.get().getPeerServiceResolver());
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
   }
 
-  public static Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
+  public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {
     return INSTRUMENTER;
   }
 

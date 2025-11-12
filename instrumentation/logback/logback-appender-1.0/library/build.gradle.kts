@@ -40,6 +40,7 @@ dependencies {
     }
   }
 
+  testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
@@ -63,13 +64,6 @@ tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
 
-// To be able to execute the tests as GraalVM native executables
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
-}
-
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 testing {
   suites {
@@ -77,7 +71,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -101,7 +94,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -131,7 +123,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")
@@ -161,7 +152,6 @@ testing {
       dependencies {
         implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
-        implementation(project(":testing-common"))
 
         if (latestDepTest) {
           implementation("ch.qos.logback:logback-classic:latest.release")

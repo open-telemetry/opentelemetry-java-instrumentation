@@ -31,7 +31,6 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import spock.util.environment.Jvm;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -51,7 +50,7 @@ class Elasticsearch53SpringRepositoryTest extends ElasticsearchSpringTest {
     // when running on jdk 21 this test occasionally fails with timeout
     Assumptions.assumeTrue(
         Boolean.getBoolean("testLatestDeps")
-            || !Jvm.getCurrent().isJava21Compatible()
+            || Double.parseDouble(System.getProperty("java.specification.version")) < 21
             || Boolean.getBoolean("collectMetadata"));
 
     DocRepository result =
