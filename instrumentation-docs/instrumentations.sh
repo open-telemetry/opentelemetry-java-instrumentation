@@ -146,6 +146,8 @@ readonly INSTRUMENTATIONS=(
   "jsf:jsf-mojarra-3.0:javaagent:test"
   "jsf:jsf-myfaces-1.2:javaagent:myfaces2Test"
   "jsf:jsf-myfaces-3.0:javaagent:test"
+  "jsp-2.3:javaagent:test"
+  "jsp-2.3:javaagent:testExperimental"
   "kafka:kafka-connect-2.6:testing:test"
   "nats:nats-2.17:javaagent:test"
   "nats:nats-2.17:javaagent:testExperimental"
