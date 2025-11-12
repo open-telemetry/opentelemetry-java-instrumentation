@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.jfinal.v3_6;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.jfinal.v3_6.JFinalSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -41,7 +40,7 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class HandleAdvice {
+  private static class HandleAdvice {
 
     public static class AdviceScope {
       private final Context context;
@@ -53,7 +52,8 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
       }
 
       @Nullable
-      public static AdviceScope start(Context parentContext) {
+      public static AdviceScope start() {
+        Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, null)) {
           return null;
         }
@@ -70,7 +70,7 @@ public class ActionHandlerInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope onEnter() {
-      return AdviceScope.start(currentContext());
+      return AdviceScope.start();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
