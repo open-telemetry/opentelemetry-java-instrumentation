@@ -6,12 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
-
-
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.jfinal.core.JFinalFilter;

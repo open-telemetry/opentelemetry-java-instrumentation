@@ -12,7 +12,6 @@ import com.jfinal.core.ActionKey;
 import com.jfinal.core.Controller;
 import com.jfinal.render.TextRender;
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 
 public class TestController extends Controller {

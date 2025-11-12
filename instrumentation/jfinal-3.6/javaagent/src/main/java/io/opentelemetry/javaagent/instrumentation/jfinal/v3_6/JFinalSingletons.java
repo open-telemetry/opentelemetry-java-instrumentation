@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-
 import java.lang.reflect.Method;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -32,7 +31,8 @@ public final class JFinalSingletons {
           .buildInstrumenter();
 
   static {
-    // see https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465#issuecomment-2137294837
+    // see
+    // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465#issuecomment-2137294837
     excludeOtAttrs();
   }
 
@@ -52,7 +52,7 @@ public final class JFinalSingletons {
     Class<? extends Controller> clazz = action.getControllerClass();
     Method method = action.getMethod();
     if (clazz != null && method != null) {
-        Span.fromContext(context).updateName(clazz.getSimpleName() + '.' + method.getName());
+      Span.fromContext(context).updateName(clazz.getSimpleName() + '.' + method.getName());
     }
   }
 
