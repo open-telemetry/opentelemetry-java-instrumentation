@@ -160,6 +160,16 @@
       ],
     },
     {
+      // snakeyaml-engine 3+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.snakeyaml:snakeyaml-engine'
+      ],
+    },
+    {
       // vaadin 14 tests require node 16
       matchPackageNames: [
         'actions/node-versions',
