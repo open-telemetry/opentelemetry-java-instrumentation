@@ -146,6 +146,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     // getDbQueryText(), and getDbQuerySummary() implementations can override
     // the parsed values from above
     DbClientAttributesExtractor.onStartCommon(attributes, getter, request);
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   private void setQueryParameters(
