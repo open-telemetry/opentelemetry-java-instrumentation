@@ -121,6 +121,9 @@ public abstract class AbstractGraphqlTest {
                 "fetchBookById",
                 () -> {
                   String bookId = dataFetchingEnvironment.getArgument("id");
+                  if ("book-failure".equals(bookId)) {
+                    throw new IllegalStateException("fetching book failed");
+                  }
                   return books.stream()
                       .filter(book -> book.get("id").equals(bookId))
                       .findFirst()
