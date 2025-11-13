@@ -41,6 +41,12 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
     return getStatement(request);
   }
 
+  // TODO: make this required to implement
+  @Nullable
+  default String getDbQuerySummary(REQUEST request) {
+    return null;
+  }
+
   /**
    * @deprecated Use {@link #getDbOperationName(REQUEST)} instead.
    */
@@ -54,10 +60,5 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   @Nullable
   default String getDbOperationName(REQUEST request) {
     return getOperation(request);
-  }
-
-  @Nullable
-  default String getDbQuerySummary(REQUEST request) {
-    return null;
   }
 }

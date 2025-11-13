@@ -74,10 +74,10 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       DbClientAttributesGetter<REQUEST, RESPONSE> getter,
       REQUEST request) {
     if (SemconvStability.emitStableDatabaseSemconv()) {
-      String dbSystem = getter.getDbSystem(request);
-      if (dbSystem != null) {
-        internalSet(attributes, DB_SYSTEM_NAME, SemconvStability.stableDbSystemName(dbSystem));
-      }
+      internalSet(
+          attributes,
+          DB_SYSTEM_NAME,
+          SemconvStability.stableDbSystemName(getter.getDbSystem(request)));
       internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
