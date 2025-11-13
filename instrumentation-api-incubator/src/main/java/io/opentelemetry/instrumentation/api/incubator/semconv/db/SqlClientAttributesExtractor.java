@@ -85,7 +85,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    // SQL-specific attributes
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
     Long batchSize = getter.getBatchSize(request);
