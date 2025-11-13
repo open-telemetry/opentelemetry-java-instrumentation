@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.vertx.core.Handler;
+import io.vertx.core.http.HttpServerRequest;
 import io.vertx.ext.web.RoutingContext;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.UndeclaredThrowableException;
@@ -37,6 +40,7 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
       route = route.substring(0, route.length() - 1);
     }
     HttpServerRoute.update(otelContext, HttpServerRouteSource.NESTED_CONTROLLER, route);
+    injectContextToDownstream(otelContext, context.request());
 
     try (Scope ignore = RouteHolder.init(otelContext, route).makeCurrent()) {
       handler.handle(context);
@@ -47,6 +51,21 @@ public final class RoutingContextHandlerWrapper implements Handler<RoutingContex
       }
       throw throwable;
     }
+  }
+
+  private static void injectContextToDownstream(
+      Context otelContext, HttpServerRequest serverRequest) {
+    TextMapSetter<HttpServerRequest> setter =
+        (carrier, key, value) -> {
+          if (carrier != null) {
+            carrier.headers().set(key, value);
+          }
+        };
+
+    GlobalOpenTelemetry.get()
+        .getPropagators()
+        .getTextMapPropagator()
+        .inject(otelContext, serverRequest, setter);
   }
 
   private static String getRoute(Context otelContext, RoutingContext routingContext) {
