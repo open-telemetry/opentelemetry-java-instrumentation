@@ -1,3 +1,5 @@
+import java.io.File
+
 plugins {
   id("otel.java-conventions")
   id("otel.publish-conventions")
@@ -16,6 +18,14 @@ val extensionLibs by configurations.creating {
   isCanBeConsumed = false
 }
 
+val agentJarFile = providers.provider { agent.singleFile }
+
+val agentManifestFile = agentJarFile.map { jarFile: File ->
+  zipTree(jarFile).matching {
+    include("META-INF/MANIFEST.MF")
+  }.singleFile
+}
+
 dependencies {
   extensionLibs(project(":testing:agent-exporter", configuration = "shadow"))
   agent(project(":javaagent", configuration = "baseJar"))
@@ -27,16 +37,12 @@ dependencies {
 tasks {
   jar {
     dependsOn(agent)
-    from(zipTree(agent.singleFile))
+  from(agentJarFile.map { jarFile: File -> zipTree(jarFile) })
     from(extensionLibs) {
       into("extensions")
     }
 
-    manifest.from(
-      zipTree(agent.singleFile).matching {
-        include("META-INF/MANIFEST.MF")
-      }.singleFile,
-    )
+    manifest.from(agentManifestFile)
   }
 
   afterEvaluate {
