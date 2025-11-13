@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumenta
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.EnumSet;
 import javax.servlet.DispatcherType;
 import org.eclipse.jetty.server.Server;
@@ -37,19 +38,8 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    // In the redirection scenario, the current test case fails to pass.
-    // Modifying the logic of AbstractHttpServerTest to address this would
-    // entail significant risk; therefore, we will temporarily skip validation
-    // for this scenario.
-    //
-    // actual span relationship:          expecting span relationship
-    // GET /redirect                      GET /redirect
-    // |---jfinal.handle                  |---jfinal.handle
-    //      |---controller                     |---controller
-    //      |---Response.sendRedirect                |---Response.sendRedirect
-    //
-    options.setTestRedirect(false);
     options.setHasHandlerSpan(unused -> true);
+    options.setHasResponseSpan(endpoint -> endpoint == REDIRECT);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
           if (endpoint == PATH_PARAM) {
@@ -92,19 +82,22 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
 
   @Override
   protected SpanDataAssert assertResponseSpan(
-      SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    if (endpoint == REDIRECT) {
-      span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"));
-    }
-    span.hasKind(SpanKind.INTERNAL).hasAttributesSatisfying(Attributes::isEmpty);
-    return span;
+      SpanDataAssert span,
+      SpanData serverSpan,
+      SpanData controllerSpan,
+      SpanData handlerSpan,
+      String method,
+      ServerEndpoint endpoint) {
+    return span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"))
+        .hasParent(handlerSpan)
+        .hasKind(SpanKind.INTERNAL)
+        .hasAttributesSatisfying(Attributes::isEmpty);
   }
 
   @Override
   public SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    span.hasName(getHandlerSpanName(endpoint)).hasKind(INTERNAL);
-    return span;
+    return span.hasName(getHandlerSpanName(endpoint)).hasKind(INTERNAL);
   }
 
   private static String getHandlerSpanName(ServerEndpoint endpoint) {
