@@ -38,7 +38,7 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class JFinalTest extends AbstractHttpServerTest<Server> {
+class JFinalTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
