@@ -1,4 +1,5 @@
-description: "This instrumentation enables messaging spans for Kafka Connect sink tasks."
+description: This instrumentation enables messaging spans for Kafka Connect sink tasks.
+display_name: Apache Kafka Connect
+library_link: https://kafka.apache.org/documentation/#connect
 semantic_conventions:
   - MESSAGING_SPANS
-library_link: https://kafka.apache.org/documentation/#connect
