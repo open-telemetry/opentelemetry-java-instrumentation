@@ -65,7 +65,6 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     onStartCommon(attributes, getter, request);
-    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   @SuppressWarnings("deprecation") // until old db semconv are dropped
@@ -91,6 +90,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(attributes, DB_STATEMENT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION, getter.getDbOperationName(request));
     }
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   @Override
