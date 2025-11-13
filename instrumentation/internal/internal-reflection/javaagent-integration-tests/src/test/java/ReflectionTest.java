@@ -7,15 +7,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import instrumentation.TestHelperClass;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationProxy;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldAccessorMarker;
-import io.opentelemetry.javaagent.bootstrap.VirtualFieldInstalledMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
+import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldInstalledMarker;
 import java.io.ObjectStreamClass;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 
-public class ReflectionTest {
+class ReflectionTest {
 
   @Test
   void testOurFieldsAndMethodsAreNotVisibleWithReflection() {

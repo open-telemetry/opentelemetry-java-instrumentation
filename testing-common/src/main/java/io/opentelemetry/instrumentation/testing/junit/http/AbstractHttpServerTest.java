@@ -41,6 +41,7 @@ import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
@@ -82,7 +83,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -754,7 +754,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             trace.hasSpansSatisfyingExactly(spanAssertions);
 
             if (options.verifyServerSpanEndTime) {
-              List<SpanData> spanData = AssertAccess.getActual(trace);
+              List<SpanData> spanData = trace.actual();
               if (spanData.size() > 1) {
                 SpanData rootSpan = spanData.get(0);
                 for (int j = 1; j < spanData.size(); j++) {
@@ -828,7 +828,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String expectedRoute = options.expectedHttpRoute.apply(endpoint, method);
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
 
-    span.hasName(name).hasKind(SpanKind.SERVER);
+    span.hasName(name)
+        .hasKind(SpanKind.SERVER)
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                    .isEqualTo(SchemaUrls.V1_37_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }

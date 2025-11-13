@@ -1,6 +1,9 @@
 description: >
-  Instruments the Cassandra database client, providing database client spans and metrics for
-  Cassandra queries.
+  This instrumentation enables database client spans and database client metrics for the DataStax
+  Cassandra Driver.
+semantic_conventions:
+  - DATABASE_CLIENT_SPANS
+  - DATABASE_CLIENT_METRICS
 library_link: https://github.com/apache/cassandra-java-driver
 configurations:
   - name: otel.instrumentation.common.db-statement-sanitizer.enabled

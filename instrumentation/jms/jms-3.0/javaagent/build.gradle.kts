@@ -27,6 +27,8 @@ dependencies {
   library("jakarta.jms:jakarta.jms-api:3.0.0")
 
   testImplementation("org.apache.activemq:artemis-jakarta-client:2.27.1")
+
+  testInstrumentation(project(":instrumentation:jms:jms-1.1:javaagent"))
 }
 
 otelJava {
@@ -36,6 +38,7 @@ otelJava {
 tasks {
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {

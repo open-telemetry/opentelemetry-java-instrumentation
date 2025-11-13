@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Instrument
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @AutoService(InstrumentationModule.class)
-public class MethodInstrumentationModule extends InstrumentationModule {
+public class MethodInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   private static final String TRACE_METHODS_CONFIG = "otel.instrumentation.methods.include";
 
@@ -65,5 +67,10 @@ public class MethodInstrumentationModule extends InstrumentationModule {
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return typeInstrumentations;
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }

@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -59,8 +60,10 @@ public abstract class AbstractOpenSearchRestTest {
     opensearch =
         new OpensearchContainer(DockerImageName.parse("opensearchproject/opensearch:1.3.6"))
             .withSecurityEnabled();
-    // limit memory usage
-    opensearch.withEnv("OPENSEARCH_JAVA_OPTS", "-Xmx256m -Xms256m");
+    // limit memory usage and disable Log4j JMX to avoid cgroup detection issues in containers
+    opensearch.withEnv(
+        "OPENSEARCH_JAVA_OPTS",
+        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
@@ -97,6 +100,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -167,6 +171,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                     span ->

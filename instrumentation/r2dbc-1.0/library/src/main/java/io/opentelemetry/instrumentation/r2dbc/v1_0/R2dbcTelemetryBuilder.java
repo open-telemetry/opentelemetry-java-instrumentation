@@ -10,16 +10,24 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /** A builder of {@link R2dbcTelemetry}. */
 public final class R2dbcTelemetryBuilder {
 
   private final R2dbcInstrumenterBuilder instrumenterBuilder;
   private boolean statementSanitizationEnabled = true;
-  private Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
-      spanNameExtractorTransformer = Function.identity();
+  private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer =
+      UnaryOperator.identity();
+  private boolean sqlCommenterEnabled;
+
+  static {
+    Experimental.internalSetEnableSqlCommenter(
+        (builder, sqlCommenterEnabled) -> builder.sqlCommenterEnabled = sqlCommenterEnabled);
+  }
 
   R2dbcTelemetryBuilder(OpenTelemetry openTelemetry) {
     instrumenterBuilder = new R2dbcInstrumenterBuilder(openTelemetry);
@@ -43,12 +51,27 @@ public final class R2dbcTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
+  @SuppressWarnings("unchecked") // cast result to SpanNameExtractor<DbExecution>
   public R2dbcTelemetryBuilder setSpanNameExtractor(
       Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
           spanNameExtractorTransformer) {
-    this.spanNameExtractorTransformer = spanNameExtractorTransformer;
+    return setSpanNameExtractor(
+        (UnaryOperator<SpanNameExtractor<DbExecution>>)
+            input -> (SpanNameExtractor<DbExecution>) spanNameExtractorTransformer.apply(input));
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public R2dbcTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractor) {
+    this.spanNameExtractorTransformer = spanNameExtractor;
     return this;
   }
 
@@ -57,6 +80,7 @@ public final class R2dbcTelemetryBuilder {
    */
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
-        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled));
+        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled),
+        sqlCommenterEnabled);
   }
 }

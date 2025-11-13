@@ -15,7 +15,7 @@ dependencies {
   library("org.apache.pulsar:pulsar-client:2.8.0")
 
   testImplementation("javax.annotation:javax.annotation-api:1.3.2")
-  testImplementation("org.testcontainers:pulsar")
+  testImplementation("org.testcontainers:testcontainers-pulsar")
   testImplementation("org.apache.pulsar:pulsar-client-admin:2.8.0")
 }
 
@@ -38,6 +38,12 @@ tasks {
 
   check {
     dependsOn(testReceiveSpanDisabled)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }
 

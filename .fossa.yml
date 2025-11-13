@@ -342,6 +342,12 @@ targets:
       target: ':instrumentation:armeria:armeria-grpc-1.14:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:async-http-client:async-http-client-1-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:async-http-client:async-http-client-1.8:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:async-http-client:async-http-client-1.9:javaagent'
     - type: gradle
       path: ./
@@ -393,6 +399,9 @@ targets:
       target: ':instrumentation:azure-core:azure-core-1.36:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:azure-core:azure-core-1.53:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:cassandra:cassandra-3.0:javaagent'
     - type: gradle
       path: ./
@@ -430,6 +439,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:couchbase:couchbase-3.2:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:couchbase:couchbase-3.4:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:dropwizard:dropwizard-metrics-4.0:javaagent'
@@ -622,6 +634,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:jsf:jsf-myfaces-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:kafka:kafka-connect-2.6:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:kafka:kafka-streams-0.11:javaagent'

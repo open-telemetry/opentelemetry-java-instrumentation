@@ -20,14 +20,16 @@ class PrometheusSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .springBoot("20251011.18424653812")
+        .springBoot("20251017.18602659902")
         .env("OTEL_METRICS_EXPORTER", "prometheus")
         .env("OTEL_EXPORTER_PROMETHEUS_PORT", String.valueOf(PROMETHEUS_PORT))
         .extraPorts(PROMETHEUS_PORT);
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  // restore after image update
+  // @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {8, 21, 25})
   void shouldExportMetrics(int jdk) {
     start(jdk);
     client().get("/greeting").aggregate().join();

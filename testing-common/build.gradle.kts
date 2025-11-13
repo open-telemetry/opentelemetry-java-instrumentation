@@ -17,22 +17,6 @@ sourceSets {
 }
 
 dependencies {
-  api("org.apache.groovy:groovy")
-  api("org.apache.groovy:groovy-json")
-  api("org.spockframework:spock-core") {
-    // exclude optional dependencies
-    exclude(group = "cglib", module = "cglib-nodep")
-    exclude(group = "net.bytebuddy", module = "byte-buddy")
-    exclude(group = "org.junit.platform", module = "junit-platform-testkit")
-    exclude(group = "org.jetbrains", module = "annotations")
-    exclude(group = "org.objenesis", module = "objenesis")
-    exclude(group = "org.ow2.asm", module = "asm")
-  }
-  api("org.spockframework:spock-junit4") {
-    // spock-core is already added as dependency
-    // exclude it here to avoid pulling in optional dependencies
-    exclude(group = "org.spockframework", module = "spock-core")
-  }
   api("org.junit.jupiter:junit-jupiter-api")
   api("org.junit.jupiter:junit-jupiter-params")
 
@@ -43,7 +27,6 @@ dependencies {
   api(project(":instrumentation-api"))
 
   api("org.assertj:assertj-core")
-  // Needs to be api dependency due to Spock restriction.
   api("org.awaitility:awaitility")
   api("org.mockito:mockito-core")
   api("org.slf4j:slf4j-api")
@@ -82,10 +65,5 @@ dependencies {
 tasks {
   javadoc {
     enabled = false
-  }
-
-  jar {
-    // When there are duplicates between multiple shaded dependencies, just ignore them.
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
   }
 }

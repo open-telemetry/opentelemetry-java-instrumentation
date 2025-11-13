@@ -7,10 +7,10 @@ plugins {
 dependencies {
   implementation("org.snakeyaml:snakeyaml-engine")
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("org.testcontainers:testcontainers")
 
-  testImplementation("org.testcontainers:junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.linecorp.armeria:armeria-junit5:1.31.3")
   testImplementation("com.linecorp.armeria:armeria-junit5:1.31.3")
   testImplementation("com.linecorp.armeria:armeria-grpc:1.31.3")

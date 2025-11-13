@@ -27,9 +27,12 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
+import io.opentelemetry.semconv.incubating.PeerIncubatingAttributes;
+import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.UrlIncubatingAttributes;
 import java.net.URI;
 import java.time.Duration;
@@ -1070,6 +1073,19 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         .hasKind(SpanKind.CLIENT)
         .hasAttributesSatisfying(
             attrs -> {
+              // Check for peer.service when running with javaagent instrumentation
+              String distroName =
+                  span.actual()
+                      .getResource()
+                      .getAttribute(TelemetryIncubatingAttributes.TELEMETRY_DISTRO_NAME);
+              if ("opentelemetry-java-instrumentation".equals(distroName)) {
+                String expectedPeerService = options.getExpectedPeerServiceName().apply(uri);
+                if (expectedPeerService != null) {
+                  assertThat(attrs)
+                      .containsEntry(PeerIncubatingAttributes.PEER_SERVICE, expectedPeerService);
+                }
+              }
+
               // we're opting out of these attributes in the new semconv
               assertThat(attrs)
                   .doesNotContainKey(NetworkAttributes.NETWORK_TRANSPORT)
@@ -1119,11 +1135,10 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               if (httpClientAttributes.contains(UrlAttributes.URL_FULL)) {
                 assertThat(attrs).containsEntry(UrlAttributes.URL_FULL, uri.toString());
               }
-              if (options.getHasUrlTemplate()) {
+              String expectedUrlTemplate = options.getExpectedUrlTemplateMapper().apply(uri);
+              if (expectedUrlTemplate != null) {
                 assertThat(attrs)
-                    .containsEntry(
-                        UrlIncubatingAttributes.URL_TEMPLATE,
-                        options.getExpectedUrlTemplateMapper().apply(uri));
+                    .containsEntry(UrlIncubatingAttributes.URL_TEMPLATE, expectedUrlTemplate);
               }
               if (httpClientAttributes.contains(HttpAttributes.HTTP_REQUEST_METHOD)) {
                 assertThat(attrs).containsEntry(HttpAttributes.HTTP_REQUEST_METHOD, method);
@@ -1151,7 +1166,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               } else {
                 assertThat(attrs).doesNotContainKey(HttpAttributes.HTTP_REQUEST_RESEND_COUNT);
               }
-            });
+            })
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                    .isEqualTo(SchemaUrls.V1_37_0));
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {

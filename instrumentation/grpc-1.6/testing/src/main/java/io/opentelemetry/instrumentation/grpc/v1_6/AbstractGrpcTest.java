@@ -130,7 +130,8 @@ public abstract class AbstractGrpcTest {
                 "parent",
                 () -> client.sayHello(Helloworld.Request.newBuilder().setName(paramName).build()));
 
-    assertThat(response.getMessage()).isEqualTo("Hello " + paramName);
+    String prefix = "Hello ";
+    assertThat(response.getMessage()).isEqualTo(prefix + paramName);
 
     testing()
         .waitAndAssertTraces(
@@ -206,49 +207,8 @@ public abstract class AbstractGrpcTest {
                                             equalTo(
                                                 MessageIncubatingAttributes.MESSAGE_TYPE, "SENT"),
                                             equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L)))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
+
+    assertMetrics(server, Status.Code.OK);
   }
 
   @Test
@@ -274,13 +234,14 @@ public abstract class AbstractGrpcTest {
 
     AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () -> {
               ListenableFuture<Helloworld.Response> future =
                   Futures.transform(
-                      client.sayHello(Helloworld.Request.newBuilder().setName("test").build()),
+                      client.sayHello(request),
                       resp -> {
                         testing().runWithSpan("child", () -> {});
                         return resp;
@@ -294,7 +255,8 @@ public abstract class AbstractGrpcTest {
             });
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    Helloworld.Response res = response.get();
+    assertThat(res.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -374,49 +336,8 @@ public abstract class AbstractGrpcTest {
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
+
+    assertMetrics(server, Status.Code.OK);
   }
 
   @Test
@@ -443,12 +364,13 @@ public abstract class AbstractGrpcTest {
     AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () ->
                 client.sayHello(
-                    Helloworld.Request.newBuilder().setName("test").build(),
+                    request,
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
@@ -470,7 +392,8 @@ public abstract class AbstractGrpcTest {
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    Helloworld.Response res = response.get();
+    assertThat(res.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -550,49 +473,8 @@ public abstract class AbstractGrpcTest {
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.OK.value()))))));
+
+    assertMetrics(server, Status.Code.OK);
   }
 
   @ParameterizedTest
@@ -613,8 +495,8 @@ public abstract class AbstractGrpcTest {
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
-    assertThatThrownBy(
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("error").build();
+    assertThatThrownBy(() -> client.sayHello(request))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,
             t -> {
@@ -690,49 +572,8 @@ public abstract class AbstractGrpcTest {
                                     span.hasException(status.getCause());
                                   }
                                 })));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) status.getCode().value()))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) status.getCode().value()))))));
+
+    assertMetrics(server, status.getCode());
   }
 
   @ParameterizedTest
@@ -752,9 +593,8 @@ public abstract class AbstractGrpcTest {
     closer.add(() -> server.shutdownNow().awaitTermination());
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
-
-    assertThatThrownBy(
-            () -> client.sayHello(Helloworld.Request.newBuilder().setName("error").build()))
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("error").build();
+    assertThatThrownBy(() -> client.sayHello(request))
         .isInstanceOfSatisfying(
             StatusRuntimeException.class,
             t -> {
@@ -830,49 +670,8 @@ public abstract class AbstractGrpcTest {
                                           equalTo(MessageIncubatingAttributes.MESSAGE_ID, 1L));
                                   span.hasException(status.asRuntimeException());
                                 })));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.server.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.UNKNOWN.value()))))));
-    testing()
-        .waitAndAssertMetrics(
-            "io.opentelemetry.grpc-1.6",
-            "rpc.client.duration",
-            metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("ms")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, server.getPort()),
-                                                equalTo(RPC_METHOD, "SayHello"),
-                                                equalTo(RPC_SERVICE, "example.Greeter"),
-                                                equalTo(RPC_SYSTEM, "grpc"),
-                                                equalTo(
-                                                    RPC_GRPC_STATUS_CODE,
-                                                    (long) Status.Code.UNKNOWN.value()))))));
+
+    assertMetrics(server, Status.Code.UNKNOWN);
   }
 
   private static Stream<Arguments> provideErrorArguments() {
@@ -971,12 +770,13 @@ public abstract class AbstractGrpcTest {
     AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () ->
                 client.sayHello(
-                    Helloworld.Request.newBuilder().setName("test").build(),
+                    request,
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
@@ -1007,7 +807,8 @@ public abstract class AbstractGrpcTest {
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    Helloworld.Response res = response.get();
+    assertThat(res.getMessage()).isEqualTo("Hello test");
 
     testing()
         .waitAndAssertTraces(
@@ -1105,17 +906,20 @@ public abstract class AbstractGrpcTest {
     GreeterGrpc.GreeterStub client = GreeterGrpc.newStub(channel);
 
     IllegalStateException thrown = new IllegalStateException("illegal");
+    AtomicReference<Helloworld.Response> response = new AtomicReference<>();
     AtomicReference<Throwable> error = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
     testing()
         .runWithSpan(
             "parent",
             () ->
                 client.sayMultipleHello(
-                    Helloworld.Request.newBuilder().setName("test").build(),
+                    request,
                     new StreamObserver<Helloworld.Response>() {
                       @Override
                       public void onNext(Helloworld.Response r) {
+                        response.set(r);
                         throw thrown;
                       }
 
@@ -1250,16 +1054,18 @@ public abstract class AbstractGrpcTest {
               }
             });
 
-    request.onNext(
+    ServerReflectionRequest serverReflectionRequest =
         ServerReflectionRequest.newBuilder()
             .setListServices("The content will not be checked?")
-            .build());
+            .build();
+    request.onNext(serverReflectionRequest);
     request.onCompleted();
 
     latch.await(10, TimeUnit.SECONDS);
 
     assertThat(error).hasValue(null);
-    assertThat(response.get().getListServicesResponse().getService(0).getName())
+    ServerReflectionResponse serverReflectionResponse = response.get();
+    assertThat(serverReflectionResponse.getListServicesResponse().getService(0).getName())
         .isEqualTo("grpc.reflection.v1alpha.ServerReflection");
 
     testing()
@@ -1368,11 +1174,8 @@ public abstract class AbstractGrpcTest {
 
     GreeterGrpc.GreeterBlockingStub client = GreeterGrpc.newBlockingStub(channel);
 
-    Helloworld.Response response =
-        testing()
-            .runWithSpan(
-                "parent",
-                () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
+    Helloworld.Request request = Helloworld.Request.newBuilder().setName("test").build();
+    Helloworld.Response response = testing().runWithSpan("parent", () -> client.sayHello(request));
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
@@ -1695,5 +1498,154 @@ public abstract class AbstractGrpcTest {
       result.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
     }
     return result;
+  }
+
+  private void assertMetrics(Server server, Status.Code statusCode) {
+    boolean hasSizeMetric = statusCode == Status.Code.OK;
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.server.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfyingExactly(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                satisfies(
+                                                    SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    RPC_GRPC_STATUS_CODE,
+                                                    (long) statusCode.value()),
+                                                equalTo(NETWORK_TYPE, "ipv4"))))));
+
+    if (hasSizeMetric) {
+      testing()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.grpc-1.6",
+              "rpc.server.request.size",
+              metrics ->
+                  metrics.anySatisfy(
+                      metric ->
+                          assertThat(metric)
+                              .hasUnit("By")
+                              .hasHistogramSatisfying(
+                                  histogram ->
+                                      histogram.hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributesSatisfyingExactly(
+                                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                                  satisfies(
+                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                  equalTo(RPC_METHOD, "SayHello"),
+                                                  equalTo(RPC_SERVICE, "example.Greeter"),
+                                                  equalTo(RPC_SYSTEM, "grpc"),
+                                                  equalTo(
+                                                      RPC_GRPC_STATUS_CODE,
+                                                      (long) statusCode.value()),
+                                                  equalTo(NETWORK_TYPE, "ipv4"))))));
+      testing()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.grpc-1.6",
+              "rpc.server.response.size",
+              metrics ->
+                  metrics.anySatisfy(
+                      metric ->
+                          assertThat(metric)
+                              .hasUnit("By")
+                              .hasHistogramSatisfying(
+                                  histogram ->
+                                      histogram.hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributesSatisfyingExactly(
+                                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                                  satisfies(
+                                                      SERVER_PORT, k -> k.isInstanceOf(Long.class)),
+                                                  equalTo(RPC_METHOD, "SayHello"),
+                                                  equalTo(RPC_SERVICE, "example.Greeter"),
+                                                  equalTo(RPC_SYSTEM, "grpc"),
+                                                  equalTo(
+                                                      RPC_GRPC_STATUS_CODE,
+                                                      (long) statusCode.value()),
+                                                  equalTo(NETWORK_TYPE, "ipv4"))))));
+    }
+
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.duration",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("ms")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    RPC_GRPC_STATUS_CODE,
+                                                    (long) statusCode.value()))))));
+
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.grpc-1.6",
+            "rpc.client.request.size",
+            metrics ->
+                metrics.anySatisfy(
+                    metric ->
+                        assertThat(metric)
+                            .hasUnit("By")
+                            .hasHistogramSatisfying(
+                                histogram ->
+                                    histogram.hasPointsSatisfying(
+                                        point ->
+                                            point.hasAttributesSatisfying(
+                                                equalTo(SERVER_ADDRESS, "localhost"),
+                                                equalTo(SERVER_PORT, server.getPort()),
+                                                equalTo(RPC_METHOD, "SayHello"),
+                                                equalTo(RPC_SERVICE, "example.Greeter"),
+                                                equalTo(RPC_SYSTEM, "grpc"),
+                                                equalTo(
+                                                    RPC_GRPC_STATUS_CODE,
+                                                    (long) statusCode.value()))))));
+    if (hasSizeMetric) {
+      testing()
+          .waitAndAssertMetrics(
+              "io.opentelemetry.grpc-1.6",
+              "rpc.client.response.size",
+              metrics ->
+                  metrics.anySatisfy(
+                      metric ->
+                          assertThat(metric)
+                              .hasUnit("By")
+                              .hasHistogramSatisfying(
+                                  histogram ->
+                                      histogram.hasPointsSatisfying(
+                                          point ->
+                                              point.hasAttributesSatisfying(
+                                                  equalTo(SERVER_ADDRESS, "localhost"),
+                                                  equalTo(SERVER_PORT, server.getPort()),
+                                                  equalTo(RPC_METHOD, "SayHello"),
+                                                  equalTo(RPC_SERVICE, "example.Greeter"),
+                                                  equalTo(RPC_SYSTEM, "grpc"),
+                                                  equalTo(
+                                                      RPC_GRPC_STATUS_CODE,
+                                                      (long) statusCode.value()))))));
+    }
   }
 }
