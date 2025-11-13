@@ -2,6 +2,8 @@ plugins {
   id("otel.javaagent-testing")
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 dependencies {
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
   testInstrumentation(project(":instrumentation:r2dbc-1.0:javaagent"))
@@ -20,6 +22,15 @@ dependencies {
   testImplementation("org.hsqldb:hsqldb:2.0.0")
   testImplementation("com.h2database:h2:1.4.197")
   testImplementation("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
+
+  if (testLatestDeps) {
+    // Exclude Spring Framework 7.0+ until compatible version available
+    testImplementation("org.springframework:spring-core") {
+      version {
+        strictly("[6.0,7.0[")
+      }
+    }
+  }
 }
 
 otelJava {

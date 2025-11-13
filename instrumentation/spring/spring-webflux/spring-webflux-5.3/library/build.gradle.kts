@@ -23,6 +23,15 @@ if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_17)
   }
+
+  // Exclude Spring Framework 7.0+ until compatible version available
+  dependencies {
+    testImplementation("org.springframework:spring-webflux") {
+      version {
+        strictly("[6.0,7.0[")
+      }
+    }
+  }
 }
 
 if (!latestDepTest) {

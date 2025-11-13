@@ -2,6 +2,8 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
 dependencies {
   library("org.springframework.security:spring-security-config:6.0.0")
   library("org.springframework.security:spring-security-web:6.0.0")
@@ -17,6 +19,30 @@ dependencies {
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testLibrary("org.springframework:spring-test:6.0.0")
+
+  if (testLatestDeps) {
+    // Exclude Spring Framework 7.0+ until compatible version available
+    testImplementation("org.springframework:spring-core") {
+      version {
+        strictly("[6.0,7.0[")
+      }
+    }
+    testImplementation("org.springframework:spring-context") {
+      version {
+        strictly("[6.0,7.0[")
+      }
+    }
+    testImplementation("org.springframework:spring-web") {
+      version {
+        strictly("[6.0,7.0[")
+      }
+    }
+    testImplementation("org.springframework:spring-test") {
+      version {
+        strictly("[6.0,7.0[")
+      }
+    }
+  }
 }
 
 otelJava {
