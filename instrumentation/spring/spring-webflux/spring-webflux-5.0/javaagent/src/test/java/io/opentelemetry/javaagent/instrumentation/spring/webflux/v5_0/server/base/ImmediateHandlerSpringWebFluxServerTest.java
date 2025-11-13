@@ -27,7 +27,7 @@ import reactor.core.publisher.Mono;
  * deferred actions. For exception endpoint, the exception is thrown within route handler method
  * scope.
  */
-public class ImmediateHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTest {
+class ImmediateHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application.class;

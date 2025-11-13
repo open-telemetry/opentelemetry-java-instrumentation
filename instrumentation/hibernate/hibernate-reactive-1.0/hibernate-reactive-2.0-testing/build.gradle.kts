@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("org.testcontainers:testcontainers")
 
   compileOnly("org.hibernate.reactive:hibernate-reactive-core:2.0.0.Final")

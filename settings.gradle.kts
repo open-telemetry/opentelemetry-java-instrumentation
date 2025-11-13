@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
-    id("org.graalvm.buildtools.native") version "0.11.2"
+    id("org.graalvm.buildtools.native") version "0.11.3"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
   }
@@ -139,6 +139,7 @@ include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
 include(":testing-common")
+include(":testing-common:with-shaded-dependencies")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
@@ -189,7 +190,9 @@ include(":instrumentation:armeria:armeria-1.3:javaagent")
 include(":instrumentation:armeria:armeria-1.3:library")
 include(":instrumentation:armeria:armeria-1.3:testing")
 include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
+include(":instrumentation:async-http-client:async-http-client-1.8:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
+include(":instrumentation:async-http-client:async-http-client-1-common:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
 include(":instrumentation:avaje-jex-3.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")

@@ -339,6 +339,12 @@ targets:
       target: ':instrumentation:armeria:armeria-grpc-1.14:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:async-http-client:async-http-client-1-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:async-http-client:async-http-client-1.8:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:async-http-client:async-http-client-1.9:javaagent'
     - type: gradle
       path: ./

@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * <p>{@code Mono<String>} from a handler is already a fully constructed response with no deferred
  * actions. For exception endpoint, the exception is thrown within controller method scope.
  */
-public class ImmediateControllerSpringWebFluxServerTest extends ControllerSpringWebFluxServerTest {
+class ImmediateControllerSpringWebFluxServerTest extends ControllerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application.class;

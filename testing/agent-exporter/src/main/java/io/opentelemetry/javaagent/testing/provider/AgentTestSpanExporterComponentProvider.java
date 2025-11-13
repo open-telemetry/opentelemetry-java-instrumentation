@@ -11,9 +11,8 @@ import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.trace.export.SpanExporter;
 import java.util.Objects;
 
-@SuppressWarnings("rawtypes")
 @AutoService(ComponentProvider.class)
-public class AgentTestSpanExporterComponentProvider implements ComponentProvider<SpanExporter> {
+public class AgentTestSpanExporterComponentProvider implements ComponentProvider {
 
   private static SpanExporter spanExporter;
 

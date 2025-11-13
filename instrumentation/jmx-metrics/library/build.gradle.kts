@@ -7,7 +7,7 @@ plugins {
 dependencies {
   implementation("org.snakeyaml:snakeyaml-engine")
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("org.testcontainers:testcontainers")
 
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")

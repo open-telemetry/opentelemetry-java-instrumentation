@@ -20,7 +20,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MarkerFactory;
 
-public class Slf4j2Test {
+class Slf4j2Test {
   private static final Logger logger = LoggerFactory.getLogger("TestLogger");
 
   @RegisterExtension

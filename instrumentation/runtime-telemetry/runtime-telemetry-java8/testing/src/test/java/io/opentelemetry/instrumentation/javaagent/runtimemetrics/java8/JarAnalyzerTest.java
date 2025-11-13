@@ -139,7 +139,7 @@ class JarAnalyzerTest {
 
   private static URL archiveUrl(File file) {
     try {
-      return new URL("file://" + file.getAbsolutePath());
+      return file.toURI().toURL();
     } catch (MalformedURLException e) {
       throw new IllegalArgumentException("Error creating URL for file", e);
     }

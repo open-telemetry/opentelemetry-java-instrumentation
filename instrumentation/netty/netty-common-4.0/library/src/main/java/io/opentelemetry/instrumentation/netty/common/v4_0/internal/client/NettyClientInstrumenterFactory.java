@@ -17,7 +17,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExt
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.netty.common.internal.NettyConnectionRequest;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import javax.annotation.Nullable;
 
 /**
@@ -26,12 +26,12 @@ import javax.annotation.Nullable;
  */
 public final class NettyClientInstrumenterFactory {
 
-  private final DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder;
+  private final DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder;
   private final NettyConnectionInstrumentationFlag connectionTelemetryState;
   private final NettyConnectionInstrumentationFlag sslTelemetryState;
 
   public NettyClientInstrumenterFactory(
-      DefaultHttpClientInstrumenterBuilder<HttpRequestAndChannel, HttpResponse> builder,
+      DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder,
       NettyConnectionInstrumentationFlag connectionTelemetryState,
       NettyConnectionInstrumentationFlag sslTelemetryState) {
     this.builder = builder;
@@ -39,7 +39,7 @@ public final class NettyClientInstrumenterFactory {
     this.sslTelemetryState = sslTelemetryState;
   }
 
-  public Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter() {
+  public Instrumenter<NettyRequest, HttpResponse> instrumenter() {
     return builder.build();
   }
 
