@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -41,6 +43,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
   private static final AttributeKey<String> DB_STATEMENT = AttributeKey.stringKey("db.statement");
+  private static final AttributeKey<String> DB_SYSTEM = AttributeKey.stringKey("db.system");
+  private static final AttributeKey<String> DB_USER = AttributeKey.stringKey("db.user");
+  private static final AttributeKey<String> DB_NAME = AttributeKey.stringKey("db.name");
+  private static final AttributeKey<String> DB_CONNECTION_STRING =
+      AttributeKey.stringKey("db.connection_string");
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
 
@@ -194,19 +201,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-<<<<<<< HEAD
-    DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
-=======
     internalNetworkExtractor.onEnd(attributes, request, response);
-    if (SemconvStability.emitStableDatabaseSemconv()) {
-      if (error != null) {
-        internalSet(attributes, ERROR_TYPE, error.getClass().getName());
-      }
-      if (error != null || response != null) {
-        internalSet(attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatus(response, error));
-      }
-    }
->>>>>>> 491840ef70 (Consolidate network attribute extraction into DbClientAttributesGetter)
+    DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
   }
 
   /**

@@ -20,47 +20,11 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
+@SuppressWarnings("deprecation") // until DbClientCommonAttributesGetter is removed
 public interface DbClientAttributesGetter<REQUEST, RESPONSE>
-    extends NetworkAttributesGetter<REQUEST, RESPONSE>, ServerAttributesGetter<REQUEST> {
-
-  @Deprecated
-  @Nullable
-  default String getSystem(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
-  default String getDbSystem(REQUEST request) {
-    return getSystem(request);
-  }
-
-  @Deprecated
-  @Nullable
-  default String getUser(REQUEST request) {
-    return null;
-  }
-
-  /**
-   * @deprecated Use {@link #getDbNamespace(Object)} instead.
-   */
-  @Deprecated
-  @Nullable
-  default String getName(REQUEST request) {
-    return null;
-  }
-
-  // TODO: make this required to implement
-  @Nullable
-  default String getDbNamespace(REQUEST request) {
-    return getName(request);
-  }
-
-  @Deprecated
-  @Nullable
-  default String getConnectionString(REQUEST request) {
-    return null;
-  }
+    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE>,
+        NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST> {
 
   /**
    * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.
@@ -94,11 +58,6 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
 
   @Nullable
   default String getDbQuerySummary(REQUEST request) {
-    return null;
-  }
-
-  @Nullable
-  default String getResponseStatus(@Nullable RESPONSE response, @Nullable Throwable error) {
     return null;
   }
 }
