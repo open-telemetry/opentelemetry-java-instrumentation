@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
@@ -18,13 +19,16 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.servlet.v3_0.copied.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import javax.servlet.Servlet;
+import org.junit.jupiter.api.Test;
 
 public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttpServerTest<SERVER> {
 
@@ -62,11 +66,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setTestCaptureRequestParameters(false); // Requires AgentConfig.
-    options.setTestCaptureHttpHeaders(false); // Requires AgentConfig.
-    options.disableTestNonStandardHttpMethod(); // test doesn't use route mapping correctly.
-    options.setTestException(false); // filters don't have visibility into exception handling above.
-    HttpServerResponseCustomizerHolder.setCustomizer(new TestAgentHttpResponseCustomizer());
+    options.setTestCaptureRequestParameters(true);
     options.setHasResponseCustomizer(e -> true);
     options.setHasResponseSpan(this::hasResponseSpan);
   }
@@ -107,9 +107,11 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
       return getContextPath() + endpoint.getPath();
     }
 
-    // NOTE: Primary difference from javaagent servlet instrumentation!
-    // Since just we're working with a filter, we can't actually get the proper servlet path.
-    return getContextPath() + "/*";
+    if (NOT_FOUND.equals(endpoint)) {
+      return getContextPath() + "/*";
+    } else {
+      return super.expectedHttpRoute(endpoint, method);
+    }
   }
 
   public boolean errorEndpointUsesSendError() {
@@ -140,5 +142,85 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
 
   protected boolean assertParentOnRedirect() {
     return true;
+  }
+
+  @Test
+  protected void snippetInjectionWithServletOutputStream() {
+    ExperimentalSnippetHolder.setSnippet(
+        "\n  <script type=\"text/javascript\"> Test Test</script>");
+    AggregatedHttpRequest request = request(HTML_SERVLET_OUTPUT_STREAM, "GET");
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(HTML_SERVLET_OUTPUT_STREAM.getStatus());
+    String result =
+        "<!DOCTYPE html>\n"
+            + "<html lang=\"en\">\n"
+            + "<head>\n"
+            + "  <script type=\"text/javascript\"> Test Test</script>\n"
+            + "  <meta charset=\"UTF-8\">\n"
+            + "  <title>Title</title>\n"
+            + "</head>\n"
+            + "<body>\n"
+            + "<p>test works</p>\n"
+            + "</body>\n"
+            + "</html>";
+    assertThat(response.contentUtf8()).isEqualTo(result);
+    assertThat(response.headers().contentLength()).isEqualTo(result.length());
+
+    ExperimentalSnippetHolder.setSnippet("");
+
+    String expectedRoute = expectedHttpRoute(HTML_SERVLET_OUTPUT_STREAM, "GET");
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  protected void snippetInjectionWithPrintWriter() {
+    ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
+    AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(HTML_PRINT_WRITER.getStatus());
+    String result =
+        "<!DOCTYPE html>\n"
+            + "<html lang=\"en\">\n"
+            + "<head>\n"
+            + "  <script type=\"text/javascript\"> Test </script>\n"
+            + "  <meta charset=\"UTF-8\">\n"
+            + "  <title>Title</title>\n"
+            + "</head>\n"
+            + "<body>\n"
+            + "<p>test works</p>\n"
+            + "</body>\n"
+            + "</html>";
+
+    assertThat(response.contentUtf8()).isEqualTo(result);
+    assertThat(response.headers().contentLength()).isEqualTo(result.length());
+
+    ExperimentalSnippetHolder.setSnippet("");
+
+    String expectedRoute = expectedHttpRoute(HTML_PRINT_WRITER, "GET");
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("GET" + (expectedRoute != null ? " " + expectedRoute : ""))
+                            .hasKind(SpanKind.SERVER)
+                            .hasNoParent(),
+                    span ->
+                        span.hasName("controller")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 }

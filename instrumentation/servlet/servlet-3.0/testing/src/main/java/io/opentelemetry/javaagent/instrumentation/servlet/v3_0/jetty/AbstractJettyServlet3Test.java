@@ -3,38 +3,28 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.jetty;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.jetty;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.servlet.v3_0.AbstractServlet3Test;
-import io.opentelemetry.instrumentation.servlet.v3_0.OpenTelemetryServletFilter;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.IOException;
 import java.io.Writer;
 import java.net.InetSocketAddress;
-import java.util.EnumSet;
-import javax.servlet.DispatcherType;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ErrorHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.junit.jupiter.api.extension.RegisterExtension;
 
-public abstract class JettyServlet3Test
+public abstract class AbstractJettyServlet3Test
     extends AbstractServlet3Test<Server, ServletContextHandler> {
-
-  @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forLibrary();
 
   static final boolean IS_BEFORE_94 = isBefore94();
 
@@ -66,6 +56,7 @@ public abstract class JettyServlet3Test
   @Override
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span,
+      SpanData serverSpan,
       SpanData controllerSpan,
       SpanData handlerSpan,
       String method,
@@ -73,10 +64,11 @@ public abstract class JettyServlet3Test
     if (IS_BEFORE_94 && endpoint.equals(EXCEPTION)) {
       span.satisfies(it -> assertThat(it.getName()).matches(".*\\.sendError"))
           .hasKind(SpanKind.INTERNAL)
-          .hasParent(handlerSpan);
+          .hasParent(serverSpan);
     }
 
-    return super.assertResponseSpan(span, controllerSpan, handlerSpan, method, endpoint);
+    return super.assertResponseSpan(
+        span, serverSpan, controllerSpan, handlerSpan, method, endpoint);
   }
 
   @Override
@@ -94,8 +86,7 @@ public abstract class JettyServlet3Test
             writer.write(th != null ? th.getMessage() : message);
           }
         });
-    servletContext.addFilter(
-        OpenTelemetryServletFilter.class, "/*", EnumSet.allOf(DispatcherType.class));
+    addFilter(servletContext);
     setupServlets(servletContext);
     jettyServer.setHandler(servletContext);
 
@@ -103,6 +94,8 @@ public abstract class JettyServlet3Test
 
     return jettyServer;
   }
+
+  protected void addFilter(ServletContextHandler servletContext) {}
 
   @Override
   public void stopServer(Server server) throws Exception {

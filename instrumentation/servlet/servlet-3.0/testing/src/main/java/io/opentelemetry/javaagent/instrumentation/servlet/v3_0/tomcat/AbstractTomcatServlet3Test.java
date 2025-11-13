@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.tomcat;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.tomcat;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
@@ -11,12 +11,9 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.servlet.v3_0.AbstractServlet3Test;
-import io.opentelemetry.instrumentation.servlet.v3_0.OpenTelemetryServletFilter;
-import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.AbstractServlet3Test;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -32,46 +29,36 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import javax.servlet.Servlet;
-import org.apache.catalina.Container;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
-import org.apache.catalina.core.StandardContext;
-import org.apache.catalina.core.StandardEngine;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
-import org.apache.tomcat.util.descriptor.web.FilterDef;
-import org.apache.tomcat.util.descriptor.web.FilterMap;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
+public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<Tomcat, Context> {
 
-  @RegisterExtension
-  protected static final InstrumentationExtension testing =
-      HttpServerInstrumentationExtension.forLibrary();
-
-  private static final ServerEndpoint ACCESS_LOG_SUCCESS =
+  protected static final ServerEndpoint ACCESS_LOG_SUCCESS =
       new ServerEndpoint(
           "ACCESS_LOG_SUCCESS",
           "success?access-log=true",
           SUCCESS.getStatus(),
           SUCCESS.getBody(),
           false);
-  private static final ServerEndpoint ACCESS_LOG_ERROR =
+  protected static final ServerEndpoint ACCESS_LOG_ERROR =
       new ServerEndpoint(
           "ACCESS_LOG_ERROR",
           "error-status?access-log=true",
           ERROR.getStatus(),
           ERROR.getBody(),
           false);
-  private final TestAccessLogValve accessLogValue = new TestAccessLogValve();
+  protected final TestAccessLogValve accessLogValue = new TestAccessLogValve();
 
-  @TempDir private static File tempDir;
+  @TempDir protected static File tempDir;
 
   @Override
   protected void configure(HttpServerTestOptions options) {
@@ -100,7 +87,6 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
     return endpoint == NOT_FOUND || super.hasResponseSpan(endpoint);
   }
 
-  @SuppressWarnings("deprecation") // needed API also on Engine.
   @Override
   protected Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
@@ -125,25 +111,14 @@ public abstract class TomcatServlet3Test extends AbstractServlet3Test<Tomcat, Co
         .setErrorReportValveClass(ErrorHandlerValve.class.getName());
     tomcatServer.getHost().getPipeline().addValve(accessLogValue);
 
-    StandardEngine engine =
-        (StandardEngine) tomcatServer.getServer().findService("Tomcat").getContainer();
-    Container container = engine.findChild(engine.getDefaultHost());
-    StandardContext context = (StandardContext) container.findChild(getContextPath());
-
-    FilterDef filter1definition = new FilterDef();
-    filter1definition.setFilterName(OpenTelemetryServletFilter.class.getSimpleName());
-    filter1definition.setFilterClass(OpenTelemetryServletFilter.class.getName());
-    context.addFilterDef(filter1definition);
-
-    FilterMap filter1mapping = new FilterMap();
-    filter1mapping.setFilterName(OpenTelemetryServletFilter.class.getSimpleName());
-    filter1mapping.addURLPattern("/*");
-    context.addFilterMap(filter1mapping);
+    beforeStart(tomcatServer);
 
     tomcatServer.start();
 
     return tomcatServer;
   }
+
+  protected void beforeStart(Tomcat tomcatServer) {}
 
   @BeforeEach
   void setUp() {

@@ -9,14 +9,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import javax.servlet.Servlet;
 import org.junit.jupiter.api.Test;
 
-class JettyServlet3AsyncTest extends JettyServlet3Test {
+class JettyServlet3AsyncLibraryTest extends JettyServlet3LibraryTest {
 
   @Override
   public Class<? extends Servlet> servlet() {

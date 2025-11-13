@@ -3,12 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.tomcat.dispatch;
+package io.opentelemetry.instrumentation.servlet.v3_0.jetty.dispatch;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.tomcat.TomcatServlet3Test;
+import io.opentelemetry.instrumentation.servlet.v3_0.jetty.JettyServlet3LibraryTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 
-abstract class TomcatDispatchTest extends TomcatServlet3Test {
+abstract class JettyDispatchLibraryTest extends JettyServlet3LibraryTest {
 
   @Override
   protected void configure(HttpServerTestOptions options) {

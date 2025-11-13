@@ -15,11 +15,11 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import javax.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 
-class JettyServlet3DispatchImmediateTest extends JettyDispatchTest {
+class JettyServlet3DispatchImmediateLibraryTest extends JettyDispatchLibraryTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Async.class;

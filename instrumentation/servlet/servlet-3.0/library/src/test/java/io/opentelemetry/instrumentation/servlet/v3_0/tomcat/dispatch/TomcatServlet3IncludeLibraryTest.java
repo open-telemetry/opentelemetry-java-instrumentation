@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.jetty.dispatch;
+package io.opentelemetry.instrumentation.servlet.v3_0.tomcat.dispatch;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
@@ -14,13 +14,14 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.RequestDispatcherServlet;
-import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.RequestDispatcherServlet;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import javax.servlet.Servlet;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.apache.catalina.Context;
 
-class JettyServlet3IncludeTest extends JettyDispatchTest {
+class TomcatServlet3IncludeLibraryTest extends TomcatDispatchLibraryTest {
+
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class; // dispatch to sync servlet
@@ -29,22 +30,17 @@ class JettyServlet3IncludeTest extends JettyDispatchTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
+    options.setTestNotFound(false);
     options.setTestRedirect(false);
     options.setTestCaptureHttpHeaders(false);
     options.setTestError(false);
   }
 
   @Override
-  protected void setupServlets(ServletContextHandler context) throws Exception {
+  protected void setupServlets(Context context) throws Exception {
     super.setupServlets(context);
 
     addServlet(context, "/dispatch" + SUCCESS.getPath(), RequestDispatcherServlet.Include.class);
-    addServlet(
-        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), RequestDispatcherServlet.Include.class);
-    addServlet(
-        context,
-        "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
-        RequestDispatcherServlet.Include.class);
     addServlet(
         context, "/dispatch" + QUERY_PARAM.getPath(), RequestDispatcherServlet.Include.class);
     addServlet(context, "/dispatch" + REDIRECT.getPath(), RequestDispatcherServlet.Include.class);
@@ -58,5 +54,11 @@ class JettyServlet3IncludeTest extends JettyDispatchTest {
         RequestDispatcherServlet.Include.class);
     addServlet(
         context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Include.class);
+    addServlet(
+        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), RequestDispatcherServlet.Include.class);
+    addServlet(
+        context,
+        "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
+        RequestDispatcherServlet.Include.class);
   }
 }
