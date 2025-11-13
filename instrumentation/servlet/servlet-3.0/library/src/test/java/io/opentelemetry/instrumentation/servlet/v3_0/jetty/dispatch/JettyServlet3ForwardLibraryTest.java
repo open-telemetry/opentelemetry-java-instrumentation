@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.tomcat.dispatch;
+package io.opentelemetry.instrumentation.servlet.v3_0.jetty.dispatch;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
@@ -15,30 +15,28 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.RequestDispatcherServlet;
-import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
-import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.RequestDispatcherServlet;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import javax.servlet.Servlet;
-import org.apache.catalina.Context;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
-class TomcatServlet3ForwardTest extends TomcatDispatchTest {
-
+class JettyServlet3ForwardLibraryTest extends JettyDispatchLibraryTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.Sync.class; // dispatch to sync servlet
   }
 
   @Override
-  protected void configure(HttpServerTestOptions options) {
-    super.configure(options);
-    options.setTestNotFound(false);
-  }
-
-  @Override
-  protected void setupServlets(Context context) throws Exception {
+  protected void setupServlets(ServletContextHandler context) throws Exception {
     super.setupServlets(context);
 
     addServlet(context, "/dispatch" + SUCCESS.getPath(), RequestDispatcherServlet.Forward.class);
+    addServlet(
+        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), RequestDispatcherServlet.Forward.class);
+    addServlet(
+        context,
+        "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
+        RequestDispatcherServlet.Forward.class);
     addServlet(
         context, "/dispatch" + QUERY_PARAM.getPath(), RequestDispatcherServlet.Forward.class);
     addServlet(context, "/dispatch" + REDIRECT.getPath(), RequestDispatcherServlet.Forward.class);
@@ -54,11 +52,5 @@ class TomcatServlet3ForwardTest extends TomcatDispatchTest {
         RequestDispatcherServlet.Forward.class);
     addServlet(
         context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Forward.class);
-    addServlet(
-        context, "/dispatch" + HTML_PRINT_WRITER.getPath(), RequestDispatcherServlet.Forward.class);
-    addServlet(
-        context,
-        "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
-        RequestDispatcherServlet.Forward.class);
   }
 }

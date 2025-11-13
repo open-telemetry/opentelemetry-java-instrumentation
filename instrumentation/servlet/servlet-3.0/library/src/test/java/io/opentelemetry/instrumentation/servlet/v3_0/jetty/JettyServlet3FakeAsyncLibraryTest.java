@@ -3,13 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.tomcat;
+package io.opentelemetry.instrumentation.servlet.v3_0.jetty;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.TestServlet3;
 import javax.servlet.Servlet;
 
-class TomcatServlet3FakeAsyncTest extends TomcatServlet3Test {
-
+class JettyServlet3FakeAsyncLibraryTest extends JettyServlet3LibraryTest {
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet3.FakeAsync.class;

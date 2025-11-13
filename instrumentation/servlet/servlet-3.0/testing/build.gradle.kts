@@ -3,17 +3,22 @@ plugins {
 }
 
 dependencies {
+  implementation(project(":testing-common"))
+  implementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
+
   testImplementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testImplementation(project(":instrumentation:servlet:servlet-3.0:testing"))
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
+  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testImplementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
-  testLibrary("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
-  testLibrary("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
+  library("org.eclipse.jetty:jetty-server:8.0.0.v20110901")
+  library("org.eclipse.jetty:jetty-servlet:8.0.0.v20110901")
+  library("org.apache.tomcat.embed:tomcat-embed-core:8.0.41")
+  library("org.apache.tomcat.embed:tomcat-embed-jasper:8.0.41")
 
   latestDepTestLibrary("org.eclipse.jetty:jetty-server:10.+") // see servlet-5.0 module
   latestDepTestLibrary("org.eclipse.jetty:jetty-servlet:10.+") // see servlet-5.0 module
