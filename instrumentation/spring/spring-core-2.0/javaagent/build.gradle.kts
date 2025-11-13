@@ -18,6 +18,8 @@ dependencies {
   // 3.0 introduces submit() methods
   // 4.0 introduces submitListenable() methods
   testLibrary("org.springframework:spring-core:4.0.0.RELEASE")
+
+  latestDepTestLibrary("org.springframework:spring-core:6.+") // documented limitation
 }
 
 // spring 6 requires java 17
