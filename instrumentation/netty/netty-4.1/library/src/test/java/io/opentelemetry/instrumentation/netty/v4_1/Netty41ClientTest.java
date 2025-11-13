@@ -14,7 +14,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions
 import java.util.Collections;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class Netty41ClientTest extends AbstractNetty41ClientTest {
+class Netty41ClientTest extends AbstractNetty41ClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forLibrary();

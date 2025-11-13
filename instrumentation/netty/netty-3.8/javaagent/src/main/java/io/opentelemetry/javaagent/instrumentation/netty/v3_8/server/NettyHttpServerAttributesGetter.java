@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.netty.v3_8.server;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import io.opentelemetry.javaagent.instrumentation.netty.v3_8.HttpRequestAndChannel;
+import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.ChannelUtil;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSchemeUtil;
 import java.net.InetSocketAddress;
@@ -17,64 +17,63 @@ import org.jboss.netty.handler.codec.http.HttpResponse;
 import org.jboss.netty.handler.codec.http.HttpVersion;
 
 final class NettyHttpServerAttributesGetter
-    implements HttpServerAttributesGetter<HttpRequestAndChannel, HttpResponse> {
+    implements HttpServerAttributesGetter<NettyRequest, HttpResponse> {
 
   @Override
-  public String getHttpRequestMethod(HttpRequestAndChannel requestAndChannel) {
+  public String getHttpRequestMethod(NettyRequest requestAndChannel) {
     return requestAndChannel.request().getMethod().getName();
   }
 
   @Override
-  public List<String> getHttpRequestHeader(HttpRequestAndChannel requestAndChannel, String name) {
+  public List<String> getHttpRequestHeader(NettyRequest requestAndChannel, String name) {
     return requestAndChannel.request().headers().getAll(name);
   }
 
   @Override
   public Integer getHttpResponseStatusCode(
-      HttpRequestAndChannel requestAndChannel, HttpResponse response, @Nullable Throwable error) {
+      NettyRequest requestAndChannel, HttpResponse response, @Nullable Throwable error) {
     return response.getStatus().getCode();
   }
 
   @Override
   public List<String> getHttpResponseHeader(
-      HttpRequestAndChannel requestAndChannel, HttpResponse response, String name) {
+      NettyRequest requestAndChannel, HttpResponse response, String name) {
     return response.headers().getAll(name);
   }
 
   @Override
-  public String getUrlScheme(HttpRequestAndChannel requestAndChannel) {
+  public String getUrlScheme(NettyRequest requestAndChannel) {
     return HttpSchemeUtil.getScheme(requestAndChannel);
   }
 
   @Override
-  public String getUrlPath(HttpRequestAndChannel requestAndChannel) {
+  public String getUrlPath(NettyRequest requestAndChannel) {
     String fullPath = requestAndChannel.request().getUri();
     int separatorPos = fullPath.indexOf('?');
     return separatorPos == -1 ? fullPath : fullPath.substring(0, separatorPos);
   }
 
   @Override
-  public String getUrlQuery(HttpRequestAndChannel requestAndChannel) {
+  public String getUrlQuery(NettyRequest requestAndChannel) {
     String fullPath = requestAndChannel.request().getUri();
     int separatorPos = fullPath.indexOf('?');
     return separatorPos == -1 ? null : fullPath.substring(separatorPos + 1);
   }
 
   @Override
-  public String getNetworkTransport(
-      HttpRequestAndChannel requestAndChannel, HttpResponse response) {
+  public String getNetworkTransport(NettyRequest requestAndChannel, HttpResponse response) {
     return ChannelUtil.getNetworkTransport(requestAndChannel.channel());
   }
 
   @Override
   public String getNetworkProtocolName(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+      NettyRequest requestAndChannel, @Nullable HttpResponse response) {
     return requestAndChannel.request().getProtocolVersion().getProtocolName();
   }
 
   @Override
   public String getNetworkProtocolVersion(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+      NettyRequest requestAndChannel, @Nullable HttpResponse response) {
     HttpVersion version = requestAndChannel.request().getProtocolVersion();
     if (version.getMinorVersion() == 0) {
       return Integer.toString(version.getMajorVersion());
@@ -85,7 +84,7 @@ final class NettyHttpServerAttributesGetter
   @Override
   @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+      NettyRequest requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getRemoteAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;
@@ -96,7 +95,7 @@ final class NettyHttpServerAttributesGetter
   @Nullable
   @Override
   public InetSocketAddress getNetworkLocalInetSocketAddress(
-      HttpRequestAndChannel requestAndChannel, @Nullable HttpResponse response) {
+      NettyRequest requestAndChannel, @Nullable HttpResponse response) {
     SocketAddress address = requestAndChannel.channel().getLocalAddress();
     if (address instanceof InetSocketAddress) {
       return (InetSocketAddress) address;

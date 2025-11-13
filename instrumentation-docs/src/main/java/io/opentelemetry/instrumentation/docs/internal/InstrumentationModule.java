@@ -27,7 +27,7 @@ public class InstrumentationModule {
   private final String instrumentationName;
   private final String namespace;
   private final String group;
-  private final InstrumentationScopeInfo scopeInfo;
+  private InstrumentationScopeInfo scopeInfo;
   private Map<String, List<EmittedMetrics.Metric>> metrics;
   private Map<String, List<EmittedSpans.Span>> spans;
 
@@ -56,7 +56,10 @@ public class InstrumentationModule {
     this.metadata = builder.metadata;
     this.targetVersions = builder.targetVersions;
     this.minJavaVersion = builder.minJavaVersion;
-    this.scopeInfo = InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName);
+    this.scopeInfo =
+        Objects.requireNonNullElseGet(
+            builder.scopeInfo,
+            () -> InstrumentationScopeInfo.create("io.opentelemetry." + instrumentationName));
   }
 
   public String getSrcPath() {
@@ -109,6 +112,10 @@ public class InstrumentationModule {
     this.targetVersions = targetVersions;
   }
 
+  public void setScopeInfo(InstrumentationScopeInfo scopeInfo) {
+    this.scopeInfo = scopeInfo;
+  }
+
   public void setMetadata(InstrumentationMetadata metadata) {
     this.metadata = metadata;
   }
@@ -136,6 +143,7 @@ public class InstrumentationModule {
     @Nullable private String group;
     @Nullable private Integer minJavaVersion;
     @Nullable private InstrumentationMetadata metadata;
+    @Nullable private InstrumentationScopeInfo scopeInfo;
     @Nullable private Map<InstrumentationType, Set<String>> targetVersions;
     @Nullable private Map<String, List<EmittedMetrics.Metric>> metrics;
     @Nullable private Map<String, List<EmittedSpans.Span>> spans;
@@ -155,6 +163,12 @@ public class InstrumentationModule {
     @CanIgnoreReturnValue
     public Builder namespace(String namespace) {
       this.namespace = namespace;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder scope(InstrumentationScopeInfo scope) {
+      this.scopeInfo = scope;
       return this;
     }
 

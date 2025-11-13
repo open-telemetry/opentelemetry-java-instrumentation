@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 /** Netty client test with epoll/kqueue native library. */
-public class Netty41NativeClientTest extends AbstractNetty41ClientTest {
+class Netty41NativeClientTest extends AbstractNetty41ClientTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();

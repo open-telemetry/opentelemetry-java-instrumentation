@@ -26,8 +26,6 @@ public class PlayJavaWsClientBaseTest extends PlayWsClientBaseTest<StandaloneWSR
     wsClient = new StandaloneAhcWSClient(asyncHttpClient, materializer);
     wsClientWithReadTimeout =
         new StandaloneAhcWSClient(asyncHttpClientWithReadTimeout, materializer);
-    // autoCleanup.deferCleanup(wsClient);
-    // autoCleanup.deferCleanup(wsClientWithReadTimeout);
   }
 
   @AfterAll

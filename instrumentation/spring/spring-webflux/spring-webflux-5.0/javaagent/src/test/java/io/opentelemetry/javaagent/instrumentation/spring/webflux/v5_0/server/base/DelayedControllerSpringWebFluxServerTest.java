@@ -20,7 +20,7 @@ import reactor.core.publisher.Mono;
  * within a Mono map step, which follows a delay step. For exception endpoint, the exception is
  * thrown within the last map step.
  */
-public class DelayedControllerSpringWebFluxServerTest extends ControllerSpringWebFluxServerTest {
+class DelayedControllerSpringWebFluxServerTest extends ControllerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application.class;
