@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Locale;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileScanTask;
@@ -282,11 +281,7 @@ public abstract class AbstractIcebergTest {
     TimerResult timer = expected.scanMetrics().totalPlanningDuration();
 
     if (timer != null) {
-      assertIcebergGaugeMetric(
-          "iceberg.scan.planning.duration",
-          timer.timeUnit().name().toLowerCase(Locale.getDefault()),
-          expected,
-          timer.totalDuration().toMillis());
+      assertIcebergHistogramMetric("iceberg.scan.planning.duration", "s", expected);
     } else {
       assertIcebergMetricNotReported("iceberg.scan.planning.duration");
     }
@@ -303,8 +298,8 @@ public abstract class AbstractIcebergTest {
                         "metric is not reported")));
   }
 
-  private void assertIcebergGaugeMetric(
-      String otelMetricName, String expectedUnit, ScanReport expectedReport, long expectedValue) {
+  private void assertIcebergHistogramMetric(
+      String otelMetricName, String expectedUnit, ScanReport expectedReport) {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.iceberg-1.8",
@@ -312,12 +307,13 @@ public abstract class AbstractIcebergTest {
                 metricAssert
                     .hasName(otelMetricName)
                     .hasUnit(expectedUnit)
-                    .hasLongGaugeSatisfying(
-                        sum ->
-                            sum.hasPointsSatisfying(
-                                longAssert ->
-                                    longAssert
-                                        .hasValue(expectedValue)
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasCount(1)
                                         .hasAttributesSatisfying(
                                             attributes ->
                                                 assertEquals(

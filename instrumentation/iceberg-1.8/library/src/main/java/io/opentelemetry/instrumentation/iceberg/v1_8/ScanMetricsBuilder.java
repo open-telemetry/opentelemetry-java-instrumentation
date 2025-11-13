@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.LongGauge;
 import io.opentelemetry.api.metrics.Meter;
 
 final class ScanMetricsBuilder {
@@ -34,12 +34,11 @@ final class ScanMetricsBuilder {
     // prevents instantiation
   }
 
-  static LongGauge totalPlanningDuration(Meter meter, String unit) {
+  static DoubleHistogram totalPlanningDuration(Meter meter, String unit) {
     return meter
-        .gaugeBuilder(TOTAL_PLANNING_DURATION)
+        .histogramBuilder(TOTAL_PLANNING_DURATION)
         .setDescription("The total duration needed to plan the scan.")
         .setUnit(unit)
-        .ofLongs()
         .build();
   }
 

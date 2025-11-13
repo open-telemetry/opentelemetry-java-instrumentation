@@ -10,7 +10,7 @@ import org.apache.iceberg.Scan;
 import org.apache.iceberg.ScanTask;
 import org.apache.iceberg.ScanTaskGroup;
 
-public class IcebergTelemetry {
+public final class IcebergTelemetry {
   private final OpenTelemetry openTelemetry;
 
   public static IcebergTelemetry create(OpenTelemetry openTelemetry) {

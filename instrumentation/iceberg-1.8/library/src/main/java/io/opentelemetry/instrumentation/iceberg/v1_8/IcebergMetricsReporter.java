@@ -8,9 +8,8 @@ package io.opentelemetry.instrumentation.iceberg.v1_8;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
-import io.opentelemetry.api.metrics.LongGauge;
-import java.util.Locale;
 import org.apache.iceberg.metrics.CounterResult;
 import org.apache.iceberg.metrics.MetricsReport;
 import org.apache.iceberg.metrics.MetricsReporter;
@@ -18,7 +17,7 @@ import org.apache.iceberg.metrics.ScanMetricsResult;
 import org.apache.iceberg.metrics.ScanReport;
 import org.apache.iceberg.metrics.TimerResult;
 
-public class IcebergMetricsReporter implements MetricsReporter {
+final class IcebergMetricsReporter implements MetricsReporter {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.iceberg-1.8";
   private static final AttributeKey<Long> SCHEMA_ID = AttributeKey.longKey("iceberg.schema.id");
   private static final AttributeKey<String> TABLE_NAME =
@@ -51,11 +50,10 @@ public class IcebergMetricsReporter implements MetricsReporter {
     TimerResult duration = metrics.totalPlanningDuration();
 
     if (duration != null) {
-      LongGauge metric =
+      DoubleHistogram metric =
           ScanMetricsBuilder.totalPlanningDuration(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME),
-              duration.timeUnit().name().toLowerCase(Locale.getDefault()));
-      metric.set(duration.totalDuration().toMillis(), scanAttributes);
+              openTelemetry.getMeter(INSTRUMENTATION_NAME), "s");
+      metric.record(duration.totalDuration().toMillis() / 1000.0, scanAttributes);
     }
 
     CounterResult current = metrics.resultDataFiles();
