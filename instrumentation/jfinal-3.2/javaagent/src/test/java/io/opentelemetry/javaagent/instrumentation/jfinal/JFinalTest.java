@@ -6,9 +6,13 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal;
 
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -17,13 +21,16 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.EnumSet;
+import java.util.Locale;
 import javax.servlet.DispatcherType;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
@@ -38,7 +45,7 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setHasHandlerSpan(unused -> true);
+    options.setHasHandlerSpan(endpoint -> endpoint != NOT_FOUND);
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT);
     options.setExpectedHttpRoute(
         (endpoint, method) -> {
@@ -89,7 +96,7 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
       String method,
       ServerEndpoint endpoint) {
     return span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"))
-        .hasParent(handlerSpan)
+        .hasParent(serverSpan)
         .hasKind(SpanKind.INTERNAL)
         .hasAttributesSatisfying(Attributes::isEmpty);
   }
@@ -97,7 +104,30 @@ public class JFinalTest extends AbstractHttpServerTest<Server> {
   @Override
   public SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    return span.hasName(getHandlerSpanName(endpoint)).hasKind(INTERNAL);
+    span.hasName(getHandlerSpanName(endpoint))
+        .hasKind(INTERNAL)
+        .hasAttributesSatisfyingExactly(
+            SemconvCodeStabilityUtil.codeFunctionAssertions(
+                TestController.class, getHandlerMethod(endpoint)));
+
+    if (endpoint == EXCEPTION) {
+      span.hasStatus(StatusData.error());
+      span.hasException(new IllegalStateException(EXCEPTION.getBody()));
+    }
+    return span;
+  }
+
+  private static String getHandlerMethod(ServerEndpoint endpoint) {
+    if (QUERY_PARAM.equals(endpoint)) {
+      return "query";
+    } else if (PATH_PARAM.equals(endpoint)) {
+      return "path";
+    } else if (CAPTURE_HEADERS.equals(endpoint)) {
+      return "captureHeaders";
+    } else if (INDEXED_CHILD.equals(endpoint)) {
+      return "child";
+    }
+    return endpoint.name().toLowerCase(Locale.ROOT);
   }
 
   private static String getHandlerSpanName(ServerEndpoint endpoint) {

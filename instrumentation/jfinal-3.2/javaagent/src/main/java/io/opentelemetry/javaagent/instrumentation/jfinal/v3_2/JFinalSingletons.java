@@ -6,37 +6,44 @@
 package io.opentelemetry.javaagent.instrumentation.jfinal.v3_2;
 
 import com.jfinal.core.Action;
-import com.jfinal.core.Controller;
 import com.jfinal.render.JsonRender;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import java.lang.reflect.Method;
 
 public final class JFinalSingletons {
 
-  private static final String SPAN_NAME = "jfinal.handle";
-  private static final Instrumenter<Void, Void> INSTRUMENTER =
-      Instrumenter.<Void, Void>builder(
-              GlobalOpenTelemetry.get(), "io.opentelemetry.jfinal-3.2", s -> SPAN_NAME)
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
-          .buildInstrumenter();
+  private static final Instrumenter<ClassAndMethod, Void> INSTRUMENTER;
 
   static {
     // see
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/11465#issuecomment-2137294837
     excludeOtAttrs();
+
+    CodeAttributesGetter<ClassAndMethod> codedAttributesGetter =
+        ClassAndMethod.codeAttributesGetter();
+    INSTRUMENTER =
+        Instrumenter.<ClassAndMethod, Void>builder(
+                GlobalOpenTelemetry.get(),
+                "io.opentelemetry.jfinal-3.2",
+                CodeSpanNameExtractor.create(codedAttributesGetter))
+            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .addAttributesExtractor(CodeAttributesExtractor.create(codedAttributesGetter))
+            .buildInstrumenter();
   }
 
-  public static Instrumenter<Void, Void> instrumenter() {
+  public static Instrumenter<ClassAndMethod, Void> instrumenter() {
     return INSTRUMENTER;
   }
 
-  public static void updateSpan(Action action) {
+  public static void updateRoute(Action action) {
     if (action == null) {
       return;
     }
@@ -44,11 +51,6 @@ public final class JFinalSingletons {
     Context context = Context.current();
     if (route != null) {
       HttpServerRoute.update(context, HttpServerRouteSource.CONTROLLER, route);
-    }
-    Class<? extends Controller> clazz = action.getControllerClass();
-    Method method = action.getMethod();
-    if (clazz != null && method != null) {
-      Span.fromContext(context).updateName(clazz.getSimpleName() + '.' + method.getName());
     }
   }
 

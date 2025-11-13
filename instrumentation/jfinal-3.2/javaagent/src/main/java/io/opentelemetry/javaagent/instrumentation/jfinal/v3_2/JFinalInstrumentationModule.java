@@ -38,6 +38,6 @@ public class JFinalInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new ActionMappingInstrumentation(), new ActionHandlerInstrumentation());
+    return asList(new ActionMappingInstrumentation(), new InvocationInstrumentation());
   }
 }

@@ -32,7 +32,7 @@ public class ActionMappingInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void exitGetAction(@Advice.Return Action action) {
-      JFinalSingletons.updateSpan(action);
+      JFinalSingletons.updateRoute(action);
     }
   }
 }
