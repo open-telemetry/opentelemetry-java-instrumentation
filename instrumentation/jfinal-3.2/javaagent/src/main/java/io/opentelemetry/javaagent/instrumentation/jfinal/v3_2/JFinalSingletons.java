@@ -16,12 +16,8 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.lang.reflect.Method;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 public final class JFinalSingletons {
-
-  private static final Logger logger = Logger.getLogger(JFinalSingletons.class.getName());
 
   private static final String SPAN_NAME = "jfinal.handle";
   private static final Instrumenter<Void, Void> INSTRUMENTER =
@@ -57,14 +53,10 @@ public final class JFinalSingletons {
   }
 
   private static void excludeOtAttrs() {
-    try {
-      JsonRender.addExcludedAttrs(
-          "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.Context",
-          "trace_id",
-          "span_id");
-    } catch (Throwable t) {
-      logger.log(Level.INFO, "exclude failed", t);
-    }
+    JsonRender.addExcludedAttrs(
+        "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.Context",
+        "trace_id",
+        "span_id");
   }
 
   private JFinalSingletons() {}
