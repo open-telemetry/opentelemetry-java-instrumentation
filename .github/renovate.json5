@@ -170,6 +170,16 @@
       ],
     },
     {
+      // groovy 5+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.apache.groovy:**'
+      ],
+    },
+    {
       // vaadin 14 tests require node 16
       matchPackageNames: [
         'actions/node-versions',
