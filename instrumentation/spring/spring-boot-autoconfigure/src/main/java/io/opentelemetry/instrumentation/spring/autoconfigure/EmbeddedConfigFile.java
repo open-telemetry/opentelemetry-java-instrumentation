@@ -104,10 +104,11 @@ class EmbeddedConfigFile {
             list.set(index, value);
           } else {
             // Need to create a nested map at this index
-            if (list.get(index) == null) {
-              list.set(index, new HashMap<String, Object>());
-            }
             current = (Map<String, Object>) list.get(index);
+            if (current == null) {
+              current = new HashMap<>();
+              list.set(index, current);
+            }
           }
         } else {
           // Regular property (not an array)
