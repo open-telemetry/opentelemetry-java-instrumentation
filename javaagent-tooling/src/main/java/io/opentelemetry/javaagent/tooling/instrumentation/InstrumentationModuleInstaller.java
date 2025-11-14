@@ -28,7 +28,6 @@ import io.opentelemetry.javaagent.tooling.instrumentation.indy.ClassInjectorImpl
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForwardIndyAdviceTransformer;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.PatchByteCodeVersionTransformer;
 import io.opentelemetry.javaagent.tooling.muzzle.HelperResourceBuilderImpl;
 import io.opentelemetry.javaagent.tooling.muzzle.InstrumentationModuleMuzzle;
 import io.opentelemetry.javaagent.tooling.util.IgnoreFailedTypeMatcher;
@@ -146,23 +145,13 @@ public final class InstrumentationModuleInstaller {
     VirtualFieldImplementationInstaller contextProvider =
         virtualFieldInstallerFactory.create(instrumentationModule);
 
-    boolean allowClassVersionChange =
-        config.getBoolean("otel.javaagent.experimental.allow-class-version-change", false);
     AgentBuilder agentBuilder = parentAgentBuilder;
     for (TypeInstrumentation typeInstrumentation : instrumentationModule.typeInstrumentations()) {
-      AgentBuilder.Identified.Extendable extendableAgentBuilder;
-      AgentBuilder.Identified.Narrowable narrowableAgentBuilder =
+      AgentBuilder.Identified.Extendable extendableAgentBuilder =
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
-              .and(muzzleMatcher);
-      if (allowClassVersionChange) {
-        extendableAgentBuilder =
-            narrowableAgentBuilder.transform(new PatchByteCodeVersionTransformer());
-      } else {
-        extendableAgentBuilder =
-            narrowableAgentBuilder
-                .transform(ConstantAdjuster.instance())
-                .transform(new ForwardIndyAdviceTransformer(helperInjector));
-      }
+              .and(muzzleMatcher)
+              .transform(ConstantAdjuster.instance())
+              .transform(new ForwardIndyAdviceTransformer(helperInjector));
 
       extendableAgentBuilder =
           IndyModuleRegistry.initializeModuleLoaderOnMatch(
