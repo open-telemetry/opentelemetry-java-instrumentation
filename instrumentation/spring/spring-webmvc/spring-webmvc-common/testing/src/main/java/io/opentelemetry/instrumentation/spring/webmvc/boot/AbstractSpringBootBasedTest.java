@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeSta
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.DEFERRED_RESULT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.LOGIN;
@@ -22,6 +23,7 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
@@ -57,6 +59,10 @@ public abstract class AbstractSpringBootBasedTest
   protected abstract ConfigurableApplicationContext context();
 
   protected abstract Class<?> securityConfigClass();
+
+  protected boolean shouldTestDeferredResult() {
+    return true;
+  }
 
   @Override
   protected void stopServer(ConfigurableApplicationContext ctx) {
@@ -144,6 +150,39 @@ public abstract class AbstractSpringBootBasedTest
                             .hasKind(SpanKind.INTERNAL)));
   }
 
+  @Test
+  void deferredResult() {
+    assumeTrue(shouldTestDeferredResult());
+
+    AggregatedHttpResponse response =
+        client.execute(request(DEFERRED_RESULT, "GET")).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(DEFERRED_RESULT.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(DEFERRED_RESULT.getBody());
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> {
+                      assertServerSpan(span, "GET", DEFERRED_RESULT, DEFERRED_RESULT.getStatus());
+                      span.hasNoParent();
+                    },
+                    span ->
+                        assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("deferred-result-child")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(1))
+                            .hasTotalAttributeCount(0),
+                    // Handler method runs once for the initial request and again for the async
+                    // redispatch when DeferredResult completes, so we expect two spans with the
+                    // same name. The second handler span is parented to the async child span.
+                    span ->
+                        assertHandlerSpan(span, "GET", DEFERRED_RESULT)
+                            .hasParent(trace.getSpan(2))));
+  }
+
   @Override
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
@@ -228,6 +267,8 @@ public abstract class AbstractSpringBootBasedTest
       return "TestController.captureHeaders";
     } else if (INDEXED_CHILD.equals(endpoint)) {
       return "TestController.indexedChild";
+    } else if (DEFERRED_RESULT.equals(endpoint)) {
+      return "TestController.deferredResult";
     }
     return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);
   }
