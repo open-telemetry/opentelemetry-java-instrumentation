@@ -59,11 +59,11 @@ enum SpringWebHttpAttributesGetter
     GET_STATUS_CODE = getStatusCode;
     STATUS_CODE_VALUE = statusCodeValue;
 
-    // since webflux 7.0
+    // since spring web 7.0
     MethodHandle methodHandle =
         findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
     if (methodHandle == null) {
-      // up to webflux 7.0
+      // up to spring web 7.0
       methodHandle =
           findGetHeadersMethod(MethodType.methodType(Object.class, Object.class, Object.class));
     }
