@@ -5,11 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -24,6 +23,24 @@ import org.springframework.core.env.PropertySource;
 class EmbeddedConfigFile {
 
   private static final Pattern ARRAY_PATTERN = Pattern.compile("(.+)\\[(\\d+)]$");
+
+  // the entire configuration is copied from
+  // https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/DeclarativeConfiguration.java#L66-L79
+  // which is not public
+  private static final ObjectMapper MAPPER;
+
+  static {
+    MAPPER =
+        new ObjectMapper()
+            // Create empty object instances for keys which are present but have null values
+            .setDefaultSetterInfo(JsonSetter.Value.forValueNulls(Nulls.AS_EMPTY));
+    // Boxed primitives which are present but have null values should be set to null, rather than
+    // empty instances
+    MAPPER.configOverride(String.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    MAPPER.configOverride(Integer.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    MAPPER.configOverride(Double.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+    MAPPER.configOverride(Boolean.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
+  }
 
   private EmbeddedConfigFile() {}
 
@@ -67,13 +84,7 @@ class EmbeddedConfigFile {
   }
 
   static ObjectMapper getObjectMapper() {
-    try {
-      Field field = DeclarativeConfiguration.class.getDeclaredField("MAPPER");
-      field.setAccessible(true);
-      return (ObjectMapper) field.get(null);
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new DeclarativeConfigException("Failed to access ObjectMapper", e);
-    }
+    return MAPPER;
   }
 
   /**
