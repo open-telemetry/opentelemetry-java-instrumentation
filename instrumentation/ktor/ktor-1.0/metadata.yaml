@@ -1,4 +1,4 @@
-description: This instrumentation enables HTTP server spans and HTTP server metrics for the Ktor server.
+description: This standalone instrumentation enables HTTP server spans and HTTP server metrics for the Ktor server.
 semantic_conventions:
   - HTTP_SERVER_SPANS
   - HTTP_SERVER_METRICS
