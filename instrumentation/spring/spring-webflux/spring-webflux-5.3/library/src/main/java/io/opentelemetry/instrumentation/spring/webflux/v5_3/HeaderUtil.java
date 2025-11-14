@@ -30,7 +30,7 @@ class HeaderUtil {
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
-      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "getOrDefault", methodType);
+      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
     } catch (Throwable t) {
       return null;
     }
