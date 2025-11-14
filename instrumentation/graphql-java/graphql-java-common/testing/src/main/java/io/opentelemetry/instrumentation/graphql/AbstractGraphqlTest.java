@@ -14,6 +14,8 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import graphql.ExecutionResult;
 import graphql.GraphQL;
+import graphql.GraphqlErrorBuilder;
+import graphql.execution.DataFetcherResult;
 import graphql.schema.DataFetcher;
 import graphql.schema.GraphQLSchema;
 import graphql.schema.idl.RuntimeWiring;
@@ -114,20 +116,32 @@ public abstract class AbstractGraphqlTest {
         .build();
   }
 
-  private DataFetcher<Map<String, String>> getBookByIdDataFetcher() {
+  private DataFetcher<DataFetcherResult<Map<String, String>>> getBookByIdDataFetcher() {
     return dataFetchingEnvironment ->
         getTesting()
             .runWithSpan(
                 "fetchBookById",
                 () -> {
                   String bookId = dataFetchingEnvironment.getArgument("id");
-                  if ("book-failure".equals(bookId)) {
+                  DataFetcherResult.Builder<Map<String, String>> builder =
+                      DataFetcherResult.newResult();
+                  if ("book-exception".equals(bookId)) {
                     throw new IllegalStateException("fetching book failed");
+                  } else if ("book-graphql-error".equals(bookId)) {
+                    return builder
+                        .error(
+                            GraphqlErrorBuilder.newError(dataFetchingEnvironment)
+                                .message("failed to fetch book")
+                                .build())
+                        .build();
                   }
-                  return books.stream()
-                      .filter(book -> book.get("id").equals(bookId))
-                      .findFirst()
-                      .orElse(null);
+                  return builder
+                      .data(
+                          books.stream()
+                              .filter(book -> book.get("id").equals(bookId))
+                              .findFirst()
+                              .orElse(null))
+                      .build();
                 });
   }
 
