@@ -3,6 +3,9 @@ plugins {
 }
 
 dependencies {
+  // SpringExtension in spring-test 7 requires JUnit 6
+  implementation(enforcedPlatform("org.junit:junit-bom:6.0.1"))
+
   library("org.springframework.security:spring-security-config:6.0.0")
   library("org.springframework.security:spring-security-web:6.0.0")
   library("org.springframework:spring-web:6.0.0")
@@ -17,6 +20,9 @@ dependencies {
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
   testLibrary("org.springframework:spring-test:6.0.0")
+  // remove after 7.0 is released for spring security
+  // spring-test 7 requires spring-context 7
+  latestDepTestLibrary("org.springframework:spring-context:latest.release")
 }
 
 otelJava {
