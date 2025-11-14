@@ -54,3 +54,7 @@ kotlin {
     javaParameters = true
   }
 }
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+}

@@ -1,0 +1,5 @@
+description: >
+  This instrumentation adds support for @WithSpan annotations on methods that return Kotlin Flow,
+  it does not emit any telemetry on its own.
+display_name: Kotlin Coroutines Flow
+library_link: https://github.com/Kotlin/kotlinx.coroutines
