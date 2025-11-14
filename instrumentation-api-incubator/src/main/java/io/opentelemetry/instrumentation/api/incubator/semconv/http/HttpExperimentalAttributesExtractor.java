@@ -69,8 +69,14 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
     Long requestBodySize = requestBodySize(request);
     internalSet(attributes, HTTP_REQUEST_BODY_SIZE, requestBodySize);
 
+    System.out.println("HttpExperimentalAttributesExtractor - onEnd - response: " + response);
+
     if (response != null) {
       Long responseBodySize = responseBodySize(request, response);
+
+      System.out.println(
+          "HttpExperimentalAttributesExtractor - onEnd - responseBodySize: " + responseBodySize);
+
       internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
     }
   }
