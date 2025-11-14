@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webmvc.boot;
 
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.DEFERRED_RESULT;
+import static io.opentelemetry.instrumentation.spring.webmvc.boot.AbstractSpringBootBasedTest.DEFERRED_RESULT;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
@@ -21,8 +21,8 @@ public class TestBean {
   private static final Tracer tracer = GlobalOpenTelemetry.getTracer("test");
 
   @Async
-  public void asyncDependencyCall(DeferredResult<String> deferredResult) {
-    Span span = tracer.spanBuilder("deferred-result-child").startSpan();
+  public void asyncCall(DeferredResult<String> deferredResult) {
+    Span span = tracer.spanBuilder("async-call-child").startSpan();
     try (Scope ignored = span.makeCurrent()) {
       deferredResult.setResult(DEFERRED_RESULT.getBody());
     } finally {

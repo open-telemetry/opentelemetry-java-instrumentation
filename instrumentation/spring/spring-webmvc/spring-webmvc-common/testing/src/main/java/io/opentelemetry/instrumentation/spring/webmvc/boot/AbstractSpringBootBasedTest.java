@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeSta
 import static io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil.codeFunctionSuffixAssertions;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
-import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.DEFERRED_RESULT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.INDEXED_CHILD;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.LOGIN;
@@ -52,6 +51,9 @@ import org.springframework.web.servlet.view.RedirectView;
 
 public abstract class AbstractSpringBootBasedTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+
+  static final ServerEndpoint DEFERRED_RESULT =
+      new ServerEndpoint("DEFERRED_RESULT", "deferred-result", 200, "deferred result");
 
   private static final String EXPERIMENTAL_SPAN_CONFIG =
       "otel.instrumentation.spring-webmvc.experimental-span-attributes";
@@ -171,7 +173,7 @@ public abstract class AbstractSpringBootBasedTest
                     span ->
                         assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(0)),
                     span ->
-                        span.hasName("deferred-result-child")
+                        span.hasName("async-call-child")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(1))
                             .hasTotalAttributeCount(0),

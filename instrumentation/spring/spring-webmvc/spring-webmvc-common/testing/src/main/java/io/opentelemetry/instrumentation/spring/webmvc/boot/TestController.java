@@ -108,7 +108,7 @@ public class TestController {
   @ResponseBody
   DeferredResult<String> deferredResult() {
     DeferredResult<String> deferredResult = new DeferredResult<>();
-    testBean.asyncDependencyCall(deferredResult);
+    testBean.asyncCall(deferredResult);
     return deferredResult;
   }
 
