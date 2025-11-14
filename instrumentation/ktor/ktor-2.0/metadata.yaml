@@ -1,7 +1,9 @@
 description: >
-  This instrumentation enables HTTP client spans and HTTP client metrics for the Ktor HTTP
-  client, and enriches HTTP server spans with route information for the Ktor server.
+  This instrumentation provides HTTP server spans and HTTP server metrics for the Ktor server,
+  and HTTP client spans and HTTP client metrics for the Ktor HTTP client.
 semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS
   - HTTP_CLIENT_SPANS
   - HTTP_CLIENT_METRICS
 features:
@@ -14,6 +16,21 @@ configurations:
       other methods will be treated as `_OTHER`.
     type: list
     default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+  - name: otel.instrumentation.http.server.capture-request-headers
+    description: List of HTTP request headers to capture in HTTP server telemetry.
+    type: list
+    default: ""
+  - name: otel.instrumentation.http.server.capture-response-headers
+    description: List of HTTP response headers to capture in HTTP server telemetry.
+    type: list
+    default: ""
+  - name: otel.instrumentation.http.server.emit-experimental-telemetry
+    description: >
+      Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size`
+      and `http.response.body.size` attributes to spans, and records `http.server.request.size` and
+      `http.server.response.size` metrics.
+    type: boolean
+    default: false
   - name: otel.instrumentation.http.client.capture-request-headers
     description: List of HTTP request headers to capture in HTTP client telemetry.
     type: list
