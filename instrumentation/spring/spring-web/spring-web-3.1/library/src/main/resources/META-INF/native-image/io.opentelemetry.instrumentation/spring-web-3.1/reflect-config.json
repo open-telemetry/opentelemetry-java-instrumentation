@@ -31,11 +31,20 @@
     "methods": [
       {
         "name": "getOrDefault",
-        "parameterTypes": ["java.lang.String", "java.util.List"]
+        "parameterTypes": ["java.lang.Object", "java.lang.Object"]
+      }
+    ]
+  },
+  {
+    "name": "org.springframework.http.HttpHeaders",
+    "methods": [
+      {
+        "name": "get",
+        "parameterTypes": ["java.lang.Object"]
       },
       {
         "name": "getOrDefault",
-        "parameterTypes": ["java.lang.Object", "java.lang.Object"]
+        "parameterTypes": ["java.lang.String", "java.util.List"]
       }
     ]
   }
