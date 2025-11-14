@@ -68,8 +68,6 @@ enum SpringWebHttpAttributesGetter
           findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
     }
     GET_HEADERS = methodHandle;
-
-    System.out.println("Get headers " + GET_HEADERS);
   }
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
@@ -106,8 +104,6 @@ enum SpringWebHttpAttributesGetter
         }
         return result;
       } catch (Throwable t) {
-        System.out.println("error getting headers " + t.getMessage());
-        t.printStackTrace();
         // ignore
       }
     }
