@@ -44,7 +44,8 @@ val generateJflex by tasks.registering(JavaExec::class) {
     outputDir.mkdirs()
     val specFile = sourceDir.asFile.resolve("SqlSanitizer.jflex")
     args(
-      "-d", outputDir.absolutePath,
+      "-d",
+      outputDir.absolutePath,
       "--nobak",
       specFile.absolutePath,
     )
