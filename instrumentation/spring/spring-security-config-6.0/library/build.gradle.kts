@@ -3,9 +3,6 @@ plugins {
 }
 
 dependencies {
-  // SpringExtension in spring-test 7 requires JUnit 6
-  implementation(enforcedPlatform("org.junit:junit-bom:6.0.1"))
-
   library("org.springframework.security:spring-security-config:6.0.0")
   library("org.springframework.security:spring-security-web:6.0.0")
   library("org.springframework:spring-web:6.0.0")
@@ -18,6 +15,9 @@ dependencies {
   latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+
+  // SpringExtension in spring-test 7 requires JUnit 6
+  testImplementation(platform("org.junit:junit-bom:6.0.1"))
 
   testLibrary("org.springframework:spring-test:6.0.0")
   // remove after 7.0 is released for spring security

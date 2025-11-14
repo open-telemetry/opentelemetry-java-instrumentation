@@ -15,14 +15,14 @@ muzzle {
 }
 
 dependencies {
-  // SpringExtension in spring-test 7 requires JUnit 6
-  implementation(enforcedPlatform("org.junit:junit-bom:6.0.1"))
-
   implementation(project(":instrumentation:spring:spring-security-config-6.0:library"))
 
   library("org.springframework.security:spring-security-config:6.0.0")
   library("org.springframework.security:spring-security-web:6.0.0")
   library("io.projectreactor:reactor-core:3.5.0")
+
+  // SpringExtension in spring-test 7 requires JUnit 6
+  testImplementation(platform("org.junit:junit-bom:6.0.1"))
 
   testLibrary("org.springframework:spring-test:6.0.0")
   testLibrary("org.springframework:spring-context:6.0.0")
