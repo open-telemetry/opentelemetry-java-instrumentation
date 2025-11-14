@@ -64,8 +64,7 @@ enum SpringWebHttpAttributesGetter
         findGetHeadersMethod(MethodType.methodType(List.class, String.class));
     if (methodHandle == null) {
       // up to spring web 7.0
-      methodHandle =
-          findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+      methodHandle = findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
     }
     GET_HEADERS = methodHandle;
   }

@@ -33,8 +33,7 @@ public enum WebClientHttpAttributesGetter
         findGetHeadersMethod(MethodType.methodType(List.class, String.class));
     if (methodHandle == null) {
       // up to webflux 7.0
-      methodHandle =
-          findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+      methodHandle = findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
     }
     GET_HEADERS = methodHandle;
   }
