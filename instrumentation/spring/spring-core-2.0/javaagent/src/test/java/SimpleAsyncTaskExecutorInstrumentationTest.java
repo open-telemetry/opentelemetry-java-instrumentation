@@ -27,6 +27,7 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
 
   private static final Method submitListenableRunnable;
   private static final Method submitListenableCallable;
+
   static {
     // removed in spring 7
     submitListenableRunnable = findMethod("submitListenable", Runnable.class);
