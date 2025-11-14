@@ -17,6 +17,11 @@ import javax.annotation.Nullable;
 /**
  * Spring flavor of {@link io.opentelemetry.sdk.extension.incubator.fileconfig.SdkConfigProvider}
  * that tries to coerce types, because spring doesn't tell what the original type was.
+ *
+ * <p>The entire class is a copy of <a
+ * href="https://github.com/open-telemetry/opentelemetry-java/blob/main/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/SdkConfigProvider.java">SdkConfigProvider</a>
+ * which uses {@link SpringDeclarativeConfigProperties} instead of {@link
+ * io.opentelemetry.sdk.extension.incubator.fileconfig.YamlDeclarativeConfigProperties}.
  */
 final class SpringConfigProvider implements ConfigProvider {
 
