@@ -1,5 +1,4 @@
 [tools]
-java = "graalvm-community-25.0.1"
 lychee = "0.21.0"
 
 [settings]

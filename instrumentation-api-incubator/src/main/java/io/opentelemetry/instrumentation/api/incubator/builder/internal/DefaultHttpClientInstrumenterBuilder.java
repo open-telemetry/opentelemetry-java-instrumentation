@@ -172,9 +172,6 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>
       setEmitExperimentalHttpClientTelemetry(boolean emitExperimentalHttpClientTelemetry) {
-    if (emitExperimentalHttpClientTelemetry) {
-      System.out.println("Experimental HTTP client telemetry is enabled.");
-    }
     this.emitExperimentalHttpClientTelemetry = emitExperimentalHttpClientTelemetry;
     return this;
   }
