@@ -9,7 +9,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationAccess;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Collections;
 import java.util.Map;
@@ -32,7 +31,7 @@ final class SpringConfigProvider implements ConfigProvider {
   private static DeclarativeConfigProperties toConfigProperties(
       Object model, ComponentLoader componentLoader) {
     Map<String, Object> configurationMap =
-        DeclarativeConfigurationAccess.getObjectMapper()
+        EmbeddedConfigFile.getObjectMapper()
             .convertValue(model, new TypeReference<Map<String, Object>>() {});
     if (configurationMap == null) {
       configurationMap = Collections.emptyMap();

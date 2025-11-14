@@ -5,8 +5,11 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure;
 
-import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationAccess;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigException;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -60,8 +63,17 @@ class EmbeddedConfigFile {
       Map<String, String> flatProps) {
     Map<String, Object> nested = convertFlatPropsToNested(flatProps);
 
-    return DeclarativeConfigurationAccess.getObjectMapper()
-        .convertValue(nested, OpenTelemetryConfigurationModel.class);
+    return getObjectMapper().convertValue(nested, OpenTelemetryConfigurationModel.class);
+  }
+
+  static ObjectMapper getObjectMapper() {
+    try {
+      Field field = DeclarativeConfiguration.class.getDeclaredField("MAPPER");
+      field.setAccessible(true);
+      return (ObjectMapper) field.get(null);
+    } catch (NoSuchFieldException | IllegalAccessException e) {
+      throw new DeclarativeConfigException("Failed to access ObjectMapper", e);
+    }
   }
 
   /**
