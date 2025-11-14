@@ -6865,23 +6865,6 @@ libraries:
     target_versions:
       javaagent:
       - org.apache.tomcat:tomcat-jasper:[7.0.19,10)
-    telemetry:
-    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes: []
-    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true
-      spans:
-      - span_kind: INTERNAL
-        attributes:
-        - name: jsp.classFQCN
-          type: STRING
-        - name: jsp.compiler
-          type: STRING
-        - name: jsp.forwardOrigin
-          type: STRING
-        - name: jsp.requestURL
-          type: STRING
   kafka:
   - name: kafka-clients-0.11
     display_name: Apache Kafka Client
@@ -8346,7 +8329,7 @@ libraries:
       library:
       - io.ktor:ktor-server-core:[1.0.0,1.+)
     telemetry:
-    - when: otel.instrumentation.common.experimental.controller-telemetry.enabled=true
+    - when: default
       metrics:
       - name: http.server.request.duration
         description: Duration of HTTP server requests.

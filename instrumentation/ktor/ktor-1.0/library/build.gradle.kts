@@ -31,9 +31,6 @@ kotlin {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
-
-  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+tasks.test {
   systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }
