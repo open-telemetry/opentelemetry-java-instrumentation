@@ -30,18 +30,18 @@ public enum WebClientHttpAttributesGetter
   static {
     // since webflux 7.0
     MethodHandle methodHandle =
-        findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
+        findGetHeadersMethod(MethodType.methodType(List.class, String.class));
     if (methodHandle == null) {
       // up to webflux 7.0
       methodHandle =
-          findGetHeadersMethod(MethodType.methodType(Object.class, Object.class, Object.class));
+          findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
     }
     GET_HEADERS = methodHandle;
   }
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
-      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "getOrDefault", methodType);
+      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
     } catch (Throwable t) {
       return null;
     }
@@ -62,7 +62,11 @@ public enum WebClientHttpAttributesGetter
   public List<String> getHttpRequestHeader(ClientRequest request, String name) {
     if (GET_HEADERS != null) {
       try {
-        return (List<String>) GET_HEADERS.invoke(request.headers(), name, emptyList());
+        List<String> result = (List<String>) GET_HEADERS.invoke(request, name);
+        if (result == null) {
+          return emptyList();
+        }
+        return result;
       } catch (Throwable t) {
         // ignore
       }

@@ -20,11 +20,11 @@ class HeaderUtil {
   static {
     // since spring web 7.0
     MethodHandle methodHandle =
-        findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
+        findGetHeadersMethod(MethodType.methodType(List.class, String.class));
     if (methodHandle == null) {
       // up to spring web 7.0
       methodHandle =
-          findGetHeadersMethod(MethodType.methodType(Object.class, Object.class, Object.class));
+          findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
     }
     GET_HEADERS = methodHandle;
   }
@@ -41,7 +41,11 @@ class HeaderUtil {
   static List<String> getHeader(HttpHeaders headers, String name) {
     if (GET_HEADERS != null) {
       try {
-        return (List<String>) GET_HEADERS.invoke(headers, name, emptyList());
+        List<String> result = (List<String>) GET_HEADERS.invoke(headers, name);
+        if (result == null) {
+          return emptyList();
+        }
+        return result;
       } catch (Throwable t) {
         // ignore
       }
