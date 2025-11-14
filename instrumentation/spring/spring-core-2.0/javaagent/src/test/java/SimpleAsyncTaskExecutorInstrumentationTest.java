@@ -3,11 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.lang.reflect.Method;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import org.junit.jupiter.api.Test;
@@ -21,6 +24,23 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final SimpleAsyncTaskExecutor EXECUTOR = new SimpleAsyncTaskExecutor();
+
+  private static final Method submitListenableRunnable;
+  private static final Method submitListenableCallable;
+
+  static {
+    // removed in spring 7
+    submitListenableRunnable = findMethod("submitListenable", Runnable.class);
+    submitListenableCallable = findMethod("submitListenable", Callable.class);
+  }
+
+  private static Method findMethod(String name, Class<?>... parameterTypes) {
+    try {
+      return SimpleAsyncTaskExecutor.class.getMethod(name, parameterTypes);
+    } catch (Exception e) {
+      return null;
+    }
+  }
 
   @Test
   void executeRunnable() {
@@ -39,12 +59,14 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
 
   @Test
   void submitListenableRunnable() {
-    executeTwoTasks(task -> EXECUTOR.submitListenable((Runnable) task));
+    assumeTrue(submitListenableRunnable != null);
+    executeTwoTasks(task -> submitListenableRunnable.invoke(EXECUTOR, task));
   }
 
   @Test
   void submitListenableCallable() {
-    executeTwoTasks(task -> EXECUTOR.submitListenable((Callable<?>) task));
+    assumeTrue(submitListenableCallable != null);
+    executeTwoTasks(task -> submitListenableCallable.invoke(EXECUTOR, task));
   }
 
   private static void executeTwoTasks(ThrowingConsumer<AsyncTask> task) {

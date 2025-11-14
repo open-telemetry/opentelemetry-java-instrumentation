@@ -7,7 +7,7 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
-    id("org.graalvm.buildtools.native") version "0.11.2"
+    id("org.graalvm.buildtools.native") version "0.11.3"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
   }
@@ -641,6 +641,7 @@ include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing")
+include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing-webflux7")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:wildfly-testing")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library")

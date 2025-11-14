@@ -28,7 +28,7 @@ public final class SpringAwsUtil {
   // put the TracingList into thread local, so we can use it in attachTracingState method
   public static void initialize(Collection<?> messages) {
     if (messages instanceof TracingList tracingList) {
-      // disable tracing int the iterator of TracingList, we'll do the tracing when message handler
+      // disable tracing in the iterator of TracingList, we'll do the tracing when message handler
       // is called
       tracingList.disableTracing();
       context.set(tracingList);
