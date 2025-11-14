@@ -1,0 +1,11 @@
+[
+  {
+    "name": "org.springframework.web.reactive.function.client.ClientResponse",
+    "methods": [
+      {
+        "name": "todo",
+        "parameterTypes": []
+      }
+    ]
+  }
+]

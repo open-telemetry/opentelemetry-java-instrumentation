@@ -1,0 +1,42 @@
+[
+  {
+    "name": "org.springframework.http.client.ClientHttpResponse",
+    "methods": [
+      {
+        "name": "getStatusCode",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "org.springframework.http.HttpStatusCode",
+    "methods": [
+      {
+        "name": "value",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "org.springframework.http.HttpStatus",
+    "methods": [
+      {
+        "name": "value",
+        "parameterTypes": []
+      }
+    ]
+  },
+  {
+    "name": "java.util.Map",
+    "methods": [
+      {
+        "name": "getOrDefault",
+        "parameterTypes": ["java.lang.String", "java.util.List"]
+      },
+      {
+        "name": "getOrDefault",
+        "parameterTypes": ["java.lang.Object", "java.lang.Object"]
+      }
+    ]
+  }
+]
