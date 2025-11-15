@@ -55,7 +55,6 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    // older versions of Spring Boot return 200 for non-standard HTTP methods instead of 500
     options.setResponseCodeOnNonStandardHttpMethod(
         Boolean.getBoolean("testLatestDeps") ? 500 : 200);
     options.setExpectedException(new RuntimeException(EXCEPTION.getBody()));
