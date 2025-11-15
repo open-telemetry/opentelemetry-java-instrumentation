@@ -21,6 +21,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import javax.annotation.Nullable;
 
 /**
@@ -44,6 +46,8 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
 
   private final DbClientAttributesGetter<REQUEST, RESPONSE> getter;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
 
   /** Creates the database client attributes extractor with default configuration. */
   public static <REQUEST, RESPONSE> AttributesExtractor<REQUEST, RESPONSE> create(
@@ -53,12 +57,15 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
 
   DbClientAttributesExtractor(DbClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
+    internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
+    serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
   @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
     onStartCommon(attributes, getter, request);
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   @SuppressWarnings("deprecation") // until old db semconv are dropped
@@ -93,6 +100,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+    internalNetworkExtractor.onEnd(attributes, request, response);
     onEndCommon(attributes, getter, response, error);
   }
 

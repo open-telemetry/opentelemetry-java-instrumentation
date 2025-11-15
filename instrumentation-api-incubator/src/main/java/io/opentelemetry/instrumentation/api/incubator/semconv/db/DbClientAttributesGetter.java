@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
+import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
 /**
@@ -18,9 +20,11 @@ import javax.annotation.Nullable;
  * from the attribute methods, but implement as many as possible for best compliance with the
  * OpenTelemetry specification.
  */
-@SuppressWarnings("deprecation") // extending deprecated interface for backward compatibility
+@SuppressWarnings("deprecation") // until DbClientCommonAttributesGetter is removed
 public interface DbClientAttributesGetter<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
+    extends DbClientCommonAttributesGetter<REQUEST, RESPONSE>,
+        NetworkAttributesGetter<REQUEST, RESPONSE>,
+        ServerAttributesGetter<REQUEST> {
 
   /**
    * @deprecated Use {@link #getDbQueryText(REQUEST)} instead.

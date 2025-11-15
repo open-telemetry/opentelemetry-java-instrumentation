@@ -57,4 +57,16 @@ public enum R2dbcSqlAttributesGetter implements SqlClientAttributesGetter<DbExec
     }
     return null;
   }
+
+  @Nullable
+  @Override
+  public String getServerAddress(DbExecution request) {
+    return request.getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(DbExecution request) {
+    return request.getPort();
+  }
 }

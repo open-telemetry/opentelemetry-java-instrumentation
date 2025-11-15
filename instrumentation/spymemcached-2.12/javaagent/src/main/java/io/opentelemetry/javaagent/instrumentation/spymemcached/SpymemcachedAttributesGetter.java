@@ -16,13 +16,6 @@ public class SpymemcachedAttributesGetter
     return "memcached";
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(SpymemcachedRequest spymemcachedRequest) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(SpymemcachedRequest spymemcachedRequest) {
@@ -30,12 +23,6 @@ public class SpymemcachedAttributesGetter
   }
 
   @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(SpymemcachedRequest spymemcachedRequest) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {

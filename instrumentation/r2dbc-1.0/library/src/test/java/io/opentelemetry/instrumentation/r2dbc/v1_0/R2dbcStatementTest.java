@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
-import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcNetAttributesGetter;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlAttributesGetter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -53,7 +53,7 @@ class R2dbcStatementTest extends AbstractR2dbcStatementTest {
     return R2dbcTelemetry.builder(testing.getOpenTelemetry())
         .addAttributesExtractor(
             PeerServiceAttributesExtractor.create(
-                R2dbcNetAttributesGetter.INSTANCE, PeerServiceResolver.create(peerServiceMapping)))
+                R2dbcSqlAttributesGetter.INSTANCE, PeerServiceResolver.create(peerServiceMapping)))
         .build()
         .wrapConnectionFactory(
             super.createProxyConnectionFactory(connectionFactoryOptions), connectionFactoryOptions);
