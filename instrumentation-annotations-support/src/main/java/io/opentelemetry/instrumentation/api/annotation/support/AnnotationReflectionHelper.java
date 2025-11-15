@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.annotation.support;
 
 import java.lang.annotation.Annotation;
-import java.lang.invoke.CallSite;
-import java.lang.invoke.LambdaMetafactory;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -65,6 +63,7 @@ public class AnnotationReflectionHelper {
    * @throws NoSuchMethodException the annotation element method was not found
    * @throws Throwable on failing to bind to the
    */
+  @SuppressWarnings("unchecked") // need to cast the return value for MethodHandle.invoke
   public static <A extends Annotation, T> Function<A, T> bindAnnotationElementMethod(
       MethodHandles.Lookup lookup,
       Class<? extends Annotation> annotationClass,
@@ -75,19 +74,12 @@ public class AnnotationReflectionHelper {
     MethodHandle valueHandle =
         lookup.findVirtual(annotationClass, methodName, MethodType.methodType(returnClass));
 
-    CallSite callSite =
-        LambdaMetafactory.metafactory(
-            lookup,
-            "apply",
-            MethodType.methodType(Function.class),
-            MethodType.methodType(Object.class, Object.class),
-            valueHandle,
-            MethodType.methodType(returnClass, annotationClass));
-
-    MethodHandle factory = callSite.getTarget();
-
-    @SuppressWarnings("unchecked")
-    Function<A, T> function = (Function<A, T>) factory.invoke();
-    return function;
+    return a -> {
+      try {
+        return (T) valueHandle.invoke(a);
+      } catch (Throwable e) {
+        throw new IllegalStateException(e);
+      }
+    };
   }
 }

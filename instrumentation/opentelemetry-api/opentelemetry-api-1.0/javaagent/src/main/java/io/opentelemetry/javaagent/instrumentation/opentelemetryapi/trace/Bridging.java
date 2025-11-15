@@ -105,7 +105,7 @@ public class Bridging {
     }
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({"unchecked", "rawtypes"}) // toAgent conversion uses raw AttributeKey
   public static io.opentelemetry.api.common.Attributes toAgent(Attributes applicationAttributes) {
     io.opentelemetry.api.common.AttributesBuilder agentAttributes =
         io.opentelemetry.api.common.Attributes.builder();
@@ -121,7 +121,7 @@ public class Bridging {
 
   // TODO optimize this by storing shaded AttributeKey inside of application AttributeKey instead of
   // creating every time
-  @SuppressWarnings({"rawtypes"})
+  @SuppressWarnings({"rawtypes"}) // conversion uses raw AttributeKey
   public static io.opentelemetry.api.common.AttributeKey toAgent(AttributeKey applicationKey) {
     switch (applicationKey.getType()) {
       case STRING:

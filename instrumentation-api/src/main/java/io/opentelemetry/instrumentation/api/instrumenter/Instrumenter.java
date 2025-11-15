@@ -85,6 +85,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
 
+  // to allow converting generic lists to arrays with toArray
   @SuppressWarnings({"rawtypes", "unchecked"})
   Instrumenter(InstrumenterBuilder<REQUEST, RESPONSE> builder) {
     this.instrumentationName = builder.instrumentationName;

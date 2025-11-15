@@ -74,7 +74,7 @@ public class TelemetryRetriever implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings({"unchecked", "rawtypes"})
+  @SuppressWarnings({"unchecked", "rawtypes"}) // fine
   private <T extends GeneratedMessage, B extends GeneratedMessage.Builder>
       Collection<T> waitForTelemetry(String path, Supplier<B> builderConstructor) {
     if (closed) {
@@ -102,7 +102,7 @@ public class TelemetryRetriever implements AutoCloseable {
     }
   }
 
-  @SuppressWarnings("SystemOut")
+  @SuppressWarnings("SystemOut") // used only in tests
   private String waitForContent(String path) throws InterruptedException {
     long previousSize = 0;
     long deadline = System.currentTimeMillis() + telemetryTimeout.toMillis();

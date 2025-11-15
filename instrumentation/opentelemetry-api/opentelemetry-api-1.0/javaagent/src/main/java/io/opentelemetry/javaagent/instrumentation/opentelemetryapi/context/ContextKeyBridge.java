@@ -61,7 +61,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
         toAgent);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection results
   ContextKeyBridge(
       Class<?> applicationKeyHolderClass,
       Class<?> agentKeyHolderClass,
@@ -93,7 +93,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
         return null;
       }
       APPLICATION applicationValue = toApplication.apply(agentValue);
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // fine
       V castValue = (V) applicationValue;
       return castValue;
     }
@@ -103,7 +103,7 @@ final class ContextKeyBridge<APPLICATION, AGENT> {
   @Nullable
   <V> Context with(AgentContextWrapper contextWrapper, ContextKey<V> requestedKey, V value) {
     if (requestedKey == applicationContextKey) {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // fine
       APPLICATION applicationValue = (APPLICATION) value;
       AGENT agentValue = toAgent.apply(applicationValue);
       if (agentValue == null) {

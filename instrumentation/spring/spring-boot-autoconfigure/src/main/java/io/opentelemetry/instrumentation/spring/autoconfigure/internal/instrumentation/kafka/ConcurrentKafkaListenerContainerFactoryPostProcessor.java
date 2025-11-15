@@ -23,7 +23,7 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
     this.springKafkaTelemetry = springKafkaTelemetry;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we check the bean type before casting
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (!(bean instanceof ConcurrentKafkaListenerContainerFactory)) {

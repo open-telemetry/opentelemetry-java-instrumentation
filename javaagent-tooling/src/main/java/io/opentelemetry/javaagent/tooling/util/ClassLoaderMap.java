@@ -64,7 +64,7 @@ class ClassLoaderMap {
     return map;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static Map<Object, Object> createMap(ClassLoader classLoader, Injector classInjector) {
     String className =
         "io.opentelemetry.javaagent.ClassLoaderData$$"

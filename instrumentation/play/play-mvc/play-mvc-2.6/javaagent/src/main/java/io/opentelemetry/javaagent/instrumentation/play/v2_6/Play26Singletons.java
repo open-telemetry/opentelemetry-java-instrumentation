@@ -70,7 +70,7 @@ public final class Play26Singletons {
       Option<HandlerDef> defOption = null;
       if (typedKeyGetUnderlying != null) { // Should always be non-null but just to make sure
         try {
-          @SuppressWarnings("unchecked")
+          @SuppressWarnings("unchecked") // casting reflection result
           play.api.libs.typedmap.TypedKey<HandlerDef> handlerDef =
               (play.api.libs.typedmap.TypedKey<HandlerDef>)
                   typedKeyGetUnderlying.invoke(Router.Attrs.HANDLER_DEF);

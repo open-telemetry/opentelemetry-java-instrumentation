@@ -428,7 +428,7 @@ public class ConnectionRequestInstrumentation implements TypeInstrumentation {
         @Advice.Return CompletableFuture<Message> originalResult,
         @Advice.Enter Object[] enterResult) {
 
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // fine
       CompletableFuture<Message> future = (CompletableFuture<Message>) enterResult[0];
       return future != null ? future : originalResult;
     }

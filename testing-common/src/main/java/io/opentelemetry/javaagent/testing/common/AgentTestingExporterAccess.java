@@ -79,9 +79,9 @@ public final class AgentTestingExporterAccess {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static List<SpanData> getExportedSpans() {
     try {
+      @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result
       List<byte[]> bytes = (List<byte[]>) getSpanExportRequests.invokeExact();
       List<ResourceSpans> allResourceSpans =
           bytes.stream()
@@ -102,43 +102,43 @@ public final class AgentTestingExporterAccess {
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static List<MetricData> getExportedMetrics() {
     try {
+      @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result
+      List<byte[]> bytes = (List<byte[]>) getMetricExportRequests.invokeExact();
       return TelemetryConverter.getMetricsData(
-          ((List<byte[]>) getMetricExportRequests.invokeExact())
-              .stream()
-                  .map(
-                      serialized -> {
-                        try {
-                          return ExportMetricsServiceRequest.parseFrom(serialized);
-                        } catch (InvalidProtocolBufferException e) {
-                          throw new AssertionError(e);
-                        }
-                      })
-                  .flatMap(request -> request.getResourceMetricsList().stream())
-                  .collect(toList()));
+          bytes.stream()
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportMetricsServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
+              .flatMap(request -> request.getResourceMetricsList().stream())
+              .collect(toList()));
     } catch (Throwable t) {
       throw new AssertionError("Could not invoke getSpanExportRequests", t);
     }
   }
 
-  @SuppressWarnings("unchecked")
   public static List<LogRecordData> getExportedLogRecords() {
     try {
+      @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result
+      List<byte[]> bytes = (List<byte[]>) getLogExportRequests.invokeExact();
       return TelemetryConverter.getLogRecordData(
-          ((List<byte[]>) getLogExportRequests.invokeExact())
-              .stream()
-                  .map(
-                      serialized -> {
-                        try {
-                          return ExportLogsServiceRequest.parseFrom(serialized);
-                        } catch (InvalidProtocolBufferException e) {
-                          throw new AssertionError(e);
-                        }
-                      })
-                  .flatMap(request -> request.getResourceLogsList().stream())
-                  .collect(toList()));
+          bytes.stream()
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportLogsServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
+              .flatMap(request -> request.getResourceLogsList().stream())
+              .collect(toList()));
     } catch (Throwable t) {
       throw new AssertionError("Could not invoke getLogExportRequests", t);
     }

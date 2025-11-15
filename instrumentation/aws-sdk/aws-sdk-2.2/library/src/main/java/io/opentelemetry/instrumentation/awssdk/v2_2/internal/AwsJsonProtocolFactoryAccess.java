@@ -40,10 +40,11 @@ final class AwsJsonProtocolFactoryAccess {
                   // AwsJsonProtocolFactory requires any URI to be present
                   .option(SdkClientOption.ENDPOINT, URI.create("http://empty"))
                   .build());
-      @SuppressWarnings("rawtypes")
-      Class awsJsonProtocolClass =
-          Class.forName("software.amazon.awssdk.protocols.json.AwsJsonProtocol");
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("rawtypes") // fine
+      Class<? extends Enum> awsJsonProtocolClass =
+          Class.forName("software.amazon.awssdk.protocols.json.AwsJsonProtocol")
+              .asSubclass(Enum.class);
+      @SuppressWarnings("unchecked") // fine
       Object awsJsonProtocol = Enum.valueOf(awsJsonProtocolClass, "AWS_JSON");
       awsJsonProtocolFactoryBuilder
           .getClass()
@@ -69,7 +70,7 @@ final class AwsJsonProtocolFactoryAccess {
     INVOKE_CREATE_PROTOCOL_MARSHALLER = invokeCreateProtocolMarshaller;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   @Nullable
   static ProtocolMarshaller<SdkHttpFullRequest> createMarshaller() {
     if (INVOKE_CREATE_PROTOCOL_MARSHALLER == null) {

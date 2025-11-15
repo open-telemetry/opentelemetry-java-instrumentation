@@ -140,6 +140,7 @@ tasks {
           // This check causes too many failures, ignore the ones in tests
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
+          disable("SuppressWarningsWithoutExplanation")
         }
       }
     }

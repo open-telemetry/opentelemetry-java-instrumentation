@@ -85,7 +85,7 @@ public class ServletHelper<REQUEST, RESPONSE> extends BaseServletHelper<REQUEST,
     ServletAsyncContext.setAsyncListenerResponse(context, response);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // we set the response in setAsyncListenerResponse
   public RESPONSE getAsyncListenerResponse(Context context) {
     return (RESPONSE) ServletAsyncContext.getAsyncListenerResponse(context);
   }

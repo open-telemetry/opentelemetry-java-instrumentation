@@ -114,7 +114,7 @@ class AttributeBindingFactory {
     return defaultArrayBinding(name);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // safe because type is checked before casting
   private static AttributeBinding listBinding(String name, Type componentType) {
     if (componentType == String.class) {
       AttributeKey<List<String>> key = AttributeKey.stringArrayKey(name);
@@ -310,7 +310,7 @@ class AttributeBindingFactory {
   private static <T, U> AttributeBinding mappedListBinding(
       AttributeKey<List<U>> key, Function<T, U> mapping) {
     return (setter, arg) -> {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // safe because we only call this method for lists
       List<T> list = (List<T>) arg;
       List<U> wrapper =
           new AbstractList<U>() {
