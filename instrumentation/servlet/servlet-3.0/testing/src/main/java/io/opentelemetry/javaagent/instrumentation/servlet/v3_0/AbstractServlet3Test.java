@@ -145,7 +145,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   }
 
   @Test
-  void snippetInjectionWithServletOutputStream() {
+  protected void snippetInjectionWithServletOutputStream() {
     ExperimentalSnippetHolder.setSnippet(
         "\n  <script type=\"text/javascript\"> Test Test</script>");
     AggregatedHttpRequest request = request(HTML_SERVLET_OUTPUT_STREAM, "GET");
@@ -185,7 +185,7 @@ public abstract class AbstractServlet3Test<SERVER, CONTEXT> extends AbstractHttp
   }
 
   @Test
-  void snippetInjectionWithPrintWriter() {
+  protected void snippetInjectionWithPrintWriter() {
     ExperimentalSnippetHolder.setSnippet("\n  <script type=\"text/javascript\"> Test </script>");
     AggregatedHttpRequest request = request(HTML_PRINT_WRITER, "GET");
     AggregatedHttpResponse response = client.execute(request).aggregate().join();
