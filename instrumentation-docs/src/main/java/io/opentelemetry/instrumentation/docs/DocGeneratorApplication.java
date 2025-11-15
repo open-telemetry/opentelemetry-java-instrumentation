@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.docs;
 
+import static io.opentelemetry.instrumentation.docs.WeaverModelGenerator.generateWeaverModels;
 import static java.util.Locale.Category.FORMAT;
 
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
@@ -46,6 +47,8 @@ public class DocGeneratorApplication {
       writer.write("file_format: 0.1\n\n");
       YamlHelper.generateInstrumentationYaml(modules, writer);
     }
+
+    generateWeaverModels(modules);
 
     printStats(modules);
   }
