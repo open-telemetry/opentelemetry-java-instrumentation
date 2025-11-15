@@ -1,0 +1,47 @@
+otel:
+  # "file_format" serves as opt-in to the new file format
+  file_format: "1.0-rc.1"
+  resource:
+    detection/development:
+      detectors:
+        - service:
+    attributes:
+      - name: service.name
+        value: declarative-config-spring-boot-2
+
+  tracer_provider:
+    processors:
+      - simple:
+          exporter:
+            test:
+      - simple:
+          exporter:
+            console:
+
+  logger_provider:
+    processors:
+      - simple:
+          exporter:
+            test:
+
+  meter_provider:
+    readers:
+      - periodic:
+          # Set really long interval. We'll call forceFlush when we need the metrics
+          # instead of collecting them periodically.
+          interval: 1000000
+          exporter:
+            test:
+
+  propagator:
+    composite:
+      - tracecontext:
+      - baggage:
+
+  instrumentation/development:
+    java:
+      runtime-telemetry:
+        emit_experimental_telemetry: true
+      http:
+        client:
+          emit_experimental_telemetry: true
