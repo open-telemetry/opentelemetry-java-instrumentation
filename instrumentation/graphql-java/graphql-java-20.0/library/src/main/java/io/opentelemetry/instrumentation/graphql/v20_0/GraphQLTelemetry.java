@@ -27,13 +27,13 @@ public final class GraphQLTelemetry {
   }
 
   private final OpenTelemetryInstrumentationHelper helper;
-  private final Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter;
+  private final Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter;
   private final boolean createSpansForTrivialDataFetcher;
 
   GraphQLTelemetry(
       OpenTelemetry openTelemetry,
       boolean sanitizeQuery,
-      Instrumenter<DataFetchingEnvironment, Void> dataFetcherInstrumenter,
+      Instrumenter<DataFetchingEnvironment, Object> dataFetcherInstrumenter,
       boolean createSpansForTrivialDataFetcher,
       boolean addOperationNameToSpanName) {
     helper =
