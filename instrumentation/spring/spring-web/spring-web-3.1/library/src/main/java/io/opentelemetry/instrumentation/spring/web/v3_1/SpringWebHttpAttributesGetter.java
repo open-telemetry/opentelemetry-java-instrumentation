@@ -23,7 +23,7 @@ enum SpringWebHttpAttributesGetter
 
   @Nullable private static final MethodHandle GET_STATUS_CODE;
   @Nullable private static final MethodHandle STATUS_CODE_VALUE;
-  @Nullable private static final MethodHandle GET_HEADERS;
+  private static final MethodHandle GET_HEADERS;
 
   static {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
@@ -58,15 +58,19 @@ enum SpringWebHttpAttributesGetter
 
     GET_STATUS_CODE = getStatusCode;
     STATUS_CODE_VALUE = statusCodeValue;
+    GET_HEADERS =
+        isSpring7OrNewer()
+            ? findGetHeadersMethod(MethodType.methodType(List.class, String.class))
+            : findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+  }
 
-    // since spring web 7.0
-    MethodHandle methodHandle =
-        findGetHeadersMethod(MethodType.methodType(List.class, String.class));
-    if (methodHandle == null) {
-      // up to spring web 7.0
-      methodHandle = findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+  private static boolean isSpring7OrNewer() {
+    try {
+      Class.forName("org.springframework.core.Nullness");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
     }
-    GET_HEADERS = methodHandle;
   }
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
@@ -94,19 +98,16 @@ enum SpringWebHttpAttributesGetter
   }
 
   @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
-  private static List<String> getHeader(HttpHeaders headers, String name) {
-    if (GET_HEADERS != null) {
-      try {
-        List<String> result = (List<String>) GET_HEADERS.invoke(headers, name);
-        if (result == null) {
-          return emptyList();
-        }
-        return result;
-      } catch (Throwable t) {
-        // ignore
+  static List<String> getHeader(HttpHeaders headers, String name) {
+    try {
+      List<String> result = (List<String>) GET_HEADERS.invoke(headers, name);
+      if (result == null) {
+        return emptyList();
       }
+      return result;
+    } catch (Throwable t) {
+      throw new IllegalStateException(t);
     }
-    return emptyList();
   }
 
   @Override

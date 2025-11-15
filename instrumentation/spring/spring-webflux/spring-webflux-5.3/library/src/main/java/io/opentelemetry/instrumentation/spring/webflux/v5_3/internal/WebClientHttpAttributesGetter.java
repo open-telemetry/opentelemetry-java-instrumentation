@@ -28,21 +28,26 @@ public enum WebClientHttpAttributesGetter
   private static final MethodHandle GET_HEADERS;
 
   static {
-    // since webflux 7.0
-    MethodHandle methodHandle =
-        findGetHeadersMethod(MethodType.methodType(List.class, String.class));
-    if (methodHandle == null) {
-      // up to webflux 7.0
-      methodHandle = findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+    GET_HEADERS =
+        isSpring7OrNewer()
+            ? findGetHeadersMethod(MethodType.methodType(List.class, String.class))
+            : findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+  }
+
+  private static boolean isSpring7OrNewer() {
+    try {
+      Class.forName("org.springframework.core.Nullness");
+      return true;
+    } catch (ClassNotFoundException e) {
+      return false;
     }
-    GET_HEADERS = methodHandle;
   }
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
       return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
     } catch (Throwable t) {
-      return null;
+      throw new IllegalStateException(t);
     }
   }
 
@@ -59,18 +64,15 @@ public enum WebClientHttpAttributesGetter
   @Override
   @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
   public List<String> getHttpRequestHeader(ClientRequest request, String name) {
-    if (GET_HEADERS != null) {
-      try {
-        List<String> result = (List<String>) GET_HEADERS.invoke(request, name);
-        if (result == null) {
-          return emptyList();
-        }
-        return result;
-      } catch (Throwable t) {
-        // ignore
+    try {
+      List<String> result = (List<String>) GET_HEADERS.invoke(request.headers(), name);
+      if (result == null) {
+        return emptyList();
       }
+      return result;
+    } catch (Throwable t) {
+      throw new IllegalStateException(t);
     }
-    return emptyList();
   }
 
   @Override
