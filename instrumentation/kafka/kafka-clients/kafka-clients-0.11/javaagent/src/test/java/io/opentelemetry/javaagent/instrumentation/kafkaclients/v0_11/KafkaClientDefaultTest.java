@@ -26,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -33,6 +34,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
+
+  private static final boolean testLatestDeps =
+      Boolean.parseBoolean(System.getProperty("testLatestDeps", "true"));
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -110,6 +114,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, testHeaders, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
+
+    if (testLatestDeps) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.kafka-clients-0.11",
+          "kafka.producer.record_send_total",
+          AbstractIterableAssert::isNotEmpty);
+    }
   }
 
   @DisplayName("test pass through tombstone")
@@ -155,6 +166,7 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             processAttributes(null, null, false, false))));
   }
 
+  @ParameterizedTest
   @DisplayName("test records(TopicPartition) kafka consume")
   @ValueSource(booleans = {true, false})
   void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)
