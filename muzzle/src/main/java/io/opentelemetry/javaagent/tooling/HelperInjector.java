@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.HelperResources;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper;
 import io.opentelemetry.javaagent.bootstrap.InjectedClassHelper.HelperClassInfo;
+import io.opentelemetry.javaagent.bootstrap.advice.AdviceForwardLookupSupplier;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldLookupSupplier;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.injection.InjectionMode;
 import io.opentelemetry.javaagent.instrumentation.executors.ExecutorLookupSupplier;
@@ -289,7 +290,7 @@ public class HelperInjector implements Transformer {
       if (isBootClassLoader(classLoader)) {
         injectBootstrapClassLoader(classnameToBytes);
       }
-    } catch (Exception e) {
+    } catch (RuntimeException e) {
       if (logger.isLoggable(SEVERE)) {
         logger.log(
             SEVERE,
@@ -297,16 +298,20 @@ public class HelperInjector implements Transformer {
             new Object[] {typeDescription, requestingName, classLoader},
             e);
       }
-      throw new IllegalStateException(e);
+      throw e;
     }
   }
 
-  public static void injectHelperClasses(
+  public void injectHelperClasses(
       ClassLoader classLoader, Map<String, Supplier<byte[]>> classNameToBytes) {
-    if (isBootClassLoader(classLoader)) {
-      throw new UnsupportedOperationException("boot loader not supported");
-    }
     if (classNameToBytes.isEmpty()) {
+      return;
+    }
+    if (classLoader == null) {
+      if (instrumentation == null) {
+        throw new UnsupportedOperationException("boot loader not supported");
+      }
+      injectBootstrapClassLoader(classNameToBytes);
       return;
     }
 
@@ -339,6 +344,7 @@ public class HelperInjector implements Transformer {
     // because all generated virtual field classes are in the same package we can use lookup to
     // define them
     addPackageLookup(new VirtualFieldLookupSupplier());
+    addPackageLookup(new AdviceForwardLookupSupplier());
   }
 
   private static void addPackageLookup(Supplier<MethodHandles.Lookup> supplier) {
@@ -350,7 +356,7 @@ public class HelperInjector implements Transformer {
     return lookup != null ? ClassInjector.UsingLookup.of(lookup) : null;
   }
 
-  private void injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject) throws IOException {
+  private void injectBootstrapClassLoader(Map<String, Supplier<byte[]>> inject) {
     Map<String, byte[]> classnameToBytes = resolve(inject);
     if (helperInjectorListener != null) {
       helperInjectorListener.onInjection(classnameToBytes);
@@ -404,7 +410,7 @@ public class HelperInjector implements Transformer {
     // a reference count -- but for now, starting simple.
 
     // Failures to create a tempDir are propagated as IOException and handled by transform
-    if (!classnameToBytes.isEmpty()) {
+    if (!classnameToBytes.isEmpty() && instrumentation != null) {
       File tempDir = createTempDir();
       try {
         ClassInjector.UsingInstrumentation.of(
@@ -417,8 +423,12 @@ public class HelperInjector implements Transformer {
     }
   }
 
-  private static File createTempDir() throws IOException {
-    return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
+  private static File createTempDir() {
+    try {
+      return Files.createTempDirectory("opentelemetry-temp-jars").toFile();
+    } catch (IOException exception) {
+      throw new IllegalStateException("Failed to create temporary directory.", exception);
+    }
   }
 
   private static void deleteTempDir(File file) {
