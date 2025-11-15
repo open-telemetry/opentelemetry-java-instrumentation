@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 import static java.util.Collections.emptyIterator;
 
 import io.opentelemetry.context.propagation.TextMapGetter;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.HeaderUtil;
 import java.util.Iterator;
 import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
