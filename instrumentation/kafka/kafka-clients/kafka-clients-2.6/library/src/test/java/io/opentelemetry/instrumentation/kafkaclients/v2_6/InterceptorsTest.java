@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import java.nio.charset.StandardCharsets;
 import java.util.concurrent.atomic.AtomicReference;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 
@@ -125,5 +126,10 @@ class InterceptorsTest extends AbstractInterceptorsTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasName("producer callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kafka-clients-2.6",
+        "kafka.producer.record_send_total",
+        AbstractIterableAssert::isNotEmpty);
   }
 }

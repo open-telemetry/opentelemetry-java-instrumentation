@@ -32,13 +32,13 @@ val DEPENDENCY_BOMS = listOf(
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:2.0.1"
+  "org.testcontainers:testcontainers-bom:2.0.2"
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.11.0"
+val autoValueVersion = "1.11.1"
 val errorProneVersion = "2.43.0"
-val byteBuddyVersion = "1.17.8"
+val byteBuddyVersion = "1.18.1"
 val asmVersion = "9.9"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
@@ -87,7 +87,7 @@ val DEPENDENCIES = listOf(
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
   "com.uber.nullaway:nullaway:0.12.12",
   "commons-beanutils:commons-beanutils:1.11.0",
-  "commons-cli:commons-cli:1.10.0",
+  "commons-cli:commons-cli:1.11.0",
   "commons-codec:commons-codec:1.20.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",

@@ -15,19 +15,19 @@ import io.netty.util.Attribute;
 import io.netty.util.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v4_0.AttributeKeys;
 
 public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapter {
 
-  static final AttributeKey<HttpRequestAndChannel> HTTP_SERVER_REQUEST =
+  static final AttributeKey<NettyRequest> HTTP_SERVER_REQUEST =
       AttributeKeys.attributeKey(AttributeKeys.class.getName() + ".http-server-request");
 
   @Override
   public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
     Channel channel = ctx.channel();
     Attribute<Context> contextAttr = channel.attr(AttributeKeys.SERVER_CONTEXT);
-    Attribute<HttpRequestAndChannel> requestAttr = channel.attr(HTTP_SERVER_REQUEST);
+    Attribute<NettyRequest> requestAttr = channel.attr(HTTP_SERVER_REQUEST);
 
     if (!(msg instanceof HttpRequest)) {
       Context serverContext = contextAttr.get();
@@ -45,7 +45,7 @@ public class HttpServerRequestTracingHandler extends ChannelInboundHandlerAdapte
     if (parentContext == null) {
       parentContext = Context.current();
     }
-    HttpRequestAndChannel request = HttpRequestAndChannel.create((HttpRequest) msg, channel);
+    NettyRequest request = NettyRequest.create((HttpRequest) msg, channel);
 
     if (!instrumenter().shouldStart(parentContext, request)) {
       super.channelRead(ctx, msg);
