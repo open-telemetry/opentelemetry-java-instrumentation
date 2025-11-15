@@ -12,6 +12,7 @@ dependencies {
   compileOnly("com.google.auto.service:auto-service")
 
   compileOnly(project(":instrumentation-api"))
+  compileOnly(project(":instrumentation-api-incubator"))
   compileOnly(project(":javaagent-extension-api"))
   compileOnly(project(":javaagent-bootstrap"))
   compileOnly(project(":javaagent-tooling"))
