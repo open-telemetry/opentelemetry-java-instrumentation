@@ -42,6 +42,8 @@ class PersistenceConfig {
     initializer.setDatabasePopulator(
       ResourceDatabasePopulator(
         ByteArrayResource(
+          // lowercase identifiers need to be quoted since v4.0.0
+          // (https://github.com/spring-projects/spring-data-relational/issues/1993)
           ("CREATE TABLE \"customer\" (\"id\" INT PRIMARY KEY, \"name\" VARCHAR(100) NOT NULL);" +
             "INSERT INTO \"customer\" (\"id\", \"name\") VALUES ('1', 'Name');")
             .toByteArray(StandardCharsets.UTF_8)
