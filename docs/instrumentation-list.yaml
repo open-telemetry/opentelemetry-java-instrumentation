@@ -8293,12 +8293,6 @@ libraries:
       javaagent:
       - org.jetbrains.kotlinx:kotlinx-coroutines-core-jvm:[1.3.9,)
       - org.jetbrains.kotlinx:kotlinx-coroutines-core:[1.0.0,1.3.8)
-    configurations:
-    - name: otel.instrumentation.kotlinx-coroutines.check-class
-      description: |
-        Enables bytecode verification with ASM CheckClassAdapter for debugging transformed classes.
-      type: boolean
-      default: false
   - name: kotlinx-coroutines-flow-1.3
     display_name: Kotlin Coroutines Flow
     description: |

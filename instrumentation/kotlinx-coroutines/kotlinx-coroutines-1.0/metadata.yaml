@@ -5,9 +5,3 @@ display_name: Kotlin Coroutines
 features:
   - CONTEXT_PROPAGATION
 library_link: https://github.com/Kotlin/kotlinx.coroutines
-configurations:
-  - name: otel.instrumentation.kotlinx-coroutines.check-class
-    description: >
-      Enables bytecode verification with ASM CheckClassAdapter for debugging transformed classes.
-    type: boolean
-    default: false
