@@ -1,0 +1,11 @@
+file_format: "1.0-rc.1"
+propagator:
+  composite_list: "tracecontext"
+instrumentation/development:
+  java:
+    http:
+      client:
+        emit_experimental_telemetry: true
+        url_template_rules:
+          - pattern: "http://localhost:.*/hello/.*"
+            template: "/hello/*"
