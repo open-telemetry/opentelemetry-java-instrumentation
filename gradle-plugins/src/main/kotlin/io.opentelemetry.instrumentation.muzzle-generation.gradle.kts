@@ -1,7 +1,7 @@
 import io.opentelemetry.javaagent.muzzle.generation.ClasspathByteBuddyPlugin
 import io.opentelemetry.javaagent.muzzle.generation.ClasspathTransformation
+import io.opentelemetry.javaagent.muzzle.generation.ConfigurationCacheFriendlyByteBuddyTask
 import net.bytebuddy.ClassFileVersion
-import net.bytebuddy.build.gradle.ByteBuddySimpleTask
 import net.bytebuddy.build.gradle.Transformation
 
 plugins {
@@ -61,7 +61,7 @@ tasks {
 
 fun createLanguageTask(
   compileTaskProvider: TaskProvider<*>, name: String): TaskProvider<*> {
-  return tasks.register<ByteBuddySimpleTask>(name) {
+  return tasks.register(name, ConfigurationCacheFriendlyByteBuddyTask::class.java) {
     setGroup("Byte Buddy")
     outputs.cacheIf { true }
     classFileVersion = ClassFileVersion.JAVA_V8
