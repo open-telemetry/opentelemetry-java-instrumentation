@@ -722,10 +722,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                   });
             }
 
+            int handlerIndex = -1;
             if (endpoint != NOT_FOUND) {
               int parentIndex = 0;
               if (options.hasHandlerSpan.test(endpoint)) {
-                parentIndex = spanAssertions.size() - 1;
+                handlerIndex = spanAssertions.size() - 1;
+                parentIndex = handlerIndex;
               }
               int finalParentIndex = parentIndex;
               spanAssertions.add(
@@ -741,10 +743,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
             if (options.hasResponseSpan.test(endpoint)) {
               int parentIndex = spanAssertions.size() - 1;
+              int finalHandlerIndex = handlerIndex;
               spanAssertions.add(
                   span ->
                       assertResponseSpan(
-                          span, trace.getSpan(parentIndex), trace.getSpan(0), method, endpoint));
+                          span,
+                          trace.getSpan(0),
+                          trace.getSpan(parentIndex),
+                          finalHandlerIndex >= 0 ? trace.getSpan(finalHandlerIndex) : null,
+                          method,
+                          endpoint));
             }
 
             if (options.hasErrorPageSpans.test(endpoint)) {
@@ -788,6 +796,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @CanIgnoreReturnValue
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span,
+      SpanData serverSpan,
       SpanData controllerSpan,
       SpanData handlerSpan,
       String method,
