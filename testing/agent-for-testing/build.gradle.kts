@@ -32,13 +32,13 @@ tasks {
       into("extensions")
     }
 
-    doFirst {
-      manifest.from(
+    manifest.from(
+      providers.provider {
         zipTree(agent.singleFile).matching {
           include("META-INF/MANIFEST.MF")
-        }.singleFile,
-      )
-    }
+        }.singleFile
+      }
+    )
   }
 
   afterEvaluate {
@@ -56,6 +56,6 @@ class JavaagentProvider(
   val agentJar: Provider<RegularFile>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}",
+    "-javaagent:${agentJar.get().asFile.absolutePath}",
   )
 }
