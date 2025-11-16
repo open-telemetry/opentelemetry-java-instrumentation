@@ -26,5 +26,13 @@ final class GenAiAttributes {
     private GenAiProviderNameIncubatingValues() {}
   }
 
+  static final class GenAiOutputTypeIncubatingValues {
+    static final String TEXT = "text";
+
+    static final String JSON = "json";
+
+    private GenAiOutputTypeIncubatingValues() {}
+  }
+
   private GenAiAttributes() {}
 }
