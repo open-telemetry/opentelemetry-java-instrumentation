@@ -12,14 +12,13 @@ public final class HttpSchemeUtil {
 
   private static final Class<? extends ChannelHandler> sslHandlerClass = getSslHandlerClass();
 
-  @SuppressWarnings("unchecked")
   private static Class<? extends ChannelHandler> getSslHandlerClass() {
     try {
-      return (Class<? extends ChannelHandler>)
-          Class.forName(
+      return Class.forName(
               "org.jboss.netty.handler.ssl.SslHandler",
               false,
-              HttpSchemeUtil.class.getClassLoader());
+              HttpSchemeUtil.class.getClassLoader())
+          .asSubclass(ChannelHandler.class);
     } catch (ClassNotFoundException exception) {
       return null;
     }

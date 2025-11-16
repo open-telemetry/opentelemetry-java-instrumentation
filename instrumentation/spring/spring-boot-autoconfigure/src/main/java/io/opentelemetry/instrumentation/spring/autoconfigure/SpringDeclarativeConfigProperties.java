@@ -188,7 +188,6 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
 
   @Nullable
   @Override
-  @SuppressWarnings("unchecked")
   public <T> List<T> getScalarList(String name, Class<T> scalarType) {
     if (!SUPPORTED_SCALAR_TYPES.contains(scalarType)) {
       throw new DeclarativeConfigException(
@@ -201,28 +200,28 @@ final class SpringDeclarativeConfigProperties implements DeclarativeConfigProper
     }
     Object value = simpleEntries.get(name);
     if (value instanceof List) {
-      List<Object> objectList = ((List<Object>) value);
+      List<?> objectList = ((List<?>) value);
       if (objectList.isEmpty()) {
         return Collections.emptyList();
       }
       List<T> result =
-          (List<T>)
-              objectList.stream()
-                  .map(
-                      entry -> {
-                        if (scalarType == String.class) {
-                          return stringOrNull(entry);
-                        } else if (scalarType == Boolean.class) {
-                          return booleanOrNull(entry);
-                        } else if (scalarType == Long.class) {
-                          return longOrNull(entry);
-                        } else if (scalarType == Double.class) {
-                          return doubleOrNull(entry);
-                        }
-                        return null;
-                      })
-                  .filter(Objects::nonNull)
-                  .collect(toList());
+          objectList.stream()
+              .map(
+                  entry -> {
+                    if (scalarType == String.class) {
+                      return stringOrNull(entry);
+                    } else if (scalarType == Boolean.class) {
+                      return booleanOrNull(entry);
+                    } else if (scalarType == Long.class) {
+                      return longOrNull(entry);
+                    } else if (scalarType == Double.class) {
+                      return doubleOrNull(entry);
+                    }
+                    return null;
+                  })
+              .filter(Objects::nonNull)
+              .map(scalarType::cast)
+              .collect(toList());
       if (result.isEmpty()) {
         return null;
       }

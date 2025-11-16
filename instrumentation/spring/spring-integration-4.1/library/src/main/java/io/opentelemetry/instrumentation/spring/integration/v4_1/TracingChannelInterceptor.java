@@ -188,7 +188,7 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   private static void ensureNativeHeadersAreMutable(MessageHeaderAccessor headerAccessor) {
     Object nativeMap = headerAccessor.getHeader(NativeMessageHeaderAccessor.NATIVE_HEADERS);
     if (nativeMap != null && !(nativeMap instanceof LinkedMultiValueMap)) {
-      @SuppressWarnings("unchecked")
+      @SuppressWarnings("unchecked") // cast to actual type
       Map<String, List<String>> map = (Map<String, List<String>>) nativeMap;
       headerAccessor.setHeader(
           NativeMessageHeaderAccessor.NATIVE_HEADERS, new LinkedMultiValueMap<>(map));
