@@ -7,11 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetry;
 import io.opentelemetry.instrumentation.jdbc.datasource.JdbcTelemetryBuilder;
 import io.opentelemetry.instrumentation.jdbc.datasource.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -30,13 +30,13 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
   private static final Class<?> ROUTING_DATA_SOURCE_CLASS = getRoutingDataSourceClass();
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
-  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
+  private final ObjectProvider<InstrumentationConfig> configProvider;
 
   DataSourcePostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<InstrumentationConfig> configProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
-    this.configPropertiesProvider = configPropertiesProvider;
+    this.configProvider = configProvider;
   }
 
   private static Class<?> getRoutingDataSourceClass() {
@@ -59,32 +59,24 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
         && !isRoutingDatasource(bean)
         && !ScopedProxyUtils.isScopedTarget(beanName)) {
       DataSource dataSource = (DataSource) bean;
+      InstrumentationConfig config = configProvider.getObject();
       JdbcTelemetryBuilder builder =
           JdbcTelemetry.builder(openTelemetryProvider.getObject())
               .setStatementSanitizationEnabled(
                   InstrumentationConfigUtil.isStatementSanitizationEnabled(
-                      configPropertiesProvider.getObject(),
-                      "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+                      config, "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
               .setCaptureQueryParameters(
-                  configPropertiesProvider
-                      .getObject()
-                      .getBoolean(
-                          "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
+                  config.getBoolean(
+                      "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))
               .setTransactionInstrumenterEnabled(
-                  configPropertiesProvider
-                      .getObject()
-                      .getBoolean(
-                          "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
+                  config.getBoolean(
+                      "otel.instrumentation.jdbc.experimental.transaction.enabled", false))
               .setDataSourceInstrumenterEnabled(
-                  configPropertiesProvider
-                      .getObject()
-                      .getBoolean(
-                          "otel.instrumentation.jdbc.experimental.datasource.enabled", false));
+                  config.getBoolean(
+                      "otel.instrumentation.jdbc.experimental.datasource.enabled", false));
       Experimental.setEnableSqlCommenter(
           builder,
-          configPropertiesProvider
-              .getObject()
-              .getBoolean("otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false));
+          config.getBoolean("otel.instrumentation.jdbc.experimental.sqlcommenter.enabled", false));
       DataSource otelDataSource = builder.build().wrap(dataSource);
 
       // wrap instrumented data source into a proxy that unwraps to the original data source

@@ -8,7 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -18,8 +19,11 @@ import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.sql.Wrapper;
 import java.util.Collections;
 import javax.sql.DataSource;
@@ -29,11 +33,7 @@ public final class JdbcSingletons {
   private static final Instrumenter<DbRequest, Void> TRANSACTION_INSTRUMENTER;
   public static final Instrumenter<DataSource, DbInfo> DATASOURCE_INSTRUMENTER =
       createDataSourceInstrumenter(GlobalOpenTelemetry.get(), true);
-  private static final boolean SQLCOMMENTER_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
-              AgentCommonConfig.get().isSqlCommenterEnabled());
+  private static final SqlCommenter SQL_COMMENTER = configureSqlCommenter();
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
@@ -102,8 +102,30 @@ public final class JdbcSingletons {
     return false;
   }
 
-  public static String processSql(String sql) {
-    return SQLCOMMENTER_ENABLED ? SqlCommenterUtil.processQuery(sql) : sql;
+  private static SqlCommenter configureSqlCommenter() {
+    SqlCommenterBuilder builder = SqlCommenter.builder();
+    builder.setEnabled(
+        AgentInstrumentationConfig.get()
+            .getBoolean(
+                "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+                AgentCommonConfig.get().isSqlCommenterEnabled()));
+    SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
+    return builder.build();
+  }
+
+  public static String processSql(Statement statement, String sql, boolean executed) {
+    Connection connection;
+    try {
+      connection = statement.getConnection();
+    } catch (SQLException exception) {
+      // connection was already closed
+      return sql;
+    }
+    return processSql(connection, sql, executed);
+  }
+
+  public static String processSql(Connection connection, String sql, boolean executed) {
+    return SQL_COMMENTER.processQuery(connection, sql, executed);
   }
 
   private JdbcSingletons() {}
