@@ -4,6 +4,9 @@ plugins {
 
 description = "smoke-tests-otel-starter-spring-boot-2"
 
+val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
+val springBootVersion = if (testLatestDeps) "2.+" else "2.6.15"
+
 dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
@@ -13,8 +16,7 @@ dependencies {
   implementation("org.springframework.kafka:spring-kafka")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   implementation("org.springframework.boot:spring-boot-starter-aop")
-  val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (testLatestDeps) "2.+" else "2.6.15"))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:$springBootVersion"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
@@ -38,8 +40,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-        implementation("org.springframework.boot:spring-boot-starter-web:2.7.18")
-        implementation("org.springframework.boot:spring-boot-starter-test:2.7.18")
+        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
       }
     }
   }
