@@ -99,11 +99,12 @@ public class ConnectionInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments(@ToArgument(value = 0, index = 0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static Object[] processSql(@Advice.Argument(0) String sql) {
+    public static Object[] processSql(
+        @Advice.This Connection connection, @Advice.Argument(0) String sql) {
       Context context = Java8BytecodeBridge.currentContext();
       if (PrepareContext.get(context) == null) {
         // process sql only in the outermost prepare call and save the original sql in context
-        String processSql = JdbcSingletons.processSql(sql);
+        String processSql = JdbcSingletons.processSql(connection, sql, false);
         Scope scope = PrepareContext.init(context, sql).makeCurrent();
         return new Object[] {processSql, scope};
       } else {
