@@ -38,8 +38,8 @@ testing {
       dependencies {
         implementation(project())
         implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-        implementation("org.springframework.boot:spring-boot-starter-web:2.6.15")
-        implementation("org.springframework.boot:spring-boot-starter-test:2.6.15")
+        implementation("org.springframework.boot:spring-boot-starter-web:2.7.18")
+        implementation("org.springframework.boot:spring-boot-starter-test:2.7.18")
       }
     }
   }
