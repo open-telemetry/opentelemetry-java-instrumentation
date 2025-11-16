@@ -18,7 +18,7 @@ public final class ServiceLoaderUtil {
 
   private ServiceLoaderUtil() {}
 
-  // we loose the generic type information because of using the loader function
+  // we lose the generic type information because of using the loader function
   @SuppressWarnings("unchecked")
   public static <T> Iterable<T> load(Class<T> clazz) {
     return (Iterable<T>) loadFunction.apply(clazz);

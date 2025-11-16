@@ -27,7 +27,7 @@ public final class ClassLoaderValue<T> {
     this.classInjector = classInjector;
   }
 
-  @SuppressWarnings("unchecked") // we loose generic type when storing it in ClassLoaderMap
+  @SuppressWarnings("unchecked") // we lose generic type when storing it in ClassLoaderMap
   public T get(ClassLoader classLoader) {
     return (T) ClassLoaderMap.get(classLoader, classInjector, this);
   }
@@ -36,7 +36,7 @@ public final class ClassLoaderValue<T> {
     ClassLoaderMap.put(classLoader, classInjector, this, value);
   }
 
-  @SuppressWarnings("unchecked") // we loose generic type when storing it in ClassLoaderMap
+  @SuppressWarnings("unchecked") // we lose generic type when storing it in ClassLoaderMap
   public T computeIfAbsent(ClassLoader classLoader, Supplier<? extends T> value) {
     return (T) ClassLoaderMap.computeIfAbsent(classLoader, classInjector, this, value);
   }

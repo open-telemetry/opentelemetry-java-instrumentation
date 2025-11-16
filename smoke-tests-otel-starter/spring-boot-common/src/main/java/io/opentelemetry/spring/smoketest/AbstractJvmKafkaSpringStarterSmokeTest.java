@@ -65,7 +65,7 @@ public class AbstractJvmKafkaSpringStarterSmokeTest extends AbstractKafkaSpringS
                 "spring.kafka.producer.transaction-id-prefix=test-");
   }
 
-  @SuppressWarnings("unchecked") // we loose parameter types for the KafkaTemplate
+  @SuppressWarnings("unchecked") // we lose parameter types for the KafkaTemplate
   @Override
   @Test
   void shouldInstrumentProducerAndConsumer() {

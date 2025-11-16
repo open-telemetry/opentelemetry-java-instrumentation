@@ -53,7 +53,7 @@ public final class JedisRequestContext<T> {
     }
   }
 
-  @SuppressWarnings("unchecked") // we loose the generic type in ThreadLocal
+  @SuppressWarnings("unchecked") // we lose the generic type in ThreadLocal
   private static <T> JedisRequestContext<T> current() {
     return (JedisRequestContext<T>) contextThreadLocal.get();
   }

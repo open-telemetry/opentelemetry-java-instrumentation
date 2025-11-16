@@ -37,11 +37,11 @@ final class TracingServerInterceptor implements ServerInterceptor {
   private static final String SENT = "SENT";
   private static final String RECEIVED = "RECEIVED";
 
-  @SuppressWarnings("rawtypes") // AtomicLongFieldUpdater.newUpdate looses generic type
+  @SuppressWarnings("rawtypes") // AtomicLongFieldUpdater.newUpdate loses generic type
   private static final AtomicLongFieldUpdater<TracingServerCall> SENT_MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "sentMessageId");
 
-  @SuppressWarnings("rawtypes") // AtomicLongFieldUpdater.newUpdate looses generic type
+  @SuppressWarnings("rawtypes") // AtomicLongFieldUpdater.newUpdate loses generic type
   private static final AtomicLongFieldUpdater<TracingServerCall> RECEIVED_MESSAGE_ID_UPDATER =
       AtomicLongFieldUpdater.newUpdater(TracingServerCall.class, "receivedMessageId");
 

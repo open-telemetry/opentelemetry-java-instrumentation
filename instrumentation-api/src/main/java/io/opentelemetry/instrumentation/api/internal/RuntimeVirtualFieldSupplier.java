@@ -51,7 +51,7 @@ public final class RuntimeVirtualFieldSupplier {
         ownerToFieldToImplementationMap = Cache.weak();
 
     @Override
-    // storing VirtualField instances in a map looses the generic types
+    // storing VirtualField instances in a map loses the generic types
     @SuppressWarnings("unchecked")
     public <U extends T, V extends F, T, F> VirtualField<U, V> find(
         Class<T> type, Class<F> fieldType) {

@@ -67,7 +67,7 @@ public class UndertowHelper {
     }
   }
 
-  @SuppressWarnings("unchecked") // we loose type info with attachments
+  @SuppressWarnings("unchecked") // we lose type info with attachments
   @Nullable
   public Context getServerContext(HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
@@ -78,7 +78,7 @@ public class UndertowHelper {
     return exchange.getAttachment(contextKey);
   }
 
-  @SuppressWarnings("unchecked") // we loose type info with attachments
+  @SuppressWarnings("unchecked") // we lose type info with attachments
   private static void attachServerContext(Context context, HttpServerExchange exchange) {
     AttachmentKey<Context> contextKey =
         (AttachmentKey<Context>)
