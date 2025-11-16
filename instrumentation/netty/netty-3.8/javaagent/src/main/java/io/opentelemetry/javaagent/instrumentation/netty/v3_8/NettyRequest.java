@@ -10,10 +10,10 @@ import org.jboss.netty.channel.Channel;
 import org.jboss.netty.handler.codec.http.HttpRequest;
 
 @AutoValue
-public abstract class HttpRequestAndChannel {
+public abstract class NettyRequest {
 
-  public static HttpRequestAndChannel create(HttpRequest request, Channel channel) {
-    return new AutoValue_HttpRequestAndChannel(request, channel);
+  public static NettyRequest create(HttpRequest request, Channel channel) {
+    return new AutoValue_NettyRequest(request, channel);
   }
 
   public abstract HttpRequest request();

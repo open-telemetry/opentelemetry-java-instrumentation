@@ -6,25 +6,22 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 
 import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.propagation.TextMapPropagator;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
-import javax.annotation.Nullable;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
-/**
- * This class is internal and experimental. Its APIs are unstable and can change at any time. Its
- * APIs (or a version of them) may be promoted to the public stable API in the future, but no
- * guarantees are made.
- */
-public final class SqlCommenterUtil {
+final class SqlCommenterUtil {
 
   /**
-   * Append comment containing tracing information at the end of the query. See <a
+   * Append comment containing tracing information to the query. See <a
    * href="https://google.github.io/sqlcommenter/spec/">sqlcommenter</a> for the description of the
    * algorithm.
    */
-  public static String processQuery(String query) {
+  public static String processQuery(String query, TextMapPropagator propagator, boolean prepend) {
     if (!Span.current().getSpanContext().isValid()) {
       return query;
     }
@@ -33,38 +30,41 @@ public final class SqlCommenterUtil {
       return query;
     }
 
-    class State {
-      @Nullable String traceparent;
-      @Nullable String tracestate;
+    Map<String, String> state = new LinkedHashMap<>();
+    propagator.inject(
+        Context.current(),
+        state,
+        (carrier, key, value) -> {
+          if (carrier == null) {
+            return;
+          }
+          carrier.put(key, value);
+        });
+
+    if (state.isEmpty()) {
+      return query;
     }
 
-    State state = new State();
-
-    W3CTraceContextPropagator.getInstance()
-        .inject(
-            Context.current(),
-            state,
-            (carrier, key, value) -> {
-              if (carrier == null) {
-                return;
-              }
-              if ("traceparent".equals(key)) {
-                carrier.traceparent = value;
-              } else if ("tracestate".equals(key)) {
-                carrier.tracestate = value;
-              }
-            });
+    StringBuilder stringBuilder = new StringBuilder("/*");
     try {
-      // we know that the traceparent doesn't contain anything that needs to be encoded
-      query += " /*traceparent='" + state.traceparent + "'";
-      if (state.tracestate != null) {
-        query += ", tracestate=" + serialize(state.tracestate);
+      for (Iterator<Map.Entry<String, String>> iterator = state.entrySet().iterator();
+          iterator.hasNext(); ) {
+        Map.Entry<String, String> entry = iterator.next();
+        stringBuilder
+            .append(serialize(entry.getKey()))
+            .append("='")
+            .append(serialize(entry.getValue()))
+            .append("'");
+        if (iterator.hasNext()) {
+          stringBuilder.append(", ");
+        }
       }
-      query += "*/";
     } catch (UnsupportedEncodingException exception) {
       // this exception should never happen as UTF-8 encoding is always available
     }
-    return query;
+    stringBuilder.append("*/");
+
+    return prepend ? stringBuilder + " " + query : query + " " + stringBuilder;
   }
 
   private static boolean containsSqlComment(String query) {
@@ -72,12 +72,11 @@ public final class SqlCommenterUtil {
   }
 
   private static String serialize(String value) throws UnsupportedEncodingException {
-    // specification requires percent encoding, here we use the java build in url encoder that
+    // specification requires percent encoding, here we use the java built in url encoder that
     // encodes space as '+' instead of '%20' as required
-    String result = URLEncoder.encode(value, "UTF-8").replace("+", "%20");
     // specification requires escaping ' with a backslash, we skip this because URLEncoder already
     // encodes the '
-    return "'" + result + "'";
+    return URLEncoder.encode(value, "UTF-8").replace("+", "%20");
   }
 
   private SqlCommenterUtil() {}

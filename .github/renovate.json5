@@ -160,6 +160,26 @@
       ],
     },
     {
+      // snakeyaml-engine 3+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.snakeyaml:snakeyaml-engine'
+      ],
+    },
+    {
+      // groovy 5+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.apache.groovy:**'
+      ],
+    },
+    {
       // vaadin 14 tests require node 16
       matchPackageNames: [
         'actions/node-versions',
@@ -357,11 +377,11 @@
       datasourceTemplate: 'java-version',
       managerFilePatterns: [
         '.github/workflows/**',
-        '**/*.gradle.kts'
+        '**/*.gradle.kts',
       ],
       matchStrings: [
-        '(?<currentValue>\\d+) # renovate: datasource=java-version',
-        '"(?<currentValue>\\d+)" // renovate: datasource=java-version',
+        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
+        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
       ],
       depNameTemplate: 'java',
       extractVersionTemplate: '^(?<version>\\d+)',
@@ -370,7 +390,7 @@
       customType: 'regex',
       datasourceTemplate: 'pypi',
       managerFilePatterns: [
-        '/^.github/workflows//',
+        '.github/workflows/**',
       ],
       matchStrings: [
         'pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)',
@@ -380,7 +400,7 @@
       customType: 'regex',
       datasourceTemplate: 'npm',
       managerFilePatterns: [
-        '/^.github/workflows//',
+        '.github/workflows/**',
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',

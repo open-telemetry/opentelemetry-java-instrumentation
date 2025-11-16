@@ -4,7 +4,7 @@
 
 ## Apache License, Version 2.0
 
-**1** **Group:** `codes.rafael.asmjdkbridge` **Name:** `asm-jdk-bridge` **Version:** `0.0.12`
+**1** **Group:** `codes.rafael.asmjdkbridge` **Name:** `asm-jdk-bridge` **Version:** `0.0.13`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 
 **2** **Group:** `com.blogspot.mydailyjava` **Name:** `weak-lock-free` **Version:** `0.18`
@@ -235,10 +235,10 @@
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
 > - **Embedded license files**: [zipkin-2.27.1.jar/META-INF/LICENSE](zipkin-2.27.1.jar/META-INF/LICENSE)
 
-**54** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.17.8`
+**54** **Group:** `net.bytebuddy` **Name:** `byte-buddy-dep` **Version:** `1.18.1`
 > - **POM License**: Apache License, Version 2.0 - [https://www.apache.org/licenses/LICENSE-2.0](https://www.apache.org/licenses/LICENSE-2.0)
-> - **Embedded license files**: [byte-buddy-dep-1.17.8.jar/META-INF/LICENSE](byte-buddy-dep-1.17.8.jar/META-INF/LICENSE)
-    - [byte-buddy-dep-1.17.8.jar/META-INF/NOTICE](byte-buddy-dep-1.17.8.jar/META-INF/NOTICE)
+> - **Embedded license files**: [byte-buddy-dep-1.18.1.jar/META-INF/LICENSE](byte-buddy-dep-1.18.1.jar/META-INF/LICENSE)
+    - [byte-buddy-dep-1.18.1.jar/META-INF/NOTICE](byte-buddy-dep-1.18.1.jar/META-INF/NOTICE)
 
 **55** **Group:** `org.jetbrains` **Name:** `annotations` **Version:** `13.0`
 > - **POM Project URL**: [http://www.jetbrains.org](http://www.jetbrains.org)
