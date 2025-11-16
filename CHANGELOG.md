@@ -2,6 +2,86 @@
 
 ## Unreleased
 
+### ⚠️ Breaking Changes
+
+- AWS SDK 2.x attributes updated to align with semantic conventions
+  ([#15028](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15028))
+  - The following DynamoDB attributes have been renamed:
+    - `aws.dynamodb.provisioned_throughput.read_capacity_units` → `aws.dynamodb.provisioned_read_capacity` (type changed from long to double)
+    - `aws.dynamodb.provisioned_throughput.write_capacity_units` → `aws.dynamodb.provisioned_write_capacity` (type changed from long to double)
+    - `aws.dynamodb.exclusive_start_table_name` → `aws.dynamodb.exclusive_start_table`
+    - `aws.dynamodb.projection_expression` → `aws.dynamodb.projection`
+    - `aws.dynamodb.scan_index_forward` → `aws.dynamodb.scan_forward`
+  - The following attributes are no longer emitted by default but can be enabled with
+    `otel.instrumentation.aws-sdk.experimental-span-attributes=true`:
+    - `aws.queue.name` (SQS)
+    - `aws.lambda.function.name` (Lambda)
+    - `aws.lambda.function.arn` (Lambda)
+- JDBC library data source instrumentation now disabled by default
+  ([#15074](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15074))
+- JMX state metrics unit changed from empty string to `1` to align with semantic conventions
+  ([#15093](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15093))
+- AWS SDK 1.x attributes updated to align with semantic conventions
+  ([#15094](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15094))
+  - Only affects users with `otel.instrumentation.aws-sdk.experimental-span-attributes=true`
+  - The following attributes have been renamed and are now emitted by default (no experimental flag required):
+    - `aws.bucket.name` (S3) → `aws.s3.bucket`
+    - `aws.queue.url` (SQS) → `aws.sqs.queue.url`
+    - `aws.stream.name` (Kinesis) → `aws.kinesis.stream_name`
+    - `aws.table.name` (DynamoDB) → `aws.dynamodb.table_names`
+- Finatra controller spans now disabled by default
+  ([#15118](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15118))
+- Netty HTTP request wrapper class renamed from HttpRequestAndChannel to NettyRequest
+  ([#15247](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15247))
+
+### 🚫 Deprecations
+
+- TracingConsumerInterceptor and TracingProducerInterceptor deprecated in favor of new configurable interceptors
+  ([#14929](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14929))
+- Various builder methods updated to use UnaryOperator<X> instead of Function<X, X>
+  ([#15101](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15101))
+- DbClientCommonAttributesGetter deprecated in favor of DbClientAttributesGetter
+  ([#15139](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15139))
+
+### 📈 Enhancements
+
+- Avoid Unsafe usage on Java 23+
+  ([#14855](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14855),
+   [#15091](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15091))
+- Update Azure SDK instrumentation so `az.namespace` can be used for sampling
+  ([#15068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15068))
+- Spring Boot Starter: OpenTelemetry SDK bean now overridable with cached environment variable lookups
+  ([#15132](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15132))
+- HTTP instrumentations now emit semantic convention schema URL
+  ([#15144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15144))
+- Added instrumentation support for AsyncHttpClient version 1.8
+  ([#15195](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15195))
+- Instrumenter customizer now receives instrumentation type
+  ([#15227](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15227))
+- Added support for Spring Framework 7.0
+  ([#15287](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15287),
+   [#15299](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15299),
+   [#15301](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15301),
+   [#15304](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15304),
+   [#15311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15311))
+- Added span status customizer to incubating InstrumenterCustomizer API
+  ([#15288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15288))
+
+### 🛠️ Bug fixes
+
+- Fix missing `peer.service` in Netty HTTP spans
+  ([#14963](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14963))
+- Fix Couchbase span kind to be `CLIENT` instead of `INTERNAL`
+  ([#14995](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14995))
+- Link attributes are now bridged to the Java agent when using OpenTelemetry API
+  ([#15143](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15143))
+- Potential race condition in JFR runtime metrics initialization fixed
+  ([#15231](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15231))
+- Regression fixed related to context propagation when using Spring `@EnableAsync`
+  ([#15249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15249))
+- Declarative configuration now uses snake_case for distro resource provider attribute name
+  ([#15260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15260))
+
 ## Version 2.21.0 (2025-10-17)
 
 ## ⚠️ Breaking Changes
