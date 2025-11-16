@@ -50,7 +50,7 @@
    [#15091](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15091))
 - Update Azure SDK instrumentation so `az.namespace` can be used for sampling
   ([#15068](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15068))
-- Spring Boot Starter: OpenTelemetry SDK bean now overridable with cached environment variable lookups
+- Spring Boot Starter: Add cache to reduce environment variable lookups
   ([#15132](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15132))
 - HTTP instrumentations now emit semantic convention schema URL
   ([#15144](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15144))
