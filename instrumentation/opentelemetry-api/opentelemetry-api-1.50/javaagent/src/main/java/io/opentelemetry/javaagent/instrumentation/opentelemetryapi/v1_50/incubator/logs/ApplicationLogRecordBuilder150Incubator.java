@@ -137,10 +137,7 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
     return this;
   }
 
-  @SuppressWarnings({
-    "unchecked",
-    "rawtypes"
-  }) // converting ExtendedAttributeKey loses generic type
+  @SuppressWarnings({"unchecked", "rawtypes"}) // converting ExtendedAttributeKey loses generic type
   private static io.opentelemetry.api.incubator.common.ExtendedAttributes convertExtendedAttributes(
       ExtendedAttributes applicationAttributes) {
     io.opentelemetry.api.incubator.common.ExtendedAttributesBuilder agentAttributes =
