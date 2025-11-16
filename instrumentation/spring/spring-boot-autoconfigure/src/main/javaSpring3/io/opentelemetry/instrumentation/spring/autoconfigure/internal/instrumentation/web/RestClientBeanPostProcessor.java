@@ -6,10 +6,10 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.web.v3_1.SpringWebTelemetry;
 import io.opentelemetry.instrumentation.spring.web.v3_1.internal.WebTelemetryUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.http.client.ClientHttpRequestInterceptor;
@@ -18,26 +18,26 @@ import org.springframework.web.client.RestClient;
 final class RestClientBeanPostProcessor implements BeanPostProcessor {
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
-  private final ObjectProvider<ConfigProperties> configPropertiesProvider;
+  private final ObjectProvider<InstrumentationConfig> configProvider;
 
   public RestClientBeanPostProcessor(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
-      ObjectProvider<ConfigProperties> configPropertiesProvider) {
+      ObjectProvider<InstrumentationConfig> configProvider) {
     this.openTelemetryProvider = openTelemetryProvider;
-    this.configPropertiesProvider = configPropertiesProvider;
+    this.configProvider = configProvider;
   }
 
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof RestClient restClient) {
       return addRestClientInterceptorIfNotPresent(
-          restClient, openTelemetryProvider.getObject(), configPropertiesProvider.getObject());
+          restClient, openTelemetryProvider.getObject(), configProvider.getObject());
     }
     return bean;
   }
 
   private static RestClient addRestClientInterceptorIfNotPresent(
-      RestClient restClient, OpenTelemetry openTelemetry, ConfigProperties config) {
+      RestClient restClient, OpenTelemetry openTelemetry, InstrumentationConfig config) {
     ClientHttpRequestInterceptor instrumentationInterceptor = getInterceptor(openTelemetry, config);
 
     return restClient
@@ -55,7 +55,7 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
   }
 
   static ClientHttpRequestInterceptor getInterceptor(
-      OpenTelemetry openTelemetry, ConfigProperties config) {
+      OpenTelemetry openTelemetry, InstrumentationConfig config) {
     return InstrumentationConfigUtil.configureClientBuilder(
             config,
             SpringWebTelemetry.builder(openTelemetry),

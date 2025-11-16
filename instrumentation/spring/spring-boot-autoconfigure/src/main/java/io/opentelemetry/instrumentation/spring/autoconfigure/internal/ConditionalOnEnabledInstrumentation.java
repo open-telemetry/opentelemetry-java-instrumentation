@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Conditional;
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 @ConditionalOnBean(OpenTelemetry.class)
-@Conditional({SdkEnabled.class, InstrumentationPropertyEnabled.class})
+@Conditional({OtelEnabled.class, InstrumentationPropertyEnabled.class})
 public @interface ConditionalOnEnabledInstrumentation {
   String module();
 
