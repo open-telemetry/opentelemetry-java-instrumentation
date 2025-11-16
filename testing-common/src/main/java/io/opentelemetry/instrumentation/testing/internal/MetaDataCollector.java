@@ -5,22 +5,27 @@
 
 package io.opentelemetry.instrumentation.testing.internal;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import io.opentelemetry.api.common.AttributeType;
 import io.opentelemetry.api.internal.InternalAttributeKeyImpl;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import java.io.BufferedWriter;
+import io.opentelemetry.testing.internal.jackson.annotation.JsonProperty;
+import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLFactory;
+import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLGenerator;
+import io.opentelemetry.testing.internal.jackson.dataformat.yaml.YAMLMapper;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,9 +39,19 @@ import java.util.regex.Pattern;
  */
 public final class MetaDataCollector {
 
+  private static final Logger logger = Logger.getLogger(MetaDataCollector.class.getName());
+
   private static final String TMP_DIR = ".telemetry";
   private static final Pattern MODULE_PATTERN =
       Pattern.compile("(.*?/instrumentation/.*?)(/javaagent|/library|/testing)");
+
+  private static final YAMLMapper YAML =
+      YAMLMapper.builder(
+              YAMLFactory.builder()
+                  .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                  .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                  .build())
+          .build();
 
   public static void writeTelemetryToFiles(
       String path,
@@ -85,53 +100,53 @@ public final class MetaDataCollector {
     Path spansPath =
         Paths.get(instrumentationPath, TMP_DIR, "spans-" + UUID.randomUUID() + ".yaml");
 
-    try (BufferedWriter writer = Files.newBufferedWriter(spansPath.toFile().toPath(), UTF_8)) {
-      String config = System.getProperty("metadataConfig");
-      String when = "default";
-      if (config != null && !config.isEmpty()) {
-        when = config;
+    String config = System.getProperty("metadataConfig");
+    String when = (config != null && !config.isEmpty()) ? config : "default";
+
+    SpanData spanData = new SpanData();
+    spanData.when = when;
+    spanData.spansByScope = new ArrayList<>();
+
+    for (Map.Entry<
+            InstrumentationScopeInfo,
+            Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
+        entry : spansByScopeAndKind.entrySet()) {
+      InstrumentationScopeInfo scope = entry.getKey();
+      Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> spansByKind = entry.getValue();
+
+      ScopeSpans scopeSpans = new ScopeSpans();
+      scopeSpans.scope = scope.getName();
+      scopeSpans.spans = new ArrayList<>();
+
+      for (Map.Entry<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> kindEntry :
+          spansByKind.entrySet()) {
+        SpanKind spanKind = kindEntry.getKey();
+        Map<InternalAttributeKeyImpl<?>, AttributeType> attributes = kindEntry.getValue();
+
+        Span span = new Span();
+        span.spanKind = spanKind.toString();
+        span.attributes = new ArrayList<>();
+
+        attributes.forEach(
+            (key, value) -> {
+              AttributeInfo attr = new AttributeInfo();
+              attr.name = key.getKey();
+              attr.type = key.getType().toString();
+              span.attributes.add(attr);
+            });
+
+        scopeSpans.spans.add(span);
       }
 
-      writer.write("when: " + when + "\n");
-
-      writer.write("spans_by_scope:\n");
-
-      for (Map.Entry<
-              InstrumentationScopeInfo,
-              Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>>>
-          entry : spansByScopeAndKind.entrySet()) {
-        InstrumentationScopeInfo scope = entry.getKey();
-        Map<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> spansByKind =
-            entry.getValue();
-
-        writer.write("  - scope: " + scope.getName() + "\n");
-        writer.write("    spans:\n");
-
-        for (Map.Entry<SpanKind, Map<InternalAttributeKeyImpl<?>, AttributeType>> kindEntry :
-            spansByKind.entrySet()) {
-          SpanKind spanKind = kindEntry.getKey();
-          Map<InternalAttributeKeyImpl<?>, AttributeType> attributes = kindEntry.getValue();
-
-          writer.write("      - span_kind: " + spanKind.toString() + "\n");
-          writer.write("        attributes:\n");
-          attributes.forEach(
-              (key, value) -> {
-                try {
-                  writer.write("          - name: " + key.getKey() + "\n");
-                  writer.write("            type: " + key.getType().toString() + "\n");
-                } catch (IOException e) {
-                  throw new IllegalStateException(e);
-                }
-              });
-        }
-      }
+      spanData.spansByScope.add(scopeSpans);
     }
+
+    YAML.writeValue(spansPath.toFile(), spanData);
   }
 
   private static void writeMetricData(
       String instrumentationPath,
-      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope)
-      throws IOException {
+      Map<InstrumentationScopeInfo, Map<String, MetricData>> metricsByScope) {
 
     if (metricsByScope.isEmpty()) {
       return;
@@ -140,46 +155,54 @@ public final class MetaDataCollector {
     Path metricsPath =
         Paths.get(instrumentationPath, TMP_DIR, "metrics-" + UUID.randomUUID() + ".yaml");
 
-    try (BufferedWriter writer = Files.newBufferedWriter(metricsPath.toFile().toPath(), UTF_8)) {
+    try {
       String config = System.getProperty("metadataConfig");
-      String when = "default";
-      if (config != null && !config.isEmpty()) {
-        when = config;
-      }
+      String when = (config != null && !config.isEmpty()) ? config : "default";
 
-      writer.write("when: " + when + "\n");
-
-      writer.write("metrics_by_scope:\n");
+      MetricsData metricsData = new MetricsData();
+      metricsData.when = when;
+      metricsData.metricsByScope = new ArrayList<>();
 
       for (Map.Entry<InstrumentationScopeInfo, Map<String, MetricData>> entry :
           metricsByScope.entrySet()) {
         InstrumentationScopeInfo scope = entry.getKey();
         Map<String, MetricData> metrics = entry.getValue();
 
-        writer.write("  - scope: " + scope.getName() + "\n");
-        writer.write("    metrics:\n");
+        ScopeMetrics scopeMetrics = new ScopeMetrics();
+        scopeMetrics.scope = scope.getName();
+        scopeMetrics.metrics = new ArrayList<>();
 
         for (MetricData metric : metrics.values()) {
-          writer.write("      - name: " + metric.getName() + "\n");
-          writer.write("        description: " + metric.getDescription() + "\n");
-          writer.write("        type: " + metric.getType().toString() + "\n");
-          writer.write("        unit: " + sanitizeUnit(metric.getUnit()) + "\n");
-          writer.write("        attributes: \n");
+          Metric metricInfo = new Metric();
+          metricInfo.name = metric.getName();
+          metricInfo.description = metric.getDescription();
+          metricInfo.type = metric.getType().toString();
+          metricInfo.unit = sanitizeUnit(metric.getUnit());
+          metricInfo.attributes = new ArrayList<>();
+
           metric.getData().getPoints().stream()
               .findFirst()
-              .get()
-              .getAttributes()
-              .forEach(
-                  (key, value) -> {
-                    try {
-                      writer.write("          - name: " + key.getKey() + "\n");
-                      writer.write("            type: " + key.getType().toString() + "\n");
-                    } catch (IOException e) {
-                      throw new IllegalStateException(e);
-                    }
-                  });
+              .ifPresent(
+                  point ->
+                      point
+                          .getAttributes()
+                          .forEach(
+                              (key, value) -> {
+                                AttributeInfo attr = new AttributeInfo();
+                                attr.name = key.getKey();
+                                attr.type = key.getType().toString();
+                                metricInfo.attributes.add(attr);
+                              }));
+
+          scopeMetrics.metrics.add(metricInfo);
         }
+
+        metricsData.metricsByScope.add(scopeMetrics);
       }
+
+      YAML.writeValue(metricsPath.toFile(), metricsData);
+    } catch (Exception e) {
+      logger.warning("Failed to write metric data: " + e.getMessage());
     }
   }
 
@@ -193,27 +216,27 @@ public final class MetaDataCollector {
 
     Path outputPath =
         Paths.get(instrumentationPath, TMP_DIR, "scope-" + UUID.randomUUID() + ".yaml");
-    try (BufferedWriter writer = Files.newBufferedWriter(outputPath.toFile().toPath(), UTF_8)) {
-      writer.write("scopes:\n");
-      for (InstrumentationScopeInfo scope : instrumentationScopes) {
-        writer.write("  - name: " + scope.getName() + "\n");
-        writer.write("    version: " + scope.getVersion() + "\n");
-        writer.write("    schemaUrl: " + scope.getSchemaUrl() + "\n");
-        if (scope.getAttributes() != null && !scope.getAttributes().isEmpty()) {
-          writer.write("    attributes:\n");
-          scope
-              .getAttributes()
-              .forEach(
-                  (key, value) -> {
-                    try {
-                      writer.write("        " + key + ": " + value + "\n");
-                    } catch (IOException e) {
-                      throw new IllegalStateException(e);
-                    }
-                  });
-        }
+
+    ScopesData scopesData = new ScopesData();
+    scopesData.scopes = new ArrayList<>();
+
+    for (InstrumentationScopeInfo scope : instrumentationScopes) {
+      ScopeInfo scopeInfo = new ScopeInfo();
+      scopeInfo.name = scope.getName();
+      scopeInfo.version = scope.getVersion();
+      scopeInfo.schemaUrl = scope.getSchemaUrl();
+
+      if (scope.getAttributes() != null && !scope.getAttributes().isEmpty()) {
+        scopeInfo.attributes = new LinkedHashMap<>();
+        scope
+            .getAttributes()
+            .forEach((key, value) -> scopeInfo.attributes.put(key.getKey(), value.toString()));
       }
+
+      scopesData.scopes.add(scopeInfo);
     }
+
+    YAML.writeValue(outputPath.toFile(), scopesData);
   }
 
   private static String sanitizeUnit(String unit) {
@@ -221,4 +244,59 @@ public final class MetaDataCollector {
   }
 
   private MetaDataCollector() {}
+
+  static class SpanData {
+    public String when;
+
+    @JsonProperty("spans_by_scope")
+    public List<ScopeSpans> spansByScope;
+  }
+
+  static class ScopeSpans {
+    public String scope;
+    public List<Span> spans;
+  }
+
+  static class Span {
+    @JsonProperty("span_kind")
+    public String spanKind;
+
+    public List<AttributeInfo> attributes;
+  }
+
+  static class MetricsData {
+    public String when;
+
+    @JsonProperty("metrics_by_scope")
+    public List<ScopeMetrics> metricsByScope;
+  }
+
+  static class ScopeMetrics {
+    public String scope;
+    public List<Metric> metrics;
+  }
+
+  static class Metric {
+    public String name;
+    public String description;
+    public String type;
+    public String unit;
+    public List<AttributeInfo> attributes;
+  }
+
+  static class ScopesData {
+    public List<ScopeInfo> scopes;
+  }
+
+  static class ScopeInfo {
+    public String name;
+    public String version;
+    public String schemaUrl;
+    public Map<String, String> attributes;
+  }
+
+  static class AttributeInfo {
+    public String name;
+    public String type;
+  }
 }
