@@ -79,7 +79,7 @@ public final class TestAgentListenerAccess {
     }
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting MethodHandle.invokeExact result
   public static List<String> getIgnoredButTransformedClassNames() {
     try {
       return (List<String>) getIgnoredButTransformedClassNames.invokeExact();

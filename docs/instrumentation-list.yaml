@@ -6942,6 +6942,52 @@ libraries:
           type: STRING
         - name: messaging.system
           type: STRING
+    - when: otel.instrumentation.kafka.experimental-span-attributes=true
+      spans:
+      - span_kind: CONSUMER
+        attributes:
+        - name: kafka.record.queue_time_ms
+          type: LONG
+        - name: messaging.batch.message_count
+          type: LONG
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.consumer.group
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.kafka.message.tombstone
+          type: BOOLEAN
+        - name: messaging.message.body.size
+          type: LONG
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
+      - span_kind: PRODUCER
+        attributes:
+        - name: messaging.client_id
+          type: STRING
+        - name: messaging.destination.name
+          type: STRING
+        - name: messaging.destination.partition.id
+          type: STRING
+        - name: messaging.kafka.message.key
+          type: STRING
+        - name: messaging.kafka.message.offset
+          type: LONG
+        - name: messaging.kafka.message.tombstone
+          type: BOOLEAN
+        - name: messaging.operation
+          type: STRING
+        - name: messaging.system
+          type: STRING
   - name: kafka-clients-2.6
     display_name: Apache Kafka Client
     description: This standalone instrumentation enables messaging spans for Kafka
