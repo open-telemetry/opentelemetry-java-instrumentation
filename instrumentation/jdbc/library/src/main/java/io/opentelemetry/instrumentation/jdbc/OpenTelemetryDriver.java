@@ -63,14 +63,16 @@ public final class OpenTelemetryDriver implements Driver {
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
-  private static final SqlCommenter sqlCommenter =
-      SqlCommenter.builder()
-          .setEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
-                  ConfigPropertiesUtil.getBoolean(
-                      "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false)))
-          .build();
+  private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
+    boolean defaultValue =
+        ConfigPropertiesUtil.getBoolean(
+            openTelemetry, false, "common", "experimental", "db_sqlcommenter", "enabled");
+    return SqlCommenter.builder()
+        .setEnabled(
+            ConfigPropertiesUtil.getBoolean(
+                openTelemetry, defaultValue, "jdbc", "experimental", "sqlcommenter", "enabled"))
+        .build();
+  }
 
   static {
     try {
@@ -256,7 +258,7 @@ public final class OpenTelemetryDriver implements Driver {
     Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
 
-    boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters();
+    boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters(openTelemetry);
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
 
@@ -266,7 +268,7 @@ public final class OpenTelemetryDriver implements Driver {
         statementInstrumenter,
         transactionInstrumenter,
         captureQueryParameters,
-        sqlCommenter);
+        getSqlCommenter(openTelemetry));
   }
 
   @Override
