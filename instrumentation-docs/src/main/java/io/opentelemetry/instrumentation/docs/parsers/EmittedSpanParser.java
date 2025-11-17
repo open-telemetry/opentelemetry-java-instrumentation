@@ -64,7 +64,8 @@ public class EmittedSpanParser {
                   }
                 });
       } catch (IOException e) {
-        logger.severe("Error reading span files: " + e.getMessage());
+        logger.severe(
+            "Error reading span files from " + instrumentationDirectory + ": " + e.getMessage());
       }
     }
 
