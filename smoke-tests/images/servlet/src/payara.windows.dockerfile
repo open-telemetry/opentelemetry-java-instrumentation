@@ -9,7 +9,7 @@ RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPat
 RUN ["powershell", "-Command", "Get-ChildItem -Path /server/ -filter payara* | Rename-Item -NewName payara"]
 RUN ["powershell", "-Command", "remove-item -Path /server/payara/glassfish/modules/phonehome-bootstrap.jar"]
 
-FROM ${jdkImage}-windowsservercore-ltsc2022
+FROM ${jdkImage}
 
 # Make /server the base directory to simplify all further paths
 COPY --from=builder /server/payara /server

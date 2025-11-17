@@ -8,7 +8,7 @@ ARG baseDownloadUrl
 ADD ${baseDownloadUrl}.zip /server.zip
 RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPath /server"]
 
-FROM ${jdkImage}-windowsservercore-ltsc2022
+FROM ${jdkImage}
 ARG version
 
 # Make /server the base directory to simplify all further paths
