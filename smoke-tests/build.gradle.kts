@@ -18,7 +18,7 @@ dependencies {
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.76.0"))
+  implementation(platform("io.grpc:grpc-bom:1.76.1"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
