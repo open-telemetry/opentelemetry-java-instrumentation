@@ -28,14 +28,14 @@ import javax.sql.DataSource;
 public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
-  public static boolean captureQueryParameters() {
+  public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return ConfigPropertiesUtil.getBoolean(
-        "otel.instrumentation.jdbc.experimental.capture-query-parameters", false);
+        openTelemetry, false, "jdbc", "experimental", "capture_query_parameters");
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
       OpenTelemetry openTelemetry) {
-    return createStatementInstrumenter(openTelemetry, captureQueryParameters());
+    return createStatementInstrumenter(openTelemetry, captureQueryParameters(openTelemetry));
   }
 
   static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -45,7 +45,7 @@ public final class JdbcInstrumenterFactory {
         emptyList(),
         true,
         ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.common.db-statement-sanitizer.enabled", true),
+            openTelemetry, true, "common", "db_statement_sanitizer", "enabled"),
         captureQueryParameters);
   }
 
@@ -95,7 +95,7 @@ public final class JdbcInstrumenterFactory {
     return createTransactionInstrumenter(
         openTelemetry,
         ConfigPropertiesUtil.getBoolean(
-            "otel.instrumentation.jdbc.experimental.transaction.enabled", false));
+            openTelemetry, false, "jdbc", "experimental", "transaction", "enabled"));
   }
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(
