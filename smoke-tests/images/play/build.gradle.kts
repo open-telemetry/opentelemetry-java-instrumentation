@@ -8,7 +8,7 @@ plugins {
   id("otel.spotless-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.playframework.play") version "3.1.0-M4"
+  id("org.playframework.play") version "3.1.0-M5-f2e2a79f-SNAPSHOT"
 }
 
 play {
