@@ -289,7 +289,7 @@
       enabled: false,
     },
     {
-      // intentionally using Java 11 in some examples
+      // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
       ],
@@ -377,6 +377,17 @@
       ],
       depNameTemplate: 'java',
       extractVersionTemplate: '^(?<version>\\d+)',
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '**/build.gradle.kts',
+      ],
+      matchStrings: [
+        '"(?<depName>eclipse-temurin):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+        '"(?<depName>ibm-semeru-runtimes):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+      ],
     },
     {
       customType: 'regex',
