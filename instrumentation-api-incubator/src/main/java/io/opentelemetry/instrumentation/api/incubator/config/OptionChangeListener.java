@@ -10,8 +10,8 @@ import javax.annotation.Nullable;
 /**
  * Listener interface for option value changes.
  *
- * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
  */
 public interface OptionChangeListener {
 
