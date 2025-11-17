@@ -409,13 +409,13 @@ final class ChatCompletionEventsHelper {
     }
 
     @Nullable
-    @SuppressWarnings("unchecked")
     static FunctionAccess create(ChatCompletionMessageToolCall toolCall) {
       if (functionToolCallHandle == null || functionHandle == null) {
         return null;
       }
 
       try {
+        @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
         Optional<Object> optional = (Optional<Object>) functionToolCallHandle.invoke(toolCall);
         if (!optional.isPresent()) {
           return null;

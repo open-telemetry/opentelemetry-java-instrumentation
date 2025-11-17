@@ -67,14 +67,14 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
 
   @Override
   public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> values = request.getHeaders(name);
     return values == null ? Collections.emptyList() : Collections.list(values);
   }
 
   @Override
   public Iterable<String> getRequestHeaderNames(HttpServletRequest httpServletRequest) {
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> names = httpServletRequest.getHeaderNames();
     return Collections.list(names);
   }

@@ -32,14 +32,14 @@ public final class OtelCommandArgsUtil {
     return result;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
+  @SuppressWarnings("unchecked") // type is checked before casting
   private static String getArgValue(StringCodec stringCodec, SingularArgument argument) {
     if (argument instanceof KeyArgument) {
-      KeyArgument keyArg = (KeyArgument) argument;
+      KeyArgument<Object, ?> keyArg = (KeyArgument<Object, ?>) argument;
       return stringCodec.decodeKey(keyArg.codec.encodeKey(keyArg.key));
     }
     if (argument instanceof ValueArgument) {
-      ValueArgument valueArg = (ValueArgument) argument;
+      ValueArgument<?, Object> valueArg = (ValueArgument<?, Object>) argument;
       return stringCodec.decodeValue(valueArg.codec.encodeValue(valueArg.val));
     }
     return argument.toString();
