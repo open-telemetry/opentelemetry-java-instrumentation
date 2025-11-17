@@ -27,6 +27,7 @@ class SpanLoggingCustomizerProviderTest {
     "invalid, false, false",
     "true, true, true",
   })
+  @SuppressWarnings("StringConcatToTextBlock") // latest dep allows text blocks
   void addSpanLoggingExporter(String propertyValue, boolean alreadyAdded, boolean expected) {
     String debug =
         propertyValue == null
