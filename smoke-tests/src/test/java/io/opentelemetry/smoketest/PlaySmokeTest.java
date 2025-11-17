@@ -22,14 +22,14 @@ class PlaySmokeTest extends AbstractSmokeTest<Integer> {
         .image(
             jdk ->
                 String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-20251009.18389598601",
-                    jdk))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-play:jdk%s-%s",
+                    jdk, ImageVersions.PLAY_VERSION))
         .waitStrategy(
             new TargetWaitStrategy.Log(java.time.Duration.ofMinutes(1), ".*Listening for HTTP.*"));
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {8, 11, 17, 21, 25})
+  @ValueSource(ints = {17, 21, 25})
   void playSmokeTest(int jdk) {
     start(jdk);
 
