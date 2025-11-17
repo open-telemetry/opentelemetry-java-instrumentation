@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
@@ -14,8 +16,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -40,9 +40,12 @@ public final class ConfigPropertiesUtil {
   }
 
   /**
-   * @deprecated use {@link #getBoolean(OpenTelemetry, boolean, String...)} instead
+   * Returns the boolean value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link #getBoolean(OpenTelemetry, boolean, String...)} instead to
+   * support Declarative Config.
    */
-  @Deprecated
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
     String strValue = getString(propertyName);
     return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
@@ -54,7 +57,6 @@ public final class ConfigPropertiesUtil {
    */
   public static boolean getBoolean(
       OpenTelemetry openTelemetry, boolean defaultValue, String... propertyName) {
-
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
     if (node != null) {
       return node.getBoolean(propertyName[propertyName.length - 1], defaultValue);
@@ -127,8 +129,9 @@ public final class ConfigPropertiesUtil {
     return null;
   }
 
-  private static String toSystemProperty(String[] propertyName) {
-    return String.join(".", propertyName).replace('_', '-');
+  // Visible for testing
+  static String toSystemProperty(String[] propertyName) {
+    return "otel.instrumentation." + String.join(".", propertyName).replace('_', '-');
   }
 
   private ConfigPropertiesUtil() {}
