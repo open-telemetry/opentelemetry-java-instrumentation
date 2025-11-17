@@ -59,4 +59,11 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
         Boolean.getBoolean("testLatestDeps") ? 500 : 200);
     options.setExpectedException(new RuntimeException(EXCEPTION.getBody()));
   }
+
+  @Override
+  protected boolean shouldTestDeferredResult() {
+    // older versions of Spring Boot don't properly propagate context to async calls,
+    // resulting in a separate trace instead of a single trace
+    return Boolean.getBoolean("testLatestDeps");
+  }
 }

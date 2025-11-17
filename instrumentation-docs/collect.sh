@@ -134,6 +134,25 @@ run_gradle_tasks() {
     --rerun-tasks --continue --no-parallel
 }
 
+run_gradle_tasks_with_latest_deps() {
+  local -a tasks=("$@")
+
+  if [[ ${#tasks[@]} -eq 0 ]]; then
+    echo "No tasks to run"
+    return 0
+  fi
+
+  echo
+  echo "Running Gradle tasks with -PtestLatestDeps=true:"
+  printf '    %s\n' "${tasks[@]}"
+  echo
+
+  ./gradlew "${tasks[@]}" \
+    -PcollectMetadata=true \
+    -PtestLatestDeps=true \
+    --rerun-tasks --continue --no-parallel
+}
+
 # Cleans any stray .telemetry directories left in the repo.
 find_and_remove_all_telemetry() {
   echo "Removing stray .telemetry directories..."
@@ -152,6 +171,14 @@ main() {
     gradle_tasks+=("$line")
   done < <(process_descriptors "${INSTRUMENTATIONS[@]}")
   run_gradle_tasks "${gradle_tasks[@]}"
+
+  # Process instrumentations requiring testLatestDeps
+  echo "Processing instrumentations with -PtestLatestDeps=true..."
+  gradle_tasks=()
+  while IFS= read -r line; do
+    gradle_tasks+=("$line")
+  done < <(process_descriptors "${TEST_LATEST_DEPS_INSTRUMENTATIONS[@]}")
+  run_gradle_tasks_with_latest_deps "${gradle_tasks[@]}"
 
   # Setup colima if needed
   setup_colima

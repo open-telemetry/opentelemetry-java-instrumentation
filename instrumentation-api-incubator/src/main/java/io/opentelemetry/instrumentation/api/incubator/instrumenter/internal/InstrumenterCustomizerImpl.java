@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashMap;
@@ -85,6 +86,13 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   public InstrumenterCustomizer setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<?>> spanNameExtractor) {
     customizer.setSpanNameExtractor(spanNameExtractor);
+    return this;
+  }
+
+  @Override
+  public InstrumenterCustomizer setSpanStatusExtractor(
+      UnaryOperator<SpanStatusExtractor<?, ?>> spanStatusExtractor) {
+    customizer.setSpanStatusExtractor(spanStatusExtractor);
     return this;
   }
 }

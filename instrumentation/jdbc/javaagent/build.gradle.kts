@@ -63,11 +63,17 @@ tasks {
   }
 
   val testSqlCommenter by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     filter {
       includeTestsMatching("SqlCommenterTest")
     }
     include("**/SqlCommenterTest.*")
-    jvmArgs("-Dotel.instrumentation.jdbc.experimental.sqlcommenter.enabled=true")
+    // This property is read in TestAgentSqlCommenterCustomizer, we use it instead of the
+    // otel.instrumentation.jdbc.experimental.sqlcommenter.enabled to test that the
+    // SqlCommenterCustomizer is run.
+    jvmArgs("-Dotel.testing.sqlcommenter.enabled=true")
   }
 
   val testStableSemconv by registering(Test::class) {

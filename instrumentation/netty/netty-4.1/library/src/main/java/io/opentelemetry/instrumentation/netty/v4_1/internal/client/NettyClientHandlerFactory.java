@@ -10,7 +10,7 @@ import io.netty.channel.ChannelOutboundHandlerAdapter;
 import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 
 /**
@@ -19,11 +19,11 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler
  */
 public class NettyClientHandlerFactory {
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Instrumenter<NettyRequest, HttpResponse> instrumenter;
   private final ProtocolEventHandler protocolEventHandler;
 
   public NettyClientHandlerFactory(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      Instrumenter<NettyRequest, HttpResponse> instrumenter,
       boolean emitExperimentalHttpClientEvents) {
     this.instrumenter = instrumenter;
     this.protocolEventHandler =
