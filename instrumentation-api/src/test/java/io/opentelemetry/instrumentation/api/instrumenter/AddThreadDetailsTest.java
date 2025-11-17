@@ -85,6 +85,8 @@ class AddThreadDetailsTest {
                         .withJava(
                             new ExperimentalLanguageSpecificInstrumentationModel()
                                 .withAdditionalProperty(
-                                    "thread_details", singletonMap("enabled", enabled)))));
+                                    "common",
+                                    singletonMap(
+                                        "thread_details", singletonMap("enabled", enabled))))));
   }
 }

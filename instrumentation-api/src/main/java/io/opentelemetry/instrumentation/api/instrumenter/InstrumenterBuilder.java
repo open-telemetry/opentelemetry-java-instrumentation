@@ -493,6 +493,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       if (instrumentationConfig != null
           && instrumentationConfig
               .getStructured("java", empty())
+              .getStructured("common", empty())
               .getStructured("thread_details", empty())
               .getBoolean("enabled", false)) {
         builder.addAttributesExtractor(new ThreadDetailsAttributesExtractor<>());
