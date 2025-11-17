@@ -45,7 +45,7 @@ public class RuleParser {
 
   private RuleParser() {}
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   public JmxConfig loadConfig(InputStream is) {
     LoadSettings settings = LoadSettings.builder().build();
     Load yaml = new Load(settings);
@@ -68,7 +68,7 @@ public class RuleParser {
             .collect(Collectors.toList()));
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static JmxRule parseJmxRule(Map<String, Object> ruleYaml) {
     JmxRule jmxRule = new JmxRule();
 
@@ -91,7 +91,7 @@ public class RuleParser {
     return jmxRule;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static Map<String, Metric> parseMappings(@Nullable Map<String, Object> mappingYaml) {
     Map<String, Metric> mappings = new LinkedHashMap<>();
     if (mappingYaml != null) {
@@ -124,7 +124,7 @@ public class RuleParser {
     return metric;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static void parseMetricStructure(
       Map<String, Object> metricStructureYaml, MetricStructure out) {
 

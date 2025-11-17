@@ -5,12 +5,14 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.r2dbc.proxy.callback.ProxyConfig;
 import io.r2dbc.proxy.core.ConnectionInfo;
 import io.r2dbc.proxy.core.StatementInfo;
 import io.r2dbc.proxy.core.ValueStore;
 import io.r2dbc.proxy.listener.BindParameterConverter;
+import io.r2dbc.spi.Connection;
+import io.r2dbc.spi.Wrapped;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,12 +23,14 @@ import java.util.Map;
 public final class R2dbcSqlCommenterUtil {
   private static final String KEY_ORIGINAL_QUERY_MAP = "originalQueryMap";
 
-  public static void configure(ProxyConfig proxyConfig) {
+  public static void configure(ProxyConfig proxyConfig, SqlCommenter sqlCommenter) {
     proxyConfig.setBindParameterConverter(
         new BindParameterConverter() {
           @Override
           public String onCreateStatement(String query, StatementInfo info) {
-            String modifiedQuery = SqlCommenterUtil.processQuery(query);
+            Connection connection =
+                unwapConnection(info.getConnectionInfo().getOriginalConnection());
+            String modifiedQuery = sqlCommenter.processQuery(connection, query, false);
             if (!modifiedQuery.equals(query)) {
               // We store mapping from the modified query to original query on the connection
               // the assumption here is that since the connection is not thread safe it won't be
@@ -38,7 +42,16 @@ public final class R2dbcSqlCommenterUtil {
         });
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting to unwrap connection
+  private static Connection unwapConnection(Connection connection) {
+    if (connection instanceof Wrapped) {
+      Wrapped<Connection> wrapped = (Wrapped<Connection>) connection;
+      return wrapped.unwrap();
+    }
+    return connection;
+  }
+
+  @SuppressWarnings("unchecked") // casting to same type as used in storeQuery
   private static Map<String, String> getOriginalQueryMap(ValueStore valueStore) {
     return valueStore.get(KEY_ORIGINAL_QUERY_MAP, Map.class);
   }

@@ -160,6 +160,26 @@
       ],
     },
     {
+      // snakeyaml-engine 3+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.snakeyaml:snakeyaml-engine'
+      ],
+    },
+    {
+      // groovy 5+ requires Java 11+
+      matchUpdateTypes: [
+        'major',
+      ],
+      enabled: false,
+      matchPackageNames: [
+        'org.apache.groovy:**'
+      ],
+    },
+    {
       // vaadin 14 tests require node 16
       matchPackageNames: [
         'actions/node-versions',
@@ -170,9 +190,7 @@
       enabled: false,
     },
     {
-      // intentionally using Spring Boot 2 in this smoke tests
-      // new versions of Spring Boot 3 are tested with
-      // https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/dc4330e0a3060bd7d8c4090ad0b8fc4727e68113/settings.gradle.kts#L43-L45
+      // intentionally using Spring Boot 2 in these smoke tests
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
@@ -183,42 +201,28 @@
       ],
       matchPackageNames: [
         'org.slf4j:slf4j-api',
-        'org.springframework.boot:org.springframework.boot.gradle.plugin', // this is for plugin id "org.springframework.boot"
-        'org.springframework.boot:spring-boot-dependencies',
+        'org.springframework.boot:**',
       ],
       matchUpdateTypes: [
         'major',
-        'minor',
       ],
       enabled: false,
     },
     {
-      // intentionally using Spring Boot 2 in this smoke tests
+      // intentionally using Logback 1.2 (for Spring Boot 2) in these smoke tests
       matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
       ],
       matchPackageNames: [
-        'ch.qos.logback:logback-classic',
-      ],
-      matchUpdateTypes: [
-        'minor',
-      ],
-      enabled: false,
-    },
-    {
-      // intentionally using logback 1.2 in this smoke tests
-      matchFileNames: [
-        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'ch.qos.logback:**',
       ],
       matchUpdateTypes: [
         'major',
         'minor',
       ],
       enabled: false,
-      matchPackageNames: [
-        'ch.qos.logback:**',
-      ],
     },
     {
       // intentionally using slf4j 1 in this smoke tests
@@ -357,11 +361,11 @@
       datasourceTemplate: 'java-version',
       managerFilePatterns: [
         '.github/workflows/**',
-        '**/*.gradle.kts'
+        '**/*.gradle.kts',
       ],
       matchStrings: [
-        '(?<currentValue>\\d+) # renovate: datasource=java-version',
-        '"(?<currentValue>\\d+)" // renovate: datasource=java-version',
+        '(?<currentValue>\\d+) # renovate\\(java-version\\)',
+        '"(?<currentValue>\\d+)" // renovate\\(java-version\\)',
       ],
       depNameTemplate: 'java',
       extractVersionTemplate: '^(?<version>\\d+)',
@@ -370,7 +374,7 @@
       customType: 'regex',
       datasourceTemplate: 'pypi',
       managerFilePatterns: [
-        '/^.github/workflows//',
+        '.github/workflows/**',
       ],
       matchStrings: [
         'pip install (?<depName>[^=]+)==(?<currentValue>[^\\s]+)',
@@ -380,7 +384,7 @@
       customType: 'regex',
       datasourceTemplate: 'npm',
       managerFilePatterns: [
-        '/^.github/workflows//',
+        '.github/workflows/**',
       ],
       matchStrings: [
         'npx (?<depName>[^@]+)@(?<currentValue>[^\\s]+)',
