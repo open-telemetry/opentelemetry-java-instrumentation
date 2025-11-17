@@ -12,7 +12,7 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.management.MBeanServerConnection;
 
-public class JmxTelemetry {
+public final class JmxTelemetry {
 
   private final JmxMetricInsight service;
   private final MetricConfiguration metricConfiguration;

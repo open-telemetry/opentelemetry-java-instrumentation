@@ -17,7 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
-public class JmxTelemetryBuilder {
+public final class JmxTelemetryBuilder {
 
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
 
