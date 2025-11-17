@@ -71,7 +71,6 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
     this.consumerTelemetry = supplier.get();
   }
 
-  @SuppressWarnings("unchecked")
   private static <T> T getProperty(Map<String, ?> configs, String key, Class<T> requiredType) {
     Object value = configs.get(key);
     if (value == null) {
@@ -81,6 +80,6 @@ public class OpenTelemetryConsumerInterceptor<K, V> implements ConsumerIntercept
       throw new IllegalStateException(
           "Configuration property " + key + " is not instance of " + requiredType.getSimpleName());
     }
-    return (T) value;
+    return requiredType.cast(value);
   }
 }

@@ -80,7 +80,7 @@ class TracingObserver<T> extends BasicFuseableObserver<T, T> {
     return getQueueDisposable().poll();
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private QueueDisposable<T> getQueueDisposable() {
     try {
       return (QueueDisposable<T>) queueDisposableField.get(this);

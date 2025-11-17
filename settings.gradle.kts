@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.0.1"
-    id("com.google.cloud.tools.jib") version "3.4.5"
+    id("com.google.cloud.tools.jib") version "3.5.0"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
@@ -641,6 +641,7 @@ include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing")
+include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing-webflux7")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:wildfly-testing")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library")
