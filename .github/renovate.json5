@@ -44,6 +44,14 @@
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
     {
+      // currently using gradle plugin org.playframework.play 3.1.0 milestone releases
+      // but don't want to pick up SNAPSHOT releases
+      matchPackageNames: [
+        'org.playframework.play:**',
+      ],
+      allowedVersions: '!/\\-SNAPSHOT$/',
+    },
+    {
       groupName: 'quarkus packages',
       matchPackageNames: [
         'io.quarkus:**',
