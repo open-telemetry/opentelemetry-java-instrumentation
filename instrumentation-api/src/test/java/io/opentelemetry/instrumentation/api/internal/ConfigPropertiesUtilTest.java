@@ -7,13 +7,18 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationBuilder;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Collections;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
@@ -61,30 +66,49 @@ class ConfigPropertiesUtilTest {
     assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(-1);
   }
 
-  @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "false")
-  @SetSystemProperty(key = "test.property.boolean", value = "true")
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_BOOLEAN", value = "false")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.boolean", value = "true")
   @Test
   void getBoolean_systemProperty() {
-    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isTrue();
+    assertBoolean(true);
   }
 
-  @SetEnvironmentVariable(key = "TEST_PROPERTY_BOOLEAN", value = "true")
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_BOOLEAN", value = "true")
   @Test
   void getBoolean_environmentVariable() {
-    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isTrue();
+    assertBoolean(true);
   }
 
   @Test
   void getBoolean_none() {
-    assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isFalse();
+    assertBoolean(false);
   }
 
-  @Test
-  void getBoolean_declarativeConfig() {
+  private static void assertBoolean(boolean expected) {
+    assertThat(ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean", false))
+        .isEqualTo(expected);
     assertThat(
             ConfigPropertiesUtil.getBoolean(
-                DeclarativeConfiguration.create(model(true)), false, "foo", "bar"))
-        .isTrue();
+                OpenTelemetry.noop(), false, "test", "property", "boolean"))
+        .isEqualTo(expected);
+  }
+
+  public static Stream<Arguments> booleanValuesProvider() {
+    return Stream.of(
+        Arguments.of(true, true),
+        Arguments.of(false, false),
+        Arguments.of("invalid", false),
+        Arguments.of("true", false), // no type coercion in declarative config
+        Arguments.of(null, false));
+  }
+
+  @ParameterizedTest
+  @MethodSource("booleanValuesProvider")
+  void getBoolean_declarativeConfig(Object property, boolean expected) {
+    assertThat(
+            ConfigPropertiesUtil.getBoolean(
+                DeclarativeConfiguration.create(model(property)), false, "foo", "bar"))
+        .isEqualTo(expected);
   }
 
   private static OpenTelemetryConfigurationModel model(Object value) {
