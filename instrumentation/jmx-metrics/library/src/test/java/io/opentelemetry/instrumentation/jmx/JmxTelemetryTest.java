@@ -12,6 +12,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -54,7 +55,7 @@ public class JmxTelemetryTest {
   @Test
   void invalidStartDelay() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.beanDiscoveryDelay(-1))
+    assertThatThrownBy(() -> builder.beanDiscoveryDelay(Duration.ofMillis(-1)))
         .isInstanceOf(IllegalArgumentException.class);
   }
 }

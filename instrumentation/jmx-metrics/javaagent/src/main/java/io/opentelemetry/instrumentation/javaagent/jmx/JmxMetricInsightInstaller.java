@@ -31,17 +31,17 @@ public class JmxMetricInsightInstaller implements AgentListener {
     if (config.getBoolean("otel.jmx.enabled", true)) {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
-              .beanDiscoveryDelay(beanDiscoveryDelay(config).toMillis());
+              .beanDiscoveryDelay(beanDiscoveryDelay(config));
 
       try {
         config.getList("otel.jmx.config").stream().map(Paths::get).forEach(jmx::addCustomRules);
         config.getList("otel.jmx.target.system").forEach(jmx::addClassPathRules);
-      } catch (IllegalArgumentException e) {
+      } catch (RuntimeException e) {
         // for now only log JMX errors as they do not prevent agent startup
         logger.log(Level.SEVERE, "Error while loading JMX configuration", e);
       }
 
-      jmx.build().startLocal();
+      jmx.build().start();
     }
   }
 

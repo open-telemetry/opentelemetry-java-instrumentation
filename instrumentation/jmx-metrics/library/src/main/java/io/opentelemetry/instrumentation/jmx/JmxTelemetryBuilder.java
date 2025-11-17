@@ -15,8 +15,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.logging.Logger;
 
+/** Builder for {@link JmxTelemetry} */
 public final class JmxTelemetryBuilder {
 
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
@@ -34,15 +36,15 @@ public final class JmxTelemetryBuilder {
   /**
    * Sets initial delay for MBean discovery
    *
-   * @param delayMs delay in milliseconds
+   * @param delay delay
    * @return builder instance
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder beanDiscoveryDelay(long delayMs) {
-    if (delayMs < 0) {
-      throw new IllegalArgumentException("delay must be greater than 0");
+  public JmxTelemetryBuilder beanDiscoveryDelay(Duration delay) {
+    if (delay.isNegative()) {
+      throw new IllegalArgumentException("delay must be positive or zero");
     }
-    this.discoveryDelayMs = delayMs;
+    this.discoveryDelayMs = delay.toMillis();
     return this;
   }
 
