@@ -205,7 +205,7 @@ fun configureImage(
 
   val jdkImageParts = jdkImage.split("@")
   val jdkImageName = jdkImageParts[0]
-  val jdkImageHash = if (jdkImageParts.size > 1) jdkImageParts[1] else ""
+  val jdkImageHash = if (jdkImageParts.size > 1) jdkImageParts[1].removePrefix("sha256:") else ""
 
   val extraArgs = args.toMutableMap()
   if (server == "wildfly") {

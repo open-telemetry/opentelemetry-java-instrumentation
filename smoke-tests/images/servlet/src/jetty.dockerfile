@@ -2,13 +2,13 @@ ARG jdkImageName
 ARG jdkImageHash
 
 # Unzip in a separate container so that zip file layer is not part of final image
-FROM ${jdkImageName}@${jdkImageHash} as builder
+FROM ${jdkImageName}@sha256:${jdkImageHash} as builder
 ARG sourceVersion
 
 ADD https://repo1.maven.org/maven2/org/eclipse/jetty/jetty-home/${sourceVersion}/jetty-home-${sourceVersion}.tar.gz /server.tgz
 RUN tar xf server.tgz && mv jetty-home-${sourceVersion} /server
 
-FROM ${jdkImageName}@${jdkImageHash}
+FROM ${jdkImageName}@sha256:${jdkImageHash}
 COPY --from=builder /server /server
 ENV JETTY_HOME=/server
 ENV JETTY_BASE=/base
