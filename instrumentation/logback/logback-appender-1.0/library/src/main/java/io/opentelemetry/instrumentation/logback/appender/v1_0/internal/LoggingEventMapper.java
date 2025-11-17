@@ -639,24 +639,40 @@ public final class LoggingEventMapper {
   @NoMuzzle
   private void captureLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
-      if (isLogstashStructuredArgument(argument)) {
-        captureLogstashStructuredArgument(builder, argument);
+      if (isLogstashSingleStructuredArgument(argument)) {
+        captureLogstashSingleStructuredArgument(builder, argument);
+      }
+      if (isLogstashMapStructuredArgument(argument)) {
+        captureLogstashMapStructuredArgument(builder, argument);
       }
     }
   }
 
   @NoMuzzle
-  private static boolean isLogstashStructuredArgument(Object argument) {
+  private static boolean isLogstashSingleStructuredArgument(Object argument) {
     // StructuredArguments implement the marker interface, so we can check for it
     // without importing the class directly (which may not be available at runtime)
     return argument instanceof SingleFieldAppendingMarker;
   }
 
   @NoMuzzle
-  private void captureLogstashStructuredArgument(LogRecordBuilder builder, Object argument) {
+  private void captureLogstashSingleStructuredArgument(LogRecordBuilder builder, Object argument) {
     // StructuredArguments created by v() or keyValue() extend SingleFieldAppendingMarker
     // which has getFieldName() and provides field value via reflection
     SingleFieldAppendingMarker marker = (SingleFieldAppendingMarker) argument;
+    captureLogstashMarker(builder, marker);
+  }
+
+  @NoMuzzle
+  private static boolean isLogstashMapStructuredArgument(Object argument) {
+    // StructuredArguments implement the marker interface, so we can check for it
+    // without importing the class directly (which may not be available at runtime)
+    return argument instanceof MapEntriesAppendingMarker;
+  }
+
+  @NoMuzzle
+  private void captureLogstashMapStructuredArgument(LogRecordBuilder builder, Object argument) {
+    MapEntriesAppendingMarker marker = (MapEntriesAppendingMarker) argument;
     captureLogstashMarker(builder, marker);
   }
 
