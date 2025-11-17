@@ -168,6 +168,7 @@ fun configureImage(
         "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:46d804b1c8a658fd84b8f3b3f39a1739b0f0ffccf41a682cea4847982de3bd08"
         "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:3b16568beff29ff623e7d72018cd6b08f4003964a342a907ad410a0b953f40e6"
         "17" -> "eclipse-temurin:17.0.16_8-jdk-windowsservercore-ltsc2022@sha256:a7dc8df0d1367405bf195cda6a12489b17c99691c2448ea97b9418915e24ca7e"
+        "20" -> "eclipse-temurin:20.0.2_9-jdk-windowsservercore-ltsc2022@sha256:c09b5dc44b8ff7cc6c84f1a24f232d3c3e2f0b8a9ecfd65cd5afaa4c79e8de0d"
         "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:45a3d356d018942a497b877633f19db401828ecb2a1de3cda635b98d08bfbaeb"
         "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:556d727eb539fd9c6242e75d17e1a2bf59456ea8a37478cfbd6406ca6db0d2d1"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
@@ -177,6 +178,7 @@ fun configureImage(
         "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:b4e05de303ea02659ee17044d6b68caadfc462f1530f3a461482afee23379cdd"
         "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:189ce1c8831fa5bdd801127dad99f68a17615f81f4aa839b1a4aae693261929a"
         "17" -> "eclipse-temurin:17.0.16_8-jdk@sha256:06ee07a59dc7011f643baaa45889ecd15a0b9176490943b0e4379630e832ac2d"
+        "20" -> "eclipse-temurin:20.0.2_9-jdk@sha256:3d94e8441e2e635ce16e795c6b2a4116b95a99a2d0ba0ba9a5a6b84d6f5faf87"
         "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:81ad1240d91eeafe1ab4154e9ed2310b67cb966caad1d235232ae10abcb1fae2"
         "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:adc4533ea69967c783ac2327dac7ff548fcf6401a7e595e723b414c0a7920eb2"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
