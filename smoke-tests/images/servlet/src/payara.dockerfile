@@ -1,9 +1,10 @@
-ARG jdkImage
+ARG jdkImageName
+ARG jdkImageHash
 ARG version
 
 FROM payara/server-full:${version} as builder
 
-FROM ${jdkImage}
+FROM ${jdkImageName}@${jdkImageHash}
 ARG domainName
 
 # These environment variables have been confirmed to work with 5.2020.6 only
