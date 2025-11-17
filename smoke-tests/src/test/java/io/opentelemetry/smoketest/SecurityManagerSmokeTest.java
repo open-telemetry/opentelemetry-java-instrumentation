@@ -19,7 +19,7 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest<Integer> {
             jdk ->
                 String.format(
                     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk%s-%s",
-                    jdk, ImageVersions.SECURITY_MANAGER_VERSION))
+                    jdk, TestImageVersions.SECURITY_MANAGER_VERSION))
         .env("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true");
   }
 
