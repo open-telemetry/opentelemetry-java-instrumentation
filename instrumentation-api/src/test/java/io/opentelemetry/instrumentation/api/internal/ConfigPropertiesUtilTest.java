@@ -7,6 +7,12 @@ package io.opentelemetry.instrumentation.api.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationBuilder;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationModel;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
+import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
@@ -71,5 +77,32 @@ class ConfigPropertiesUtilTest {
   @Test
   void getBoolean_none() {
     assertThat(ConfigPropertiesUtil.getBoolean("test.property.boolean", false)).isFalse();
+  }
+
+  @Test
+  void getBoolean_declarativeConfig() {
+    assertThat(
+            ConfigPropertiesUtil.getBoolean(
+                DeclarativeConfiguration.create(model(true)), false, "foo", "bar"))
+        .isTrue();
+  }
+
+  private static OpenTelemetryConfigurationModel model(Object value) {
+    return new DeclarativeConfigurationBuilder()
+        .customizeModel(
+            new OpenTelemetryConfigurationModel()
+                .withFileFormat("1.0-rc.1")
+                .withInstrumentationDevelopment(
+                    new InstrumentationModel()
+                        .withJava(
+                            new ExperimentalLanguageSpecificInstrumentationModel()
+                                .withAdditionalProperty(
+                                    "foo", Collections.singletonMap("bar", value)))));
+  }
+
+  @Test
+  void toSystemProperty() {
+    assertThat(ConfigPropertiesUtil.toSystemProperty(new String[] {"a_b", "c", "d"}))
+        .isEqualTo("otel.instrumentation.a-b.c.d");
   }
 }
