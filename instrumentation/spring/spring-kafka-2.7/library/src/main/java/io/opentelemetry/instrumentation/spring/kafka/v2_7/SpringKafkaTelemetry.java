@@ -10,10 +10,10 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import javax.annotation.Nullable;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
-import javax.annotation.Nullable;
 
 /** Entrypoint for instrumenting Spring Kafka listeners. */
 public final class SpringKafkaTelemetry {

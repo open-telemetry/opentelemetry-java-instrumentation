@@ -32,8 +32,7 @@ public class RuntimeMetricsAutoConfiguration {
   private static final Logger logger =
       LoggerFactory.getLogger(RuntimeMetricsAutoConfiguration.class);
 
-  @Nullable
-  private AutoCloseable closeable;
+  @Nullable private AutoCloseable closeable;
 
   @PreDestroy
   public void stopMetrics() throws Exception {

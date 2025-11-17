@@ -28,8 +28,7 @@ import org.springframework.core.Ordered;
 
 final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
 
-  @Nullable
-  private static final Class<?> ROUTING_DATA_SOURCE_CLASS = getRoutingDataSourceClass();
+  @Nullable private static final Class<?> ROUTING_DATA_SOURCE_CLASS = getRoutingDataSourceClass();
 
   private final ObjectProvider<OpenTelemetry> openTelemetryProvider;
   private final ObjectProvider<InstrumentationConfig> configProvider;

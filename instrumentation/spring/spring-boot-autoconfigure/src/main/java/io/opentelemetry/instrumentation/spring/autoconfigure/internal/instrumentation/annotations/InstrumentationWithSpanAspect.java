@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.annotations;
 
 import io.opentelemetry.api.OpenTelemetry;
+import javax.annotation.Nullable;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.core.ParameterNameDiscoverer;
-import javax.annotation.Nullable;
 
 @Aspect
 class InstrumentationWithSpanAspect extends WithSpanAspect {

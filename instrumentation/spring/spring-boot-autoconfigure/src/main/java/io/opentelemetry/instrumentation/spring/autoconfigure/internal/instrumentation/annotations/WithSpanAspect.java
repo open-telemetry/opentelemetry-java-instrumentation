@@ -16,9 +16,9 @@ import io.opentelemetry.instrumentation.api.annotation.support.ParameterAttribut
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.springframework.core.ParameterNameDiscoverer;
-import javax.annotation.Nullable;
 
 /**
  * Uses Spring-AOP to wrap methods marked by {@link WithSpan} in a {@link Span}.

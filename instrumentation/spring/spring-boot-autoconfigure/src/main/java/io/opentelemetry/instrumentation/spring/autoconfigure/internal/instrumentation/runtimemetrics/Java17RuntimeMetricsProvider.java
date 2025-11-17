@@ -9,9 +9,9 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.RuntimeMetrics;
 import io.opentelemetry.instrumentation.runtimemetrics.java17.internal.RuntimeMetricsConfigUtil;
+import javax.annotation.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import javax.annotation.Nullable;
 
 /**
  * Configures runtime metrics collection for Java 17+.
