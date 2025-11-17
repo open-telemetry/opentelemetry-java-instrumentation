@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.api.internal.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
 import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPropertiesCustomizer;
@@ -212,7 +210,7 @@ public class SpringConfigProperties implements ConfigProperties {
     }
 
     List<String> envValue = (List<String>) environment.getProperty(normalizedName, List.class);
-    return or(envValue, otelSdkProperties.getList(name));
+    return mustOr(envValue, otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -281,6 +279,10 @@ public class SpringConfigProperties implements ConfigProperties {
 
   @Nullable
   private static <T> T or(@Nullable T first, @Nullable T second) {
+    return first != null ? first : second;
+  }
+
+  private static <T> T mustOr(@Nullable T first, T second) {
     return first != null ? first : second;
   }
 }
