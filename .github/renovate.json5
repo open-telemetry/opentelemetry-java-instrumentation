@@ -281,7 +281,7 @@
       enabled: false,
     },
     {
-      // intentionally using Java 11 in some examples
+      // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
       ],
