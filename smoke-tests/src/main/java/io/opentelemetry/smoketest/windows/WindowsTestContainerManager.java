@@ -18,6 +18,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
+import io.opentelemetry.smoketest.ImageVersions;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.smoketest.TestContainerManager;
