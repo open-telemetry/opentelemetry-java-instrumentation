@@ -17,7 +17,6 @@ import java.util.EnumMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 enum SpanSuppressionStrategy {
   /** Do not suppress spans at all. */
@@ -74,10 +73,7 @@ enum SpanSuppressionStrategy {
 
   abstract SpanSuppressor create(Set<SpanKey> spanKeys);
 
-  static SpanSuppressionStrategy fromConfig(@Nullable String value) {
-    if (value == null) {
-      value = "semconv";
-    }
+  static SpanSuppressionStrategy fromConfig(String value) {
     switch (value.toLowerCase(Locale.ROOT)) {
       case "none":
         return NONE;
