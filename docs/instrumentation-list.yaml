@@ -6571,6 +6571,14 @@ libraries:
           type: LONG
         - name: url.full
           type: STRING
+  jfinal:
+  - name: jfinal-3.2
+    source_path: instrumentation/jfinal-3.2
+    scope:
+      name: io.opentelemetry.jfinal-3.2
+    target_versions:
+      javaagent:
+      - com.jfinal:jfinal:[3.2,)
   jms:
   - name: jms-1.1
     display_name: JMS (Java Message Service)
@@ -6882,11 +6890,7 @@ libraries:
       type: boolean
       default: false
     telemetry:
-    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
-      spans:
-      - span_kind: INTERNAL
-        attributes: []
-    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true
+    - when: '"otel.instrumentation.common.experimental.view-telemetry.enabled=true,otel.instrumentation.jsp.experimental-span-attributes=true"'
       spans:
       - span_kind: INTERNAL
         attributes:
@@ -6898,6 +6902,10 @@ libraries:
           type: STRING
         - name: jsp.requestURL
           type: STRING
+    - when: otel.instrumentation.common.experimental.view-telemetry.enabled=true
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   kafka:
   - name: kafka-clients-0.11
     display_name: Apache Kafka Client
@@ -6932,6 +6940,1288 @@ libraries:
       default: false
     telemetry:
     - when: default
+      metrics:
+      - name: kafka.consumer.assigned_partitions
+        description: The number of partitions currently assigned to this consumer
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.bytes_consumed_rate
+        description: The average number of bytes consumed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.bytes_consumed_total
+        description: The total number of bytes consumed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.commit_latency_avg
+        description: The average time taken for a commit request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_latency_max
+        description: The max time taken for a commit request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_rate
+        description: The number of commit calls per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_sync_time_ns_total
+        description: The total time the consumer has spent in commitSync in nanoseconds
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_total
+        description: The total number of commit calls
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.committed_time_ns_total
+        description: The total time the consumer has spent in committed in nanoseconds
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_close_rate
+        description: The number of connections closed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_close_total
+        description: The total number of connections closed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_count
+        description: The current number of active connections.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_creation_rate
+        description: The number of new connections established per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_creation_total
+        description: The total number of new connections established
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_authentication_rate
+        description: The number of connections with failed authentication per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_authentication_total
+        description: The total number of connections with failed authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_reauthentication_rate
+        description: The number of failed re-authentication of connections per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_reauthentication_total
+        description: The total number of failed re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_rebalance_rate_per_hour
+        description: The number of failed rebalance events per hour
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_rebalance_total
+        description: The total number of failed rebalance events
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_latency_avg
+        description: The average time taken for a fetch request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_latency_max
+        description: The max time taken for any fetch request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_rate
+        description: The number of fetch requests per second.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_size_avg
+        description: The average number of bytes fetched per request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.fetch_size_max
+        description: The maximum number of bytes fetched per request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.fetch_throttle_time_avg
+        description: The average throttle time in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_throttle_time_max
+        description: The maximum throttle time in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_total
+        description: The total number of fetch requests.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.heartbeat_rate
+        description: The number of heartbeats per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.heartbeat_total
+        description: The total number of heartbeats
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.incoming_byte_rate
+        description: The number of bytes read off all sockets per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.incoming_byte_total
+        description: The total number of bytes read off all sockets
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.io_ratio
+        description: The fraction of time the I/O thread spent doing I/O
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_time_ns_avg
+        description: The average length of time for I/O per select call in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_time_ns_total
+        description: The total time the I/O thread spent doing I/O
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_wait_ratio
+        description: The fraction of time the I/O thread spent waiting
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_wait_time_ns_avg
+        description: The average length of time the I/O thread spent waiting for a
+          socket ready for reads or writes in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_wait_time_ns_total
+        description: The total time the I/O thread spent waiting
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_rate
+        description: The number of group joins per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_time_avg
+        description: The average time taken for a group rejoin
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_time_max
+        description: The max time taken for a group rejoin
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_total
+        description: The total number of group joins
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.last_heartbeat_seconds_ago
+        description: The number of seconds since the last coordinator heartbeat was
+          sent
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.last_poll_seconds_ago
+        description: The number of seconds since the last poll() invocation.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.last_rebalance_seconds_ago
+        description: The number of seconds since the last successful rebalance event
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.network_io_rate
+        description: The number of network operations (reads or writes) on all connections
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.network_io_total
+        description: The total number of network operations (reads or writes) on all
+          connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.outgoing_byte_rate
+        description: The number of outgoing bytes sent to all servers per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.outgoing_byte_total
+        description: The total number of outgoing bytes sent to all servers
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.partition_assigned_latency_avg
+        description: The average time taken for a partition-assigned rebalance listener
+          callback
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.partition_assigned_latency_max
+        description: The max time taken for a partition-assigned rebalance listener
+          callback
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.poll_idle_ratio_avg
+        description: The average fraction of time the consumer's poll() is idle as
+          opposed to waiting for the user code to process records.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_latency_avg
+        description: The average time taken for a group to complete a successful rebalance,
+          which may be composed of several failed re-trials until it succeeded
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_latency_max
+        description: The max time taken for a group to complete a successful rebalance,
+          which may be composed of several failed re-trials until it succeeded
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_latency_total
+        description: The total number of milliseconds this consumer has spent in successful
+          rebalances since creation
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_rate_per_hour
+        description: The number of successful rebalance events per hour, each event
+          is composed of several failed re-trials until it succeeded
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_total
+        description: The total number of successful rebalance events, each event is
+          composed of several failed re-trials until it succeeded
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.records_consumed_rate
+        description: The average number of records consumed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_consumed_total
+        description: The total number of records consumed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lag
+        description: 'The latest lag of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lag_avg
+        description: 'The average lag of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lag_max
+        description: 'The maximum lag in terms of number of records for any partition
+          in this window. NOTE: This is based on current offset and not committed
+          offset'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lead
+        description: 'The latest lead of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lead_avg
+        description: 'The average lead of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lead_min
+        description: The minimum lead in terms of number of records for any partition
+          in this window
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_per_request_avg
+        description: The average number of records in each request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.request_latency_avg
+        description: ''
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_latency_max
+        description: ''
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_rate
+        description: The number of requests sent per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_size_avg
+        description: The average size of requests sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_size_max
+        description: The maximum size of any request sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_total
+        description: The total number of requests sent
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.response_rate
+        description: The number of responses received per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.response_total
+        description: The total number of responses received
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.select_rate
+        description: The number of times the I/O layer checked for new I/O to perform
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.select_total
+        description: The total number of times the I/O layer checked for new I/O to
+          perform
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_authentication_no_reauth_total
+        description: The total number of connections with successful authentication
+          where the client does not support re-authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_authentication_rate
+        description: The number of connections with successful authentication per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_authentication_total
+        description: The total number of connections with successful authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_reauthentication_rate
+        description: The number of successful re-authentication of connections per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_reauthentication_total
+        description: The total number of successful re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_rate
+        description: The number of group syncs per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_time_avg
+        description: The average time taken for a group sync
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_time_max
+        description: The max time taken for a group sync
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_total
+        description: The total number of group syncs
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.time_between_poll_avg
+        description: The average delay between invocations of poll() in milliseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.time_between_poll_max
+        description: The max delay between invocations of poll() in milliseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_size_avg
+        description: The average number of bytes sent per partition per-request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_size_max
+        description: The max number of bytes sent per partition per-request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_split_rate
+        description: The average number of batch splits per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_split_total
+        description: The total number of batch splits
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_available_bytes
+        description: The total amount of buffer memory that is not being used (either
+          unallocated or in the free list).
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_exhausted_rate
+        description: The average per-second number of record sends that are dropped
+          due to buffer exhaustion
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_exhausted_total
+        description: The total number of record sends that are dropped due to buffer
+          exhaustion
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_total_bytes
+        description: The maximum amount of buffer memory the client can use (whether
+          or not it is currently used).
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.bufferpool_wait_ratio
+        description: The fraction of time an appender waits for space allocation.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.bufferpool_wait_time_ns_total
+        description: The total time in nanoseconds an appender waits for space allocation.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.byte_rate
+        description: The average number of bytes sent per second for a topic.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.byte_total
+        description: The total number of bytes sent for a topic.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.compression_rate
+        description: The average compression rate of record batches for a topic, defined
+          as the average ratio of the compressed batch size over the uncompressed
+          size.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.compression_rate_avg
+        description: The average compression rate of record batches, defined as the
+          average ratio of the compressed batch size over the uncompressed size.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_close_rate
+        description: The number of connections closed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_close_total
+        description: The total number of connections closed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_count
+        description: The current number of active connections.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_creation_rate
+        description: The number of new connections established per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_creation_total
+        description: The total number of new connections established
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_authentication_rate
+        description: The number of connections with failed authentication per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_authentication_total
+        description: The total number of connections with failed authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_reauthentication_rate
+        description: The number of failed re-authentication of connections per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_reauthentication_total
+        description: The total number of failed re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.flush_time_ns_total
+        description: Total time producer has spent in flush in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.incoming_byte_rate
+        description: The number of bytes read off all sockets per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.incoming_byte_total
+        description: The total number of bytes read off all sockets
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.io_ratio
+        description: The fraction of time the I/O thread spent doing I/O
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_time_ns_avg
+        description: The average length of time for I/O per select call in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_time_ns_total
+        description: The total time the I/O thread spent doing I/O
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_wait_ratio
+        description: The fraction of time the I/O thread spent waiting
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_wait_time_ns_avg
+        description: The average length of time the I/O thread spent waiting for a
+          socket ready for reads or writes in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_wait_time_ns_total
+        description: The total time the I/O thread spent waiting
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.metadata_age
+        description: The age in seconds of the current producer metadata being used.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.metadata_wait_time_ns_total
+        description: Total time producer has spent waiting on topic metadata in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.network_io_rate
+        description: The number of network operations (reads or writes) on all connections
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.network_io_total
+        description: The total number of network operations (reads or writes) on all
+          connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.outgoing_byte_rate
+        description: The number of outgoing bytes sent to all servers per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.outgoing_byte_total
+        description: The total number of outgoing bytes sent to all servers
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.produce_throttle_time_avg
+        description: The average time in ms a request was throttled by a broker
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.produce_throttle_time_max
+        description: The maximum time in ms a request was throttled by a broker
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_error_rate
+        description: The average per-second number of record sends that resulted in
+          errors
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_error_total
+        description: The total number of record sends that resulted in errors
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_queue_time_avg
+        description: The average time in ms record batches spent in the send buffer.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_queue_time_max
+        description: The maximum time in ms record batches spent in the send buffer.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_retry_rate
+        description: The average per-second number of retried record sends
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_retry_total
+        description: The total number of retried record sends
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_send_rate
+        description: The average number of records sent per second.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_send_total
+        description: The total number of records sent.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_size_avg
+        description: The average record size
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_size_max
+        description: The maximum record size
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.records_per_request_avg
+        description: The average number of records per request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.request_latency_avg
+        description: The average request latency in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_latency_max
+        description: The maximum request latency in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_rate
+        description: The number of requests sent per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_size_avg
+        description: The average size of requests sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_size_max
+        description: The maximum size of any request sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_total
+        description: The total number of requests sent
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.requests_in_flight
+        description: The current number of in-flight requests awaiting a response.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.response_rate
+        description: The number of responses received per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.response_total
+        description: The total number of responses received
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.select_rate
+        description: The number of times the I/O layer checked for new I/O to perform
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.select_total
+        description: The total number of times the I/O layer checked for new I/O to
+          perform
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_authentication_no_reauth_total
+        description: The total number of connections with successful authentication
+          where the client does not support re-authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_authentication_rate
+        description: The number of connections with successful authentication per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_authentication_total
+        description: The total number of connections with successful authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_reauthentication_rate
+        description: The number of successful re-authentication of connections per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_reauthentication_total
+        description: The total number of successful re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_abort_time_ns_total
+        description: Total time producer has spent in abortTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_begin_time_ns_total
+        description: Total time producer has spent in beginTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_commit_time_ns_total
+        description: Total time producer has spent in commitTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_init_time_ns_total
+        description: Total time producer has spent in initTransactions in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_prepare_time_ns_total
+        description: Total time producer has spent in prepareTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_send_offsets_time_ns_total
+        description: Total time producer has spent in sendOffsetsToTransaction in
+          nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.waiting_threads
+        description: The number of user threads blocked waiting for buffer memory
+          to enqueue their records
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
       spans:
       - span_kind: CONSUMER
         attributes:
@@ -6976,6 +8266,1288 @@ libraries:
         - name: messaging.system
           type: STRING
     - when: otel.instrumentation.kafka.experimental-span-attributes=true
+      metrics:
+      - name: kafka.consumer.assigned_partitions
+        description: The number of partitions currently assigned to this consumer
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.bytes_consumed_rate
+        description: The average number of bytes consumed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.bytes_consumed_total
+        description: The total number of bytes consumed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.commit_latency_avg
+        description: The average time taken for a commit request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_latency_max
+        description: The max time taken for a commit request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_rate
+        description: The number of commit calls per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_sync_time_ns_total
+        description: The total time the consumer has spent in commitSync in nanoseconds
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.commit_total
+        description: The total number of commit calls
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.committed_time_ns_total
+        description: The total time the consumer has spent in committed in nanoseconds
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_close_rate
+        description: The number of connections closed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_close_total
+        description: The total number of connections closed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_count
+        description: The current number of active connections.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_creation_rate
+        description: The number of new connections established per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.connection_creation_total
+        description: The total number of new connections established
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_authentication_rate
+        description: The number of connections with failed authentication per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_authentication_total
+        description: The total number of connections with failed authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_reauthentication_rate
+        description: The number of failed re-authentication of connections per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_reauthentication_total
+        description: The total number of failed re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_rebalance_rate_per_hour
+        description: The number of failed rebalance events per hour
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.failed_rebalance_total
+        description: The total number of failed rebalance events
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_latency_avg
+        description: The average time taken for a fetch request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_latency_max
+        description: The max time taken for any fetch request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_rate
+        description: The number of fetch requests per second.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_size_avg
+        description: The average number of bytes fetched per request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.fetch_size_max
+        description: The maximum number of bytes fetched per request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.fetch_throttle_time_avg
+        description: The average throttle time in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_throttle_time_max
+        description: The maximum throttle time in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.fetch_total
+        description: The total number of fetch requests.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.heartbeat_rate
+        description: The number of heartbeats per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.heartbeat_total
+        description: The total number of heartbeats
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.incoming_byte_rate
+        description: The number of bytes read off all sockets per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.incoming_byte_total
+        description: The total number of bytes read off all sockets
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.io_ratio
+        description: The fraction of time the I/O thread spent doing I/O
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_time_ns_avg
+        description: The average length of time for I/O per select call in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_time_ns_total
+        description: The total time the I/O thread spent doing I/O
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_wait_ratio
+        description: The fraction of time the I/O thread spent waiting
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_wait_time_ns_avg
+        description: The average length of time the I/O thread spent waiting for a
+          socket ready for reads or writes in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.io_wait_time_ns_total
+        description: The total time the I/O thread spent waiting
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_rate
+        description: The number of group joins per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_time_avg
+        description: The average time taken for a group rejoin
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_time_max
+        description: The max time taken for a group rejoin
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.join_total
+        description: The total number of group joins
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.last_heartbeat_seconds_ago
+        description: The number of seconds since the last coordinator heartbeat was
+          sent
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.last_poll_seconds_ago
+        description: The number of seconds since the last poll() invocation.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.last_rebalance_seconds_ago
+        description: The number of seconds since the last successful rebalance event
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.network_io_rate
+        description: The number of network operations (reads or writes) on all connections
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.network_io_total
+        description: The total number of network operations (reads or writes) on all
+          connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.outgoing_byte_rate
+        description: The number of outgoing bytes sent to all servers per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.outgoing_byte_total
+        description: The total number of outgoing bytes sent to all servers
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.partition_assigned_latency_avg
+        description: The average time taken for a partition-assigned rebalance listener
+          callback
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.partition_assigned_latency_max
+        description: The max time taken for a partition-assigned rebalance listener
+          callback
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.poll_idle_ratio_avg
+        description: The average fraction of time the consumer's poll() is idle as
+          opposed to waiting for the user code to process records.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_latency_avg
+        description: The average time taken for a group to complete a successful rebalance,
+          which may be composed of several failed re-trials until it succeeded
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_latency_max
+        description: The max time taken for a group to complete a successful rebalance,
+          which may be composed of several failed re-trials until it succeeded
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_latency_total
+        description: The total number of milliseconds this consumer has spent in successful
+          rebalances since creation
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_rate_per_hour
+        description: The number of successful rebalance events per hour, each event
+          is composed of several failed re-trials until it succeeded
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.rebalance_total
+        description: The total number of successful rebalance events, each event is
+          composed of several failed re-trials until it succeeded
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.records_consumed_rate
+        description: The average number of records consumed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_consumed_total
+        description: The total number of records consumed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lag
+        description: 'The latest lag of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lag_avg
+        description: 'The average lag of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lag_max
+        description: 'The maximum lag in terms of number of records for any partition
+          in this window. NOTE: This is based on current offset and not committed
+          offset'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lead
+        description: 'The latest lead of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lead_avg
+        description: 'The average lead of the partition. Note: For topic names with
+          periods (.), an additional metric with underscores is emitted. However,
+          the periods replaced metric is deprecated. Please use the metric with actual
+          topic name instead.'
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_lead_min
+        description: The minimum lead in terms of number of records for any partition
+          in this window
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: partition
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.records_per_request_avg
+        description: The average number of records in each request
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.consumer.request_latency_avg
+        description: ''
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_latency_max
+        description: ''
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_rate
+        description: The number of requests sent per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_size_avg
+        description: The average size of requests sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_size_max
+        description: The maximum size of any request sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.request_total
+        description: The total number of requests sent
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.response_rate
+        description: The number of responses received per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.response_total
+        description: The total number of responses received
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.consumer.select_rate
+        description: The number of times the I/O layer checked for new I/O to perform
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.select_total
+        description: The total number of times the I/O layer checked for new I/O to
+          perform
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_authentication_no_reauth_total
+        description: The total number of connections with successful authentication
+          where the client does not support re-authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_authentication_rate
+        description: The number of connections with successful authentication per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_authentication_total
+        description: The total number of connections with successful authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_reauthentication_rate
+        description: The number of successful re-authentication of connections per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.successful_reauthentication_total
+        description: The total number of successful re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_rate
+        description: The number of group syncs per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_time_avg
+        description: The average time taken for a group sync
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_time_max
+        description: The max time taken for a group sync
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.sync_total
+        description: The total number of group syncs
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.time_between_poll_avg
+        description: The average delay between invocations of poll() in milliseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.consumer.time_between_poll_max
+        description: The max delay between invocations of poll() in milliseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_size_avg
+        description: The average number of bytes sent per partition per-request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_size_max
+        description: The max number of bytes sent per partition per-request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_split_rate
+        description: The average number of batch splits per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.batch_split_total
+        description: The total number of batch splits
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_available_bytes
+        description: The total amount of buffer memory that is not being used (either
+          unallocated or in the free list).
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_exhausted_rate
+        description: The average per-second number of record sends that are dropped
+          due to buffer exhaustion
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_exhausted_total
+        description: The total number of record sends that are dropped due to buffer
+          exhaustion
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.buffer_total_bytes
+        description: The maximum amount of buffer memory the client can use (whether
+          or not it is currently used).
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.bufferpool_wait_ratio
+        description: The fraction of time an appender waits for space allocation.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.bufferpool_wait_time_ns_total
+        description: The total time in nanoseconds an appender waits for space allocation.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.byte_rate
+        description: The average number of bytes sent per second for a topic.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.byte_total
+        description: The total number of bytes sent for a topic.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.compression_rate
+        description: The average compression rate of record batches for a topic, defined
+          as the average ratio of the compressed batch size over the uncompressed
+          size.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.compression_rate_avg
+        description: The average compression rate of record batches, defined as the
+          average ratio of the compressed batch size over the uncompressed size.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_close_rate
+        description: The number of connections closed per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_close_total
+        description: The total number of connections closed
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_count
+        description: The current number of active connections.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_creation_rate
+        description: The number of new connections established per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.connection_creation_total
+        description: The total number of new connections established
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_authentication_rate
+        description: The number of connections with failed authentication per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_authentication_total
+        description: The total number of connections with failed authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_reauthentication_rate
+        description: The number of failed re-authentication of connections per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.failed_reauthentication_total
+        description: The total number of failed re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.flush_time_ns_total
+        description: Total time producer has spent in flush in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.incoming_byte_rate
+        description: The number of bytes read off all sockets per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.incoming_byte_total
+        description: The total number of bytes read off all sockets
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.io_ratio
+        description: The fraction of time the I/O thread spent doing I/O
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_time_ns_avg
+        description: The average length of time for I/O per select call in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_time_ns_total
+        description: The total time the I/O thread spent doing I/O
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_wait_ratio
+        description: The fraction of time the I/O thread spent waiting
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_wait_time_ns_avg
+        description: The average length of time the I/O thread spent waiting for a
+          socket ready for reads or writes in nanoseconds.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.io_wait_time_ns_total
+        description: The total time the I/O thread spent waiting
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.metadata_age
+        description: The age in seconds of the current producer metadata being used.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.metadata_wait_time_ns_total
+        description: Total time producer has spent waiting on topic metadata in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.network_io_rate
+        description: The number of network operations (reads or writes) on all connections
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.network_io_total
+        description: The total number of network operations (reads or writes) on all
+          connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.outgoing_byte_rate
+        description: The number of outgoing bytes sent to all servers per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.outgoing_byte_total
+        description: The total number of outgoing bytes sent to all servers
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.produce_throttle_time_avg
+        description: The average time in ms a request was throttled by a broker
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.produce_throttle_time_max
+        description: The maximum time in ms a request was throttled by a broker
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_error_rate
+        description: The average per-second number of record sends that resulted in
+          errors
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_error_total
+        description: The total number of record sends that resulted in errors
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_queue_time_avg
+        description: The average time in ms record batches spent in the send buffer.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_queue_time_max
+        description: The maximum time in ms record batches spent in the send buffer.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_retry_rate
+        description: The average per-second number of retried record sends
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_retry_total
+        description: The total number of retried record sends
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_send_rate
+        description: The average number of records sent per second.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_send_total
+        description: The total number of records sent.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: topic
+          type: STRING
+      - name: kafka.producer.record_size_avg
+        description: The average record size
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.record_size_max
+        description: The maximum record size
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.records_per_request_avg
+        description: The average number of records per request.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.request_latency_avg
+        description: The average request latency in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_latency_max
+        description: The maximum request latency in ms
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_rate
+        description: The number of requests sent per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_size_avg
+        description: The average size of requests sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_size_max
+        description: The maximum size of any request sent.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.request_total
+        description: The total number of requests sent
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.requests_in_flight
+        description: The current number of in-flight requests awaiting a response.
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.response_rate
+        description: The number of responses received per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.response_total
+        description: The total number of responses received
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+        - name: node-id
+          type: STRING
+      - name: kafka.producer.select_rate
+        description: The number of times the I/O layer checked for new I/O to perform
+          per second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.select_total
+        description: The total number of times the I/O layer checked for new I/O to
+          perform
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_authentication_no_reauth_total
+        description: The total number of connections with successful authentication
+          where the client does not support re-authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_authentication_rate
+        description: The number of connections with successful authentication per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_authentication_total
+        description: The total number of connections with successful authentication
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_reauthentication_rate
+        description: The number of successful re-authentication of connections per
+          second
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.successful_reauthentication_total
+        description: The total number of successful re-authentication of connections
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_abort_time_ns_total
+        description: Total time producer has spent in abortTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_begin_time_ns_total
+        description: Total time producer has spent in beginTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_commit_time_ns_total
+        description: Total time producer has spent in commitTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_init_time_ns_total
+        description: Total time producer has spent in initTransactions in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_prepare_time_ns_total
+        description: Total time producer has spent in prepareTransaction in nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.txn_send_offsets_time_ns_total
+        description: Total time producer has spent in sendOffsetsToTransaction in
+          nanoseconds.
+        type: DOUBLE_SUM
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
+      - name: kafka.producer.waiting_threads
+        description: The number of user threads blocked waiting for buffer memory
+          to enqueue their records
+        type: DOUBLE_GAUGE
+        unit: ''
+        attributes:
+        - name: client-id
+          type: STRING
       spans:
       - span_kind: CONSUMER
         attributes:
@@ -7040,14 +9612,14 @@ libraries:
       - name: kafka.consumer.assigned_partitions
         description: The number of partitions currently assigned to this consumer
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.bytes_consumed_rate
         description: The average number of bytes consumed per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7056,7 +9628,7 @@ libraries:
       - name: kafka.consumer.bytes_consumed_total
         description: The total number of bytes consumed
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7065,133 +9637,133 @@ libraries:
       - name: kafka.consumer.commit_latency_avg
         description: The average time taken for a commit request
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.commit_latency_max
         description: The max time taken for a commit request
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.commit_rate
         description: The number of commit calls per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.commit_total
         description: The total number of commit calls
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.connection_close_rate
         description: The number of connections closed per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.connection_close_total
         description: The total number of connections closed
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.connection_count
         description: The current number of active connections.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.connection_creation_rate
         description: The number of new connections established per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.connection_creation_total
         description: The total number of new connections established
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.failed_authentication_rate
         description: The number of connections with failed authentication per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.failed_authentication_total
         description: The total number of connections with failed authentication
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.failed_reauthentication_rate
         description: The number of failed re-authentication of connections per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.failed_reauthentication_total
         description: The total number of failed re-authentication of connections
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.failed_rebalance_rate_per_hour
         description: The number of failed rebalance events per hour
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.failed_rebalance_total
         description: The total number of failed rebalance events
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.fetch_latency_avg
         description: The average time taken for a fetch request.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.fetch_latency_max
         description: The max time taken for any fetch request.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.fetch_rate
         description: The number of fetch requests per second.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.fetch_size_avg
         description: The average number of bytes fetched per request
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7200,7 +9772,7 @@ libraries:
       - name: kafka.consumer.fetch_size_max
         description: The maximum number of bytes fetched per request
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7209,42 +9781,42 @@ libraries:
       - name: kafka.consumer.fetch_throttle_time_avg
         description: The average throttle time in ms
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.fetch_throttle_time_max
         description: The maximum throttle time in ms
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.fetch_total
         description: The total number of fetch requests.
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.heartbeat_rate
         description: The number of heartbeats per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.heartbeat_total
         description: The total number of heartbeats
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.incoming_byte_rate
         description: The number of bytes read off all sockets per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7253,7 +9825,7 @@ libraries:
       - name: kafka.consumer.incoming_byte_total
         description: The total number of bytes read off all sockets
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7262,21 +9834,21 @@ libraries:
       - name: kafka.consumer.io_ratio
         description: The fraction of time the I/O thread spent doing I/O
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.io_time_ns_avg
         description: The average length of time for I/O per select call in nanoseconds.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.io_wait_ratio
         description: The fraction of time the I/O thread spent waiting
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7284,49 +9856,49 @@ libraries:
         description: The average length of time the I/O thread spent waiting for a
           socket ready for reads or writes in nanoseconds.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.io_waittime_total
         description: The total time the I/O thread spent waiting
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.iotime_total
         description: The total time the I/O thread spent doing I/O
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.join_rate
         description: The number of group joins per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.join_time_avg
         description: The average time taken for a group rejoin
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.join_time_max
         description: The max time taken for a group rejoin
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.join_total
         description: The total number of group joins
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7334,21 +9906,21 @@ libraries:
         description: The number of seconds since the last coordinator heartbeat was
           sent
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.last_poll_seconds_ago
         description: The number of seconds since the last poll() invocation.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.last_rebalance_seconds_ago
         description: The number of seconds since the last successful rebalance event
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7356,7 +9928,7 @@ libraries:
         description: The number of network operations (reads or writes) on all connections
           per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7364,14 +9936,14 @@ libraries:
         description: The total number of network operations (reads or writes) on all
           connections
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.outgoing_byte_rate
         description: The number of outgoing bytes sent to all servers per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7380,7 +9952,7 @@ libraries:
       - name: kafka.consumer.outgoing_byte_total
         description: The total number of outgoing bytes sent to all servers
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7390,7 +9962,7 @@ libraries:
         description: The average time taken for a partition-assigned rebalance listener
           callback
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7398,7 +9970,7 @@ libraries:
         description: The max time taken for a partition-assigned rebalance listener
           callback
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7406,7 +9978,7 @@ libraries:
         description: The average fraction of time the consumer's poll() is idle as
           opposed to waiting for the user code to process records.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7414,7 +9986,7 @@ libraries:
         description: The average time taken for a group to complete a successful rebalance,
           which may be composed of several failed re-trials until it succeeded
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7422,7 +9994,7 @@ libraries:
         description: The max time taken for a group to complete a successful rebalance,
           which may be composed of several failed re-trials until it succeeded
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7430,7 +10002,7 @@ libraries:
         description: The total number of milliseconds this consumer has spent in successful
           rebalances since creation
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7438,7 +10010,7 @@ libraries:
         description: The number of successful rebalance events per hour, each event
           is composed of several failed re-trials until it succeeded
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7446,14 +10018,14 @@ libraries:
         description: The total number of successful rebalance events, each event is
           composed of several failed re-trials until it succeeded
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.records_consumed_rate
         description: The average number of records consumed per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7462,7 +10034,7 @@ libraries:
       - name: kafka.consumer.records_consumed_total
         description: The total number of records consumed
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7471,7 +10043,7 @@ libraries:
       - name: kafka.consumer.records_lag
         description: The latest lag of the partition
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7482,7 +10054,7 @@ libraries:
       - name: kafka.consumer.records_lag_avg
         description: The average lag of the partition
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7494,7 +10066,7 @@ libraries:
         description: The maximum lag in terms of number of records for any partition
           in this window
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7505,7 +10077,7 @@ libraries:
       - name: kafka.consumer.records_lead
         description: The latest lead of the partition
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7516,7 +10088,7 @@ libraries:
       - name: kafka.consumer.records_lead_avg
         description: The average lead of the partition
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7528,7 +10100,7 @@ libraries:
         description: The minimum lead in terms of number of records for any partition
           in this window
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7539,7 +10111,7 @@ libraries:
       - name: kafka.consumer.records_per_request_avg
         description: The average number of records in each request
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7548,7 +10120,7 @@ libraries:
       - name: kafka.consumer.request_rate
         description: The number of requests sent per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7557,7 +10129,7 @@ libraries:
       - name: kafka.consumer.request_size_avg
         description: The average size of requests sent.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7566,7 +10138,7 @@ libraries:
       - name: kafka.consumer.request_size_max
         description: The maximum size of any request sent.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7575,7 +10147,7 @@ libraries:
       - name: kafka.consumer.request_total
         description: The total number of requests sent
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7584,7 +10156,7 @@ libraries:
       - name: kafka.consumer.response_rate
         description: The number of responses received per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7593,7 +10165,7 @@ libraries:
       - name: kafka.consumer.response_total
         description: The total number of responses received
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7603,7 +10175,7 @@ libraries:
         description: The number of times the I/O layer checked for new I/O to perform
           per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7611,7 +10183,7 @@ libraries:
         description: The total number of times the I/O layer checked for new I/O to
           perform
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7619,7 +10191,7 @@ libraries:
         description: The total number of connections with successful authentication
           where the client does not support re-authentication
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7627,14 +10199,14 @@ libraries:
         description: The number of connections with successful authentication per
           second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.successful_authentication_total
         description: The total number of connections with successful authentication
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7642,84 +10214,84 @@ libraries:
         description: The number of successful re-authentication of connections per
           second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.successful_reauthentication_total
         description: The total number of successful re-authentication of connections
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.sync_rate
         description: The number of group syncs per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.sync_time_avg
         description: The average time taken for a group sync
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.sync_time_max
         description: The max time taken for a group sync
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.sync_total
         description: The total number of group syncs
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.time_between_poll_avg
         description: The average delay between invocations of poll().
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.consumer.time_between_poll_max
         description: The max delay between invocations of poll().
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.batch_size_avg
         description: The average number of bytes sent per partition per-request.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.batch_size_max
         description: The max number of bytes sent per partition per-request.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.batch_split_rate
         description: The average number of batch splits per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.batch_split_total
         description: The total number of batch splits
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7727,7 +10299,7 @@ libraries:
         description: The total amount of buffer memory that is not being used (either
           unallocated or in the free list).
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7735,7 +10307,7 @@ libraries:
         description: The average per-second number of record sends that are dropped
           due to buffer exhaustion
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7743,7 +10315,7 @@ libraries:
         description: The total number of record sends that are dropped due to buffer
           exhaustion
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7751,28 +10323,28 @@ libraries:
         description: The maximum amount of buffer memory the client can use (whether
           or not it is currently used).
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.bufferpool_wait_ratio
         description: The fraction of time an appender waits for space allocation.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.bufferpool_wait_time_total
         description: The total time an appender waits for space allocation.
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.byte_rate
         description: The average number of bytes sent per second for a topic.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7781,7 +10353,7 @@ libraries:
       - name: kafka.producer.byte_total
         description: The total number of bytes sent for a topic.
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7790,7 +10362,7 @@ libraries:
       - name: kafka.producer.compression_rate
         description: The average compression rate of record batches for a topic.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7799,77 +10371,77 @@ libraries:
       - name: kafka.producer.compression_rate_avg
         description: The average compression rate of record batches.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.connection_close_rate
         description: The number of connections closed per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.connection_close_total
         description: The total number of connections closed
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.connection_count
         description: The current number of active connections.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.connection_creation_rate
         description: The number of new connections established per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.connection_creation_total
         description: The total number of new connections established
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.failed_authentication_rate
         description: The number of connections with failed authentication per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.failed_authentication_total
         description: The total number of connections with failed authentication
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.failed_reauthentication_rate
         description: The number of failed re-authentication of connections per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.failed_reauthentication_total
         description: The total number of failed re-authentication of connections
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.incoming_byte_rate
         description: The number of bytes read off all sockets per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7878,7 +10450,7 @@ libraries:
       - name: kafka.producer.incoming_byte_total
         description: The total number of bytes read off all sockets
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7887,21 +10459,21 @@ libraries:
       - name: kafka.producer.io_ratio
         description: The fraction of time the I/O thread spent doing I/O
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.io_time_ns_avg
         description: The average length of time for I/O per select call in nanoseconds.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.io_wait_ratio
         description: The fraction of time the I/O thread spent waiting
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7909,28 +10481,28 @@ libraries:
         description: The average length of time the I/O thread spent waiting for a
           socket ready for reads or writes in nanoseconds.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.io_waittime_total
         description: The total time the I/O thread spent waiting
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.iotime_total
         description: The total time the I/O thread spent doing I/O
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.metadata_age
         description: The age in seconds of the current producer metadata being used.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7938,7 +10510,7 @@ libraries:
         description: The number of network operations (reads or writes) on all connections
           per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7946,14 +10518,14 @@ libraries:
         description: The total number of network operations (reads or writes) on all
           connections
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.outgoing_byte_rate
         description: The number of outgoing bytes sent to all servers per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7962,7 +10534,7 @@ libraries:
       - name: kafka.producer.outgoing_byte_total
         description: The total number of outgoing bytes sent to all servers
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7971,14 +10543,14 @@ libraries:
       - name: kafka.producer.produce_throttle_time_avg
         description: The average time in ms a request was throttled by a broker
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.produce_throttle_time_max
         description: The maximum time in ms a request was throttled by a broker
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7986,7 +10558,7 @@ libraries:
         description: The average per-second number of record sends that resulted in
           errors
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -7995,7 +10567,7 @@ libraries:
       - name: kafka.producer.record_error_total
         description: The total number of record sends that resulted in errors
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8004,21 +10576,21 @@ libraries:
       - name: kafka.producer.record_queue_time_avg
         description: The average time in ms record batches spent in the send buffer.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.record_queue_time_max
         description: The maximum time in ms record batches spent in the send buffer.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.record_retry_rate
         description: The average per-second number of retried record sends
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8027,7 +10599,7 @@ libraries:
       - name: kafka.producer.record_retry_total
         description: The total number of retried record sends
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8036,7 +10608,7 @@ libraries:
       - name: kafka.producer.record_send_rate
         description: The average number of records sent per second.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8045,7 +10617,7 @@ libraries:
       - name: kafka.producer.record_send_total
         description: The total number of records sent.
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8054,28 +10626,28 @@ libraries:
       - name: kafka.producer.record_size_avg
         description: The average record size
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.record_size_max
         description: The maximum record size
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.records_per_request_avg
         description: The average number of records per request.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.request_latency_avg
         description: The average request latency in ms
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8084,7 +10656,7 @@ libraries:
       - name: kafka.producer.request_latency_max
         description: The maximum request latency in ms
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8093,7 +10665,7 @@ libraries:
       - name: kafka.producer.request_rate
         description: The number of requests sent per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8102,7 +10674,7 @@ libraries:
       - name: kafka.producer.request_size_avg
         description: The average size of requests sent.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8111,7 +10683,7 @@ libraries:
       - name: kafka.producer.request_size_max
         description: The maximum size of any request sent.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8120,7 +10692,7 @@ libraries:
       - name: kafka.producer.request_total
         description: The total number of requests sent
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8129,14 +10701,14 @@ libraries:
       - name: kafka.producer.requests_in_flight
         description: The current number of in-flight requests awaiting a response.
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.response_rate
         description: The number of responses received per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8145,7 +10717,7 @@ libraries:
       - name: kafka.producer.response_total
         description: The total number of responses received
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8155,7 +10727,7 @@ libraries:
         description: The number of times the I/O layer checked for new I/O to perform
           per second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8163,7 +10735,7 @@ libraries:
         description: The total number of times the I/O layer checked for new I/O to
           perform
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8171,7 +10743,7 @@ libraries:
         description: The total number of connections with successful authentication
           where the client does not support re-authentication
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8179,14 +10751,14 @@ libraries:
         description: The number of connections with successful authentication per
           second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.successful_authentication_total
         description: The total number of connections with successful authentication
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8194,14 +10766,14 @@ libraries:
         description: The number of successful re-authentication of connections per
           second
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
       - name: kafka.producer.successful_reauthentication_total
         description: The total number of successful re-authentication of connections
         type: DOUBLE_SUM
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8209,7 +10781,7 @@ libraries:
         description: The number of user threads blocked waiting for buffer memory
           to enqueue their records
         type: DOUBLE_GAUGE
-        unit: null
+        unit: ''
         attributes:
         - name: client-id
           type: STRING
@@ -8311,8 +10883,6 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: asdf
-          type: STRING
         - name: messaging.client_id
           type: STRING
         - name: messaging.destination.name
@@ -8335,8 +10905,6 @@ libraries:
       spans:
       - span_kind: CONSUMER
         attributes:
-        - name: asdf
-          type: STRING
         - name: kafka.record.queue_time_ms
           type: LONG
         - name: messaging.client_id
