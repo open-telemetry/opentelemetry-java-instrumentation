@@ -25,31 +25,8 @@ dependencies {
   testImplementation("org.apache.felix:org.apache.felix.framework:6.0.2")
 }
 
-val shadedJar by tasks.registering(ShadowJar::class) {
-  from(zipTree(tasks.jar.get().archiveFile))
-  archiveClassifier.set("shaded")
-}
-
 tasks {
   withType(ShadowJar::class) {
     relocate("io.opentelemetry.javaagent.instrumentation.internal.classloader.stub", "java.lang")
   }
-
-  assemble {
-    dependsOn(shadedJar)
-  }
-}
-
-// Create a consumable configuration for the shaded jar. We can't use the "shadow" configuration
-// because that is taken by the agent-testing.jar
-configurations {
-  consumable("shaded") {
-    attributes {
-      attribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, objects.named("shaded"))
-    }
-  }
-}
-
-artifacts {
-  add("shaded", shadedJar)
 }
