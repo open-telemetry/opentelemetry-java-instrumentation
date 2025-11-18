@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 base.archivesName.set("opentelemetry-spring-boot-autoconfigure")
@@ -35,6 +36,7 @@ dependencies {
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")
+  compileOnly("org.springframework.kafka:spring-kafka:2.9.0")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
@@ -55,7 +57,6 @@ dependencies {
   implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
   implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
 
-  library("org.springframework.kafka:spring-kafka:2.9.0")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
@@ -65,7 +66,9 @@ dependencies {
   library("org.springframework.boot:spring-boot-starter-data-jdbc:$springBootVersion")
 
   implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  implementation("io.opentelemetry:opentelemetry-sdk-extension-incubator")
   implementation(project(":sdk-autoconfigure-support"))
+  implementation(project(":declarative-config-bridge"))
   compileOnly("io.opentelemetry:opentelemetry-extension-trace-propagators")
   compileOnly("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   compileOnly("io.opentelemetry:opentelemetry-exporter-logging")
@@ -80,12 +83,12 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
+
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
   testRuntimeOnly("com.h2database:h2:1.4.197")
   testRuntimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
 
-  testImplementation(project(":testing-common"))
   testImplementation("io.opentelemetry:opentelemetry-sdk")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation(project(":instrumentation:resources:library"))
@@ -125,7 +128,6 @@ testing {
     val testLogbackAppender by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        implementation(project(":testing-common"))
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation("org.mockito:mockito-inline")
@@ -171,6 +173,17 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-test:3.2.4") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
+      }
+    }
+
+    val testDeclarativeConfig by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+        implementation("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
       }
     }
   }

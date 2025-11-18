@@ -12,7 +12,7 @@ import ratpack.impose.ImpositionsSpec;
 import ratpack.test.MainClassApplicationUnderTest;
 import ratpack.test.embed.EmbeddedApp;
 
-public class RatpackFunctionalTest extends MainClassApplicationUnderTest {
+class RatpackFunctionalTest extends MainClassApplicationUnderTest {
 
   private final EmbeddedApp app =
       EmbeddedApp.of(

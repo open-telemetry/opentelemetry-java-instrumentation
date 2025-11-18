@@ -1,13 +1,13 @@
 pluginManagement {
   plugins {
-    id("com.github.jk1.dependency-license-report") version "2.9"
-    id("com.google.cloud.tools.jib") version "3.4.5"
+    id("com.github.jk1.dependency-license-report") version "3.0.1"
+    id("com.google.cloud.tools.jib") version "3.5.0"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.8.2"
-    id("org.graalvm.buildtools.native") version "0.11.2"
+    id("org.graalvm.buildtools.native") version "0.11.3"
     id("com.google.osdetector") version "1.7.3"
     id("com.google.protobuf") version "0.9.5"
   }
@@ -21,7 +21,7 @@ plugins {
   // in particular, these commands are failing (reproducible locally):
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
-  id("com.bmuschko.docker-remote-api") version "9.4.0" apply false
+  id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
   id("com.gradle.develocity") version "4.2.2"
 }
 
@@ -140,6 +140,7 @@ include(":testing:agent-exporter")
 include(":testing:agent-for-testing")
 include(":testing:dependencies-shaded-for-testing")
 include(":testing-common")
+include(":testing-common:with-shaded-dependencies")
 include(":testing-common:integration-tests")
 include(":testing-common:library-for-integration-tests")
 
@@ -190,7 +191,9 @@ include(":instrumentation:armeria:armeria-1.3:javaagent")
 include(":instrumentation:armeria:armeria-1.3:library")
 include(":instrumentation:armeria:armeria-1.3:testing")
 include(":instrumentation:armeria:armeria-grpc-1.14:javaagent")
+include(":instrumentation:async-http-client:async-http-client-1.8:javaagent")
 include(":instrumentation:async-http-client:async-http-client-1.9:javaagent")
+include(":instrumentation:async-http-client:async-http-client-1-common:javaagent")
 include(":instrumentation:async-http-client:async-http-client-2.0:javaagent")
 include(":instrumentation:avaje-jex-3.0:javaagent")
 include(":instrumentation:aws-lambda:aws-lambda-core-1.0:javaagent")
@@ -352,7 +355,6 @@ include(":instrumentation:jaxws:jaxws-2.0:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-arquillian-testing")
 include(":instrumentation:jaxws:jaxws-2.0-axis2-1.6:javaagent")
 include(":instrumentation:jaxws:jaxws-2.0-common-testing")
-include(":instrumentation:jaxws:jaxws-2.0-metro-2.2-testing")
 include(":instrumentation:jaxws:jaxws-2.0-tomee-testing")
 include(":instrumentation:jaxws:jaxws-2.0-wildfly-testing")
 include(":instrumentation:jaxws:jaxws-3.0-axis2-2.0-testing")
@@ -385,6 +387,7 @@ include(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:javaagent")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:library")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing")
+include(":instrumentation:jfinal-3.2:javaagent")
 include(":instrumentation:jms:jms-1.1:javaagent")
 include(":instrumentation:jms:jms-3.0:javaagent")
 include(":instrumentation:jms:jms-common:bootstrap")
@@ -642,6 +645,7 @@ include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing")
+include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing-webflux7")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:javaagent")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-3.1:wildfly-testing")
 include(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library")

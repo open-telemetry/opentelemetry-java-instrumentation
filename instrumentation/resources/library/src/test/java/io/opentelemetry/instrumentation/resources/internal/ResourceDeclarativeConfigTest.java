@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ResourceDeclarativeConfigTest {
@@ -69,7 +70,10 @@ class ResourceDeclarativeConfigTest {
               assertThat(attributeKeys).contains("os.type");
               // ProcessResourceComponentProvider
               assertThat(attributeKeys)
-                  .contains(java8 ? "process.command_line" : "process.command_args");
+                  .contains(
+                      java8 || OS.WINDOWS.isCurrentOs()
+                          ? "process.command_line"
+                          : "process.command_args");
               assertThat(attributeKeys).contains("process.executable.path");
               assertThat(attributeKeys).contains("process.pid");
               // ProcessRuntimeResourceComponentProvider

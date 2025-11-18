@@ -5,9 +5,9 @@
 
 package instrumentation;
 
+import static instrumentation.TestSingletons.STRING;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -36,7 +36,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit
     public static String methodExit(@Advice.This Runnable test) {
-      VirtualField.find(Runnable.class, String.class).set(test, "instrumented");
+      STRING.set(test, "instrumented");
       return "instrumented";
     }
   }
@@ -47,7 +47,7 @@ public class TestTypeInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit
     public static String methodExit(@Advice.This Runnable test) {
-      return VirtualField.find(Runnable.class, String.class).get(test);
+      return STRING.get(test);
     }
   }
 }

@@ -14,7 +14,7 @@ jobs:
         with:
           fetch-depth: 0 # needed for merge-base used in lint:links-in-modified-files
 
-      - uses: jdx/mise-action@e3d7b8d67a7958d1207f6ed871e83b1ea780e7b0 # v3.3.1
+      - uses: jdx/mise-action@9dc7d5dd454262207dea3ab5a06a3df6afc8ff26 # v3.4.1
 
       - name: Link check - relative links (all files)
         if: github.event_name == 'pull_request'

@@ -4,8 +4,7 @@ name: OWASP dependency check (daily)
 
 on:
   schedule:
-    # daily at 1:30 UTC
-    - cron: "30 1 * * *"
+    - cron: "30 1 * * *" # daily at 1:30 UTC
   workflow_dispatch:
 
 permissions:

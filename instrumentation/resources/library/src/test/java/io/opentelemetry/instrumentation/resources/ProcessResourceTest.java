@@ -12,9 +12,12 @@ import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.incubating.ProcessIncubatingAttributes;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.OS;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class ProcessResourceTest {
+
+  private static final boolean IS_WINDOWS = OS.WINDOWS.isCurrentOs();
 
   @Test
   @SetSystemProperty(key = "os.name", value = "Linux 4.12")
@@ -37,10 +40,8 @@ class ProcessResourceTest {
     assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
         .matches(windows ? ".*[/\\\\]java\\.exe" : ".*[/\\\\]java");
 
-    // With Java 9+ and a compiled jar, ResourceAttributes.PROCESS_COMMAND_ARGS
-    // will be set instead of ResourceAttributes.PROCESS_COMMAND_LINE
     boolean java8 = "1.8".equals(System.getProperty("java.specification.version"));
-    if (java8) {
+    if (java8 || IS_WINDOWS) {
       assertThat(attributes.get(ProcessIncubatingAttributes.PROCESS_COMMAND_LINE))
           .contains(attributes.get(ProcessIncubatingAttributes.PROCESS_EXECUTABLE_PATH))
           .contains("-DtestSecret=***")

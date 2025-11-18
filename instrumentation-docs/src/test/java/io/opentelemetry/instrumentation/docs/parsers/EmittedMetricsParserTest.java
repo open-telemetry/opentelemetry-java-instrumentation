@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.MockedStatic;
 
-@SuppressWarnings("NullAway")
 class EmittedMetricsParserTest {
 
   @Test

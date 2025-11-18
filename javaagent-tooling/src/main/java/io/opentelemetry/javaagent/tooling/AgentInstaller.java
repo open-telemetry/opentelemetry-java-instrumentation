@@ -30,6 +30,8 @@ import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHol
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizer;
+import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.ignore.IgnoredTypesConfigurer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstrumentationModule;
@@ -107,7 +109,6 @@ public class AgentInstaller {
 
     logVersionInfo();
     if (earlyConfig.getBoolean(JAVAAGENT_ENABLED_CONFIG, true)) {
-      setupUnsafe(inst);
       List<AgentListener> agentListeners = loadOrdered(AgentListener.class, extensionClassLoader);
       installBytebuddyAgent(inst, extensionClassLoader, agentListeners, earlyConfig);
     } else {
@@ -222,6 +223,7 @@ public class AgentInstaller {
     instrumentationInstalled = true;
 
     addHttpServerResponseCustomizers(extensionClassLoader);
+    addSqlCommenterCustomizers(extensionClassLoader);
 
     runAfterAgentListeners(agentListeners, autoConfiguredSdk, sdkConfig);
   }
@@ -290,14 +292,6 @@ public class AgentInstaller {
     }
   }
 
-  private static void setupUnsafe(Instrumentation inst) {
-    try {
-      UnsafeInitializer.initialize(inst, AgentInstaller.class.getClassLoader());
-    } catch (UnsupportedClassVersionError exception) {
-      // ignore
-    }
-  }
-
   private static void setBootstrapPackages(
       ConfigProperties config, ClassLoader extensionClassLoader) {
     BootstrapPackagesBuilderImpl builder = new BootstrapPackagesBuilderImpl();
@@ -345,6 +339,18 @@ public class AgentInstaller {
             for (HttpServerResponseCustomizer modifier : customizers) {
               modifier.customize(serverContext, response, responseMutator);
             }
+          }
+        });
+  }
+
+  private static void addSqlCommenterCustomizers(ClassLoader extensionClassLoader) {
+    List<SqlCommenterCustomizer> customizers =
+        load(SqlCommenterCustomizer.class, extensionClassLoader);
+
+    SqlCommenterCustomizerHolder.setCustomizer(
+        builder -> {
+          for (SqlCommenterCustomizer modifier : customizers) {
+            modifier.customize(builder);
           }
         });
   }

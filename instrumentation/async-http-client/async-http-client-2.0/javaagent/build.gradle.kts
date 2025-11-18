@@ -16,6 +16,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.8:javaagent"))
   testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.9:javaagent"))
 }
 

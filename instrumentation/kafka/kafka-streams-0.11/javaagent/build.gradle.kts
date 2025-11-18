@@ -28,9 +28,7 @@ tasks {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
-
-    // TODO run tests both with and without experimental span attributes
-    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
   }
 
   val testReceiveSpansDisabled by registering(Test::class) {
@@ -40,6 +38,19 @@ tasks {
       includeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
     }
     include("**/KafkaStreamsSuppressReceiveSpansTest.*")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    filter {
+      excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
+    }
+    jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
+
+    jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kafka.experimental-span-attributes=true")
   }
 
   test {

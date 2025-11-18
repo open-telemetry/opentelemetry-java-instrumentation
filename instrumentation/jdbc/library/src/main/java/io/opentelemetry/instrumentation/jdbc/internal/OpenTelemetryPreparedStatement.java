@@ -20,6 +20,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.io.InputStream;
@@ -59,8 +60,8 @@ class OpenTelemetryPreparedStatement<S extends PreparedStatement> extends OpenTe
       String query,
       Instrumenter<DbRequest, Void> instrumenter,
       boolean captureQueryParameters,
-      boolean sqlCommenterEnabled) {
-    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenterEnabled);
+      SqlCommenter sqlCommenter) {
+    super(delegate, connection, dbInfo, query, instrumenter, sqlCommenter);
     this.captureQueryParameters = captureQueryParameters;
     this.parameters = new HashMap<>();
   }
