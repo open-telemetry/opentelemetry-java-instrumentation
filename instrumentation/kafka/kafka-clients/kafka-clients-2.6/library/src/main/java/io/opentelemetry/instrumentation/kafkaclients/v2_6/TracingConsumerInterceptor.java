@@ -37,18 +37,20 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
-    telemetry = KafkaTelemetry.builder(openTelemetry)
-        .setMessagingReceiveInstrumentationEnabled(
-            ConfigPropertiesUtil.getBoolean(
-                openTelemetry,
-                false,
-                "messaging", "experimental", "receive_telemetry", "enabled"))
-        .setCapturedHeaders(
-            ConfigPropertiesUtil.getList(
-                openTelemetry,
-                emptyList(),
-                "messaging", "experimental", "capture_headers"))
-        .build();
+    telemetry =
+        KafkaTelemetry.builder(openTelemetry)
+            .setMessagingReceiveInstrumentationEnabled(
+                ConfigPropertiesUtil.getBoolean(
+                    openTelemetry,
+                    false,
+                    "messaging",
+                    "experimental",
+                    "receive_telemetry",
+                    "enabled"))
+            .setCapturedHeaders(
+                ConfigPropertiesUtil.getList(
+                    openTelemetry, emptyList(), "messaging", "experimental", "capture_headers"))
+            .build();
   }
 
   private String consumerGroup;
