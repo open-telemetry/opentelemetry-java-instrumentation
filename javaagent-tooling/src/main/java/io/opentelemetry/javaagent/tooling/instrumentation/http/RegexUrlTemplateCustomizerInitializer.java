@@ -30,33 +30,26 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
     // url template is emitted only when http client experimental telemetry is enabled
     boolean urlTemplateEnabled =
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
-    if (!urlTemplateEnabled) {
+    if (!urlTemplateEnabled || !config.isDeclarative()) {
       return;
     }
-    if (config.isDeclarative()) {
-      DeclarativeConfigProperties configuration =
-          config.getDeclarativeConfig("http").getStructured("client", empty());
-      configuration
-          .getStructuredList("url_template_rules", emptyList())
-          .forEach(
-              rule -> {
-                String patternString = rule.getString("pattern", "");
-                String template = rule.getString("template", "");
-                if (patternString.isEmpty() || template.isEmpty()) {
-                  return;
-                }
-                boolean override = rule.getBoolean("override", false);
-                Pattern pattern = toPattern(patternString);
-                if (pattern != null) {
-                  UrlTemplateRules.addRule(pattern, template, override);
-                }
-              });
-    } else {
-      String rules = config.getString("otel.instrumentation.http.client.url-template-rules");
-      if (rules != null && !rules.isEmpty()) {
-        parse(rules);
-      }
-    }
+    DeclarativeConfigProperties configuration =
+        config.getDeclarativeConfig("http").getStructured("client", empty());
+    configuration
+        .getStructuredList("url_template_rules", emptyList())
+        .forEach(
+            rule -> {
+              String patternString = rule.getString("pattern", "");
+              String template = rule.getString("template", "");
+              if (patternString.isEmpty() || template.isEmpty()) {
+                return;
+              }
+              boolean override = rule.getBoolean("override", false);
+              Pattern pattern = toPattern(patternString);
+              if (pattern != null) {
+                UrlTemplateRules.addRule(pattern, template, override);
+              }
+            });
   }
 
   // visible for testing
