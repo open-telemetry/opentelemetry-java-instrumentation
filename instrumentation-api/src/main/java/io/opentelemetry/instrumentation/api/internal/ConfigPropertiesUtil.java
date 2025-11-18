@@ -66,6 +66,10 @@ public final class ConfigPropertiesUtil {
         (key) -> getBoolean(key, defaultValue));
   }
 
+  /**
+   * Returns the int value of the given property name from system properties and environment
+   * variables.
+   */
   public static int getInt(String propertyName, int defaultValue) {
     String strValue = getString(propertyName);
     if (strValue == null) {
@@ -78,6 +82,13 @@ public final class ConfigPropertiesUtil {
     }
   }
 
+  /**
+   * Returns the string value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link #getString(OpenTelemetry, String, String...)} instead to
+   * support Declarative Config.
+   */
   @Nullable
   public static String getString(String propertyName) {
     String value = System.getProperty(propertyName);
@@ -87,6 +98,10 @@ public final class ConfigPropertiesUtil {
     return System.getenv(toEnvVarName(propertyName));
   }
 
+  /**
+   * Returns the string value of the given property name from Declarative Config if available,
+   * otherwise falls back to system properties and environment variables.
+   */
   public static String getString(
       OpenTelemetry openTelemetry, String defaultValue, String... propertyName) {
     return getDeclarativeConfigOrFallback(
@@ -99,21 +114,23 @@ public final class ConfigPropertiesUtil {
         });
   }
 
-  private static List<String> getList(String propertyName, List<String> defaultValue) {
-    String value = getString(propertyName);
-    if (value == null) {
-      return defaultValue;
-    }
-    return filterBlanksAndNulls(value.split(","));
-  }
-
+  /**
+   * Returns the list of strings value of the given property name from Declarative Config if
+   * available, otherwise falls back to system properties and environment variables.
+   */
   public static List<String> getList(
       OpenTelemetry openTelemetry, List<String> defaultValue, String... propertyName) {
     return getDeclarativeConfigOrFallback(
         openTelemetry,
         propertyName,
         (node, key) -> node.getScalarList(key, String.class, defaultValue),
-        (key) -> getList(key, defaultValue));
+        (key) -> {
+          String value = getString(key);
+          if (value == null) {
+            return defaultValue;
+          }
+          return filterBlanksAndNulls(value.split(","));
+        });
   }
 
   private static List<String> filterBlanksAndNulls(String[] values) {
