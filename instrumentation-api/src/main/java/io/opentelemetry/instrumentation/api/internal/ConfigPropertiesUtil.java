@@ -86,7 +86,7 @@ public final class ConfigPropertiesUtil {
    * Returns the string value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link #getString(OpenTelemetry, String, String...)} instead to
+   * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to
    * support Declarative Config.
    */
   @Nullable
