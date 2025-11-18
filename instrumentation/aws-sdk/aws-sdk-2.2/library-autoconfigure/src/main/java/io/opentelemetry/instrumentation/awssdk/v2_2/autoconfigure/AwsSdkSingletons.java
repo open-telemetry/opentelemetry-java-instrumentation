@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
 import static java.util.Collections.emptyList;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
@@ -25,13 +26,17 @@ public final class AwsSdkSingletons {
     @Override
     protected List<String> getCapturedHeaders() {
       return ConfigPropertiesUtil.getList(
-          "otel.instrumentation.messaging.experimental.capture-headers", emptyList());
+          GlobalOpenTelemetry.get(),
+          emptyList(),
+          "messaging", "experimental", "capture_headers");
     }
 
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
       return ConfigPropertiesUtil.getBoolean(
-          "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false);
+          GlobalOpenTelemetry.get(),
+          false,
+          "messaging", "experimental", "receive_telemetry", "enabled");
     }
 
     @Override
