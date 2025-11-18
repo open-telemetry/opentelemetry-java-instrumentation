@@ -18,7 +18,6 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.jetbrains.annotations.Contract;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -103,17 +102,23 @@ public final class ConfigPropertiesUtil {
    * Returns the string value of the given property name from Declarative Config if available,
    * otherwise falls back to system properties and environment variables.
    */
-  @Contract("_, !null, _ -> !null")
-  public static String getString(
-      OpenTelemetry openTelemetry, @Nullable String defaultValue, String... propertyName) {
+  @Nullable
+  public static String getString(OpenTelemetry openTelemetry, String... propertyName) {
     return getDeclarativeConfigOrFallback(
-        openTelemetry,
-        propertyName,
-        (node, key) -> node.getString(key, defaultValue),
-        (key) -> {
-          String strValue = getString(key);
-          return strValue == null ? defaultValue : strValue;
-        });
+        openTelemetry, propertyName, (node, key) -> node.getString(key), (key) -> getString(key));
+  }
+
+  /**
+   * Returns the string value of the given property name from Declarative Config if available,
+   * otherwise falls back to system properties and environment variables.
+   */
+  public static String getStringOrFallback(
+      OpenTelemetry openTelemetry, String defaultValue, String... propertyName) {
+    String value = getString(openTelemetry, propertyName);
+    if (value == null) {
+      return defaultValue;
+    }
+    return value;
   }
 
   /**
