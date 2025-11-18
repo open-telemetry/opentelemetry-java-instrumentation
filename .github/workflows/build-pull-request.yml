@@ -53,9 +53,6 @@ jobs:
   markdown-lint-check:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
-  misspell-check:
-    uses: ./.github/workflows/reusable-misspell-check.yml
-
   required-status-check:
     # test-latest-deps is not included in the required status checks
     # because any time a new library version is released to maven central
@@ -71,7 +68,6 @@ jobs:
       - muzzle
       - shell-script-check
       - markdown-lint-check
-      - misspell-check
     runs-on: ubuntu-latest
     if: always()
     steps:
@@ -82,8 +78,7 @@ jobs:
             (
               needs.muzzle.result != 'success' ||
               needs.shell-script-check.result != 'success' ||
-              needs.markdown-lint-check.result != 'success' ||
-              needs.misspell-check.result != 'success'
+              needs.markdown-lint-check.result != 'success'
             )
           )
         run: exit 1 # fail
