@@ -17,23 +17,21 @@ public abstract class AbstractAwsSdkTelemetryFactory {
   protected abstract List<String> getCapturedHeaders();
 
   private boolean captureExperimentalSpanAttributes() {
-    return getBoolean(false, "otel.instrumentation.aws-sdk.experimental-span-attributes");
+    return getBoolean(false, "aws_sdk", "experimental_span_attributes");
   }
 
   protected abstract boolean messagingReceiveInstrumentationEnabled();
 
   private boolean useMessagingPropagator() {
-    return getBoolean(
-        false, "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging");
+    return getBoolean(false, "aws_sdk", "experimental_use_propagator_for_messaging");
   }
 
   private boolean recordIndividualHttpError() {
-    return getBoolean(
-        false, "otel.instrumentation.aws-sdk.experimental-record-individual-http-error");
+    return getBoolean(false, "aws_sdk", "experimental_record_individual_http_error");
   }
 
   private boolean genaiCaptureMessageContent() {
-    return getBoolean(false, "otel.instrumentation.genai.capture-message-content");
+    return getBoolean(false, "genai", "capture_message_content");
   }
 
   protected abstract boolean getBoolean(boolean defaultValue, String... name);
