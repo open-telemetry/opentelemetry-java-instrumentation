@@ -26,9 +26,7 @@ public final class AwsSdkSingletons {
     @Override
     protected List<String> getCapturedHeaders() {
       return ConfigPropertiesUtil.getList(
-          GlobalOpenTelemetry.get(),
-          emptyList(),
-          "messaging", "experimental", "capture_headers");
+          GlobalOpenTelemetry.get(), emptyList(), "messaging", "experimental", "capture_headers");
     }
 
     @Override
@@ -36,12 +34,15 @@ public final class AwsSdkSingletons {
       return ConfigPropertiesUtil.getBoolean(
           GlobalOpenTelemetry.get(),
           false,
-          "messaging", "experimental", "receive_telemetry", "enabled");
+          "messaging",
+          "experimental",
+          "receive_telemetry",
+          "enabled");
     }
 
     @Override
-    protected boolean getBoolean(String name, boolean defaultValue) {
-      return ConfigPropertiesUtil.getBoolean(name, defaultValue);
+    protected boolean getBoolean(boolean defaultValue, String... name) {
+      return ConfigPropertiesUtil.getBoolean(GlobalOpenTelemetry.get(), defaultValue, name);
     }
   }
 
