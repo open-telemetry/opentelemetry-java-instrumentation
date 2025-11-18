@@ -129,4 +129,62 @@ class ConfigPropertiesUtilTest {
     assertThat(ConfigPropertiesUtil.toSystemProperty(new String[] {"a_b", "c", "d"}))
         .isEqualTo("otel.instrumentation.a-b.c.d");
   }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_LIST", value = "a,b,c")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.list", value = "x,y,z")
+  @Test
+  void getList_systemProperty() {
+    assertList(java.util.Arrays.asList("x", "y", "z"));
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_LIST", value = "a,b,c")
+  @Test
+  void getList_environmentVariable() {
+    assertList(java.util.Arrays.asList("a", "b", "c"));
+  }
+
+  @Test
+  void getList_none() {
+    assertList(Collections.emptyList());
+  }
+
+  private static void assertList(java.util.List<String> expected) {
+    assertThat(ConfigPropertiesUtil.getList("otel.instrumentation.test.property.list", Collections.emptyList()))
+        .isEqualTo(expected);
+    assertThat(
+            ConfigPropertiesUtil.getList(
+                OpenTelemetry.noop(), Collections.emptyList(), "test", "property", "list"))
+        .isEqualTo(expected);
+  }
+
+  public static Stream<Arguments> listValuesProvider() {
+    return Stream.of(
+        Arguments.of(java.util.Arrays.asList("a", "b", "c"), java.util.Arrays.asList("a", "b", "c")),
+        Arguments.of(java.util.Arrays.asList("single"), java.util.Arrays.asList("single")),
+        Arguments.of(Collections.emptyList(), Collections.emptyList()),
+        Arguments.of(java.util.Arrays.asList(""), Collections.emptyList()),
+        Arguments.of(null, Collections.emptyList()));
+  }
+
+  @ParameterizedTest
+  @MethodSource("listValuesProvider")
+  void getList_declarativeConfig(java.util.List<String> property, java.util.List<String> expected) {
+    assertThat(
+            ConfigPropertiesUtil.getList(
+                DeclarativeConfiguration.create(modelForList(property)), Collections.emptyList(), "foo", "bar"))
+        .isEqualTo(expected);
+  }
+
+  private static OpenTelemetryConfigurationModel modelForList(java.util.List<String> value) {
+    return new DeclarativeConfigurationBuilder()
+        .customizeModel(
+            new OpenTelemetryConfigurationModel()
+                .withFileFormat("1.0-rc.1")
+                .withInstrumentationDevelopment(
+                    new InstrumentationModel()
+                        .withJava(
+                            new ExperimentalLanguageSpecificInstrumentationModel()
+                                .withAdditionalProperty(
+                                    "foo", Collections.singletonMap("bar", value)))));
+  }
 }
