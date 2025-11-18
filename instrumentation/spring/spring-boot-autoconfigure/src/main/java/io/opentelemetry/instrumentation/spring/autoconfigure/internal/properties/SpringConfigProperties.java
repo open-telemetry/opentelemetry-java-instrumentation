@@ -210,7 +210,7 @@ public class SpringConfigProperties implements ConfigProperties {
     }
 
     List<String> envValue = (List<String>) environment.getProperty(normalizedName, List.class);
-    return or(envValue, otelSdkProperties.getList(name));
+    return orNonNull(envValue, otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -279,6 +279,10 @@ public class SpringConfigProperties implements ConfigProperties {
 
   @Nullable
   private static <T> T or(@Nullable T first, @Nullable T second) {
+    return first != null ? first : second;
+  }
+
+  private static <T> T orNonNull(@Nullable T first, T second) {
     return first != null ? first : second;
   }
 }

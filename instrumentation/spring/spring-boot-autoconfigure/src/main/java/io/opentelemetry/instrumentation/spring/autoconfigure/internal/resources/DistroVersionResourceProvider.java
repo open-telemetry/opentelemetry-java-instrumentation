@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.resources;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
@@ -19,7 +21,9 @@ import io.opentelemetry.sdk.resources.Resource;
 public class DistroVersionResourceProvider implements ResourceProvider {
 
   public static final String VERSION =
-      EmbeddedInstrumentationProperties.findVersion("io.opentelemetry.spring-boot-autoconfigure");
+      requireNonNull(
+          EmbeddedInstrumentationProperties.findVersion(
+              "io.opentelemetry.spring-boot-autoconfigure"));
 
   private static final AttributeKey<String> TELEMETRY_DISTRO_NAME =
       AttributeKey.stringKey("telemetry.distro.name");

@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import java.lang.reflect.Field;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.kafka.config.AbstractKafkaListenerContainerFactory;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
@@ -47,6 +48,7 @@ class ConcurrentKafkaListenerContainerFactoryPostProcessor implements BeanPostPr
     return listenerContainerFactory;
   }
 
+  @Nullable
   private static <T> T readField(Object container, String filedName, Class<T> fieldType) {
     try {
       Field field = AbstractKafkaListenerContainerFactory.class.getDeclaredField(filedName);

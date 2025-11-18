@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 base.archivesName.set("opentelemetry-spring-boot-autoconfigure")
@@ -35,6 +36,7 @@ dependencies {
   annotationProcessor("org.springframework.boot:spring-boot-autoconfigure-processor:$springBootVersion")
   annotationProcessor("org.springframework.boot:spring-boot-configuration-processor:$springBootVersion")
   implementation("javax.validation:validation-api")
+  compileOnly("org.springframework.kafka:spring-kafka:2.9.0")
 
   implementation(project(":instrumentation-annotations-support"))
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
@@ -55,7 +57,6 @@ dependencies {
   implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java8:library"))
   implementation(project(":instrumentation:runtime-telemetry:runtime-telemetry-java17:library"))
 
-  library("org.springframework.kafka:spring-kafka:2.9.0")
   library("org.springframework.boot:spring-boot-starter-actuator:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-aop:$springBootVersion")
   library("org.springframework.boot:spring-boot-starter-web:$springBootVersion")
