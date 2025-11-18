@@ -46,10 +46,12 @@
     - `aws.queue.url` (SQS) → `aws.sqs.queue.url`
     - `aws.stream.name` (Kinesis) → `aws.kinesis.stream_name`
     - `aws.table.name` (DynamoDB) → `aws.dynamodb.table_names`
-- Finatra controller spans now disabled by default
+- Finatra controller spans now disabled by default to match other controller spans
   ([#15118](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15118))
 - Netty HTTP request wrapper class renamed from HttpRequestAndChannel to NettyRequest
   ([#15247](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15247))
+- JSP compile spans now disabled by default to match other view spans
+  ([#15261](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15261))
 
 ### 🚫 Deprecations
 
@@ -59,6 +61,11 @@
   ([#15101](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15101))
 - DbClientCommonAttributesGetter deprecated in favor of DbClientAttributesGetter
   ([#15139](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15139))
+
+### 🌟 New javaagent instrumentation
+
+- Add JFinal instrumentation
+  ([#15216](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15216))
 
 ### 📈 Enhancements
 
@@ -83,6 +90,10 @@
    [#15311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15311))
 - Added span status customizer to incubating InstrumenterCustomizer API
   ([#15288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15288))
+- Added configuration options for sqlcommenter
+  ([#15169](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15169))
+- GraphQL instrumentation now records data fetcher errors
+  ([#15289](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15289))
 
 ### 🛠️ Bug fixes
 
