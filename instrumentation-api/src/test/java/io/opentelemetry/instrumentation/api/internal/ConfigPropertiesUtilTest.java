@@ -46,6 +46,52 @@ class ConfigPropertiesUtilTest {
     assertThat(ConfigPropertiesUtil.getString("test.property.string")).isNull();
   }
 
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_STRING", value = "env_value")
+  @SetSystemProperty(key = "otel.instrumentation.test.property.string", value = "sys_value")
+  @Test
+  void getString_withOpenTelemetry_systemProperty() {
+    assertString("sys_value");
+  }
+
+  @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_STRING", value = "env_value")
+  @Test
+  void getString_withOpenTelemetry_environmentVariable() {
+    assertString("env_value");
+  }
+
+  @Test
+  void getString_withOpenTelemetry_none() {
+    assertString("default_value");
+  }
+
+  private static void assertString(String expected) {
+    assertThat(
+            ConfigPropertiesUtil.getString("otel.instrumentation.test.property.string", "default_value"))
+        .isEqualTo(expected);
+    assertThat(
+            ConfigPropertiesUtil.getString(
+                OpenTelemetry.noop(), "default_value", "test", "property", "string"))
+        .isEqualTo(expected);
+  }
+
+  public static Stream<Arguments> stringValuesProvider() {
+    return Stream.of(
+        Arguments.of("value1", "value1"),
+        Arguments.of("", ""),
+        Arguments.of(null, "default_value"),
+        Arguments.of(123, "default_value"), // no type coercion in declarative config
+        Arguments.of(true, "default_value")); // no type coercion in declarative config
+  }
+
+  @ParameterizedTest
+  @MethodSource("stringValuesProvider")
+  void getString_declarativeConfig(Object property, String expected) {
+    assertThat(
+            ConfigPropertiesUtil.getString(
+                DeclarativeConfiguration.create(model(property)), "default_value", "foo", "bar"))
+        .isEqualTo(expected);
+  }
+
   @SetEnvironmentVariable(key = "TEST_PROPERTY_INT", value = "12")
   @SetSystemProperty(key = "test.property.int", value = "42")
   @Test
