@@ -1,6 +1,6 @@
 description: >
   This instrumentation enables context propagation for Kotlin coroutines and adds support for
-  @WithSpan annotations on Kotlin suspend functions, it does not emit any telemetry on its own.
+  @WithSpan annotations on Kotlin suspend functions.
 display_name: Kotlin Coroutines
 features:
   - CONTEXT_PROPAGATION
