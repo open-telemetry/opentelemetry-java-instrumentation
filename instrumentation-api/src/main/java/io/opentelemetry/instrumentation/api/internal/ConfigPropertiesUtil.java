@@ -11,6 +11,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import org.jetbrains.annotations.Contract;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
@@ -102,8 +103,9 @@ public final class ConfigPropertiesUtil {
    * Returns the string value of the given property name from Declarative Config if available,
    * otherwise falls back to system properties and environment variables.
    */
+  @Contract("_, !null, _ -> !null")
   public static String getString(
-      OpenTelemetry openTelemetry, String defaultValue, String... propertyName) {
+      OpenTelemetry openTelemetry, @Nullable String defaultValue, String... propertyName) {
     return getDeclarativeConfigOrFallback(
         openTelemetry,
         propertyName,
@@ -133,6 +135,11 @@ public final class ConfigPropertiesUtil {
         });
   }
 
+  /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
+  public static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
+    return isIncubator && openTelemetry instanceof ExtendedOpenTelemetry;
+  }
+
   private static List<String> filterBlanksAndNulls(String[] values) {
     return Arrays.stream(values)
         .map(String::trim)
@@ -159,7 +166,7 @@ public final class ConfigPropertiesUtil {
   @Nullable
   private static DeclarativeConfigProperties getDeclarativeConfigNode(
       OpenTelemetry openTelemetry, String... propertyName) {
-    if (isIncubator && openTelemetry instanceof ExtendedOpenTelemetry) {
+    if (isDeclarativeConfig(openTelemetry)) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();
       DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
