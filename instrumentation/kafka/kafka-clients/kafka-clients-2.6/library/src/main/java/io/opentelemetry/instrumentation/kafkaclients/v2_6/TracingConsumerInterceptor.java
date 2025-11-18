@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -32,15 +33,23 @@ import org.apache.kafka.common.TopicPartition;
 @Deprecated
 public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setMessagingReceiveInstrumentationEnabled(
-              ConfigPropertiesUtil.getBoolean(
-                  "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
+  private static final KafkaTelemetry telemetry;
+
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    telemetry = KafkaTelemetry.builder(openTelemetry)
+        .setMessagingReceiveInstrumentationEnabled(
+            ConfigPropertiesUtil.getBoolean(
+                openTelemetry,
+                false,
+                "messaging", "experimental", "receive_telemetry", "enabled"))
+        .setCapturedHeaders(
+            ConfigPropertiesUtil.getList(
+                openTelemetry,
+                emptyList(),
+                "messaging", "experimental", "capture_headers"))
+        .build();
+  }
 
   private String consumerGroup;
   private String clientId;
