@@ -13,7 +13,7 @@
       matchManagers: [
         'github-actions',
         'dockerfile',
-        'regex',
+        'custom.regex',
       ],
       extends: [
         'schedule:weekly',
@@ -146,7 +146,7 @@
       matchPackageNames: [
         'uk.org.webcompere:system-stubs-jupiter',
       ],
-      allowedVersions: '/^2\.0\./',
+      allowedVersions: '/^2\\.0\\./',
     },
     {
       // wiremock 3+ requires Java 11+
@@ -217,7 +217,7 @@
       matchPackageNames: [
         'ch.qos.logback:**',
       ],
-      allowedVersions: '/^1\.2\./',
+      allowedVersions: '/^1\\.2\\./',
     },
     {
       // intentionally using slf4j 1 in this smoke tests
@@ -277,7 +277,7 @@
       matchPackageNames: [
         'org.scala-lang:scala-library',
       ],
-      allowedVersions: '/^2\.11\./',
+      allowedVersions: '/^2\\.11\\./',
     },
     {
       // intentionally testing against specific major Java versions
@@ -321,7 +321,7 @@
       matchPackageNames: [
         'ch.qos.logback:**',
       ],
-      allowedVersions: '/^1\.3\./',
+      allowedVersions: '/^1\\.3\\./',
     },
     {
       // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
