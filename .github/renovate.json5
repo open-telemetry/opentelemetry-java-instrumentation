@@ -13,6 +13,7 @@
       matchManagers: [
         'github-actions',
         'dockerfile',
+        'regex',
       ],
       extends: [
         'schedule:weekly',
