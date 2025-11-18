@@ -60,15 +60,17 @@ val launcher = javaToolchains.launcherFor {
   languageVersion.set(JavaLanguageVersion.of(8))
 }
 
-class CompilerArgumentsProvider : CommandLineArgumentProvider {
+class CompilerArgumentsProvider(
+  private val buildDir: Directory
+) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     // gwt module
     "test.gwt.Greeting",
-    "-war", layout.buildDirectory.dir("testapp/war").get().asFile.absolutePath,
+    "-war", buildDir.dir("testapp/war").asFile.absolutePath,
     "-logLevel", "INFO",
     "-localWorkers", "2",
     "-compileReport",
-    "-extra", layout.buildDirectory.dir("testapp/extra").get().asFile.absolutePath,
+    "-extra", buildDir.dir("testapp/extra").asFile.absolutePath,
     // makes compile a bit faster
     "-draftCompile",
   )
@@ -87,7 +89,7 @@ tasks {
 
     classpath(sourceSets["testapp"].java.srcDirs, sourceSets["testapp"].compileClasspath)
 
-    argumentProviders.add(CompilerArgumentsProvider())
+    argumentProviders.add(CompilerArgumentsProvider(layout.buildDirectory.get()))
 
     if (findProperty("testLatestDeps") as Boolean) {
       javaLauncher.set(project.javaToolchains.launcherFor {
