@@ -59,7 +59,7 @@ public final class ConfigPropertiesUtil {
       OpenTelemetry openTelemetry, boolean defaultValue, String... propertyName) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
     if (node != null) {
-      return node.getBoolean(propertyName[propertyName.length - 1], defaultValue);
+      return node.getBoolean(leaf(propertyName), defaultValue);
     }
     return getBoolean(toSystemProperty(propertyName), defaultValue);
   }
@@ -98,6 +98,15 @@ public final class ConfigPropertiesUtil {
     return filterBlanksAndNulls(value.split(","));
   }
 
+  public static List<String> getList(
+      OpenTelemetry openTelemetry, List<String> defaultValue, String... propertyName) {
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
+    if (node != null) {
+      return node.getScalarList(leaf(propertyName), String.class, defaultValue);
+    }
+    return getList(toSystemProperty(propertyName), defaultValue);
+  }
+
   private static List<String> filterBlanksAndNulls(String[] values) {
     return Arrays.stream(values)
         .map(String::trim)
@@ -107,6 +116,10 @@ public final class ConfigPropertiesUtil {
 
   private static String toEnvVarName(String propertyName) {
     return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
+  }
+
+  private static String leaf(String[] propertyName) {
+    return propertyName[propertyName.length - 1];
   }
 
   @Nullable
