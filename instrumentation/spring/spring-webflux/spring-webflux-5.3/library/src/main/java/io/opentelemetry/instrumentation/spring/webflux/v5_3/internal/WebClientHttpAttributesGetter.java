@@ -5,15 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -24,32 +18,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 public enum WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
   INSTANCE;
-
-  private static final MethodHandle GET_HEADERS;
-
-  static {
-    GET_HEADERS =
-        isSpring7OrNewer()
-            ? findGetHeadersMethod(MethodType.methodType(List.class, String.class))
-            : findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
-  }
-
-  private static boolean isSpring7OrNewer() {
-    try {
-      Class.forName("org.springframework.core.Nullness");
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
-  }
-
-  private static MethodHandle findGetHeadersMethod(MethodType methodType) {
-    try {
-      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
-    } catch (Throwable t) {
-      throw new IllegalStateException(t);
-    }
-  }
 
   @Override
   public String getUrlFull(ClientRequest request) {
@@ -62,17 +30,8 @@ public enum WebClientHttpAttributesGetter
   }
 
   @Override
-  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
   public List<String> getHttpRequestHeader(ClientRequest request, String name) {
-    try {
-      List<String> result = (List<String>) GET_HEADERS.invoke(request.headers(), name);
-      if (result == null) {
-        return emptyList();
-      }
-      return result;
-    } catch (Throwable t) {
-      throw new IllegalStateException(t);
-    }
+    return HeaderUtil.getHeader(request.headers(), name);
   }
 
   @Override

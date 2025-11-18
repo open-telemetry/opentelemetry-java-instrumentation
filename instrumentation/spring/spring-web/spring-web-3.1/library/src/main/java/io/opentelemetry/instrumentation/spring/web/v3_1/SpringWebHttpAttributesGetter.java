@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpRequest;
 import org.springframework.http.client.ClientHttpResponse;
 
@@ -23,7 +20,6 @@ enum SpringWebHttpAttributesGetter
 
   @Nullable private static final MethodHandle GET_STATUS_CODE;
   @Nullable private static final MethodHandle STATUS_CODE_VALUE;
-  private static final MethodHandle GET_HEADERS;
 
   static {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
@@ -58,27 +54,6 @@ enum SpringWebHttpAttributesGetter
 
     GET_STATUS_CODE = getStatusCode;
     STATUS_CODE_VALUE = statusCodeValue;
-    GET_HEADERS =
-        isSpring7OrNewer()
-            ? findGetHeadersMethod(MethodType.methodType(List.class, String.class))
-            : findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
-  }
-
-  private static boolean isSpring7OrNewer() {
-    try {
-      Class.forName("org.springframework.core.Nullness");
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
-  }
-
-  private static MethodHandle findGetHeadersMethod(MethodType methodType) {
-    try {
-      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
-    } catch (Throwable t) {
-      return null;
-    }
   }
 
   @Override
@@ -94,20 +69,7 @@ enum SpringWebHttpAttributesGetter
 
   @Override
   public List<String> getHttpRequestHeader(HttpRequest httpRequest, String name) {
-    return getHeader(httpRequest.getHeaders(), name);
-  }
-
-  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
-  static List<String> getHeader(HttpHeaders headers, String name) {
-    try {
-      List<String> result = (List<String>) GET_HEADERS.invoke(headers, name);
-      if (result == null) {
-        return emptyList();
-      }
-      return result;
-    } catch (Throwable t) {
-      throw new IllegalStateException(t);
-    }
+    return HeaderUtil.getHeader(httpRequest.getHeaders(), name);
   }
 
   @Override
@@ -129,7 +91,7 @@ enum SpringWebHttpAttributesGetter
   @Override
   public List<String> getHttpResponseHeader(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, String name) {
-    return getHeader(clientHttpResponse.getHeaders(), name);
+    return HeaderUtil.getHeader(clientHttpResponse.getHeaders(), name);
   }
 
   @Override

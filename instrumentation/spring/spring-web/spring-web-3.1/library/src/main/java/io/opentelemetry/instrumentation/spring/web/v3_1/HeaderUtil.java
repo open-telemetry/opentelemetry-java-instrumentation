@@ -3,14 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3;
+package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import static java.util.Collections.emptyList;
+import static java.util.Objects.requireNonNull;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
+import java.util.function.Supplier;
 import org.springframework.http.HttpHeaders;
 
 class HeaderUtil {
@@ -18,28 +20,32 @@ class HeaderUtil {
 
   static {
     GET_HEADERS =
-        isSpring7OrNewer()
-            ? findGetHeadersMethod(MethodType.methodType(List.class, String.class))
-            : findGetHeadersMethod(MethodType.methodType(List.class, Object.class));
+        requireNonNullElseGet(
+            findGetHeadersMethod(
+                MethodType.methodType(List.class, String.class)), // since spring web 7.0
+            () ->
+                findGetHeadersMethod(
+                    MethodType.methodType(List.class, Object.class))); // before spring web 7.0
   }
 
-  private static boolean isSpring7OrNewer() {
-    try {
-      Class.forName("org.springframework.core.Nullness");
-      return true;
-    } catch (ClassNotFoundException e) {
-      return false;
-    }
+  // copied from java.util.Objects in Java 9+
+  private static <T> T requireNonNullElseGet(T obj, Supplier<? extends T> supplier) {
+    return (obj != null)
+        ? obj
+        : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
   }
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
       return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
     } catch (Throwable t) {
-      throw new IllegalStateException(t);
+      return null;
     }
   }
 
+  // before spring web 7.0 HttpHeaders implements Map<String, List<String>>, this triggers
+  // errorprone BadInstanceof warning since errorpone is not aware that this instanceof check does
+  // not pass with spring web 7.0+
   @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
   static List<String> getHeader(HttpHeaders headers, String name) {
     try {
