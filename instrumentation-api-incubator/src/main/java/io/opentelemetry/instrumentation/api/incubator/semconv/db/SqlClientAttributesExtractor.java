@@ -16,9 +16,12 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
+import io.opentelemetry.instrumentation.api.internal.SpanKey;
+import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
 import java.util.Map;
+import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
@@ -31,8 +34,7 @@ import java.util.Map;
  * statement parameters are removed.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
-    extends DbClientCommonAttributesExtractor<
-        REQUEST, RESPONSE, SqlClientAttributesGetter<REQUEST, RESPONSE>> {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_OPERATION = AttributeKey.stringKey("db.operation");
@@ -57,6 +59,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
   private static final String SQL_CALL = "CALL";
 
+  private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
   private final boolean captureQueryParameters;
@@ -66,22 +69,17 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey<String> oldSemconvTableAttribute,
       boolean statementSanitizationEnabled,
       boolean captureQueryParameters) {
-    super(getter);
+    this.getter = getter;
     this.oldSemconvTableAttribute = oldSemconvTableAttribute;
     // capturing query parameters disables statement sanitization
     this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
   }
 
+  @SuppressWarnings("deprecation") // until old db semconv are dropped
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    super.onStart(attributes, parentContext, request);
-
     Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
-
-    if (rawQueryTexts.isEmpty()) {
-      return;
-    }
 
     Long batchSize = getter.getBatchSize(request);
     boolean isBatch = batchSize != null && batchSize > 1;
@@ -118,7 +116,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
-      } else {
+      } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
         internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getStatements()));
@@ -136,6 +134,11 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
 
     Map<String, String> queryParameters = getter.getQueryParameters(request);
     setQueryParameters(attributes, isBatch, queryParameters);
+
+    // calling this last so explicit getDbOperationName(), getDbCollectionName(),
+    // getDbQueryText(), and getDbQuerySummary() implementations can override
+    // the parsed values from above
+    DbClientAttributesExtractor.onStartCommon(attributes, getter, request);
   }
 
   private void setQueryParameters(
@@ -159,5 +162,24 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       builder.append(string);
     }
     return builder.toString();
+  }
+
+  @Override
+  public void onEnd(
+      AttributesBuilder attributes,
+      Context context,
+      REQUEST request,
+      @Nullable RESPONSE response,
+      @Nullable Throwable error) {
+    DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
+  }
+
+  /**
+   * This method is internal and is hence not for public use. Its API is unstable and can change at
+   * any time.
+   */
+  @Override
+  public SpanKey internalGetSpanKey() {
+    return SpanKey.DB_CLIENT;
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v4.common;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.instrumentation.netty.v4.common.VirtualFieldHelper.CHANNEL_HANDLER;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -16,7 +17,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelPipeline;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Iterator;
@@ -74,14 +74,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
-      VirtualField<ChannelHandler, ChannelHandler> virtualField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = virtualField.get(handler);
+      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        virtualField.set(handler, null);
+        CHANNEL_HANDLER.set(handler, null);
       }
     }
   }
@@ -97,14 +95,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         return;
       }
 
-      VirtualField<ChannelHandler, ChannelHandler> virtualField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = virtualField.get(handler);
+      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        virtualField.set(handler, null);
+        CHANNEL_HANDLER.set(handler, null);
       }
     }
   }
@@ -121,14 +117,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         return;
       }
 
-      VirtualField<ChannelHandler, ChannelHandler> virtualField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = virtualField.get(handler);
+      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        virtualField.set(handler, null);
+        CHANNEL_HANDLER.set(handler, null);
       }
     }
   }
@@ -139,14 +133,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
-      VirtualField<ChannelHandler, ChannelHandler> virtualField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-      ChannelHandler ourHandler = virtualField.get(handler);
+      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        virtualField.set(handler, null);
+        CHANNEL_HANDLER.set(handler, null);
       }
     }
   }
@@ -158,11 +150,9 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.AssignReturned.ToReturned
     public static ChannelHandler removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler returnHandler) {
-      VirtualField<ChannelHandler, ChannelHandler> virtualField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       // TODO remove this extra variable when migrating to "indy only" instrumentation.
       ChannelHandler handler = returnHandler;
-      ChannelHandler ourHandler = virtualField.get(handler);
+      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
         // removeLast first removed our handler and we called removeLast again to remove the http
@@ -170,7 +160,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        virtualField.set(handler, null);
+        CHANNEL_HANDLER.set(handler, null);
       } else {
         String handlerClassName = handler.getClass().getName();
         if (handlerClassName.endsWith("TracingHandler")
@@ -197,9 +187,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
       String name = nameArg;
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
-        VirtualField<ChannelHandler, ChannelHandler> virtualField =
-            VirtualField.find(ChannelHandler.class, ChannelHandler.class);
-        ChannelHandler ourHandler = virtualField.get(handler);
+        ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
         if (ourHandler != null) {
           name = ourHandler.getClass().getName();
         }
@@ -213,8 +201,6 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void wrapIterator(@Advice.Return Map<String, ChannelHandler> map) {
-      VirtualField<ChannelHandler, ChannelHandler> virtualField =
-          VirtualField.find(ChannelHandler.class, ChannelHandler.class);
       for (Iterator<ChannelHandler> iterator = map.values().iterator(); iterator.hasNext(); ) {
         ChannelHandler handler = iterator.next();
         String handlerClassName = handler.getClass().getName();

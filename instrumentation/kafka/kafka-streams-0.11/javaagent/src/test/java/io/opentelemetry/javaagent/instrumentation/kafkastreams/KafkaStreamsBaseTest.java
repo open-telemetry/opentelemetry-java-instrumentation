@@ -60,6 +60,9 @@ abstract class KafkaStreamsBaseTest {
   static Consumer<Integer, String> consumer;
   static CountDownLatch consumerReady = new CountDownLatch(1);
 
+  protected static final boolean isExperimental =
+      Boolean.getBoolean("otel.instrumentation.kafka.experimental-span-attributes");
+
   @BeforeAll
   static void setup() throws ExecutionException, InterruptedException, TimeoutException {
     kafka =

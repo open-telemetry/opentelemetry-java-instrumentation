@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
@@ -22,11 +24,10 @@ public final class R2dbcTelemetryBuilder {
   private boolean statementSanitizationEnabled = true;
   private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer =
       UnaryOperator.identity();
-  private boolean sqlCommenterEnabled;
+  private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
 
   static {
-    Experimental.internalSetEnableSqlCommenter(
-        (builder, sqlCommenterEnabled) -> builder.sqlCommenterEnabled = sqlCommenterEnabled);
+    Experimental.internalSetSqlCommenterBuilder(builder -> builder.sqlCommenterBuilder);
   }
 
   R2dbcTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -81,6 +82,6 @@ public final class R2dbcTelemetryBuilder {
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
         instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled),
-        sqlCommenterEnabled);
+        sqlCommenterBuilder.build());
   }
 }

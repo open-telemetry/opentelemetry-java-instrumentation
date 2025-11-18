@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("com.amazonaws:aws-lambda-java-core:1.0.0")
   api("com.amazonaws:aws-lambda-java-events:2.2.1")
