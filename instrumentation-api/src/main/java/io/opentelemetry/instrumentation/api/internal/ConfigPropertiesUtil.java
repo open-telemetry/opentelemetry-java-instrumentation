@@ -161,8 +161,7 @@ public final class ConfigPropertiesUtil {
     return null;
   }
 
-  // Visible for testing
-  static String toSystemProperty(String[] propertyName) {
+  public static String toSystemProperty(String[] propertyName) {
     return "otel.instrumentation." + String.join(".", propertyName).replace('_', '-');
   }
 
