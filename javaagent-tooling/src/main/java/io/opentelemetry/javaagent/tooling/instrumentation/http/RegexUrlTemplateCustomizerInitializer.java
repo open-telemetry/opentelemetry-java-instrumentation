@@ -52,30 +52,6 @@ public final class RegexUrlTemplateCustomizerInitializer implements BeforeAgentL
             });
   }
 
-  // visible for testing
-  static void parse(String rules) {
-    // We are expecting a semicolon-separated list of rules in the form
-    // pattern,replacement[,override]
-    // Where pattern is a regex, replacement is the url template to use when the pattern matches,
-    // override is an optional boolean (default false) indicating whether this rule should override
-    // an existing url template. The pattern should match the entire url.
-    for (String rule : rules.split(";")) {
-      String[] parts = rule.split(",");
-      if (parts.length != 2 && parts.length != 3) {
-        logger.log(
-            WARNING, "Invalid http client url template customization rule \"" + rule + "\".");
-        continue;
-      }
-
-      Pattern pattern = toPattern(parts[0].trim());
-      if (pattern == null) {
-        continue;
-      }
-      UrlTemplateRules.addRule(
-          pattern, parts[1].trim(), parts.length == 3 && Boolean.parseBoolean(parts[2].trim()));
-    }
-  }
-
   private static Pattern toPattern(String patternString) {
     try {
       // ensure that pattern matches the whole url
