@@ -14,8 +14,6 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
-import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -59,11 +57,11 @@ public final class ConfigPropertiesUtil {
    */
   public static boolean getBoolean(
       OpenTelemetry openTelemetry, boolean defaultValue, String... propertyName) {
-    return getDeclarativeConfigOrFallback(
-        openTelemetry,
-        propertyName,
-        (node, key) -> node.getBoolean(key, defaultValue),
-        (key) -> getBoolean(key, defaultValue));
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
+    if (node != null) {
+      return node.getBoolean(leaf(propertyName), defaultValue);
+    }
+    return getBoolean(toSystemProperty(propertyName), defaultValue);
   }
 
   /**
@@ -86,8 +84,8 @@ public final class ConfigPropertiesUtil {
    * Returns the string value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to
-   * support Declarative Config.
+   * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
+   * Declarative Config.
    */
   @Nullable
   public static String getString(String propertyName) {
@@ -104,8 +102,11 @@ public final class ConfigPropertiesUtil {
    */
   @Nullable
   public static String getString(OpenTelemetry openTelemetry, String... propertyName) {
-    return getDeclarativeConfigOrFallback(
-        openTelemetry, propertyName, (node, key) -> node.getString(key), (key) -> getString(key));
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
+    if (node != null) {
+      return node.getString(leaf(propertyName));
+    }
+    return getString(toSystemProperty(propertyName));
   }
 
   /**
@@ -127,17 +128,15 @@ public final class ConfigPropertiesUtil {
    */
   public static List<String> getList(
       OpenTelemetry openTelemetry, List<String> defaultValue, String... propertyName) {
-    return getDeclarativeConfigOrFallback(
-        openTelemetry,
-        propertyName,
-        (node, key) -> node.getScalarList(key, String.class, defaultValue),
-        (key) -> {
-          String value = getString(key);
-          if (value == null) {
-            return defaultValue;
-          }
-          return filterBlanksAndNulls(value.split(","));
-        });
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
+    if (node != null) {
+      return node.getScalarList(leaf(propertyName), String.class, defaultValue);
+    }
+    String value = getString(toSystemProperty(propertyName));
+    if (value == null) {
+      return defaultValue;
+    }
+    return filterBlanksAndNulls(value.split(","));
   }
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
@@ -156,16 +155,8 @@ public final class ConfigPropertiesUtil {
     return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }
 
-  private static <T> T getDeclarativeConfigOrFallback(
-      OpenTelemetry openTelemetry,
-      String[] propertyName,
-      BiFunction<DeclarativeConfigProperties, String, T> getter,
-      Function<String, T> fallback) {
-    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
-    if (node != null) {
-      return getter.apply(node, propertyName[propertyName.length - 1]);
-    }
-    return fallback.apply(toSystemProperty(propertyName));
+  private static String leaf(String[] propertyName) {
+    return propertyName[propertyName.length - 1];
   }
 
   @Nullable
