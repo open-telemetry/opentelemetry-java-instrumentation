@@ -1,9 +1,10 @@
-ARG jdkImage
+ARG jdkImageName
+ARG jdkImageHash
 ARG version
 
 FROM open-liberty:${version}-full-java11-openj9 as liberty
 
-FROM ${jdkImage}
+FROM ${jdkImageName}@sha256:${jdkImageHash}
 
 ENV CONFIG /config
 ENV LIBERTY /opt/ol

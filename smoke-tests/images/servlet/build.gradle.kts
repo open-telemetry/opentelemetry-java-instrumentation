@@ -203,6 +203,10 @@ fun configureImage(
     throw GradleException("Unexpected vm: $vm")
   }
 
+  val jdkImageParts = jdkImage.split("@")
+  val jdkImageName = jdkImageParts[0]
+  val jdkImageHash = if (jdkImageParts.size > 1) jdkImageParts[1].removePrefix("sha256:") else ""
+
   val extraArgs = args.toMutableMap()
   if (server == "wildfly") {
     // wildfly url without .zip or .tar.gz suffix
@@ -229,7 +233,7 @@ fun configureImage(
     inputDir.set(dockerWorkingDir)
     images.add(image)
     dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
-    buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImage" to jdkImage))
+    buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash))
     doLast {
       matrix.add(image)
     }

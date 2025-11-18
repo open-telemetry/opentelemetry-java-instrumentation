@@ -1,4 +1,5 @@
-ARG jdkImage
+ARG jdkImageName
+ARG jdkImageHash
 
 # Unzip in a separate container so that zip file layer is not part of final image
 FROM mcr.microsoft.com/windows/servercore:ltsc2022@sha256:3a2a2fdfbae2f720f6fe26f2d7680146712ce330f605b02a61d624889735c72e as builder
@@ -9,7 +10,7 @@ RUN ["powershell", "-Command", "expand-archive -Path /server.zip -DestinationPat
 RUN ["powershell", "-Command", "Get-ChildItem -Path /server/ -filter payara* | Rename-Item -NewName payara"]
 RUN ["powershell", "-Command", "remove-item -Path /server/payara/glassfish/modules/phonehome-bootstrap.jar"]
 
-FROM ${jdkImage}
+FROM ${jdkImageName}@sha256:${jdkImageHash}
 
 # Make /server the base directory to simplify all further paths
 COPY --from=builder /server/payara /server
