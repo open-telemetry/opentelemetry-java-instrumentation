@@ -23,6 +23,7 @@ import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.incubating.TelemetryIncubatingAttributes;
 import io.opentelemetry.smoketest.AbstractSmokeTest;
 import io.opentelemetry.smoketest.TestContainerManager;
+import io.opentelemetry.smoketest.TestImageVersions;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
 import io.opentelemetry.testing.internal.armeria.common.RequestHeaders;
