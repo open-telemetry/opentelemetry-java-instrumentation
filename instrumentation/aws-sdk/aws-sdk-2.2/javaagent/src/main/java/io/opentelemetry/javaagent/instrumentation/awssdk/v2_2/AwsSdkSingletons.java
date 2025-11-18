@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
@@ -32,8 +33,9 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean getBoolean(String name, boolean defaultValue) {
-      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
+    protected boolean getBoolean(boolean defaultValue, String... name) {
+      return AgentInstrumentationConfig.get()
+          .getBoolean(ConfigPropertiesUtil.toSystemProperty(name), defaultValue);
     }
   }
 
