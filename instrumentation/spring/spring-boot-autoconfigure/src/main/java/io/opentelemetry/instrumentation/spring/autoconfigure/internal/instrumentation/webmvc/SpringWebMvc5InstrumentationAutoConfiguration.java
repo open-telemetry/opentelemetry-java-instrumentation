@@ -6,11 +6,11 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.webmvc;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.SpringWebMvcTelemetry;
 import io.opentelemetry.instrumentation.spring.webmvc.v5_3.internal.SpringMvcBuilderUtil;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.servlet.Filter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.context.annotation.Bean;
@@ -28,7 +28,7 @@ import org.springframework.web.servlet.DispatcherServlet;
 public class SpringWebMvc5InstrumentationAutoConfiguration {
 
   @Bean
-  Filter otelWebMvcFilter(OpenTelemetry openTelemetry, ConfigProperties config) {
+  Filter otelWebMvcFilter(OpenTelemetry openTelemetry, InstrumentationConfig config) {
     return InstrumentationConfigUtil.configureServerBuilder(
             config,
             SpringWebMvcTelemetry.builder(openTelemetry),

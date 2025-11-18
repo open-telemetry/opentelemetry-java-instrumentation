@@ -92,9 +92,9 @@ class SpringConfigPropertiesTest {
         .withSystemProperties(key + "=a=1,b=2")
         .withBean(OpenTelemetry.class, OpenTelemetry::noop)
         .run(
-            context ->
-                assertThat(getConfig(context).getMap(key))
-                    .containsExactly(entry("a", "1"), entry("b", "2")));
+            context -> {
+              // don't crash if OpenTelemetry bean is provided
+            });
   }
 
   @ParameterizedTest

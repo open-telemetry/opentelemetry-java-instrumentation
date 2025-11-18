@@ -1,0 +1,10 @@
+otel:
+  # "file_format" serves as opt-in to the new file format
+  file_format: "1.0-rc.1"
+
+  # very lightweight test to make sure the declarative config is loaded
+  # the full config is tested in smoke-tests-otel-starter/spring-boot-2/src/testDeclarativeConfig
+  instrumentation/development:
+    java:
+      foo:
+        bar: baz
