@@ -17,6 +17,7 @@ dependencies {
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("org.jetbrains:annotations:26.0.2")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
