@@ -370,7 +370,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanSuppressor buildSpanSuppressor() {
     // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
     // for instrumentations, so we need to handle both declarative and non-declarative configs here
-
     String value =
         ConfigPropertiesUtil.isDeclarativeConfig(openTelemetry)
             ? ConfigPropertiesUtil.getString(
