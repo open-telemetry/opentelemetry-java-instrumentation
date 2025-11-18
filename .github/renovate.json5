@@ -324,13 +324,7 @@
       allowedVersions: '/^1\.3\./',
     },
     {
-      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
-      matchFileNames: [
-        'dependencyManagement/build.gradle.kts',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
+      // intentionally using Spring Boot 2 to make sure the earliest version is supported
       enabled: false,
       matchPackageNames: [
         'org.springframework.boot:spring-boot-dependencies:**',
