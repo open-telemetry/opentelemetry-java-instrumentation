@@ -87,7 +87,7 @@ public final class ConfigPropertiesUtil {
     return System.getenv(toEnvVarName(propertyName));
   }
 
-  public static String getString(String propertyName, String defaultValue) {
+  private static String getString(String propertyName, String defaultValue) {
     String strValue = getString(propertyName);
     return strValue == null ? defaultValue : strValue;
   }
@@ -101,7 +101,7 @@ public final class ConfigPropertiesUtil {
         (key) -> getString(key, defaultValue));
   }
 
-  public static List<String> getList(String propertyName, List<String> defaultValue) {
+  private static List<String> getList(String propertyName, List<String> defaultValue) {
     String value = getString(propertyName);
     if (value == null) {
       return defaultValue;

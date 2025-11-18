@@ -66,9 +66,6 @@ class ConfigPropertiesUtilTest {
 
   private static void assertString(String expected) {
     assertThat(
-            ConfigPropertiesUtil.getString("otel.instrumentation.test.property.string", "default_value"))
-        .isEqualTo(expected);
-    assertThat(
             ConfigPropertiesUtil.getString(
                 OpenTelemetry.noop(), "default_value", "test", "property", "string"))
         .isEqualTo(expected);
@@ -199,8 +196,6 @@ class ConfigPropertiesUtilTest {
   }
 
   private static void assertList(List<String> expected) {
-    assertThat(ConfigPropertiesUtil.getList("otel.instrumentation.test.property.list", emptyList()))
-        .isEqualTo(expected);
     assertThat(
             ConfigPropertiesUtil.getList(
                 OpenTelemetry.noop(), emptyList(), "test", "property", "list"))
