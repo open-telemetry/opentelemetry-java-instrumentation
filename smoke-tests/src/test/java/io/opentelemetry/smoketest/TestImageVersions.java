@@ -20,5 +20,7 @@ public final class TestImageVersions {
 
   public static final String ZULU_OPENJDK_8U31_VERSION = "20251117.19421579350";
 
+  public static final String SERVLET_VERSION = "20251118.19478518185";
+
   private TestImageVersions() {}
 }
