@@ -370,8 +370,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   SpanSuppressor buildSpanSuppressor() {
     return new SpanSuppressors.ByContextKey(
         SpanSuppressionStrategy.fromConfig(
-                ConfigPropertiesUtil.getNullableString(
-                    openTelemetry, "experimental", "span_suppression_strategy"))
+                ConfigPropertiesUtil.getString(
+                    openTelemetry, "semconv", "experimental", "span_suppression_strategy"))
             .create(getSpanKeysFromAttributesExtractors()));
   }
 

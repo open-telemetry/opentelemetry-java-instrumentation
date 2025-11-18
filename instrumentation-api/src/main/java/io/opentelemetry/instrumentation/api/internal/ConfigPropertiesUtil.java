@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -90,27 +89,14 @@ public final class ConfigPropertiesUtil {
 
   public static String getString(
       OpenTelemetry openTelemetry, String defaultValue, String... propertyName) {
-    return requireNonNull(getStringImpl(openTelemetry, defaultValue, propertyName));
-  }
-
-  @Nullable
-  public static String getStringImpl(
-      OpenTelemetry openTelemetry, @Nullable String defaultValue, String... propertyName) {
-    String result =
-        getDeclarativeConfigOrFallback(
-            openTelemetry,
-            propertyName,
-            (node, key) -> node.getString(key),
-            (key) -> getString(key));
-    if (result == null) {
-      return defaultValue;
-    }
-    return result;
-  }
-
-  @Nullable
-  public static String getNullableString(OpenTelemetry openTelemetry, String... propertyName) {
-    return getStringImpl(openTelemetry, null, propertyName);
+    return getDeclarativeConfigOrFallback(
+        openTelemetry,
+        propertyName,
+        (node, key) -> node.getString(key, defaultValue),
+        (key) -> {
+          String strValue = getString(key);
+          return strValue == null ? defaultValue : strValue;
+        });
   }
 
   private static List<String> getList(String propertyName, List<String> defaultValue) {
