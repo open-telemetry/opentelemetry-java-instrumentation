@@ -6,12 +6,29 @@
 
 - AWS SDK 2.x attributes updated to align with semantic conventions
   ([#15028](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15028))
-  - The following DynamoDB attributes have been renamed:
+  - The following attributes have been renamed:
+    - `aws.bucket.name` (S3) → `aws.s3.bucket`
+    - `aws.queue.url` (SQS) → `aws.sqs.queue.url`
+    - `aws.stream.name` (Kinesis) → `aws.kinesis.stream_name`
+    - `aws.table.name` (DynamoDB) → `aws.dynamodb.table_names`
     - `aws.dynamodb.provisioned_throughput.read_capacity_units` → `aws.dynamodb.provisioned_read_capacity` (type changed from long to double)
     - `aws.dynamodb.provisioned_throughput.write_capacity_units` → `aws.dynamodb.provisioned_write_capacity` (type changed from long to double)
     - `aws.dynamodb.exclusive_start_table_name` → `aws.dynamodb.exclusive_start_table`
     - `aws.dynamodb.projection_expression` → `aws.dynamodb.projection`
     - `aws.dynamodb.scan_index_forward` → `aws.dynamodb.scan_forward`
+  - The following attribute types have changed:
+    - `aws.dynamodb.table_names`: string → string[]
+    - `aws.dynamodb.consumed_capacity`: string → string[]
+    - `aws.dynamodb.global_secondary_indexes`: string → string[]
+    - `aws.dynamodb.local_secondary_indexes`: string → string[]
+    - `aws.dynamodb.consistent_read`: string → boolean
+    - `aws.dynamodb.table_count`: string → long
+    - `aws.dynamodb.limit`: string → long
+    - `aws.dynamodb.attributes_to_get`: string → string[]
+    - `aws.dynamodb.segment`: string → long
+    - `aws.dynamodb.total_segments`: string → long
+    - `aws.dynamodb.count`: string → long
+    - `aws.dynamodb.scanned_count`: string → long
   - The following attributes are no longer emitted by default but can be enabled with
     `otel.instrumentation.aws-sdk.experimental-span-attributes=true`:
     - `aws.queue.name` (SQS)
