@@ -15,21 +15,21 @@ import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
  */
 public final class ContextDataKeys {
   public static final String TRACE_ID_KEY =
-      ConfigPropertiesUtil.getString(
+      ConfigPropertiesUtil.getStringOrFallback(
           GlobalOpenTelemetry.get(),
           LoggingContextConstants.TRACE_ID,
           "common",
           "logging",
           "trace_id");
   public static final String SPAN_ID_KEY =
-      ConfigPropertiesUtil.getString(
+      ConfigPropertiesUtil.getStringOrFallback(
           GlobalOpenTelemetry.get(),
           LoggingContextConstants.SPAN_ID,
           "common",
           "logging",
           "span_id");
   public static final String TRACE_FLAGS_KEY =
-      ConfigPropertiesUtil.getString(
+      ConfigPropertiesUtil.getStringOrFallback(
           GlobalOpenTelemetry.get(),
           LoggingContextConstants.TRACE_FLAGS,
           "common",
