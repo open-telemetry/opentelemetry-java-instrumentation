@@ -27,9 +27,7 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   private static final boolean BAGGAGE_ENABLED =
       ConfigPropertiesUtil.getBoolean(
-          GlobalOpenTelemetry.get(),
-          false,
-          "log4j_context_data", "add_baggage");
+          GlobalOpenTelemetry.get(), false, "log4j_context_data", "add_baggage");
   private static final boolean configuredResourceAttributeAccessible =
       isConfiguredResourceAttributeAccessible();
   private static final Map<String, String> staticContextData = getStaticContextData();
