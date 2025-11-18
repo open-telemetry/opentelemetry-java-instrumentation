@@ -9,11 +9,10 @@
   ],
   packageRules: [
     {
-      // this is to reduce the number of renovate PRs
       matchManagers: [
         'github-actions',
         'dockerfile',
-        'regex',
+        'custom.regex',
       ],
       extends: [
         'schedule:weekly',
@@ -31,16 +30,10 @@
         'io.opentelemetry.proto:opentelemetry-proto',
         'io.opentelemetry.semconv:opentelemetry-semconv',
       ],
-      // Renovate's default behavior is only to update from unstable -> unstable if it's for the
-      // major.minor.patch, under the assumption that you would want to update to the stable version
-      // of that release instead of the unstable version for a future release
-      // (TODO remove once the artifacts above release stable versions)
       ignoreUnstable: false,
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
     {
-      // currently using gradle plugin org.playframework.play 3.1.0 milestone releases
-      // but don't want to pick up SNAPSHOT releases
       matchPackageNames: [
         'org.playframework.play:**',
       ],
@@ -97,21 +90,18 @@
       ],
     },
     {
-      // prevent 3.0.1u2 -> 3.0.1
       matchPackageNames: [
         'com.google.code.findbugs:annotations',
       ],
       allowedVersions: '!/3\\.0\\.1$/',
     },
     {
-      // OpenTelemetry SDK updates are handled by auto-update-otel-sdk.yml
       enabled: false,
       matchPackageNames: [
         'io.opentelemetry:**',
       ],
     },
     {
-      // junit 6+ requires Java 17+
       matchPackageNames: [
         'org.junit:**',
         'org.junit.jupiter:**',
@@ -122,7 +112,6 @@
       enabled: false,
     },
     {
-      // junit-pioneer 2+ requires Java 11+
       matchPackageNames: [
         'org.junit-pioneer:junit-pioneer',
       ],
@@ -132,7 +121,6 @@
       enabled: false,
     },
     {
-      // mockito 5+ requires Java 11+
       matchUpdateTypes: [
         'major',
       ],
@@ -142,44 +130,39 @@
       ],
     },
     {
-      // system-stubs-jupiter 2.1+ requires Java 11+
       matchPackageNames: [
         'uk.org.webcompere:system-stubs-jupiter',
       ],
-      allowedVersions: '/^2\.0\./',
+      allowedVersions: '/^2.0./',
     },
     {
-      // wiremock 3+ requires Java 11+
       matchUpdateTypes: [
         'major',
       ],
       enabled: false,
       matchPackageNames: [
-        'com.github.tomakehurst:wiremock-jre8'
+        'com.github.tomakehurst:wiremock-jre8',
       ],
     },
     {
-      // snakeyaml-engine 3+ requires Java 11+
       matchUpdateTypes: [
         'major',
       ],
       enabled: false,
       matchPackageNames: [
-        'org.snakeyaml:snakeyaml-engine'
+        'org.snakeyaml:snakeyaml-engine',
       ],
     },
     {
-      // groovy 5+ requires Java 11+
       matchUpdateTypes: [
         'major',
       ],
       enabled: false,
       matchPackageNames: [
-        'org.apache.groovy:**'
+        'org.apache.groovy:**',
       ],
     },
     {
-      // vaadin 14 tests require node 16
       matchPackageNames: [
         'actions/node-versions',
       ],
@@ -189,7 +172,6 @@
       enabled: false,
     },
     {
-      // intentionally using Spring Boot 2 in these smoke tests
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
@@ -208,7 +190,6 @@
       enabled: false,
     },
     {
-      // intentionally using Logback 1.2 (for Spring Boot 2) in these smoke tests
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
@@ -217,10 +198,9 @@
       matchPackageNames: [
         'ch.qos.logback:**',
       ],
-      allowedVersions: '/^1\.2\./',
+      allowedVersions: '/^1.2./',
     },
     {
-      // intentionally using slf4j 1 in this smoke tests
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
       ],
@@ -233,8 +213,6 @@
       ],
     },
     {
-      // intentionally pinning specifically to guice 5 in the play smoke test
-      // until we are able to test against the latest version of play
       matchFileNames: [
         'smoke-tests/images/play/build.gradle.kts',
       ],
@@ -248,7 +226,6 @@
       ],
     },
     {
-      // intentionally aligning netty 4.0 versions in this convention
       matchFileNames: [
         'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
       ],
@@ -259,7 +236,6 @@
       allowedVersions: '/^4\\.0\\./',
     },
     {
-      // intentionally aligning netty 4.1 versions in this convention
       matchFileNames: [
         'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
       ],
@@ -270,17 +246,15 @@
       allowedVersions: '/^4\\.1\\./',
     },
     {
-      // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
       matchFileNames: [
         'conventions/src/main/kotlin/otel.scala-conventions.gradle.kts',
       ],
       matchPackageNames: [
         'org.scala-lang:scala-library',
       ],
-      allowedVersions: '/^2\.11\./',
+      allowedVersions: '/^2.11./',
     },
     {
-      // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
       ],
@@ -290,7 +264,6 @@
       enabled: false,
     },
     {
-      // using old version of this obscure artifact to test instrumentation of Java 1.1 bytecode
       matchPackageNames: [
         'net.sf.jt400:jt400',
       ],
@@ -298,7 +271,6 @@
       enabled: false,
     },
     {
-      // pinned version for compatibility
       matchPackageNames: [
         'javax.servlet:javax.servlet-api',
       ],
@@ -306,7 +278,6 @@
       enabled: false,
     },
     {
-      // pinned version for compatibility
       matchPackageNames: [
         'jakarta.servlet:jakarta.servlet-api',
       ],
@@ -314,17 +285,15 @@
       enabled: false,
     },
     {
-      // intentionally using logback 1.3 in dependency management (for Java 8 support)
       matchFileNames: [
         'dependencyManagement/build.gradle.kts',
       ],
       matchPackageNames: [
         'ch.qos.logback:**',
       ],
-      allowedVersions: '/^1\.3\./',
+      allowedVersions: '/^1.3./',
     },
     {
-      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
       matchFileNames: [
         'dependencyManagement/build.gradle.kts',
       ],
@@ -337,7 +306,6 @@
       ],
     },
     {
-      // pinned version to Jetty 8 (Servlet 3.0) for compatibility
       matchFileNames: [
         'examples/distro/instrumentation/servlet-3/build.gradle',
       ],
