@@ -5,12 +5,12 @@ plugins {
 data class DependencySet(val group: String, val version: String, val modules: List<String>)
 
 // this line is managed by .github/scripts/update-sdk-version.sh
-val otelSdkVersion = "1.54.0"
-val otelContribVersion = "1.49.0-alpha"
+val otelSdkVersion = "1.56.0"
+val otelContribVersion = "1.51.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
-val groovyVersion = "4.0.28"
+val groovyVersion = "4.0.29"
 
 // We don't force libraries we instrument to new versions since we compile and test against specific
 // old baseline versions but we do try to force those libraries' transitive dependencies to new
@@ -27,19 +27,19 @@ val DEPENDENCY_BOMS = listOf(
   // for some reason boms show up as runtime dependencies in license and vulnerability scans
   // even if they are only used by test dependencies, so not using junit bom since it is LGPL
 
-  "com.fasterxml.jackson:jackson-bom:2.20.0",
-  "com.google.guava:guava-bom:33.4.8-jre",
+  "com.fasterxml.jackson:jackson-bom:2.20.1",
+  "com.google.guava:guava-bom:33.5.0-jre",
   "org.apache.groovy:groovy-bom:${groovyVersion}",
   "io.opentelemetry:opentelemetry-bom:${otelSdkVersion}",
   "io.opentelemetry:opentelemetry-bom-alpha:${otelSdkAlphaVersion}",
-  "org.testcontainers:testcontainers-bom:1.21.3"
+  "org.testcontainers:testcontainers-bom:2.0.2"
 )
 
 val autoServiceVersion = "1.1.1"
-val autoValueVersion = "1.11.0"
-val errorProneVersion = "2.41.0"
-val byteBuddyVersion = "1.17.7"
-val asmVersion = "9.8"
+val autoValueVersion = "1.11.1"
+val errorProneVersion = "2.44.0"
+val byteBuddyVersion = "1.18.1"
+val asmVersion = "9.9"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"
 val slf4jVersion = "2.0.17"
@@ -80,26 +80,22 @@ val CORE_DEPENDENCIES = listOf(
 // There are dependencies included here that appear to have no usages, but are maintained at
 // this top level to help consistently satisfy large numbers of transitive dependencies.
 val DEPENDENCIES = listOf(
-  "org.junit.jupiter:junit-jupiter-api:5.13.4",
-  "org.spockframework:spock-core:2.4-M6-groovy-4.0",
-  "org.spockframework:spock-junit4:2.4-M6-groovy-4.0",
+  "org.junit.jupiter:junit-jupiter-api:5.14.1",
 
   "io.r2dbc:r2dbc-proxy:1.1.6.RELEASE",
-  "ch.qos.logback:logback-classic:1.3.15", // 1.4+ requires Java 11+
-  "com.github.stefanbirkner:system-lambda:1.2.1",
-  "com.github.stefanbirkner:system-rules:1.19.0",
+  "ch.qos.logback:logback-classic:1.3.16", // 1.4+ requires Java 11+
   "uk.org.webcompere:system-stubs-jupiter:2.0.3",
-  "com.uber.nullaway:nullaway:0.12.9",
+  "com.uber.nullaway:nullaway:0.12.12",
   "commons-beanutils:commons-beanutils:1.11.0",
-  "commons-cli:commons-cli:1.10.0",
-  "commons-codec:commons-codec:1.19.0",
+  "commons-cli:commons-cli:1.11.0",
+  "commons-codec:commons-codec:1.20.0",
   "commons-collections:commons-collections:3.2.2",
   "commons-digester:commons-digester:2.1",
   "commons-fileupload:commons-fileupload:1.6.0",
-  "commons-io:commons-io:2.20.0",
+  "commons-io:commons-io:2.21.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.5",
-  "commons-validator:commons-validator:1.10.0",
+  "commons-validator:commons-validator:1.10.1",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",
@@ -107,20 +103,21 @@ val DEPENDENCIES = listOf(
   "io.opentelemetry.contrib:opentelemetry-gcp-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-cloudfoundry-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-baggage-processor:${otelContribVersion}",
-  "io.opentelemetry.proto:opentelemetry-proto:1.8.0-alpha",
+  "io.opentelemetry.contrib:opentelemetry-samplers:${otelContribVersion}",
+  "io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha",
   "io.opentelemetry:opentelemetry-extension-annotations:1.18.0", // deprecated, no longer part of bom
-  "org.assertj:assertj-core:3.27.4",
+  "org.assertj:assertj-core:3.27.6",
   "org.awaitility:awaitility:4.3.0",
   "com.google.code.findbugs:annotations:3.0.1u2",
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.codehaus.mojo:animal-sniffer-annotations:1.24",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.26",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.4",
   "javax.validation:validation-api:2.0.1.Final",
   "org.snakeyaml:snakeyaml-engine:2.10",
-  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.14"
+  "org.elasticmq:elasticmq-rest-sqs_2.13:1.6.15"
 )
 
 javaPlatform {

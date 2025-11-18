@@ -5,19 +5,24 @@
 
 package io.opentelemetry.instrumentation.docs.utils;
 
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_METRICS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_SPANS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
+import io.opentelemetry.instrumentation.docs.internal.InstrumentationFeature;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
 import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
+import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.io.BufferedWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
@@ -44,12 +49,23 @@ class YamlHelperTest {
             .displayName("Spring Web")
             .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(true)
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .build();
 
     modules.add(
         new InstrumentationModule.Builder()
             .srcPath("instrumentation/spring/spring-web/spring-web-6.0")
             .instrumentationName("spring-web-6.0")
+            .scope(
+                InstrumentationScopeInfo.builder("io.opentelemetry.spring-web-6.0")
+                    .setVersion("2.14.0")
+                    .setSchemaUrl("http:://www.schema.org")
+                    .setAttributes(
+                        Attributes.builder()
+                            .put("instrumentation.type", "library")
+                            .put("version.major", 6L)
+                            .build())
+                    .build())
             .namespace("spring")
             .group("spring")
             .targetVersions(targetVersions1)
@@ -84,11 +100,18 @@ class YamlHelperTest {
               - name: spring-web-6.0
                 display_name: Spring Web
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
                 disabled_by_default: true
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
                 scope:
                   name: io.opentelemetry.spring-web-6.0
+                  schema_url: http:://www.schema.org
+                  attributes:
+                    instrumentation.type: library
+                    version.major: 6
                 target_versions:
                   javaagent:
                   - org.springframework:spring-web:[6.0.0,)
@@ -116,6 +139,10 @@ class YamlHelperTest {
             .description("Spring Web 6.0 instrumentation")
             .classification(InstrumentationClassification.LIBRARY.name())
             .disabledByDefault(false)
+            .features(
+                List.of(
+                    InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTEXT_PROPAGATION))
+            .semanticConventions(List.of(DATABASE_CLIENT_METRICS, DATABASE_CLIENT_SPANS))
             .configurations(
                 List.of(
                     new ConfigurationOption(
@@ -183,6 +210,12 @@ class YamlHelperTest {
               spring:
               - name: spring-web-6.0
                 description: Spring Web 6.0 instrumentation
+                semantic_conventions:
+                - DATABASE_CLIENT_METRICS
+                - DATABASE_CLIENT_SPANS
+                features:
+                - HTTP_ROUTE
+                - CONTEXT_PROPAGATION
                 source_path: instrumentation/spring/spring-web/spring-web-6.0
                 minimum_java_version: 11
                 scope:
@@ -221,6 +254,9 @@ class YamlHelperTest {
             classification: internal
             disabled_by_default: true
             library_link: https://example.com/test-library
+            features:
+              - HTTP_ROUTE
+              - CONTROLLER_SPANS
             configurations:
               - name: otel.instrumentation.common.db-statement-sanitizer.enabled
                 description: Enables statement sanitization for database queries.
@@ -236,6 +272,10 @@ class YamlHelperTest {
     assertThat(config.description())
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
+
+    assertThat(metadata.getFeatures())
+        .containsExactly(
+            InstrumentationFeature.HTTP_ROUTE, InstrumentationFeature.CONTROLLER_SPANS);
 
     assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.INTERNAL);
     assertThat(metadata.getDescription()).isEqualTo("test description");
@@ -307,6 +347,21 @@ class YamlHelperTest {
         .isEqualTo("Enables statement sanitization for database queries.");
     assertThat(config.defaultValue()).isEqualTo("true");
     assertThat(config.type()).isEqualTo(ConfigurationType.BOOLEAN);
+  }
+
+  @Test
+  void testMetadataParserWithOnlyFeatures() throws JsonProcessingException {
+    String input =
+        """
+            features:
+              - HTTP_ROUTE
+        """;
+    InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
+
+    assertThat(metadata.getClassification()).isEqualTo(InstrumentationClassification.LIBRARY);
+    assertThat(metadata.getDescription()).isNull();
+    assertThat(metadata.getDisabledByDefault()).isFalse();
+    assertThat(metadata.getFeatures()).containsExactly(InstrumentationFeature.HTTP_ROUTE);
   }
 
   @Test

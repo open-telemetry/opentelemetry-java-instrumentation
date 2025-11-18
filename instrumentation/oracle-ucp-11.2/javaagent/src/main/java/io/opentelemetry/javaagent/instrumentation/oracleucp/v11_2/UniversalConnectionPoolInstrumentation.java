@@ -53,19 +53,18 @@ public class UniversalConnectionPoolInstrumentation implements TypeInstrumentati
   public static class StopAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter(@Advice.Local("otelCallDepth") CallDepth callDepth) {
-      callDepth = CallDepth.forClass(UniversalConnectionPool.class);
+    public static CallDepth onEnter() {
+      CallDepth callDepth = CallDepth.forClass(UniversalConnectionPool.class);
       callDepth.getAndIncrement();
+      return callDepth;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
     public static void onExit(
-        @Advice.This UniversalConnectionPool connectionPool,
-        @Advice.Local("otelCallDepth") CallDepth callDepth) {
-      if (callDepth == null || callDepth.decrementAndGet() > 0) {
+        @Advice.This UniversalConnectionPool connectionPool, @Advice.Enter CallDepth callDepth) {
+      if (callDepth.decrementAndGet() > 0) {
         return;
       }
-
       telemetry().unregisterMetrics(connectionPool);
     }
   }

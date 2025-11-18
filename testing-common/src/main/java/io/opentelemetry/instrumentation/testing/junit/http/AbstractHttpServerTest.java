@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit.http;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -16,6 +17,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static java.util.Collections.singletonList;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -39,6 +41,7 @@ import io.opentelemetry.semconv.ClientAttributes;
 import io.opentelemetry.semconv.ErrorAttributes;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.NetworkAttributes;
+import io.opentelemetry.semconv.SchemaUrls;
 import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import io.opentelemetry.semconv.UserAgentAttributes;
@@ -80,7 +83,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.assertj.core.api.AssertAccess;
 import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -720,10 +722,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                   });
             }
 
+            int handlerIndex = -1;
             if (endpoint != NOT_FOUND) {
               int parentIndex = 0;
               if (options.hasHandlerSpan.test(endpoint)) {
-                parentIndex = spanAssertions.size() - 1;
+                handlerIndex = spanAssertions.size() - 1;
+                parentIndex = handlerIndex;
               }
               int finalParentIndex = parentIndex;
               spanAssertions.add(
@@ -739,10 +743,16 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
             if (options.hasResponseSpan.test(endpoint)) {
               int parentIndex = spanAssertions.size() - 1;
+              int finalHandlerIndex = handlerIndex;
               spanAssertions.add(
                   span ->
                       assertResponseSpan(
-                          span, trace.getSpan(parentIndex), trace.getSpan(0), method, endpoint));
+                          span,
+                          trace.getSpan(0),
+                          trace.getSpan(parentIndex),
+                          finalHandlerIndex >= 0 ? trace.getSpan(finalHandlerIndex) : null,
+                          method,
+                          endpoint));
             }
 
             if (options.hasErrorPageSpans.test(endpoint)) {
@@ -752,7 +762,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             trace.hasSpansSatisfyingExactly(spanAssertions);
 
             if (options.verifyServerSpanEndTime) {
-              List<SpanData> spanData = AssertAccess.getActual(trace);
+              List<SpanData> spanData = trace.actual();
               if (spanData.size() > 1) {
                 SpanData rootSpan = spanData.get(0);
                 for (int j = 1; j < spanData.size(); j++) {
@@ -786,6 +796,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @CanIgnoreReturnValue
   protected SpanDataAssert assertResponseSpan(
       SpanDataAssert span,
+      SpanData serverSpan,
       SpanData controllerSpan,
       SpanData handlerSpan,
       String method,
@@ -826,7 +837,12 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     String expectedRoute = options.expectedHttpRoute.apply(endpoint, method);
     String name = options.expectedServerSpanNameMapper.apply(endpoint, method, expectedRoute);
 
-    span.hasName(name).hasKind(SpanKind.SERVER);
+    span.hasName(name)
+        .hasKind(SpanKind.SERVER)
+        .satisfies(
+            spanData ->
+                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                    .isEqualTo(SchemaUrls.V1_37_0));
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error());
     }
@@ -899,14 +915,17 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
           if (endpoint == CAPTURE_HEADERS) {
             assertThat(attrs)
-                .containsEntry("http.request.header.x-test-request", new String[] {"test"});
+                .containsEntry(
+                    stringArrayKey("http.request.header.x-test-request"), singletonList("test"));
             assertThat(attrs)
-                .containsEntry("http.response.header.x-test-response", new String[] {"test"});
+                .containsEntry(
+                    stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
           }
           if (endpoint == CAPTURE_PARAMETERS) {
             assertThat(attrs)
                 .containsEntry(
-                    "servlet.request.parameter.test-parameter", new String[] {"test value õäöü"});
+                    stringArrayKey("servlet.request.parameter.test-parameter"),
+                    singletonList("test value õäöü"));
           }
         });
 

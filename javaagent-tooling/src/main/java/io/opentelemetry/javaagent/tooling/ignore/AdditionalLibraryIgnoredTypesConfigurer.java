@@ -53,6 +53,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.aop.")
+        .allowClass("org.springframework.aop.interceptor.AsyncExecutionInterceptor$")
         .ignoreClass("org.springframework.cache.")
         .ignoreClass("org.springframework.dao.")
         .ignoreClass("org.springframework.ejb.")
@@ -250,7 +251,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("com.google.common.")
         .allowClass("com.google.common.util.concurrent.")
         .allowClass("com.google.common.base.internal.Finalizer")
-        .allowClass("com.google.common.base.Java8Usage$$Lambda");
+        .allowClass("com.google.common.base.Java8Usage$$Lambda")
+        .allowClass("com.google.common.eventbus.Subscriber$");
 
     builder
         .ignoreClass("com.google.inject.")

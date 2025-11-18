@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import java.util.List;
 
 public final class LogbackSingletons {
@@ -39,14 +40,23 @@ public final class LogbackSingletons {
     boolean captureArguments =
         config.getBoolean(
             "otel.instrumentation.logback-appender.experimental.capture-arguments", false);
-    boolean captureLogstashAttributes =
-        config.getBoolean(
+    boolean captureLogstashMarkerAttributes =
+        DeprecatedConfigProperties.getBoolean(
+            config,
             "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
+            false);
+    boolean captureLogstashStructuredArguments =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
             false);
     List<String> captureMdcAttributes =
         config.getList(
             "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
             emptyList());
+    boolean captureEventName =
+        config.getBoolean(
+            "otel.instrumentation.logback-appender.experimental.capture-event-name", false);
 
     mapper =
         LoggingEventMapper.builder()
@@ -57,7 +67,9 @@ public final class LogbackSingletons {
             .setCaptureKeyValuePairAttributes(captureKeyValuePairAttributes)
             .setCaptureLoggerContext(captureLoggerContext)
             .setCaptureArguments(captureArguments)
-            .setCaptureLogstashAttributes(captureLogstashAttributes)
+            .setCaptureLogstashMarkerAttributes(captureLogstashMarkerAttributes)
+            .setCaptureLogstashStructuredArguments(captureLogstashStructuredArguments)
+            .setCaptureEventName(captureEventName)
             .build();
   }
 

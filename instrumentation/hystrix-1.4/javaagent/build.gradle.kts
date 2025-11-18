@@ -24,7 +24,6 @@ tasks {
   withType<Test>().configureEach {
     // Disable so failure testing below doesn't inadvertently change the behavior.
     jvmArgs("-Dhystrix.command.default.circuitBreaker.enabled=false")
-    jvmArgs("-Dio.opentelemetry.javaagent.shaded.io.opentelemetry.context.enableStrictContext=false")
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 
@@ -42,5 +41,11 @@ tasks {
 
   check {
     dependsOn(testExperimental)
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

@@ -31,5 +31,7 @@ tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.rabbitmq.experimental-span-attributes=true")
   jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
+  systemProperty("testLatestDeps", findProperty("testLatestDeps") ?: "false")
+
   usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 }

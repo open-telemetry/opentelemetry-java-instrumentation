@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("com.amazonaws:aws-lambda-java-core:1.0.0")
 
@@ -11,5 +11,4 @@ dependencies {
   api("org.mockito:mockito-junit-jupiter")
 
   implementation("io.opentelemetry:opentelemetry-api")
-  implementation("com.github.stefanbirkner:system-lambda")
 }

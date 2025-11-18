@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,7 +53,9 @@ class ElasticsearchRest6Test {
     elasticsearch =
         new ElasticsearchContainer("docker.elastic.co/elasticsearch/elasticsearch-oss:6.8.16");
     // limit memory usage
-    elasticsearch.withEnv("ES_JAVA_OPTS", "-Xmx256m -Xms256m");
+    elasticsearch.withEnv(
+        "ES_JAVA_OPTS",
+        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     elasticsearch.start();
 
     httpHost = HttpHost.create(elasticsearch.getHttpHostAddress());
@@ -105,6 +108,7 @@ class ElasticsearchRest6Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
 
@@ -179,6 +183,7 @@ class ElasticsearchRest6Test {
                             equalTo(SERVER_PORT, httpHost.getPort()),
                             equalTo(HTTP_REQUEST_METHOD, "GET"),
                             equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
                             equalTo(HTTP_RESPONSE_STATUS_CODE, 200)),
                 span ->

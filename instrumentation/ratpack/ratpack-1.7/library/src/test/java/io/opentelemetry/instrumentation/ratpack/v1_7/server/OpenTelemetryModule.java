@@ -31,37 +31,37 @@ public class OpenTelemetryModule extends AbstractModule {
 
   @Singleton
   @Provides
-  RatpackClientTelemetry ratpackClientTelemetry(OpenTelemetry openTelemetry) {
+  static RatpackClientTelemetry ratpackClientTelemetry(OpenTelemetry openTelemetry) {
     return RatpackClientTelemetry.create(openTelemetry);
   }
 
   @Singleton
   @Provides
-  RatpackServerTelemetry ratpackServerTelemetry(OpenTelemetry openTelemetry) {
+  static RatpackServerTelemetry ratpackServerTelemetry(OpenTelemetry openTelemetry) {
     return RatpackServerTelemetry.create(openTelemetry);
   }
 
   @Singleton
   @Provides
-  Handler ratpackServerHandler(RatpackServerTelemetry ratpackTracing) {
+  static Handler ratpackServerHandler(RatpackServerTelemetry ratpackTracing) {
     return ratpackTracing.getHandler();
   }
 
   @Singleton
   @Provides
-  ExecInterceptor ratpackExecInterceptor(RatpackServerTelemetry ratpackTracing) {
+  static ExecInterceptor ratpackExecInterceptor(RatpackServerTelemetry ratpackTracing) {
     return ratpackTracing.getExecInterceptor();
   }
 
   @Singleton
   @Provides
-  HttpClient instrumentedHttpClient(RatpackClientTelemetry ratpackTracing) throws Exception {
+  static HttpClient instrumentedHttpClient(RatpackClientTelemetry ratpackTracing) throws Exception {
     return ratpackTracing.instrument(HttpClient.of(spec -> {}));
   }
 
   @Singleton
   @Provides
-  ExecInitializer ratpackExecInitializer(RatpackServerTelemetry ratpackTracing) {
+  static ExecInitializer ratpackExecInitializer(RatpackServerTelemetry ratpackTracing) {
     return ratpackTracing.getExecInitializer();
   }
 }

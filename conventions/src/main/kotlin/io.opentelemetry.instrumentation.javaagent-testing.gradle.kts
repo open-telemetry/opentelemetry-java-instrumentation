@@ -6,6 +6,17 @@ plugins {
   id("io.opentelemetry.instrumentation.javaagent-shadowing")
 }
 
+val failOnContextLeakProperty = providers.gradleProperty("failOnContextLeak")
+  .map { it != "false" }
+  .orElse(true)
+
+val testIndyProperty = providers.gradleProperty("testIndy")
+  .map { it == "true" }
+  .orElse(false)
+
+val denyUnsafe = gradle.startParameter.projectProperties["denyUnsafe"] == "true"
+extra["denyUnsafe"] = denyUnsafe
+
 dependencies {
   /*
     Dependencies added to this configuration will be found by the muzzle gradle plugin during code
@@ -71,31 +82,51 @@ class JavaagentTestArgumentsProvider(
   @InputFile
   @PathSensitive(PathSensitivity.RELATIVE)
   val shadowJar: File,
+
+  @get:Input
+  val failOnContextLeak: Boolean,
+
+  @get:Input
+  val testIndy: Boolean,
+
+  @get:Input
+  val denyUnsafe: Boolean,
 ) : CommandLineArgumentProvider {
-  override fun asArguments(): Iterable<String> = listOf(
-    "-Dotel.javaagent.debug=true",
-    "-javaagent:${agentShadowJar.absolutePath}",
-    // make the path to the javaagent available to tests
-    "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
-    "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
-    "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
-    "-Dotel.javaagent.testing.fail-on-context-leak=${findProperty("failOnContextLeak") != false}",
-    // prevent sporadic gradle deadlocks, see SafeLogger for more details
-    "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
-    // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
-    // in smoke tests instead.
-    "-Dotel.javaagent.add-thread-details=false",
-    "-Dotel.javaagent.experimental.indy=${findProperty("testIndy") == "true"}",
-    // suppress repeated logging of "No metric data to export - skipping export."
-    // since PeriodicMetricReader is configured with a short interval
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
-    // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
-    "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
-    "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2"
-  )
+  override fun asArguments(): Iterable<String> {
+    val list = mutableListOf(
+      "-Dotel.javaagent.debug=true",
+      "-javaagent:${agentShadowJar.absolutePath}",
+      // make the path to the javaagent available to tests
+      "-Dotel.javaagent.testing.javaagent-jar-path=${agentShadowJar.absolutePath}",
+      "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
+      "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
+      "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
+      // prevent sporadic gradle deadlocks, see SafeLogger for more details
+      "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
+      // Reduce noise in assertion messages since we don't need to verify this in most tests. We check
+      // in smoke tests instead.
+      "-Dotel.javaagent.add-thread-details=false",
+      "-Dotel.javaagent.experimental.indy=$testIndy",
+      // suppress repeated logging of "No metric data to export - skipping export."
+      // since PeriodicMetricReader is configured with a short interval
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
+      // suppress a couple of verbose ClassNotFoundException stack traces logged at debug level
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ServerImplBuilder=INFO",
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.internal.ManagedChannelImplBuilder=INFO",
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.perfmark.PerfMark=INFO",
+      "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.grpc.Context=INFO",
+      "-Dotel.java.experimental.span-attributes.copy-from-baggage.include=test-baggage-key-1,test-baggage-key-2",
+      "-Dotel.instrumentation.common.peer-service-mapping=127.0.0.1=test-peer-service,localhost=test-peer-service,192.0.2.1=test-peer-service"
+    )
+    if (denyUnsafe) {
+      list += listOf(
+        "-Dsun.misc.unsafe.memory.access=deny",
+        "-Dotel.instrumentation.deny-unsafe.enabled=true",
+        "-Dio.netty.noUnsafe=true"
+      )
+    }
+    return list
+  }
 }
 
 // need to run this after evaluate because testSets plugin adds new test tasks
@@ -109,22 +140,26 @@ afterEvaluate {
     // this dependency.
     dependsOn(agentForTesting.buildDependencies)
 
+    val failOnContextLeakOverride = failOnContextLeakProperty.get()
+    val testIndyEnabled = testIndyProperty.get()
+
     jvmArgumentProviders.add(
       JavaagentTestArgumentsProvider(
         agentShadowJar,
-        shadowJar.archiveFile.get().asFile
+        shadowJar.archiveFile.get().asFile,
+        failOnContextLeakOverride,
+        testIndyEnabled,
+        denyUnsafe
       )
     )
 
     // We do fine-grained filtering of the classpath of this codebase's sources since Gradle's
     // configurations will include transitive dependencies as well, which tests do often need.
+    val mainResourcesDir = project.layout.buildDirectory.dir("resources/main").get().asFile.absoluteFile
+    val mainClassesDir = project.layout.buildDirectory.dir("classes/java/main").get().asFile.absoluteFile
+
     classpath = classpath.filter {
-      if (file(layout.buildDirectory.dir("resources/main")).equals(it) || file(
-          layout.buildDirectory.dir(
-            "classes/java/main"
-          )
-        ).equals(it)
-      ) {
+      if (it.absoluteFile == mainResourcesDir || it.absoluteFile == mainClassesDir) {
         // The sources are packaged into the testing jar, so we need to exclude them from the test
         // classpath, which automatically inherits them, to ensure our shaded versions are used.
         return@filter false

@@ -33,10 +33,6 @@ testing {
   suites {
     val version35Test by registering(JvmTestSuite::class) {
       dependencies {
-        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-        // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-
         val version = if (testLatestDeps) "3.+" else "3.5.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
@@ -50,10 +46,6 @@ testing {
 
     val version41Test by registering(JvmTestSuite::class) {
       dependencies {
-        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-        // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-
         val version = if (testLatestDeps) "4.+" else "4.1.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")
@@ -67,10 +59,6 @@ testing {
 
     val version5Test by registering(JvmTestSuite::class) {
       dependencies {
-        // this only exists to make Intellij happy since it doesn't (currently at least) understand our
-        // inclusion of this artifact inside :testing-common
-        compileOnly(project.dependencies.project(":testing:armeria-shaded-for-testing", configuration = "shadow"))
-
         val version = if (testLatestDeps) "latest.release" else "5.0.0"
         implementation("org.hsqldb:hsqldb:2.3.4")
         compileOnly("io.vertx:vertx-codegen:$version")

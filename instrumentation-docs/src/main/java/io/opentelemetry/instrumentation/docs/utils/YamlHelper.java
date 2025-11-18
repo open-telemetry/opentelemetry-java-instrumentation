@@ -11,6 +11,7 @@ import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
+import io.opentelemetry.instrumentation.docs.internal.EmittedScope;
 import io.opentelemetry.instrumentation.docs.internal.EmittedSpans;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationClassification;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationMetadata;
@@ -201,11 +202,26 @@ public class YamlHelper {
       if (module.getMetadata().getDescription() != null) {
         moduleMap.put("description", module.getMetadata().getDescription());
       }
+      if (module.getMetadata().getSemanticConventions() != null
+          && !module.getMetadata().getSemanticConventions().isEmpty()) {
+        List<String> conventionNames =
+            module.getMetadata().getSemanticConventions().stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+        moduleMap.put("semantic_conventions", conventionNames);
+      }
       if (module.getMetadata().getLibraryLink() != null) {
         moduleMap.put("library_link", module.getMetadata().getLibraryLink());
       }
       if (module.getMetadata().getDisabledByDefault()) {
         moduleMap.put("disabled_by_default", module.getMetadata().getDisabledByDefault());
+      }
+      if (!module.getMetadata().getFeatures().isEmpty()) {
+        List<String> functionNames =
+            module.getMetadata().getFeatures().stream()
+                .map(Enum::name)
+                .collect(Collectors.toList());
+        moduleMap.put("features", functionNames);
       }
     }
   }
@@ -213,6 +229,18 @@ public class YamlHelper {
   private static Map<String, Object> getScopeMap(InstrumentationModule module) {
     Map<String, Object> scopeMap = new LinkedHashMap<>();
     scopeMap.put("name", module.getScopeInfo().getName());
+    if (module.getScopeInfo().getSchemaUrl() != null) {
+      scopeMap.put("schema_url", module.getScopeInfo().getSchemaUrl());
+    }
+    if (module.getScopeInfo().getAttributes() != null
+        && !module.getScopeInfo().getAttributes().isEmpty()) {
+      Map<String, Object> attributesMap = new LinkedHashMap<>();
+      module
+          .getScopeInfo()
+          .getAttributes()
+          .forEach((key, value) -> attributesMap.put(key.getKey(), value));
+      scopeMap.put("attributes", attributesMap);
+    }
     return scopeMap;
   }
 
@@ -296,6 +324,10 @@ public class YamlHelper {
   public static InstrumentationMetadata metaDataParser(String input)
       throws JsonProcessingException {
     return mapper.readValue(input, InstrumentationMetadata.class);
+  }
+
+  public static EmittedScope emittedScopeParser(String input) {
+    return new Yaml().loadAs(input, EmittedScope.class);
   }
 
   public static EmittedMetrics emittedMetricsParser(String input) throws JsonProcessingException {

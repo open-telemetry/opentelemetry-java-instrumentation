@@ -1,3 +1,5 @@
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import play.gradle.Language
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -6,44 +8,33 @@ plugins {
   id("otel.spotless-conventions")
 
   id("com.google.cloud.tools.jib")
-  // TODO (trask) this plugin doesn't support Play 2.9+, see https://github.com/gradle/playframework/issues/185
-  //  once play 3.1 is released, we can update to https://github.com/orgs/playframework/discussions/12338
-  id("org.gradle.playframework") version "0.16.0"
+  id("org.playframework.play") version "3.1.0-M4"
 }
 
-val playVer = "2.8.22"
-val scalaVer = "2.12"
-
 play {
-  platform {
-    playVersion.set(playVer)
-    scalaVersion.set(scalaVer)
-    javaVersion.set(JavaVersion.VERSION_1_8)
-  }
-  injectedRoutesGenerator.set(true)
+  lang.set(Language.SCALA)
 }
 
 dependencies {
-  implementation("com.typesafe.play:play-guice_$scalaVer:$playVer")
-  // Guice 5.1 is needed for Java 17 support on Play 2.8, see https://github.com/playframework/playframework/releases/tag/2.8.15
-  // TODO (trask) remove these version overrides after updating to Play 2.9
-  implementation("com.google.inject:guice:5.1.0")
-  implementation("com.google.inject.extensions:guice-assistedinject:5.1.0")
-  implementation("com.typesafe.play:play-logback_$scalaVer:$playVer")
-  implementation("com.typesafe.play:filters-helpers_$scalaVer:$playVer")
+  val playVersion = "3.1.0-M4"
+  val scalaVersion = "2.13"
+
+  implementation("org.playframework:play-guice_$scalaVersion:$playVersion")
+  implementation("org.playframework:play-logback_$scalaVersion:$playVersion")
+  implementation("org.playframework:play-filters-helpers_$scalaVersion:$playVersion")
+  runtimeOnly("org.playframework:play-server_$scalaVersion:$playVersion")
+  runtimeOnly("org.playframework:play-pekko-http-server_$scalaVersion:$playVersion")
+  runtimeOnly("org.apache.pekko:pekko-http_$scalaVersion:1.3.0")
 }
 
-val targetJDK = project.findProperty("targetJDK") ?: "11"
+val targetJDK = (project.findProperty("targetJDK") as String?) ?: "17"
+val javaLanguageVersion = targetJDK.toIntOrNull() ?: 17
 
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
 java {
-  // this is needed to avoid jib failing with
-  // "Your project is using Java 17 but the base image is for Java 8"
-  // (it seems the jib plugins does not understand toolchains yet)
-  sourceCompatibility = JavaVersion.VERSION_1_8
-  targetCompatibility = JavaVersion.VERSION_1_8
+  toolchain.languageVersion.set(JavaLanguageVersion.of(javaLanguageVersion))
 }
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"

@@ -22,7 +22,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.code.SemconvCodeStabilityUtil;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.lang.reflect.Field;
 import java.time.Instant;
@@ -33,7 +32,6 @@ import java.util.stream.Stream;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.apache.log4j.helpers.Loader;
-import org.assertj.core.api.AssertAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -161,8 +159,7 @@ class Log4j1Test {
                 SemconvCodeStabilityUtil.codeFileAndLineAssertions("Log4j1Test.java"));
             logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
-            LogRecordData logRecordData = AssertAccess.getActual(logRecord);
-            assertThat(logRecordData.getTimestampEpochNanos())
+            assertThat(logRecord.actual().getTimestampEpochNanos())
                 .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
                 .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
           });
@@ -176,11 +173,13 @@ class Log4j1Test {
   void testMdc() {
     MDC.put("key1", "val1");
     MDC.put("key2", "val2");
+    MDC.put("event.name", "MyEventName");
     try {
       logger.info("xyz");
     } finally {
       MDC.remove("key1");
       MDC.remove("key2");
+      MDC.remove("event.name");
     }
 
     List<AttributeAssertion> assertions =
@@ -195,6 +194,7 @@ class Log4j1Test {
         logRecord ->
             logRecord
                 .hasBody("xyz")
+                .hasEventName("MyEventName")
                 .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
                 .hasSeverity(Severity.INFO)
                 .hasSeverityText("INFO")

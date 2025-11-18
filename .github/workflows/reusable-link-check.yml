@@ -11,8 +11,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0 # needed for merge-base used in lint:links-in-modified-files
 
-      - name: Link check
+      - uses: jdx/mise-action@9dc7d5dd454262207dea3ab5a06a3df6afc8ff26 # v3.4.1
+
+      - name: Link check - relative links (all files)
+        if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: ./.github/scripts/link-check.sh
+        run: mise run lint:local-links
+
+      - name: Link check (modified files only)
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: mise run lint:links-in-modified-files --base origin/${{ github.base_ref }} --head ${{ github.event.pull_request.head.sha }} --event ${{ github.event_name }}

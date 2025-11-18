@@ -12,12 +12,16 @@ muzzle {
 }
 
 dependencies {
+  implementation(project(":instrumentation:async-http-client:async-http-client-1-common:javaagent"))
+
   library("com.ning:async-http-client:1.9.0")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testInstrumentation(project(":instrumentation:netty:netty-3.8:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-1.8:javaagent"))
+  testInstrumentation(project(":instrumentation:async-http-client:async-http-client-2.0:javaagent"))
 }
 
 tasks {

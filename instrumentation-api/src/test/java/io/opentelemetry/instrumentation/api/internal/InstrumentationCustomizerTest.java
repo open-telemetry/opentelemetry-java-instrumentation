@@ -21,7 +21,9 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanId;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer.InstrumentationType;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.internal.InternalInstrumenterCustomizerProviderImpl;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -105,6 +107,43 @@ class InstrumentationCustomizerTest {
 
     Instrumenter.<Map<String, String>, Map<String, String>>builder(
             otelTesting.getOpenTelemetry(), "test", unused -> "span")
+        .buildInstrumenter();
+
+    assertThat(customizerCalled).isTrue();
+  }
+
+  @Test
+  void testHasType() {
+    AtomicBoolean customizerCalled = new AtomicBoolean();
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          assertThat(customizer.hasType(InstrumentationType.HTTP_CLIENT)).isTrue();
+          assertThat(customizer.hasType(InstrumentationType.HTTP_SERVER)).isFalse();
+        });
+
+    class TestAttributesExtractor implements AttributesExtractor<Object, Object>, SpanKeyProvider {
+      @Override
+      public void onStart(AttributesBuilder attributes, Context parentContext, Object request) {}
+
+      @Override
+      public void onEnd(
+          AttributesBuilder attributes,
+          Context context,
+          Object request,
+          @Nullable Object response,
+          @Nullable Throwable error) {}
+
+      @Nullable
+      @Override
+      public SpanKey internalGetSpanKey() {
+        return SpanKey.HTTP_CLIENT;
+      }
+    }
+
+    Instrumenter.<Map<String, String>, Map<String, String>>builder(
+            otelTesting.getOpenTelemetry(), "test", unused -> "span")
+        .addAttributesExtractor(new TestAttributesExtractor())
         .buildInstrumenter();
 
     assertThat(customizerCalled).isTrue();
@@ -318,6 +357,50 @@ class InstrumentationCustomizerTest {
                             .hasSpanId(spanContext.getSpanId())
                             .hasParentSpanId(SpanId.getInvalid())
                             .hasStatus(StatusData.unset())
+                            .hasAttributes(Attributes.empty())));
+  }
+
+  @Test
+  void testSetSpanStatusExtractor() {
+    AtomicBoolean customizerCalled = new AtomicBoolean();
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.setSpanStatusExtractor(
+              unused ->
+                  (spanStatusBuilder, request, response, error) ->
+                      spanStatusBuilder.setStatus(StatusCode.OK));
+        });
+
+    Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
+        Instrumenter.<Map<String, String>, Map<String, String>>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, request, response, error) ->
+                    spanStatusBuilder.setStatus(StatusCode.ERROR))
+            .buildInstrumenter();
+
+    assertThat(customizerCalled).isTrue();
+
+    Context context = instrumenter.start(Context.root(), REQUEST);
+    SpanContext spanContext = Span.fromContext(context).getSpanContext();
+    assertThat(spanContext.isValid()).isTrue();
+
+    instrumenter.end(context, REQUEST, RESPONSE, null);
+
+    otelTesting
+        .assertTraces()
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.ok())
                             .hasAttributes(Attributes.empty())));
   }
 

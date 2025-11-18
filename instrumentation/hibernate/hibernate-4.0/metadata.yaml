@@ -1,9 +1,7 @@
-description: >
-  This instrumentation enables the generation of INTERNAL spans for Hibernate operations, including
-  session methods (e.g., `save`, `update`, `delete`), transaction commits, and query executions.
-library_link: https://github.com/hibernate/hibernate-orm
+description: This instrumentation enables spans for Hibernate ORM operations.
+library_link: https://hibernate.org/
 configurations:
   - name: otel.instrumentation.hibernate.experimental-span-attributes
+    description: Enables the experimental `hibernate.session_id` span attribute.
     type: boolean
-    description: Enables the addition of the experimental `hibernate.session_id` span attribute.
     default: false

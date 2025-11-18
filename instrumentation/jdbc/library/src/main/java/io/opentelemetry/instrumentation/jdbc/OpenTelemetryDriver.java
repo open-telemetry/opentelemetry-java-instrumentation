@@ -23,7 +23,9 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -60,6 +62,15 @@ public final class OpenTelemetryDriver implements Driver {
   private static final String URL_PREFIX = "jdbc:otel:";
   private static final AtomicBoolean REGISTERED = new AtomicBoolean();
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
+
+  private static final SqlCommenter sqlCommenter =
+      SqlCommenter.builder()
+          .setEnabled(
+              ConfigPropertiesUtil.getBoolean(
+                  "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
+                  ConfigPropertiesUtil.getBoolean(
+                      "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false)))
+          .build();
 
   static {
     try {
@@ -244,12 +255,18 @@ public final class OpenTelemetryDriver implements Driver {
 
     Instrumenter<DbRequest, Void> statementInstrumenter =
         JdbcInstrumenterFactory.createStatementInstrumenter(openTelemetry);
+
     boolean captureQueryParameters = JdbcInstrumenterFactory.captureQueryParameters();
     Instrumenter<DbRequest, Void> transactionInstrumenter =
         JdbcInstrumenterFactory.createTransactionInstrumenter(openTelemetry);
 
     return OpenTelemetryConnection.create(
-        connection, dbInfo, statementInstrumenter, transactionInstrumenter, captureQueryParameters);
+        connection,
+        dbInfo,
+        statementInstrumenter,
+        transactionInstrumenter,
+        captureQueryParameters,
+        sqlCommenter);
   }
 
   @Override

@@ -18,6 +18,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
@@ -25,6 +26,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.producer.ProducerRecord;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -32,6 +34,9 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
+
+  private static final boolean testLatestDeps =
+      Boolean.parseBoolean(System.getProperty("testLatestDeps", "true"));
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -109,6 +114,13 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                         .hasAttributesSatisfyingExactly(
                             processAttributes("10", greeting, testHeaders, false)),
                 span -> span.hasName("processing").hasParent(trace.getSpan(1))));
+
+    if (testLatestDeps) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.kafka-clients-0.11",
+          "kafka.producer.record_send_total",
+          AbstractIterableAssert::isNotEmpty);
+    }
   }
 
   @DisplayName("test pass through tombstone")
@@ -154,9 +166,10 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
                             processAttributes(null, null, false, false))));
   }
 
+  @ParameterizedTest
   @DisplayName("test records(TopicPartition) kafka consume")
-  @Test
-  void testRecordsWithTopicPartitionKafkaConsume()
+  @ValueSource(booleans = {true, false})
+  void testRecordsWithTopicPartitionKafkaConsume(boolean testListIterator)
       throws ExecutionException, InterruptedException, TimeoutException {
     String greeting = "Hello from MockConsumer!";
     producer
@@ -172,9 +185,19 @@ class KafkaClientDefaultTest extends KafkaClientPropagationBaseTest {
     assertThat(recordsInPartition.size()).isEqualTo(1);
 
     // iterate over records to generate spans
-    for (ConsumerRecord<?, ?> record : recordsInPartition) {
-      assertThat(record.value()).isEqualTo(greeting);
-      assertThat(record.key()).isNull();
+    if (testListIterator) {
+      for (ListIterator<? extends ConsumerRecord<?, ?>> iterator =
+              recordsInPartition.listIterator();
+          iterator.hasNext(); ) {
+        ConsumerRecord<?, ?> record = iterator.next();
+        assertThat(record.value()).isEqualTo(greeting);
+        assertThat(record.key()).isNull();
+      }
+    } else {
+      for (ConsumerRecord<?, ?> record : recordsInPartition) {
+        assertThat(record.value()).isEqualTo(greeting);
+        assertThat(record.key()).isNull();
+      }
     }
 
     AtomicReference<SpanData> producerSpan = new AtomicReference<>();

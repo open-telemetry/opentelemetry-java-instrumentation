@@ -17,7 +17,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import grails.boot.GrailsApp;
 import grails.boot.config.GrailsAutoConfiguration;
-import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -41,7 +40,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.web.ServerProperties;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
+class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
   static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
 
@@ -132,25 +131,40 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
     return TestApplication.start(port, getContextPath());
   }
 
-  private static String getHandlerSpanName(ServerEndpoint endpoint) {
+  private static String getHandlerMethod(ServerEndpoint endpoint) {
     if (QUERY_PARAM.equals(endpoint)) {
-      return "TestController.query";
+      return "query";
     } else if (PATH_PARAM.equals(endpoint)) {
-      return "TestController.path";
+      return "path";
     } else if (CAPTURE_HEADERS.equals(endpoint)) {
-      return "TestController.captureHeaders";
+      return "captureHeaders";
     } else if (INDEXED_CHILD.equals(endpoint)) {
-      return "TestController.child";
+      return "child";
     } else if (NOT_FOUND.equals(endpoint)) {
-      return "ResourceHttpRequestHandler.handleRequest";
+      return "handleRequest";
     }
-    return "TestController." + endpoint.name().toLowerCase(Locale.ROOT);
+    return endpoint.name().toLowerCase(Locale.ROOT);
+  }
+
+  private static String getHandlerClass(ServerEndpoint endpoint) {
+    if (NOT_FOUND.equals(endpoint)) {
+      return "org.springframework.web.servlet.resource.ResourceHttpRequestHandler";
+    }
+    return "test.TestController";
   }
 
   @Override
   public SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    span.hasName(getHandlerSpanName(endpoint)).hasKind(SpanKind.INTERNAL);
+    String handlerClass = getHandlerClass(endpoint);
+    String handlerMethod = getHandlerMethod(endpoint);
+    String handlerSpanName =
+        handlerClass.substring(handlerClass.lastIndexOf('.') + 1) + "." + handlerMethod;
+    span.hasName(handlerSpanName).hasKind(SpanKind.INTERNAL);
+
+    span.hasAttributesSatisfyingExactly(
+        SemconvCodeStabilityUtil.codeFunctionAssertions(handlerClass, handlerMethod));
+
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       span.hasException(new IllegalStateException(EXCEPTION.getBody()));
@@ -182,11 +196,14 @@ public class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationCo
       String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
     spanAssertions.add(
-        span ->
-            span.hasName(
-                    endpoint == NOT_FOUND ? "ErrorController.notFound" : "ErrorController.index")
-                .hasKind(SpanKind.INTERNAL)
-                .hasAttributes(Attributes.empty()));
+        span -> {
+          String actionName = endpoint == NOT_FOUND ? "notFound" : "index";
+          span.hasName("ErrorController." + actionName)
+              .hasKind(SpanKind.INTERNAL)
+              .hasAttributesSatisfyingExactly(
+                  SemconvCodeStabilityUtil.codeFunctionAssertions(
+                      "test.ErrorController", actionName));
+        });
     if (endpoint == NOT_FOUND) {
       spanAssertions.add(
           span ->

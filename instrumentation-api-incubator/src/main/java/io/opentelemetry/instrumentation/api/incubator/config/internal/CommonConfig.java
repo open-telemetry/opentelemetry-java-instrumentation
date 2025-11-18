@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -34,12 +34,18 @@ public final class CommonConfig {
   private final Set<String> knownHttpRequestMethods;
   private final EnduserConfig enduserConfig;
   private final boolean statementSanitizationEnabled;
+  private final boolean sqlCommenterEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
   private final boolean redactQueryParameters;
   private final String loggingTraceIdKey;
   private final String loggingSpanIdKey;
   private final String loggingTraceFlagsKey;
+
+  interface ValueProvider<T> {
+    @Nullable
+    T get(ConfigProvider configProvider);
+  }
 
   public CommonConfig(InstrumentationConfig config) {
     peerServiceResolver =
@@ -82,6 +88,9 @@ public final class CommonConfig {
                 new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
+    sqlCommenterEnabled =
+        config.getBoolean(
+            "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false);
     emitExperimentalHttpClientTelemetry =
         config.getBoolean("otel.instrumentation.http.client.emit-experimental-telemetry", false);
     redactQueryParameters =
@@ -133,6 +142,10 @@ public final class CommonConfig {
     return statementSanitizationEnabled;
   }
 
+  public boolean isSqlCommenterEnabled() {
+    return sqlCommenterEnabled;
+  }
+
   public boolean shouldEmitExperimentalHttpClientTelemetry() {
     return emitExperimentalHttpClientTelemetry;
   }
@@ -159,12 +172,12 @@ public final class CommonConfig {
 
   private static <T> T getFromConfigProviderOrFallback(
       InstrumentationConfig config,
-      Function<ConfigProvider, T> getFromConfigProvider,
+      ValueProvider<T> getFromConfigProvider,
       T defaultValue,
       Supplier<T> fallback) {
     ConfigProvider configProvider = config.getConfigProvider();
     if (configProvider != null) {
-      T value = getFromConfigProvider.apply(configProvider);
+      T value = getFromConfigProvider.get(configProvider);
       return value != null ? value : defaultValue;
     }
     // fallback doesn't return null, so we can safely call it

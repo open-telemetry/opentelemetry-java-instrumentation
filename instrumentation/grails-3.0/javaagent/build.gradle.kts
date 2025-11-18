@@ -18,10 +18,6 @@ muzzle {
   }
 }
 
-otelJava {
-  maxJavaVersionSupported.set(JavaVersion.VERSION_17)
-}
-
 val grailsVersion = "3.0.6" // first version that the tests pass on
 val springBootVersion = "1.2.5.RELEASE"
 
@@ -42,13 +38,6 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-tomcat:2.+") // related dependency
 }
 
-// testing-common pulls in groovy 4 and spock as dependencies, exclude them
-configurations.configureEach {
-  exclude("org.apache.groovy", "groovy")
-  exclude("org.apache.groovy", "groovy-json")
-  exclude("org.spockframework", "spock-core")
-}
-
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 if (!latestDepTest) {
@@ -57,7 +46,7 @@ if (!latestDepTest) {
       resolutionStrategy {
         eachDependency {
           if (requested.group == "org.codehaus.groovy") {
-            useVersion("3.0.9")
+            useVersion("3.0.25")
           }
         }
       }
@@ -84,5 +73,11 @@ tasks {
 
     systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
     systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  }
+
+  if (findProperty("denyUnsafe") as Boolean) {
+    withType<Test>().configureEach {
+      enabled = false
+    }
   }
 }

@@ -15,13 +15,13 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.util.concurrent.Callable;
 import library.MyProxySuperclass;
+import org.apache.commons.io.IOUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.testcontainers.shaded.org.apache.commons.io.IOUtils;
 
 @SuppressWarnings({"unused", "MethodCanBeStatic"})
-public class IndyInstrumentationTest {
+class IndyInstrumentationTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

@@ -57,8 +57,7 @@ public final class HttpServerRoute {
    * strictly lower priority than the provided {@link HttpServerRouteSource}, and the passed value
    * is non-null.
    */
-  public static void update(
-      Context context, HttpServerRouteSource source, @Nullable String httpRoute) {
+  public static void update(Context context, HttpServerRouteSource source, String httpRoute) {
     update(context, source, ConstantAdapter.INSTANCE, httpRoute);
   }
 
@@ -77,7 +76,7 @@ public final class HttpServerRoute {
       HttpServerRouteSource source,
       HttpServerRouteGetter<T> httpRouteGetter,
       T arg1) {
-    update(context, source, OneArgAdapter.getInstance(), arg1, httpRouteGetter);
+    update(context, source, OneArgAdapter::get, arg1, httpRouteGetter);
   }
 
   /**
@@ -94,7 +93,7 @@ public final class HttpServerRoute {
       Context context,
       HttpServerRouteSource source,
       HttpServerRouteBiGetter<T, U> httpRouteGetter,
-      T arg1,
+      @Nullable T arg1,
       U arg2) {
     HttpRouteState httpRouteState = HttpRouteState.fromContextOrNull(context);
     if (httpRouteState == null) {
@@ -150,19 +149,11 @@ public final class HttpServerRoute {
     return httpRouteState == null ? null : httpRouteState.getRoute();
   }
 
-  private static final class OneArgAdapter<T>
-      implements HttpServerRouteBiGetter<T, HttpServerRouteGetter<T>> {
+  private static final class OneArgAdapter {
 
-    private static final OneArgAdapter<Object> INSTANCE = new OneArgAdapter<>();
-
-    @SuppressWarnings("unchecked")
-    static <T> OneArgAdapter<T> getInstance() {
-      return (OneArgAdapter<T>) INSTANCE;
-    }
-
-    @Override
     @Nullable
-    public String get(Context context, T arg, HttpServerRouteGetter<T> httpRouteGetter) {
+    static <T> String get(
+        Context context, @Nullable T arg, HttpServerRouteGetter<T> httpRouteGetter) {
       return httpRouteGetter.get(context, arg);
     }
   }
@@ -173,7 +164,7 @@ public final class HttpServerRoute {
 
     @Nullable
     @Override
-    public String get(Context context, String route) {
+    public String get(Context context, @Nullable String route) {
       return route;
     }
   }

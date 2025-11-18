@@ -6,6 +6,37 @@ Before submitting new features or changes to current functionality, it is recomm
 [open an issue](https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/new)
 and discuss your ideas or propose the changes you wish to make.
 
+
+## Breaking Changes
+
+When your PR introduces a breaking change:
+
+* Add the `breaking change` label to your PR
+  - If you can't add labels directly, post a comment containing only `/breaking-change` and the label will be added automatically
+* Provide migration notes in the PR description:
+  - What is changing and why
+  - How users should update their code/configuration
+  - Code examples showing before/after usage (if applicable)
+
+**When to Use:**
+
+* API changes that break backward compatibility
+* Configuration changes that require user action
+* Behavioral changes that might affect existing users
+* Removal of deprecated features
+
+## Deprecations
+
+When your PR deprecates functionality:
+
+* Add the `deprecation` label to your PR
+  - If you can't add labels directly, post a comment containing only `/deprecation` and the label will be added automatically
+* Provide deprecation details in the PR description:
+  - What is being deprecated and why
+  - What should be used instead (if applicable)
+  - Timeline for removal (if known)
+  - Any migration guidance
+
 ## Building
 
 This project requires Java 21 to build and run tests. Newer JDK's may work, but this version is used in CI.
@@ -15,10 +46,28 @@ See [Running the tests](./docs/contributing/running-tests.md) for more details.
 
 ### Snapshot builds
 
-For developers testing code changes before a release is complete, there are
-snapshot builds of the `main` branch. They are available from
-the Sonatype snapshot repository at `https://central.sonatype.com/repository/maven-snapshots/`
-([browse](https://central.sonatype.com/service/rest/repository/browse/maven-snapshots/io/opentelemetry/)).
+For developers testing code changes before a release is complete, snapshot builds of the `main`
+branch are available from the Sonatype snapshot repository at `https://central.sonatype.com/repository/maven-snapshots/`.
+
+To find the latest snapshot, check the maven metadata (replace `{LATEST_VERSION}` with the current
+stable release):
+
+```
+https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent/{LATEST_VERSION}-SNAPSHOT/maven-metadata.xml
+```
+
+Look for the `<timestamp>` and `<buildNumber>` in the XML response, then construct the download URL:
+
+```
+https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent/{VERSION}-SNAPSHOT/opentelemetry-javaagent-{VERSION}-{TIMESTAMP}-{BUILD_NUMBER}.jar
+```
+
+For example, if the metadata shows timestamp `20250925.160708` and build number `56` for version
+`2.21.0`, the snapshot JAR URL would be:
+
+```
+https://central.sonatype.com/repository/maven-snapshots/io/opentelemetry/javaagent/opentelemetry-javaagent/2.21.0-SNAPSHOT/opentelemetry-javaagent-2.21.0-20250925.160708-56.jar
+```
 
 ### Building from source
 
@@ -43,6 +92,18 @@ the file name to stay consistent across versions. To do so, add the following to
 ```properties
 removeJarVersionNumbers=true
 ```
+
+## Working with fork repositories
+
+If you forked this repository, some GitHub Actions workflows may fail due to missing secrets or permissions. To avoid unnecessary workflow failure notifications:
+
+### Disabling GitHub Actions in your fork
+
+**Option 1: Disable all workflows** - Go to Settings > Actions > General, select "Disable actions", and save
+
+**Option 2: Disable specific workflows** - Go to Actions tab, click a workflow, click "..." menu, and select "Disable workflow"
+
+Either option still allows you to contribute via pull requests to the main repository.
 
 ## IntelliJ setup and troubleshooting
 
@@ -81,7 +142,7 @@ See [Understanding Muzzle](docs/contributing/muzzle.md)
 The build logs are very long and there is a lot of parallelization, so the logs can be hard to
 decipher, but if you expand the "Build scan" step, you should see something like:
 
-```
+```text
 Run cat build-scan.txt
 https://gradle.com/s/ila4qwp5lcf5s
 ```

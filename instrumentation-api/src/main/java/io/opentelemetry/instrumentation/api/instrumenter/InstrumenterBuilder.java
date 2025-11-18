@@ -21,6 +21,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
@@ -32,7 +33,7 @@ import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,6 +61,8 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<SpanLinksExtractor<? super REQUEST>> spanLinksExtractors = new ArrayList<>();
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> attributesExtractors =
       new ArrayList<>();
+  final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>>
+      operationListenerAttributesExtractors = new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
   private final List<OperationListener> operationListeners = new ArrayList<>();
   private final List<OperationMetrics> operationMetrics = new ArrayList<>();
@@ -72,6 +75,14 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   ErrorCauseExtractor errorCauseExtractor = ErrorCauseExtractor.getDefault();
   boolean propagateOperationListenersToOnEnd = false;
   boolean enabled = true;
+
+  static {
+    Experimental.internalAddOperationListenerAttributesExtractor(
+        (builder, operationListenerAttributesExtractor) ->
+            builder.operationListenerAttributesExtractors.add(
+                requireNonNull(
+                    operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
+  }
 
   InstrumenterBuilder(
       OpenTelemetry openTelemetry,
@@ -384,13 +395,24 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static <REQUEST, RESPONSE> void applyCustomizers(
       InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    for (InternalInstrumenterCustomizerProvider provider :
-        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders()) {
+    List<InternalInstrumenterCustomizerProvider> customizerProviders =
+        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
+    if (customizerProviders.isEmpty()) {
+      return;
+    }
+
+    Set<SpanKey> spanKeys = builder.getSpanKeysFromAttributesExtractors();
+    for (InternalInstrumenterCustomizerProvider provider : customizerProviders) {
       provider.customize(
           new InternalInstrumenterCustomizer<REQUEST, RESPONSE>() {
             @Override
             public String getInstrumentationName() {
               return builder.instrumentationName;
+            }
+
+            @Override
+            public boolean hasType(SpanKey type) {
+              return spanKeys.contains(type);
             }
 
             @Override
@@ -416,10 +438,17 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
             @Override
             public void setSpanNameExtractor(
-                Function<SpanNameExtractor<? super REQUEST>, SpanNameExtractor<? super REQUEST>>
-                    spanNameExtractorTransformer) {
+                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
               builder.spanNameExtractor =
                   spanNameExtractorTransformer.apply(builder.spanNameExtractor);
+            }
+
+            @Override
+            public void setSpanStatusExtractor(
+                UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+                    spanStatusExtractorTransformer) {
+              builder.spanStatusExtractor =
+                  spanStatusExtractorTransformer.apply(builder.spanStatusExtractor);
             }
           });
     }

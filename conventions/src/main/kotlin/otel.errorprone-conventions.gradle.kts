@@ -63,7 +63,6 @@ tasks {
 
         // TODO (trask) use animal sniffer
         disable("Java8ApiChecker")
-        disable("AndroidJdkLibsChecker")
 
         // apparently disabling android doesn't disable this
         disable("StaticOrDefaultInterfaceMethod")
@@ -141,6 +140,7 @@ tasks {
           // This check causes too many failures, ignore the ones in tests
           disable("OtelCanIgnoreReturnValueSuggester")
           disable("OtelInternalJavadoc")
+          disable("SuppressWarningsWithoutExplanation")
         }
       }
     }

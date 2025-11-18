@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest;
 
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -16,6 +19,7 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
+import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -49,13 +53,17 @@ public abstract class AbstractOpenSearchRestTest {
 
   protected abstract int getResponseStatus(Response response);
 
+  protected abstract String getInstrumentationName();
+
   @BeforeAll
   void setUp() throws Exception {
     opensearch =
         new OpensearchContainer(DockerImageName.parse("opensearchproject/opensearch:1.3.6"))
             .withSecurityEnabled();
-    // limit memory usage
-    opensearch.withEnv("OPENSEARCH_JAVA_OPTS", "-Xmx256m -Xms256m");
+    // limit memory usage and disable Log4j JMX to avoid cgroup detection issues in containers
+    opensearch.withEnv(
+        "OPENSEARCH_JAVA_OPTS",
+        "-Xmx256m -Xms256m -Dlog4j2.disableJmx=true -Dlog4j2.disable.jmx=true -XX:-UseContainerSupport");
     opensearch.start();
     httpHost = URI.create(opensearch.getHttpHostAddress());
 
@@ -92,6 +100,7 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
@@ -162,11 +171,22 @@ public abstract class AbstractOpenSearchRestTest {
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(URL_FULL, httpHost + "/_cluster/health"),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
                             .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void shouldRecordMetrics() throws IOException {
+    Response response = client.performRequest(new Request("GET", "_cluster/health"));
+    assertThat(getResponseStatus(response)).isEqualTo(200);
+
+    getTesting().waitForTraces(1);
+
+    assertDurationMetric(getTesting(), getInstrumentationName(), DB_OPERATION_NAME, DB_SYSTEM_NAME);
   }
 }

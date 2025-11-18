@@ -10,6 +10,8 @@ on:
         type: boolean
         required: false
     secrets:
+      DEVELOCITY_ACCESS_KEY:
+        required: false
       FLAKY_TEST_REPORTER_ACCESS_KEY:
         required: false
 
@@ -46,7 +48,7 @@ jobs:
 
       # vaadin tests use pnpm
       - name: Cache pnpm modules
-        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.pnpm-store
           key: ${{ runner.os }}-test-latest-cache-pnpm-modules
@@ -55,11 +57,13 @@ jobs:
         run: .github/scripts/deadlock-detector.sh
 
       - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
       - name: List tests
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
           ./gradlew
           check -x spotlessCheck
@@ -72,6 +76,8 @@ jobs:
           echo "test-tasks=$(cat test-tasks.txt | xargs echo | sed 's/\n/ /g')" >> $GITHUB_ENV
 
       - name: Test
+        env:
+          DEVELOCITY_ACCESS_KEY: ${{ secrets.DEVELOCITY_ACCESS_KEY }}
         run: >
           ./gradlew
           ${{ env.test-tasks }}
@@ -91,15 +97,26 @@ jobs:
         with:
           result-encoding: string
           script: |
-            const { data: workflow_run } = await github.rest.actions.listJobsForWorkflowRun({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              run_id: context.runId,
-              per_page: 100
-            });
-            const matrix = JSON.parse(process.env.matrix);
-            const job_name = `test-latest-deps / testLatestDeps${ matrix['test-partition'] }`;
-            return workflow_run.jobs.find((job) => job.name === job_name).html_url;
+            try {
+              const job_name = `test-latest-deps / testLatestDeps${ matrix['test-partition'] }`;
+              const workflow_jobs_nested = await github.paginate(
+                github.rest.actions.listJobsForWorkflowRun,
+                {
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  run_id: context.runId,
+                  per_page: 100
+                },
+                (response) => {
+                  return response.data;
+                },
+              );
+              const job = workflow_jobs_nested.flat().find((job) => job.name === job_name);
+              return job ? job.html_url : '';
+            } catch (e) {
+              core.warning(`Failed to get current job url: ${e}`);
+              return '';
+            }
 
       - name: Flaky test report
         if: ${{ !cancelled() }}
@@ -114,7 +131,7 @@ jobs:
 
       - name: Upload deadlock detector artifacts if any
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: deadlock-detector-test-latest-${{ matrix.test-java-version }}-${{ matrix.vm }}-${{ matrix.test-partition }}
           path: /tmp/deadlock-detector-*
@@ -122,7 +139,7 @@ jobs:
 
       - name: Upload jvm crash dump files if any
         if: failure()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           name: javacore-test-latest-${{ matrix.test-java-version }}-${{ matrix.test-partition }}
           path: |

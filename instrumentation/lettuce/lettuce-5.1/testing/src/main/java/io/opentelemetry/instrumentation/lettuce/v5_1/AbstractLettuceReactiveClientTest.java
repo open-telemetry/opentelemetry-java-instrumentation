@@ -106,9 +106,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -119,13 +117,17 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
   void testGetCommandWithLambdaFunction() throws Exception {
     CompletableFuture<String> future = new CompletableFuture<>();
 
-    reactiveCommands
-        .get("TESTKEY")
-        .subscribe(
-            res -> {
-              assertThat(res).isEqualTo("TESTVAL");
-              future.complete(res);
-            });
+    testing()
+        .runWithSpan(
+            "parent",
+            () ->
+                reactiveCommands
+                    .get("TESTKEY")
+                    .subscribe(
+                        res -> {
+                          assertThat(res).isEqualTo("TESTVAL");
+                          future.complete(res);
+                        }));
 
     assertThat(future.get(10, TimeUnit.SECONDS)).isEqualTo("TESTVAL");
 
@@ -133,9 +135,11 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 addExtraAttributes(
                                     equalTo(NETWORK_TYPE, "ipv4"),
@@ -145,9 +149,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -195,9 +197,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -233,9 +233,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -258,9 +256,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "COMMAND")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -304,9 +300,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -320,9 +314,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 
   @Test
@@ -350,9 +342,7 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "SET a ?")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end")),
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents),
                     span ->
                         span.hasName("GET")
                             .hasKind(SpanKind.CLIENT)
@@ -366,8 +356,6 @@ public abstract class AbstractLettuceReactiveClientTest extends AbstractLettuceC
                                     equalTo(SERVER_PORT, port),
                                     equalTo(maybeStable(DB_SYSTEM), "redis"),
                                     equalTo(maybeStable(DB_STATEMENT), "GET a")))
-                            .hasEventsSatisfyingExactly(
-                                event -> event.hasName("redis.encode.start"),
-                                event -> event.hasName("redis.encode.end"))));
+                            .satisfies(AbstractLettuceClientTest::assertCommandEncodeEvents)));
   }
 }

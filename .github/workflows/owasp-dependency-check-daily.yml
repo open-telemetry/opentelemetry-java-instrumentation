@@ -4,8 +4,7 @@ name: OWASP dependency check (daily)
 
 on:
   schedule:
-    # daily at 1:30 UTC
-    - cron: "30 1 * * *"
+    - cron: "30 1 * * *" # daily at 1:30 UTC
   workflow_dispatch:
 
 permissions:
@@ -30,7 +29,7 @@ jobs:
         run: |
           sed -i "s/org.gradle.jvmargs=/org.gradle.jvmargs=-Xmx3g /" gradle.properties
 
-      - uses: gradle/actions/setup-gradle@ed408507eac070d1f99cc633dbcf757c94c7933a # v4.4.3
+      - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
 
       - run: ./gradlew :javaagent:dependencyCheckAnalyze
         env:
@@ -38,7 +37,7 @@ jobs:
 
       - name: Upload report
         if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
         with:
           path: javaagent/build/reports
 

@@ -20,15 +20,18 @@ dependencies {
   testImplementation("io.lettuce:lettuce-core:5.0.0.RELEASE")
 
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-4.0:javaagent"))
+  testInstrumentation(project(":instrumentation:lettuce:lettuce-5.1:javaagent"))
 
   latestDepTestLibrary("io.lettuce:lettuce-core:5.0.+") // see lettuce-5.1 module
 }
 
 tasks {
   withType<Test>().configureEach {
-    // TODO run tests both with and without experimental span attributes
+    // TODO run tests both with and without experimental span attributes and span events
     jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
+    jvmArgs("-Dotel.instrumentation.lettuce.experimental.command-encoding-events.enabled=true")
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 

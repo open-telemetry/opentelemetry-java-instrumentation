@@ -4,9 +4,9 @@ plugins {
   id("otel.java-conventions")
   id("otel.animalsniffer-conventions")
   id("otel.jacoco-conventions")
-  id("otel.japicmp-conventions")
   id("otel.publish-conventions")
   id("otel.jmh-conventions")
+  id("otel.nullaway-conventions")
 }
 
 group = "io.opentelemetry.instrumentation"
@@ -19,7 +19,7 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
   testImplementation("org.junit-pioneer:junit-pioneer")

@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -28,16 +29,19 @@ public final class JdbcTelemetry {
   private final Instrumenter<DbRequest, Void> statementInstrumenter;
   private final Instrumenter<DbRequest, Void> transactionInstrumenter;
   private final boolean captureQueryParameters;
+  private final SqlCommenter sqlCommenter;
 
   JdbcTelemetry(
       Instrumenter<DataSource, DbInfo> dataSourceInstrumenter,
       Instrumenter<DbRequest, Void> statementInstrumenter,
       Instrumenter<DbRequest, Void> transactionInstrumenter,
-      boolean captureQueryParameters) {
+      boolean captureQueryParameters,
+      SqlCommenter sqlCommenter) {
     this.dataSourceInstrumenter = dataSourceInstrumenter;
     this.statementInstrumenter = statementInstrumenter;
     this.transactionInstrumenter = transactionInstrumenter;
     this.captureQueryParameters = captureQueryParameters;
+    this.sqlCommenter = sqlCommenter;
   }
 
   public DataSource wrap(DataSource dataSource) {
@@ -46,6 +50,7 @@ public final class JdbcTelemetry {
         this.dataSourceInstrumenter,
         this.statementInstrumenter,
         this.transactionInstrumenter,
-        this.captureQueryParameters);
+        this.captureQueryParameters,
+        this.sqlCommenter);
   }
 }

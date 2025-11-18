@@ -11,12 +11,14 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
 import java.util.Arrays;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 
 @AutoService(InstrumentationModule.class)
-public class AwsLambdaInstrumentationModule extends InstrumentationModule {
+public class AwsLambdaInstrumentationModule extends InstrumentationModule
+    implements ExperimentalInstrumentationModule {
 
   public AwsLambdaInstrumentationModule() {
     super("aws-lambda-core", "aws-lambda-core-1.0", "aws-lambda");
@@ -38,5 +40,10 @@ public class AwsLambdaInstrumentationModule extends InstrumentationModule {
     return Arrays.asList(
         new AwsLambdaRequestHandlerInstrumentation(),
         new AwsLambdaRequestStreamHandlerInstrumentation());
+  }
+
+  @Override
+  public boolean isIndyReady() {
+    return true;
   }
 }
