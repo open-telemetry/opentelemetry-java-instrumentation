@@ -92,6 +92,15 @@ public final class ConfigPropertiesUtil {
     return strValue == null ? defaultValue : strValue;
   }
 
+  public static String getString(
+      OpenTelemetry openTelemetry, String defaultValue, String... propertyName) {
+    return getDeclarativeConfigOrFallback(
+        openTelemetry,
+        propertyName,
+        (node, key) -> node.getString(key, defaultValue),
+        (key) -> getString(key, defaultValue));
+  }
+
   public static List<String> getList(String propertyName, List<String> defaultValue) {
     String value = getString(propertyName);
     if (value == null) {
@@ -127,13 +136,9 @@ public final class ConfigPropertiesUtil {
       Function<String, T> fallback) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
     if (node != null) {
-      return getter.apply(node, leaf(propertyName));
+      return getter.apply(node, propertyName[propertyName.length - 1]);
     }
     return fallback.apply(toSystemProperty(propertyName));
-  }
-
-  private static String leaf(String[] propertyName) {
-    return propertyName[propertyName.length - 1];
   }
 
   @Nullable
