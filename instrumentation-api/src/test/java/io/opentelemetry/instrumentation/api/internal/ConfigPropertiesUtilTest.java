@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
@@ -14,6 +17,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Experi
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.InstrumentationModel;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -134,57 +138,44 @@ class ConfigPropertiesUtilTest {
   @SetSystemProperty(key = "otel.instrumentation.test.property.list", value = "x,y,z")
   @Test
   void getList_systemProperty() {
-    assertList(java.util.Arrays.asList("x", "y", "z"));
+    assertList(asList("x", "y", "z"));
   }
 
   @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_LIST", value = "a,b,c")
   @Test
   void getList_environmentVariable() {
-    assertList(java.util.Arrays.asList("a", "b", "c"));
+    assertList(asList("a", "b", "c"));
   }
 
   @Test
   void getList_none() {
-    assertList(Collections.emptyList());
+    assertList(emptyList());
   }
 
-  private static void assertList(java.util.List<String> expected) {
-    assertThat(ConfigPropertiesUtil.getList("otel.instrumentation.test.property.list", Collections.emptyList()))
+  private static void assertList(List<String> expected) {
+    assertThat(ConfigPropertiesUtil.getList("otel.instrumentation.test.property.list", emptyList()))
         .isEqualTo(expected);
     assertThat(
             ConfigPropertiesUtil.getList(
-                OpenTelemetry.noop(), Collections.emptyList(), "test", "property", "list"))
+                OpenTelemetry.noop(), emptyList(), "test", "property", "list"))
         .isEqualTo(expected);
   }
 
   public static Stream<Arguments> listValuesProvider() {
     return Stream.of(
-        Arguments.of(java.util.Arrays.asList("a", "b", "c"), java.util.Arrays.asList("a", "b", "c")),
-        Arguments.of(java.util.Arrays.asList("single"), java.util.Arrays.asList("single")),
-        Arguments.of(Collections.emptyList(), Collections.emptyList()),
-        Arguments.of(java.util.Arrays.asList(""), Collections.emptyList()),
-        Arguments.of(null, Collections.emptyList()));
+        Arguments.of(asList("a", "b", "c"), asList("a", "b", "c")),
+        Arguments.of(singletonList("single"), singletonList("single")),
+        Arguments.of(emptyList(), emptyList()),
+        Arguments.of("invalid", emptyList()),
+        Arguments.of(null, emptyList()));
   }
 
   @ParameterizedTest
   @MethodSource("listValuesProvider")
-  void getList_declarativeConfig(java.util.List<String> property, java.util.List<String> expected) {
+  void getList_declarativeConfig(Object property, List<String> expected) {
     assertThat(
             ConfigPropertiesUtil.getList(
-                DeclarativeConfiguration.create(modelForList(property)), Collections.emptyList(), "foo", "bar"))
+                DeclarativeConfiguration.create(model(property)), emptyList(), "foo", "bar"))
         .isEqualTo(expected);
-  }
-
-  private static OpenTelemetryConfigurationModel modelForList(java.util.List<String> value) {
-    return new DeclarativeConfigurationBuilder()
-        .customizeModel(
-            new OpenTelemetryConfigurationModel()
-                .withFileFormat("1.0-rc.1")
-                .withInstrumentationDevelopment(
-                    new InstrumentationModel()
-                        .withJava(
-                            new ExperimentalLanguageSpecificInstrumentationModel()
-                                .withAdditionalProperty(
-                                    "foo", Collections.singletonMap("bar", value)))));
   }
 }
