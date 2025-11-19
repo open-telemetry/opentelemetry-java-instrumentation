@@ -24,21 +24,76 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-api")
 }
 
+abstract class ExtractAgentJar : DefaultTask() {
+  @get:InputFiles
+  @get:PathSensitive(PathSensitivity.NONE)
+  abstract val agentJar: ConfigurableFileCollection
+
+  @get:OutputDirectory
+  abstract val extractDir: DirectoryProperty
+
+  @get:Inject
+  abstract val archiveOperations: ArchiveOperations
+
+  @get:Inject
+  abstract val fileSystemOperations: FileSystemOperations
+
+  @TaskAction
+  fun extract() {
+    fileSystemOperations.sync {
+      from(archiveOperations.zipTree(agentJar.singleFile))
+      into(extractDir)
+    }
+  }
+}
+
+abstract class ExtractAgentManifest : DefaultTask() {
+  @get:InputFiles
+  @get:PathSensitive(PathSensitivity.NONE)
+  abstract val agentJar: ConfigurableFileCollection
+
+  @get:OutputFile
+  abstract val manifestFile: RegularFileProperty
+
+  @get:Inject
+  abstract val archiveOperations: ArchiveOperations
+
+  @get:Inject
+  abstract val fileSystemOperations: FileSystemOperations
+
+  @TaskAction
+  fun extract() {
+    fileSystemOperations.copy {
+      from(archiveOperations.zipTree(agentJar.singleFile))
+      include("META-INF/MANIFEST.MF")
+      into(temporaryDir)
+    }
+    manifestFile.get().asFile.writeBytes(
+      temporaryDir.resolve("META-INF/MANIFEST.MF").readBytes()
+    )
+  }
+}
+
+val extractAgent = tasks.register<ExtractAgentJar>("extractAgent") {
+  agentJar.from(agent)
+  extractDir.set(layout.buildDirectory.dir("tmp/agent-extracted"))
+}
+
+val extractManifest = tasks.register<ExtractAgentManifest>("extractManifest") {
+  agentJar.from(agent)
+  manifestFile.set(layout.buildDirectory.file("tmp/agent-manifest/MANIFEST.MF"))
+}
+
 tasks {
   jar {
-    dependsOn(agent)
-    from(zipTree(agent.singleFile))
+    dependsOn(extractAgent)
+    from(extractAgent.flatMap { it.extractDir })
     from(extensionLibs) {
       into("extensions")
     }
 
-    manifest.from(
-      providers.provider {
-        zipTree(agent.singleFile).matching {
-          include("META-INF/MANIFEST.MF")
-        }.singleFile
-      }
-    )
+    dependsOn(extractManifest)
+    manifest.from(extractManifest.flatMap { it.manifestFile })
   }
 
   afterEvaluate {
