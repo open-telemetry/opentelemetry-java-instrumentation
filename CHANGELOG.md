@@ -98,6 +98,10 @@
   ([#15289](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15289))
 - Add http client url template customizer
   ([#15217](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15217))
+- Introduce idiomatic `JmxTelemetry` API for JMX metrics library
+  ([#15220](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15220))
+- Add instrumentation for OpenTelemetry API incubator's `ExtendedOpenTelemetry`
+  ([#15178](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15178))
 
 ### 🛠️ Bug fixes
 
@@ -115,6 +119,8 @@
   ([#15260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15260))
 - Logback appender fixed to capture Logstash `StructuredArguments.entries()`
   ([#15341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15341))
+- Fix context propagation in Spring WebFlux 7.0 client reactive callbacks
+  ([#15336](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15336))
 
 ## Version 2.21.0 (2025-10-17)
 
