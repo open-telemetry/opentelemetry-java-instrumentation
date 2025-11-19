@@ -150,6 +150,8 @@ readonly INSTRUMENTATIONS=(
   "jsp-2.3:javaagent:testExperimental"
   "kafka:kafka-clients:kafka-clients-2.6:library:test"
   "kafka:kafka-connect-2.6:testing:test"
+  "kubernetes-client-7.0:javaagent:test"
+  "kubernetes-client-7.0:javaagent:testExperimental"
   "nats:nats-2.17:javaagent:test"
   "nats:nats-2.17:javaagent:testExperimental"
   "netty:netty-3.8:javaagent:test"

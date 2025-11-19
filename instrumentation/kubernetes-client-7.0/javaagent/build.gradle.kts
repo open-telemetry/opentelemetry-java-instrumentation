@@ -48,8 +48,8 @@ tasks {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
-    jvmArgs("-Dotel.instrumentation.kubernetes.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.kubernetes.experimental-span-attributes=true")
+    jvmArgs("-Dotel.instrumentation.kubernetes-client.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.kubernetes-client.experimental-span-attributes=true")
   }
 
   check {

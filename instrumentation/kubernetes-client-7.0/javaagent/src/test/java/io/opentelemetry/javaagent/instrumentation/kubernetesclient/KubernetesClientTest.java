@@ -52,7 +52,7 @@ class KubernetesClientTest {
 
   @Nullable
   private static String experimental(String value) {
-    if (Boolean.getBoolean("otel.instrumentation.kubernetes.experimental-span-attributes")) {
+    if (Boolean.getBoolean("otel.instrumentation.kubernetes-client.experimental-span-attributes")) {
       return value;
     }
     return null;

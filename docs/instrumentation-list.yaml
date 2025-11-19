@@ -7229,12 +7229,94 @@ libraries:
       - io.ktor:ktor-client-core:3.0.0
   kubernetes:
   - name: kubernetes-client-7.0
+    display_name: Kubernetes Client
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for the Kubernetes Client for Java.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://github.com/kubernetes-client/java
     source_path: instrumentation/kubernetes-client-7.0
     scope:
       name: io.opentelemetry.kubernetes-client-7.0
+      schema_url: https://opentelemetry.io/schemas/1.37.0
     target_versions:
       javaagent:
       - io.kubernetes:client-java-api:[7.0.0,)
+    configurations:
+    - name: otel.instrumentation.kubernetes-client.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `kubernetes-client.namespace` and `kubernetes-client.name` for Kubernetes API requests.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
+    - when: otel.instrumentation.kubernetes-client.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: error.type
+          type: STRING
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: kubernetes-client.name
+          type: STRING
+        - name: kubernetes-client.namespace
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+        - name: url.full
+          type: STRING
   lettuce:
   - name: lettuce-4.0
     source_path: instrumentation/lettuce/lettuce-4.0
