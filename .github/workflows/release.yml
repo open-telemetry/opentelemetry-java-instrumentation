@@ -201,6 +201,8 @@ jobs:
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
   documentation-audit:
+    permissions:
+      issues: write # for workflow-notification job
     needs:
       - release
     uses: ./.github/workflows/documentation-synchronization-audit.yml
