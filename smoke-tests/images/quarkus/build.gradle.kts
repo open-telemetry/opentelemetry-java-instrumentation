@@ -9,9 +9,13 @@ buildscript {
 }
 
 plugins {
-  // Don't apply otel.java-conventions since the shared dependency platform
-  // conflicts somehow with Quarkus dependency resolution, causing StackOverflow
+  // otel.java-conventions isn't applied to this module because it adds
+  // platform(project(":dependencyManagement")) which conflicts with
+  // Quarkus's dependency resolution logic, causing infinite recursion in
+  // GradleApplicationModelBuilder.collectDependencies during the configuration phase
+  // resulting in StackOverflowError
   id("java")
+
   id("com.google.cloud.tools.jib")
   id("io.quarkus") version "3.29.3"
 }
