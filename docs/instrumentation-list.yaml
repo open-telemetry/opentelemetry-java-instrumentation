@@ -7278,6 +7278,20 @@ libraries:
       default: true
     telemetry:
     - when: default
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:
@@ -7296,6 +7310,20 @@ libraries:
         - name: url.full
           type: STRING
     - when: otel.instrumentation.kubernetes-client.experimental-span-attributes=true
+      metrics:
+      - name: http.client.request.duration
+        description: Duration of HTTP client requests.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
       spans:
       - span_kind: CLIENT
         attributes:

@@ -24,6 +24,7 @@ import io.kubernetes.client.openapi.apis.CoreV1Api;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
@@ -104,6 +105,20 @@ class KubernetesClientTest {
                                 stringKey("kubernetes-client.namespace"),
                                 experimental("namespace")),
                             equalTo(stringKey("kubernetes-client.name"), experimental("name")))));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.kubernetes-client-7.0",
+        "http.client.request.duration",
+        metrics ->
+            metrics.anySatisfy(
+                metric ->
+                    OpenTelemetryAssertions.assertThat(metric)
+                        .hasDescription("Duration of HTTP client requests.")
+                        .hasUnit("s")
+                        .hasHistogramSatisfying(
+                            histogram ->
+                                histogram.hasPointsSatisfying(
+                                    point -> point.hasSumGreaterThan(0.0)))));
   }
 
   @Test
