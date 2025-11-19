@@ -87,13 +87,17 @@
    [#15299](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15299),
    [#15301](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15301),
    [#15304](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15304),
-   [#15311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15311))
+   [#15311](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15311),
+   [#15362](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15362),
+   [#15371](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15371))
 - Added span status customizer to incubating InstrumenterCustomizer API
   ([#15288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15288))
 - Added configuration options for sqlcommenter
   ([#15169](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15169))
 - GraphQL instrumentation now records data fetcher errors
   ([#15289](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15289))
+- Add http client url template customizer
+  ([#15217](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15217))
 
 ### 🛠️ Bug fixes
 
@@ -109,6 +113,8 @@
   ([#15249](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15249))
 - Declarative configuration now uses snake_case for distro resource provider attribute name
   ([#15260](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15260))
+- Logback appender fixed to capture Logstash `StructuredArguments.entries()`
+  ([#15341](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15341))
 
 ## Version 2.21.0 (2025-10-17)
 
