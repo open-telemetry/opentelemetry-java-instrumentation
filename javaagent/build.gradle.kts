@@ -291,7 +291,7 @@ tasks {
     jvmArgs("-Dotel.metrics.exporter=none")
     jvmArgs("-Dotel.logs.exporter=none")
 
-    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }))
+    jvmArgumentProviders.add(JavaagentProvider(shadowJar.flatMap { it.archiveFile }.map { it.asFile.absolutePath }))
 
     testLogging {
       events("started")
@@ -459,12 +459,11 @@ fun ShadowJar.excludeBootstrapClasses() {
 }
 
 class JavaagentProvider(
-  @InputFile
-  @PathSensitive(PathSensitivity.RELATIVE)
-  val agentJar: Provider<RegularFile>,
+  @Input
+  val agentJarPath: Provider<String>,
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
-    "-javaagent:${file(agentJar).absolutePath}",
+    "-javaagent:${agentJarPath.get()}",
     "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
   )
 }

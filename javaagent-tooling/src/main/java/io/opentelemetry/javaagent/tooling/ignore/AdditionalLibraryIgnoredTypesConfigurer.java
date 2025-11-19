@@ -53,6 +53,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.aop.")
+        .allowClass("org.springframework.aop.interceptor.AsyncExecutionInterceptor$")
         .ignoreClass("org.springframework.cache.")
         .ignoreClass("org.springframework.dao.")
         .ignoreClass("org.springframework.ejb.")

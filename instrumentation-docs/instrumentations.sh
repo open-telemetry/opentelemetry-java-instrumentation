@@ -146,6 +146,9 @@ readonly INSTRUMENTATIONS=(
   "jsf:jsf-mojarra-3.0:javaagent:test"
   "jsf:jsf-myfaces-1.2:javaagent:myfaces2Test"
   "jsf:jsf-myfaces-3.0:javaagent:test"
+  "jsp-2.3:javaagent:test"
+  "jsp-2.3:javaagent:testExperimental"
+  "kafka:kafka-clients:kafka-clients-2.6:library:test"
   "kafka:kafka-connect-2.6:testing:test"
   "nats:nats-2.17:javaagent:test"
   "nats:nats-2.17:javaagent:testExperimental"
@@ -221,4 +224,14 @@ readonly COLIMA_INSTRUMENTATIONS=(
   "oracle-ucp-11.2:javaagent:test"
   "oracle-ucp-11.2:javaagent:testStableSemconv"
   "spring:spring-jms:spring-jms-6.0:javaagent:test"
+)
+
+# Some instrumentation test suites need to run with -PtestLatestDeps=true to collect
+# metrics telemetry or test against latest library versions.
+# shellcheck disable=SC2034
+readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
+  "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
+  "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
+  "kafka:kafka-streams-0.11:javaagent:test"
+  "kafka:kafka-streams-0.11:javaagent:testExperimental"
 )

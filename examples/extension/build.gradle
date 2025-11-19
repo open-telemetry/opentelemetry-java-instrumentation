@@ -11,7 +11,7 @@ plugins {
   See https://imperceptiblethoughts.com/shadow/ for more details about Shadow plugin.
    */
   id "com.gradleup.shadow" version "9.2.2"
-  id "com.diffplug.spotless" version "8.0.0"
+  id "com.diffplug.spotless" version "8.1.0"
 
   id "io.opentelemetry.instrumentation.muzzle-generation" version "2.22.0-alpha-SNAPSHOT"
   id "io.opentelemetry.instrumentation.muzzle-check" version "2.22.0-alpha-SNAPSHOT"
@@ -95,15 +95,15 @@ dependencies {
   Only dependencies added to `implementation` configuration will be picked up by Shadow plugin
   and added to the resulting jar for our extension's distribution.
    */
-  implementation 'org.apache.commons:commons-lang3:3.19.0'
+  implementation 'org.apache.commons:commons-lang3:3.20.0'
 
   //All dependencies below are only for tests
-  testImplementation("org.testcontainers:testcontainers:2.0.1")
+  testImplementation("org.testcontainers:testcontainers:2.0.2")
   testImplementation("com.fasterxml.jackson.core:jackson-databind:2.20.1")
-  testImplementation("com.google.protobuf:protobuf-java-util:4.33.0")
-  testImplementation("com.squareup.okhttp3:okhttp:5.3.0")
+  testImplementation("com.google.protobuf:protobuf-java-util:4.33.1")
+  testImplementation("com.squareup.okhttp3:okhttp:5.3.2")
   testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.8.0-alpha")
+  testImplementation("io.opentelemetry.proto:opentelemetry-proto:1.9.0-alpha")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.1"))
   testImplementation("org.junit.jupiter:junit-jupiter-api")

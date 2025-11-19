@@ -19,7 +19,7 @@ data class ImageTarget(
 val extraTag = findProperty("extraTag")
   ?: java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(java.time.LocalDateTime.now())
 
-val latestJava = "25" // renovate: datasource=java-version
+val latestJava = "25" // renovate(java-version)
 
 // Each line under appserver describes one matrix of (version x vm x jdk), dockerfile key overrides
 // Dockerfile name, args key passes raw arguments to docker build
@@ -33,10 +33,8 @@ val targets = mapOf(
   "liberty" to listOf(
     ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
     ImageTarget(listOf("21.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
-    // Java 19 is not supported until 22.0.0.10
     ImageTarget(listOf("22.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
-    // Java 21 is not supported until 23.0.0.3 - despite that only 20 seems to work
-    ImageTarget(listOf("23.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "20"), mapOf("release" to "23.0.0.12")),
+    ImageTarget(listOf("23.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("release" to "23.0.0.12")),
   ),
   "payara" to listOf(
     ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
@@ -157,25 +155,52 @@ fun configureImage(
   val image = "ghcr.io/$repo/smoke-test-servlet-$server:$version-jdk$jdk$vmSuffix$platformSuffix-$extraTag"
 
   val jdkImage = if (vm == "hotspot") {
-    if (jdk == "24") {
+    if (jdk == "26-ea") {
       // "The only tags which will continue to receive updates beyond July 2022 will be Early Access
       // builds (which are sourced from jdk.java.net), as those are not published/supported by any
       // of the above projects."
       // (see https://hub.docker.com/_/openjdk)
       "openjdk:$jdk"
+    } else if (isWindows) {
+      when (jdk) {
+        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:46d804b1c8a658fd84b8f3b3f39a1739b0f0ffccf41a682cea4847982de3bd08"
+        "11" -> "eclipse-temurin:11.0.29_7-jdk-windowsservercore-ltsc2022@sha256:3b16568beff29ff623e7d72018cd6b08f4003964a342a907ad410a0b953f40e6"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk-windowsservercore-ltsc2022@sha256:7c9e423728d04540c0a30d68ca0922390665dfec20e012beb95861d80aa2dd70"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk-windowsservercore-ltsc2022@sha256:45a3d356d018942a497b877633f19db401828ecb2a1de3cda635b98d08bfbaeb"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk-windowsservercore-ltsc2022@sha256:556d727eb539fd9c6242e75d17e1a2bf59456ea8a37478cfbd6406ca6db0d2d1"
+        else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
+      }
     } else {
-      "eclipse-temurin:$jdk"
+      when (jdk) {
+        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:b4e05de303ea02659ee17044d6b68caadfc462f1530f3a461482afee23379cdd"
+        "11" -> "eclipse-temurin:11.0.29_7-jdk@sha256:189ce1c8831fa5bdd801127dad99f68a17615f81f4aa839b1a4aae693261929a"
+        "17" -> "eclipse-temurin:17.0.17_10-jdk@sha256:5a66a3ffd8728ed6c76eb4ec674c37991ac679927381f71774f5aa44cf420082"
+        "21" -> "eclipse-temurin:21.0.9_10-jdk@sha256:ec2005c536f3661c6ef1253292c9c623e582186749a3ef2ed90903d1aaf74640"
+        "25" -> "eclipse-temurin:25.0.1_8-jdk@sha256:adc4533ea69967c783ac2327dac7ff548fcf6401a7e595e723b414c0a7920eb2"
+        else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
+      }
     }
   } else if (vm == "openj9") {
     if (isWindows) {
       // ibm-semeru-runtimes doesn't publish windows images
       throw GradleException("Unexpected vm: $vm")
     } else {
-      "ibm-semeru-runtimes:open-$jdk-jdk"
+      when (jdk) {
+        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:63bb8aad02000edbc5f90222a018862f546a0ac21ec01d6b31af6202083297e8"
+        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:a0910e6646e71de764f56ea19238719cb150ffabb46c0f9d3323e4cb697d59dc"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:ad9a76a79afef5f01b49d3a7487e017305cb76f7421cd88e9424ee1c96fe8c09"
+        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:bd69dbe68315b72ebfa0d708511176c3317dd0c500dc462e7041570983f14c49"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:58f8efd0e2b137c19e192a3d1a36e9efe070d6f59784bc4a84f551e6c148b35c"
+        else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
+      }
     }
   } else {
     throw GradleException("Unexpected vm: $vm")
   }
+
+  val jdkImageParts = jdkImage.split("@")
+  val jdkImageName = jdkImageParts[0]
+  val jdkImageHash = if (jdkImageParts.size > 1) jdkImageParts[1].removePrefix("sha256:") else ""
 
   val extraArgs = args.toMutableMap()
   if (server == "wildfly") {
@@ -203,7 +228,7 @@ fun configureImage(
     inputDir.set(dockerWorkingDir)
     images.add(image)
     dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
-    buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImage" to jdkImage))
+    buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash))
     doLast {
       matrix.add(image)
     }

@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpCommonAttributesGetter;
@@ -47,7 +48,15 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
+    if (getter instanceof HttpClientAttributesGetter) {
+      HttpClientAttributesGetter<REQUEST, RESPONSE> clientGetter =
+          (HttpClientAttributesGetter<REQUEST, RESPONSE>) getter;
+      String urlTemplate =
+          HttpClientUrlTemplateUtil.getUrlTemplate(parentContext, request, clientGetter);
+      internalSet(attributes, URL_TEMPLATE, urlTemplate);
+    }
+  }
 
   @Override
   public void onEnd(
@@ -63,15 +72,6 @@ public final class HttpExperimentalAttributesExtractor<REQUEST, RESPONSE>
     if (response != null) {
       Long responseBodySize = responseBodySize(request, response);
       internalSet(attributes, HTTP_RESPONSE_BODY_SIZE, responseBodySize);
-    }
-
-    String urlTemplate = HttpClientUrlTemplate.get(context);
-    if (urlTemplate != null) {
-      internalSet(attributes, URL_TEMPLATE, urlTemplate);
-    } else if (getter instanceof HttpClientExperimentalAttributesGetter) {
-      HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE> experimentalGetter =
-          (HttpClientExperimentalAttributesGetter<REQUEST, RESPONSE>) getter;
-      internalSet(attributes, URL_TEMPLATE, experimentalGetter.getUrlTemplate(request));
     }
   }
 
