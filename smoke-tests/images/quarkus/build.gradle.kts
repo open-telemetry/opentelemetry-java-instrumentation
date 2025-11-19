@@ -9,8 +9,9 @@ buildscript {
 }
 
 plugins {
-  id("otel.java-conventions")
-
+  // Don't apply otel.java-conventions since the shared dependency platform
+  // conflicts somehow with Quarkus dependency resolution, causing StackOverflow
+  id("java")
   id("com.google.cloud.tools.jib")
   id("io.quarkus") version "3.29.3"
 }
@@ -63,18 +64,6 @@ tasks {
   }
 
   compileJava {
-    dependsOn(compileQuarkusGeneratedSourcesJava)
-  }
-
-  sourcesJar {
-    dependsOn(quarkusGenerateCode, compileQuarkusGeneratedSourcesJava)
-  }
-
-  javadoc {
-    dependsOn(compileQuarkusGeneratedSourcesJava)
-  }
-
-  checkstyleMain {
     dependsOn(compileQuarkusGeneratedSourcesJava)
   }
 }
