@@ -3,12 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.servlet.v3_0.copied;
+package io.opentelemetry.javaagent.instrumentation.servlet.v3_0;
 
-import static io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3Singletons.helper;
+import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Singletons.helper;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
+import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import javax.annotation.Nullable;
 import javax.servlet.Servlet;
 import javax.servlet.http.HttpServletRequest;

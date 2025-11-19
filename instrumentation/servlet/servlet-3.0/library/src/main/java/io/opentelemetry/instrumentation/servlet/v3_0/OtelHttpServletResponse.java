@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
-import io.opentelemetry.instrumentation.servlet.v3_0.copied.CallDepth;
-import io.opentelemetry.instrumentation.servlet.v3_0.copied.Servlet3ResponseAdviceScope;
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3ResponseAdviceScope;
 import java.io.IOException;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
