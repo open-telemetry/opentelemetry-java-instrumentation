@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## Version 2.22.0 (2025-11-19)
 
 ### ⚠️ Breaking Changes
 
