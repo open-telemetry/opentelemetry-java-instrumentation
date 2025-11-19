@@ -13,8 +13,8 @@ plugins {
   id "com.gradleup.shadow" version "9.2.2"
   id "com.diffplug.spotless" version "8.1.0"
 
-  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.22.0-alpha-SNAPSHOT"
-  id "io.opentelemetry.instrumentation.muzzle-check" version "2.22.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-generation" version "2.23.0-alpha-SNAPSHOT"
+  id "io.opentelemetry.instrumentation.muzzle-check" version "2.23.0-alpha-SNAPSHOT"
 }
 
 group 'io.opentelemetry.example'
@@ -26,8 +26,8 @@ ext {
     opentelemetrySdk           : "1.56.0",
 
     // these lines are managed by .github/scripts/update-version.sh
-    opentelemetryJavaagent     : "2.22.0-SNAPSHOT",
-    opentelemetryJavaagentAlpha: "2.22.0-alpha-SNAPSHOT"
+    opentelemetryJavaagent     : "2.23.0-SNAPSHOT",
+    opentelemetryJavaagentAlpha: "2.23.0-alpha-SNAPSHOT"
   ]
 
   deps = [

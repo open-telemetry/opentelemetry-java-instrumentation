@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## Version 2.22.0 (2025-11-19)
+
 ### ⚠️ Breaking Changes
 
 - AWS SDK 2.x attributes updated to align with semantic conventions
