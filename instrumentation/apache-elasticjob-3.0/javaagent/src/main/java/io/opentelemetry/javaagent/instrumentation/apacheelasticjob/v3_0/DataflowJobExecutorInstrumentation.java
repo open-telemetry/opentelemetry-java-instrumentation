@@ -51,10 +51,7 @@ public class DataflowJobExecutorInstrumentation implements TypeInstrumentation {
 
       ElasticJobProcessRequest request =
           ElasticJobProcessRequest.createFromShardingContext(
-              shardingContext,
-              ElasticJobType.DATAFLOW.getValue(),
-              elasticJob.getClass(),
-              "processData");
+              shardingContext, ElasticJobType.DATAFLOW, elasticJob.getClass(), "processData");
 
       return helper().startSpan(request);
     }
@@ -62,9 +59,7 @@ public class DataflowJobExecutorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
     public static void onExit(
         @Advice.Enter ElasticJobHelper.ElasticJobScope scope, @Advice.Thrown Throwable throwable) {
-      if (scope != null) {
-        helper().endSpan(scope, throwable);
-      }
+      helper().endSpan(scope, throwable);
     }
   }
 }

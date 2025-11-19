@@ -6,24 +6,28 @@
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 public enum ElasticJobType {
-  SIMPLE("SIMPLE"),
-  DATAFLOW("DATAFLOW"),
-  HTTP("HTTP"),
-  SCRIPT("SCRIPT"),
-  UNKNOWN("UNKNOWN");
+  SIMPLE,
+  DATAFLOW,
+  HTTP,
+  SCRIPT,
+  UNKNOWN;
 
-  private final String value;
+  public static ElasticJobType fromExecutor(Object jobItemExecutor) {
+    if (jobItemExecutor == null) {
+      return UNKNOWN;
+    }
 
-  ElasticJobType(String value) {
-    this.value = value;
-  }
-
-  public String getValue() {
-    return value;
-  }
-
-  @Override
-  public String toString() {
-    return value;
+    switch (jobItemExecutor.getClass().getSimpleName()) {
+      case "HttpJobExecutor":
+        return HTTP;
+      case "ScriptJobExecutor":
+        return SCRIPT;
+      case "SimpleJobExecutor":
+        return SIMPLE;
+      case "DataflowJobExecutor":
+        return DATAFLOW;
+      default:
+        return UNKNOWN;
+    }
   }
 }

@@ -13,7 +13,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import javax.annotation.Nullable;
-import org.apache.commons.lang3.StringUtils;
 
 class ElasticJobExperimentalAttributeExtractor
     implements AttributesExtractor<ElasticJobProcessRequest, Void> {
@@ -39,10 +38,9 @@ class ElasticJobExperimentalAttributeExtractor
     attributes.put(ELASTICJOB_SHARDING_ITEM_INDEX, elasticJobProcessRequest.getShardingItemIndex());
     attributes.put(
         ELASTICJOB_SHARDING_TOTAL_COUNT, elasticJobProcessRequest.getShardingTotalCount());
-    if (!StringUtils.isEmpty(elasticJobProcessRequest.getShardingItemParameters())) {
-      attributes.put(
-          ELASTICJOB_SHARDING_ITEM_PARAMETERS,
-          elasticJobProcessRequest.getShardingItemParameters());
+    String shardingItemParameters = elasticJobProcessRequest.getShardingItemParameters();
+    if (shardingItemParameters != null) {
+      attributes.put(ELASTICJOB_SHARDING_ITEM_PARAMETERS, shardingItemParameters);
     }
   }
 

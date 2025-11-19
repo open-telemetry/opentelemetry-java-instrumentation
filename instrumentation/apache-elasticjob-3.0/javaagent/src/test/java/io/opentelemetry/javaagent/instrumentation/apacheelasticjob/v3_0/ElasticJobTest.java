@@ -12,8 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import com.sun.net.httpserver.HttpExchange;
-import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
@@ -25,6 +23,7 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
@@ -35,6 +34,7 @@ import java.util.List;
 import java.util.Locale;
 import org.apache.shardingsphere.elasticjob.api.JobConfiguration;
 import org.apache.shardingsphere.elasticjob.http.props.HttpJobProperties;
+import org.apache.shardingsphere.elasticjob.infra.env.IpUtils;
 import org.apache.shardingsphere.elasticjob.lite.api.bootstrap.impl.ScheduleJobBootstrap;
 import org.apache.shardingsphere.elasticjob.reg.base.CoordinatorRegistryCenter;
 import org.apache.shardingsphere.elasticjob.reg.zookeeper.ZookeeperConfiguration;
@@ -47,7 +47,6 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ElasticJobTest {
 
-  private static int embedZookeeperPort;
   private static String zookeeperConnectionString;
 
   @RegisterExtension
@@ -56,29 +55,30 @@ class ElasticJobTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   private static CoordinatorRegistryCenter regCenter;
-  private static int port;
   private static HttpServer httpServer;
 
   @BeforeAll
   static void init() throws Exception {
-    embedZookeeperPort = PortUtils.findOpenPort();
+    // ip address detection in ElasticJob may fail to find a valid address, we skip the detection
+    // and set the address ourselves
+    Field field = IpUtils.class.getDeclaredField("cachedIpAddress");
+    field.setAccessible(true);
+    field.set(null, "127.0.0.1");
+
+    int embedZookeeperPort = PortUtils.findOpenPort();
     zookeeperConnectionString = "localhost:" + embedZookeeperPort;
     EmbedZookeeperServer.start(embedZookeeperPort);
     regCenter = setUpRegistryCenter();
-    port = PortUtils.findOpenPort();
-    httpServer = HttpServer.create(new InetSocketAddress(port), 0);
+    httpServer = HttpServer.create(new InetSocketAddress(0), 0);
     httpServer.createContext(
         "/hello",
-        new HttpHandler() {
-          @Override
-          public void handle(HttpExchange exchange) throws IOException {
-            byte[] response = "{\"success\": true}".getBytes(UTF_8);
-            exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
-            exchange.getResponseBody().write(response);
-            exchange.close();
-          }
+        exchange -> {
+          byte[] response = "{\"success\": true}".getBytes(UTF_8);
+          exchange.sendResponseHeaders(HttpURLConnection.HTTP_OK, response.length);
+          exchange.getResponseBody().write(response);
+          exchange.close();
         });
-    new Thread(() -> httpServer.start()).start();
+    httpServer.start();
   }
 
   @AfterAll
@@ -276,7 +276,9 @@ class ElasticJobTest {
         regCenter,
         "HTTP",
         JobConfiguration.newBuilder("javaHttpJob", 3)
-            .setProperty(HttpJobProperties.URI_KEY, "http://localhost:" + port + "/hello")
+            .setProperty(
+                HttpJobProperties.URI_KEY,
+                "http://localhost:" + httpServer.getAddress().getPort() + "/hello")
             .setProperty(HttpJobProperties.METHOD_KEY, "GET")
             .cron("0/5 * * * * ?")
             .shardingItemParameters("0=Beijing,1=Shanghai,2=Guangzhou")

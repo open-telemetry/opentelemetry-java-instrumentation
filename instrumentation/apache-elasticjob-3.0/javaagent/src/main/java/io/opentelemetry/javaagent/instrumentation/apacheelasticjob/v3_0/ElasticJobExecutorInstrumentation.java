@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 
 import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.ElasticJobSingletons.helper;
-import static io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0.JobTypeHelper.determineJobTypeFromExecutor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -53,7 +53,7 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) ShardingContexts shardingContexts,
         @Advice.Argument(2) int item) {
 
-      ElasticJobType jobType = determineJobTypeFromExecutor(jobItemExecutor);
+      ElasticJobType jobType = ElasticJobType.fromExecutor(jobItemExecutor);
       if (jobType != ElasticJobType.SCRIPT && jobType != ElasticJobType.HTTP) {
         return null;
       }
@@ -63,10 +63,8 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
               shardingContexts.getTaskId(),
               item,
               shardingContexts.getShardingTotalCount(),
-              shardingContexts.getShardingItemParameters() == null
-                  ? ""
-                  : shardingContexts.getShardingItemParameters().toString(),
-              jobType.getValue());
+              Objects.toString(shardingContexts.getShardingItemParameters(), null),
+              jobType);
       return helper().startSpan(request);
     }
 
