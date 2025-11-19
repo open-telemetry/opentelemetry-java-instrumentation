@@ -27,6 +27,15 @@ jobs:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
+      - name: Set up JDK for running Gradle
+        uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
+        with:
+          cache-read-only: false
       - uses: graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243 # v1.4.2.1
         with:
           version: "latest"
@@ -40,9 +49,9 @@ jobs:
           echo "JAVA_HOME: $JAVA_HOME"
           java --version
           native-image --version
-          # Testcontainers does not work in some cases with GraalVM native images, 
+          # Testcontainers does not work in some cases with GraalVM native images,
           # therefore we're starting a Kafka container manually for the tests
           docker compose -f .github/graal-native-docker-compose.yaml up -d
           # don't wait for startup - gradle compile takes long enough
-          ./gradlew ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest
+          ./gradlew --parallel ${{ inputs.test-latest-deps && '-PtestLatestDeps=true' || '' }} nativeTest
           docker compose -f .github/graal-native-docker-compose.yaml down # is this needed?
