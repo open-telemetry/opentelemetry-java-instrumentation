@@ -11,6 +11,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.co
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.SpanKind;
@@ -324,18 +325,14 @@ class ElasticJobTest {
 
   private static List<AttributeAssertion> elasticJobBaseAttributes(
       String jobName, long item, long totalCount, String parameters) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(stringKey("job.system"), "elasticjob"));
-    assertions.add(equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName));
-    assertions.add(equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item));
-    assertions.add(
-        equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount));
-    assertions.add(
-        equalTo(stringKey("scheduling.apache-elasticjob.sharding.item.parameters"), parameters));
-    assertions.add(
+    return asList(
+        equalTo(stringKey("job.system"), "elasticjob"),
+        equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
+        equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
+        equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
+        equalTo(stringKey("scheduling.apache-elasticjob.sharding.item.parameters"), parameters),
         satisfies(
             stringKey("scheduling.apache-elasticjob.task.id"), taskId -> taskId.contains(jobName)));
-    return assertions;
   }
 
   private static List<AttributeAssertion> elasticJobWithCodeAttributes(
@@ -345,9 +342,11 @@ class ElasticJobTest {
       String parameters,
       String codeFunction,
       String codeNamespace) {
-    List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(equalTo(stringKey("code.function"), codeFunction));
-    assertions.add(equalTo(stringKey("code.namespace"), codeNamespace));
+    List<AttributeAssertion> assertions =
+        new ArrayList<>(
+            asList(
+                equalTo(stringKey("code.function"), codeFunction),
+                equalTo(stringKey("code.namespace"), codeNamespace)));
     assertions.addAll(elasticJobBaseAttributes(jobName, item, totalCount, parameters));
     return assertions;
   }
