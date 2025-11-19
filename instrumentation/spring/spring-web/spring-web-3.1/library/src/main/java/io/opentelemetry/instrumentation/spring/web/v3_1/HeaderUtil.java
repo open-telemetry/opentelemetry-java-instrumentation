@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.webflux.v5_3;
+package io.opentelemetry.instrumentation.spring.web.v3_1;
 
 import static java.util.Collections.emptyList;
 
@@ -11,6 +11,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpHeaders;
 
@@ -19,14 +20,7 @@ class HeaderUtil {
 
   static {
     // since spring web 7.0
-    MethodHandle methodHandle =
-        findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
-    if (methodHandle == null) {
-      // up to spring web 7.0
-      methodHandle =
-          findGetHeadersMethod(MethodType.methodType(Object.class, Object.class, Object.class));
-    }
-    GET_HEADERS = methodHandle;
+    GET_HEADERS = findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
   }
 
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
@@ -37,9 +31,16 @@ class HeaderUtil {
     }
   }
 
-  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
+  // before spring web 7.0 HttpHeaders implements Map<String, List<String>>, this triggers
+  // errorprone BadInstanceof warning since errorpone is not aware that this instanceof check does
+  // not pass with spring web 7.0+
+  @SuppressWarnings({"unchecked", "BadInstanceof"})
   static List<String> getHeader(HttpHeaders headers, String name) {
-    if (GET_HEADERS != null) {
+    if (headers instanceof Map) {
+      // before spring web 7.0
+      return ((Map<String, List<String>>) headers).getOrDefault(name, emptyList());
+    } else if (GET_HEADERS != null) {
+      // spring web 7.0
       try {
         return (List<String>) GET_HEADERS.invoke(headers, name, emptyList());
       } catch (Throwable t) {

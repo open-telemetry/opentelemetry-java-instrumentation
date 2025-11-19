@@ -5,15 +5,9 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import java.lang.invoke.MethodHandle;
-import java.lang.invoke.MethodHandles;
-import java.lang.invoke.MethodType;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 
@@ -24,28 +18,6 @@ import org.springframework.web.reactive.function.client.ClientResponse;
 public enum WebClientHttpAttributesGetter
     implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
   INSTANCE;
-
-  private static final MethodHandle GET_HEADERS;
-
-  static {
-    // since webflux 7.0
-    MethodHandle methodHandle =
-        findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
-    if (methodHandle == null) {
-      // up to webflux 7.0
-      methodHandle =
-          findGetHeadersMethod(MethodType.methodType(Object.class, Object.class, Object.class));
-    }
-    GET_HEADERS = methodHandle;
-  }
-
-  private static MethodHandle findGetHeadersMethod(MethodType methodType) {
-    try {
-      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "getOrDefault", methodType);
-    } catch (Throwable t) {
-      return null;
-    }
-  }
 
   @Override
   public String getUrlFull(ClientRequest request) {
@@ -58,16 +30,8 @@ public enum WebClientHttpAttributesGetter
   }
 
   @Override
-  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
   public List<String> getHttpRequestHeader(ClientRequest request, String name) {
-    if (GET_HEADERS != null) {
-      try {
-        return (List<String>) GET_HEADERS.invoke(request.headers(), name, emptyList());
-      } catch (Throwable t) {
-        // ignore
-      }
-    }
-    return emptyList();
+    return HeaderUtil.getHeader(request.headers(), name);
   }
 
   @Override

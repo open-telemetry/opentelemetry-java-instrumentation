@@ -193,7 +193,7 @@ public class SpringConfigProperties implements ConfigProperties {
         otelSdkProperties.getDouble(name));
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // reading list form environment loses generic type
   @Override
   public List<String> getList(String name) {
     String normalizedName = ConfigUtil.normalizeEnvironmentVariableKey(name);
@@ -210,7 +210,7 @@ public class SpringConfigProperties implements ConfigProperties {
     }
 
     List<String> envValue = (List<String>) environment.getProperty(normalizedName, List.class);
-    return or(envValue, otelSdkProperties.getList(name));
+    return orNonNull(envValue, otelSdkProperties.getList(name));
   }
 
   @Nullable
@@ -224,7 +224,7 @@ public class SpringConfigProperties implements ConfigProperties {
         .getDuration(name);
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // reading map loses generic type
   @Override
   public Map<String, String> getMap(String name) {
     Map<String, String> otelSdkMap = otelSdkProperties.getMap(name);
@@ -279,6 +279,10 @@ public class SpringConfigProperties implements ConfigProperties {
 
   @Nullable
   private static <T> T or(@Nullable T first, @Nullable T second) {
+    return first != null ? first : second;
+  }
+
+  private static <T> T orNonNull(@Nullable T first, T second) {
     return first != null ? first : second;
   }
 }
