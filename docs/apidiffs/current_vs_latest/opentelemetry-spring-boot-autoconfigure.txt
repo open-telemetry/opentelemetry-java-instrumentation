@@ -1,4 +1,4 @@
-Comparing source compatibility of opentelemetry-spring-boot-autoconfigure-2.22.0-SNAPSHOT.jar against opentelemetry-spring-boot-autoconfigure-2.21.0.jar
+Comparing source compatibility of opentelemetry-spring-boot-autoconfigure-2.22.0.jar against opentelemetry-spring-boot-autoconfigure-2.21.0.jar
 ===  UNCHANGED CLASS: PUBLIC io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration  (not serializable)
 	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
 	---  REMOVED ANNOTATION: org.springframework.boot.context.properties.EnableConfigurationProperties
