@@ -369,8 +369,8 @@ public abstract class AbstractGraphqlTest {
 
     String normalized =
         query.replaceAll("(?s)\\s+", " ").replaceAll("([{:,]) ", "$1").replaceAll(" ([{}])", "$1");
-    if (normalized.startsWith("query {")) {
-      normalized = normalized.substring("query ".length());
+    if (normalized.startsWith("query{")) {
+      normalized = normalized.substring("query".length());
     }
     return normalized;
   }
