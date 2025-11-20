@@ -49,14 +49,13 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds built-in JMX rules from classpath resource
+   * Adds built-in JMX rules from classpath resource.
    *
    * @param target name of target in /jmx/rules/{target}.yaml classpath resource
    * @return builder instance
    * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
-   * @deprecated use {@link #addClassPathResourceRules(String)} instead
    */
-  @Deprecated
+  // TODO: deprecate this method after 2.23.0 release in favor of addClassPathResourceRules
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathRules(String target) {
     return addClassPathResourceRules(String.format("jmx/rules/%s.yaml", target));
@@ -72,17 +71,21 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathResourceRules(String resourcePath) {
+    boolean found = false;
     try (InputStream inputStream =
         JmxTelemetryBuilder.class.getClassLoader().getResourceAsStream(resourcePath)) {
-      if (inputStream == null) {
-        throw new IllegalArgumentException("JMX rules not found in classpath: " + resourcePath);
+      if (inputStream != null) {
+        found = true;
+        logger.log(FINE, "Adding JMX config from classpath for {0}", resourcePath);
+        RuleParser parserInstance = RuleParser.get();
+        parserInstance.addMetricDefsTo(metricConfiguration, inputStream, resourcePath);
       }
-      logger.log(FINE, "Adding JMX config from classpath for {0}", resourcePath);
-      RuleParser parserInstance = RuleParser.get();
-      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, resourcePath);
-    } catch (Exception e) {
+    } catch (RuntimeException | IOException e) {
       throw new IllegalArgumentException(
           "Unable to load JMX rules from classpath: " + resourcePath, e);
+    }
+    if (!found) {
+      throw new IllegalArgumentException("JMX rules not found in classpath: " + resourcePath);
     }
     return this;
   }
