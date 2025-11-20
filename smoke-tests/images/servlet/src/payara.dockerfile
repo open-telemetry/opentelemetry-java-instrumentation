@@ -1,8 +1,9 @@
 ARG jdkImageName
 ARG jdkImageHash
-ARG version
+ARG imageName
+ARG imageHash
 
-FROM payara/server-full:${version} as builder
+FROM ${imageName}@sha256:${imageHash} as builder
 
 FROM ${jdkImageName}@sha256:${jdkImageHash}
 ARG domainName

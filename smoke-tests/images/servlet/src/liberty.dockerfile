@@ -1,8 +1,9 @@
 ARG jdkImageName
 ARG jdkImageHash
-ARG version
+ARG imageName
+ARG imageHash
 
-FROM open-liberty:${version}-full-java11-openj9 as liberty
+FROM ${imageName}@sha256:${imageHash} as liberty
 
 FROM ${jdkImageName}@sha256:${jdkImageHash}
 
