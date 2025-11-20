@@ -21,7 +21,7 @@ class HeaderUtil {
 
   static {
     GET_HEADERS =
-        requireNonNullElseGet(
+        nonNullHandle(
             findGetHeadersMethod(
                 MethodType.methodType(List.class, String.class)), // since spring web 7.0
             () ->
@@ -29,11 +29,11 @@ class HeaderUtil {
                     MethodType.methodType(List.class, Object.class))); // before spring web 7.0
   }
 
-  // copied from java.util.Objects in Java 9+
-  private static <T> T requireNonNullElseGet(@Nullable T obj, Supplier<? extends T> supplier) {
-    return (obj != null)
-        ? obj
-        : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
+  private static MethodHandle nonNullHandle(
+      @Nullable MethodHandle first, Supplier<? extends MethodHandle> supplier) {
+    return (first != null)
+        ? first
+        : requireNonNull(supplier.get(), "Could not find suitable get method on HttpHeaders");
   }
 
   @Nullable
@@ -48,7 +48,7 @@ class HeaderUtil {
   // before spring web 7.0 HttpHeaders implements Map<String, List<String>>, this triggers
   // errorprone BadInstanceof warning since errorpone is not aware that this instanceof check does
   // not pass with spring web 7.0+
-  @SuppressWarnings("unchecked") // casting MethodHandle.invoke result
+  @SuppressWarnings("unchecked") // casting GET_HEADERS.invoke result
   static List<String> getHeader(HttpHeaders headers, String name) {
     try {
       List<String> result = (List<String>) GET_HEADERS.invoke(headers, name);
