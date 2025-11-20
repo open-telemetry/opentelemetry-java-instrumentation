@@ -28,7 +28,6 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import org.apache.shardingsphere.elasticjob.api.JobConfiguration;
@@ -359,21 +358,16 @@ class ElasticJobTest {
       String codeFunction,
       String codeNamespace,
       String jobType) {
-    List<AttributeAssertion> assertions =
-        new ArrayList<>(
-            asList(
-                equalTo(stringKey("code.function"), codeFunction),
-                equalTo(stringKey("code.namespace"), codeNamespace),
-                equalTo(stringKey("job.system"), "elasticjob"),
-                equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
-                equalTo(stringKey("scheduling.apache-elasticjob.job.type"), jobType),
-                equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
-                equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
-                equalTo(
-                    stringKey("scheduling.apache-elasticjob.sharding.item.parameter"), parameter),
-                satisfies(
-                    stringKey("scheduling.apache-elasticjob.task.id"),
-                    taskId -> taskId.contains(jobName))));
-    return assertions;
+    return asList(
+        equalTo(stringKey("code.function"), codeFunction),
+        equalTo(stringKey("code.namespace"), codeNamespace),
+        equalTo(stringKey("job.system"), "elasticjob"),
+        equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
+        equalTo(stringKey("scheduling.apache-elasticjob.job.type"), jobType),
+        equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
+        equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
+        equalTo(stringKey("scheduling.apache-elasticjob.sharding.item.parameter"), parameter),
+        satisfies(
+            stringKey("scheduling.apache-elasticjob.task.id"), taskId -> taskId.contains(jobName)));
   }
 }

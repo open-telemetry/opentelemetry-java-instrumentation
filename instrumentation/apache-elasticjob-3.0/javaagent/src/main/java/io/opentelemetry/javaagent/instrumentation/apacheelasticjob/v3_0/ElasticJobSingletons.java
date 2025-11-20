@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.apacheelasticjob.v3_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -29,7 +30,7 @@ public final class ElasticJobSingletons {
         Instrumenter.<ElasticJobProcessRequest, Void>builder(
                 GlobalOpenTelemetry.get(),
                 INSTRUMENTATION_NAME,
-                new ElasticJobSpanNameExtractor(codeAttributesGetter))
+                CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter));
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       builder.addAttributesExtractor(

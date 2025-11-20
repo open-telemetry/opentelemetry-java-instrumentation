@@ -40,7 +40,7 @@ class ElasticJobExperimentalAttributeExtractor
     attributes.put(ELASTICJOB_SHARDING_ITEM_INDEX, elasticJobProcessRequest.getShardingItemIndex());
     attributes.put(
         ELASTICJOB_SHARDING_TOTAL_COUNT, elasticJobProcessRequest.getShardingTotalCount());
-    attributes.put(ELASTICJOB_JOB_TYPE, elasticJobProcessRequest.getJobType());
+    attributes.put(ELASTICJOB_JOB_TYPE, elasticJobProcessRequest.getJobType().name());
     String shardingItemParameter = elasticJobProcessRequest.getShardingItemParameter();
     if (shardingItemParameter != null) {
       attributes.put(ELASTICJOB_SHARDING_ITEM_PARAMETER, shardingItemParameter);

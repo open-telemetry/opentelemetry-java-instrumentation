@@ -50,8 +50,8 @@ public class SimpleJobExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) ShardingContext shardingContext) {
 
       ElasticJobProcessRequest request =
-          ElasticJobProcessRequest.createFromShardingContext(
-              shardingContext, "SIMPLE", elasticJob.getClass(), "execute");
+          ElasticJobProcessRequest.create(
+              shardingContext, ElasticJobType.SIMPLE, elasticJob.getClass(), "execute");
 
       return helper().startSpan(request);
     }

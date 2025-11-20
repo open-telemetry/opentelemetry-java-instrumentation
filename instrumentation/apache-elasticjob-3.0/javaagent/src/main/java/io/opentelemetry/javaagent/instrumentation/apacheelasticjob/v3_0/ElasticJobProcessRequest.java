@@ -13,56 +13,35 @@ public final class ElasticJobProcessRequest {
   private final int shardingItemIndex;
   private final int shardingTotalCount;
   private final String shardingItemParameter;
-  private final String jobType;
-  private Class<?> userJobClass;
-  private String userMethodName = "process";
+  private final ElasticJobType jobType;
+  private final Class<?> userJobClass;
+  private final String userMethodName;
 
   private ElasticJobProcessRequest(
-      String jobName,
-      String taskId,
-      int shardingItemIndex,
-      int shardingTotalCount,
-      String shardingItemParameter,
-      String jobType) {
-    this.jobName = jobName;
-    this.taskId = taskId;
-    this.shardingItemIndex = shardingItemIndex;
-    this.shardingTotalCount = shardingTotalCount;
-    this.shardingItemParameter = emptyToNull(shardingItemParameter);
+      ShardingContext shardingContext,
+      ElasticJobType jobType,
+      Class<?> userJobClass,
+      String userMethodNam) {
+    this.jobName = shardingContext.getJobName();
+    this.taskId = shardingContext.getTaskId();
+    this.shardingItemIndex = shardingContext.getShardingItem();
+    this.shardingTotalCount = shardingContext.getShardingTotalCount();
+    this.shardingItemParameter = emptyToNull(shardingContext.getShardingParameter());
     this.jobType = jobType;
-  }
-
-  public static ElasticJobProcessRequest create(
-      String jobName,
-      String taskId,
-      int shardingItemIndex,
-      int shardingTotalCount,
-      String shardingItemParameters,
-      String jobType) {
-    return new ElasticJobProcessRequest(
-        jobName, taskId, shardingItemIndex, shardingTotalCount, shardingItemParameters, jobType);
+    this.userJobClass = userJobClass;
+    this.userMethodName = userMethodNam;
   }
 
   private static String emptyToNull(String string) {
     return string == null || string.isEmpty() ? null : string;
   }
 
-  public static ElasticJobProcessRequest createFromShardingContext(
+  public static ElasticJobProcessRequest create(
       ShardingContext shardingContext,
-      String jobType,
+      ElasticJobType jobType,
       Class<?> userJobClass,
       String userMethodName) {
-    ElasticJobProcessRequest request =
-        create(
-            shardingContext.getJobName(),
-            shardingContext.getTaskId(),
-            shardingContext.getShardingItem(),
-            shardingContext.getShardingTotalCount(),
-            shardingContext.getShardingParameter(),
-            jobType);
-    request.userJobClass = userJobClass;
-    request.userMethodName = userMethodName;
-    return request;
+    return new ElasticJobProcessRequest(shardingContext, jobType, userJobClass, userMethodName);
   }
 
   public String getJobName() {
@@ -85,7 +64,7 @@ public final class ElasticJobProcessRequest {
     return this.shardingItemParameter;
   }
 
-  public String getJobType() {
+  public ElasticJobType getJobType() {
     return this.jobType;
   }
 

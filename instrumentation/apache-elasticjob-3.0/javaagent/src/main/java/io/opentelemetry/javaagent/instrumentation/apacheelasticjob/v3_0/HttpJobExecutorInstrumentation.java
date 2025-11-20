@@ -43,8 +43,8 @@ public class HttpJobExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) ShardingContext shardingContext) {
 
       ElasticJobProcessRequest request =
-          ElasticJobProcessRequest.createFromShardingContext(
-              shardingContext, "HTTP", HttpJobExecutor.class, "process");
+          ElasticJobProcessRequest.create(
+              shardingContext, ElasticJobType.HTTP, HttpJobExecutor.class, "process");
 
       return helper().startSpan(request);
     }

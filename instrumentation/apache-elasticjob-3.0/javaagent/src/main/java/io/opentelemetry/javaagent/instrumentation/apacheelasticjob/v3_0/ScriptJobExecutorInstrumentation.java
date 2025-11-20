@@ -43,8 +43,8 @@ public class ScriptJobExecutorInstrumentation implements TypeInstrumentation {
         @Advice.Argument(3) ShardingContext shardingContext) {
 
       ElasticJobProcessRequest request =
-          ElasticJobProcessRequest.createFromShardingContext(
-              shardingContext, "SCRIPT", ScriptJobExecutor.class, "process");
+          ElasticJobProcessRequest.create(
+              shardingContext, ElasticJobType.SCRIPT, ScriptJobExecutor.class, "process");
 
       return helper().startSpan(request);
     }
