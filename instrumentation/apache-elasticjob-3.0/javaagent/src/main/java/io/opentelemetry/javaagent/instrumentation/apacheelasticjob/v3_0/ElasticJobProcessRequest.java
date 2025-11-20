@@ -85,6 +85,10 @@ public final class ElasticJobProcessRequest {
     return this.shardingItemParameter;
   }
 
+  public String getJobType() {
+    return this.jobType;
+  }
+
   public Class<?> getUserJobClass() {
     return this.userJobClass;
   }

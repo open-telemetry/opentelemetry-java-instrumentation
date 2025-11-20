@@ -111,7 +111,8 @@ class ElasticJobTest {
                                 3L,
                                 "Beijing",
                                 "process",
-                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor"))),
+                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
+                                "HTTP"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -124,7 +125,8 @@ class ElasticJobTest {
                                 3L,
                                 "Shanghai",
                                 "process",
-                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor"))),
+                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
+                                "HTTP"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -137,7 +139,8 @@ class ElasticJobTest {
                                 3L,
                                 "Guangzhou",
                                 "process",
-                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor"))));
+                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor",
+                                "HTTP"))));
   }
 
   @Test
@@ -169,7 +172,8 @@ class ElasticJobTest {
                                 2L,
                                 "A",
                                 "execute",
-                                TestSimpleJob.class.getName()))),
+                                TestSimpleJob.class.getName(),
+                                "SIMPLE"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -182,7 +186,8 @@ class ElasticJobTest {
                                 2L,
                                 "B",
                                 "execute",
-                                TestSimpleJob.class.getName()))));
+                                TestSimpleJob.class.getName(),
+                                "SIMPLE"))));
   }
 
   @Test
@@ -214,7 +219,8 @@ class ElasticJobTest {
                                 2L,
                                 "X",
                                 "processData",
-                                TestDataflowJob.class.getName()))),
+                                TestDataflowJob.class.getName(),
+                                "DATAFLOW"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -227,7 +233,8 @@ class ElasticJobTest {
                                 2L,
                                 "Y",
                                 "processData",
-                                TestDataflowJob.class.getName()))));
+                                TestDataflowJob.class.getName(),
+                                "DATAFLOW"))));
   }
 
   @Test
@@ -247,7 +254,8 @@ class ElasticJobTest {
                                 1L,
                                 null,
                                 "process",
-                                "org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor"))));
+                                "org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor",
+                                "SCRIPT"))));
   }
 
   @Test
@@ -280,7 +288,8 @@ class ElasticJobTest {
                                 1L,
                                 "failed",
                                 "execute",
-                                TestFailedJob.class.getName()))));
+                                TestFailedJob.class.getName(),
+                                "SIMPLE"))));
   }
 
   private static CoordinatorRegistryCenter setUpRegistryCenter() {
@@ -346,9 +355,10 @@ class ElasticJobTest {
       String jobName,
       long item,
       long totalCount,
-      String parameters,
+      String parameter,
       String codeFunction,
-      String codeNamespace) {
+      String codeNamespace,
+      String jobType) {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
@@ -356,10 +366,11 @@ class ElasticJobTest {
                 equalTo(stringKey("code.namespace"), codeNamespace),
                 equalTo(stringKey("job.system"), "elasticjob"),
                 equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
+                equalTo(stringKey("scheduling.apache-elasticjob.job.type"), jobType),
                 equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
                 equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
                 equalTo(
-                    stringKey("scheduling.apache-elasticjob.sharding.item.parameters"), parameters),
+                    stringKey("scheduling.apache-elasticjob.sharding.item.parameter"), parameter),
                 satisfies(
                     stringKey("scheduling.apache-elasticjob.task.id"),
                     taskId -> taskId.contains(jobName))));
