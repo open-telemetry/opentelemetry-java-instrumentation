@@ -27,20 +27,24 @@ public class JmxTelemetryTest {
   @Test
   void missingClasspathTarget() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addClassPathRules("should-not-exist"))
+    assertThatThrownBy(() -> builder.addClassPathResourceRules("should-not-exist"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void invalidClasspathTarget() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addClassPathRules("invalid"))
+    assertThatThrownBy(() -> builder.addClassPathResourceRules("rules/jmx/invalid.yaml"))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void knownClassPathTarget() {
-    JmxTelemetry.builder(OpenTelemetry.noop()).addClassPathRules("jvm").build();
+    JmxTelemetry jmxtelemetry =
+        JmxTelemetry.builder(OpenTelemetry.noop())
+            .addClassPathResourceRules("rules/jmx/jvm.yaml")
+            .build();
+    assertThat(jmxtelemetry).isNotNull();
   }
 
   @Test

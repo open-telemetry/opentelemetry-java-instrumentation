@@ -57,18 +57,30 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathRules(String target) {
-    String yamlResource = String.format("jmx/rules/%s.yaml", target);
+    return addClassPathResourceRules(String.format("jmx/rules/%s.yaml", target));
+  }
+
+  /**
+   * Adds built-in JMX rules from classpath resource
+   *
+   * @param resourcePath relative path of the classpath resource yaml from classpath root, must not
+   *     start with '/'
+   * @return builder instance
+   * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder addClassPathResourceRules(String resourcePath) {
     try (InputStream inputStream =
-        JmxTelemetryBuilder.class.getClassLoader().getResourceAsStream(yamlResource)) {
+        JmxTelemetryBuilder.class.getClassLoader().getResourceAsStream(resourcePath)) {
       if (inputStream == null) {
-        throw new IllegalArgumentException("JMX rules not found in classpath: " + yamlResource);
+        throw new IllegalArgumentException("JMX rules not found in classpath: " + resourcePath);
       }
-      logger.log(FINE, "Adding JMX config from classpath for {0}", yamlResource);
+      logger.log(FINE, "Adding JMX config from classpath for {0}", resourcePath);
       RuleParser parserInstance = RuleParser.get();
-      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, target);
+      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, resourcePath);
     } catch (Exception e) {
       throw new IllegalArgumentException(
-          "Unable to load JMX rules from classpath: " + yamlResource, e);
+          "Unable to load JMX rules from classpath: " + resourcePath, e);
     }
     return this;
   }
