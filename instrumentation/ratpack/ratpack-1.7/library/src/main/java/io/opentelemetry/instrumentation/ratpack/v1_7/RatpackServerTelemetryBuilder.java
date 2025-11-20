@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExt
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.Experimental;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackServerInstrumenterBuilderFactory;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import ratpack.http.Request;
 import ratpack.http.Response;
@@ -87,19 +86,6 @@ public final class RatpackServerTelemetryBuilder {
   public RatpackServerTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
-  }
-
-  /**
-   * Sets custom server {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public RatpackServerTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<Request>, SpanNameExtractor<Request>> serverSpanNameExtractor) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<Request>>) serverSpanNameExtractor::apply);
   }
 
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
