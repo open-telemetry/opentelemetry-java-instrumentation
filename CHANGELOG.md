@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## Version 2.22.0 (2025-11-19)
+## Version 2.22.0 (2025-11-20)
 
 ### ⚠️ Breaking Changes
 
