@@ -25,39 +25,144 @@ val latestJava = "25" // renovate(java-version)
 // Dockerfile name, args key passes raw arguments to docker build
 val targets = mapOf(
   "jetty" to listOf(
-    ImageTarget(listOf("9.4.58"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava), mapOf("sourceVersion" to "9.4.58.v20250814")),
-    ImageTarget(listOf("10.0.26"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), mapOf("sourceVersion" to "10.0.26")),
-    ImageTarget(listOf("11.0.26"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), mapOf("sourceVersion" to "11.0.26"), "servlet-5.0"),
-    ImageTarget(listOf("12.0.28"), listOf("hotspot", "openj9"), listOf("17", "21", latestJava), mapOf("sourceVersion" to "12.0.28"), "servlet-5.0"),
+    ImageTarget(
+      listOf("9.4.58"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21", latestJava),
+      mapOf("sourceVersion" to "9.4.58.v20250814")
+    ),
+    ImageTarget(
+      listOf("10.0.26"),
+      listOf("hotspot", "openj9"),
+      listOf("11", "17", "21", latestJava),
+      mapOf("sourceVersion" to "10.0.26")
+    ),
+    ImageTarget(
+      listOf("11.0.26"),
+      listOf("hotspot", "openj9"),
+      listOf("11", "17", "21", latestJava),
+      mapOf("sourceVersion" to "11.0.26"),
+      "servlet-5.0"
+    ),
+    ImageTarget(
+      listOf("12.0.28"),
+      listOf("hotspot", "openj9"),
+      listOf("17", "21", latestJava),
+      mapOf("sourceVersion" to "12.0.28"),
+      "servlet-5.0"
+    ),
   ),
   "liberty" to listOf(
-    ImageTarget(listOf("20.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11"), mapOf("release" to "2020-11-11_0736")),
-    ImageTarget(listOf("21.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "2021-11-17_1256")),
-    ImageTarget(listOf("22.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17"), mapOf("release" to "22.0.0.12")),
-    ImageTarget(listOf("23.0.0.12"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21"), mapOf("release" to "23.0.0.12")),
+    ImageTarget(
+      listOf("open-liberty:20.0.0.12-full-java11-openj9@sha256:2fa4af95d6c48e3db79edfd2b8a9c71e26c63a68c3fcae92f222fbb42c469ed2"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11"),
+      mapOf("release" to "2020-11-11_0736")
+    ),
+    ImageTarget(
+      listOf("open-liberty:21.0.0.12-full-java11-openj9@sha256:eb014c600b5e08b799cb0c5781e606cf1e7a28ad913ba956c9d9e7f8a2f528dc"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17"),
+      mapOf("release" to "2021-11-17_1256")
+    ),
+    ImageTarget(
+      listOf("open-liberty:22.0.0.12-full-java11-openj9@sha256:a06f1da35a564f00354b86c7d01d8cc9d6eef156ce88d5b59605c5c02bf48c72"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17"),
+      mapOf("release" to "22.0.0.12")
+    ),
+    ImageTarget(
+      listOf("open-liberty:23.0.0.12-full-java11-openj9@sha256:cd6aa69cffffb45427cbb6a5640cd00b13c98064f296a66894ea1decd181e1c3"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21"),
+      mapOf("release" to "23.0.0.12")
+    ),
   ),
   "payara" to listOf(
-    ImageTarget(listOf("5.2020.6", "5.2021.8"), listOf("hotspot", "openj9"), listOf("8", "11")),
+    ImageTarget(
+      listOf(
+        "payara/server-full:5.2020.6@sha256:8c8f054ecbfb340b60961d7ffea2d223cea1afe6183f6986f4806de5c0bc9419",
+        "payara/server-full:5.2021.8@sha256:ffc915a7243b27504c13c4bd4adb3da55c6c08a93ac05685afea3ea77380109d"
+      ),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11")
+    ),
     // Test application is not deployed when server is sarted with hotspot jdk version 21
-    ImageTarget(listOf("6.2023.12"), listOf("hotspot"), listOf("11", "17"), war = "servlet-5.0"),
-    ImageTarget(listOf("6.2023.12"), listOf("openj9"), listOf("11", "17", "21"), war = "servlet-5.0")
+    ImageTarget(
+      listOf("payara/server-full:6.2023.12@sha256:5c382db1f5bad8bef693dbcd0fed299844690839f4894e07c248de5f4b186b9b"),
+      listOf("hotspot"),
+      listOf("11", "17"),
+      war = "servlet-5.0"
+    ),
+    ImageTarget(
+      listOf("payara/server-full:6.2023.12@sha256:5c382db1f5bad8bef693dbcd0fed299844690839f4894e07c248de5f4b186b9b"),
+      listOf("openj9"),
+      listOf("11", "17", "21"),
+      war = "servlet-5.0"
+    )
   ),
   "tomcat" to listOf(
-    ImageTarget(listOf("7.0.109"), listOf("hotspot", "openj9"), listOf("8"), mapOf("majorVersion" to "7")),
-    ImageTarget(listOf("8.5.98"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava), mapOf("majorVersion" to "8")),
-    ImageTarget(listOf("9.0.111"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava), mapOf("majorVersion" to "9")),
-    ImageTarget(listOf("10.1.48"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), mapOf("majorVersion" to "10"), "servlet-5.0"),
+    ImageTarget(
+      listOf("7.0.109"),
+      listOf("hotspot", "openj9"),
+      listOf("8"),
+      mapOf("majorVersion" to "7")
+    ),
+    ImageTarget(
+      listOf("8.5.98"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21", latestJava),
+      mapOf("majorVersion" to "8")
+    ),
+    ImageTarget(
+      listOf("9.0.111"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21", latestJava),
+      mapOf("majorVersion" to "9")
+    ),
+    ImageTarget(
+      listOf("10.1.48"),
+      listOf("hotspot", "openj9"),
+      listOf("11", "17", "21", latestJava),
+      mapOf("majorVersion" to "10"),
+      "servlet-5.0"
+    ),
   ),
   "tomee" to listOf(
-    ImageTarget(listOf("7.0.9", "7.1.4"), listOf("hotspot", "openj9"), listOf("8")),
-    ImageTarget(listOf("8.0.16"), listOf("hotspot", "openj9"), listOf("8", "11", "17", "21", latestJava)),
-    ImageTarget(listOf("9.1.3"), listOf("hotspot", "openj9"), listOf("11", "17", "21", latestJava), war = "servlet-5.0"),
+    ImageTarget(
+      listOf("7.0.9", "7.1.4"),
+      listOf("hotspot", "openj9"),
+      listOf("8")
+    ),
+    ImageTarget(
+      listOf("8.0.16"),
+      listOf("hotspot", "openj9"),
+      listOf("8", "11", "17", "21", latestJava)
+    ),
+    ImageTarget(
+      listOf("9.1.3"),
+      listOf("hotspot", "openj9"),
+      listOf("11", "17", "21", latestJava),
+      war = "servlet-5.0"
+    ),
   ),
   "websphere" to listOf(
-    ImageTarget(listOf("8.5.5.22", "9.0.5.14"), listOf("openj9"), listOf("8"), windows = false),
+    ImageTarget(
+      listOf(
+        "ibmcom/websphere-traditional:8.5.5.22@sha256:2a385c56f3e6781cc595d873473efd5ef7cb4f34e88c6cf8381121332fb49c9c",
+        "ibmcom/websphere-traditional:9.0.5.14@sha256:7e569af2f4050bb0f3ac0fcab113e2dee20d9d6bdc4061cef4b97b79c2ea4fdd"
+      ),
+      listOf("openj9"),
+      listOf("8"),
+      windows = false
+    ),
   ),
   "wildfly" to listOf(
-    ImageTarget(listOf("13.0.0.Final"), listOf("hotspot", "openj9"), listOf("8")),
+    ImageTarget(
+      listOf("13.0.0.Final"),
+      listOf("hotspot", "openj9"),
+      listOf("8")
+    ),
     ImageTarget(
       listOf("17.0.1.Final", "21.0.0.Final"),
       listOf("hotspot", "openj9"),
@@ -127,13 +232,24 @@ fun configureImage(
   parentTask: TaskProvider<out Task>,
   server: String,
   dockerfile: String,
-  version: String,
+  fullVersion: String,
   vm: String,
   jdk: String,
   warProject: String,
   args: Map<String, String>,
   isWindows: Boolean
 ): String {
+  val versionParts = fullVersion.split("@")
+  val imageNameWithTag = versionParts[0]
+  val serverImageHash = if (versionParts.size > 1) versionParts[1].removePrefix("sha256:") else ""
+
+  // Extract just the version (tag) from the full image reference
+  val version = if (imageNameWithTag.contains(":")) {
+    imageNameWithTag.substringAfterLast(":")
+  } else {
+    imageNameWithTag
+  }
+
   // Using separate build directory for different image
   val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"
@@ -203,6 +319,12 @@ fun configureImage(
   val jdkImageHash = if (jdkImageParts.size > 1) jdkImageParts[1].removePrefix("sha256:") else ""
 
   val extraArgs = args.toMutableMap()
+
+  // Pass the full image name with tag (for servers that need it)
+  if (imageNameWithTag.contains(":")) {
+    extraArgs["imageName"] = imageNameWithTag
+  }
+
   if (server == "wildfly") {
     // wildfly url without .zip or .tar.gz suffix
     val majorVersion = version.substring(0, version.indexOf(".")).toInt()
@@ -228,7 +350,7 @@ fun configureImage(
     inputDir.set(dockerWorkingDir)
     images.add(image)
     dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
-    buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash))
+    buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash, "imageHash" to serverImageHash))
     doLast {
       matrix.add(image)
     }
