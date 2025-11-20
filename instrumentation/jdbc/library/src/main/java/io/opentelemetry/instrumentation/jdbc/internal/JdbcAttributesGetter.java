@@ -12,7 +12,13 @@ import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
 
-final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+
+  public static final JdbcAttributesGetter INSTANCE = new JdbcAttributesGetter();
 
   @Nullable
   @Override
@@ -63,5 +69,17 @@ final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest,
   @Override
   public Map<String, String> getQueryParameters(DbRequest request) {
     return request.getPreparedStatementParameters();
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(DbRequest request) {
+    return request.getDbInfo().getHost();
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(DbRequest request) {
+    return request.getDbInfo().getPort();
   }
 }

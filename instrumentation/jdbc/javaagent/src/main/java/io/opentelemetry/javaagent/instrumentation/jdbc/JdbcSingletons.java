@@ -15,8 +15,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
+import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
-import io.opentelemetry.instrumentation.jdbc.internal.JdbcNetworkAttributesGetter;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
@@ -37,10 +37,9 @@ public final class JdbcSingletons {
   public static final boolean CAPTURE_QUERY_PARAMETERS;
 
   static {
-    JdbcNetworkAttributesGetter netAttributesGetter = new JdbcNetworkAttributesGetter();
     AttributesExtractor<DbRequest, Void> peerServiceExtractor =
         PeerServiceAttributesExtractor.create(
-            netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver());
+            JdbcAttributesGetter.INSTANCE, AgentCommonConfig.get().getPeerServiceResolver());
 
     CAPTURE_QUERY_PARAMETERS =
         AgentInstrumentationConfig.get()
