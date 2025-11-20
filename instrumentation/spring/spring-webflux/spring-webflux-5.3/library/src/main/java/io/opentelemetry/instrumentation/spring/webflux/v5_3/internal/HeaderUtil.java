@@ -11,6 +11,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.springframework.http.HttpHeaders;
 
 /**
@@ -19,31 +21,44 @@ import org.springframework.http.HttpHeaders;
  * guarantees are made.
  */
 public final class HeaderUtil {
-  private static final MethodHandle GET_HEADERS;
+
+  @Nullable private static final MethodHandle GET_HEADERS;
 
   static {
-    // since spring web 7.0
-    GET_HEADERS = findGetHeadersMethod(MethodType.methodType(List.class, String.class, List.class));
+    GET_HEADERS =
+        firstAvailableHandle(
+            findGetHeadersMethod(
+                MethodType.methodType(List.class, String.class)), // since spring web 7.0
+            () ->
+                findGetHeadersMethod(
+                    MethodType.methodType(List.class, Object.class))); // before spring web 7.0
   }
 
+  @Nullable
+  private static MethodHandle firstAvailableHandle(
+      @Nullable MethodHandle first, Supplier<? extends MethodHandle> supplier) {
+    return first != null ? first : supplier.get();
+  }
+
+  @Nullable
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
-      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "getOrDefault", methodType);
+      return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
     } catch (Throwable t) {
       return null;
     }
   }
 
-  // before spring web 7.0 HttpHeaders implements Map<String, List<String>>, this triggers
-  // errorprone BadInstanceof warning since errorpone is not aware that this instanceof check does
-  // not pass with spring web 7.0+
   @SuppressWarnings("unchecked") // casting GET_HEADERS.invoke result
   public static List<String> getHeader(HttpHeaders headers, String name) {
-    if (headers != null) {
+    if (GET_HEADERS != null) {
       try {
-        return (List<String>) GET_HEADERS.invoke(headers, name, emptyList());
+        List<String> result = (List<String>) GET_HEADERS.invoke(headers, name);
+        if (result != null) {
+          return result;
+        }
       } catch (Throwable t) {
-        throw new IllegalStateException(t);
+        // ignore
       }
     }
     return emptyList();
