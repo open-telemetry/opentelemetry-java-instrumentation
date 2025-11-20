@@ -244,10 +244,16 @@ fun configureImage(
   val serverImageHash = if (versionParts.size > 1) versionParts[1].removePrefix("sha256:") else ""
 
   // Extract just the version (tag) from the full image reference
-  val version = if (imageNameWithTag.contains(":")) {
+  var version = if (imageNameWithTag.contains(":")) {
     imageNameWithTag.substringAfterLast(":")
   } else {
     imageNameWithTag
+  }
+
+  // Extract just the version number from tags with suffixes
+  // (e.g., "20.0.0.12" from "20.0.0.12-full-java11-openj9")
+  if (version.contains("-")) {
+    version = version.substringBefore("-")
   }
 
   // Using separate build directory for different image
