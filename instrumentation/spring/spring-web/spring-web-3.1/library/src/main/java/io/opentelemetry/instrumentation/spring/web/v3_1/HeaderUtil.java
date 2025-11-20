@@ -13,6 +13,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.util.List;
 import java.util.function.Supplier;
+import javax.annotation.Nullable;
 import org.springframework.http.HttpHeaders;
 
 class HeaderUtil {
@@ -29,12 +30,13 @@ class HeaderUtil {
   }
 
   // copied from java.util.Objects in Java 9+
-  private static <T> T requireNonNullElseGet(T obj, Supplier<? extends T> supplier) {
+  private static <T> T requireNonNullElseGet(@Nullable T obj, Supplier<? extends T> supplier) {
     return (obj != null)
         ? obj
         : requireNonNull(requireNonNull(supplier, "supplier").get(), "supplier.get()");
   }
 
+  @Nullable
   private static MethodHandle findGetHeadersMethod(MethodType methodType) {
     try {
       return MethodHandles.lookup().findVirtual(HttpHeaders.class, "get", methodType);
