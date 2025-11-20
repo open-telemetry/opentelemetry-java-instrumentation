@@ -76,7 +76,7 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
         throw GradleException("Invalid test partition")
       }
 
-      val partitionTasks = ArrayList<Test>()
+      val partitionTasks = ArrayList<String>()
       var testPartitionCounter = 0
       subprojects {
         // relying on predictable ordering of subprojects
@@ -84,16 +84,17 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
         // since we are splitting these tasks across different github action jobs
         val enabled = testPartitionCounter++ % 4 == testPartition
         if (enabled) {
+          val projectPath = this.path
           tasks.withType<Test>().configureEach {
-            partitionTasks.add(this)
+            val taskPath = projectPath + ":" + this.name
+            partitionTasks.add(taskPath)
           }
         }
       }
 
       doLast {
         File("test-tasks.txt").printWriter().use { writer ->
-          partitionTasks.forEach { task ->
-            var taskPath = task.project.path + ":" + task.name
+          partitionTasks.forEach { taskPath ->
             // smoke tests are run separately
             // :instrumentation:test runs all instrumentation tests
             if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test") {
