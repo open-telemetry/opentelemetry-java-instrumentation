@@ -128,23 +128,29 @@ tasks {
     group = "Help"
     description = "Generate .fossa.yml configuration file"
 
+    // Capture the project paths at configuration time to avoid serializing Gradle script objects
+    val projectPaths = rootProject.subprojects
+      .sortedBy { it.findProperty("archivesName") as String? }
+      .filter { !it.name.startsWith("bom") }
+      .filter { it.plugins.hasPlugin("maven-publish") }
+      .map { it.path }
+
+    val outputFile = layout.projectDirectory.file(".fossa.yml")
+    outputs.file(outputFile)
+
     doLast {
-      File(".fossa.yml").printWriter().use { writer ->
+      outputFile.asFile.printWriter().use { writer ->
         writer.println("version: 3")
         writer.println()
         writer.println("targets:")
         writer.println("  only:")
         writer.println("    # only scanning the modules which are published")
         writer.println("    # (as opposed to internal testing modules")
-        rootProject.subprojects
-          .sortedBy { it.findProperty("archivesName") as String? }
-          .filter { !it.name.startsWith("bom") }
-          .filter { it.plugins.hasPlugin("maven-publish") }
-          .forEach {
-            writer.println("    - type: gradle")
-            writer.println("      path: ./")
-            writer.println("      target: '${it.path}'")
-          }
+        projectPaths.forEach { path ->
+          writer.println("    - type: gradle")
+          writer.println("      path: ./")
+          writer.println("      target: '$path'")
+        }
         writer.println()
         writer.println("experimental:")
         writer.println("  gradle:")
