@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -37,6 +38,8 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
   public static class ReceiveAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
+    @SuppressWarnings("NullAway") // request is typed as Void
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
         return null;
