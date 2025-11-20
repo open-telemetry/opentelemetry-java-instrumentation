@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
 import static io.opentelemetry.javaagent.bootstrap.rmi.ThreadLocalContext.THREAD_LOCAL_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.SpringRmiSingletons.serverInstrumenter;
+import static java.util.Objects.requireNonNull;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -45,12 +46,15 @@ public class ServerInstrumentation implements TypeInstrumentation {
 
     public static class AdviceScope {
       private final CallDepth callDepth;
-      private final ClassAndMethod request;
-      private final Context context;
-      private final Scope scope;
+      @Nullable private final ClassAndMethod request;
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
 
       private AdviceScope(
-          CallDepth callDepth, ClassAndMethod request, Context context, Scope scope) {
+          CallDepth callDepth,
+          @Nullable ClassAndMethod request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
@@ -81,7 +85,8 @@ public class ServerInstrumentation implements TypeInstrumentation {
           return;
         }
         scope.close();
-        serverInstrumenter().end(context, request, null, throwable);
+        // the "if" check prevents null dereference
+        serverInstrumenter().end(requireNonNull(context), requireNonNull(request), null, throwable);
       }
     }
 
