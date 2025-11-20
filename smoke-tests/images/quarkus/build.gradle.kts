@@ -9,14 +9,19 @@ buildscript {
 }
 
 plugins {
-  id("otel.java-conventions")
+  // otel.java-conventions isn't applied to this module because it adds
+  // platform(project(":dependencyManagement")) which conflicts with
+  // Quarkus's dependency resolution logic, causing infinite recursion in
+  // GradleApplicationModelBuilder.collectDependencies during the configuration phase
+  // resulting in StackOverflowError
+  id("java")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.25.0"
+  id("io.quarkus") version "3.30.0"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.26.0"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.30.0"))
   implementation("io.quarkus:quarkus-rest")
 }
 
@@ -63,18 +68,6 @@ tasks {
   }
 
   compileJava {
-    dependsOn(compileQuarkusGeneratedSourcesJava)
-  }
-
-  sourcesJar {
-    dependsOn(quarkusGenerateCode, compileQuarkusGeneratedSourcesJava)
-  }
-
-  javadoc {
-    dependsOn(compileQuarkusGeneratedSourcesJava)
-  }
-
-  checkstyleMain {
     dependsOn(compileQuarkusGeneratedSourcesJava)
   }
 }

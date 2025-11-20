@@ -34,9 +34,6 @@ jobs:
   markdown-lint-check:
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
-  misspell-check:
-    uses: ./.github/workflows/reusable-misspell-check.yml
-
   workflow-notification:
     permissions:
       contents: read
@@ -46,7 +43,6 @@ jobs:
       - test-latest-deps
       - muzzle
       - link-check
-      - misspell-check
     if: always()
     uses: ./.github/workflows/reusable-workflow-notification.yml
     with:
@@ -55,6 +51,5 @@ jobs:
           needs.common.result == 'success' &&
           needs.test-latest-deps.result == 'success' &&
           needs.muzzle.result == 'success' &&
-          needs.link-check.result == 'success' &&
-          needs.misspell-check.result == 'success'
+          needs.link-check.result == 'success'
         }}

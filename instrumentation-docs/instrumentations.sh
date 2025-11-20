@@ -153,6 +153,8 @@ readonly INSTRUMENTATIONS=(
   "ktor:ktor-1.0:library:test"
   "ktor:ktor-2.0:library:test"
   "ktor:ktor-3.0:library:test"
+  "kubernetes-client-7.0:javaagent:test"
+  "kubernetes-client-7.0:javaagent:testExperimental"
   "nats:nats-2.17:javaagent:test"
   "nats:nats-2.17:javaagent:testExperimental"
   "netty:netty-3.8:javaagent:test"

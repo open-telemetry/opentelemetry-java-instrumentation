@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.jmx.yaml;
 
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
 import java.io.InputStream;
@@ -164,6 +163,7 @@ public class RuleParser {
    * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
    * @param id identifier of the YAML ruleset, such as a filename
+   * @throws IllegalArgumentException when unable to parse YAML
    */
   public void addMetricDefsTo(MetricConfiguration conf, InputStream is, String id) {
     try {
@@ -171,13 +171,13 @@ public class RuleParser {
       logger.log(INFO, "{0}: found {1} metric rules", new Object[] {id, config.getRules().size()});
       config.addMetricDefsTo(conf);
     } catch (Exception exception) {
-      logger.log(
-          WARNING,
-          "Failed to parse YAML rules from {0}: {1}",
-          new Object[] {id, rootCause(exception)});
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
-      logger.log(WARNING, exception.toString());
+      String msg =
+          String.format(
+              "Failed to parse YAML rules from %s: %s %s",
+              id, rootCause(exception), exception.getMessage());
+      throw new IllegalArgumentException(msg, exception);
     }
   }
 

@@ -60,7 +60,7 @@ class HttpExperimentalAttributesExtractorTest {
 
     AttributesBuilder attributes = Attributes.builder();
     extractor.onStart(attributes, Context.root(), "request");
-    assertThat(attributes.build()).isEmpty();
+    assertThat(attributes.build().asMap()).containsExactlyInAnyOrderEntriesOf(expected);
 
     extractor.onEnd(attributes, Context.root(), "request", "response", null);
     Map<AttributeKey<?>, Object> expectedAttributes = new HashMap<>(expected);

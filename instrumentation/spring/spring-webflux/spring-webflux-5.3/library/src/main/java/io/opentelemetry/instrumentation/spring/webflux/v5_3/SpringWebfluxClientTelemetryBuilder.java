@@ -15,7 +15,6 @@ import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimenta
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientHttpAttributesGetter;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
@@ -92,20 +91,6 @@ public final class SpringWebfluxClientTelemetryBuilder {
   public SpringWebfluxClientTelemetryBuilder setKnownMethods(Collection<String> knownMethods) {
     builder.setKnownMethods(knownMethods);
     return this;
-  }
-
-  /**
-   * Sets custom client {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebfluxClientTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<ClientRequest>, SpanNameExtractor<ClientRequest>>
-          clientSpanNameExtractor) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<ClientRequest>>) clientSpanNameExtractor::apply);
   }
 
   /** Sets custom client {@link SpanNameExtractor} via transform function. */

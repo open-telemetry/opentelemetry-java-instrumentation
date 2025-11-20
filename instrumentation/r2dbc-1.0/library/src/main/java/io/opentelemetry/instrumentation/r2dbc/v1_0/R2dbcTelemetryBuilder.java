@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.Experimental;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcInstrumenterBuilder;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /** A builder of {@link R2dbcTelemetry}. */
@@ -50,22 +49,6 @@ public final class R2dbcTelemetryBuilder {
   public R2dbcTelemetryBuilder setStatementSanitizationEnabled(boolean enabled) {
     this.statementSanitizationEnabled = enabled;
     return this;
-  }
-
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  @SuppressWarnings("unchecked") // cast result to SpanNameExtractor<DbExecution>
-  public R2dbcTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<DbExecution>, ? extends SpanNameExtractor<? super DbExecution>>
-          spanNameExtractorTransformer) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<DbExecution>>)
-            input -> (SpanNameExtractor<DbExecution>) spanNameExtractorTransformer.apply(input));
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */

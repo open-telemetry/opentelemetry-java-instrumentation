@@ -640,7 +640,7 @@ public final class LoggingEventMapper {
   private void captureLogstashStructuredArguments(LogRecordBuilder builder, Object[] arguments) {
     for (Object argument : arguments) {
       if (isLogstashStructuredArgument(argument)) {
-        captureLogstashStructuredArgument(builder, argument);
+        captureLogstashMarker(builder, argument);
       }
     }
   }
@@ -649,15 +649,8 @@ public final class LoggingEventMapper {
   private static boolean isLogstashStructuredArgument(Object argument) {
     // StructuredArguments implement the marker interface, so we can check for it
     // without importing the class directly (which may not be available at runtime)
-    return argument instanceof SingleFieldAppendingMarker;
-  }
-
-  @NoMuzzle
-  private void captureLogstashStructuredArgument(LogRecordBuilder builder, Object argument) {
-    // StructuredArguments created by v() or keyValue() extend SingleFieldAppendingMarker
-    // which has getFieldName() and provides field value via reflection
-    SingleFieldAppendingMarker marker = (SingleFieldAppendingMarker) argument;
-    captureLogstashMarker(builder, marker);
+    return argument instanceof SingleFieldAppendingMarker
+        || argument instanceof MapEntriesAppendingMarker;
   }
 
   private interface FieldReader {

@@ -19,8 +19,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.context.Context;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
@@ -77,16 +75,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
     if (Webflux7Util.isWebflux7) {
-      // FIXME: context is not propagated to the callback, this needs to be fixed
-      Context context = Context.current();
       Webflux7Util.sendRequestWithCallback(
-          request,
-          status -> {
-            try (Scope ignore = context.makeCurrent()) {
-              httpClientResult.complete(status);
-            }
-          },
-          httpClientResult::complete);
+          request, httpClientResult::complete, httpClientResult::complete);
     } else {
       request
           .exchange()
