@@ -202,7 +202,8 @@ jobs:
 
   documentation-audit:
     permissions:
-      issues: write # for workflow-notification job
+      contents: read
+      issues: write
     needs:
       - release
     uses: ./.github/workflows/documentation-synchronization-audit.yml
