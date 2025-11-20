@@ -18,12 +18,6 @@ class ElasticJobSpanNameExtractor implements SpanNameExtractor<ElasticJobProcess
 
   @Override
   public String extract(ElasticJobProcessRequest request) {
-    if (request.isScriptJob()) {
-      return "SCRIPT";
-    }
-    if (request.isHttpJob()) {
-      return "HTTP";
-    }
     return this.codeSpanNameExtractor.extract(request);
   }
 }

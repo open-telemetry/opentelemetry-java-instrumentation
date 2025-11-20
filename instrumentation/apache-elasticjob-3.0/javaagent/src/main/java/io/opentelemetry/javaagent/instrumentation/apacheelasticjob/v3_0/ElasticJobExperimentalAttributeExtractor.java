@@ -25,8 +25,8 @@ class ElasticJobExperimentalAttributeExtractor
       longKey("scheduling.apache-elasticjob.sharding.item.index");
   private static final AttributeKey<Long> ELASTICJOB_SHARDING_TOTAL_COUNT =
       longKey("scheduling.apache-elasticjob.sharding.total.count");
-  private static final AttributeKey<String> ELASTICJOB_SHARDING_ITEM_PARAMETERS =
-      stringKey("scheduling.apache-elasticjob.sharding.item.parameters");
+  private static final AttributeKey<String> ELASTICJOB_SHARDING_ITEM_PARAMETER =
+      stringKey("scheduling.apache-elasticjob.sharding.item.parameter");
 
   @Override
   public void onStart(
@@ -38,9 +38,9 @@ class ElasticJobExperimentalAttributeExtractor
     attributes.put(ELASTICJOB_SHARDING_ITEM_INDEX, elasticJobProcessRequest.getShardingItemIndex());
     attributes.put(
         ELASTICJOB_SHARDING_TOTAL_COUNT, elasticJobProcessRequest.getShardingTotalCount());
-    String shardingItemParameters = elasticJobProcessRequest.getShardingItemParameters();
+    String shardingItemParameters = elasticJobProcessRequest.getShardingItemParameter();
     if (shardingItemParameters != null) {
-      attributes.put(ELASTICJOB_SHARDING_ITEM_PARAMETERS, shardingItemParameters);
+      attributes.put(ELASTICJOB_SHARDING_ITEM_PARAMETER, shardingItemParameters);
     }
   }
 

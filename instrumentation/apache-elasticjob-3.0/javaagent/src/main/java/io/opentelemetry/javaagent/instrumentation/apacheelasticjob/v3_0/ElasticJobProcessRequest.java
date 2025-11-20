@@ -12,8 +12,8 @@ public final class ElasticJobProcessRequest {
   private final String taskId;
   private final int shardingItemIndex;
   private final int shardingTotalCount;
-  private final String shardingItemParameters;
-  private final ElasticJobType jobType;
+  private final String shardingItemParameter;
+  private final String jobType;
   private Class<?> userJobClass;
   private String userMethodName = "process";
 
@@ -22,13 +22,13 @@ public final class ElasticJobProcessRequest {
       String taskId,
       int shardingItemIndex,
       int shardingTotalCount,
-      String shardingItemParameters,
-      ElasticJobType jobType) {
+      String shardingItemParameter,
+      String jobType) {
     this.jobName = jobName;
     this.taskId = taskId;
     this.shardingItemIndex = shardingItemIndex;
     this.shardingTotalCount = shardingTotalCount;
-    this.shardingItemParameters = emptyToNull(shardingItemParameters);
+    this.shardingItemParameter = emptyToNull(shardingItemParameter);
     this.jobType = jobType;
   }
 
@@ -38,7 +38,7 @@ public final class ElasticJobProcessRequest {
       int shardingItemIndex,
       int shardingTotalCount,
       String shardingItemParameters,
-      ElasticJobType jobType) {
+      String jobType) {
     return new ElasticJobProcessRequest(
         jobName, taskId, shardingItemIndex, shardingTotalCount, shardingItemParameters, jobType);
   }
@@ -49,7 +49,7 @@ public final class ElasticJobProcessRequest {
 
   public static ElasticJobProcessRequest createFromShardingContext(
       ShardingContext shardingContext,
-      ElasticJobType jobType,
+      String jobType,
       Class<?> userJobClass,
       String userMethodName) {
     ElasticJobProcessRequest request =
@@ -81,16 +81,8 @@ public final class ElasticJobProcessRequest {
     return this.shardingTotalCount;
   }
 
-  public String getShardingItemParameters() {
-    return this.shardingItemParameters;
-  }
-
-  public boolean isScriptJob() {
-    return ElasticJobType.SCRIPT == jobType;
-  }
-
-  public boolean isHttpJob() {
-    return ElasticJobType.HTTP == jobType;
+  public String getShardingItemParameter() {
+    return this.shardingItemParameter;
   }
 
   public Class<?> getUserJobClass() {

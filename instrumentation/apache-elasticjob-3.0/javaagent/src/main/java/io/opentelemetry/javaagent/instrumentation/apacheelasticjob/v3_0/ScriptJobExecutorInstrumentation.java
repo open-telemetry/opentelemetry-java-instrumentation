@@ -11,17 +11,17 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.util.Objects;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.shardingsphere.elasticjob.infra.listener.ShardingContexts;
+import org.apache.shardingsphere.elasticjob.api.ShardingContext;
+import org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor;
 
-public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
+public class ScriptJobExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.shardingsphere.elasticjob.executor.ElasticJobExecutor");
+    return named("org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor");
   }
 
   @Override
@@ -30,17 +30,8 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
         named("process")
             .and(
                 takesArgument(
-                    0, named("org.apache.shardingsphere.elasticjob.api.JobConfiguration")))
-            .and(
-                takesArgument(
-                    1,
-                    named("org.apache.shardingsphere.elasticjob.infra.listener.ShardingContexts")))
-            .and(takesArgument(2, int.class))
-            .and(
-                takesArgument(
-                    3,
-                    named("org.apache.shardingsphere.elasticjob.tracing.event.JobExecutionEvent"))),
-        ElasticJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
+                    3, named("org.apache.shardingsphere.elasticjob.api.ShardingContext"))),
+        ScriptJobExecutorInstrumentation.class.getName() + "$ProcessAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -49,22 +40,12 @@ public class ElasticJobExecutorInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static ElasticJobHelper.ElasticJobScope onEnter(
-        @Advice.FieldValue("jobItemExecutor") Object jobItemExecutor,
-        @Advice.Argument(1) ShardingContexts shardingContexts,
-        @Advice.Argument(2) int item) {
+        @Advice.Argument(3) ShardingContext shardingContext) {
 
-      ElasticJobType jobType = ElasticJobType.fromExecutor(jobItemExecutor);
-      if (jobType != ElasticJobType.SCRIPT && jobType != ElasticJobType.HTTP) {
-        return null;
-      }
       ElasticJobProcessRequest request =
-          ElasticJobProcessRequest.create(
-              shardingContexts.getJobName(),
-              shardingContexts.getTaskId(),
-              item,
-              shardingContexts.getShardingTotalCount(),
-              Objects.toString(shardingContexts.getShardingItemParameters(), null),
-              jobType);
+          ElasticJobProcessRequest.createFromShardingContext(
+              shardingContext, "SCRIPT", ScriptJobExecutor.class, "process");
+
       return helper().startSpan(request);
     }
 

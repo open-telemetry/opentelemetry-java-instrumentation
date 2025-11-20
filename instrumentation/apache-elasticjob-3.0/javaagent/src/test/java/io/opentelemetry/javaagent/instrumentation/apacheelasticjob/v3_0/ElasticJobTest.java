@@ -23,13 +23,11 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -105,26 +103,41 @@ class ElasticJobTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.INTERNAL)
-                        .hasName("HTTP")
+                        .hasName("HttpJobExecutor.process")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobBaseAttributes(
-                                "javaHttpJob", 0L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
+                            elasticJobAttributes(
+                                "javaHttpJob",
+                                0L,
+                                3L,
+                                "Beijing",
+                                "process",
+                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.INTERNAL)
-                        .hasName("HTTP")
+                        .hasName("HttpJobExecutor.process")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobBaseAttributes(
-                                "javaHttpJob", 1L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))),
+                            elasticJobAttributes(
+                                "javaHttpJob",
+                                1L,
+                                3L,
+                                "Shanghai",
+                                "process",
+                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor"))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.INTERNAL)
-                        .hasName("HTTP")
+                        .hasName("HttpJobExecutor.process")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobBaseAttributes(
-                                "javaHttpJob", 2L, 3L, "{0=Beijing, 1=Shanghai, 2=Guangzhou}"))));
+                            elasticJobAttributes(
+                                "javaHttpJob",
+                                2L,
+                                3L,
+                                "Guangzhou",
+                                "process",
+                                "org.apache.shardingsphere.elasticjob.http.executor.HttpJobExecutor"))));
   }
 
   @Test
@@ -150,7 +163,7 @@ class ElasticJobTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestSimpleJob.execute")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobWithCodeAttributes(
+                            elasticJobAttributes(
                                 "simpleElasticJob",
                                 0L,
                                 2L,
@@ -163,7 +176,7 @@ class ElasticJobTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestSimpleJob.execute")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobWithCodeAttributes(
+                            elasticJobAttributes(
                                 "simpleElasticJob",
                                 1L,
                                 2L,
@@ -195,7 +208,7 @@ class ElasticJobTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestDataflowJob.processData")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobWithCodeAttributes(
+                            elasticJobAttributes(
                                 "dataflowElasticJob",
                                 0L,
                                 2L,
@@ -208,7 +221,7 @@ class ElasticJobTest {
                     span.hasKind(SpanKind.INTERNAL)
                         .hasName("TestDataflowJob.processData")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobWithCodeAttributes(
+                            elasticJobAttributes(
                                 "dataflowElasticJob",
                                 1L,
                                 2L,
@@ -226,9 +239,15 @@ class ElasticJobTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasKind(SpanKind.INTERNAL)
-                        .hasName("SCRIPT")
+                        .hasName("ScriptJobExecutor.process")
                         .hasAttributesSatisfyingExactly(
-                            elasticJobBaseAttributes("scriptElasticJob", 0L, 1L, "{0=null}"))));
+                            elasticJobAttributes(
+                                "scriptElasticJob",
+                                0L,
+                                1L,
+                                null,
+                                "process",
+                                "org.apache.shardingsphere.elasticjob.script.executor.ScriptJobExecutor"))));
   }
 
   @Test
@@ -255,7 +274,7 @@ class ElasticJobTest {
                         .hasStatus(StatusData.error())
                         .hasException(new RuntimeException("Simulated job failure for testing"))
                         .hasAttributesSatisfyingExactly(
-                            elasticJobWithCodeAttributes(
+                            elasticJobAttributes(
                                 "failedElasticJob",
                                 0L,
                                 1L,
@@ -302,18 +321,18 @@ class ElasticJobTest {
 
   private static String buildScriptCommandLine() throws IOException {
     String os = System.getProperty("os.name").toLowerCase(Locale.ROOT);
-    String scriptName = os.contains("win") ? "/script/demo.bat" : "/script/demo.sh";
-    String extension = os.contains("win") ? ".bat" : ".sh";
+    boolean isWindows = os.contains("win");
+    String extension = isWindows ? ".bat" : ".sh";
 
     Path tempScript = Files.createTempFile("elasticjob-test-", extension);
     tempScript.toFile().deleteOnExit();
 
-    try (InputStream scriptStream = ElasticJobTest.class.getResourceAsStream(scriptName)) {
-      if (scriptStream == null) {
-        throw new IOException("Script resource not found: " + scriptName);
-      }
-      Files.copy(scriptStream, tempScript, StandardCopyOption.REPLACE_EXISTING);
-    }
+    String scriptContent =
+        isWindows
+            ? "@echo off\necho Sharding Context %*"
+            : "#!/bin/bash\necho \"Sharding Context $*\"";
+
+    Files.write(tempScript, scriptContent.getBytes(UTF_8));
 
     File scriptFile = tempScript.toFile();
     if (!scriptFile.setExecutable(true)) {
@@ -323,19 +342,7 @@ class ElasticJobTest {
     return tempScript.toString();
   }
 
-  private static List<AttributeAssertion> elasticJobBaseAttributes(
-      String jobName, long item, long totalCount, String parameters) {
-    return asList(
-        equalTo(stringKey("job.system"), "elasticjob"),
-        equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
-        equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
-        equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
-        equalTo(stringKey("scheduling.apache-elasticjob.sharding.item.parameters"), parameters),
-        satisfies(
-            stringKey("scheduling.apache-elasticjob.task.id"), taskId -> taskId.contains(jobName)));
-  }
-
-  private static List<AttributeAssertion> elasticJobWithCodeAttributes(
+  private static List<AttributeAssertion> elasticJobAttributes(
       String jobName,
       long item,
       long totalCount,
@@ -346,8 +353,16 @@ class ElasticJobTest {
         new ArrayList<>(
             asList(
                 equalTo(stringKey("code.function"), codeFunction),
-                equalTo(stringKey("code.namespace"), codeNamespace)));
-    assertions.addAll(elasticJobBaseAttributes(jobName, item, totalCount, parameters));
+                equalTo(stringKey("code.namespace"), codeNamespace),
+                equalTo(stringKey("job.system"), "elasticjob"),
+                equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
+                equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
+                equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
+                equalTo(
+                    stringKey("scheduling.apache-elasticjob.sharding.item.parameters"), parameters),
+                satisfies(
+                    stringKey("scheduling.apache-elasticjob.task.id"),
+                    taskId -> taskId.contains(jobName))));
     return assertions;
   }
 }

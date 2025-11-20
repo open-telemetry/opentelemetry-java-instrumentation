@@ -12,18 +12,12 @@ class ElasticJobCodeAttributesGetter implements CodeAttributesGetter<ElasticJobP
   @Nullable
   @Override
   public Class<?> getCodeClass(ElasticJobProcessRequest request) {
-    if (request.isScriptJob() || request.isHttpJob()) {
-      return null;
-    }
     return request.getUserJobClass();
   }
 
   @Nullable
   @Override
   public String getMethodName(ElasticJobProcessRequest request) {
-    if (request.isScriptJob() || request.isHttpJob()) {
-      return null;
-    }
     return request.getUserMethodName();
   }
 }

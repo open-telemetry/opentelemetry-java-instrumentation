@@ -51,7 +51,7 @@ public class DataflowJobExecutorInstrumentation implements TypeInstrumentation {
 
       ElasticJobProcessRequest request =
           ElasticJobProcessRequest.createFromShardingContext(
-              shardingContext, ElasticJobType.DATAFLOW, elasticJob.getClass(), "processData");
+              shardingContext, "DATAFLOW", elasticJob.getClass(), "processData");
 
       return helper().startSpan(request);
     }

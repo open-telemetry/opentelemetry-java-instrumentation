@@ -24,9 +24,10 @@ public class ElasticJobInstrumentationModule extends InstrumentationModule
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
-        new ElasticJobExecutorInstrumentation(),
         new SimpleJobExecutorInstrumentation(),
-        new DataflowJobExecutorInstrumentation());
+        new DataflowJobExecutorInstrumentation(),
+        new ScriptJobExecutorInstrumentation(),
+        new HttpJobExecutorInstrumentation());
   }
 
   @Override
