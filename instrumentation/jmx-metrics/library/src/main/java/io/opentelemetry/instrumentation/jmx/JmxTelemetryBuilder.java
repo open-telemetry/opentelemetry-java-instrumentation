@@ -54,7 +54,9 @@ public final class JmxTelemetryBuilder {
    * @param target name of target in /jmx/rules/{target}.yaml classpath resource
    * @return builder instance
    * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   * @deprecated use {@link #addClassPathResourceRules(String)} instead
    */
+  @Deprecated
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathRules(String target) {
     return addClassPathResourceRules(String.format("jmx/rules/%s.yaml", target));
