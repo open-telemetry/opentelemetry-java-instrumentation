@@ -26,7 +26,6 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TType;
 import org.apache.thrift.transport.TTransport;
 
-@SuppressWarnings("all")
 public final class ClientOutProtocolWrapper extends AbstractProtocolWrapper {
   public static final String ONE_WAY_METHOD_NAME_PREFIX = "recv_";
   private volatile RequestScopeContext requestScopeContext;
@@ -78,6 +77,13 @@ public final class ClientOutProtocolWrapper extends AbstractProtocolWrapper {
       }
     } finally {
       if (this.isOneway() && message.type != TMessageType.ONEWAY) {
+        // In Thrift 0.9.1 and 0.9.2 versions, the type of the TMessage for oneway requests is still
+        // TMessageType.CALL.
+        // This causes issues with the server-side instrumentation logic. Here, we are simply
+        // correcting the actual request type.
+        // Since it is a oneway request, the client does not need to handle the response,
+        // and the server does not use this type for any specific logic processing.
+        // Therefore, it has no impact on either the client or the server.
         TMessage onewayMessage = new TMessage(message.name, TMessageType.ONEWAY, message.seqid);
         super.writeMessageBegin(onewayMessage);
       } else {

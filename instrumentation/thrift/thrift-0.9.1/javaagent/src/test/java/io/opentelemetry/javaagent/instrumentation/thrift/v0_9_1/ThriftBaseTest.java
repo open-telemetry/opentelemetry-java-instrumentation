@@ -835,14 +835,14 @@ public abstract class ThriftBaseTest {
       String errorType) {
     Consumer<SpanDataAssert> consumer =
         span ->
-            span.hasName(clientMethod)
+            span.hasName(clientClass + "/" + clientMethod)
                 .hasKind(SpanKind.CLIENT)
                 .hasParent(trace.getSpan(0))
                 .hasStatus(statusData)
                 .hasAttributesSatisfying(
                     equalTo(NETWORK_PEER_PORT, peerPort),
                     equalTo(NETWORK_PEER_ADDRESS, peerAddr),
-                    equalTo(RPC_SYSTEM, "thrift"),
+                    equalTo(RPC_SYSTEM, "apache_thrift"),
                     equalTo(RPC_SERVICE, clientClass),
                     equalTo(RPC_METHOD, clientMethod));
     if (statusData == StatusData.error()) {
@@ -873,13 +873,13 @@ public abstract class ThriftBaseTest {
       String errorType) {
     Consumer<SpanDataAssert> consumer =
         span ->
-            span.hasName(serverMethod)
+            span.hasName(serverClass + "/" + serverMethod)
                 .hasKind(SpanKind.SERVER)
                 .hasParent(trace.getSpan(1))
                 .hasStatus(statusData)
                 .hasAttributesSatisfying(
                     equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                    equalTo(RPC_SYSTEM, "thrift"),
+                    equalTo(RPC_SYSTEM, "apache_thrift"),
                     equalTo(RPC_SERVICE, serverClass),
                     equalTo(RPC_METHOD, serverMethod));
     if (statusData == StatusData.error()) {

@@ -5,13 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.client;
 
+import static io.opentelemetry.instrumentation.thrift.common.client.VirtualFields.ASYNC_METHOD_CALLBACK;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.ThriftSingletons.clientInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.thrift.common.RequestScopeContext;
 import io.opentelemetry.instrumentation.thrift.common.client.MethodAccessor;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -75,9 +75,7 @@ public final class ThriftAsyncWriteArgsInstrumentation implements TypeInstrument
           return;
         }
 
-        VirtualField<TAsyncMethodCall<?>, AsyncMethodCallback<?>> callbackVirtualField =
-            VirtualField.find(TAsyncMethodCall.class, AsyncMethodCallback.class);
-        AsyncMethodCallback<?> callback = callbackVirtualField.get(methodCall);
+        AsyncMethodCallback<?> callback = ASYNC_METHOD_CALLBACK.get(methodCall);
         if (callback instanceof AsyncMethodCallbackWrapper) {
           ((AsyncMethodCallbackWrapper<?>) callback).setRequestScopeContext(requestScopeContext);
         }

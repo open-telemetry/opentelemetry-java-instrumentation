@@ -617,7 +617,8 @@ include(":instrumentation:xxl-job:xxl-job-common:javaagent")
 include(":instrumentation:xxl-job:xxl-job-common:testing")
 include(":instrumentation:zio:zio-2.0:javaagent")
 include(":instrumentation:thrift:thrift-0.9.1:javaagent")
-include(":instrumentation:thrift:thrift-common:library")
+include(":instrumentation:thrift:thrift-0.9.3:javaagent")
+include(":instrumentation:thrift:thrift-common:javaagent")
 
 // benchmark
 include(":benchmark-overhead-jmh")

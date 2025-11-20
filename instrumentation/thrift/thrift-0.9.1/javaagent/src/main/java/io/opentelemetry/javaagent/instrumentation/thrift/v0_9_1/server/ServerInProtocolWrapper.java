@@ -63,6 +63,11 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
 
         Socket socket = SocketAccessor.getSocket(super.getTransport());
         if (socket == null) {
+          // The non-blocking processing method cannot obtain the corresponding Transport with a
+          // socket through super.getTransport().
+          // Instrumentation has been added to the invoke methods of FrameBuffer and
+          // AsyncFrameBuffer to actively set TNonblockingTransport.
+          // This serves as a compensation here.
           socket = SocketAccessor.getSocket(this.transport);
         }
         ThriftRequest request =
@@ -87,6 +92,14 @@ public final class ServerInProtocolWrapper extends AbstractProtocolWrapper {
     super.readMessageEnd();
     if (this.requestScopeContext == null) {
       Socket socket = SocketAccessor.getSocket(super.getTransport());
+      if (socket == null) {
+        // The non-blocking processing method cannot obtain the corresponding Transport with a
+        // socket through super.getTransport().
+        // Instrumentation has been added to the invoke methods of FrameBuffer and AsyncFrameBuffer
+        // to actively set TNonblockingTransport.
+        // This serves as a compensation here.
+        socket = SocketAccessor.getSocket(this.transport);
+      }
       ThriftRequest request =
           ThriftRequest.create(this.serviceName, this.methodName, socket, new HashMap<>());
       Context parentContext = Java8BytecodeBridge.currentContext();

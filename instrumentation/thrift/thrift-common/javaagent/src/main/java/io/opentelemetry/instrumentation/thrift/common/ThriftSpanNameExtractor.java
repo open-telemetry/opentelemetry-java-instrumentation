@@ -10,6 +10,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 public final class ThriftSpanNameExtractor implements SpanNameExtractor<ThriftRequest> {
   @Override
   public String extract(ThriftRequest request) {
-    return request.getMethodName();
+    if (request.getServiceName() == null || request.getMethodName() == null) {
+      return "Thrift request";
+    }
+    return request.getServiceName() + '/' + request.getMethodName();
   }
 }

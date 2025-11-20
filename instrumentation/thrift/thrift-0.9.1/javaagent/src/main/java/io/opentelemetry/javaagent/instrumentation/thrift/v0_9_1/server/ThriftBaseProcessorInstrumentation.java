@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.thrift.common.RequestScopeContext;
+import io.opentelemetry.instrumentation.thrift.common.client.MethodAccessor;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Field;
@@ -38,24 +39,19 @@ public final class ThriftBaseProcessorInstrumentation implements TypeInstrumenta
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void methodEnter(
         @Advice.Argument(value = 0) TProtocol inProtocol,
-        @Advice.FieldValue(value = "iface") Object iface) {
+        @Advice.FieldValue(value = "iface") Object iface)
+        throws IllegalAccessException {
       String serviceName = iface.getClass().getName();
       if (inProtocol instanceof ServerInProtocolWrapper) {
         ServerInProtocolWrapper wrapper = (ServerInProtocolWrapper) inProtocol;
         wrapper.setServiceName(serviceName);
       } else if (inProtocol instanceof TProtocolDecorator) {
         // TMultiplexedProcessor compatible
-        Field field = null;
-        try {
-          field = TProtocolDecorator.class.getDeclaredField("concreteProtocol");
-          field.setAccessible(true);
-          Object obj = field.get(inProtocol);
-          if (obj != null && obj instanceof ServerInProtocolWrapper) {
-            ServerInProtocolWrapper wrapper = (ServerInProtocolWrapper) obj;
-            wrapper.setServiceName(serviceName);
-          }
-        } catch (Throwable ignored) {
-          // reflection error; in practice should never happen, we can ignore it
+        Field field = MethodAccessor.getConcreteProtocolField(TProtocolDecorator.class);
+        Object obj = field.get(inProtocol);
+        if (obj != null && obj instanceof ServerInProtocolWrapper) {
+          ServerInProtocolWrapper wrapper = (ServerInProtocolWrapper) obj;
+          wrapper.setServiceName(serviceName);
         }
       }
     }

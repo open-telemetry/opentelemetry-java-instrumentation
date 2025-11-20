@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.client;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -26,7 +27,10 @@ public final class ThriftAsyncClientInstrumentation implements TypeInstrumentati
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor(), ThriftAsyncClientInstrumentation.class.getName() + "$ConstructorAdvice");
+        isConstructor()
+            .and(takesArgument(0, named("org.apache.thrift.protocol.TProtocolFactory")))
+            .and(takesArgument(2, named("org.apache.thrift.transport.TNonblockingTransport"))),
+        ThriftAsyncClientInstrumentation.class.getName() + "$ConstructorAdvice");
   }
 
   public static class ConstructorAdvice {

@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.client;
 
+import static io.opentelemetry.instrumentation.thrift.common.client.VirtualFields.ASYNC_METHOD_CALLBACK;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.AsyncMethodCallbackWrapper;
@@ -55,9 +55,7 @@ public final class ThriftAsyncMethodCallInstrumentation implements TypeInstrumen
         @Advice.This TAsyncMethodCall<?> thiz,
         @Advice.FieldValue(value = "callback") AsyncMethodCallback<?> callback) {
       if (callback instanceof AsyncMethodCallbackWrapper) {
-        VirtualField<TAsyncMethodCall<?>, AsyncMethodCallback<?>> virtualField =
-            VirtualField.find(TAsyncMethodCall.class, AsyncMethodCallback.class);
-        virtualField.set(thiz, callback);
+        ASYNC_METHOD_CALLBACK.set(thiz, callback);
       }
     }
   }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_1.client.v3;
+package io.opentelemetry.javaagent.instrumentation.thrift.v0_9_3.client;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static java.util.Arrays.asList;
@@ -18,7 +18,7 @@ import net.bytebuddy.matcher.ElementMatcher;
 public final class ThriftClientInstrumentationModule extends InstrumentationModule {
 
   public ThriftClientInstrumentationModule() {
-    super("thrift", "thrift-0.9.1", "thrift-0.9.3-client");
+    super("thrift", "thrift-0.9.3", "thrift-0.9.3-client");
   }
 
   @Override

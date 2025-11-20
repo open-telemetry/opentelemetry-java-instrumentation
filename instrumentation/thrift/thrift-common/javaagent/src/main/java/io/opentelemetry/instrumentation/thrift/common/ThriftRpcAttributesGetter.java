@@ -13,7 +13,7 @@ public enum ThriftRpcAttributesGetter implements RpcAttributesGetter<ThriftReque
 
   @Override
   public String getSystem(ThriftRequest request) {
-    return "thrift";
+    return "apache_thrift";
   }
 
   @Override

@@ -9,7 +9,6 @@ import org.apache.thrift.protocol.TProtocol;
 import org.apache.thrift.protocol.TProtocolFactory;
 import org.apache.thrift.transport.TTransport;
 
-@SuppressWarnings({"serial"})
 public final class ClientProtocolFactoryWrapper implements TProtocolFactory {
   public TProtocolFactory delegate;
   public TTransport transport;
