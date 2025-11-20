@@ -1,5 +1,2 @@
-Comparing source compatibility of opentelemetry-spring-boot-autoconfigure-2.23.0-SNAPSHOT.jar against opentelemetry-spring-boot-autoconfigure-2.21.0.jar
-===  UNCHANGED CLASS: PUBLIC io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration  (not serializable)
-	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
-	---  REMOVED ANNOTATION: org.springframework.boot.context.properties.EnableConfigurationProperties
-		---  REMOVED ELEMENT: value=io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties,io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties (-)
+Comparing source compatibility of opentelemetry-spring-boot-autoconfigure-2.23.0-SNAPSHOT.jar against opentelemetry-spring-boot-autoconfigure-2.22.0.jar
+No changes.
