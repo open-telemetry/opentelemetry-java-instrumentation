@@ -5,9 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -17,7 +17,8 @@ public class KafkaProcessRequest extends AbstractKafkaConsumerRequest {
 
   private final ConsumerRecord<?, ?> record;
 
-  public static KafkaProcessRequest create(ConsumerRecord<?, ?> record, @Nullable Consumer<?, ?> consumer) {
+  public static KafkaProcessRequest create(
+      ConsumerRecord<?, ?> record, @Nullable Consumer<?, ?> consumer) {
     return create(record, KafkaUtil.getConsumerGroup(consumer), KafkaUtil.getClientId(consumer));
   }
 
