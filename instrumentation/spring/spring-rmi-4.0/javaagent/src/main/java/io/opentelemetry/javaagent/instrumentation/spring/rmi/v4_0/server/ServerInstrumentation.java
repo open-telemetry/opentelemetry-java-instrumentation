@@ -85,7 +85,6 @@ public class ServerInstrumentation implements TypeInstrumentation {
           return;
         }
         scope.close();
-        // the "if" check prevents null dereference
         serverInstrumenter().end(requireNonNull(context), requireNonNull(request), null, throwable);
       }
     }
