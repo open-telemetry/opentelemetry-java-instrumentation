@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.co
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.trace.SpanKind;
@@ -28,8 +27,10 @@ import java.net.HttpURLConnection;
 import java.net.InetSocketAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import javax.annotation.Nullable;
 import org.apache.shardingsphere.elasticjob.api.JobConfiguration;
 import org.apache.shardingsphere.elasticjob.http.props.HttpJobProperties;
 import org.apache.shardingsphere.elasticjob.infra.env.IpUtils;
@@ -54,6 +55,9 @@ class ElasticJobTest {
 
   private static CoordinatorRegistryCenter regCenter;
   private static HttpServer httpServer;
+
+  private static final boolean EXPERIMENTAL_ATTRIBUTES_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.apache-elasticjob.experimental-span-attributes");
 
   @BeforeAll
   static void init() throws Exception {
@@ -150,7 +154,7 @@ class ElasticJobTest {
             regCenter,
             job,
             JobConfiguration.newBuilder("simpleElasticJob", 2)
-                .cron("0/5 * * * * ?")
+                .cron("0/30 * * * * ?")
                 .shardingItemParameters("0=A,1=B")
                 .build());
 
@@ -350,6 +354,11 @@ class ElasticJobTest {
     return tempScript.toString();
   }
 
+  @Nullable
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES_ENABLED ? value : null;
+  }
+
   private static List<AttributeAssertion> elasticJobAttributes(
       String jobName,
       long item,
@@ -358,16 +367,35 @@ class ElasticJobTest {
       String codeFunction,
       String codeNamespace,
       String jobType) {
-    return asList(
-        equalTo(stringKey("code.function"), codeFunction),
-        equalTo(stringKey("code.namespace"), codeNamespace),
-        equalTo(stringKey("job.system"), "elasticjob"),
-        equalTo(stringKey("scheduling.apache-elasticjob.job.name"), jobName),
-        equalTo(stringKey("scheduling.apache-elasticjob.job.type"), jobType),
-        equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), item),
-        equalTo(longKey("scheduling.apache-elasticjob.sharding.total.count"), totalCount),
-        equalTo(stringKey("scheduling.apache-elasticjob.sharding.item.parameter"), parameter),
+    List<AttributeAssertion> assertions = new ArrayList<>();
+
+    assertions.add(equalTo(stringKey("code.function"), codeFunction));
+    assertions.add(equalTo(stringKey("code.namespace"), codeNamespace));
+
+    assertions.add(equalTo(stringKey("job.system"), experimental("elasticjob")));
+    assertions.add(
+        equalTo(stringKey("scheduling.apache-elasticjob.job.name"), experimental(jobName)));
+    assertions.add(
+        equalTo(stringKey("scheduling.apache-elasticjob.job.type"), experimental(jobType)));
+    assertions.add(
+        equalTo(longKey("scheduling.apache-elasticjob.sharding.item.index"), experimental(item)));
+    assertions.add(
+        equalTo(
+            longKey("scheduling.apache-elasticjob.sharding.total.count"),
+            experimental(totalCount)));
+    assertions.add(
+        equalTo(
+            stringKey("scheduling.apache-elasticjob.sharding.item.parameter"),
+            experimental(parameter)));
+    assertions.add(
         satisfies(
-            stringKey("scheduling.apache-elasticjob.task.id"), taskId -> taskId.contains(jobName)));
+            stringKey("scheduling.apache-elasticjob.task.id"),
+            taskId -> {
+              if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                taskId.contains(jobName);
+              }
+            }));
+
+    return assertions;
   }
 }
