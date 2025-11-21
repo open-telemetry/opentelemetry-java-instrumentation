@@ -199,7 +199,7 @@
         'smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts',
       ],
       matchPackageNames: [
-        'org.springframework.boot:spring-boot-dependencies:**',
+        'org.springframework.boot:spring-boot-dependencies',
       ],
       enabled: false
     },
