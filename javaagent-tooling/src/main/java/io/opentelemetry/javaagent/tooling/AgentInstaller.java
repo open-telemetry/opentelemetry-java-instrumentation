@@ -140,7 +140,7 @@ public class AgentInstaller {
                     .with(MethodGraph.Compiler.ForDeclaredMethods.INSTANCE)
                     .with(VisibilityBridgeStrategy.Default.NEVER)
                     .with(InstrumentedType.Factory.Default.FROZEN))
-            .with(AgentBuilder.TypeStrategy.Default.DECORATE)
+            .with(AgentBuilder.TypeStrategy.Default.REDEFINE)
             .disableClassFormatChanges()
             .with(AgentBuilder.RedefinitionStrategy.RETRANSFORMATION)
             .with(new RedefinitionDiscoveryStrategy())
