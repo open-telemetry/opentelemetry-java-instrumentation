@@ -287,6 +287,9 @@ jobs:
           - test-java-version: 25-deny-unsafe
             vm: openj9
       fail-fast: false
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
 
