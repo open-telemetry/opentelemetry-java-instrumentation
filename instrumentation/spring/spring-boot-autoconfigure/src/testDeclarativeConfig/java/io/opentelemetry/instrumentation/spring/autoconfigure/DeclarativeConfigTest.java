@@ -131,4 +131,23 @@ class DeclarativeConfigTest {
             "otel.instrumentation/development.java.spring_web.enabled=false")
         .run(context -> assertThat(context).doesNotHaveBean("otelRestTemplateBeanPostProcessor"));
   }
+
+  @Test
+  void envVarOverride() {
+    this.contextRunner
+        // this is typically set via env var
+        // OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT
+        .withSystemProperties(
+            "OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT=http://custom:4318/v1/traces")
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean(OpenTelemetry.class)
+                    .isNotNull()
+                    .satisfies(
+                        c ->
+                            assertThat(c.toString())
+                                .contains(
+                                    "OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces")));
+  }
 }
