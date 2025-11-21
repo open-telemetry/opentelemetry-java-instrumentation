@@ -26,7 +26,7 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
   @Nullable
   public static BulkGetCompletionListener create(
       Context parentContext, MemcachedConnection connection, String methodName) {
-    MemcachedNode handlingNode = getRepresentativeNodeFromConnection(connection);
+    MemcachedNode handlingNode = getNodeFromConnection(connection);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, methodName, handlingNode);
     if (!instrumenter().shouldStart(parentContext, request)) {
       return null;
@@ -35,28 +35,15 @@ public class BulkGetCompletionListener extends CompletionListener<BulkGetFuture<
   }
 
   @Nullable
-  private static MemcachedNode getRepresentativeNodeFromConnection(MemcachedConnection connection) {
+  private static MemcachedNode getNodeFromConnection(MemcachedConnection connection) {
     try {
-      // Strategy: Get the "most representative" node for bulk operations
-      // We choose the last active node in the list, which often represents
-      // the most recently added or most stable node in the cluster
       Collection<MemcachedNode> allNodes = connection.getLocator().getAll();
-
-      MemcachedNode lastActiveNode = null;
-      MemcachedNode fallbackNode = null;
-
-      for (MemcachedNode node : allNodes) {
-        if (fallbackNode == null) {
-          fallbackNode = node;
-        }
-
-        if (node.isActive()) {
-          lastActiveNode = node;
-        }
+      if (allNodes.size() == 1) {
+        return allNodes.iterator().next();
       }
-
-      // Return the last active node, or fallback to the first node
-      return lastActiveNode != null ? lastActiveNode : fallbackNode;
+      // For multiple nodes, return null - bulk operations span multiple servers
+      // and we cannot accurately attribute to a single server
+      return null;
     } catch (RuntimeException e) {
       return null;
     }
