@@ -10,6 +10,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.Meter;
 import org.apache.iceberg.metrics.CounterResult;
 import org.apache.iceberg.metrics.MetricsReport;
 import org.apache.iceberg.metrics.MetricsReporter;
@@ -23,11 +24,27 @@ final class IcebergMetricsReporter implements MetricsReporter {
   private static final AttributeKey<String> TABLE_NAME =
       AttributeKey.stringKey("iceberg.table.name");
   private static final AttributeKey<Long> SNAPHSOT_ID = AttributeKey.longKey("iceberg.snapshot.id");
-
-  private final OpenTelemetry openTelemetry;
+  private static final AttributeKey<String> SCAN_STATE =
+      AttributeKey.stringKey("iceberg.scan.state");
+  private static final AttributeKey<String> DELETE_TYPE =
+      AttributeKey.stringKey("iceberg.delete_file.type");
+  private final DoubleHistogram planningDuration;
+  private final LongCounter dataFilesCount;
+  private final LongCounter dataFilesSize;
+  private final LongCounter deleteFilesCount;
+  private final LongCounter deleteFilesSize;
+  private final LongCounter dataManifestsCount;
+  private final LongCounter deleteManifestsCount;
 
   IcebergMetricsReporter(OpenTelemetry openTelemetry) {
-    this.openTelemetry = openTelemetry;
+    Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+    planningDuration = ScanMetricsBuilder.totalPlanningDuration(meter, "s");
+    dataFilesCount = ScanMetricsBuilder.dataFilesCount(meter);
+    dataFilesSize = ScanMetricsBuilder.dataFilesSize(meter);
+    deleteFilesCount = ScanMetricsBuilder.deleteFilesCount(meter);
+    deleteFilesSize = ScanMetricsBuilder.deleteFilesSize(meter);
+    dataManifestsCount = ScanMetricsBuilder.dataManifestsCount(meter);
+    deleteManifestsCount = ScanMetricsBuilder.deleteManifestsCount(meter);
   }
 
   @Override
@@ -50,143 +67,164 @@ final class IcebergMetricsReporter implements MetricsReporter {
     TimerResult duration = metrics.totalPlanningDuration();
 
     if (duration != null) {
-      DoubleHistogram metric =
-          ScanMetricsBuilder.totalPlanningDuration(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME), "s");
-      metric.record(duration.totalDuration().toMillis() / 1000.0, scanAttributes);
+      planningDuration.record(duration.totalDuration().toMillis() / 1000.0, scanAttributes);
     }
 
+    // Data files metrics
     CounterResult current = metrics.resultDataFiles();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.scannedDataFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.resultDeleteFiles();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.scannedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.scannedDataManifests();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.scannedDataManifestsCount(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.scannedDeleteManifests();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.scannedDeleteManifestsCount(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.totalDataManifests();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.totalDataManifestsCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.totalDeleteManifests();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.totalDeleteManifestsCount(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.totalFileSizeInBytes();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.scannedDataFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.totalDeleteFileSizeInBytes();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.scannedDeleteFilesSize(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.skippedDataManifests();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.skippedDataManifestsCount(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
-    }
-
-    current = metrics.skippedDeleteManifests();
-
-    if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.skippedDeleteManifestsCount(
-              openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(dataFilesCount, current.value(), scanAttributes, SCAN_STATE, "scanned");
     }
 
     current = metrics.skippedDataFiles();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.skippedDataFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(dataFilesCount, current.value(), scanAttributes, SCAN_STATE, "skipped");
+    }
+
+    current = metrics.totalFileSizeInBytes();
+
+    if (current != null) {
+      dataFilesSize.add(current.value(), scanAttributes);
+    }
+
+    // Delete files metrics
+    current = metrics.totalDeleteFileSizeInBytes();
+
+    if (current != null) {
+      deleteFilesSize.add(current.value(), scanAttributes);
+    }
+
+    current = metrics.resultDeleteFiles();
+
+    if (current != null) {
+      addValueToLongCounter(
+          deleteFilesCount,
+          current.value(),
+          scanAttributes,
+          SCAN_STATE,
+          "scanned",
+          DELETE_TYPE,
+          "all");
     }
 
     current = metrics.skippedDeleteFiles();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.skippedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(
+          deleteFilesCount,
+          current.value(),
+          scanAttributes,
+          SCAN_STATE,
+          "skipped",
+          DELETE_TYPE,
+          "all");
     }
 
     current = metrics.indexedDeleteFiles();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.indexedDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(
+          deleteFilesCount,
+          current.value(),
+          scanAttributes,
+          SCAN_STATE,
+          "scanned",
+          DELETE_TYPE,
+          "indexed");
     }
 
     current = metrics.equalityDeleteFiles();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.equalityDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(
+          deleteFilesCount,
+          current.value(),
+          scanAttributes,
+          SCAN_STATE,
+          "scanned",
+          DELETE_TYPE,
+          "equality");
     }
 
     current = metrics.positionalDeleteFiles();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.positionDeleteFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(
+          deleteFilesCount,
+          current.value(),
+          scanAttributes,
+          SCAN_STATE,
+          "scanned",
+          DELETE_TYPE,
+          "position");
     }
 
     current = metrics.dvs();
 
     if (current != null) {
-      LongCounter metric =
-          ScanMetricsBuilder.deletionVectorFilesCount(openTelemetry.getMeter(INSTRUMENTATION_NAME));
-      metric.add(current.value(), scanAttributes);
+      addValueToLongCounter(
+          deleteFilesCount,
+          current.value(),
+          scanAttributes,
+          SCAN_STATE,
+          "scanned",
+          DELETE_TYPE,
+          "dvs");
     }
+
+    // Data manifests metrics
+    current = metrics.scannedDataManifests();
+
+    if (current != null) {
+      addValueToLongCounter(
+          dataManifestsCount, current.value(), scanAttributes, SCAN_STATE, "scanned");
+    }
+
+    current = metrics.skippedDataManifests();
+
+    if (current != null) {
+      addValueToLongCounter(
+          dataManifestsCount, current.value(), scanAttributes, SCAN_STATE, "skipped");
+    }
+
+    // Delete manifests metrics
+    current = metrics.scannedDeleteManifests();
+
+    if (current != null) {
+      addValueToLongCounter(
+          deleteManifestsCount, current.value(), scanAttributes, SCAN_STATE, "scanned");
+    }
+
+    current = metrics.skippedDeleteManifests();
+
+    if (current != null) {
+      addValueToLongCounter(
+          deleteManifestsCount, current.value(), scanAttributes, SCAN_STATE, "skipped");
+    }
+  }
+
+  private void addValueToLongCounter(
+      LongCounter metric,
+      long measurement,
+      Attributes attributes,
+      AttributeKey<String> att1Key,
+      String att1Value) {
+    Attributes newAttributes = attributes.toBuilder().put(att1Key, att1Value).build();
+    metric.add(measurement, newAttributes);
+  }
+
+  private void addValueToLongCounter(
+      LongCounter metric,
+      long measurement,
+      Attributes attributes,
+      AttributeKey<String> att1Key,
+      String att1Value,
+      AttributeKey<String> att2Key,
+      String att2Value) {
+    Attributes newAttributes =
+        attributes.toBuilder().put(att1Key, att1Value).put(att2Key, att2Value).build();
+    metric.add(measurement, newAttributes);
   }
 }

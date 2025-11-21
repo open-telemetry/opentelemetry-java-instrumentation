@@ -12,23 +12,13 @@ import io.opentelemetry.api.metrics.Meter;
 final class ScanMetricsBuilder {
   private static final String ROOT = "iceberg.scan";
   private static final String TOTAL_PLANNING_DURATION = ROOT + ".planning.duration";
-  private static final String RESULT_DATA_FILES = ROOT + ".scanned.data_files.count";
-  private static final String RESULT_DELETE_FILES = ROOT + ".scanned.delete_files.count";
-  private static final String SCANNED_DATA_MANIFESTS = ROOT + ".scanned.data_manifests.count";
-  private static final String SCANNED_DELETE_MANIFESTS = ROOT + ".scanned.delete_manifests.count";
-  private static final String TOTAL_DATA_MANIFESTS = ROOT + ".total.data_manifests.count";
-  private static final String TOTAL_DELETE_MANIFESTS = ROOT + ".total.delete_manifests.count";
-  private static final String TOTAL_FILE_SIZE_IN_BYTES = ROOT + ".scanned.data_files.size";
-  private static final String TOTAL_DELETE_FILE_SIZE_IN_BYTES = ROOT + ".scanned.delete_files.size";
-  private static final String SKIPPED_DATA_MANIFESTS = ROOT + ".skipped.data_manifests.count";
-  private static final String SKIPPED_DELETE_MANIFESTS = ROOT + ".skipped.delete_manifests.count";
-  private static final String SKIPPED_DATA_FILES = ROOT + ".skipped.data_files.count";
-  private static final String SKIPPED_DELETE_FILES = ROOT + ".skipped.delete_files.count";
-  private static final String INDEXED_DELETE_FILES = ROOT + ".scanned.indexed_delete_files.count";
-  private static final String EQUALITY_DELETE_FILES = ROOT + ".scanned.equality_delete_files.count";
-  private static final String POSITIONAL_DELETE_FILES =
-      ROOT + ".scanned.positional_delete_files.count";
-  private static final String DVS = ROOT + ".scanned.dvs.count";
+
+  private static final String DATA_FILES_COUNT = ROOT + ".data_files.count";
+  private static final String DATA_FILES_SIZE = ROOT + ".data_files.size";
+  private static final String DELETE_FILES_SIZE = ROOT + ".delete_files.size";
+  private static final String DELETE_FILES_COUNT = ROOT + ".delete_files.count";
+  private static final String DATA_MANIFESTS_COUNT = ROOT + ".data_manifests.count";
+  private static final String DELETE_MANIFESTS_COUNT = ROOT + ".delete_manifests.count";
 
   private ScanMetricsBuilder() {
     // prevents instantiation
@@ -42,132 +32,51 @@ final class ScanMetricsBuilder {
         .build();
   }
 
-  static LongCounter scannedDataFilesCount(Meter meter) {
+  static LongCounter dataFilesCount(Meter meter) {
     return meter
-        .counterBuilder(RESULT_DATA_FILES)
-        .setDescription("The number of scanned data files.")
+        .counterBuilder(DATA_FILES_COUNT)
+        .setDescription("The number of data files.")
         .setUnit("{file}")
         .build();
   }
 
-  static LongCounter scannedDeleteFilesCount(Meter meter) {
+  static LongCounter deleteFilesCount(Meter meter) {
     return meter
-        .counterBuilder(RESULT_DELETE_FILES)
-        .setDescription("The number of scanned delete files.")
+        .counterBuilder(DELETE_FILES_COUNT)
+        .setDescription("The number of delete files.")
         .setUnit("{file}")
         .build();
   }
 
-  static LongCounter scannedDataManifestsCount(Meter meter) {
+  static LongCounter dataManifestsCount(Meter meter) {
     return meter
-        .counterBuilder(SCANNED_DATA_MANIFESTS)
-        .setDescription("The number of scanned data manifests.")
+        .counterBuilder(DATA_MANIFESTS_COUNT)
+        .setDescription("The number of data manifests.")
         .setUnit("{file}")
         .build();
   }
 
-  static LongCounter scannedDeleteManifestsCount(Meter meter) {
+  static LongCounter deleteManifestsCount(Meter meter) {
     return meter
-        .counterBuilder(SCANNED_DELETE_MANIFESTS)
-        .setDescription("The number of scanned delete manifests.")
+        .counterBuilder(DELETE_MANIFESTS_COUNT)
+        .setDescription("The number of delete manifests.")
         .setUnit("{file}")
         .build();
   }
 
-  static LongCounter totalDataManifestsCount(Meter meter) {
+  static LongCounter dataFilesSize(Meter meter) {
     return meter
-        .counterBuilder(TOTAL_DATA_MANIFESTS)
-        .setDescription("The number of all data manifests.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter totalDeleteManifestsCount(Meter meter) {
-    return meter
-        .counterBuilder(TOTAL_DELETE_MANIFESTS)
-        .setDescription("The number of all delete manifests.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter scannedDataFilesSize(Meter meter) {
-    return meter
-        .counterBuilder(TOTAL_FILE_SIZE_IN_BYTES)
+        .counterBuilder(DATA_FILES_SIZE)
         .setDescription("The total size of all scanned data files.")
         .setUnit("By")
         .build();
   }
 
-  static LongCounter scannedDeleteFilesSize(Meter meter) {
+  static LongCounter deleteFilesSize(Meter meter) {
     return meter
-        .counterBuilder(TOTAL_DELETE_FILE_SIZE_IN_BYTES)
+        .counterBuilder(DELETE_FILES_SIZE)
         .setDescription("The total size of all scanned delete files.")
         .setUnit("By")
-        .build();
-  }
-
-  static LongCounter skippedDataManifestsCount(Meter meter) {
-    return meter
-        .counterBuilder(SKIPPED_DATA_MANIFESTS)
-        .setDescription("The number of data manifests that were skipped during the scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter skippedDeleteManifestsCount(Meter meter) {
-    return meter
-        .counterBuilder(SKIPPED_DELETE_MANIFESTS)
-        .setDescription("The number of delete manifests that were skipped during the scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter skippedDataFilesCount(Meter meter) {
-    return meter
-        .counterBuilder(SKIPPED_DATA_FILES)
-        .setDescription("The number of data files that were skipped during the scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter skippedDeleteFilesCount(Meter meter) {
-    return meter
-        .counterBuilder(SKIPPED_DELETE_FILES)
-        .setDescription("The number of delete files that were skipped during the scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter indexedDeleteFilesCount(Meter meter) {
-    return meter
-        .counterBuilder(INDEXED_DELETE_FILES)
-        .setDescription(
-            "The number of delete files constituting the delete file index for this scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter equalityDeleteFilesCount(Meter meter) {
-    return meter
-        .counterBuilder(EQUALITY_DELETE_FILES)
-        .setDescription("The number of equality delete files relevant for the current scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter positionDeleteFilesCount(Meter meter) {
-    return meter
-        .counterBuilder(POSITIONAL_DELETE_FILES)
-        .setDescription("The number of position delete files relevant for the current scan.")
-        .setUnit("{file}")
-        .build();
-  }
-
-  static LongCounter deletionVectorFilesCount(Meter meter) {
-    return meter
-        .counterBuilder(DVS)
-        .setDescription("The number of deletion vector (DV) files relevant for the current scan.")
-        .setUnit("{file}")
         .build();
   }
 }
