@@ -148,6 +148,7 @@ readonly INSTRUMENTATIONS=(
   "jsf:jsf-myfaces-3.0:javaagent:test"
   "jsp-2.3:javaagent:test"
   "jsp-2.3:javaagent:testExperimental"
+  "jfinal-3.2:javaagent:test"
   "kafka:kafka-clients:kafka-clients-2.6:library:test"
   "kafka:kafka-connect-2.6:testing:test"
   "ktor:ktor-1.0:library:test"

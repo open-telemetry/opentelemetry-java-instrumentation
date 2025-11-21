@@ -6573,12 +6573,33 @@ libraries:
           type: STRING
   jfinal:
   - name: jfinal-3.2
+    display_name: JFinal
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JFinal controller methods (controller spans are disabled by default).
+    library_link: https://github.com/jfinal/jfinal
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jfinal-3.2
     scope:
       name: io.opentelemetry.jfinal-3.2
     target_versions:
       javaagent:
       - com.jfinal:jfinal:[3.2,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   jms:
   - name: jms-1.1
     display_name: JMS (Java Message Service)
