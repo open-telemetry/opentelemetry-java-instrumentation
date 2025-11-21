@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 import org.springframework.batch.core.scope.context.ChunkContext;
 
 public class ItemSingletons {
@@ -47,6 +48,7 @@ public class ItemSingletons {
     return currentContext.with(CHUNK_CONTEXT_KEY, chunkContext);
   }
 
+  @Nullable
   public static ChunkContext getChunkContext(Context currentContext) {
     return currentContext.get(CHUNK_CONTEXT_KEY);
   }

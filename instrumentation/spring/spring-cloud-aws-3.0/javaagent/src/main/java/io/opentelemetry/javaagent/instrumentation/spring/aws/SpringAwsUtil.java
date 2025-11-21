@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import java.util.Collection;
+import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
@@ -61,6 +62,7 @@ public final class SpringAwsUtil {
     tracingContextField.set(transformed, tracingContextField.get(original));
   }
 
+  @Nullable
   public static MessageScope handleMessage(Message<?> message) {
     TracingContext tracingContext = tracingContextField.get(message);
     if (tracingContext == null) {
@@ -71,6 +73,7 @@ public final class SpringAwsUtil {
   }
 
   // restore context from the first message of the batch
+  @Nullable
   public static Scope handleBatch(Collection<Message<?>> messages) {
     if (messages == null || messages.isEmpty()) {
       return null;
@@ -131,6 +134,7 @@ public final class SpringAwsUtil {
       this.sqsMessage = sqsMessage;
     }
 
+    @Nullable
     MessageScope trace() {
       SqsMessage wrappedMessage = SqsMessageImpl.wrap(sqsMessage);
       Context parentContext = receiveContext;

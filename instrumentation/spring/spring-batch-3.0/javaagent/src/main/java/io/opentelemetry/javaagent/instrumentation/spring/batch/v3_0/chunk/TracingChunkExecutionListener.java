@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.chunk
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.Initializer;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.spring.batch.v3_0.ContextAndScope;
 import javax.annotation.Nullable;
@@ -28,6 +29,7 @@ public final class TracingChunkExecutionListener implements ChunkListener, Order
   }
 
   @Override
+  @Initializer
   public void beforeChunk(ChunkContext chunkContext) {
     Context parentContext = shouldCreateRootSpanForChunk() ? Context.root() : Context.current();
     chunkContextAndBuilder = new ChunkContextAndBuilder(chunkContext, builderClass);

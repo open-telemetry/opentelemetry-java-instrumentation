@@ -14,6 +14,7 @@ import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Value;
@@ -47,7 +48,7 @@ public abstract class AbstractRouteMappingTest {
   }
 
   protected List<AttributeAssertion> buildAttributeAssertions(
-      String routeId, String uri, int order, int filterSize) {
+      @Nullable String routeId, String uri, int order, int filterSize) {
     List<AttributeAssertion> assertions = new ArrayList<>();
     if (!StringUtils.isEmpty(routeId)) {
       assertions.add(equalTo(AttributeKey.stringKey("spring-cloud-gateway.route.id"), routeId));

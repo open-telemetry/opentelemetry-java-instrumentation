@@ -1,5 +1,6 @@
 plugins {
   id("otel.sdk-extension")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {

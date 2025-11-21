@@ -21,6 +21,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.lang.reflect.Method;
 import java.util.List;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -89,13 +90,14 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
   }
 
   static final class RepositoryInterceptor implements MethodInterceptor {
-    private static final Class<?> MONO_CLASS = loadClass("reactor.core.publisher.Mono");
+    @Nullable private static final Class<?> MONO_CLASS = loadClass("reactor.core.publisher.Mono");
     private final Class<?> repositoryInterface;
 
     RepositoryInterceptor(Class<?> repositoryInterface) {
       this.repositoryInterface = repositoryInterface;
     }
 
+    @Nullable
     private static Class<?> loadClass(String name) {
       try {
         return Class.forName(name);
@@ -105,6 +107,7 @@ public class SpringDataInstrumentationModule extends InstrumentationModule {
     }
 
     @Override
+    @Nullable
     public Object invoke(MethodInvocation methodInvocation) throws Throwable {
       Context parentContext = currentContext();
       Method method = methodInvocation.getMethod();
