@@ -1,7 +1,7 @@
 pluginManagement {
   plugins {
     id("com.github.jk1.dependency-license-report") version "3.0.1"
-    id("com.google.cloud.tools.jib") version "3.5.0"
+    id("com.google.cloud.tools.jib") version "3.5.1"
     id("com.gradle.plugin-publish") version "2.0.0"
     id("io.github.gradle-nexus.publish-plugin") version "2.0.0"
     id("org.jetbrains.kotlin.jvm") version "2.2.21"
@@ -127,6 +127,7 @@ include(":bom")
 include(":bom-alpha")
 include(":instrumentation-api")
 include(":instrumentation-api-incubator")
+include(":instrumentation-api-incubator:javaagent-testing")
 include(":instrumentation-annotations")
 include(":instrumentation-annotations-support")
 include(":instrumentation-annotations-support-testing")
@@ -178,6 +179,7 @@ include(":instrumentation:apache-dbcp-2.0:testing")
 include(":instrumentation:apache-dubbo-2.7:javaagent")
 include(":instrumentation:apache-dubbo-2.7:library-autoconfigure")
 include(":instrumentation:apache-dubbo-2.7:testing")
+include(":instrumentation:apache-elasticjob-3.0:javaagent")
 include(":instrumentation:apache-httpasyncclient-4.1:javaagent")
 include(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent")
 include(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent")
@@ -388,6 +390,7 @@ include(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:javaagent")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:library")
 include(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing")
+include(":instrumentation:jfinal-3.2:javaagent")
 include(":instrumentation:jms:jms-1.1:javaagent")
 include(":instrumentation:jms:jms-3.0:javaagent")
 include(":instrumentation:jms:jms-common:bootstrap")
@@ -505,6 +508,7 @@ include(":instrumentation:opentelemetry-api:opentelemetry-api-1.42:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.47:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.50:javaagent")
 include(":instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent")
+include(":instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent")
 include(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent")
 include(":instrumentation:opentelemetry-extension-kotlin-1.0:javaagent")
 include(":instrumentation:opentelemetry-instrumentation-annotations-1.16:javaagent")

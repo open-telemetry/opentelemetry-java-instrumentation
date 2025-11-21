@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.spring.webmvc.v6_0.internal.SpringMvcBui
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 
 /** A builder of {@link SpringWebMvcTelemetry}. */
@@ -73,20 +72,6 @@ public final class SpringWebMvcTelemetryBuilder {
       Collection<String> responseHeaders) {
     builder.setCapturedResponseHeaders(responseHeaders);
     return this;
-  }
-
-  /**
-   * Sets custom {@link SpanNameExtractor} via transform function.
-   *
-   * @deprecated Use {@link #setSpanNameExtractor(UnaryOperator)} instead.
-   */
-  @Deprecated
-  @CanIgnoreReturnValue
-  public SpringWebMvcTelemetryBuilder setSpanNameExtractor(
-      Function<SpanNameExtractor<HttpServletRequest>, SpanNameExtractor<HttpServletRequest>>
-          spanNameExtractor) {
-    return setSpanNameExtractor(
-        (UnaryOperator<SpanNameExtractor<HttpServletRequest>>) spanNameExtractor::apply);
   }
 
   /** Sets custom {@link SpanNameExtractor} via transform function. */

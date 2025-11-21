@@ -20,23 +20,9 @@ final class RediscalaAttributesGetter
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(RedisCommand<?, ?> redisCommand) {
-    return null;
-  }
-
   @Override
   @Nullable
   public String getDbNamespace(RedisCommand<?, ?> redisCommand) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  @Nullable
-  public String getConnectionString(RedisCommand<?, ?> redisCommand) {
     return null;
   }
 

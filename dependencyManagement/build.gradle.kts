@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.56.0"
-val otelContribVersion = "1.51.0-alpha"
+val otelContribVersion = "1.52.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -95,7 +95,7 @@ val DEPENDENCIES = listOf(
   "commons-io:commons-io:2.21.0",
   "commons-lang:commons-lang:2.6",
   "commons-logging:commons-logging:1.3.5",
-  "commons-validator:commons-validator:1.10.0",
+  "commons-validator:commons-validator:1.10.1",
   "io.netty:netty:3.10.6.Final",
   "io.opentelemetry.contrib:opentelemetry-azure-resources:${otelContribVersion}",
   "io.opentelemetry.contrib:opentelemetry-aws-resources:${otelContribVersion}",

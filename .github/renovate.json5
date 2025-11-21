@@ -7,23 +7,18 @@
   ignorePaths: [
     'instrumentation/**',
   ],
-  // needed in order to get patch-only updates in package rules below
-  // unfortunately you can't combine updateTypes and separateMinorPatch in the same package rule
-  // so we have to apply it globally here, see
-  // https://github.com/renovatebot/renovate/discussions/8399#discussioncomment-305798
-  separateMinorPatch: true,
   packageRules: [
     {
       // this is to reduce the number of renovate PRs
       matchManagers: [
         'github-actions',
         'dockerfile',
+        'custom.regex',
       ],
       extends: [
         'schedule:weekly',
       ],
       groupName: 'weekly update',
-      separateMinorPatch: false,  // overrides separateMinorPatch specified above
     },
     {
       matchPackageNames: [
@@ -41,6 +36,14 @@
       // of that release instead of the unstable version for a future release
       // (TODO remove once the artifacts above release stable versions)
       ignoreUnstable: false,
+      allowedVersions: '!/\\-SNAPSHOT$/',
+    },
+    {
+      // currently using gradle plugin org.playframework.play 3.1.0 milestone releases
+      // but don't want to pick up SNAPSHOT releases
+      matchPackageNames: [
+        'org.playframework.play:**',
+      ],
       allowedVersions: '!/\\-SNAPSHOT$/',
     },
     {
@@ -143,11 +146,7 @@
       matchPackageNames: [
         'uk.org.webcompere:system-stubs-jupiter',
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
+      allowedVersions: '/^2\\.0\\./',
     },
     {
       // wiremock 3+ requires Java 11+
@@ -190,7 +189,22 @@
       enabled: false,
     },
     {
-      // intentionally using Spring Boot 2 in these smoke tests
+      // intentionally using Spring Boot 2 to make sure the earliest version is supported
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-common/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-common/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'org.springframework.boot:spring-boot-dependencies:**',
+      ],
+      enabled: false
+    },
+    {
+      // Spring Boot 2 smoke tests are intentionally using slf4j 1.x
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
@@ -201,7 +215,6 @@
       ],
       matchPackageNames: [
         'org.slf4j:slf4j-api',
-        'org.springframework.boot:**',
       ],
       matchUpdateTypes: [
         'major',
@@ -218,11 +231,7 @@
       matchPackageNames: [
         'ch.qos.logback:**',
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
+      allowedVersions: '/^1\\.2\\./',
     },
     {
       // intentionally using slf4j 1 in this smoke tests
@@ -253,18 +262,26 @@
       ],
     },
     {
-      // intentionally aligning both netty 4.0 and 4.1 version in this convention
+      // intentionally aligning netty 4.0 versions in this convention
       matchFileNames: [
         'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
       ],
       matchPackageNames: [
         'io.netty:netty-bom',
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
+      matchCurrentVersion: '/^4\\.0\\./',
+      allowedVersions: '/^4\\.0\\./',
+    },
+    {
+      // intentionally aligning netty 4.1 versions in this convention
+      matchFileNames: [
+        'conventions/src/main/kotlin/otel.java-conventions.gradle.kts',
       ],
-      enabled: false,
+      matchPackageNames: [
+        'io.netty:netty-bom',
+      ],
+      matchCurrentVersion: '/^4\\.1\\./',
+      allowedVersions: '/^4\\.1\\./',
     },
     {
       // intentionally using scala 2.11 in otel.scala-conventions.gradle.kts
@@ -274,14 +291,10 @@
       matchPackageNames: [
         'org.scala-lang:scala-library',
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
+      allowedVersions: '/^2\\.11\\./',
     },
     {
-      // intentionally using Java 11 in some examples
+      // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
       ],
@@ -319,27 +332,10 @@
       matchFileNames: [
         'dependencyManagement/build.gradle.kts',
       ],
-      matchUpdateTypes: [
-        'major',
-        'minor',
-      ],
-      enabled: false,
       matchPackageNames: [
         'ch.qos.logback:**',
       ],
-    },
-    {
-      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
-      matchFileNames: [
-        'dependencyManagement/build.gradle.kts',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
-      enabled: false,
-      matchPackageNames: [
-        'org.springframework.boot:spring-boot-dependencies:**',
-      ],
+      allowedVersions: '/^1\\.3\\./',
     },
     {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility
@@ -369,6 +365,17 @@
       ],
       depNameTemplate: 'java',
       extractVersionTemplate: '^(?<version>\\d+)',
+    },
+    {
+      customType: 'regex',
+      datasourceTemplate: 'docker',
+      managerFilePatterns: [
+        '**/build.gradle.kts',
+      ],
+      matchStrings: [
+        '"(?<depName>eclipse-temurin):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+        '"(?<depName>ibm-semeru-runtimes):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+      ],
     },
     {
       customType: 'regex',

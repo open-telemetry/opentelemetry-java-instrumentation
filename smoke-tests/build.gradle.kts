@@ -18,7 +18,7 @@ dependencies {
 
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.76.0"))
+  implementation(platform("io.grpc:grpc-bom:1.77.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
@@ -72,13 +72,14 @@ tasks {
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
-    inputs.files(layout.files(shadowTask))
+    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
+    val agentJarPath = shadowTask.flatMap { it.archiveFile }
+    inputs.files(agentJarPath)
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
-      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
+      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}")
     }
   }
 }

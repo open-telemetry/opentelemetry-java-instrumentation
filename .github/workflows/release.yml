@@ -201,6 +201,9 @@ jobs:
           echo "prior-version=$PRIOR_VERSION" >> $GITHUB_OUTPUT
 
   documentation-audit:
+    permissions:
+      contents: read
+      issues: write
     needs:
       - release
     uses: ./.github/workflows/documentation-synchronization-audit.yml
@@ -248,6 +251,14 @@ jobs:
           do
             sleep 60
           done
+
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v5.0.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
 
       - name: Update apidiff baseline
         env:

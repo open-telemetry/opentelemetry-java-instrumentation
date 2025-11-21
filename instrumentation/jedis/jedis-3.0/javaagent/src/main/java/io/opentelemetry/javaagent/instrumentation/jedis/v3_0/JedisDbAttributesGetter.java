@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
-import javax.annotation.Nullable;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
@@ -17,21 +16,8 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 
-  @Deprecated
-  @Override
-  @Nullable
-  public String getUser(JedisRequest request) {
-    return null;
-  }
-
   @Override
   public String getDbNamespace(JedisRequest request) {
-    return null;
-  }
-
-  @Deprecated
-  @Override
-  public String getConnectionString(JedisRequest request) {
     return null;
   }
 

@@ -18,6 +18,7 @@ import com.github.dockerjava.core.DefaultDockerClientConfig;
 import com.github.dockerjava.core.DockerClientImpl;
 import com.github.dockerjava.httpclient5.ApacheDockerHttpClient;
 import io.opentelemetry.smoketest.AbstractTestContainerManager;
+import io.opentelemetry.smoketest.ImageVersions;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
 import io.opentelemetry.smoketest.TestContainerManager;
@@ -78,7 +79,8 @@ public class WindowsTestContainerManager extends AbstractTestContainerManager {
             .getId();
 
     String backendImageName =
-        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:20251006.18272043386";
+        "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-fake-backend-windows:"
+            + ImageVersions.FAKE_BACKEND_WINDOWS_VERSION;
     if (!imageExists(backendImageName)) {
       pullImage(backendImageName);
     }
