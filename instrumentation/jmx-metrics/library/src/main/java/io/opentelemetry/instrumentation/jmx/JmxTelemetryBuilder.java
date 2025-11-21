@@ -87,6 +87,22 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
+   * Adds JMX rules from file system path
+   *
+   * @param path path to yaml file
+   * @return builder instance
+   * @throws IllegalArgumentException in case of parsing errors or when file does not exist
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder addRules(Path path) {
+    try (InputStream inputStream = Files.newInputStream(path)) {
+      return addRules(inputStream, "file " + path);
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
+    }
+  }
+
+  /**
    * Adds custom JMX rules from file system path
    *
    * @param path path to yaml file
@@ -96,12 +112,7 @@ public final class JmxTelemetryBuilder {
   // TODO: deprecate this method after 2.23.0 release in favor of addRules
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addCustomRules(Path path) {
-    logger.log(FINE, "Adding JMX config from file: {0}", path);
-    try (InputStream inputStream = Files.newInputStream(path)) {
-      return addRules(inputStream, path.toString());
-    } catch (IOException e) {
-      throw new IllegalArgumentException("Unable to load JMX rules in path: " + path, e);
-    }
+    return addRules(path);
   }
 
   public JmxTelemetry build() {

@@ -56,14 +56,13 @@ public class JmxTelemetryTest {
   }
 
   @Test
-  void tryInvalidYaml(@TempDir Path dir) throws Exception {
+  void invalidExternalYaml(@TempDir Path dir) throws Exception {
     Path invalid = Files.createTempFile(dir, "invalid", ".yaml");
     Files.write(invalid, ":this !is /not YAML".getBytes(StandardCharsets.UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    try (InputStream input = Files.newInputStream(invalid)) {
-      assertThatThrownBy(() -> builder.addRules(input, invalid.toString()))
-          .isInstanceOf(IllegalArgumentException.class);
-    }
+    assertThatThrownBy(() -> builder.addCustomRules(invalid))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining(invalid.toString());
   }
 
   @Test
