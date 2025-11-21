@@ -238,9 +238,11 @@ jobs:
 
   test:
     name: test${{ matrix.test-partition }} (${{ matrix.test-java-version }}, ${{ matrix.vm }}, indy ${{ matrix.test-indy }})
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
+        os:
+          - ubuntu-latest
         test-java-version:
           - 8
           - 11
@@ -259,6 +261,27 @@ jobs:
         test-indy:
           - false
           - true
+        include:
+          - os: windows-latest
+            test-java-version: 25
+            vm: hotspot
+            test-partition: 0
+            test-indy: false
+          - os: windows-latest
+            test-java-version: 25
+            vm: hotspot
+            test-partition: 1
+            test-indy: false
+          - os: windows-latest
+            test-java-version: 25
+            vm: hotspot
+            test-partition: 2
+            test-indy: false
+          - os: windows-latest
+            test-java-version: 25
+            vm: hotspot
+            test-partition: 3
+            test-indy: false
         exclude:
           - vm: ${{ inputs.skip-openj9-tests && 'openj9' || '' }}
           - test-java-version: 25-deny-unsafe
