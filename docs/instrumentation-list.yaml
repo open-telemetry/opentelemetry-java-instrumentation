@@ -527,6 +527,13 @@ libraries:
           type: STRING
         - name: rpc.system
           type: STRING
+  - name: apache-elasticjob-3.0
+    source_path: instrumentation/apache-elasticjob-3.0
+    scope:
+      name: io.opentelemetry.apache-elasticjob-3.0
+    target_versions:
+      javaagent:
+      - org.apache.shardingsphere.elasticjob:elasticjob-lite-core:[3.0.0,)
   - name: apache-httpasyncclient-4.1
     display_name: Apache HttpAsyncClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
