@@ -121,3 +121,8 @@ if (project == rootProject) {
     }
   }
 }
+
+// Disable configuration cache for spotlessGroovy task which is not compatible
+tasks.matching { it.name.contains("spotlessGroovy") }.configureEach {
+  notCompatibleWithConfigurationCache("Spotless Groovy task references other Task instances which are not supported with configuration cache")
+}
