@@ -39,12 +39,12 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
     @Nullable
-    @SuppressWarnings("NullAway") // request is typed as Void
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
         return null;
       }
       // suppress receive span creation in jms instrumentation
+      @SuppressWarnings("NullAway") // request is typed as Void
       Context context =
           InstrumenterUtil.suppressSpan(
               receiveInstrumenter(), Java8BytecodeBridge.currentContext(), null);
