@@ -23,7 +23,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
   private static final AttributeKey<Long> SCHEMA_ID = AttributeKey.longKey("iceberg.schema.id");
   private static final AttributeKey<String> TABLE_NAME =
       AttributeKey.stringKey("iceberg.table.name");
-  private static final AttributeKey<Long> SNAPHSOT_ID = AttributeKey.longKey("iceberg.snapshot.id");
+  private static final AttributeKey<Long> SNAPSHOT_ID = AttributeKey.longKey("iceberg.snapshot.id");
   private static final AttributeKey<String> SCAN_STATE =
       AttributeKey.stringKey("iceberg.scan.state");
   private static final AttributeKey<String> DELETE_TYPE =
@@ -61,7 +61,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
             Long.valueOf(scanReport.schemaId()),
             TABLE_NAME,
             scanReport.tableName(),
-            SNAPHSOT_ID,
+            SNAPSHOT_ID,
             scanReport.snapshotId());
     ScanMetricsResult metrics = scanReport.scanMetrics();
     TimerResult duration = metrics.totalPlanningDuration();
@@ -205,7 +205,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
     }
   }
 
-  private void addValueToLongCounter(
+  private static void addValueToLongCounter(
       LongCounter metric,
       long measurement,
       Attributes attributes,
@@ -215,7 +215,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
     metric.add(measurement, newAttributes);
   }
 
-  private void addValueToLongCounter(
+  private static void addValueToLongCounter(
       LongCounter metric,
       long measurement,
       Attributes attributes,
