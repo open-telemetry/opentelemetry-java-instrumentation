@@ -84,6 +84,7 @@ public final class LoggingEventMapper {
   private final boolean captureMarkerAttribute;
   private final boolean captureKeyValuePairAttributes;
   private final boolean captureLoggerContext;
+  private final boolean captureTemplate;
   private final boolean captureArguments;
   private final boolean captureLogstashMarkerAttributes;
   private final boolean captureLogstashStructuredArguments;
@@ -96,6 +97,7 @@ public final class LoggingEventMapper {
     this.captureMarkerAttribute = builder.captureMarkerAttribute;
     this.captureKeyValuePairAttributes = builder.captureKeyValuePairAttributes;
     this.captureLoggerContext = builder.captureLoggerContext;
+    this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.captureLogstashMarkerAttributes = builder.captureLogstashMarkerAttributes;
     this.captureLogstashStructuredArguments = builder.captureLogstashStructuredArguments;
@@ -215,10 +217,14 @@ public final class LoggingEventMapper {
       captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
+    if (captureTemplate) {
+      captureTemplate(builder, loggingEvent);
+    }
+
     if (captureArguments
         && loggingEvent.getArgumentArray() != null
         && loggingEvent.getArgumentArray().length > 0) {
-      captureArguments(builder, loggingEvent.getMessage(), loggingEvent.getArgumentArray());
+      captureArguments(builder, loggingEvent.getArgumentArray());
     }
 
     if (supportsLogstashMarkers && captureLogstashMarkerAttributes) {
@@ -265,8 +271,11 @@ public final class LoggingEventMapper {
     }
   }
 
-  void captureArguments(LogRecordBuilder builder, String message, Object[] arguments) {
-    builder.setAttribute(LOG_BODY_TEMPLATE, message);
+  private static void captureTemplate(LogRecordBuilder builder, ILoggingEvent loggingEvent) {
+    builder.setAttribute(LOG_BODY_TEMPLATE, loggingEvent.getMessage());
+  }
+
+  private static void captureArguments(LogRecordBuilder builder, Object[] arguments) {
     builder.setAttribute(
         LOG_BODY_PARAMETERS,
         Arrays.stream(arguments).map(String::valueOf).collect(Collectors.toList()));
@@ -679,6 +688,7 @@ public final class LoggingEventMapper {
     private boolean captureMarkerAttribute;
     private boolean captureKeyValuePairAttributes;
     private boolean captureLoggerContext;
+    private boolean captureTemplate;
     private boolean captureArguments;
     private boolean captureLogstashMarkerAttributes;
     private boolean captureLogstashStructuredArguments;
@@ -719,6 +729,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setCaptureLoggerContext(boolean captureLoggerContext) {
       this.captureLoggerContext = captureLoggerContext;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setCaptureTemplate(boolean captureTemplate) {
+      this.captureTemplate = captureTemplate;
       return this;
     }
 
