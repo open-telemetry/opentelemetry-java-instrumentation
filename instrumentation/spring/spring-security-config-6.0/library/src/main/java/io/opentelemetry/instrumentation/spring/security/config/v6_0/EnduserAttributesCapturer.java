@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -97,8 +98,9 @@ public final class EnduserAttributesCapturer {
     }
   }
 
+  @Nullable
   private static StringBuilder appendSuffix(
-      String prefix, String authorityString, StringBuilder builder) {
+      String prefix, String authorityString, @Nullable StringBuilder builder) {
     if (authorityString.length() > prefix.length()) {
       String suffix = authorityString.substring(prefix.length());
       if (builder == null) {
