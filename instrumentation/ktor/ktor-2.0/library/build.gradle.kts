@@ -37,3 +37,7 @@ kotlin {
     languageVersion.set(KotlinVersion.KOTLIN_1_8)
   }
 }
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+}
