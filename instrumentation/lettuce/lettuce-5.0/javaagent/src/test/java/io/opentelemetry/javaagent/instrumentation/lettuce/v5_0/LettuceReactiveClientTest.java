@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
@@ -97,7 +99,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET TESTSETKEY ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -128,7 +132,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "GET TESTKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -167,7 +173,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "GET NON_EXISTENT_KEY"),
-                            equalTo(maybeStable(DB_OPERATION), "GET")),
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -197,7 +205,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "RANDOMKEY"),
-                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"))));
+                            equalTo(maybeStable(DB_OPERATION), "RANDOMKEY"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -214,6 +224,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
                             satisfies(
                                 AttributeKey.longKey("lettuce.command.results.count"),
                                 val -> val.isGreaterThan(100)))));
@@ -233,6 +245,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "COMMAND"),
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port),
                             satisfies(
                                 AttributeKey.booleanKey("lettuce.command.cancelled"),
                                 AbstractBooleanAssert::isTrue),
@@ -266,7 +280,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "DEBUG SEGFAULT"),
-                            equalTo(maybeStable(DB_OPERATION), "DEBUG"))));
+                            equalTo(maybeStable(DB_OPERATION), "DEBUG"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   @Test
@@ -286,7 +302,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SHUTDOWN NOSAVE"),
-                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"))));
+                            equalTo(maybeStable(DB_OPERATION), "SHUTDOWN"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, serverPort))));
   }
 
   @Test
@@ -306,7 +324,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -314,7 +334,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -334,7 +356,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -342,7 +366,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -367,7 +393,9 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "SET a ?"),
-                            equalTo(maybeStable(DB_OPERATION), "SET")),
+                            equalTo(maybeStable(DB_OPERATION), "SET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port)),
                 span ->
                     span.hasName("GET")
                         .hasKind(SpanKind.CLIENT)
@@ -375,6 +403,8 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "redis"),
                             equalTo(maybeStable(DB_STATEMENT), "GET a"),
-                            equalTo(maybeStable(DB_OPERATION), "GET"))));
+                            equalTo(maybeStable(DB_OPERATION), "GET"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, port))));
   }
 }
