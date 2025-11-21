@@ -17,6 +17,20 @@ dependencies {
   testImplementation("org.apache.curator:curator-test:5.1.0")
 }
 
-tasks.withType<Test>().configureEach {
-  jvmArgs("-Dotel.instrumentation.apache-elasticjob.experimental-span-attributes=true")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    jvmArgs("-Dotel.instrumentation.apache-elasticjob.experimental-span-attributes=true")
+    systemProperty("metadataConfig", "otel.instrumentation.apache-elasticjob.experimental-span-attributes=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }
