@@ -1,0 +1,14 @@
+# This file is generated and should not be manually edited.
+groups:
+  - id: metric."http.server.request.duration"
+    type: metric
+    metric_name: "http.server.request.duration"
+    stability: development
+    brief: "Duration of HTTP server requests."
+    instrument: "histogram"
+    unit: "s"
+    attributes:
+      - ref: "http.request.method"
+      - ref: "url.scheme"
+      - ref: "network.protocol.version"
+      - ref: "http.response.status_code"
