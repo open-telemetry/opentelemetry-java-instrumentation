@@ -14,11 +14,22 @@ public final class GraphQLTelemetryBuilder {
 
   private final OpenTelemetry openTelemetry;
 
+  private boolean captureQuery = true;
   private boolean sanitizeQuery = true;
   private boolean addOperationNameToSpanName = false;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
+  }
+
+  /**
+   * Sets whether query should be captured in {@code graphql.document} span attribute. Default is
+   * {@code true}.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setCaptureQuery(boolean captureQuery) {
+    this.captureQuery = captureQuery;
+    return this;
   }
 
   /** Sets whether sensitive information should be removed from queries. Default is {@code true}. */
@@ -45,6 +56,7 @@ public final class GraphQLTelemetryBuilder {
    * GraphQLTelemetryBuilder}.
    */
   public GraphQLTelemetry build() {
-    return new GraphQLTelemetry(openTelemetry, sanitizeQuery, addOperationNameToSpanName);
+    return new GraphQLTelemetry(
+        openTelemetry, captureQuery, sanitizeQuery, addOperationNameToSpanName);
   }
 }

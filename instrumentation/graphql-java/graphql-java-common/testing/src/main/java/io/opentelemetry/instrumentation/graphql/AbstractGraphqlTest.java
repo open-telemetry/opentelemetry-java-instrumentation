@@ -356,11 +356,22 @@ public abstract class AbstractGraphqlTest {
         stringAssert ->
             stringAssert.satisfies(
                 querySource -> {
-                  String normalized = querySource.replaceAll("(?s)\\s+", " ");
-                  if (normalized.startsWith("query {")) {
-                    normalized = normalized.substring("query ".length());
-                  }
-                  assertThat(normalized).isEqualTo(value);
+                  String normalized = normalizeQuery(querySource);
+                  String valueNormalized = normalizeQuery(value);
+                  assertThat(normalized).isEqualTo(valueNormalized);
                 }));
+  }
+
+  private static String normalizeQuery(String query) {
+    if (query == null) {
+      return null;
+    }
+
+    String normalized =
+        query.replaceAll("(?s)\\s+", " ").replaceAll("([{:,]) ", "$1").replaceAll(" ([{}])", "$1");
+    if (normalized.startsWith("query{")) {
+      normalized = normalized.substring("query".length());
+    }
+    return normalized;
   }
 }
