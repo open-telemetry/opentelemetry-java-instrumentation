@@ -162,13 +162,16 @@ public class RuleParser {
    *
    * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
-   * @param id identifier of the YAML ruleset, such as a filename
+   * @param description description of the YAML ruleset like file name or classpath resource
    * @throws IllegalArgumentException when unable to parse YAML
    */
-  public void addMetricDefsTo(MetricConfiguration conf, InputStream is, String id) {
+  public void addMetricDefsTo(MetricConfiguration conf, InputStream is, String description) {
     try {
       JmxConfig config = loadConfig(is);
-      logger.log(INFO, "{0}: found {1} metric rules", new Object[] {id, config.getRules().size()});
+      logger.log(
+          INFO,
+          "{0}: found {1} metric rules",
+          new Object[] {description, config.getRules().size()});
       config.addMetricDefsTo(conf);
     } catch (Exception exception) {
       // It is essential that the parser exception is made visible to the user.
@@ -176,7 +179,7 @@ public class RuleParser {
       String msg =
           String.format(
               "Failed to parse YAML rules from %s: %s %s",
-              id, rootCause(exception), exception.getMessage());
+              description, rootCause(exception), exception.getMessage());
       throw new IllegalArgumentException(msg, exception);
     }
   }

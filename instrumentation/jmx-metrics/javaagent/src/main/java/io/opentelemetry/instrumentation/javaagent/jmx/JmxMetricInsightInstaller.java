@@ -13,6 +13,10 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.logging.Level;
@@ -32,12 +36,9 @@ public class JmxMetricInsightInstaller implements AgentListener {
       JmxTelemetryBuilder jmx =
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
               .beanDiscoveryDelay(beanDiscoveryDelay(config));
-
       try {
-        config.getList("otel.jmx.config").stream().map(Paths::get).forEach(jmx::addCustomRules);
-        config.getList("otel.jmx.target.system").stream()
-            .map(v -> String.format("jmx/rules/%s.yaml", v))
-            .forEach(jmx::addClassPathResourceRules);
+        config.getList("otel.jmx.config").forEach(file -> addCustomRules(file, jmx));
+        config.getList("otel.jmx.target.system").forEach(target -> addClasspathRules(target, jmx));
       } catch (RuntimeException e) {
         // for now only log JMX errors as they do not prevent agent startup
         logger.log(Level.SEVERE, "Error while loading JMX configuration", e);
@@ -45,6 +46,22 @@ public class JmxMetricInsightInstaller implements AgentListener {
 
       jmx.build().start();
     }
+  }
+
+  private static void addCustomRules(String path, JmxTelemetryBuilder jmx) {
+    Path filePath = Paths.get(path);
+    try (InputStream input = Files.newInputStream(filePath)) {
+      jmx.addRules(input, filePath.toString());
+    } catch (IOException e) {
+      throw new IllegalArgumentException("Unable to load JMX rules from " + filePath, e);
+    }
+  }
+
+  private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
+    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+    String resource = String.format("jmx/rules/%s.yaml", target);
+    InputStream input = classLoader.getResourceAsStream(resource);
+    builder.addRules(input, "classpath " + resource);
   }
 
   private static Duration beanDiscoveryDelay(ConfigProperties configProperties) {

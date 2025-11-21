@@ -55,38 +55,34 @@ public final class JmxTelemetryBuilder {
    * @return builder instance
    * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
    */
-  // TODO: deprecate this method after 2.23.0 release in favor of addClassPathResourceRules
+  // TODO: deprecate this method after 2.23.0 release in favor of addRules
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addClassPathRules(String target) {
-    return addClassPathResourceRules(String.format("jmx/rules/%s.yaml", target));
+    String resourcePath = String.format("jmx/rules/%s.yaml", target);
+    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+    try (InputStream inputStream = classLoader.getResourceAsStream(resourcePath)) {
+      return addRules(inputStream, resourcePath);
+    } catch (IOException e) {
+      throw new IllegalArgumentException(
+          "Unable to load JMX rules from resource " + resourcePath, e);
+    }
   }
 
   /**
-   * Adds built-in JMX rules from classpath resource
+   * Adds JMX rules from input stream
    *
-   * @param resourcePath relative path of the classpath resource yaml from classpath root, must not
-   *     start with '/'
-   * @return builder instance
-   * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
+   * @param input input to read rules from
+   * @param description input description, used for user-friendly logs and parsing error messages
+   * @throws IllegalArgumentException when input is {@literal null}
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addClassPathResourceRules(String resourcePath) {
-    boolean found = false;
-    try (InputStream inputStream =
-        JmxTelemetryBuilder.class.getClassLoader().getResourceAsStream(resourcePath)) {
-      if (inputStream != null) {
-        found = true;
-        logger.log(FINE, "Adding JMX config from classpath for {0}", resourcePath);
-        RuleParser parserInstance = RuleParser.get();
-        parserInstance.addMetricDefsTo(metricConfiguration, inputStream, resourcePath);
-      }
-    } catch (RuntimeException | IOException e) {
-      throw new IllegalArgumentException(
-          "Unable to load JMX rules from classpath: " + resourcePath, e);
+  public JmxTelemetryBuilder addRules(InputStream input, String description) {
+    if (input == null) {
+      throw new IllegalArgumentException("JMX rules not found for " + description);
     }
-    if (!found) {
-      throw new IllegalArgumentException("JMX rules not found in classpath: " + resourcePath);
-    }
+    logger.log(FINE, "Adding JMX config from {0}", description);
+    RuleParser parserInstance = RuleParser.get();
+    parserInstance.addMetricDefsTo(metricConfiguration, input, description);
     return this;
   }
 
@@ -97,16 +93,15 @@ public final class JmxTelemetryBuilder {
    * @return builder instance
    * @throws IllegalArgumentException when classpath resource does not exist or can't be parsed
    */
+  // TODO: deprecate this method after 2.23.0 release in favor of addRules
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addCustomRules(Path path) {
     logger.log(FINE, "Adding JMX config from file: {0}", path);
-    RuleParser parserInstance = RuleParser.get();
     try (InputStream inputStream = Files.newInputStream(path)) {
-      parserInstance.addMetricDefsTo(metricConfiguration, inputStream, path.toString());
+      return addRules(inputStream, path.toString());
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules in path: " + path, e);
     }
-    return this;
   }
 
   public JmxTelemetry build() {
