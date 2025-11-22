@@ -47,14 +47,17 @@ public final class OpenTelemetryInstrumentationHelper {
   private static final AstTransformer astTransformer = new AstTransformer();
 
   private final Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter;
+  private final boolean captureQuery;
   private final boolean sanitizeQuery;
   private final boolean addOperationNameToSpanName;
 
   private OpenTelemetryInstrumentationHelper(
       Instrumenter<OpenTelemetryInstrumentationState, ExecutionResult> instrumenter,
+      boolean captureQuery,
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName) {
     this.instrumenter = instrumenter;
+    this.captureQuery = captureQuery;
     this.sanitizeQuery = sanitizeQuery;
     this.addOperationNameToSpanName = addOperationNameToSpanName;
   }
@@ -62,6 +65,7 @@ public final class OpenTelemetryInstrumentationHelper {
   public static OpenTelemetryInstrumentationHelper create(
       OpenTelemetry openTelemetry,
       String instrumentationName,
+      boolean captureQuery,
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName) {
     InstrumenterBuilder<OpenTelemetryInstrumentationState, ExecutionResult> builder =
@@ -83,7 +87,7 @@ public final class OpenTelemetryInstrumentationHelper {
     builder.addAttributesExtractor(new GraphqlAttributesExtractor());
 
     return new OpenTelemetryInstrumentationHelper(
-        builder.buildInstrumenter(), sanitizeQuery, addOperationNameToSpanName);
+        builder.buildInstrumenter(), captureQuery, sanitizeQuery, addOperationNameToSpanName);
   }
 
   public InstrumentationContext<ExecutionResult> beginExecution(
@@ -133,11 +137,13 @@ public final class OpenTelemetryInstrumentationHelper {
     state.setOperation(operation);
     state.setOperationName(operationName);
 
-    Node<?> node = operationDefinition;
-    if (sanitizeQuery) {
-      node = sanitize(node);
+    if (captureQuery) {
+      Node<?> node = operationDefinition;
+      if (sanitizeQuery) {
+        node = sanitize(node);
+      }
+      state.setQuery(AstPrinter.printAstCompact(node));
     }
-    state.setQuery(AstPrinter.printAst(node));
 
     return SimpleInstrumentationContext.noOp();
   }

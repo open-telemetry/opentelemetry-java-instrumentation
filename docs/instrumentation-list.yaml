@@ -527,6 +527,53 @@ libraries:
           type: STRING
         - name: rpc.system
           type: STRING
+  - name: apache-elasticjob-3.0
+    display_name: Apache ElasticJob
+    description: This instrumentation enables spans for Apache ElasticJob job executions.
+    library_link: https://shardingsphere.apache.org/elasticjob/
+    source_path: instrumentation/apache-elasticjob-3.0
+    scope:
+      name: io.opentelemetry.apache-elasticjob-3.0
+    target_versions:
+      javaagent:
+      - org.apache.shardingsphere.elasticjob:elasticjob-lite-core:[3.0.0,)
+    configurations:
+    - name: otel.instrumentation.apache-elasticjob.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `job.system`, `scheduling.apache-elasticjob.job.name`, `scheduling.apache-elasticjob.task.id`, `scheduling.apache-elasticjob.sharding.item.index`, `scheduling.apache-elasticjob.sharding.total.count`, `scheduling.apache-elasticjob.sharding.item.parameter`, and `scheduling.apache-elasticjob.job.type`.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+    - when: otel.instrumentation.apache-elasticjob.experimental-span-attributes=true
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
+        - name: job.system
+          type: STRING
+        - name: scheduling.apache-elasticjob.job.name
+          type: STRING
+        - name: scheduling.apache-elasticjob.job.type
+          type: STRING
+        - name: scheduling.apache-elasticjob.sharding.item.index
+          type: LONG
+        - name: scheduling.apache-elasticjob.sharding.item.parameter
+          type: STRING
+        - name: scheduling.apache-elasticjob.sharding.total.count
+          type: LONG
+        - name: scheduling.apache-elasticjob.task.id
+          type: STRING
   - name: apache-httpasyncclient-4.1
     display_name: Apache HttpAsyncClient
     description: This instrumentation enables HTTP client spans and HTTP client metrics
@@ -6573,12 +6620,33 @@ libraries:
           type: STRING
   jfinal:
   - name: jfinal-3.2
+    display_name: JFinal
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for JFinal controller methods (controller spans are disabled by default).
+    library_link: https://github.com/jfinal/jfinal
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/jfinal-3.2
     scope:
       name: io.opentelemetry.jfinal-3.2
     target_versions:
       javaagent:
       - com.jfinal:jfinal:[3.2,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   jms:
   - name: jms-1.1
     display_name: JMS (Java Message Service)
