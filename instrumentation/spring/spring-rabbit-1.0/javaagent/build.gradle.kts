@@ -23,6 +23,10 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter:1.5.22.RELEASE")
   // spring-retry is required by org.springframework.amqp:spring-rabbit:4.0.0
   testLibrary("org.springframework.retry:spring-retry")
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
 }
 
 tasks {

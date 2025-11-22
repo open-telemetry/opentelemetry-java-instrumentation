@@ -9,7 +9,6 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -151,9 +150,6 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
                 SERVER_PORT,
                 NETWORK_PEER_ADDRESS,
                 NETWORK_PEER_PORT));
-    if (Boolean.getBoolean("testLatestDeps")) {
-      expected.add(DB_NAMESPACE);
-    }
     assertDurationMetric(testing(), "io.opentelemetry.lettuce-5.1", toArray(expected));
   }
 

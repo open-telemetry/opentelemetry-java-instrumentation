@@ -13,6 +13,9 @@ dependencies {
 
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:2.2.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.2.0.RELEASE")
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {
