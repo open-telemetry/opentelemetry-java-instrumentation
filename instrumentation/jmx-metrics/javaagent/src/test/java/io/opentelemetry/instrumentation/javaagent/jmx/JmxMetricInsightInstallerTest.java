@@ -10,6 +10,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.yaml.RuleParser;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -41,7 +43,9 @@ class JmxMetricInsightInstallerTest {
       assertThat(filePath).isRegularFile();
 
       // loading rules from direct file access
-      JmxTelemetry.builder(OpenTelemetry.noop()).addCustomRules(filePath);
+      try (InputStream fileInput = Files.newInputStream(filePath)) {
+        JmxTelemetry.builder(OpenTelemetry.noop()).addRules(fileInput, filePath.toString());
+      }
     }
   }
 }
