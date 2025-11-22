@@ -22,6 +22,10 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.2.4")
   testLibrary("org.springframework.boot:spring-boot-starter:3.2.4")
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -35,8 +39,8 @@ testing {
 
         if (latestDepTest) {
           implementation("org.springframework.pulsar:spring-pulsar:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter-test:latest.release")
-          implementation("org.springframework.boot:spring-boot-starter:latest.release")
+          implementation("org.springframework.boot:spring-boot-starter-test:3.+")
+          implementation("org.springframework.boot:spring-boot-starter:3.+")
         } else {
           implementation("org.springframework.pulsar:spring-pulsar:1.0.0")
           implementation("org.springframework.boot:spring-boot-starter-test:3.2.4")
