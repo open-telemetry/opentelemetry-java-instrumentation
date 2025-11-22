@@ -140,10 +140,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())))));
+                                                expectedReport.tableName())))));
   }
 
   private void assertDataFilesCountMetrics(ScanReport expectedReport) {
@@ -168,10 +165,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -183,10 +177,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())))));
+                                                expectedReport.tableName())))));
   }
 
   private void assertDataManifestCountMetrics(ScanReport expectedReport) {
@@ -214,10 +205,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -232,10 +220,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())))));
+                                                expectedReport.tableName())))));
   }
 
   private void assertDeleteManifestCountMetrics(ScanReport expectedReport) {
@@ -263,10 +248,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -281,10 +263,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())))));
+                                                expectedReport.tableName())))));
   }
 
   private void assertDeleteFilesCountMetrics(ScanReport expectedReport) {
@@ -313,10 +292,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -332,10 +308,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -352,10 +325,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -372,10 +342,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(
@@ -392,10 +359,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())),
+                                                expectedReport.tableName())),
                                 longSumAssert ->
                                     longSumAssert
                                         .hasValue(expectedReport.scanMetrics().dvs().value())
@@ -407,10 +371,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())))));
+                                                expectedReport.tableName())))));
   }
 
   private void assertSizeMetric(
@@ -434,10 +395,7 @@ public abstract class AbstractIcebergTest {
                                                 expectedReport.schemaId()),
                                             equalTo(
                                                 stringKey("iceberg.table.name"),
-                                                expectedReport.tableName()),
-                                            equalTo(
-                                                longKey("iceberg.snapshot.id"),
-                                                expectedReport.snapshotId())))));
+                                                expectedReport.tableName())))));
   }
 
   static final class SimpleReporter implements MetricsReporter {

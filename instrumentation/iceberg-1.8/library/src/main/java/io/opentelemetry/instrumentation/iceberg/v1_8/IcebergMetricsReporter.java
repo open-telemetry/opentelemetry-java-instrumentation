@@ -8,9 +8,14 @@ package io.opentelemetry.instrumentation.iceberg.v1_8;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.incubator.metrics.ExtendedDoubleHistogramBuilder;
+import io.opentelemetry.api.incubator.metrics.ExtendedLongCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleHistogram;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import java.util.List;
 import org.apache.iceberg.metrics.CounterResult;
 import org.apache.iceberg.metrics.MetricsReport;
 import org.apache.iceberg.metrics.MetricsReporter;
@@ -28,6 +33,10 @@ final class IcebergMetricsReporter implements MetricsReporter {
       AttributeKey.stringKey("iceberg.scan.state");
   private static final AttributeKey<String> DELETE_TYPE =
       AttributeKey.stringKey("iceberg.delete_file.type");
+  private static final List<AttributeKey<?>> advice1 = List.of(SCHEMA_ID, TABLE_NAME);
+  private static final List<AttributeKey<?>> advice2 = List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE);
+  private static final List<AttributeKey<?>> advice3 =
+      List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE, DELETE_TYPE);
   private final DoubleHistogram planningDuration;
   private final LongCounter dataFilesCount;
   private final LongCounter dataFilesSize;
@@ -38,13 +47,18 @@ final class IcebergMetricsReporter implements MetricsReporter {
 
   IcebergMetricsReporter(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
-    planningDuration = ScanMetricsBuilder.totalPlanningDuration(meter, "s");
-    dataFilesCount = ScanMetricsBuilder.dataFilesCount(meter);
-    dataFilesSize = ScanMetricsBuilder.dataFilesSize(meter);
-    deleteFilesCount = ScanMetricsBuilder.deleteFilesCount(meter);
-    deleteFilesSize = ScanMetricsBuilder.deleteFilesSize(meter);
-    dataManifestsCount = ScanMetricsBuilder.dataManifestsCount(meter);
-    deleteManifestsCount = ScanMetricsBuilder.deleteManifestsCount(meter);
+    planningDuration =
+        applyAdvice(advice1, ScanMetricsBuilderFactory.totalPlanningDuration(meter, "s")).build();
+    dataFilesCount = applyAdvice(advice2, ScanMetricsBuilderFactory.dataFilesCount(meter)).build();
+    dataFilesSize = applyAdvice(advice1, ScanMetricsBuilderFactory.dataFilesSize(meter)).build();
+    deleteFilesCount =
+        applyAdvice(advice3, ScanMetricsBuilderFactory.deleteFilesCount(meter)).build();
+    deleteFilesSize =
+        applyAdvice(advice1, ScanMetricsBuilderFactory.deleteFilesSize(meter)).build();
+    dataManifestsCount =
+        applyAdvice(advice2, ScanMetricsBuilderFactory.dataManifestsCount(meter)).build();
+    deleteManifestsCount =
+        applyAdvice(advice2, ScanMetricsBuilderFactory.deleteManifestsCount(meter)).build();
   }
 
   @Override
@@ -226,5 +240,23 @@ final class IcebergMetricsReporter implements MetricsReporter {
     Attributes newAttributes =
         attributes.toBuilder().put(att1Key, att1Value).put(att2Key, att2Value).build();
     metric.add(measurement, newAttributes);
+  }
+
+  private static LongCounterBuilder applyAdvice(
+      List<AttributeKey<?>> attributeKeys, LongCounterBuilder builder) {
+    if (builder instanceof ExtendedLongCounterBuilder) {
+      return ((ExtendedLongCounterBuilder) builder).setAttributesAdvice(attributeKeys);
+    }
+
+    return builder;
+  }
+
+  private static DoubleHistogramBuilder applyAdvice(
+      List<AttributeKey<?>> attributeKeys, DoubleHistogramBuilder builder) {
+    if (builder instanceof ExtendedDoubleHistogramBuilder) {
+      return ((ExtendedDoubleHistogramBuilder) builder).setAttributesAdvice(attributeKeys);
+    }
+
+    return builder;
   }
 }

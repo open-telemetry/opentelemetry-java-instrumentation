@@ -5,11 +5,11 @@
 
 package io.opentelemetry.instrumentation.iceberg.v1_8;
 
-import io.opentelemetry.api.metrics.DoubleHistogram;
-import io.opentelemetry.api.metrics.LongCounter;
+import io.opentelemetry.api.metrics.DoubleHistogramBuilder;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 
-final class ScanMetricsBuilder {
+final class ScanMetricsBuilderFactory {
   private static final String ROOT = "iceberg.scan";
   private static final String TOTAL_PLANNING_DURATION = ROOT + ".planning.duration";
 
@@ -20,63 +20,56 @@ final class ScanMetricsBuilder {
   private static final String DATA_MANIFESTS_COUNT = ROOT + ".data_manifests.count";
   private static final String DELETE_MANIFESTS_COUNT = ROOT + ".delete_manifests.count";
 
-  private ScanMetricsBuilder() {
+  private ScanMetricsBuilderFactory() {
     // prevents instantiation
   }
 
-  static DoubleHistogram totalPlanningDuration(Meter meter, String unit) {
+  static DoubleHistogramBuilder totalPlanningDuration(Meter meter, String unit) {
     return meter
         .histogramBuilder(TOTAL_PLANNING_DURATION)
         .setDescription("The total duration needed to plan the scan.")
-        .setUnit(unit)
-        .build();
+        .setUnit(unit);
   }
 
-  static LongCounter dataFilesCount(Meter meter) {
+  static LongCounterBuilder dataFilesCount(Meter meter) {
     return meter
         .counterBuilder(DATA_FILES_COUNT)
         .setDescription("The number of data files.")
-        .setUnit("{file}")
-        .build();
+        .setUnit("{file}");
   }
 
-  static LongCounter deleteFilesCount(Meter meter) {
+  static LongCounterBuilder deleteFilesCount(Meter meter) {
     return meter
         .counterBuilder(DELETE_FILES_COUNT)
         .setDescription("The number of delete files.")
-        .setUnit("{file}")
-        .build();
+        .setUnit("{file}");
   }
 
-  static LongCounter dataManifestsCount(Meter meter) {
+  static LongCounterBuilder dataManifestsCount(Meter meter) {
     return meter
         .counterBuilder(DATA_MANIFESTS_COUNT)
         .setDescription("The number of data manifests.")
-        .setUnit("{file}")
-        .build();
+        .setUnit("{file}");
   }
 
-  static LongCounter deleteManifestsCount(Meter meter) {
+  static LongCounterBuilder deleteManifestsCount(Meter meter) {
     return meter
         .counterBuilder(DELETE_MANIFESTS_COUNT)
         .setDescription("The number of delete manifests.")
-        .setUnit("{file}")
-        .build();
+        .setUnit("{file}");
   }
 
-  static LongCounter dataFilesSize(Meter meter) {
+  static LongCounterBuilder dataFilesSize(Meter meter) {
     return meter
         .counterBuilder(DATA_FILES_SIZE)
         .setDescription("The total size of all scanned data files.")
-        .setUnit("By")
-        .build();
+        .setUnit("By");
   }
 
-  static LongCounter deleteFilesSize(Meter meter) {
+  static LongCounterBuilder deleteFilesSize(Meter meter) {
     return meter
         .counterBuilder(DELETE_FILES_SIZE)
         .setDescription("The total size of all scanned delete files.")
-        .setUnit("By")
-        .build();
+        .setUnit("By");
   }
 }
