@@ -12,17 +12,21 @@ muzzle {
   }
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 dependencies {
   library("org.springframework.boot:spring-boot-actuator-autoconfigure:2.0.0.RELEASE")
   library("io.micrometer:micrometer-core:1.5.0")
   testLibrary("io.micrometer:micrometer-registry-prometheus:1.0.1")
 
+  if (latestDepTest) {
+    testLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
+  }
+
   implementation(project(":instrumentation:micrometer:micrometer-1.5:javaagent"))
 
   // dependency management pins logback-classic to 1.3 which is the last release that supports java 8
   latestDepTestLibrary("ch.qos.logback:logback-classic:latest.release")
-  // tests don't work with spring boot 4 yet
-  latestDepTestLibrary("org.springframework.boot:spring-boot-actuator-autoconfigure:3.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {
@@ -32,8 +36,6 @@ tasks.withType<Test>().configureEach {
 
   jvmArgs("-Dotel.instrumentation.spring-boot-actuator-autoconfigure.enabled=true")
 }
-
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 
 // spring 6 (spring boot 3) requires java 17
 if (latestDepTest) {

@@ -16,8 +16,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.config.BeanPostProcessor;
-import org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration;
-import org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -27,11 +25,21 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 // CompositeMeterRegistryAutoConfiguration configures the "final" composite registry
-@AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
+// Spring Boot 2.x-3.x location and Spring Boot 4.x location (package changed in 4.x)
+@AutoConfigureBefore(
+    name = {
+      "org.springframework.boot.actuate.autoconfigure.metrics.CompositeMeterRegistryAutoConfiguration",
+      "org.springframework.boot.micrometer.metrics.autoconfigure.CompositeMeterRegistryAutoConfiguration"
+    })
 // configure after the SimpleMeterRegistry has initialized; it is normally the last MeterRegistry
 // implementation to be configured, as it's used as a fallback
 // the OTel registry should be added in addition to that fallback and not replace it
-@AutoConfigureAfter(SimpleMetricsExportAutoConfiguration.class)
+// Spring Boot 2.x-3.x location and Spring Boot 4.x location (package changed in 4.x)
+@AutoConfigureAfter(
+    name = {
+      "org.springframework.boot.actuate.autoconfigure.metrics.export.simple.SimpleMetricsExportAutoConfiguration",
+      "org.springframework.boot.micrometer.metrics.autoconfigure.export.simple.SimpleMetricsExportAutoConfiguration"
+    })
 @ConditionalOnBean(Clock.class)
 @ConditionalOnClass(MeterRegistry.class)
 public class OpenTelemetryMeterRegistryAutoConfiguration {

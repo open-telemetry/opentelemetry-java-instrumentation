@@ -113,6 +113,8 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
             "org.springframework.boot.actuate.metrics.web.reactive.server.MetricsWebFilter$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
         .allowClass(
+            "org.springframework.boot.autoconfigure.preinitialize.BackgroundPreinitializingApplicationListener$")
+        .allowClass(
             "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
         .allowClass(
