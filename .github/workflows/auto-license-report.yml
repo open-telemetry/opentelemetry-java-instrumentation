@@ -1,20 +1,20 @@
 name: Auto license report
 on:
-  pull_request:
-    types:
-      - opened
-      - synchronize
+  push:
+    branches:
+      - 'renovate/**/*'
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
   contents: read
 
 jobs:
-  check:
-    if: ${{ github.event.pull_request.draft == false }}
+  auto-license-report:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -33,26 +33,16 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Check out PR branch
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: gh pr checkout ${{ github.event.pull_request.number }}
+      - name: Use CLA approved bot
+        run: .github/scripts/use-cla-approved-bot.sh
 
       - name: Update license report
         run: ./gradlew generateLicenseReport --no-build-cache
 
-      - id: create-patch
-        name: Create patch file
+      - name: Commit and push if there are changes
         run: |
-          git add -N --ignore-removal licenses
-          git diff > patch
-          if [ -s patch ]; then
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+          git add licenses
+          if ! git diff --cached --quiet; then
+            git commit -m "Update license report"
+            git push
           fi
-
-      - name: Upload patch file
-        if: steps.create-patch.outputs.exists == 'true'
-        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
-        with:
-          path: patch
-          name: patch
