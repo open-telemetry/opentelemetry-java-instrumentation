@@ -11,6 +11,8 @@ muzzle {
   }
 }
 
+val latestDepTest = findProperty("testLatestDeps") as Boolean
+
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
@@ -20,7 +22,11 @@ dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
 
-  library("org.springframework.kafka:spring-kafka:2.7.0")
+  if (latestDepTest) {
+    library("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+  } else {
+    library("org.springframework.kafka:spring-kafka:2.7.0")
+  }
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-scheduling-3.1:javaagent"))
@@ -29,13 +35,8 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
-
-  // tests don't work with spring boot 4 yet
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
 }
 
-val latestDepTest = findProperty("testLatestDeps") as Boolean
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
 
 testing {
@@ -45,9 +46,9 @@ testing {
         implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
 
         // the "library" configuration is not recognized by the test suite plugin
-        val springKafkaVersion = if (latestDepTest) "latest.release" else "2.7.0"
-        val springBootVersion = if (latestDepTest) "3.+" else "2.5.3"
-        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
+        val springKafkaVersion = if (latestDepTest) "org.springframework.boot:spring-boot-starter-kafka:latest.release" else "org.springframework.kafka:spring-kafka:2.7.0"
+        val springBootVersion = if (latestDepTest) "latest.release" else "2.5.3"
+        implementation(springKafkaVersion)
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
         implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
       }
