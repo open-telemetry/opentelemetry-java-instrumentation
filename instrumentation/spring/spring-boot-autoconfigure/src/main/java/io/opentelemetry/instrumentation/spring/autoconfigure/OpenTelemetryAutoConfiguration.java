@@ -158,7 +158,7 @@ public class OpenTelemetryAutoConfiguration {
       @Bean
       public OpenTelemetryConfigurationModel openTelemetryConfigurationModel(
           ConfigurableEnvironment environment) throws IOException {
-        return EmbeddedConfigFile.extractModel(environment);
+        return new EmbeddedConfigFile(environment).extractModel(environment);
       }
 
       @Bean

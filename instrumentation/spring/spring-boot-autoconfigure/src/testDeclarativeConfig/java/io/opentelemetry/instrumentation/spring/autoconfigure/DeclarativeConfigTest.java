@@ -133,12 +133,28 @@ class DeclarativeConfigTest {
   }
 
   @Test
-  void envVarOverride() {
+  void envVarOverrideSpringStyle() {
     this.contextRunner
         // this is typically set via env var
-        // OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT
         .withSystemProperties(
             "OTEL_TRACER_PROVIDER_PROCESSORS_0_BATCH_EXPORTER_OTLP_HTTP_ENDPOINT=http://custom:4318/v1/traces")
+        .run(
+            context ->
+                assertThat(context)
+                    .getBean(OpenTelemetry.class)
+                    .isNotNull()
+                    .satisfies(
+                        c ->
+                            assertThat(c.toString())
+                                .contains(
+                                    "OtlpHttpSpanExporter{endpoint=http://custom:4318/v1/traces")));
+  }
+
+  @Test
+  void envVarOverrideOtelStyle() {
+    this.contextRunner
+        // this is typically set via env var
+        .withSystemProperties("OTEL_EXPORTER_OTLP_ENDPOINT=http://custom:4318")
         .run(
             context ->
                 assertThat(context)
