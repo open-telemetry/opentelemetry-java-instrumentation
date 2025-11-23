@@ -331,6 +331,13 @@ jobs:
       - name: Start deadlock detector
         run: .github/scripts/deadlock-detector.sh
 
+      - name: Switch from Windows containers to Linux containers mode
+        if: matrix.os == 'windows-latest'
+        run: |
+          "/c/Program Files/Docker/Docker/DockerCli.exe" -SwitchLinuxEngine
+          # Wait for Docker deamon to restart
+          sleep 30
+
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
         with:
