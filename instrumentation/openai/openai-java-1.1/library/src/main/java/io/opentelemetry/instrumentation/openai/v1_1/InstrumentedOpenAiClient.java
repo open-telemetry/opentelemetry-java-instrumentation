@@ -11,6 +11,7 @@ import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 
@@ -20,19 +21,19 @@ final class InstrumentedOpenAiClient
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter;
   private final Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter;
   private final Logger eventLogger;
-  private final boolean captureMessageContent;
+  private final CaptureMessageOptions captureMessageOptions;
 
   InstrumentedOpenAiClient(
       OpenAIClient delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> chatInstrumenter,
       Instrumenter<EmbeddingCreateParams, CreateEmbeddingResponse> embeddingInstrumenter,
       Logger eventLogger,
-      boolean captureMessageContent) {
+      CaptureMessageOptions captureMessageOptions) {
     super(delegate);
     this.chatInstrumenter = chatInstrumenter;
     this.embeddingInstrumenter = embeddingInstrumenter;
     this.eventLogger = eventLogger;
-    this.captureMessageContent = captureMessageContent;
+    this.captureMessageOptions = captureMessageOptions;
   }
 
   @Override
@@ -46,7 +47,7 @@ final class InstrumentedOpenAiClient
     Class<?>[] parameterTypes = method.getParameterTypes();
     if (methodName.equals("chat") && parameterTypes.length == 0) {
       return new InstrumentedChatService(
-              delegate.chat(), chatInstrumenter, eventLogger, captureMessageContent)
+              delegate.chat(), chatInstrumenter, eventLogger, captureMessageOptions)
           .createProxy();
     }
     if (methodName.equals("embeddings") && parameterTypes.length == 0) {
@@ -59,7 +60,7 @@ final class InstrumentedOpenAiClient
               chatInstrumenter,
               embeddingInstrumenter,
               eventLogger,
-              captureMessageContent)
+              captureMessageOptions)
           .createProxy();
     }
     return super.invoke(proxy, method, args);

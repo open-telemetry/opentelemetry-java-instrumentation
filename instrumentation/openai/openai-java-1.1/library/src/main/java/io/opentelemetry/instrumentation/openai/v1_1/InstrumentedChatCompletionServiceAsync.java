@@ -14,6 +14,7 @@ import com.openai.services.async.chat.ChatCompletionServiceAsync;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
@@ -24,17 +25,17 @@ final class InstrumentedChatCompletionServiceAsync
 
   private final Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter;
   private final Logger eventLogger;
-  private final boolean captureMessageContent;
+  private final CaptureMessageOptions captureMessageOptions;
 
   InstrumentedChatCompletionServiceAsync(
       ChatCompletionServiceAsync delegate,
       Instrumenter<ChatCompletionCreateParams, ChatCompletion> instrumenter,
       Logger eventLogger,
-      boolean captureMessageContent) {
+      CaptureMessageOptions captureMessageOptions) {
     super(delegate);
     this.instrumenter = instrumenter;
     this.eventLogger = eventLogger;
-    this.captureMessageContent = captureMessageContent;
+    this.captureMessageOptions = captureMessageOptions;
   }
 
   @Override
@@ -100,13 +101,13 @@ final class InstrumentedChatCompletionServiceAsync
       ChatCompletionCreateParams chatCompletionCreateParams,
       RequestOptions requestOptions) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+        context, eventLogger, chatCompletionCreateParams, captureMessageOptions);
     CompletableFuture<ChatCompletion> future =
         delegate.create(chatCompletionCreateParams, requestOptions);
     future.thenAccept(
         r ->
             ChatCompletionEventsHelper.emitCompletionLogEvents(
-                context, eventLogger, r, captureMessageContent));
+                context, eventLogger, r, captureMessageOptions));
     return future;
   }
 
@@ -133,7 +134,7 @@ final class InstrumentedChatCompletionServiceAsync
       RequestOptions requestOptions,
       boolean newSpan) {
     ChatCompletionEventsHelper.emitPromptLogEvents(
-        context, eventLogger, chatCompletionCreateParams, captureMessageContent);
+        context, eventLogger, chatCompletionCreateParams, captureMessageOptions);
     AsyncStreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
     return new TracingAsyncStreamedResponse(
@@ -143,7 +144,7 @@ final class InstrumentedChatCompletionServiceAsync
             chatCompletionCreateParams,
             instrumenter,
             eventLogger,
-            captureMessageContent,
+            captureMessageOptions.captureMessageContent(),
             newSpan));
   }
 }

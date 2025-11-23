@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_CHOICE_COUNT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_ID;
@@ -215,6 +216,7 @@ class ChatTest extends AbstractChatTest {
                             equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                             satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
                             equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                            equalTo(GEN_AI_REQUEST_CHOICE_COUNT, 2L),
                             satisfies(
                                 GEN_AI_RESPONSE_FINISH_REASONS,
                                 reasons -> reasons.containsExactly("stop", "stop")),
@@ -711,6 +713,7 @@ class ChatTest extends AbstractChatTest {
                                 equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
                                 satisfies(GEN_AI_RESPONSE_ID, id -> id.startsWith("chatcmpl-")),
                                 equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                equalTo(GEN_AI_REQUEST_CHOICE_COUNT, 2L),
                                 satisfies(
                                     GEN_AI_RESPONSE_FINISH_REASONS,
                                     reasons -> reasons.containsExactly("stop", "stop"))))));
