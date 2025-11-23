@@ -15,6 +15,7 @@ import jakarta.ws.rs.Produces;
 @Path("/ignored")
 public interface Resource {
   @Path("ignored")
+  @Produces(TEXT_PLAIN)
   String hello(String name);
 
   @Path("/test")
@@ -22,12 +23,12 @@ public interface Resource {
     @Override
     @POST
     @Path("/hello/{name}")
+    @Produces(TEXT_PLAIN)
     String hello(@PathParam("name") String name);
   }
 
   class Test1 implements SubResource {
     @Override
-    @Produces(TEXT_PLAIN)
     public String hello(String name) {
       return "Test1 " + name + "!";
     }
@@ -36,7 +37,6 @@ public interface Resource {
   @Path("/test2")
   class Test2 implements SubResource {
     @Override
-    @Produces(TEXT_PLAIN)
     public String hello(String name) {
       return "Test2 " + name + "!";
     }
