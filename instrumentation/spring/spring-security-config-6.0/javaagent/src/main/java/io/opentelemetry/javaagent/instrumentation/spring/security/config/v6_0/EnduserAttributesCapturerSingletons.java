@@ -39,7 +39,7 @@ public class EnduserAttributesCapturerSingletons {
             .getString(
                 "otel.instrumentation.spring-security.enduser.scope.granted-authority-prefix");
     if (scopePrefix != null) {
-      capturer.setScopeGrantedAuthorityPrefix(rolePrefix);
+      capturer.setScopeGrantedAuthorityPrefix(scopePrefix);
     }
     return capturer;
   }
