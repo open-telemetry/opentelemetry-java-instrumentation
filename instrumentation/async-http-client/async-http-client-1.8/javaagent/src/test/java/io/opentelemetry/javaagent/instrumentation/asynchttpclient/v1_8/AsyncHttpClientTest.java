@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
+import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
@@ -107,6 +108,12 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
     // disable read timeout test for non latest because it is flaky with 1.8.x
     if (!Boolean.getBoolean("testLatestDeps")) {
       optionsBuilder.disableTestReadTimeout();
+    }
+
+    // On Windows, non-routable addresses timeout instead of failing fast, causing test timeout
+    // before the HTTP client can create a span, resulting in only the parent span.
+    if (OS.WINDOWS.isCurrentOs()) {
+      optionsBuilder.disableTestRemoteConnection();
     }
 
     optionsBuilder.setHttpAttributes(
