@@ -44,7 +44,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
         return null;
       }
       // suppress receive span creation in jms instrumentation
-      @SuppressWarnings("NullAway") // request is typed as Void
+      @SuppressWarnings("NullAway") // request is ignored in SpanKindExtractor.alwaysConsumer()
       Context context =
           InstrumenterUtil.suppressSpan(
               receiveInstrumenter(), Java8BytecodeBridge.currentContext(), null);
