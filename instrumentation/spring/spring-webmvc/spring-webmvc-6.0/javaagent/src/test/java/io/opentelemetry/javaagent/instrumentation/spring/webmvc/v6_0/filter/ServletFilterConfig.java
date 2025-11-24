@@ -24,6 +24,8 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 class ServletFilterConfig {
 
+  private static final boolean testLatestDeps = Boolean.getBoolean("testLatestDeps");
+
   @Bean
   Filter servletFilter() {
     return new Filter() {
@@ -54,6 +56,9 @@ class ServletFilterConfig {
                 } else if (endpoint == ServerEndpoint.ERROR) {
                   resp.sendError(endpoint.getStatus(), endpoint.getBody());
                 } else if (endpoint == ServerEndpoint.EXCEPTION) {
+                  if (testLatestDeps) {
+                    throw new IllegalArgumentException(endpoint.getBody());
+                  }
                   throw new IllegalStateException(endpoint.getBody());
                 } else if (endpoint == ServerEndpoint.INDEXED_CHILD) {
                   INDEXED_CHILD.collectSpanAttributes(req::getParameter);

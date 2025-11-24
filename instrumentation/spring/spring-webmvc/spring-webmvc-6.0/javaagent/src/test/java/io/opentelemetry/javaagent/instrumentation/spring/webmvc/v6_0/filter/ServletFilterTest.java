@@ -50,7 +50,8 @@ class ServletFilterTest extends AbstractServletFilterTest {
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app =
         new SpringApplication(FilteredAppConfig.class, securityConfigClass(), filterConfigClass());
-    app.setDefaultProperties(Map.of("server.port", port, "server.error.include-message", "always"));
+    app.setDefaultProperties(
+        Map.of("server.port", port, "spring.web.error.include-message", "always"));
     return app.run();
   }
 
@@ -96,5 +97,9 @@ class ServletFilterTest extends AbstractServletFilterTest {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setResponseCodeOnNonStandardHttpMethod(400);
+    if (testLatestDeps) {
+      options.setExpectedException(
+          new IllegalArgumentException(ServerEndpoint.EXCEPTION.getBody()));
+    }
   }
 }
