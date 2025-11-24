@@ -312,6 +312,7 @@ val buildGraalVmReflectionJson = tasks.register("buildGraalVmReflectionJson") {
     }
 
     // write into targetFile in json format
+    // todo either write to generated sources or add to SDK extension incubator build process
     targetFile.parentFile.mkdirs()
     targetFile.bufferedWriter().use { writer ->
       writer.write("[\n")
