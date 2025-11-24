@@ -27,11 +27,12 @@ final class RetryPolicyEventListenerBuilders {
       LongHistogram attemptsHistogram,
       Attributes commonAttributes) {
     Attributes attributes = commonAttributes.toBuilder().put(OUTCOME_KEY, "failure").build();
+    EventListener<ExecutionCompletedEvent<R>> userFailureListener = userConfig.getFailureListener();
     return e -> {
       executionCounter.add(1, attributes);
       attemptsHistogram.record(e.getAttemptCount(), attributes);
-      if (userConfig.getFailureListener() != null) {
-        userConfig.getFailureListener().accept(e);
+      if (userFailureListener != null) {
+        userFailureListener.accept(e);
       }
     };
   }
@@ -42,11 +43,12 @@ final class RetryPolicyEventListenerBuilders {
       LongHistogram attemptsHistogram,
       Attributes commonAttributes) {
     Attributes attributes = commonAttributes.toBuilder().put(OUTCOME_KEY, "success").build();
+    EventListener<ExecutionCompletedEvent<R>> userSuccessListener = userConfig.getSuccessListener();
     return e -> {
       executionCounter.add(1, attributes);
       attemptsHistogram.record(e.getAttemptCount(), attributes);
-      if (userConfig.getFailureListener() != null) {
-        userConfig.getFailureListener().accept(e);
+      if (userSuccessListener != null) {
+        userSuccessListener.accept(e);
       }
     };
   }
