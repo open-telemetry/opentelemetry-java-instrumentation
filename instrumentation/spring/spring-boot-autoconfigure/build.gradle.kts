@@ -291,29 +291,17 @@ val buildGraalVmReflectionJson = tasks.register("buildGraalVmReflectionJson") {
   doLast {
     val sourcePackage =
       "io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model"
-    val sourcePackagePath  = sourcePackage.replace(".", "/")
+    val sourcePackagePath = sourcePackage.replace(".", "/")
 
-    val cp = configurations.compileClasspath.get()
-
-    println("Scanning classpath for OpenTelemetry Incubator SDK extension jar...")
-    println(cp.asPath)
-
-    val incubatorJar = cp
+    val incubatorJar = configurations.compileClasspath.get()
       .filter { it.name.contains("opentelemetry-sdk-extension-incubator") && it.name.endsWith(".jar") }
       .singleFile
 
-    println("Found incubator jar: $incubatorJar")
-
     val classes = mutableListOf<String>()
-
-    // list contents of incubatorJar in gradle cache
-
     zipTree(incubatorJar).matching {
       include("$sourcePackagePath/**")
     }.forEach {
       val path = it.path
-
-      println(path)
 
       val className = path
         .substringAfter(sourcePackagePath)
@@ -322,10 +310,6 @@ val buildGraalVmReflectionJson = tasks.register("buildGraalVmReflectionJson") {
         .replace("/", ".")
       classes.add("$sourcePackage.$className")
     }
-
-    // todo remove output to console
-    println("Discovered ${classes.size} classes for reflection:")
-    println(classes)
 
     // write into targetFile in json format
     targetFile.parentFile.mkdirs()
