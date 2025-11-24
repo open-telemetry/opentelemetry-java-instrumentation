@@ -39,8 +39,10 @@ public class AutoConfigurationImportSelectorInstrumentation implements TypeInstr
     public static List<String> onExit(@Advice.Return List<String> originalConfigurations) {
       List<String> configurations = originalConfigurations;
       if (configurations.contains(
+              // Spring Boot 2.x-3.x location
               "org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration")
           || configurations.contains(
+              // Spring Boot 4.x location
               "org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration")) {
         List<String> configs = new ArrayList<>(configurations.size() + 1);
         configs.addAll(configurations);

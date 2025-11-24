@@ -20,6 +20,7 @@ dependencies {
   testLibrary("io.micrometer:micrometer-registry-prometheus:1.0.1")
 
   if (latestDepTest) {
+    // Micrometer moved into its own Spring Boot starter in version 4
     testLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
   }
 
