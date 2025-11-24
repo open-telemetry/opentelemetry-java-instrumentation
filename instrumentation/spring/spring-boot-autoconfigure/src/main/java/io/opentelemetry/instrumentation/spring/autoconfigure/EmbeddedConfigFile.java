@@ -14,10 +14,8 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.regex.MatchResult;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import javax.annotation.Nullable;
 import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.EnumerablePropertySource;
 import org.springframework.core.env.MutablePropertySources;
@@ -32,13 +30,6 @@ class EmbeddedConfigFile {
   // which is not public
   private static final ObjectMapper MAPPER;
 
-  private static final Pattern ENV_VARIABLE_REFERENCE =
-      Pattern.compile("\\$\\{([a-zA-Z_][a-zA-Z0-9_]*)(:-([^\n}]*))?}");
-
-  private static final String ESCAPE_SEQUENCE = "$$";
-  private static final int ESCAPE_SEQUENCE_LENGTH = ESCAPE_SEQUENCE.length();
-  private static final char ESCAPE_SEQUENCE_REPLACEMENT = '$';
-
   static {
     MAPPER =
         new ObjectMapper()
@@ -52,18 +43,14 @@ class EmbeddedConfigFile {
     MAPPER.configOverride(Boolean.class).setSetterInfo(JsonSetter.Value.forValueNulls(Nulls.SET));
   }
 
-  private final ConfigurableEnvironment environment;
+  private EmbeddedConfigFile() {}
 
-  EmbeddedConfigFile(ConfigurableEnvironment environment) {
-    this.environment = environment;
-  }
-
-  OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
+  static OpenTelemetryConfigurationModel extractModel(ConfigurableEnvironment environment) {
     Map<String, String> props = extractSpringProperties(environment);
     return convertToOpenTelemetryConfigurationModel(props);
   }
 
-  private Map<String, String> extractSpringProperties(ConfigurableEnvironment environment) {
+  private static Map<String, String> extractSpringProperties(ConfigurableEnvironment environment) {
     MutablePropertySources propertySources = environment.getPropertySources();
 
     Map<String, String> props = new HashMap<>();
@@ -93,9 +80,7 @@ class EmbeddedConfigFile {
                 property = envVarValue;
               }
             }
-            if (property != null) {
-              property = envSubstitution(property);
-            }
+
             props.put(propertyName.substring("otel.".length()), property);
           }
         }
@@ -182,67 +167,5 @@ class EmbeddedConfigFile {
       }
     }
     return result;
-  }
-
-  /**
-   * Copy of <a
-   * href="https://github.com/open-telemetry/opentelemetry-java/blob/e6584623ccd2c626d66b357fd7c2c837a9c862bb/sdk-extensions/incubator/src/main/java/io/opentelemetry/sdk/extension/incubator/fileconfig/DeclarativeConfiguration.java#L358">envSubstitution</a>
-   */
-  private String envSubstitution(String val) {
-    // Iterate through val left to right, search for escape sequence "$$"
-    // For the substring of val between the last escape sequence and the next found, perform
-    // environment variable substitution
-    // Add the escape replacement character '$' in place of each escape sequence found
-
-    int lastEscapeIndexEnd = 0;
-    StringBuilder newVal = null;
-    while (true) {
-      int escapeIndex = val.indexOf(ESCAPE_SEQUENCE, lastEscapeIndexEnd);
-      int substitutionEndIndex = escapeIndex == -1 ? val.length() : escapeIndex;
-      newVal = envVarSubstitution(newVal, val, lastEscapeIndexEnd, substitutionEndIndex);
-      if (escapeIndex == -1) {
-        break;
-      } else {
-        newVal.append(ESCAPE_SEQUENCE_REPLACEMENT);
-      }
-      lastEscapeIndexEnd = escapeIndex + ESCAPE_SEQUENCE_LENGTH;
-      if (lastEscapeIndexEnd >= val.length()) {
-        break;
-      }
-    }
-
-    return newVal.toString();
-  }
-
-  private StringBuilder envVarSubstitution(
-      @Nullable StringBuilder newVal, String source, int startIndex, int endIndex) {
-    String val = source.substring(startIndex, endIndex);
-    Matcher matcher = ENV_VARIABLE_REFERENCE.matcher(val);
-
-    if (!matcher.find()) {
-      return newVal == null ? new StringBuilder(val) : newVal.append(val);
-    }
-
-    if (newVal == null) {
-      newVal = new StringBuilder();
-    }
-
-    int offset = 0;
-    do {
-      MatchResult matchResult = matcher.toMatchResult();
-      String envVarKey = matcher.group(1);
-      String defaultValue = matcher.group(3);
-      if (defaultValue == null) {
-        defaultValue = "";
-      }
-      String replacement = environment.getProperty(envVarKey, defaultValue);
-      newVal.append(val, offset, matchResult.start()).append(replacement);
-      offset = matchResult.end();
-    } while (matcher.find());
-    if (offset != val.length()) {
-      newVal.append(val, offset, val.length());
-    }
-
-    return newVal;
   }
 }
