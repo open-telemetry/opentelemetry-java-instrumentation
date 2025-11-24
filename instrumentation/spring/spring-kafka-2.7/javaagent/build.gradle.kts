@@ -23,7 +23,7 @@ dependencies {
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
 
   if (latestDepTest) {
-    library("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+    library("org.springframework.boot:spring-boot-starter-kafka:latest.release")
   } else {
     library("org.springframework.kafka:spring-kafka:2.7.0")
   }
