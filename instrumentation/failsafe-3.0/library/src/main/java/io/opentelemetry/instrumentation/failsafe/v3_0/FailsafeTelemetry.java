@@ -21,8 +21,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.Meter;
-import java.util.stream.Collectors;
-import java.util.stream.LongStream;
+import java.util.Arrays;
 
 /** Entrypoint for instrumenting Failsafe components. */
 public final class FailsafeTelemetry {
@@ -102,10 +101,7 @@ public final class FailsafeTelemetry {
             .histogramBuilder("failsafe.retry_policy.attempts")
             .setDescription("Histogram of number of attempts for each execution.")
             .ofLongs()
-            .setExplicitBucketBoundariesAdvice(
-                LongStream.range(1, userConfig.getMaxAttempts() + 1)
-                    .boxed()
-                    .collect(Collectors.toList()))
+            .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
             .build();
     Attributes attributes = Attributes.of(RETRY_POLICY_NAME, retryPolicyName);
     return RetryPolicy.builder(userConfig)

@@ -101,7 +101,7 @@ final class FailsafeTelemetryTest {
         failsafeTelemetry.createRetryPolicy(userRetryPolicy, "testing");
 
     // when
-    for (int i = 0; i <= 3; i++) {
+    for (int i = 0; i <= 4; i++) {
       int temp = i;
       AtomicInteger retry = new AtomicInteger(0);
       Failsafe.with(instrumentedRetryPolicy)
@@ -131,7 +131,7 @@ final class FailsafeTelemetryTest {
         .anyMatch(
             p ->
                 p.getAttributes().equals(buildExpectedRetryPolicyAttributes("failure"))
-                    && p.getValue() == 1);
+                    && p.getValue() == 2);
     assertThat(executionCountMetric.getPoints())
         .anyMatch(
             p ->
@@ -153,15 +153,15 @@ final class FailsafeTelemetryTest {
                     && p.getMin() == 1
                     && p.getMax() == 3
                     && p.getAttributes().equals(buildExpectedRetryPolicyAttributes("success"))
-                    && Arrays.equals(p.getCounts().toArray(), new Long[] {1L, 1L, 1L, 0L}));
+                    && Arrays.equals(p.getCounts().toArray(), new Long[] {1L, 1L, 1L, 0L, 0L}));
     assertThat(pointData)
         .anyMatch(
             p ->
-                p.getCount() == 1
+                p.getCount() == 2
                     && p.getMin() == 3
                     && p.getMax() == 3
                     && p.getAttributes().equals(buildExpectedRetryPolicyAttributes("failure"))
-                    && Arrays.equals(p.getCounts().toArray(), new Long[] {0L, 0L, 1L, 0L}));
+                    && Arrays.equals(p.getCounts().toArray(), new Long[] {0L, 0L, 2L, 0L, 0L}));
   }
 
   private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(
