@@ -102,7 +102,7 @@ Method parameters and local variables should never be declared `final`.
 
 ## `@Nullable` annotation usage
 
-**Note: this section is aspirational, as opposed to a reflection of the current codebase**
+**Note: this section is aspirational, as opposed to a reflection of the current codebase.**
 
 All parameters and fields which can be `null` should be annotated with `@Nullable`
 (specifically `javax.annotation.Nullable`, which is included by the

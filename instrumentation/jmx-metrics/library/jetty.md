@@ -3,6 +3,7 @@
 Here is the list of metrics based on MBeans exposed by [Jetty](https://jetty.org/).
 
 The metrics captured and their respective attributes depend on the Jetty version:
+
 - [Jetty 12 and later](#jetty-12-and-later)
 - [Jetty 9 to 11](#jetty-9-to-11)
 

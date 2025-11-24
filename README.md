@@ -158,7 +158,7 @@ For more information about the approver role, see the [community repository](htt
 
 For more information about the emeritus role, see the [community repository](https://github.com/open-telemetry/community/blob/main/guides/contributor/membership.md#emeritus-maintainerapprovertriager).
 
-### Thanks to all of our contributors!
+### Thanks to all of our contributors
 
 <a href="https://github.com/open-telemetry/opentelemetry-java-instrumentation/graphs/contributors">
   <img alt="Repo contributors" src="https://contrib.rocks/image?repo=open-telemetry/opentelemetry-java-instrumentation" />
