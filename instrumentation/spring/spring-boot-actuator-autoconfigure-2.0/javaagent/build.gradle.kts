@@ -21,6 +21,8 @@ dependencies {
 
   // dependency management pins logback-classic to 1.3 which is the last release that supports java 8
   latestDepTestLibrary("ch.qos.logback:logback-classic:latest.release")
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-actuator-autoconfigure:3.+") // documented limitation
 }
 
 tasks.withType<Test>().configureEach {
