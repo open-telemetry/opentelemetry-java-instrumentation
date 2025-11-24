@@ -14,6 +14,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import jakarta.servlet.http.HttpServletRequest;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -50,19 +51,8 @@ public class WebAsyncManagerInstrumentation implements TypeInstrumentation {
       // This is the context that includes the async work (e.g., the async-call-child span)
       // and should be used when the handler is redispatched
       Context currentContext = Java8BytecodeBridge.currentContext();
-      WebAsyncManagerContext.setViaRequestContextHolder(currentContext);
-    }
-  }
 
-  // Helper class to store and retrieve context for async processing
-  public static class WebAsyncManagerContext {
-    public static final String CONTEXT_ATTRIBUTE =
-        "io.opentelemetry.javaagent.spring.webmvc.async.Context";
-
-    private WebAsyncManagerContext() {}
-
-    static void setViaRequestContextHolder(Context context) {
-      // Use Spring's RequestContextHolder to access the current request and store the context
+      // Store context in request attributes via Spring's RequestContextHolder
       try {
         Class<?> requestContextHolderClass =
             Class.forName("org.springframework.web.context.request.RequestContextHolder");
@@ -72,25 +62,30 @@ public class WebAsyncManagerInstrumentation implements TypeInstrumentation {
           requestAttributes
               .getClass()
               .getMethod("setAttribute", String.class, Object.class, int.class)
-              .invoke(requestAttributes, CONTEXT_ATTRIBUTE, context, 0); // 0 = REQUEST_SCOPE
+              .invoke(
+                  requestAttributes,
+                  "io.opentelemetry.javaagent.spring.webmvc.async.Context",
+                  currentContext,
+                  0); // 0 = REQUEST_SCOPE
         }
       } catch (Exception e) {
         // Ignore - best effort
       }
     }
+  }
 
-    @Nullable
-    public static Context getFromRequest(Object request) {
-      try {
-        return (Context)
-            request
-                .getClass()
-                .getMethod("getAttribute", String.class)
-                .invoke(request, CONTEXT_ATTRIBUTE);
-      } catch (Exception e) {
-        // Ignore - best effort
-        return null;
-      }
+  // Helper method to retrieve the stored async context from the request
+  @Nullable
+  public static Context getAsyncContext(HttpServletRequest request) {
+    try {
+      return (Context)
+          request
+              .getClass()
+              .getMethod("getAttribute", String.class)
+              .invoke(request, "io.opentelemetry.javaagent.spring.webmvc.async.Context");
+    } catch (Exception e) {
+      // Ignore - best effort
+      return null;
     }
   }
 }

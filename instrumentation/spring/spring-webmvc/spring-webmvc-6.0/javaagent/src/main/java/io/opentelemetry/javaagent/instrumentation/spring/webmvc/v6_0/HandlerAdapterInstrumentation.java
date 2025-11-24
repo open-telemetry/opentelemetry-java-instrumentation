@@ -73,6 +73,11 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         }
 
         Context parentContext = Context.current();
+        // TODO: Handle async context propagation for DeferredResult
+        // Context storedAsyncContext = WebAsyncManagerInstrumentation.getAsyncContext(request);
+        // if (storedAsyncContext != null) {
+        //   parentContext = storedAsyncContext;
+        // }
 
         // don't start a new top-level span
         if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
