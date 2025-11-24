@@ -16,13 +16,16 @@ jobs:
 
       - uses: jdx/mise-action@146a28175021df8ca24f8ee1828cc2a60f980bd5 # v3.5.1
 
-      - name: Link check - relative links (all files)
+      - name: Link check for pull requests
         if: github.event_name == 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: mise run lint:local-links
+        run: |
+          mise run lint:local-links
+          mise run lint:links-in-modified-files --base origin/${{ github.base_ref }} --head ${{ github.event.pull_request.head.sha }} --event pull_request
 
-      - name: Link check (modified files only)
+      - name: Link check for pushes and scheduled workflows
+        if: github.event_name != 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: mise run lint:links-in-modified-files --base origin/${{ github.base_ref }} --head ${{ github.event.pull_request.head.sha }} --event ${{ github.event_name }}
+        run: mise run lint:links
