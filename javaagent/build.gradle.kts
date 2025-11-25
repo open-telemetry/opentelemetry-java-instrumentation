@@ -305,8 +305,9 @@ tasks {
 
   val removeLicenseDate by registering {
     // removing the license report date makes it idempotent
+    val rootDirPath = rootDir.toPath()
     doLast {
-      val filePath = rootDir.toPath().resolve("licenses").resolve("licenses.md")
+      val filePath = rootDirPath.resolve("licenses").resolve("licenses.md")
       if (Files.exists(filePath)) {
         val datePattern =
           Pattern.compile("^_[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2} .*_$")
@@ -321,19 +322,27 @@ tasks {
     }
   }
 
-  val generateLicenseReportEnabled =
+  val generateLicenseReportEnabled = providers.provider {
     gradle.startParameter.taskNames.any { it.equals("generateLicenseReport") }
-  named("generateLicenseReport").configure {
+  }
+  val generateLicenseReportTask = named("generateLicenseReport")
+  generateLicenseReportTask.configure {
     dependsOn(cleanLicenses)
     finalizedBy(":spotlessApply")
     finalizedBy(removeLicenseDate)
     // disable licence report generation unless this task is explicitly run
     // the files produced by this task are used by other tasks without declaring them as dependency
     // which gradle considers an error
-    enabled = enabled && generateLicenseReportEnabled
+    enabled = enabled && generateLicenseReportEnabled.get()
+    // License report plugin is not configuration cache compatible
+    // https://github.com/jk1/Gradle-License-Report/issues/280
+    notCompatibleWithConfigurationCache("License report plugin uses Project at execution time")
   }
-  if (generateLicenseReportEnabled) {
-    project.parent?.tasks?.getByName("spotlessMisc")?.dependsOn(named("generateLicenseReport"))
+  val parentSpotlessMiscTask = project.parent?.tasks?.named("spotlessMisc")
+  if (generateLicenseReportEnabled.get()) {
+    parentSpotlessMiscTask?.configure {
+      dependsOn(generateLicenseReportTask)
+    }
   }
 
   // Because we reconfigure publishing to only include the shadow jar, the Gradle metadata is not correct.
@@ -390,7 +399,7 @@ project.afterEvaluate {
 }
 
 licenseReport {
-  outputDir = rootProject.file("licenses").absolutePath
+  outputDir = rootProject.layout.projectDirectory.dir("licenses").asFile.absolutePath
 
   renderers = arrayOf(InventoryMarkdownReportRenderer())
 

@@ -18,9 +18,16 @@ final class GraphqlInstrumenterFactory {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.graphql-java-20.0";
 
   static OpenTelemetryInstrumentationHelper createInstrumentationHelper(
-      OpenTelemetry openTelemetry, boolean sanitizeQuery, boolean addOperationNameToSpanName) {
+      OpenTelemetry openTelemetry,
+      boolean captureQuery,
+      boolean sanitizeQuery,
+      boolean addOperationNameToSpanName) {
     return OpenTelemetryInstrumentationHelper.create(
-        openTelemetry, INSTRUMENTATION_NAME, sanitizeQuery, addOperationNameToSpanName);
+        openTelemetry,
+        INSTRUMENTATION_NAME,
+        captureQuery,
+        sanitizeQuery,
+        addOperationNameToSpanName);
   }
 
   static Instrumenter<DataFetchingEnvironment, Object> createDataFetcherInstrumenter(
