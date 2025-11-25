@@ -12,16 +12,17 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Conditiona
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
+import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
 
 /**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
+ * Spring Boot 4+ specific Kafka instrumentation auto-configuration. This class is internal and is
+ * hence not for public use. Its APIs are unstable and can change at any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
 @ConditionalOnClass({
@@ -29,10 +30,9 @@ import org.springframework.kafka.core.KafkaTemplate;
   ConcurrentKafkaListenerContainerFactory.class,
   DefaultKafkaProducerFactoryCustomizer.class
 })
-@org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass(
-    "org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer")
+@ConditionalOnMissingBean(name = "otelKafkaProducerFactoryCustomizer")
 @Configuration
-public class KafkaInstrumentationAutoConfiguration {
+public class KafkaInstrumentationSpringBoot4AutoConfiguration {
 
   @Bean
   DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
@@ -59,6 +59,7 @@ public class KafkaInstrumentationAutoConfiguration {
       name = "otel.instrumentation.kafka.autoconfigure-interceptor",
       havingValue = "true",
       matchIfMissing = true)
+  @ConditionalOnMissingBean
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider,

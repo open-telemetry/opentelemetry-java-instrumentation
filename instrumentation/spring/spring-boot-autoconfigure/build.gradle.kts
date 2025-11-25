@@ -23,10 +23,18 @@ sourceSets {
       setSrcDirs(listOf("src/main/javaSpring3"))
     }
   }
+  create("javaSpring4") {
+    java {
+      setSrcDirs(listOf("src/main/javaSpring4"))
+    }
+  }
 }
 
 configurations {
   named("javaSpring3CompileOnly") {
+    extendsFrom(configurations["compileOnly"])
+  }
+  named("javaSpring4CompileOnly") {
     extendsFrom(configurations["compileOnly"])
   }
 }
@@ -110,6 +118,18 @@ dependencies {
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
+  // Spring Boot 4
+  add("javaSpring4CompileOnly", files(sourceSets.main.get().output.classesDirs))
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-web:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-jdbc:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+  add("javaSpring4CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+  add("javaSpring4CompileOnly", "jakarta.servlet:jakarta.servlet-api:6.1.0")
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
+
   // tests don't work with spring boot 4 yet
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-actuator:3.+") // documented limitation
@@ -186,6 +206,20 @@ testing {
       }
     }
 
+    val testSpring4 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("org.springframework.boot:spring-boot-starter-web:4.0.0")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
+        implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+        implementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
+        implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+      }
+    }
+
     val testDeclarativeConfig by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
@@ -234,12 +268,30 @@ tasks {
     isEnabled = testSpring3
   }
 
+  named<JavaCompile>("compileJavaSpring4Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<JavaCompile>("compileTestSpring4Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<Test>("testSpring4") {
+    isEnabled = testSpring3 // same condition as Spring 3 (requires Java 17+)
+  }
+
   named<Jar>("jar") {
     from(sourceSets["javaSpring3"].output)
+    from(sourceSets["javaSpring4"].output)
   }
 
   named<Jar>("sourcesJar") {
     from(sourceSets["javaSpring3"].java)
+    from(sourceSets["javaSpring4"].java)
   }
 
   val testStableSemconv by registering(Test::class) {
