@@ -32,17 +32,17 @@ public final class AwsSdkSingletons {
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
       return ConfigPropertiesUtil.getBoolean(
-          GlobalOpenTelemetry.get(),
-          false,
-          "messaging",
-          "experimental",
-          "receive_telemetry",
-          "enabled");
+              GlobalOpenTelemetry.get(),
+              "messaging",
+              "experimental",
+              "receive_telemetry",
+              "enabled")
+          .orElse(false);
     }
 
     @Override
     protected boolean getBoolean(boolean defaultValue, String... name) {
-      return ConfigPropertiesUtil.getBoolean(GlobalOpenTelemetry.get(), defaultValue, name);
+      return ConfigPropertiesUtil.getBoolean(GlobalOpenTelemetry.get(), name).orElse(defaultValue);
     }
   }
 
