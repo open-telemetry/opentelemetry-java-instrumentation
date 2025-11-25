@@ -49,7 +49,12 @@ public final class ConfigPropertiesUtil {
    * Declarative Config.
    */
   public static Optional<Boolean> getBoolean(String propertyName) {
-    return getString(propertyName).map(Boolean::parseBoolean);
+    Optional<String> string = getString(propertyName);
+    // lambdas must not be used here in early initialization phase on early JDK8 versions
+    if (string.isPresent()) {
+      return Optional.ofNullable(Boolean.parseBoolean(string.get()));
+    }
+    return Optional.empty();
   }
 
   /**
@@ -69,15 +74,16 @@ public final class ConfigPropertiesUtil {
    * variables.
    */
   public static Optional<Integer> getInt(String propertyName) {
-    return getString(propertyName)
-        .flatMap(
-            s -> {
-              try {
-                return Optional.of(Integer.parseInt(s));
-              } catch (NumberFormatException ignored) {
-                return Optional.empty();
-              }
-            });
+    Optional<String> string = getString(propertyName);
+    // lambdas must not be used here in early initialization phase on early JDK8 versions
+    if (string.isPresent()) {
+      try {
+        return Optional.of(Integer.parseInt(string.get()));
+      } catch (NumberFormatException ignored) {
+        // ignored
+      }
+    }
+    return Optional.empty();
   }
 
   /**
