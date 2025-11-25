@@ -180,9 +180,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
   }
 
   /**
-   * Sets whether the message template should be captured in logs
+   * Sets whether the message template should be captured in logs if arguments are provided.
    *
-   * @param captureTemplate whether the message template should be captured in logs
+   * @param captureTemplate whether the message template should be captured in logs if arguments are
+   *     provided
    */
   public void setCaptureTemplate(boolean captureTemplate) {
     this.captureTemplate = captureTemplate;

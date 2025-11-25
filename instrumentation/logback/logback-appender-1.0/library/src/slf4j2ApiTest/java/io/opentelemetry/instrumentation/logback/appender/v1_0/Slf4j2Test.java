@@ -60,8 +60,7 @@ class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(
-                    codeAttributesLogCount() + 9) // 8 key value pairs + 1 template
+                .hasTotalAttributeCount(codeAttributesLogCount() + 8) // 8 key value pairs
                 .hasEventName("MyEventName")
                 .hasAttributesSatisfying(
                     equalTo(AttributeKey.stringKey("string key"), "string value"),
@@ -71,8 +70,7 @@ class Slf4j2Test {
                     equalTo(AttributeKey.longKey("int key"), 3),
                     equalTo(AttributeKey.longKey("long key"), 4),
                     equalTo(AttributeKey.doubleKey("float key"), 5.0),
-                    equalTo(AttributeKey.doubleKey("double key"), 6.0),
-                    equalTo(AttributeKey.stringKey("log.body.template"), "log message 1")));
+                    equalTo(AttributeKey.doubleKey("double key"), 6.0)));
   }
 
   @Test
@@ -92,12 +90,11 @@ class Slf4j2Test {
                 .hasResource(resource)
                 .hasInstrumentationScope(instrumentationScopeInfo)
                 .hasBody("log message 1")
-                .hasTotalAttributeCount(codeAttributesLogCount() + 2) // 1 marker + 1 template
+                .hasTotalAttributeCount(codeAttributesLogCount() + 1) // 1 marker
                 .hasAttributesSatisfying(
                     equalTo(
                         AttributeKey.stringArrayKey("logback.marker"),
-                        Arrays.asList(markerName1, markerName2)),
-                    equalTo(AttributeKey.stringKey("log.body.template"), "log message 1")));
+                        Arrays.asList(markerName1, markerName2))));
   }
 
   @Test

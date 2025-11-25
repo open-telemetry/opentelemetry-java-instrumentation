@@ -217,7 +217,9 @@ public final class LoggingEventMapper {
       captureLoggerContext(builder, loggingEvent.getLoggerContextVO().getPropertyMap());
     }
 
-    if (captureTemplate) {
+    if (captureTemplate
+        && loggingEvent.getArgumentArray() != null
+        && loggingEvent.getArgumentArray().length > 0) {
       captureTemplate(builder, loggingEvent);
     }
 
