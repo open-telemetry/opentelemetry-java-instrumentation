@@ -32,18 +32,18 @@ class ConfigPropertiesUtilTest {
   @SetSystemProperty(key = "test.property.string", value = "sys")
   @Test
   void getString_systemProperty() {
-    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isEqualTo("sys");
+    assertThat(ConfigPropertiesUtil.getString("test.property.string")).hasValue("sys");
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_STRING", value = "env")
   @Test
   void getString_environmentVariable() {
-    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isEqualTo("env");
+    assertThat(ConfigPropertiesUtil.getString("test.property.string")).hasValue("env");
   }
 
   @Test
   void getString_none() {
-    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isNull();
+    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isEmpty();
   }
 
   @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_STRING", value = "env_value")
@@ -66,8 +66,9 @@ class ConfigPropertiesUtilTest {
 
   private static void assertString(String expected) {
     assertThat(
-            ConfigPropertiesUtil.getStringOrFallback(
-                OpenTelemetry.noop(), "default_value", "test", "property", "string"))
+            ConfigPropertiesUtil.getString(
+                    OpenTelemetry.noop(), new String[] {"test", "property", "string"})
+                .orElse("default_value"))
         .isEqualTo(expected);
   }
 
@@ -83,9 +84,10 @@ class ConfigPropertiesUtilTest {
   @ParameterizedTest
   @MethodSource("stringValuesProvider")
   void getString_declarativeConfig(Object property, String expected) {
+    OpenTelemetry openTelemetry = DeclarativeConfiguration.create(model(property));
     assertThat(
-            ConfigPropertiesUtil.getStringOrFallback(
-                DeclarativeConfiguration.create(model(property)), "default_value", "foo", "bar"))
+            ConfigPropertiesUtil.getString(openTelemetry, new String[] {"foo", "bar"})
+                .orElse("default_value"))
         .isEqualTo(expected);
   }
 

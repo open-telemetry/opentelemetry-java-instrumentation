@@ -373,9 +373,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     String value =
         ConfigPropertiesUtil.isDeclarativeConfig(openTelemetry)
             ? ConfigPropertiesUtil.getString(
-                openTelemetry, "common", "experimental", "span_suppression_strategy")
+                    openTelemetry, "common", "experimental", "span_suppression_strategy")
+                .orElse(null)
             : ConfigPropertiesUtil.getString(
-                "otel.instrumentation.experimental.span-suppression-strategy");
+                    "otel.instrumentation.experimental.span-suppression-strategy")
+                .orElse(null);
     return new SpanSuppressors.ByContextKey(
         SpanSuppressionStrategy.fromConfig(value).create(getSpanKeysFromAttributesExtractors()));
   }
