@@ -67,16 +67,16 @@ public final class ConfigPropertiesUtil {
    * Returns the int value of the given property name from system properties and environment
    * variables.
    */
-  public static int getInt(String propertyName, int defaultValue) {
-    String strValue = getString(propertyName);
-    if (strValue == null) {
-      return defaultValue;
-    }
-    try {
-      return Integer.parseInt(strValue);
-    } catch (NumberFormatException ignored) {
-      return defaultValue;
-    }
+  public static Optional<Integer> getInt(String propertyName) {
+    return Optional.ofNullable(getString(propertyName))
+        .flatMap(
+            s -> {
+              try {
+                return Optional.of(Integer.parseInt(s));
+              } catch (NumberFormatException ignored) {
+                return Optional.empty();
+              }
+            });
   }
 
   /**
