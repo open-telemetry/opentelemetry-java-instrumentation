@@ -10,6 +10,8 @@ config:
     style: ordered
   no-inline-html: false
   fenced-code-language: false
+  no-trailing-punctuation:
+    punctuation: ".,;:" # allowing exclamation points and question marks at end of sentences
 
 ignores:
   - "**/build/**"
