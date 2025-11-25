@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -125,15 +126,14 @@ public final class ConfigPropertiesUtil {
    * Returns the list of strings value of the given property name from Declarative Config if
    * available, otherwise falls back to system properties and environment variables.
    */
-  public static List<String> getList(
-      OpenTelemetry openTelemetry, List<String> defaultValue, String... propertyName) {
+  public static List<String> getList(OpenTelemetry openTelemetry, String... propertyName) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
     if (node != null) {
-      return node.getScalarList(leaf(propertyName), String.class, defaultValue);
+      return node.getScalarList(leaf(propertyName), String.class, emptyList());
     }
     String value = getString(toSystemProperty(propertyName));
     if (value == null) {
-      return defaultValue;
+      return emptyList();
     }
     return filterBlanksAndNulls(value.split(","));
   }
