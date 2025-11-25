@@ -244,7 +244,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                                 longKey("lettuce.command.results.count"),
                                 val -> {
                                   if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
-                                    assertThat(val).isEqualTo(2);
+                                    val.isEqualTo(2);
                                   }
                                 }))));
   }
