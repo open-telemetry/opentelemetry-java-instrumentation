@@ -30,7 +30,8 @@ public final class JdbcInstrumenterFactory {
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return ConfigPropertiesUtil.getBoolean(
-        openTelemetry, false, "jdbc", "experimental", "capture_query_parameters");
+            openTelemetry, "jdbc", "experimental", "capture_query_parameters")
+        .orElse(false);
   }
 
   public static Instrumenter<DbRequest, Void> createStatementInstrumenter(
@@ -45,7 +46,8 @@ public final class JdbcInstrumenterFactory {
         emptyList(),
         true,
         ConfigPropertiesUtil.getBoolean(
-            openTelemetry, true, "common", "db_statement_sanitizer", "enabled"),
+                openTelemetry, "common", "db_statement_sanitizer", "enabled")
+            .orElse(true),
         captureQueryParameters);
   }
 
@@ -95,7 +97,8 @@ public final class JdbcInstrumenterFactory {
     return createTransactionInstrumenter(
         openTelemetry,
         ConfigPropertiesUtil.getBoolean(
-            openTelemetry, false, "jdbc", "experimental", "transaction", "enabled"));
+                openTelemetry, "jdbc", "experimental", "transaction", "enabled")
+            .orElse(false));
   }
 
   public static Instrumenter<DbRequest, Void> createTransactionInstrumenter(

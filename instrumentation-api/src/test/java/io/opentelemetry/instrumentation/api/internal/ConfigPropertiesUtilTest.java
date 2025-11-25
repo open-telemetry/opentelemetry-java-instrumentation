@@ -132,11 +132,13 @@ class ConfigPropertiesUtilTest {
   }
 
   private static void assertBoolean(boolean expected) {
-    assertThat(ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean", false))
+    assertThat(
+            ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean")
+                .orElse(false))
         .isEqualTo(expected);
     assertThat(
-            ConfigPropertiesUtil.getBoolean(
-                OpenTelemetry.noop(), false, "test", "property", "boolean"))
+            ConfigPropertiesUtil.getBoolean(OpenTelemetry.noop(), "test", "property", "boolean")
+                .orElse(false))
         .isEqualTo(expected);
   }
 
@@ -154,7 +156,8 @@ class ConfigPropertiesUtilTest {
   void getBoolean_declarativeConfig(Object property, boolean expected) {
     assertThat(
             ConfigPropertiesUtil.getBoolean(
-                DeclarativeConfiguration.create(model(property)), false, "foo", "bar"))
+                    DeclarativeConfiguration.create(model(property)), "foo", "bar")
+                .orElse(false))
         .isEqualTo(expected);
   }
 

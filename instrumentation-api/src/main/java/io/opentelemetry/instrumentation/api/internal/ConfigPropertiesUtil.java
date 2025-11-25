@@ -14,6 +14,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -43,25 +44,23 @@ public final class ConfigPropertiesUtil {
    * Returns the boolean value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link #getBoolean(OpenTelemetry, boolean, String...)} instead to
-   * support Declarative Config.
+   * <p>It's recommended to use {@link #getBoolean(OpenTelemetry, String...)} instead to support
+   * Declarative Config.
    */
-  public static boolean getBoolean(String propertyName, boolean defaultValue) {
-    String strValue = getString(propertyName);
-    return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
+  public static Optional<Boolean> getBoolean(String propertyName) {
+    return Optional.ofNullable(getString(propertyName)).map(Boolean::parseBoolean);
   }
 
   /**
    * Returns the boolean value of the given property name from Declarative Config if available,
    * otherwise falls back to system properties and environment variables.
    */
-  public static boolean getBoolean(
-      OpenTelemetry openTelemetry, boolean defaultValue, String... propertyName) {
+  public static Optional<Boolean> getBoolean(OpenTelemetry openTelemetry, String... propertyName) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
     if (node != null) {
-      return node.getBoolean(leaf(propertyName), defaultValue);
+      return Optional.ofNullable(node.getBoolean(leaf(propertyName)));
     }
-    return getBoolean(toSystemProperty(propertyName), defaultValue);
+    return getBoolean(toSystemProperty(propertyName));
   }
 
   /**

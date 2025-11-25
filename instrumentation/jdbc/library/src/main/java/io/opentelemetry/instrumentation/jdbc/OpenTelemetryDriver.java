@@ -66,11 +66,13 @@ public final class OpenTelemetryDriver implements Driver {
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
     boolean defaultValue =
         ConfigPropertiesUtil.getBoolean(
-            openTelemetry, false, "common", "experimental", "db_sqlcommenter", "enabled");
+                openTelemetry, "common", "experimental", "db_sqlcommenter", "enabled")
+            .orElse(false);
     return SqlCommenter.builder()
         .setEnabled(
             ConfigPropertiesUtil.getBoolean(
-                openTelemetry, defaultValue, "jdbc", "experimental", "sqlcommenter", "enabled"))
+                    openTelemetry, "jdbc", "experimental", "sqlcommenter", "enabled")
+                .orElse(defaultValue))
         .build();
   }
 
