@@ -1,4 +1,6 @@
-# Settings for the methods instrumentation
+# Methods Instrumentation
+
+## Settings for the methods instrumentation
 
 Provides a flexible way to capture telemetry at the method level in JVM applications. By weaving
 instrumentation into targeted methods at runtime based on the "otel.instrumentation.methods.include"
@@ -11,7 +13,7 @@ occurrences. The resulting data is automatically translated into OpenTelemetry t
 
 [cs]: https://opentelemetry.io/docs/zero-code/java/agent/annotations/#creating-spans-around-methods-with-otelinstrumentationmethodsinclude
 
-# Declarative Configuration Example
+## Declarative Configuration Example
 
 In addition to configuring method instrumentation via system properties, you can use declarative
 configuration files to specify which methods to trace. This approach allows for more flexible and
