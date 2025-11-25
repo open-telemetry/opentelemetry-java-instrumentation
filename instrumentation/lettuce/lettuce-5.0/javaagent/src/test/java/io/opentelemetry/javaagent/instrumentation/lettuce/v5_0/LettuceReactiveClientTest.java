@@ -218,10 +218,11 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(maybeStable(DB_OPERATION), "COMMAND"),
                             satisfies(
                                 longKey("lettuce.command.results.count"),
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(EXPERIMENTAL_ATTRIBUTES_ENABLED).isFalse(),
-                                        v -> assertThat(v).isGreaterThan(100))))));
+                                val -> {
+                                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                    val.isGreaterThan(100);
+                                  }
+                                }))));
   }
 
   @Test
@@ -241,10 +242,11 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
                             equalTo(booleanKey("lettuce.command.cancelled"), experimental(true)),
                             satisfies(
                                 longKey("lettuce.command.results.count"),
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(EXPERIMENTAL_ATTRIBUTES_ENABLED).isFalse(),
-                                        v -> assertThat(v).isEqualTo(2))))));
+                                val -> {
+                                  if (EXPERIMENTAL_ATTRIBUTES_ENABLED) {
+                                    assertThat(val).isEqualTo(2);
+                                  }
+                                }))));
   }
 
   @Test
