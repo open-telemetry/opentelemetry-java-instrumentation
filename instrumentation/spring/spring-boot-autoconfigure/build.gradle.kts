@@ -123,11 +123,13 @@ dependencies {
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-web:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-micrometer:4.0.0")
   add("javaSpring4CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   add("javaSpring4CompileOnly", "jakarta.servlet:jakarta.servlet-api:6.1.0")
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
 
   // tests don't work with spring boot 4 yet

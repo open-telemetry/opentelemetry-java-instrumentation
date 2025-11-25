@@ -12,6 +12,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Conditiona
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -29,7 +30,7 @@ import org.springframework.kafka.core.KafkaTemplate;
   ConcurrentKafkaListenerContainerFactory.class,
   DefaultKafkaProducerFactoryCustomizer.class
 })
-@org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass(
+@ConditionalOnMissingClass(
     "org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer")
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
