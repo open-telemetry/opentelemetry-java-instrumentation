@@ -93,24 +93,24 @@ class ConfigPropertiesUtilTest {
   @SetSystemProperty(key = "test.property.int", value = "42")
   @Test
   void getInt_systemProperty() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(42);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).hasValue(42);
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_INT", value = "12")
   @Test
   void getInt_environmentVariable() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(12);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).hasValue(12);
   }
 
   @Test
   void getInt_none() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(-1);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).isEmpty();
   }
 
   @SetSystemProperty(key = "test.property.int", value = "not a number")
   @Test
   void getInt_invalidNumber() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(-1);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).isEmpty();
   }
 
   @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_BOOLEAN", value = "false")
