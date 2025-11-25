@@ -85,6 +85,7 @@ public class ServerInstrumentation implements TypeInstrumentation {
           return;
         }
         scope.close();
+        // scope non-null implies context and request are both non-null (see enter method above)
         serverInstrumenter().end(requireNonNull(context), requireNonNull(request), null, throwable);
       }
     }
