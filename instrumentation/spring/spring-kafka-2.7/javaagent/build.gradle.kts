@@ -22,11 +22,7 @@ dependencies {
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
 
-  if (latestDepTest) {
-    library("org.springframework.boot:spring-boot-starter-kafka:latest.release")
-  } else {
-    library("org.springframework.kafka:spring-kafka:2.7.0")
-  }
+  library("org.springframework.kafka:spring-kafka:2.7.0")
 
   testInstrumentation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-scheduling-3.1:javaagent"))
@@ -35,6 +31,7 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
 val collectMetadata = findProperty("collectMetadata")?.toString() ?: "false"
