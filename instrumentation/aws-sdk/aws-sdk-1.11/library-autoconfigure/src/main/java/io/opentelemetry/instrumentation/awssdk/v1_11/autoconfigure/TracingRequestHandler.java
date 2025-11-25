@@ -27,10 +27,12 @@ public class TracingRequestHandler extends RequestHandler2 {
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
             ConfigPropertiesUtil.getBoolean(
-                openTelemetry, false, "aws_sdk", "experimental_span_attributes"))
+                    openTelemetry, "aws_sdk", "experimental_span_attributes")
+                .orElse(false))
         .setMessagingReceiveInstrumentationEnabled(
             ConfigPropertiesUtil.getBoolean(
-                openTelemetry, false, "messaging", "experimental", "receive_telemetry", "enabled"))
+                    openTelemetry, "messaging", "experimental", "receive_telemetry", "enabled")
+                .orElse(false))
         .setCapturedHeaders(
             ConfigPropertiesUtil.getList(
                 openTelemetry, emptyList(), "messaging", "experimental", "capture_headers"))

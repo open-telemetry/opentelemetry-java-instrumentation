@@ -38,7 +38,7 @@ public final class EarlyInitAgentConfig {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
-    return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
+    return ConfigPropertiesUtil.getBoolean(propertyName).orElse(configFileValue);
   }
 
   public int getInt(String propertyName, int defaultValue) {
