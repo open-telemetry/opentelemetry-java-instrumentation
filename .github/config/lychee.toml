@@ -1,5 +1,5 @@
 # Lychee configuration file
-# See https://lychee.cli.rs/config/
+# See https://lychee.cli.rs/guides/config/
 
 timeout = 30
 retry_wait_time = 5
