@@ -199,9 +199,7 @@ class ConfigPropertiesUtilTest {
   }
 
   private static void assertList(List<String> expected) {
-    assertThat(
-            ConfigPropertiesUtil.getList(
-                OpenTelemetry.noop(), emptyList(), "test", "property", "list"))
+    assertThat(ConfigPropertiesUtil.getList(OpenTelemetry.noop(), "test", "property", "list"))
         .isEqualTo(expected);
   }
 
@@ -219,7 +217,7 @@ class ConfigPropertiesUtilTest {
   void getList_declarativeConfig(Object property, List<String> expected) {
     assertThat(
             ConfigPropertiesUtil.getList(
-                DeclarativeConfiguration.create(model(property)), emptyList(), "foo", "bar"))
+                DeclarativeConfiguration.create(model(property)), "foo", "bar"))
         .isEqualTo(expected);
   }
 }
