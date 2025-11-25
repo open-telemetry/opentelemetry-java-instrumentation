@@ -52,7 +52,7 @@ public final class ConfigPropertiesUtil {
     Optional<String> string = getString(propertyName);
     // lambdas must not be used here in early initialization phase on early JDK8 versions
     if (string.isPresent()) {
-      return Optional.ofNullable(Boolean.parseBoolean(string.get()));
+      return Optional.of(Boolean.parseBoolean(string.get()));
     }
     return Optional.empty();
   }
