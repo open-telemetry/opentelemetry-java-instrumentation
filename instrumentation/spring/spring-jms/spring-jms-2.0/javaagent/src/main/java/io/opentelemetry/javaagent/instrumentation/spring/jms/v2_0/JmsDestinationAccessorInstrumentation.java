@@ -10,6 +10,7 @@ import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJ
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
@@ -44,10 +45,9 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
         return null;
       }
       // suppress receive span creation in jms instrumentation
-      @SuppressWarnings("NullAway") // request is ignored in SpanKindExtractor.alwaysConsumer()
       Context context =
           InstrumenterUtil.suppressSpan(
-              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), null);
+              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), SpanKind.CONSUMER);
       return context.makeCurrent();
     }
 
