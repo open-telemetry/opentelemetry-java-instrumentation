@@ -23,9 +23,9 @@ import javax.annotation.Nullable;
  */
 public final class ConfigPropertiesUtil {
 
-  private static final boolean isIncubator = isIncubator();
+  private static final boolean supportsDeclarativeConfig = supportsDeclarativeConfig();
 
-  private static boolean isIncubator() {
+  private static boolean supportsDeclarativeConfig() {
     try {
       Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
       return true;
@@ -141,7 +141,7 @@ public final class ConfigPropertiesUtil {
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
   public static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
-    return isIncubator && openTelemetry instanceof ExtendedOpenTelemetry;
+    return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
   private static List<String> filterBlanksAndNulls(String[] values) {
