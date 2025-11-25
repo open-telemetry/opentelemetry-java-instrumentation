@@ -18,11 +18,13 @@ DynamoDbClient client = DynamoDbClient.builder()
 ```
 
 For SQS an additional step is needed
+
 ```java
 SqsClientBuilder sqsClientBuilder = SqsClient.builder();
 ...
 SqsClient sqsClient = telemetry.wrap(sqsClientBuilder.build());
 ```
+
 ```java
 SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 ...

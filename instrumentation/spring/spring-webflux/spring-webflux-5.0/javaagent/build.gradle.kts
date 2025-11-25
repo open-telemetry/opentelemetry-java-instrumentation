@@ -59,6 +59,11 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.0.0.RELEASE")
   testLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:2.0.0.RELEASE")
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-reactor-netty:3.+") // documented limitation
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

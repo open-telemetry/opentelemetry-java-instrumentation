@@ -109,6 +109,16 @@ dependencies {
   add("javaSpring3CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-actuator:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-aop:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-data-mongodb:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-data-r2dbc:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-data-jdbc:3.+") // documented limitation
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean

@@ -21,6 +21,10 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
+
+  // tests don't work with spring boot 4 yet
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:3.+") // documented limitation
 }
 
 otelJava {

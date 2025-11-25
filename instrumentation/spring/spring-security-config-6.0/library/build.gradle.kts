@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -20,9 +21,6 @@ dependencies {
   testImplementation(platform("org.junit:junit-bom:6.0.1"))
 
   testLibrary("org.springframework:spring-test:6.0.0")
-  // remove after 7.0 is released for spring security
-  // spring-test 7 requires spring-context 7
-  latestDepTestLibrary("org.springframework:spring-context:latest.release")
 }
 
 otelJava {

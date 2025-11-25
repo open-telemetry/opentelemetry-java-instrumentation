@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -31,10 +32,6 @@ dependencies {
   // testLibrary("jakarta.servlet:jakarta.servlet-api:6.0.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:6.0.0")
   latestDepTestLibrary("jakarta.servlet:jakarta.servlet-api:6.1.0") // documented limitation
-  // remove after 7.0 is released for spring security
-  // spring-test 7 requires spring-context 7
-  latestDepTestLibrary("org.springframework:spring-context:latest.release")
-  latestDepTestLibrary("org.springframework:spring-web:latest.release")
 }
 
 otelJava {

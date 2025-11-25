@@ -108,5 +108,4 @@ The available settings are:
 | `captureEventName`                   | Boolean | `false` | Enable moving the `event.name` attribute (captured by one of the other mechanisms of capturing attributes) to the log event name.                                                                                                                 |
 | `numLogsCapturedBeforeOtelInstall`   | Integer | 1000    | Log telemetry is emitted after the initialization of the OpenTelemetry Logback appender with an OpenTelemetry object. This setting allows you to modify the size of the cache used to replay the first logs. thread.id attribute is not captured. |
 
-
 [source code attributes]: https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#source-code-attributes
