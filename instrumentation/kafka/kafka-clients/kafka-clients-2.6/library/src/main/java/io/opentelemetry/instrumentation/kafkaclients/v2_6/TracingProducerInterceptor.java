@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
@@ -37,7 +35,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
         KafkaTelemetry.builder(openTelemetry)
             .setCapturedHeaders(
                 ConfigPropertiesUtil.getList(
-                    openTelemetry, emptyList(), "messaging", "experimental", "capture_headers"))
+                    openTelemetry, "messaging", "experimental", "capture_headers"))
             .build();
   }
 
