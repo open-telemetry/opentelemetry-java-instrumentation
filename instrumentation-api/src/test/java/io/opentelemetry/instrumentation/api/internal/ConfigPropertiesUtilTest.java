@@ -66,8 +66,7 @@ class ConfigPropertiesUtilTest {
 
   private static void assertString(String expected) {
     assertThat(
-            ConfigPropertiesUtil.getString(
-                    OpenTelemetry.noop(), new String[] {"test", "property", "string"})
+            ConfigPropertiesUtil.getString(OpenTelemetry.noop(), "test", "property", "string")
                 .orElse("default_value"))
         .isEqualTo(expected);
   }
@@ -85,9 +84,7 @@ class ConfigPropertiesUtilTest {
   @MethodSource("stringValuesProvider")
   void getString_declarativeConfig(Object property, String expected) {
     OpenTelemetry openTelemetry = DeclarativeConfiguration.create(model(property));
-    assertThat(
-            ConfigPropertiesUtil.getString(openTelemetry, new String[] {"foo", "bar"})
-                .orElse("default_value"))
+    assertThat(ConfigPropertiesUtil.getString(openTelemetry, "foo", "bar").orElse("default_value"))
         .isEqualTo(expected);
   }
 
