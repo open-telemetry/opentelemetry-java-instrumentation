@@ -43,9 +43,7 @@ class JmxMetricInsightInstallerTest {
       assertThat(filePath).isRegularFile();
 
       // loading rules from direct file access
-      try (InputStream fileInput = Files.newInputStream(filePath)) {
-        JmxTelemetry.builder(OpenTelemetry.noop()).addRules(fileInput, filePath.toString());
-      }
+      JmxTelemetry.builder(OpenTelemetry.noop()).addRules(filePath);
     }
   }
 }

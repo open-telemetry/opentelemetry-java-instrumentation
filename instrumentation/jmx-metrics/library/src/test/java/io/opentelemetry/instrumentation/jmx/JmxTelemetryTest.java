@@ -60,7 +60,7 @@ public class JmxTelemetryTest {
     Path invalid = Files.createTempFile(dir, "invalid", ".yaml");
     Files.write(invalid, ":this !is /not YAML".getBytes(StandardCharsets.UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addCustomRules(invalid))
+    assertThatThrownBy(() -> builder.addRules(invalid))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining(invalid.toString());
   }
