@@ -27,11 +27,8 @@ public final class EarlyInitAgentConfig {
 
   @Nullable
   public String getString(String propertyName) {
-    String value = ConfigPropertiesUtil.getString(propertyName);
-    if (value != null) {
-      return value;
-    }
-    return configFileContents.get(propertyName);
+    return ConfigPropertiesUtil.getString(propertyName)
+        .orElseGet(() -> configFileContents.get(propertyName));
   }
 
   public boolean getBoolean(String propertyName, boolean defaultValue) {
