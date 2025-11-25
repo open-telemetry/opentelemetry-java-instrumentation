@@ -49,7 +49,7 @@ public final class ConfigPropertiesUtil {
    * Declarative Config.
    */
   public static Optional<Boolean> getBoolean(String propertyName) {
-    return Optional.ofNullable(getString(propertyName)).map(Boolean::parseBoolean);
+    return getString(propertyName).map(Boolean::parseBoolean);
   }
 
   /**
@@ -69,7 +69,7 @@ public final class ConfigPropertiesUtil {
    * variables.
    */
   public static Optional<Integer> getInt(String propertyName) {
-    return Optional.ofNullable(getString(propertyName))
+    return getString(propertyName)
         .flatMap(
             s -> {
               try {
@@ -87,39 +87,24 @@ public final class ConfigPropertiesUtil {
    * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
    * Declarative Config.
    */
-  @Nullable
-  public static String getString(String propertyName) {
+  public static Optional<String> getString(String propertyName) {
     String value = System.getProperty(propertyName);
     if (value != null) {
-      return value;
+      return Optional.of(value);
     }
-    return System.getenv(toEnvVarName(propertyName));
+    return Optional.ofNullable(System.getenv(toEnvVarName(propertyName)));
   }
 
   /**
    * Returns the string value of the given property name from Declarative Config if available,
    * otherwise falls back to system properties and environment variables.
    */
-  @Nullable
-  public static String getString(OpenTelemetry openTelemetry, String... propertyName) {
+  public static Optional<String> getString(OpenTelemetry openTelemetry, String... propertyName) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
     if (node != null) {
-      return node.getString(leaf(propertyName));
+      return Optional.ofNullable(node.getString(leaf(propertyName)));
     }
     return getString(toSystemProperty(propertyName));
-  }
-
-  /**
-   * Returns the string value of the given property name from Declarative Config if available,
-   * otherwise falls back to system properties and environment variables.
-   */
-  public static String getStringOrFallback(
-      OpenTelemetry openTelemetry, String defaultValue, String... propertyName) {
-    String value = getString(openTelemetry, propertyName);
-    if (value == null) {
-      return defaultValue;
-    }
-    return value;
   }
 
   /**
@@ -131,11 +116,9 @@ public final class ConfigPropertiesUtil {
     if (node != null) {
       return node.getScalarList(leaf(propertyName), String.class, emptyList());
     }
-    String value = getString(toSystemProperty(propertyName));
-    if (value == null) {
-      return emptyList();
-    }
-    return filterBlanksAndNulls(value.split(","));
+    return getString(toSystemProperty(propertyName))
+        .map(value -> filterBlanksAndNulls(value.split(",")))
+        .orElse(emptyList());
   }
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
