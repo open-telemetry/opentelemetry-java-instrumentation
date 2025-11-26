@@ -23,6 +23,8 @@ import akka.stream.stage.GraphStage;
 import akka.stream.stage.GraphStageLogic;
 import akka.stream.stage.OutHandler;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteHolder;
 import java.util.ArrayDeque;
@@ -158,6 +160,15 @@ public class AkkaFlowWrapper
                 List<HttpHeader> headers = responseMutator.getHeaders();
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
+                }
+
+                AkkaRouteHolder routeHolder = AkkaRouteHolder.get(tracingRequest.context);
+                if (routeHolder != null) {
+                  routeHolder.pushIfNotCompletelyMatched("*");
+                  HttpServerRoute.update(
+                      tracingRequest.context,
+                      HttpServerRouteSource.CONTROLLER,
+                      routeHolder.route());
                 }
 
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);

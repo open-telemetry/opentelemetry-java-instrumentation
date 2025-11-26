@@ -39,7 +39,6 @@ public class AkkaHttpServerRouteInstrumentationModule extends InstrumentationMod
     return asList(
         new PathMatcherInstrumentation(),
         new PathMatcherStaticInstrumentation(),
-        new RouteConcatenationInstrumentation(),
-        new PathConcatenationInstrumentation());
+        new RouteConcatenationInstrumentation());
   }
 }
