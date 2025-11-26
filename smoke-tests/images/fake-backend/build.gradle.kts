@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -46,6 +47,11 @@ tasks {
     with(options) {
       release.set(11)
     }
+  }
+
+  withType<JibTask>().configureEach {
+    // Jib tasks access Task.project at execution time which is not compatible with configuration cache
+    notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
   }
 
   javadoc {
