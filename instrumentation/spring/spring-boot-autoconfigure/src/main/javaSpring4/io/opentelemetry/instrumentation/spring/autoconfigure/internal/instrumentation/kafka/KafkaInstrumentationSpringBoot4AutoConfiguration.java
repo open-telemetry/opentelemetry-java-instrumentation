@@ -63,11 +63,11 @@ public class KafkaInstrumentationSpringBoot4AutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   @ConditionalOnMissingBean
-  static ConcurrentKafkaListenerContainerFactoryPostProcessor
+  static ConcurrentKafkaListenerContainerFactorySpringBoot4PostProcessor
       otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider,
           ObjectProvider<InstrumentationConfig> configProvider) {
-    return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
+    return new ConcurrentKafkaListenerContainerFactorySpringBoot4PostProcessor(
         () -> getTelemetry(openTelemetryProvider, configProvider));
   }
 }
