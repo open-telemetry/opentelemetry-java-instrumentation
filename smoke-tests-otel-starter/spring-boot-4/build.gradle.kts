@@ -1,6 +1,7 @@
 plugins {
   id("otel.java-conventions")
   alias(springBoot40.plugins.versions)
+  id("org.graalvm.buildtools.native")
 }
 
 description = "smoke-tests-otel-starter-spring-boot-4"
@@ -43,7 +44,48 @@ tasks.withType<JavaCompile>().configureEach {
 }
 
 tasks {
+  compileAotJava {
+    with(options) {
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
+      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
+      // -deprecation,-unchecked and none are required (none is not enough)
+    }
+  }
+  compileAotTestJava {
+    with(options) {
+      compilerArgs.add("-Xlint:-deprecation,-unchecked,none")
+      // To disable warnings/failure coming from the Java compiler during the Spring AOT processing
+      // -deprecation,-unchecked and none are required (none is not enough)
+    }
+  }
+  checkstyleAot {
+    isEnabled = false
+  }
+  checkstyleAotTest {
+    isEnabled = false
+  }
+  bootJar {
+    enabled = false
+  }
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
+}
+
+graalvmNative {
+  // See https://github.com/graalvm/native-build-tools/issues/572
+  metadataRepository {
+    enabled.set(false)
+  }
+
+  tasks.test {
+    useJUnitPlatform()
+    setForkEvery(1)
+  }
+}
+
+// Disable collectReachabilityMetadata task to avoid configuration isolation issues
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata").configure {
+  enabled = false
 }
