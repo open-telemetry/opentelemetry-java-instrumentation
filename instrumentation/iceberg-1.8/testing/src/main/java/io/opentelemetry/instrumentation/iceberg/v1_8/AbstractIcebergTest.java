@@ -14,8 +14,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
-import java.util.Collections;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.iceberg.DataFile;
 import org.apache.iceberg.DataFiles;
 import org.apache.iceberg.FileScanTask;
@@ -23,9 +21,8 @@ import org.apache.iceberg.PartitionSpec;
 import org.apache.iceberg.Schema;
 import org.apache.iceberg.Table;
 import org.apache.iceberg.TableScan;
-import org.apache.iceberg.Tables;
+import org.apache.iceberg.TestTables;
 import org.apache.iceberg.expressions.Expressions;
-import org.apache.iceberg.hadoop.HadoopTables;
 import org.apache.iceberg.io.CloseableIterable;
 import org.apache.iceberg.metrics.MetricsReport;
 import org.apache.iceberg.metrics.MetricsReporter;
@@ -62,7 +59,6 @@ public abstract class AbstractIcebergTest {
           .build();
 
   @TempDir protected File tableDir = null;
-  protected Tables tables;
   protected Table table;
 
   protected abstract InstrumentationExtension testing();
@@ -71,15 +67,7 @@ public abstract class AbstractIcebergTest {
 
   @BeforeEach
   void init() {
-    Configuration conf = new Configuration();
-    this.tables = new HadoopTables(conf);
-    String tableLocation = new File(tableDir, "test").toString();
-    this.table =
-        tables.create(
-            SCHEMA,
-            SPEC,
-            Collections.singletonMap("format-version", String.valueOf(FORMAT_VERSION)),
-            tableLocation);
+    this.table = TestTables.create(this.tableDir, "test", SCHEMA, SPEC, FORMAT_VERSION);
     this.table.newFastAppend().appendFile(FILE_1).appendFile(FILE_2).commit();
   }
 

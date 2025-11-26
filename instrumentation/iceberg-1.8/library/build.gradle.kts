@@ -11,5 +11,4 @@ dependencies {
 
 otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
-  maxJavaVersionForTests.set(JavaVersion.VERSION_21)
 }
