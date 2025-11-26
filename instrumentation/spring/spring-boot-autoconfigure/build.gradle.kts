@@ -108,6 +108,8 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
 
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:latest.release")
+
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
@@ -126,6 +128,7 @@ dependencies {
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-restclient:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-mongodb:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
   add("javaSpring4CompileOnly", project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
@@ -203,10 +206,16 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
         implementation("org.springframework.boot:spring-boot-restclient:4.0.0")
         implementation("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-actuator:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:4.0.0")
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation(project(":instrumentation-api"))
         implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
         runtimeOnly("com.h2database:h2:1.4.197")
+        runtimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
       }
     }
 
@@ -232,6 +241,15 @@ configurations.configureEach {
 tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
+
+    // Exclude Spring Boot specific tests from compilation when testLatestDeps is true
+    // These tests are covered by testSpring4 suite
+    if (latestDepTest) {
+      exclude("**/micrometer/MicrometerBridgeAutoConfigurationTest.java")
+      exclude("**/r2dbc/R2DbcInstrumentationAutoConfigurationTest.java")
+      exclude("**/jdbc/JdbcInstrumentationAutoConfigurationTest.java")
+      exclude("**/web/SpringWebInstrumentationAutoConfigurationTest.java")
+    }
   }
 
   withType<Test>().configureEach {
@@ -240,6 +258,17 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  test {
+    // Exclude Spring Boot specific tests when testLatestDeps is true
+    // These tests are covered by testSpring4 suite
+    if (latestDepTest) {
+      exclude("**/micrometer/MicrometerBridgeAutoConfigurationTest.class")
+      exclude("**/r2dbc/R2DbcInstrumentationAutoConfigurationTest.class")
+      exclude("**/jdbc/JdbcInstrumentationAutoConfigurationTest.class")
+      exclude("**/web/SpringWebInstrumentationAutoConfigurationTest.class")
+    }
   }
 
   named<JavaCompile>("compileJavaSpring3Java") {
