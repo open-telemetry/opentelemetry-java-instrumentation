@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
@@ -51,6 +52,11 @@ public final class InstrumenterUtil {
   public static <REQUEST, RESPONSE> Context suppressSpan(
       Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, REQUEST request) {
     return instrumenterAccess.suppressSpan(instrumenter, parentContext, request);
+  }
+
+  public static <REQUEST, RESPONSE> Context suppressSpan(
+      Instrumenter<REQUEST, RESPONSE> instrumenter, Context parentContext, SpanKind spanKind) {
+    return instrumenterAccess.suppressSpan(instrumenter, parentContext, spanKind);
   }
 
   public static <REQUEST, RESPONSE> Instrumenter<REQUEST, RESPONSE> buildUpstreamInstrumenter(

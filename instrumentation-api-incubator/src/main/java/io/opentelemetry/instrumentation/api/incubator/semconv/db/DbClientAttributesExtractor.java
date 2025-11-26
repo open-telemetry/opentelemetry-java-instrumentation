@@ -27,7 +27,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md">database
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md">database
  * client attributes</a>.
  *
  * <p>This class delegates to a type-specific {@link DbClientAttributesGetter} for individual

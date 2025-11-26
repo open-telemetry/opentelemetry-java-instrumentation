@@ -1,4 +1,6 @@
-# Settings for the GraphQL instrumentation
+# GraphQL Instrumentation
+
+## Settings for the GraphQL instrumentation
 
 | System property                                                        | Type    | Default | Description                                                                                                                                                                                                             |
 |------------------------------------------------------------------------|---------|---------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -6,7 +8,7 @@
 | `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` | Boolean | `false` | Whether GraphQL operation name is added to the span name. <p>**WARNING**: GraphQL operation name is provided by the client and can have high cardinality. Use only when the server is not exposed to malicious clients. |
 | `otel.instrumentation.graphql.capture-query`                           | Boolean | `true`  | Whether to capture the query in `graphql.document` span attribute.                                                                                                                                                      |
 
-# Settings for the GraphQL 20 instrumentation
+## Settings for the GraphQL 20 instrumentation
 
 | System property                                             | Type    | Default | Description                                                                                                                       |
 |-------------------------------------------------------------|---------|---------|-----------------------------------------------------------------------------------------------------------------------------------|
