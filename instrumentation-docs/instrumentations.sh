@@ -4,7 +4,6 @@ set -euo pipefail
 
 # This file is sourced by collect.sh and ci-collect.sh
 
-# shellcheck disable=SC2034
 readonly INSTRUMENTATIONS=(
   # <module path (colon-separated)> : <javaagent|library> : [ gradle-task-suffix ]
   "activej-http-6.0:javaagent:test"
@@ -222,7 +221,6 @@ readonly INSTRUMENTATIONS=(
 
 #  Some instrumentation test suites don't run ARM, so we use colima to run them in an x86_64
 #  container.
-# shellcheck disable=SC2034
 readonly COLIMA_INSTRUMENTATIONS=(
   "elasticsearch:elasticsearch-rest-5.0:javaagent:test"
   "elasticsearch:elasticsearch-rest-5.0:javaagent:testStableSemconv"
@@ -236,7 +234,6 @@ readonly COLIMA_INSTRUMENTATIONS=(
 
 # Some instrumentation test suites need to run with -PtestLatestDeps=true to collect
 # metrics telemetry or test against latest library versions.
-# shellcheck disable=SC2034
 readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
