@@ -132,6 +132,7 @@ dependencies {
   add("javaSpring4CompileOnly", project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -208,9 +209,11 @@ testing {
         implementation("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
         implementation("org.springframework.boot:spring-boot-starter-actuator:4.0.0")
         implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation(project(":instrumentation-api"))
+        implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
         implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }

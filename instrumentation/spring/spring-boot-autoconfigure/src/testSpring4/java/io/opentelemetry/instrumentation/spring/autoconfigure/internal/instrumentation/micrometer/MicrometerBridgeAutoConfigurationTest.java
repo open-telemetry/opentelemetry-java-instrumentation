@@ -11,8 +11,8 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 class MicrometerBridgeAutoConfigurationTest {
@@ -21,7 +21,7 @@ class MicrometerBridgeAutoConfigurationTest {
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withConfiguration(
-              AutoConfigurations.of(MicrometerBridgeAutoSpringBoot4Configuration.class));
+              AutoConfigurations.of(MicrometerBridgeSpringBoot4AutoConfiguration.class));
 
   @Test
   void metricsEnabled() {
