@@ -23,6 +23,7 @@ import org.springframework.boot.test.context.SpringBootTest;
       "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry=true",
       "otel.instrumentation.runtime-telemetry-java17.enable-all=true",
       "otel.instrumentation.common.thread_details.enabled=true",
+      "logging.level.org.springframework.boot.autoconfigure=DEBUG",
     })
 @AutoConfigureTestRestTemplate
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {

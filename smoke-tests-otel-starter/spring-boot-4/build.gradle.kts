@@ -15,14 +15,19 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-web")
   implementation("org.springframework.boot:spring-boot-starter-data-jdbc")
   implementation("org.springframework.boot:spring-boot-starter-kafka")
+  testImplementation("org.springframework:spring-aop")
+  testImplementation("org.aspectj:aspectjweaver")
   runtimeOnly("com.h2database:h2")
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
+
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
-  testImplementation("org.awaitility:awaitility")
   testImplementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
+  testImplementation("org.springframework.boot:spring-boot-starter-kafka")
+  testImplementation("org.testcontainers:testcontainers-junit-jupiter")
+  testImplementation("org.testcontainers:testcontainers-kafka")
 }
 
 springBoot {
