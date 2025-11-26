@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Conditiona
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.InstrumentationConfigUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
-import org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer;
+import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,9 +24,9 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass({MongoClientSettings.class, MongoClientSettingsBuilderCustomizer.class})
 @ConditionalOnEnabledInstrumentation(module = "mongo")
 @ConditionalOnMissingClass(
-    "org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer")
+    "org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer")
 @Configuration
-public class MongoClientInstrumentationAutoConfiguration {
+public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
 
   @Bean
   MongoClientSettingsBuilderCustomizer customizer(

@@ -1,0 +1,65 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.spring.smoketest;
+
+import com.mongodb.client.MongoClient;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.mongo.MongoClientInstrumentationSpringBoot4AutoConfiguration;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledInNativeImage;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.mongodb.autoconfigure.MongoAutoConfiguration;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.mongodb.MongoDBContainer;
+
+@DisabledInNativeImage // See GraalVmNativeMongodbSpringStarterSmokeTest for the GraalVM native test
+class MongoSpringStarterSmokeTest extends AbstractMongodbSpringStarterSmokeTest {
+
+  @Container static MongoDBContainer container;
+
+  private ApplicationContextRunner contextRunner;
+
+  @BeforeAll
+  static void setUpContainer() {
+    container = new MongoDBContainer("mongo:8.2.2");
+    container.start();
+  }
+
+  @AfterAll
+  static void tearDownContainer() {
+    container.stop();
+  }
+
+  @BeforeEach
+  void setUpContext() {
+    contextRunner =
+        new ApplicationContextRunner()
+            .withAllowBeanDefinitionOverriding(true)
+            .withConfiguration(
+                AutoConfigurations.of(
+                    OpenTelemetryAutoConfiguration.class,
+                    SpringSmokeOtelConfiguration.class,
+                    MongoAutoConfiguration.class,
+                    MongoClientInstrumentationSpringBoot4AutoConfiguration.class))
+            .withPropertyValues("spring.mongodb.uri=" + container.getReplicaSetUrl());
+  }
+
+  @Override
+  @Test
+  void mongodb() {
+    contextRunner.run(
+        applicationContext -> {
+          testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
+          mongoClient = applicationContext.getBean(MongoClient.class);
+          super.mongodb();
+        });
+  }
+}

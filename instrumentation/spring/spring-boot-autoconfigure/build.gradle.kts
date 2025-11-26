@@ -120,18 +120,15 @@ dependencies {
 
   // Spring Boot 4
   add("javaSpring4CompileOnly", files(sourceSets.main.get().output.classesDirs))
-//  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-web:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-kafka:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-autoconfigure:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
   add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-restclient:4.0.0")
-//  add("javaSpring4CompileOnly", "io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-//  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
-//  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-mongodb:4.0.0")
   add("javaSpring4CompileOnly", project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
-//  add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -202,14 +199,10 @@ testing {
     val testSpring4 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-//        implementation("org.springframework.boot:spring-boot-starter-web:4.0.0")
-        implementation("org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation("org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
         implementation("org.springframework.boot:spring-boot-restclient:4.0.0")
         implementation("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
-//        implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
-//        implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
-//        implementation("jakarta.servlet:jakarta.servlet-api:6.1.0")
         implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }
