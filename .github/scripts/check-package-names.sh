@@ -58,8 +58,6 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   package_name_normalized=$(echo "$package_name" | sed 's#/##g')
 
   if [[ "$package_name_normalized" != "$expected_package_name_normalized"* ]]; then
-    echo "$package_name_normalized"
-    echo "$expected_package_name_normalized"
     echo "ERROR: $dir"
     exit 1
   fi
