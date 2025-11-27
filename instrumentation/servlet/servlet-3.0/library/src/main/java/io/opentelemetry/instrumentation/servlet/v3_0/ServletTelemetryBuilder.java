@@ -26,6 +26,7 @@ import java.util.function.UnaryOperator;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/** A builder of {@link ServletTelemetry}. */
 public final class ServletTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-3.0";
 
@@ -100,12 +101,11 @@ public final class ServletTelemetryBuilder {
     return this;
   }
 
-  @CanIgnoreReturnValue
-  public ServletTelemetryBuilder setCaptureEnduserId(boolean captureEnduserId) {
-    servletBuilder.setCaptureEnduserId(captureEnduserId);
-    return this;
-  }
-
+  /**
+   * Configures the HTTP request parameters that will be captured as span attributes.
+   *
+   * @param captureRequestParameters A list of request parameter names.
+   */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setCapturedRequestParameters(
       List<String> captureRequestParameters) {

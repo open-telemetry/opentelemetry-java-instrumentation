@@ -14,6 +14,7 @@ import javax.servlet.Filter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+/** Entrypoint for instrumenting Servlets. */
 public final class ServletTelemetry {
 
   /** Returns a new {@link ServletTelemetry} configured with the given {@link OpenTelemetry}. */
@@ -21,6 +22,9 @@ public final class ServletTelemetry {
     return builder(openTelemetry).build();
   }
 
+  /**
+   * Returns a new {@link ServletTelemetryBuilder} configured with the given {@link OpenTelemetry}.
+   */
   public static ServletTelemetryBuilder builder(OpenTelemetry openTelemetry) {
     return new ServletTelemetryBuilder(openTelemetry);
   }
@@ -40,6 +44,7 @@ public final class ServletTelemetry {
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
   }
 
+  /** Returns a new {@link Filter} for producing telemetry. */
   public Filter newFilter() {
     return new Servlet3TelemetryFilter(instrumenter, addTraceIdRequestAttribute);
   }

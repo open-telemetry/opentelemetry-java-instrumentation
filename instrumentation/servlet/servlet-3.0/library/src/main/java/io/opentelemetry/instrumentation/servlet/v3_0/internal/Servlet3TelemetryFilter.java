@@ -32,7 +32,7 @@ import javax.servlet.http.HttpServletResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class Servlet3TelemetryFilter implements Filter {
+public final class Servlet3TelemetryFilter implements Filter {
 
   private final Instrumenter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>

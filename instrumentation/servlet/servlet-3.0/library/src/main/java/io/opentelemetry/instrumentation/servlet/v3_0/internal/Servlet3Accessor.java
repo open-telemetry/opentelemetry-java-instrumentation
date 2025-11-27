@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> {
+public final class Servlet3Accessor extends JavaxServletAccessor<HttpServletResponse> {
   public static final Servlet3Accessor INSTANCE = new Servlet3Accessor();
 
   private Servlet3Accessor() {}
