@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -48,13 +47,9 @@ public final class ConfigPropertiesUtil {
    * <p>It's recommended to use {@link #getBoolean(OpenTelemetry, String...)} instead to support
    * Declarative Config.
    */
-  public static Optional<Boolean> getBoolean(String propertyName) {
-    Optional<String> string = getString(propertyName);
-    // lambdas must not be used here in early initialization phase on early JDK8 versions
-    if (string.isPresent()) {
-      return Optional.of(Boolean.parseBoolean(string.get()));
-    }
-    return Optional.empty();
+  public static boolean getBoolean(String propertyName, boolean defaultValue) {
+    String strValue = getString(propertyName);
+    return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
   }
 
   /**
@@ -66,24 +61,24 @@ public final class ConfigPropertiesUtil {
     if (node != null) {
       return Optional.ofNullable(node.getBoolean(leaf(propertyName)));
     }
-    return getBoolean(toSystemProperty(propertyName));
+    String strValue = getString(toSystemProperty(propertyName));
+    return strValue == null ? Optional.empty() : Optional.of(Boolean.parseBoolean(strValue));
   }
 
   /**
    * Returns the int value of the given property name from system properties and environment
    * variables.
    */
-  public static Optional<Integer> getInt(String propertyName) {
-    Optional<String> string = getString(propertyName);
-    // lambdas must not be used here in early initialization phase on early JDK8 versions
-    if (string.isPresent()) {
-      try {
-        return Optional.of(Integer.parseInt(string.get()));
-      } catch (NumberFormatException ignored) {
-        // ignored
-      }
+  public static int getInt(String propertyName, int defaultValue) {
+    String strValue = getString(propertyName);
+    if (strValue == null) {
+      return defaultValue;
     }
-    return Optional.empty();
+    try {
+      return Integer.parseInt(strValue);
+    } catch (NumberFormatException ignored) {
+      return defaultValue;
+    }
   }
 
   /**
@@ -93,12 +88,25 @@ public final class ConfigPropertiesUtil {
    * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
    * Declarative Config.
    */
-  public static Optional<String> getString(String propertyName) {
+  @Nullable
+  public static String getString(String propertyName) {
     String value = System.getProperty(propertyName);
     if (value != null) {
-      return Optional.of(value);
+      return value;
     }
-    return Optional.ofNullable(System.getenv(toEnvVarName(propertyName)));
+    return System.getenv(toEnvVarName(propertyName));
+  }
+
+  /**
+   * Returns the string value of the given property name from system properties and environment
+   * variables.
+   *
+   * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
+   * Declarative Config.
+   */
+  public static String getString(String propertyName, String defaultValue) {
+    String strValue = getString(propertyName);
+    return strValue == null ? defaultValue : strValue;
   }
 
   /**
@@ -110,21 +118,19 @@ public final class ConfigPropertiesUtil {
     if (node != null) {
       return Optional.ofNullable(node.getString(leaf(propertyName)));
     }
-    return getString(toSystemProperty(propertyName));
+    return Optional.ofNullable(getString(toSystemProperty(propertyName)));
   }
 
   /**
    * Returns the list of strings value of the given property name from Declarative Config if
    * available, otherwise falls back to system properties and environment variables.
    */
-  public static List<String> getList(OpenTelemetry openTelemetry, String... propertyName) {
-    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
-    if (node != null) {
-      return node.getScalarList(leaf(propertyName), String.class, emptyList());
+  public static List<String> getList(String propertyName, List<String> defaultValue) {
+    String value = getString(propertyName);
+    if (value == null) {
+      return defaultValue;
     }
-    return getString(toSystemProperty(propertyName))
-        .map(value -> filterBlanksAndNulls(value.split(",")))
-        .orElse(emptyList());
+    return filterBlanksAndNulls(value.split(","));
   }
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
