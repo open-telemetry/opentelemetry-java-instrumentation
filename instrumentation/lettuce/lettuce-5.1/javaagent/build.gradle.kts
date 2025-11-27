@@ -41,3 +41,16 @@ tasks {
     dependsOn(testStableSemconv)
   }
 }
+
+testing {
+  suites {
+    val test_compatibility by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation("io.lettuce:lettuce-core:5.2.0.RELEASE")
+        implementation("io.projectreactor:reactor-core:3.5.3")
+        implementation("org.testcontainers:testcontainers")
+        implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
+      }
+    }
+  }
+}

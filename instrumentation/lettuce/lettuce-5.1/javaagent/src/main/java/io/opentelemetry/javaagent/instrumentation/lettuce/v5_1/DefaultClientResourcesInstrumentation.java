@@ -35,7 +35,9 @@ public class DefaultClientResourcesInstrumentation implements TypeInstrumentatio
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void methodEnter(@Advice.Return DefaultClientResources.Builder builder) {
-      builder.tracing(TracingHolder.TRACING);
+      if (CompatibilityChecker.checkCompatible()) {
+        builder.tracing(TracingHolder.TRACING);
+      }
     }
   }
 }
