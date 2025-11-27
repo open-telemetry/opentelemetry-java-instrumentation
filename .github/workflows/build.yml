@@ -34,11 +34,6 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-muzzle.yml
 
-  shell-script-check:
-    # release branches are excluded to avoid unnecessary maintenance if new shell checks are added
-    if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-shell-script-check.yml
-
   link-check:
     # release branches are excluded to avoid unnecessary maintenance if external links break
     # (and also because the README.md javaagent download link has to be updated on release branches

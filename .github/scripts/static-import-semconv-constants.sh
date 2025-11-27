@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-# shellcheck disable=SC2044
 for file in $(find instrumentation instrumentation-api -name '*Test.java'); do
   echo "Processing $file"
 

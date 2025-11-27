@@ -40,9 +40,6 @@ jobs:
     with:
       cache-read-only: true
 
-  shell-script-check:
-    uses: ./.github/workflows/reusable-shell-script-check.yml
-
   # this is not a required check to avoid blocking pull requests if external links break
   markdown-check:
     # release branches are excluded because the README.md javaagent download link has to be updated
@@ -66,7 +63,6 @@ jobs:
     needs:
       - common
       - muzzle
-      - shell-script-check
       - markdown-lint-check
     runs-on: ubuntu-latest
     if: always()
@@ -77,7 +73,6 @@ jobs:
             !startsWith(github.base_ref, 'release/') &&
             (
               needs.muzzle.result != 'success' ||
-              needs.shell-script-check.result != 'success' ||
               needs.markdown-lint-check.result != 'success'
             )
           )

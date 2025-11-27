@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-# shellcheck disable=SC2001
-
 for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | sed 's#/[^/]*$##' | sort -u); do
 
   module_name=$(echo "$dir" | sed 's#.*/\([^/]*\)/library/src/main/java/.*#\1#')

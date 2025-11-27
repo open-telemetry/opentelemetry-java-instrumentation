@@ -1,6 +1,5 @@
 #!/bin/bash -e
 
-# shellcheck disable=SC2044
 for file in $(find instrumentation -name "*Module.java"); do
 
   if ! grep -q "extends InstrumentationModule" "$file"; then
@@ -11,9 +10,7 @@ for file in $(find instrumentation -name "*Module.java"); do
     continue
   fi
 
-  # shellcheck disable=SC2001
   module_name=$(echo "$file" | sed 's#.*/\([^/]*\)/javaagent/src/.*#\1#')
-  # shellcheck disable=SC2001
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//')
 
   if [[ "$simple_module_name" == *jaxrs* ]]; then
