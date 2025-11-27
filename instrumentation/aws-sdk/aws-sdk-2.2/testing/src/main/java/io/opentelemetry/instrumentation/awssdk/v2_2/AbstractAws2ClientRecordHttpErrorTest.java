@@ -126,8 +126,7 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest {
   public boolean isRecordIndividualHttpErrorEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean(
-            getTesting().getOpenTelemetry(),
-            "otel.instrumentation.aws-sdk.experimental-record-individual-http-error")
+            getTesting().getOpenTelemetry(), "aws_sdk", "experimental_record_individual_http_error")
         .orElse(false);
   }
 
