@@ -19,6 +19,6 @@ public class SpanLoggingCustomizerProvider extends AbstractSpanLoggingCustomizer
   protected boolean isEnabled(OpenTelemetryConfigurationModel model) {
     // read from system properties as it's an early init property and the config bridge is not
     // available here
-    return ConfigPropertiesUtil.getBoolean("otel.javaagent.debug").orElse(false);
+    return ConfigPropertiesUtil.getBoolean("otel.javaagent.debug", false);
   }
 }
