@@ -38,6 +38,11 @@ public class ExtensionsSmokeTest {
                 + IMAGE_VERSION))
         .withStartupTimeout(Duration.ofMinutes(1))
         .withLogConsumer(new Slf4jLogConsumer(logger))
+        // disable export as we only instrument
+        .withEnv("OTEL_TRACES_EXPORTER", "none")
+        .withEnv("OTEL_METRICS_EXPORTER", "none")
+        .withEnv("OTEL_LOGS_EXPORTER", "none")
+        //
         .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:" + TARGET_AGENT_FILENAME)
         .withEnv("OTEL_JAVAAGENT_EXTENSIONS", TARGET_EXTENSION_FILENAME)
         .withCopyFileToContainer(

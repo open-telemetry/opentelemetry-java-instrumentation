@@ -26,7 +26,7 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
-        namedOneOf("testReturnValue").and(takesArgument(0, int.class)).and(isPublic()),
+        namedOneOf("returnValue").and(takesArgument(0, int.class)).and(isPublic()),
         this.getClass().getName() + "$ModifyReturnValueAdvice");
   }
 
