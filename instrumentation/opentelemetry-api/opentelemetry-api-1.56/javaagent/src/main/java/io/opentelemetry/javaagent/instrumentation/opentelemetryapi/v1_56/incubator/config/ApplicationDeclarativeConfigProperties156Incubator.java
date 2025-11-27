@@ -92,9 +92,8 @@ public final class ApplicationDeclarativeConfigProperties156Incubator
   @Nullable
   @Override
   public DeclarativeConfigProperties getStructured(String name) {
-    io.opentelemetry.api.incubator.config.DeclarativeConfigProperties config =
-        instrumentationConfig.getStructured(name);
-    return config == null ? null : new ApplicationDeclarativeConfigProperties156Incubator(config);
+    return new ApplicationDeclarativeConfigProperties156Incubator(
+        instrumentationConfig.getStructured(name));
   }
 
   @Nullable
