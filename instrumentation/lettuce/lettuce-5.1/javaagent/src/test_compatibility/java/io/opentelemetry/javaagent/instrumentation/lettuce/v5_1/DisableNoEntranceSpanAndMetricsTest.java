@@ -65,7 +65,7 @@ public class DisableNoEntranceSpanAndMetricsTest extends AbstractLettuceClientTe
         testing().runWithSpan("parent", () -> syncCommands.set("TESTSETKEY", "TESTSETVAL"));
     assertThat(res).isEqualTo("OK");
 
-    assertThat(testing.spans().isEmpty());
-    assertThat(testing.metrics().isEmpty());
+    assertThat(testing.spans().isEmpty()).isTrue();
+    assertThat(testing.metrics().isEmpty()).isTrue();
   }
 }
