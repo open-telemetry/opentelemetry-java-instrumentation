@@ -18,20 +18,9 @@ import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.TestConfiguration;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.context.annotation.Bean;
 import org.springframework.util.StringUtils;
 
 public abstract class AbstractRouteMappingTest {
-  @TestConfiguration
-  public static class ForceNettyAutoConfiguration {
-    @Bean
-    NettyReactiveWebServerFactory nettyFactory() {
-      return new NettyReactiveWebServerFactory();
-    }
-  }
-
   @RegisterExtension
   protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

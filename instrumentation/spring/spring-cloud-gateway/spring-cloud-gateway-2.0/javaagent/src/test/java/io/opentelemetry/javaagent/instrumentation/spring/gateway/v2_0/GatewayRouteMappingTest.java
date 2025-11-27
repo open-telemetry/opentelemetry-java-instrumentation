@@ -18,10 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension;
 @ExtendWith(SpringExtension.class)
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = {
-      GatewayTestApplication.class,
-      GatewayRouteMappingTest.ForceNettyAutoConfiguration.class
-    })
+    classes = {GatewayTestApplication.class})
 class GatewayRouteMappingTest extends AbstractRouteMappingTest {
 
   @Test

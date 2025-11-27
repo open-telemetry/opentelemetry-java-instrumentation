@@ -15,10 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    classes = {
-      Gateway22TestApplication.class,
-      Gateway22RouteMappingTest.ForceNettyAutoConfiguration.class
-    })
+    classes = {Gateway22TestApplication.class})
 class Gateway22RouteMappingTest extends AbstractRouteMappingTest {
 
   @Test
