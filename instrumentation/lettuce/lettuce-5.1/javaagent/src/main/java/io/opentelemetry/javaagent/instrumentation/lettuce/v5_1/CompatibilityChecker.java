@@ -13,6 +13,9 @@ import java.util.concurrent.locks.ReentrantLock;
 import reactor.core.publisher.Mono;
 
 public class CompatibilityChecker {
+
+  private CompatibilityChecker(){}
+
   private static Boolean isCompatible;
   private static final Lock lock = new ReentrantLock();
 
@@ -20,8 +23,8 @@ public class CompatibilityChecker {
   // if users are using  incompatible versions of reactor-core and lettuce
   // then just disable the instrumentation
   public static boolean checkCompatible() {
+    lock.lock();
     try {
-      lock.lock();
       if (isCompatible != null) {
         return isCompatible;
       }
