@@ -27,4 +27,10 @@ tasks {
     jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
+
+  if (findProperty("testLatestDeps") as Boolean) {
+    compileTestJava {
+      options.release.set(11)
+    }
+  }
 }
