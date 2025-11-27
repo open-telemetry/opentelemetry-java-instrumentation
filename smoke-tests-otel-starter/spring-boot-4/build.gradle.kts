@@ -21,10 +21,8 @@ dependencies {
   runtimeOnly("com.h2database:h2")
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
 
-  implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-
-  testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
+  testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   testImplementation(project(":instrumentation:spring:starters:spring-boot-starter"))
   testImplementation(project(":smoke-tests-otel-starter:spring-smoke-testing"))
