@@ -20,6 +20,7 @@ dependencies {
   implementation("org.apache.commons:commons-dbcp2")
   runtimeOnly("com.h2database:h2")
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
+  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
 
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
