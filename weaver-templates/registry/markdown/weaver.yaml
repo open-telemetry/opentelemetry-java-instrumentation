@@ -1,0 +1,10 @@
+# Simple signals-only documentation generator
+# This generates a signals.md page showing metrics and spans
+# Attributes are handled by the default semantic-conventions templates
+
+templates:
+  # Generate signals documentation (metrics and spans)
+  - pattern: signals.md.j2
+    filter: '.'
+    application_mode: single
+    file_name: signals.md
