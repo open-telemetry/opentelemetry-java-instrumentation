@@ -25,9 +25,6 @@ jobs:
   muzzle:
     uses: ./.github/workflows/reusable-muzzle.yml
 
-  shell-script-check:
-    uses: ./.github/workflows/reusable-shell-script-check.yml
-
   link-check:
     uses: ./.github/workflows/reusable-link-check.yml
 

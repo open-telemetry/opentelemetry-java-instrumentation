@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 muzzle {
@@ -29,10 +30,7 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   testLibrary("org.springframework.boot:spring-boot-starter:2.5.3")
-
-  // tests don't work with spring boot 4 yet
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter:3.+") // documented limitation
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-kafka:latest.release")
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -46,17 +44,19 @@ testing {
 
         // the "library" configuration is not recognized by the test suite plugin
         val springKafkaVersion = if (latestDepTest) "latest.release" else "2.7.0"
-        val springBootVersion = if (latestDepTest) "3.+" else "2.5.3"
+        val springBootVersion = if (latestDepTest) "latest.release" else "2.5.3"
         implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
         implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+
+        if (latestDepTest) {
+          implementation("org.springframework.boot:spring-boot-starter-kafka:latest.release")
+        }
       }
 
       targets {
         all {
           testTask.configure {
-            usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-
             jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=false")
             jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=false")
 
@@ -69,10 +69,12 @@ testing {
 }
 
 tasks {
-  test {
+  withType<Test>().configureEach {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+    systemProperty("testLatestDeps", latestDepTest)
+  }
 
-    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
+  test {
     jvmArgs("-Dotel.instrumentation.kafka.experimental-span-attributes=true")
     jvmArgs("-Dotel.instrumentation.messaging.experimental.receive-telemetry.enabled=true")
 
