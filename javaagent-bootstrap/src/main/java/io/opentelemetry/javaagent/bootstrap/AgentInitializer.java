@@ -94,7 +94,7 @@ public final class AgentInitializer {
         new PrivilegedAction<Boolean>() {
           @Override
           public Boolean run() {
-            return ConfigPropertiesUtil.getBoolean(property).orElse(defaultValue);
+            return ConfigPropertiesUtil.getBoolean(property, defaultValue);
           }
         });
   }

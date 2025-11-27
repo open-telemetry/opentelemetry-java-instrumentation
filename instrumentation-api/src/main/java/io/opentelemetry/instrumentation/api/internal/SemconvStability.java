@@ -31,7 +31,7 @@ public final class SemconvStability {
     boolean oldCode = true;
     boolean stableCode = false;
 
-    String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in").orElse(null);
+    String value = ConfigPropertiesUtil.getString("otel.semconv-stability.opt-in");
     if (value != null) {
       Set<String> values = new HashSet<>(asList(value.split(",")));
 

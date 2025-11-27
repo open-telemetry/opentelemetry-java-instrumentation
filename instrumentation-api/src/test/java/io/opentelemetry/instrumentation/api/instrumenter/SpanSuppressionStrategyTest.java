@@ -45,7 +45,8 @@ class SpanSuppressionStrategyTest {
         Arguments.of("Span-Kind", SpanSuppressionStrategy.SPAN_KIND),
         Arguments.of("semconv", SpanSuppressionStrategy.SEMCONV),
         Arguments.of("SemConv", SpanSuppressionStrategy.SEMCONV),
-        Arguments.of("asdfasdfasdf", SpanSuppressionStrategy.SEMCONV));
+        Arguments.of("asdfasdfasdf", SpanSuppressionStrategy.SEMCONV),
+        Arguments.of(null, SpanSuppressionStrategy.SEMCONV));
   }
 
   @ParameterizedTest

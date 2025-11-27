@@ -22,7 +22,8 @@ public class ExperimentalSnippetHolder {
         ConfigPropertiesUtil.isDeclarativeConfig(openTelemetry)
             ? ConfigPropertiesUtil.getString(
                 openTelemetry, "servlet", "experimental", "javascript-snippet")
-            : ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet");
+            : Optional.ofNullable(
+                ConfigPropertiesUtil.getString("otel.experimental.javascript-snippet"));
     return result.orElse("");
   }
 

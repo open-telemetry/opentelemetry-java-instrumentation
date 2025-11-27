@@ -27,15 +27,18 @@ public final class EarlyInitAgentConfig {
 
   @Nullable
   public String getString(String propertyName) {
-    return ConfigPropertiesUtil.getString(propertyName)
-        .orElseGet(() -> configFileContents.get(propertyName));
+    String value = ConfigPropertiesUtil.getString(propertyName);
+    if (value != null) {
+      return value;
+    }
+    return configFileContents.get(propertyName);
   }
 
   public boolean getBoolean(String propertyName, boolean defaultValue) {
     String configFileValueStr = configFileContents.get(propertyName);
     boolean configFileValue =
         configFileValueStr == null ? defaultValue : Boolean.parseBoolean(configFileValueStr);
-    return ConfigPropertiesUtil.getBoolean(propertyName).orElse(configFileValue);
+    return ConfigPropertiesUtil.getBoolean(propertyName, configFileValue);
   }
 
   public int getInt(String propertyName, int defaultValue) {
@@ -43,7 +46,7 @@ public final class EarlyInitAgentConfig {
       String configFileValueStr = configFileContents.get(propertyName);
       int configFileValue =
           configFileValueStr == null ? defaultValue : Integer.parseInt(configFileValueStr);
-      return ConfigPropertiesUtil.getInt(propertyName).orElse(configFileValue);
+      return ConfigPropertiesUtil.getInt(propertyName, configFileValue);
     } catch (NumberFormatException ignored) {
       return defaultValue;
     }
