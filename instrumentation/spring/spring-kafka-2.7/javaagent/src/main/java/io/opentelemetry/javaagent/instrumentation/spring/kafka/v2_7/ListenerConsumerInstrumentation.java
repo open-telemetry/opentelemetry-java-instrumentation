@@ -112,6 +112,7 @@ public class ListenerConsumerInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static AdviceScope onEnter(
         @Advice.Argument(0) ConsumerRecords<?, ?> records,
         @Advice.FieldValue("consumer") Consumer<?, ?> consumer) {

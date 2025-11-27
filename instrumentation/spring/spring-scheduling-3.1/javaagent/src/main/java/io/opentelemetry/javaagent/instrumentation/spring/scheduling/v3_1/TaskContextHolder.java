@@ -17,7 +17,7 @@ public final class TaskContextHolder implements ImplicitContextKeyed {
   private static final ContextKey<TaskContextHolder> KEY =
       named("opentelemetry-spring-scheduling-task");
 
-  private Context taskContext;
+  @Nullable private Context taskContext;
 
   private TaskContextHolder() {}
 

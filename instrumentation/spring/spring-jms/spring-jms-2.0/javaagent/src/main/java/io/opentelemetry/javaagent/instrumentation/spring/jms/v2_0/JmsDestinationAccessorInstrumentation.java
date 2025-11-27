@@ -10,12 +10,14 @@ import static io.opentelemetry.javaagent.instrumentation.spring.jms.v2_0.SpringJ
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -37,6 +39,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
   public static class ReceiveAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope onEnter() {
       if (isReceiveTelemetryEnabled()) {
         return null;
@@ -44,7 +47,7 @@ public class JmsDestinationAccessorInstrumentation implements TypeInstrumentatio
       // suppress receive span creation in jms instrumentation
       Context context =
           InstrumenterUtil.suppressSpan(
-              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), null);
+              receiveInstrumenter(), Java8BytecodeBridge.currentContext(), SpanKind.CONSUMER);
       return context.makeCurrent();
     }
 
