@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -98,18 +99,6 @@ public final class ConfigPropertiesUtil {
   }
 
   /**
-   * Returns the string value of the given property name from system properties and environment
-   * variables.
-   *
-   * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
-   * Declarative Config.
-   */
-  public static String getString(String propertyName, String defaultValue) {
-    String strValue = getString(propertyName);
-    return strValue == null ? defaultValue : strValue;
-  }
-
-  /**
    * Returns the string value of the given property name from Declarative Config if available,
    * otherwise falls back to system properties and environment variables.
    */
@@ -125,12 +114,14 @@ public final class ConfigPropertiesUtil {
    * Returns the list of strings value of the given property name from Declarative Config if
    * available, otherwise falls back to system properties and environment variables.
    */
-  public static List<String> getList(String propertyName, List<String> defaultValue) {
-    String value = getString(propertyName);
-    if (value == null) {
-      return defaultValue;
+  public static List<String> getList(OpenTelemetry openTelemetry, String... propertyName) {
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyName);
+    if (node != null) {
+      return node.getScalarList(leaf(propertyName), String.class, emptyList());
     }
-    return filterBlanksAndNulls(value.split(","));
+    return Optional.ofNullable(getString(toSystemProperty(propertyName)))
+        .map(value -> filterBlanksAndNulls(value.split(",")))
+        .orElse(emptyList());
   }
 
   /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
