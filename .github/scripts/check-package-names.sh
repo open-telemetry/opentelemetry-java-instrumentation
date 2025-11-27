@@ -19,6 +19,9 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$module_name" == "oshi" ]]; then
     continue
   fi
+  if [[ "$module_name" == "servlet-common" ]]; then
+    continue
+  fi
 
   # these are possibly problematic
   if [[ "$dir" == "instrumentation/grpc-1.6/library/src/main/java/io/grpc/override" ]]; then
@@ -34,7 +37,7 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   # some common modules don't have any base version
   # - lettuce-common
   # - netty-common
-  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" && "$module_name" != "servlet-common" ]]; then
+  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" ]]; then
     echo "module name doesn't have a base version: $dir"
     exit 1
   fi
@@ -42,7 +45,7 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   simple_module_name=$(echo "$module_name" | sed 's/-[0-9.]*$//' | sed 's/-//g')
   base_version=$(echo "$module_name" | sed 's/.*-\([0-9.]*\)$/\1/' | sed 's/\./_/')
 
-  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" && "$module_name" != "servlet-common" ]]; then
+  if [[ ! "$module_name" =~ [0-9]$ && "$module_name" != "lettuce-common" && "$module_name" != "netty-common" ]]; then
     expected_package_name="io/opentelemetry/instrumentation/$simple_module_name/v$base_version"
   else
     expected_package_name="io/opentelemetry/instrumentation/$simple_module_name"
@@ -55,6 +58,8 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   package_name_normalized=$(echo "$package_name" | sed 's#/##g')
 
   if [[ "$package_name_normalized" != "$expected_package_name_normalized"* ]]; then
+    echo "$package_name_normalized"
+    echo "$expected_package_name_normalized"
     echo "ERROR: $dir"
     exit 1
   fi
