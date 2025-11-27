@@ -273,7 +273,7 @@ public abstract class AbstractAws2ClientTest extends AbstractAws2ClientCoreTest 
           + "    </ResponseMetadata>"
           + "</CreateTopicResponse>";
 
-  private static void assumeSupportedConfig(String operation) {
+  private void assumeSupportedConfig(String operation) {
     Assumptions.assumeFalse(
         operation.equals("SendMessage") && isSqsAttributeInjectionEnabled(),
         "Cannot check Sqs.SendMessage here due to hard-coded MD5.");
