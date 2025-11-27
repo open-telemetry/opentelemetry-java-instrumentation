@@ -11,3 +11,4 @@ no-inline-html: false
 fenced-code-language: false
 no-trailing-punctuation:
   punctuation: ".,;:" # allowing exclamation points and question marks at end of sentences
+MD059: false # disable link text should be descriptive check
