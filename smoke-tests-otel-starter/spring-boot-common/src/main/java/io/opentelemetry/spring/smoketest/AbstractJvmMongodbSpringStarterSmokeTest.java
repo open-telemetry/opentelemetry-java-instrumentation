@@ -51,7 +51,11 @@ public class AbstractJvmMongodbSpringStarterSmokeTest
                     MongoAutoConfiguration.class,
                     MongoClientInstrumentationSpringBoot4AutoConfiguration.class,
                     MongoClientInstrumentationAutoConfiguration.class))
-            .withPropertyValues("spring.data.mongodb.uri=" + container.getReplicaSetUrl());
+            .withPropertyValues(
+                // Spring 2 and Spring 3 use different property names for the MongoDB URI
+                "spring.data.mongodb.uri=" + container.getReplicaSetUrl(),
+                // Spring Boot 4
+                "spring.mongodb.uri=" + container.getReplicaSetUrl());
   }
 
   @Override

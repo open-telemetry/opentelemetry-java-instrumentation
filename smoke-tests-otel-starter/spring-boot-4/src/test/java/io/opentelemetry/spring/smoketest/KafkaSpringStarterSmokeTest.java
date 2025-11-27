@@ -7,6 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationSpringBoot4AutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsAutoConfiguration;
 import java.time.Duration;
@@ -55,6 +56,7 @@ class KafkaSpringStarterSmokeTest extends AbstractKafkaSpringStarterSmokeTest {
                     ThreadDetailsAutoConfiguration.class,
                     SpringSmokeOtelConfiguration.class,
                     KafkaAutoConfiguration.class,
+                    KafkaInstrumentationAutoConfiguration.class,
                     KafkaInstrumentationSpringBoot4AutoConfiguration.class,
                     KafkaConfig.class))
             .withPropertyValues(
