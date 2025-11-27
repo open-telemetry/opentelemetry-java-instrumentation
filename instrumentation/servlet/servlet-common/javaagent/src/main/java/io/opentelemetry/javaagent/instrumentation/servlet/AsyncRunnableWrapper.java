@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 
 public class AsyncRunnableWrapper<REQUEST> implements Runnable {
   private final ServletHelper<REQUEST, ?> helper;
@@ -27,7 +28,7 @@ public class AsyncRunnableWrapper<REQUEST> implements Runnable {
 
   @Override
   public void run() {
-    try {
+    try (Scope ignored = context.makeCurrent()) {
       runnable.run();
     } catch (Throwable throwable) {
       helper.recordAsyncException(context, throwable);

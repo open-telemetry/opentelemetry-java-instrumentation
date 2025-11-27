@@ -12,6 +12,12 @@ jobs:
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
+      - uses: jdx/mise-action@9dc7d5dd454262207dea3ab5a06a3df6afc8ff26 # v3.4.1
+
       - name: Run markdownlint
         run: |
-          npx markdownlint-cli2@0.17.1 --config .github/config/.markdownlint-cli2.yaml "**/*.md"
+          if ! mise run lint:markdown; then
+            echo "markdownlint failed. To auto-fix many issues locally, run:"
+            echo "  mise run lint:markdown --fix"
+            exit 1
+          fi
