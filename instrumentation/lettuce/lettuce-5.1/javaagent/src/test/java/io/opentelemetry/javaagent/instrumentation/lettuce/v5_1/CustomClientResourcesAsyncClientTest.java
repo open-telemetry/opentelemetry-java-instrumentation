@@ -30,4 +30,3 @@ class CustomClientResourcesAsyncClientTest extends LettuceAsyncClientTest {
     return Boolean.getBoolean("testLatestDeps");
   }
 }
-

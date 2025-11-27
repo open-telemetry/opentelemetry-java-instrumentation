@@ -24,4 +24,3 @@ class CustomClientResourcesReactiveClientTest extends LettuceReactiveClientTest 
     return RedisClient.create(CustomClientResources.create(), uri);
   }
 }
-

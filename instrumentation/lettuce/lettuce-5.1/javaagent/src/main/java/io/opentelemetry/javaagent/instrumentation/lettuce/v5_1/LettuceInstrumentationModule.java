@@ -35,8 +35,7 @@ public class LettuceInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(
-        new ClientResourcesInstrumentation(), new LettuceAsyncCommandInstrumentation());
+    return asList(new ClientResourcesInstrumentation(), new LettuceAsyncCommandInstrumentation());
   }
 
   @Override
