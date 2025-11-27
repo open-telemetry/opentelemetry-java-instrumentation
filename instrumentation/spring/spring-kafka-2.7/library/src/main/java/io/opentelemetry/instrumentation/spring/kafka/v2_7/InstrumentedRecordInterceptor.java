@@ -138,6 +138,6 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
 
   private static class ThreadState {
     // used to record the error in failure() so it could be used in afterRecord()
-    Throwable error;
+    @Nullable Throwable error;
   }
 }
