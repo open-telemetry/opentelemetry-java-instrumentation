@@ -1,3 +1,4 @@
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -41,4 +42,11 @@ val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-j
 jib {
   from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-grpc:jdk$targetJDK-$tag"
+}
+
+tasks {
+  withType<JibTask>().configureEach {
+    // Jib tasks access Task.project at execution time which is not compatible with configuration cache
+    notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
+  }
 }
