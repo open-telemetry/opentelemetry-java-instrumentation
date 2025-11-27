@@ -14,7 +14,7 @@ import reactor.core.publisher.Mono;
 
 public class CompatibilityChecker {
 
-  private CompatibilityChecker(){}
+  private CompatibilityChecker() {}
 
   private static Boolean isCompatible;
   private static final Lock lock = new ReentrantLock();
