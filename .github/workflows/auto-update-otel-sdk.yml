@@ -17,7 +17,7 @@ jobs:
       latest-version: ${{ steps.check-versions.outputs.latest-version }}
       already-opened: ${{ steps.check-versions.outputs.already-opened }}
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - id: check-versions
         name: Check versions
@@ -55,7 +55,7 @@ jobs:
     needs:
       - check-versions
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Update version
         env:
@@ -84,7 +84,7 @@ jobs:
       - name: Use CLA approved bot
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
         id: otelbot-token
         with:
           app-id: ${{ vars.OTELBOT_APP_ID }}

@@ -34,7 +34,7 @@ muzzle {
 }
 
 dependencies {
-  compileOnly("javax.ws.rs:javax.ws.rs-api:2.0")
+  library("javax.ws.rs:javax.ws.rs-api:2.0")
   library("org.jboss.resteasy:resteasy-jaxrs:3.1.0.Final")
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent"))

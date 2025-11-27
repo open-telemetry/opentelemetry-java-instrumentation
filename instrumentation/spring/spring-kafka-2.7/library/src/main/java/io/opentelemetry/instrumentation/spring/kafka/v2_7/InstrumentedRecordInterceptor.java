@@ -48,7 +48,7 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     return decorated == null ? record : decorated.intercept(record, consumer);
   }
 
-  private void start(ConsumerRecord<K, V> record, Consumer<K, V> consumer) {
+  private void start(ConsumerRecord<K, V> record, @Nullable Consumer<K, V> consumer) {
     Context parentContext = getParentContext(record);
 
     KafkaProcessRequest request = KafkaProcessRequest.create(record, consumer);
