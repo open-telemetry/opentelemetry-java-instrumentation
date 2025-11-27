@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.web.server.ServerWebExchange;
 
@@ -68,7 +69,11 @@ public final class ServerWebExchangeHelper {
     }
   }
 
-  public static String extractServerRoute(ServerWebExchange exchange) {
+  @Nullable
+  public static String extractServerRoute(@Nullable ServerWebExchange exchange) {
+    if (exchange == null) {
+      return null;
+    }
     Route route = exchange.getAttribute(GATEWAY_ROUTE_ATTR);
     if (route != null) {
       return convergeRouteId(route);
@@ -83,6 +88,7 @@ public final class ServerWebExchangeHelper {
    * @see <a
    *     href="https://github.com/spring-cloud/spring-cloud-gateway/commit/5002fe2e0a2825ef47dd667cade37b844c276cf6"/>
    */
+  @Nullable
   private static String convergeRouteId(Route route) {
     String routeId = route.getId();
     if (routeId == null || routeId.isEmpty()) {
