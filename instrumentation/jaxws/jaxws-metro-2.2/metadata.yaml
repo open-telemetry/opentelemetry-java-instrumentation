@@ -1,10 +1,10 @@
 display_name: Metro JAX-WS
 description: >
-  This instrumentation enriches HTTP server spans with route information, and enables controller
-  spans for Metro JAX-WS web services (controller spans are disabled by default).
+  This instrumentation enriches server span names with web service operation information, and
+  enables controller spans for Metro JAX-WS web services (controller spans are disabled by default).
 library_link: https://javaee.github.io/metro/
 features:
-  - HTTP_ROUTE
+  - SERVER_SPAN_NAME
   - CONTROLLER_SPANS
 configurations:
   - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
