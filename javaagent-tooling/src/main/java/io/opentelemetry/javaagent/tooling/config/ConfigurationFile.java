@@ -47,7 +47,8 @@ final class ConfigurationFile {
   // visible for tests
   static Map<String, String> loadConfigFile() {
     // Reading from system property first and from env after
-    String configurationFilePath = ConfigPropertiesUtil.getString(CONFIGURATION_FILE_PROPERTY);
+    String configurationFilePath =
+        ConfigPropertiesUtil.getString(CONFIGURATION_FILE_PROPERTY).orElse(null);
     if (configurationFilePath == null) {
       return emptyMap();
     }

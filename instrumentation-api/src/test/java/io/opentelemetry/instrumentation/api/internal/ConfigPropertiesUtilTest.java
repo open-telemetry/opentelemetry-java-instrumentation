@@ -32,18 +32,18 @@ class ConfigPropertiesUtilTest {
   @SetSystemProperty(key = "test.property.string", value = "sys")
   @Test
   void getString_systemProperty() {
-    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isEqualTo("sys");
+    assertThat(ConfigPropertiesUtil.getString("test.property.string")).hasValue("sys");
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_STRING", value = "env")
   @Test
   void getString_environmentVariable() {
-    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isEqualTo("env");
+    assertThat(ConfigPropertiesUtil.getString("test.property.string")).hasValue("env");
   }
 
   @Test
   void getString_none() {
-    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isNull();
+    assertThat(ConfigPropertiesUtil.getString("test.property.string")).isEmpty();
   }
 
   @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_STRING", value = "env_value")
@@ -92,24 +92,24 @@ class ConfigPropertiesUtilTest {
   @SetSystemProperty(key = "test.property.int", value = "42")
   @Test
   void getInt_systemProperty() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(42);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).hasValue(42);
   }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_INT", value = "12")
   @Test
   void getInt_environmentVariable() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(12);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).hasValue(12);
   }
 
   @Test
   void getInt_none() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(-1);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).isEmpty();
   }
 
   @SetSystemProperty(key = "test.property.int", value = "not a number")
   @Test
   void getInt_invalidNumber() {
-    assertThat(ConfigPropertiesUtil.getInt("test.property.int", -1)).isEqualTo(-1);
+    assertThat(ConfigPropertiesUtil.getInt("test.property.int")).isEmpty();
   }
 
   @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_BOOLEAN", value = "false")
@@ -131,7 +131,9 @@ class ConfigPropertiesUtilTest {
   }
 
   private static void assertBoolean(boolean expected) {
-    assertThat(ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean", false))
+    assertThat(
+            ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean")
+                .orElse(false))
         .isEqualTo(expected);
     assertThat(
             ConfigPropertiesUtil.getBoolean(OpenTelemetry.noop(), "test", "property", "boolean")

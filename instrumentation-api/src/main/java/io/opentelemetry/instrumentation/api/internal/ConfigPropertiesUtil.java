@@ -48,9 +48,13 @@ public final class ConfigPropertiesUtil {
    * <p>It's recommended to use {@link #getBoolean(OpenTelemetry, String...)} instead to support
    * Declarative Config.
    */
-  public static boolean getBoolean(String propertyName, boolean defaultValue) {
-    String strValue = getString(propertyName);
-    return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
+  public static Optional<Boolean> getBoolean(String propertyName) {
+    Optional<String> string = getString(propertyName);
+    // lambdas must not be used here in early initialization phase on early JDK8 versions
+    if (string.isPresent()) {
+      return Optional.of(Boolean.parseBoolean(string.get()));
+    }
+    return Optional.empty();
   }
 
   /**
@@ -62,24 +66,24 @@ public final class ConfigPropertiesUtil {
     if (node != null) {
       return Optional.ofNullable(node.getBoolean(leaf(propertyName)));
     }
-    String strValue = getString(toSystemProperty(propertyName));
-    return strValue == null ? Optional.empty() : Optional.of(Boolean.parseBoolean(strValue));
+    return getBoolean(toSystemProperty(propertyName));
   }
 
   /**
    * Returns the int value of the given property name from system properties and environment
    * variables.
    */
-  public static int getInt(String propertyName, int defaultValue) {
-    String strValue = getString(propertyName);
-    if (strValue == null) {
-      return defaultValue;
+  public static Optional<Integer> getInt(String propertyName) {
+    Optional<String> string = getString(propertyName);
+    // lambdas must not be used here in early initialization phase on early JDK8 versions
+    if (string.isPresent()) {
+      try {
+        return Optional.of(Integer.parseInt(string.get()));
+      } catch (NumberFormatException ignored) {
+        // ignored
+      }
     }
-    try {
-      return Integer.parseInt(strValue);
-    } catch (NumberFormatException ignored) {
-      return defaultValue;
-    }
+    return Optional.empty();
   }
 
   /**
@@ -89,13 +93,12 @@ public final class ConfigPropertiesUtil {
    * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
    * Declarative Config.
    */
-  @Nullable
-  public static String getString(String propertyName) {
+  public static Optional<String> getString(String propertyName) {
     String value = System.getProperty(propertyName);
     if (value != null) {
-      return value;
+      return Optional.of(value);
     }
-    return System.getenv(toEnvVarName(propertyName));
+    return Optional.ofNullable(System.getenv(toEnvVarName(propertyName)));
   }
 
   /**
@@ -107,7 +110,7 @@ public final class ConfigPropertiesUtil {
     if (node != null) {
       return Optional.ofNullable(node.getString(leaf(propertyName)));
     }
-    return Optional.ofNullable(getString(toSystemProperty(propertyName)));
+    return getString(toSystemProperty(propertyName));
   }
 
   /**
@@ -119,7 +122,7 @@ public final class ConfigPropertiesUtil {
     if (node != null) {
       return node.getScalarList(leaf(propertyName), String.class, emptyList());
     }
-    return Optional.ofNullable(getString(toSystemProperty(propertyName)))
+    return getString(toSystemProperty(propertyName))
         .map(value -> filterBlanksAndNulls(value.split(",")))
         .orElse(emptyList());
   }
