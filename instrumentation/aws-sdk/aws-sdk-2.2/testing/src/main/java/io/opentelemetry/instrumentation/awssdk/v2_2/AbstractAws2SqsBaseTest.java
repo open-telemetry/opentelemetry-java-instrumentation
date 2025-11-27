@@ -132,8 +132,7 @@ public abstract class AbstractAws2SqsBaseTest {
   protected boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean(
-            getTesting().getOpenTelemetry(),
-            "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging")
+            getTesting().getOpenTelemetry(), "aws_sdk", "experimental_use_propagator_for_messaging")
         .orElse(false);
   }
 
