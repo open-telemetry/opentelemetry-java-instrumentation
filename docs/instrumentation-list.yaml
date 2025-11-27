@@ -7801,20 +7801,193 @@ libraries:
           type: STRING
   lettuce:
   - name: lettuce-4.0
+    description: |
+      This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/redis/lettuce
     source_path: instrumentation/lettuce/lettuce-4.0
     scope:
       name: io.opentelemetry.lettuce-4.0
     target_versions:
       javaagent:
       - biz.paluch.redis:lettuce:[4.0.Final,)
+    configurations:
+    - name: otel.instrumentation.lettuce.connection-telemetry.enabled
+      description: Enables connection telemetry spans for Redis connections.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.lettuce.experimental-span-attributes
+      description: Enables experimental span attribute `lettuce.command.cancelled`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.lettuce.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: lettuce.command.cancelled
+          type: BOOLEAN
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: lettuce-5.0
+    description: |
+      This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/redis/lettuce
     source_path: instrumentation/lettuce/lettuce-5.0
     scope:
       name: io.opentelemetry.lettuce-5.0
     target_versions:
       javaagent:
       - io.lettuce:lettuce-core:[5.0.0.RELEASE,5.1.0.RELEASE)
+    configurations:
+    - name: otel.instrumentation.lettuce.connection-telemetry.enabled
+      description: Enables connection telemetry spans for Redis connections.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.lettuce.experimental-span-attributes
+      description: |
+        Enables experimental span attributes `lettuce.command.cancelled` and `lettuce.command.results.count`.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.instrumentation.lettuce.experimental-span-attributes=true
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: lettuce.command.cancelled
+          type: BOOLEAN
+        - name: lettuce.command.results.count
+          type: LONG
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error.type
+          type: STRING
+        - name: peer.service
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: lettuce-5.1
+    description: |
+      This instrumentation enables database client spans and database client metrics for the Lettuce Redis client.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://github.com/redis/lettuce
     source_path: instrumentation/lettuce/lettuce-5.1
     scope:
       name: io.opentelemetry.lettuce-5.1
@@ -7823,6 +7996,73 @@ libraries:
       - io.lettuce:lettuce-core:[5.1.0.RELEASE,)
       library:
       - io.lettuce:lettuce-core:5.1.0.RELEASE
+    configurations:
+    - name: otel.instrumentation.lettuce.experimental.command-encoding-events.enabled
+      description: Enables capturing `redis.encode.start` and `redis.encode.end` span
+        events.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: error
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.system.name
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: error
+          type: STRING
+        - name: network.peer.address
+          type: STRING
+        - name: network.peer.port
+          type: LONG
+        - name: network.type
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   liberty:
   - name: liberty-20.0
     source_path: instrumentation/liberty/liberty-20.0
