@@ -1,0 +1,13 @@
+# See https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+# and https://github.com/DavidAnson/markdownlint-cli2
+
+ul-style: false
+line-length: false
+no-duplicate-heading:
+  siblings_only: true
+ol-prefix:
+  style: ordered
+no-inline-html: false
+fenced-code-language: false
+no-trailing-punctuation:
+  punctuation: ".,;:" # allowing exclamation points and question marks at end of sentences
