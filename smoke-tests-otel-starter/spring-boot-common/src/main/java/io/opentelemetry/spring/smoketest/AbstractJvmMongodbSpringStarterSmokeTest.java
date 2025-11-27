@@ -9,6 +9,7 @@ import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.mongo.MongoClientInstrumentationAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.mongo.MongoClientInstrumentationSpringBoot4AutoConfiguration;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,7 @@ public class AbstractJvmMongodbSpringStarterSmokeTest
                     OpenTelemetryAutoConfiguration.class,
                     SpringSmokeOtelConfiguration.class,
                     MongoAutoConfiguration.class,
+                    MongoClientInstrumentationSpringBoot4AutoConfiguration.class,
                     MongoClientInstrumentationAutoConfiguration.class))
             .withPropertyValues("spring.data.mongodb.uri=" + container.getReplicaSetUrl());
   }
