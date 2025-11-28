@@ -48,7 +48,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
     try {
       builder.addRules(path);
     } catch (RuntimeException e) {
-      // for now only log JMX errors as they do not prevent agent startup
+      // for now only log JMX metric configuration errors as they do not prevent agent startup
       logger.log(Level.SEVERE, "Error while loading JMX configuration from " + path, e);
     }
   }
@@ -60,7 +60,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
     try {
       builder.addRules(input);
     } catch (RuntimeException e) {
-      // for now only log JMX errors as they do not prevent agent startup
+      // for now only log JMX metric configuration errors as they do not prevent agent startup
       logger.log(
           Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
