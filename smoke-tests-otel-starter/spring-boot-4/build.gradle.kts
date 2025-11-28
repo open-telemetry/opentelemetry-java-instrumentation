@@ -22,6 +22,7 @@ dependencies {
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
 
+  testImplementation("org.springframework:spring-test:7.0.1")
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("org.springframework.boot:spring-boot-starter-data-mongodb")
@@ -68,6 +69,16 @@ tasks {
   }
   test {
     usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+  }
+
+  // Spring Boot 4 requires GraalVM native-image with Java 25+ support
+  // Disable native test tasks if running on Java < 25
+  val javaVersionSupportsNative = JavaVersion.current().isCompatibleWith(JavaVersion.VERSION_25)
+  named("nativeTest").configure {
+    enabled = javaVersionSupportsNative
+  }
+  named("nativeTestCompile").configure {
+    enabled = javaVersionSupportsNative
   }
 }
 
