@@ -17,9 +17,9 @@ public class AppMain {
   private static void testReturnValue() {
     int returnValue = returnValue(42);
     if (returnValue != 42) {
-      System.out.println("return value has been modified");
+      printMsg("return value has been modified");
     } else {
-      System.out.println("return value not modified");
+      printMsg("return value not modified");
     }
   }
 
@@ -33,9 +33,14 @@ public class AppMain {
 
   private static void methodArguments(int argument, int originalArgument) {
     if (argument != originalArgument) {
-      System.out.println("argument has been modified");
+      printMsg("argument has been modified");
     } else {
-      System.out.println("argument not modified");
+      printMsg("argument not modified");
     }
+  }
+
+  private static void printMsg(String msg) {
+    // using a known prefix to allow easy filtering of expected output in test
+    System.out.println(">>> " + msg);
   }
 }

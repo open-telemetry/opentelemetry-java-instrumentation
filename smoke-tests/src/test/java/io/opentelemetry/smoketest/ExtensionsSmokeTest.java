@@ -9,10 +9,14 @@ import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 import java.time.Duration;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
@@ -28,7 +32,10 @@ public class ExtensionsSmokeTest {
   private static final String extensionInlinePath =
       System.getProperty("io.opentelemetry.smoketest.extension.inline.path");
 
-  private static final String IMAGE_VERSION = "jdk17-20251127.135061";
+  // TODO: add version constant in TestImageVersions.
+  private static final String IMAGE_VERSION = "jdk17-20251128.165054";
+
+  // TODO: test with and without indy mode
 
   @Test
   void inlinedExtension() throws InterruptedException {
@@ -42,7 +49,6 @@ public class ExtensionsSmokeTest {
         .withEnv("OTEL_TRACES_EXPORTER", "none")
         .withEnv("OTEL_METRICS_EXPORTER", "none")
         .withEnv("OTEL_LOGS_EXPORTER", "none")
-        //
         .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:" + TARGET_AGENT_FILENAME)
         .withEnv("OTEL_JAVAAGENT_EXTENSIONS", TARGET_EXTENSION_FILENAME)
         .withCopyFileToContainer(
@@ -51,10 +57,15 @@ public class ExtensionsSmokeTest {
             MountableFile.forHostPath(extensionInlinePath), TARGET_EXTENSION_FILENAME);
     target.start();
     while (target.isRunning()) {
-      Thread.sleep(1000);
+      Thread.sleep(100);
     }
-    assertThat(target.getLogs().split("\n"))
-        .contains("return value not modified", "argument not modified");
+
+    List<String> appOutput = Arrays.stream(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"))
+        .filter(line -> line.startsWith(">>>"))
+        .map(line -> line.substring(4))
+        .collect(Collectors.toList());
+    assertThat(appOutput)
+        .containsExactlyInAnyOrder("return value has been modified", "argument not modified");
   }
 
 
