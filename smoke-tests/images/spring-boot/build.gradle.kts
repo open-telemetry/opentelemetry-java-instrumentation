@@ -1,3 +1,4 @@
+import com.google.cloud.tools.jib.gradle.JibTask
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
@@ -63,6 +64,11 @@ jib {
 }
 
 tasks {
+  withType<JibTask>().configureEach {
+    // Jib tasks access Task.project at execution time which is not compatible with configuration cache
+    notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
+  }
+
   val springBootJar by configurations.creating {
     isCanBeConsumed = true
     isCanBeResolved = false

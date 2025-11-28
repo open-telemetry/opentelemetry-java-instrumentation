@@ -5,7 +5,6 @@
 
 set -euo pipefail
 
-# shellcheck source=instrumentation-docs/instrumentations.sh
 source "$(dirname "$0")/instrumentations.sh"
 
 # Collect standard and colima tasks (without testLatestDeps)
