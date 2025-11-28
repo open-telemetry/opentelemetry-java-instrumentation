@@ -26,12 +26,12 @@ public class JmxTelemetryTest {
   }
 
   @Test
-  void missingClasspathTarget() {
+  void throwsExceptionOnNullInput() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
-    assertThatThrownBy(() -> builder.addRules(null, "something is missing"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("not found")
-        .hasMessageContaining("something is missing");
+    assertThatThrownBy(() -> builder.addRules((InputStream) null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> builder.addRules((Path) null))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -52,7 +52,7 @@ public class JmxTelemetryTest {
 
   private static void addClasspathRules(JmxTelemetryBuilder builder, String path) {
     InputStream input = JmxTelemetryTest.class.getClassLoader().getResourceAsStream(path);
-    builder.addRules(input, path);
+    builder.addRules(input);
   }
 
   @Test

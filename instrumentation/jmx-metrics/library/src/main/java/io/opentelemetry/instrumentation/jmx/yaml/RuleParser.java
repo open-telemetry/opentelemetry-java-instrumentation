@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.yaml;
 
 import static java.util.Collections.emptyList;
-import static java.util.logging.Level.INFO;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
 import java.io.InputStream;
@@ -162,24 +162,19 @@ public class RuleParser {
    *
    * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
-   * @param description description of the YAML ruleset like file name or classpath resource
    * @throws IllegalArgumentException when unable to parse YAML
    */
-  public void addMetricDefsTo(MetricConfiguration conf, InputStream is, String description) {
+  public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
     try {
       JmxConfig config = loadConfig(is);
-      logger.log(
-          INFO,
-          "{0}: found {1} metric rules",
-          new Object[] {description, config.getRules().size()});
+      logger.log(FINE, "found {1} metric rules", config.getRules().size());
       config.addMetricDefsTo(conf);
     } catch (Exception exception) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
       String msg =
           String.format(
-              "Failed to parse YAML rules from %s: %s %s",
-              description, rootCause(exception), exception.getMessage());
+              "Failed to parse YAML rules : %s %s", rootCause(exception), exception.getMessage());
       throw new IllegalArgumentException(msg, exception);
     }
   }

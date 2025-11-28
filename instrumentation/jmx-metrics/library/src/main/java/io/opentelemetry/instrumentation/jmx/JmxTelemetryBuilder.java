@@ -60,8 +60,9 @@ public final class JmxTelemetryBuilder {
   public JmxTelemetryBuilder addClassPathRules(String target) {
     String resourcePath = String.format("jmx/rules/%s.yaml", target);
     ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+    logger.log(FINE, "Adding JMX config from classpath {0}", resourcePath);
     try (InputStream inputStream = classLoader.getResourceAsStream(resourcePath)) {
-      return addRules(inputStream, resourcePath);
+      return addRules(inputStream);
     } catch (IOException e) {
       throw new IllegalArgumentException(
           "Unable to load JMX rules from resource " + resourcePath, e);
@@ -72,17 +73,15 @@ public final class JmxTelemetryBuilder {
    * Adds JMX rules from input stream
    *
    * @param input input to read rules from
-   * @param description input description, used for user-friendly logs and parsing error messages
-   * @throws IllegalArgumentException when input is {@literal null}
+   * @throws IllegalArgumentException when input is {@literal null} or can't be parsed
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addRules(InputStream input, String description) {
+  public JmxTelemetryBuilder addRules(InputStream input) {
     if (input == null) {
-      throw new IllegalArgumentException("JMX rules not found for " + description);
+      throw new IllegalArgumentException("missing JMX rules");
     }
-    logger.log(FINE, "Adding JMX config from {0}", description);
     RuleParser parserInstance = RuleParser.get();
-    parserInstance.addMetricDefsTo(metricConfiguration, input, description);
+    parserInstance.addMetricDefsTo(metricConfiguration, input);
     return this;
   }
 
@@ -96,7 +95,8 @@ public final class JmxTelemetryBuilder {
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addRules(Path path) {
     try (InputStream inputStream = Files.newInputStream(path)) {
-      return addRules(inputStream, "file " + path);
+      logger.log(FINE, "Adding JMX config from file {0}", path);
+      return addRules(inputStream);
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
     }
