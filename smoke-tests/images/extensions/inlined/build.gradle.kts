@@ -10,4 +10,9 @@ dependencies {
 
   compileOnly("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
+
+  annotationProcessor("com.google.auto.service:auto-service")
+
+  // Used by byte-buddy but not brought in as a transitive dependency
+  compileOnly("com.google.code.findbugs:annotations")
 }
