@@ -92,14 +92,14 @@ public final class FailsafeTelemetry {
         meter
             .counterBuilder("failsafe.retry_policy.execution.count")
             .setDescription(
-                "Count of execution events processed by the retry policy. "
-                    + "Each event represents one complete execution flow (initial attempt + any retries). "
-                    + "This metric does not count individual retry attempts - it counts each time the policy is invoked.")
+                "Count of execution attempts processed by the retry policy, "
+                    + "where one execution represents the total number of attempts.")
+            .setUnit("{execution}")
             .build();
     LongHistogram attemptsHistogram =
         meter
             .histogramBuilder("failsafe.retry_policy.attempts")
-            .setDescription("Histogram of number of attempts for each execution.")
+            .setDescription("Number of attempts for each execution.")
             .ofLongs()
             .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
             .build();
