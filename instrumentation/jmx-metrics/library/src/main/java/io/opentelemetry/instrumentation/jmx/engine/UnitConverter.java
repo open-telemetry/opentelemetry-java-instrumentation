@@ -22,6 +22,7 @@ class UnitConverter {
     registerConversion("ms", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toMillis(1));
     registerConversion("us", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toMicros(1));
     registerConversion("ns", "s", value -> value.doubleValue() / TimeUnit.SECONDS.toNanos(1));
+    registerConversion("%", "1", value -> value.doubleValue() / 100d);
   }
 
   private final Function<Number, Number> convertingFunction;
