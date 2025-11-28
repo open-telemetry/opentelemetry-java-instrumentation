@@ -5,7 +5,6 @@
 
 package io.opentelemetry.smoketest.extensions.inlined;
 
-import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -26,7 +25,7 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer typeTransformer) {
     typeTransformer.applyAdviceToMethod(
-        namedOneOf("returnValue").and(takesArgument(0, int.class)).and(isPublic()),
+        namedOneOf("returnValue").and(takesArgument(0, int.class)),
         this.getClass().getName() + "$ModifyReturnValueAdvice");
   }
 
@@ -34,7 +33,7 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   public static class ModifyReturnValueAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void onExit(@Advice.Argument(value = 1, readOnly = false) int returnValue) {
+    public static void onExit(@Advice.Return(readOnly = false) int returnValue) {
       returnValue = returnValue + 1;
     }
   }
