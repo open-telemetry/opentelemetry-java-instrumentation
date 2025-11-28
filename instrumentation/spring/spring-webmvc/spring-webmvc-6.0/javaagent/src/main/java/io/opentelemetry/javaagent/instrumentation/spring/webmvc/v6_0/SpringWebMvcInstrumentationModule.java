@@ -51,7 +51,10 @@ public class SpringWebMvcInstrumentationModule extends InstrumentationModule
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new DispatcherServletInstrumentation(), new HandlerAdapterInstrumentation());
+    return asList(
+        new DispatcherServletInstrumentation(),
+        new HandlerAdapterInstrumentation(),
+        new DeferredResultInstrumentation());
   }
 
   @Override
