@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
+import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
-import java.util.Collections;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
@@ -24,9 +24,7 @@ class KafkaInstrumentationAutoConfigurationTest {
       new ApplicationContextRunner()
           .withBean(
               InstrumentationConfig.class,
-              () ->
-                  new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+              () -> new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(emptyMap())))
           .withConfiguration(
               AutoConfigurations.of(KafkaInstrumentationSpringBoot4AutoConfiguration.class))
           .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);
@@ -47,7 +45,7 @@ class KafkaInstrumentationAutoConfigurationTest {
 
           // Verify the customizer works by applying it to a producer factory
           DefaultKafkaProducerFactory<Object, Object> factory =
-              new DefaultKafkaProducerFactory<>(Collections.emptyMap());
+              new DefaultKafkaProducerFactory<>(emptyMap());
           customizer.customize(factory);
 
           // Check that interceptors were added (the customizer adds a post processor)
