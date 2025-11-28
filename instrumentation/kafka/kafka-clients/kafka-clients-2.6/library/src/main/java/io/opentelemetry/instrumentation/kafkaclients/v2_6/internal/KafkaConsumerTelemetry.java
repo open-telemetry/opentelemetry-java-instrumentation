@@ -54,7 +54,7 @@ public class KafkaConsumerTelemetry {
       }
       records.put(partition, list);
     }
-    return new ConsumerRecords<>(records);
+    return new ConsumerRecords<>(records, consumerRecords.nextOffsets());
   }
 
   public <K, V> Context buildAndFinishSpan(
