@@ -79,6 +79,9 @@ class KtorServerMetricsTest : AbstractHttpServerUsingTest<EmbeddedServer<*, *>>(
     server.stop(0, 10, TimeUnit.SECONDS)
   }
 
+  // regression test for
+  // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/15303
+  // verify that active requests are counted correctly when there is a send error
   @ParameterizedTest
   @MethodSource("provideArguments")
   fun testActiveRequestsMetric(endpoint: ServerEndpoint) {
