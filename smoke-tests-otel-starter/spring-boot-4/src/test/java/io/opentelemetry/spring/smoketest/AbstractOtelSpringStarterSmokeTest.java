@@ -5,8 +5,22 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.api.common.AttributeKey.booleanKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_FUNCTION;
+import static io.opentelemetry.semconv.incubating.CodeIncubatingAttributes.CODE_NAMESPACE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -22,21 +36,17 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
 import io.opentelemetry.sdk.resources.Resource;
-import io.opentelemetry.semconv.ClientAttributes;
-import io.opentelemetry.semconv.CodeAttributes;
-import io.opentelemetry.semconv.HttpAttributes;
-import io.opentelemetry.semconv.ServerAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
-import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import org.assertj.core.api.AbstractCharSequenceAssert;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -44,11 +54,11 @@ import org.junit.jupiter.api.TestMethodOrder;
 import org.junit.jupiter.api.condition.OS;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.boot.resttestclient.TestRestTemplate;
 import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
@@ -78,9 +88,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Autowired private RestTemplateBuilder restTemplateBuilder;
   @Autowired private JdbcTemplate jdbcTemplate;
 
-  // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
-  @Value("${local.server.port}")
-  private int port;
+  @LocalServerPort private int port;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -102,8 +110,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               (resource, config) ->
                   resource.merge(
                       Resource.create(
-                          Attributes.of(
-                              AttributeKey.booleanKey("keyFromResourceCustomizer"), false))));
+                          Attributes.of(booleanKey("keyFromResourceCustomizer"), false))));
     }
 
     @Bean
@@ -114,8 +121,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
               (resource, config) ->
                   resource.merge(
                       Resource.create(
-                          Attributes.of(
-                              AttributeKey.booleanKey("keyFromResourceCustomizer"), true))));
+                          Attributes.of(booleanKey("keyFromResourceCustomizer"), true))));
     }
 
     @Bean
@@ -163,7 +169,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
             null, headers, HttpMethod.GET, URI.create(OtelSpringStarterSmokeTestController.PING)),
         String.class);
 
-    // Span
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -182,39 +187,36 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                             satisfies(
                                 UrlAttributes.URL_FULL,
                                 stringAssert -> stringAssert.endsWith("/ping")),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            satisfies(ServerAttributes.SERVER_PORT, val -> val.isNotZero())),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(SERVER_PORT, val -> val.isNotZero())),
                 serverSpan ->
                     HttpSpanDataAssert.create(serverSpan)
                         .assertServerGetRequest("/ping")
                         .hasResourceSatisfying(
                             r ->
-                                r.hasAttribute(
-                                        AttributeKey.booleanKey("keyFromResourceCustomizer"), true)
-                                    .hasAttribute(
-                                        AttributeKey.stringKey("attributeFromYaml"), "true")
+                                r.hasAttribute(booleanKey("keyFromResourceCustomizer"), true)
+                                    .hasAttribute(stringKey("attributeFromYaml"), "true")
                                     .hasAttribute(
                                         satisfies(
                                             ServiceIncubatingAttributes.SERVICE_INSTANCE_ID,
-                                            val -> val.isNotBlank())))
+                                            AbstractCharSequenceAssert::isNotBlank)))
                         .hasAttributesSatisfying(
-                            equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HttpAttributes.HTTP_RESPONSE_STATUS_CODE, 200L),
-                            equalTo(HttpAttributes.HTTP_ROUTE, "/ping"),
-                            equalTo(ServerAttributes.SERVER_ADDRESS, "localhost"),
-                            satisfies(
-                                ClientAttributes.CLIENT_ADDRESS,
-                                s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(HTTP_ROUTE, "/ping"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            satisfies(CLIENT_ADDRESS, s -> s.isIn("127.0.0.1", "0:0:0:0:0:0:0:1")),
                             equalTo(
-                                AttributeKey.stringArrayKey("http.request.header.key"),
-                                Collections.singletonList("value")),
-                            satisfies(ServerAttributes.SERVER_PORT, val -> val.isNotZero()),
-                            satisfies(ThreadIncubatingAttributes.THREAD_ID, val -> val.isNotZero()),
+                                stringArrayKey("http.request.header.key"), singletonList("value")),
+                            satisfies(SERVER_PORT, AbstractLongAssert::isNotZero),
                             satisfies(
-                                ThreadIncubatingAttributes.THREAD_NAME, val -> val.isNotBlank())),
-                val -> withSpanAssert(val)));
+                                ThreadIncubatingAttributes.THREAD_ID,
+                                AbstractLongAssert::isNotZero),
+                            satisfies(
+                                ThreadIncubatingAttributes.THREAD_NAME,
+                                AbstractCharSequenceAssert::isNotBlank)),
+                AbstractSpringStarterSmokeTest::withSpanAssert));
 
-    // Metric
     testing.waitAndAssertMetrics(
         OtelSpringStarterSmokeTestController.METER_SCOPE_NAME,
         OtelSpringStarterSmokeTestController.TEST_HISTOGRAM,
@@ -222,7 +224,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     // JMX based metrics - test one per JMX bean
     List<String> jmxMetrics =
-        new ArrayList<>(Arrays.asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
+        new ArrayList<>(asList("jvm.thread.count", "jvm.memory.used", "jvm.memory.init"));
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
@@ -245,7 +247,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     assertAdditionalMetrics();
 
-    // Log
     List<LogRecordData> exportedLogRecords = testing.getExportedLogRecords();
     assertThat(exportedLogRecords).as("No log record exported.").isNotEmpty();
     if (!nativeImage) {
@@ -261,15 +262,12 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
       if (SemconvStability.emitStableDatabaseSemconv()) {
         attributesAssert.containsEntry(
-            CodeAttributes.CODE_FUNCTION_NAME,
-            "org.springframework.boot.StartupInfoLogger.logStarting");
+            CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
       }
       if (SemconvStability.isEmitOldCodeSemconv()) {
         attributesAssert
-            .containsEntry(
-                CodeIncubatingAttributes.CODE_NAMESPACE,
-                "org.springframework.boot.StartupInfoLogger")
-            .containsEntry(CodeIncubatingAttributes.CODE_FUNCTION, "logStarting");
+            .containsEntry(CODE_NAMESPACE, "org.springframework.boot.StartupInfoLogger")
+            .containsEntry(CODE_FUNCTION, "logStarting");
       }
     }
   }
@@ -282,10 +280,9 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
     testing.runWithSpan(
         "server",
-        () -> {
-          jdbcTemplate.query(
-              "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name"));
-        });
+        () ->
+            jdbcTemplate.query(
+                "select name from customer where id = 1", (rs, rowNum) -> rs.getString("name")));
 
     // 1 is not replaced by ?, otel.instrumentation.common.db-statement-sanitizer.enabled=false
     testing.waitAndAssertTraces(
@@ -309,8 +306,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
                 span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
-                span ->
-                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
                 span -> withSpanAssert(span)));
   }
 
@@ -328,8 +324,6 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
                 span ->
                     HttpSpanDataAssert.create(span)
                         .assertClientGetRequest("/test?X-Goog-Signature=REDACTED"),
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasAttribute(HttpAttributes.HTTP_ROUTE, "/test")));
+                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/test")));
   }
 }

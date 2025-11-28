@@ -26,7 +26,7 @@ import org.springframework.kafka.core.KafkaTemplate;
 
 abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @Autowired protected KafkaTemplate<String, String> kafkaTemplate;
+  protected KafkaTemplate<String, String> kafkaTemplate;
 
   private static final AttributeKey<String> MESSAGING_CLIENT_ID =
       AttributeKey.stringKey("messaging.client_id");
@@ -36,20 +36,12 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
   void shouldInstrumentProducerAndConsumer() {
     testing.runWithSpan(
         "producer",
-        () -> {
-          kafkaTemplate.executeInTransaction(
-              ops -> {
-                // return type is incompatible between Spring Boot 2 and 3
-                try {
-                  ops.getClass()
-                      .getDeclaredMethod("send", String.class, Object.class, Object.class)
-                      .invoke(ops, "testTopic", "10", "testSpan");
-                } catch (Exception e) {
-                  throw new IllegalStateException(e);
-                }
-                return 0;
-              });
-        });
+        () ->
+            kafkaTemplate.executeInTransaction(
+                ops -> {
+                  ops.send("testTopic", "10", "testSpan");
+                  return 0;
+                }));
 
     testing.waitAndAssertTraces(
         trace ->

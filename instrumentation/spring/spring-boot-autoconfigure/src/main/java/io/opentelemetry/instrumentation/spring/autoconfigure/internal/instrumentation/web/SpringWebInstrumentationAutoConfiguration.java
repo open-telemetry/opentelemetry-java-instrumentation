@@ -26,7 +26,8 @@ import org.springframework.web.client.RestTemplate;
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
 @ConditionalOnClass({RestTemplate.class, RestTemplateCustomizer.class})
-@ConditionalOnMissingClass("org.springframework.boot.restclient.RestTemplateCustomizer")
+@ConditionalOnMissingClass(
+    "org.springframework.boot.restclient.RestTemplateCustomizer") // Spring Boot 4+
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 

@@ -26,7 +26,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnBean({DataSource.class})
 @Configuration(proxyBeanMethods = false)
 @ConditionalOnMissingClass(
-    "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration")
+    "org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration") // Spring Boot 2 & 3
 public class JdbcInstrumentationSpringBoot4AutoConfiguration {
 
   // For error prone

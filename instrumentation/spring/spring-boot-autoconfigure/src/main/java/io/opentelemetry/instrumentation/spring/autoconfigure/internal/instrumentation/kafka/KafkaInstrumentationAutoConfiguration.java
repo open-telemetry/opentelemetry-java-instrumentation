@@ -31,7 +31,8 @@ import org.springframework.kafka.core.KafkaTemplate;
   DefaultKafkaProducerFactoryCustomizer.class
 })
 @ConditionalOnMissingClass(
-    "org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer")
+    "org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer") // Spring
+// Boot 4+
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
 

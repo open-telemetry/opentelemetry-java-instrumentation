@@ -24,7 +24,9 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnClass({MongoClientSettings.class, MongoClientSettingsBuilderCustomizer.class})
 @ConditionalOnEnabledInstrumentation(module = "mongo")
 @ConditionalOnMissingClass(
-    "org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer")
+    "org.springframework.boot.autoconfigure.mongo.MongoClientSettingsBuilderCustomizer") // Spring
+// Boot 2 &
+// 3
 @Configuration
 public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
 

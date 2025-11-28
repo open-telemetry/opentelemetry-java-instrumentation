@@ -22,11 +22,7 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
   @SuppressWarnings("deprecation") // uses deprecated semconv
   @Test
   void mongodb() {
-    testing.runWithSpan(
-        "server",
-        () -> {
-          mongoClient.listDatabaseNames().into(new ArrayList<>());
-        });
+    testing.runWithSpan("server", () -> mongoClient.listDatabaseNames().into(new ArrayList<>()));
 
     testing.waitAndAssertTraces(
         trace ->
