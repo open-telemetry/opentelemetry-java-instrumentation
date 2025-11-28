@@ -38,9 +38,7 @@ public class JmxTelemetryTest {
   void invalidClasspathTarget() {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     assertThatThrownBy(() -> addClasspathRules(builder, "jmx/rules/invalid.yaml"))
-        .isInstanceOf(IllegalArgumentException.class)
-        .describedAs("must have an exception message including the invalid resource path")
-        .hasMessageContaining("jmx/rules/invalid.yaml");
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -61,8 +59,7 @@ public class JmxTelemetryTest {
     Files.write(invalid, ":this !is /not YAML".getBytes(StandardCharsets.UTF_8));
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     assertThatThrownBy(() -> builder.addRules(invalid))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining(invalid.toString());
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

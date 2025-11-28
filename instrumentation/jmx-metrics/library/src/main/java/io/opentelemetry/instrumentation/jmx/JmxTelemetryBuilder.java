@@ -94,6 +94,9 @@ public final class JmxTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder addRules(Path path) {
+    if (path == null) {
+      throw new IllegalArgumentException("missing JMX rules");
+    }
     try (InputStream inputStream = Files.newInputStream(path)) {
       logger.log(FINE, "Adding JMX config from file {0}", path);
       return addRules(inputStream);
