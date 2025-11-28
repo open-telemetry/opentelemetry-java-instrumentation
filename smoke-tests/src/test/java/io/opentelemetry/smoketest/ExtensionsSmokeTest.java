@@ -16,7 +16,6 @@ import org.testcontainers.utility.MountableFile;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
@@ -33,7 +32,7 @@ public class ExtensionsSmokeTest {
       System.getProperty("io.opentelemetry.smoketest.extension.inline.path");
 
   // TODO: add version constant in TestImageVersions.
-  private static final String IMAGE_VERSION = "jdk17-20251128.165054";
+  private static final String IMAGE_VERSION = "jdk17-20251128.170123";
 
   // TODO: test with and without indy mode
 
@@ -60,12 +59,9 @@ public class ExtensionsSmokeTest {
       Thread.sleep(100);
     }
 
-    List<String> appOutput = Arrays.stream(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"))
-        .filter(line -> line.startsWith(">>>"))
-        .map(line -> line.substring(4))
-        .collect(Collectors.toList());
+    List<String> appOutput = Arrays.asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
     assertThat(appOutput)
-        .containsExactlyInAnyOrder("return value has been modified", "argument not modified");
+        .containsExactlyInAnyOrder("return value has been modified", "argument has been modified");
   }
 
 
