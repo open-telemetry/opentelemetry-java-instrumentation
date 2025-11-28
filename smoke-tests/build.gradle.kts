@@ -81,6 +81,8 @@ tasks {
     val extensionInlineShadowTask = project(":smoke-tests:images:extensions:inlined").tasks.named<Jar>("jar")
     val extensionInlineJarPath = extensionInlineShadowTask.flatMap { it.archiveFile }
 
+    dependsOn(shadowTask, extensionInlineShadowTask)
+
     doFirst {
       jvmArgs(
         "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}",
