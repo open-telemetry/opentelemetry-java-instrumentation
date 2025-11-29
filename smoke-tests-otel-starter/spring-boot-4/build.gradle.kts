@@ -22,6 +22,8 @@ dependencies {
   implementation(platform(org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES))
   implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
 
+  testImplementation(project(":smoke-tests-otel-starter:spring-boot-common"))
+
   testImplementation("org.springframework:spring-test:7.0.1")
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
