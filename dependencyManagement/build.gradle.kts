@@ -6,7 +6,7 @@ data class DependencySet(val group: String, val version: String, val modules: Li
 
 // this line is managed by .github/scripts/update-sdk-version.sh
 val otelSdkVersion = "1.56.0"
-val otelContribVersion = "1.51.0-alpha"
+val otelContribVersion = "1.52.0-alpha"
 val otelSdkAlphaVersion = otelSdkVersion.replaceFirst("(-SNAPSHOT)?$".toRegex(), "-alpha$1")
 
 // Need both BOM and groovy jars
@@ -37,8 +37,8 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
-val errorProneVersion = "2.44.0"
-val byteBuddyVersion = "1.18.1"
+val errorProneVersion = "2.45.0"
+val byteBuddyVersion = "1.18.2"
 val asmVersion = "9.9"
 val jmhVersion = "1.37"
 val mockitoVersion = "4.11.0"

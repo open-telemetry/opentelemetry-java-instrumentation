@@ -189,7 +189,22 @@
       enabled: false,
     },
     {
-      // intentionally using Spring Boot 2 in these smoke tests
+      // intentionally using Spring Boot 2 to make sure the earliest version is supported
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-common/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-2/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-boot-reactive-common/build.gradle.kts',
+        'smoke-tests-otel-starter/spring-smoke-testing/build.gradle.kts',
+      ],
+      matchPackageNames: [
+        'org.springframework.boot:spring-boot-dependencies',
+      ],
+      enabled: false
+    },
+    {
+      // Spring Boot 2 smoke tests are intentionally using slf4j 1.x
       matchFileNames: [
         'smoke-tests/images/spring-boot/build.gradle.kts',
         'smoke-tests-otel-starter/spring-boot-2/build.gradle.kts',
@@ -200,7 +215,6 @@
       ],
       matchPackageNames: [
         'org.slf4j:slf4j-api',
-        'org.springframework.boot:**',
       ],
       matchUpdateTypes: [
         'major',
@@ -322,19 +336,6 @@
         'ch.qos.logback:**',
       ],
       allowedVersions: '/^1\\.3\\./',
-    },
-    {
-      // intentionally using Spring Boot 2 in dependency management (for Java 8 support)
-      matchFileNames: [
-        'dependencyManagement/build.gradle.kts',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
-      enabled: false,
-      matchPackageNames: [
-        'org.springframework.boot:spring-boot-dependencies:**',
-      ],
     },
     {
       // pinned version to Jetty 8 (Servlet 3.0) for compatibility

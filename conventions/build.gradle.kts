@@ -1,7 +1,7 @@
 plugins {
   `kotlin-dsl`
   // When updating, update below in dependencies too
-  id("com.diffplug.spotless") version "8.0.0"
+  id("com.diffplug.spotless") version "8.1.0"
 }
 
 spotless {
@@ -54,7 +54,7 @@ dependencies {
   implementation("org.apache.maven:maven-aether-provider:3.3.9")
 
   // When updating, update above in plugins too
-  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.0.0")
+  implementation("com.diffplug.spotless:spotless-plugin-gradle:8.1.0")
   implementation("com.google.guava:guava:33.5.0-jre")
   implementation("com.gradleup.shadow:shadow-gradle-plugin:9.2.2")
   implementation("org.apache.httpcomponents:httpclient:4.5.14")
@@ -63,7 +63,7 @@ dependencies {
   implementation("ru.vyarus:gradle-animalsniffer-plugin:2.0.1")
   implementation("org.spdx:spdx-gradle-plugin:0.9.0")
   // When updating, also update dependencyManagement/build.gradle.kts
-  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.1")
+  implementation("net.bytebuddy:byte-buddy-gradle-plugin:1.18.2")
   implementation("gradle.plugin.io.morethan.jmhreport:gradle-jmh-report:0.9.6")
   implementation("me.champeau.jmh:jmh-gradle-plugin:0.7.3")
   implementation("net.ltgt.gradle:gradle-errorprone-plugin:4.3.0")

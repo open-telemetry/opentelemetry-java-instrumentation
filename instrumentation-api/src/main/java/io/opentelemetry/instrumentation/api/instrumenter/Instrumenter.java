@@ -327,8 +327,15 @@ public class Instrumenter<REQUEST, RESPONSE> {
               Instrumenter<REQUEST, RESPONSE> instrumenter,
               Context parentContext,
               REQUEST request) {
-            SpanKind spanKind = instrumenter.spanKindExtractor.extract(request);
+            return suppressSpan(
+                instrumenter, parentContext, instrumenter.spanKindExtractor.extract(request));
+          }
 
+          @Override
+          public <REQUEST, RESPONSE> Context suppressSpan(
+              Instrumenter<REQUEST, RESPONSE> instrumenter,
+              Context parentContext,
+              SpanKind spanKind) {
             return instrumenter.spanSuppressor.storeInContext(
                 parentContext, spanKind, Span.getInvalid());
           }

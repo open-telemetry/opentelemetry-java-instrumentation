@@ -18,6 +18,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
 import java.util.Collection;
 import java.util.Map;
@@ -25,7 +27,7 @@ import javax.annotation.Nullable;
 
 /**
  * Extractor of <a
- * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/database/database-spans.md">database
+ * href="https://github.com/open-telemetry/semantic-conventions/blob/main/docs/db/database-spans.md">database
  * attributes</a>. This class is designed with SQL (or SQL-like) database clients in mind.
  *
  * <p>It sets the same set of attributes as {@link DbClientAttributesExtractor} plus an additional
@@ -60,6 +62,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   private static final String SQL_CALL = "CALL";
 
   private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
+  private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
+  private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
   private final AttributeKey<String> oldSemconvTableAttribute;
   private final boolean statementSanitizationEnabled;
   private final boolean captureQueryParameters;
@@ -74,6 +78,8 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     // capturing query parameters disables statement sanitization
     this.statementSanitizationEnabled = !captureQueryParameters && statementSanitizationEnabled;
     this.captureQueryParameters = captureQueryParameters;
+    internalNetworkExtractor = new InternalNetworkAttributesExtractor<>(getter, true, false);
+    serverAttributesExtractor = ServerAttributesExtractor.create(getter);
   }
 
   @SuppressWarnings("deprecation") // until old db semconv are dropped
@@ -139,6 +145,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     // getDbQueryText(), and getDbQuerySummary() implementations can override
     // the parsed values from above
     DbClientAttributesExtractor.onStartCommon(attributes, getter, request);
+    serverAttributesExtractor.onStart(attributes, parentContext, request);
   }
 
   private void setQueryParameters(
@@ -171,6 +178,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
+    internalNetworkExtractor.onEnd(attributes, request, response);
     DbClientAttributesExtractor.onEndCommon(attributes, getter, response, error);
   }
 

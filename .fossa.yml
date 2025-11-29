@@ -78,6 +78,9 @@ targets:
       target: ':instrumentation:apache-dubbo-2.7:library-autoconfigure'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-elasticjob-3.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-httpasyncclient-4.1:javaagent'
     - type: gradle
       path: ./
@@ -829,6 +832,9 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.52:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:opentelemetry-api:opentelemetry-api-1.56:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:opentelemetry-instrumentation-annotations:opentelemetry-instrumentation-annotations-1.16:javaagent'

@@ -34,11 +34,6 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-muzzle.yml
 
-  shell-script-check:
-    # release branches are excluded to avoid unnecessary maintenance if new shell checks are added
-    if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-shell-script-check.yml
-
   link-check:
     # release branches are excluded to avoid unnecessary maintenance if external links break
     # (and also because the README.md javaagent download link has to be updated on release branches
@@ -51,22 +46,15 @@ jobs:
     if: "!startsWith(github.ref_name, 'release/')"
     uses: ./.github/workflows/reusable-markdown-lint-check.yml
 
-  misspell-check:
-    # release branches are excluded to avoid unnecessary maintenance if new misspellings are added
-    # to the misspell dictionary
-    if: "!startsWith(github.ref_name, 'release/')"
-    uses: ./.github/workflows/reusable-misspell-check.yml
-
   publish-snapshots:
     needs:
-      # intentionally not blocking snapshot publishing on test-latest-deps, muzzle,
-      # link-check, or misspell-check
+      # intentionally not blocking snapshot publishing on test-latest-deps, muzzle, or link-check
       - common
     runs-on: ubuntu-latest
     # skipping release branches because the versions in those branches are not snapshots
     if: github.ref_name == 'main' && github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
     steps:
-      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh

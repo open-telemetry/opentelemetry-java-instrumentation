@@ -73,6 +73,7 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
+  @Nullable
   public Integer getHttpResponseStatusCode(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, @Nullable Throwable error) {
 

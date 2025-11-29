@@ -37,6 +37,7 @@ public final class TracingStepExecutionListener implements StepExecutionListener
   }
 
   @Override
+  @Nullable
   public ExitStatus afterStep(StepExecution stepExecution) {
     ContextAndScope contextAndScope = CONTEXT_AND_SCOPE.get(stepExecution);
     if (contextAndScope == null) {

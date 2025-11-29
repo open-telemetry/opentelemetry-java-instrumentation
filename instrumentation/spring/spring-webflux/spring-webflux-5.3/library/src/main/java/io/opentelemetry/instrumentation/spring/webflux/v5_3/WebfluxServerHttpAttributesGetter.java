@@ -22,9 +22,9 @@ enum WebfluxServerHttpAttributesGetter
     implements HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
   INSTANCE;
 
-  private static final MethodHandle GET_RAW_STATUS_CODE;
-  private static final MethodHandle GET_STATUS_CODE;
-  private static final MethodHandle STATUS_CODE_VALUE;
+  @Nullable private static final MethodHandle GET_RAW_STATUS_CODE;
+  @Nullable private static final MethodHandle GET_STATUS_CODE;
+  @Nullable private static final MethodHandle STATUS_CODE_VALUE;
 
   static {
     MethodHandle getRawStatusCode = null;
@@ -61,6 +61,7 @@ enum WebfluxServerHttpAttributesGetter
     STATUS_CODE_VALUE = statusCodeValue;
   }
 
+  @Nullable
   private static Integer getStatusCode(ServerHttpResponse response) {
     if (GET_RAW_STATUS_CODE != null) {
       try {

@@ -10,6 +10,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
+import javax.annotation.Nullable;
 import org.reactivestreams.Subscription;
 import org.springframework.core.Ordered;
 import org.springframework.http.server.reactive.ServerHttpResponse;
@@ -115,7 +116,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       actual.onComplete();
     }
 
-    private void onTerminal(Context currentContext, Throwable t) {
+    private void onTerminal(Context currentContext, @Nullable Throwable t) {
       ServerHttpResponse response = exchange.getResponse();
       if (response.isCommitted()) {
         end(currentContext, t);
@@ -128,13 +129,16 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       }
     }
 
-    private void end(Context currentContext, Throwable t) {
+    private void end(Context currentContext, @Nullable Throwable t) {
       // Update HTTP route now, because during instrumenter.start()
       // the HTTP route isn't available from the exchange attributes, but is afterwards
       HttpServerRoute.update(
           currentContext,
           HttpServerRouteSource.CONTROLLER,
-          (context, exchange) -> WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
+          (context, exchange) ->
+              exchange == null
+                  ? null
+                  : WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
           exchange);
       instrumenter.end(currentContext, exchange, exchange, t);
     }

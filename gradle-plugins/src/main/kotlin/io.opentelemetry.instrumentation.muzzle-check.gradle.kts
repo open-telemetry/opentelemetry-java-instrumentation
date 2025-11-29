@@ -136,10 +136,21 @@ val muzzle by tasks.registering {
 tasks.register("printMuzzleReferences") {
   group = "Muzzle"
   description = "Print references created by instrumentation muzzle"
+  val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
+  val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
+  
   dependsOn(compileMuzzle)
   dependsOn(shadowModule)
+  dependsOn(shadowMuzzleTooling)
+  
   doLast {
-    val instrumentationCL = createInstrumentationClassloader()
+    // Create instrumentation classloader
+    val instrumentationUrls = arrayOf(
+      muzzleShadowJarFile.get().asFile.toURI().toURL(),
+      muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
+    )
+    val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
+    
     MuzzleGradlePluginUtil.printMuzzleReferences(instrumentationCL)
   }
 }
@@ -149,7 +160,8 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
   val taskName = it.removePrefix(":")
   val projectPath = project.path.substring(1)
   // Either the specific muzzle task in this project or a top level muzzle task.
-  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle")
+  taskName == "${projectPath}:muzzle" || taskName.startsWith("instrumentation:muzzle") ||
+    taskName.contains(":muzzle-Assert")
 }
 
 if (hasRelevantTask) {
@@ -206,10 +218,8 @@ fun getProjectRepositories(project: Project): List<RemoteRepository> {
   return projectRepositories
 }
 
-fun createInstrumentationClassloader(): ClassLoader {
+fun createInstrumentationClassloader(muzzleShadowJar: File, muzzleToolingShadowJar: File): ClassLoader {
   logger.info("Creating instrumentation class loader for: $path")
-  val muzzleShadowJar = shadowModule.get().archiveFile.get()
-  val muzzleToolingShadowJar = shadowMuzzleTooling.get().archiveFile.get()
   return classpathLoader(files(muzzleShadowJar, muzzleToolingShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
@@ -296,13 +306,32 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
   }
 
   val muzzleTask = tasks.register(taskName) {
+    val configFiles = config.incoming.files
+    val muzzleShadowJarFile = shadowModule.flatMap { it.archiveFile }
+    val muzzleToolingShadowJarFile = shadowMuzzleTooling.flatMap { it.archiveFile }
+    val muzzleBootstrapShadowJarFile = shadowMuzzleBootstrap.flatMap { it.archiveFile }
+    val excludedNames = muzzleDirective.excludedInstrumentationNames.get()
+    val shouldAssertPass = muzzleDirective.assertPass.get()
+    
     dependsOn(configurations.named("runtimeClasspath"))
     dependsOn(shadowModule)
+    dependsOn(shadowMuzzleTooling)
+    dependsOn(shadowMuzzleBootstrap)
+    
     doLast {
-      val instrumentationCL = createInstrumentationClassloader()
-      val userCL = createClassLoaderForTask(config)
+      // Create instrumentation classloader
+      val instrumentationUrls = arrayOf(
+        muzzleShadowJarFile.get().asFile.toURI().toURL(),
+        muzzleToolingShadowJarFile.get().asFile.toURI().toURL()
+      )
+      val instrumentationCL = URLClassLoader(instrumentationUrls, ClassLoader.getPlatformClassLoader())
+      
+      // Create user classloader
+      val userUrls = (configFiles + muzzleBootstrapShadowJarFile.get().asFile).map { it.toURI().toURL() }.toTypedArray()
+      val userCL = URLClassLoader(userUrls, ClassLoader.getPlatformClassLoader())
+      
       MuzzleGradlePluginUtil.assertInstrumentationMuzzled(instrumentationCL, userCL,
-        muzzleDirective.excludedInstrumentationNames.get(), muzzleDirective.assertPass.get())
+        excludedNames, shouldAssertPass)
     }
   }
 
@@ -310,10 +339,9 @@ fun addMuzzleTask(muzzleDirective: MuzzleDirective, versionArtifact: Artifact?, 
   return muzzleTask
 }
 
-fun createClassLoaderForTask(muzzleTaskConfiguration: Configuration): ClassLoader {
+fun createClassLoaderForTask(muzzleTaskFiles: FileCollection, muzzleBootstrapShadowJar: File): ClassLoader {
   logger.info("Creating user class loader for muzzle check")
-  val muzzleBootstrapShadowJar = shadowMuzzleBootstrap.get().archiveFile.get()
-  return classpathLoader(muzzleTaskConfiguration + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
+  return classpathLoader(muzzleTaskFiles + files(muzzleBootstrapShadowJar), ClassLoader.getPlatformClassLoader())
 }
 
 fun inverseOf(muzzleDirective: MuzzleDirective, system: RepositorySystem, session: RepositorySystemSession, repos: List<RemoteRepository>): Set<MuzzleDirective> {
