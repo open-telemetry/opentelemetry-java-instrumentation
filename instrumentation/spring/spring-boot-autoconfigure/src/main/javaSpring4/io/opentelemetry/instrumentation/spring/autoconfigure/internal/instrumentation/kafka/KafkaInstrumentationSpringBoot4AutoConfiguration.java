@@ -13,7 +13,6 @@ import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -32,9 +31,6 @@ import org.springframework.kafka.core.KafkaTemplate;
   DefaultKafkaProducerFactoryCustomizer.class
 })
 @ConditionalOnMissingBean(name = "otelKafkaProducerFactoryCustomizer")
-@ConditionalOnMissingClass(
-    // Spring Boot 2 & 3
-    "org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer")
 @Configuration
 public class KafkaInstrumentationSpringBoot4AutoConfiguration {
 

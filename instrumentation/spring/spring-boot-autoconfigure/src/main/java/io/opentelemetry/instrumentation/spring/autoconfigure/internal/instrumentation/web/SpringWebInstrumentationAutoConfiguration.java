@@ -10,7 +10,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Instrument
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingClass;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,8 +25,6 @@ import org.springframework.web.client.RestTemplate;
  */
 @ConditionalOnEnabledInstrumentation(module = "spring-web")
 @ConditionalOnClass({RestTemplate.class, RestTemplateCustomizer.class})
-@ConditionalOnMissingClass(
-    "org.springframework.boot.restclient.RestTemplateCustomizer") // Spring Boot 4+
 @Configuration
 public class SpringWebInstrumentationAutoConfiguration {
 
