@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v2_2;
 
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletAccessor;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import java.util.Set;
 
 public class Servlet2SpanNameExtractor<REQUEST, RESPONSE>

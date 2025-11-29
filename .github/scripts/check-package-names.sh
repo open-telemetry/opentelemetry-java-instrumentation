@@ -19,6 +19,9 @@ for dir in $(find instrumentation -name "*.java" | grep library/src/main/java | 
   if [[ "$module_name" == "oshi" ]]; then
     continue
   fi
+  if [[ "$module_name" == "servlet-common" ]]; then
+    continue
+  fi
 
   # these are possibly problematic
   if [[ "$dir" == "instrumentation/grpc-1.6/library/src/main/java/io/grpc/override" ]]; then

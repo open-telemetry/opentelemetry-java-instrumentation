@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
@@ -14,17 +15,28 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletAdditionalAttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestParametersExtractor;
+import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
 import io.opentelemetry.semconv.incubating.EnduserIncubatingAttributes;
 import java.security.Principal;
+import java.util.List;
 import java.util.function.Function;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class BaseServletHelper<REQUEST, RESPONSE> {
+  private static final List<String> CAPTURE_REQUEST_PARAMETERS =
+      AgentInstrumentationConfig.get()
+          .getList(
+              "otel.instrumentation.servlet.experimental.capture-request-parameters", emptyList());
+
   protected final Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>>
       instrumenter;
   protected final ServletAccessor<REQUEST, RESPONSE> accessor;
@@ -40,8 +52,8 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
     this.spanNameProvider = new ServletSpanNameProvider<>(accessor);
     this.contextPathExtractor = accessor::getRequestContextPath;
     this.parameterExtractor =
-        ServletRequestParametersExtractor.enabled()
-            ? new ServletRequestParametersExtractor<>(accessor)
+        !CAPTURE_REQUEST_PARAMETERS.isEmpty()
+            ? new ServletRequestParametersExtractor<>(accessor, CAPTURE_REQUEST_PARAMETERS)
             : null;
   }
 

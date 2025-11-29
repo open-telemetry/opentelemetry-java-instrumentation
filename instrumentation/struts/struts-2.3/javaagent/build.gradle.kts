@@ -22,7 +22,6 @@ dependencies {
   testRuntimeOnly("javax.servlet:jsp-api:2.0")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:struts:struts-7.0:javaagent"))
 

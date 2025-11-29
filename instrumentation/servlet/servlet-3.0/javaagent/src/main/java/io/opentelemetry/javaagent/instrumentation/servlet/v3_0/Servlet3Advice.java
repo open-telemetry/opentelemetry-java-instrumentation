@@ -10,11 +10,11 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3Si
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.servlet.internal.MappingResolver;
+import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
-import io.opentelemetry.javaagent.instrumentation.servlet.ServletRequestContext;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.Servlet3SnippetInjectingResponseWrapper;
 import javax.annotation.Nullable;
 import javax.servlet.Servlet;
@@ -48,7 +48,7 @@ public class Servlet3Advice {
       Context attachedContext = helper().getServerContext(request);
       Context contextToUpdate;
 
-      requestContext = new ServletRequestContext<>(request, servletOrFilter);
+      requestContext = new ServletRequestContext<>(request);
       if (attachedContext == null && helper().shouldStart(currentContext, requestContext)) {
         context = helper().start(currentContext, requestContext);
         helper().setAsyncListenerResponse(context, response);
@@ -79,7 +79,7 @@ public class Servlet3Advice {
       if (context != null) {
         // Only trigger response customizer once, so only if server span was created here
         HttpServerResponseCustomizerHolder.getCustomizer()
-            .customize(contextToUpdate, response, Servlet3Accessor.INSTANCE);
+            .customize(contextToUpdate, response, Servlet3HttpServerResponseMutator.INSTANCE);
       }
     }
 

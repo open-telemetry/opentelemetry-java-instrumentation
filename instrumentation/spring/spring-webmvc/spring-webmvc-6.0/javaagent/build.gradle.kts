@@ -27,7 +27,6 @@ dependencies {
 
   // Include servlet instrumentation for verifying the tomcat requests
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-web:spring-web-6.0:javaagent"))
