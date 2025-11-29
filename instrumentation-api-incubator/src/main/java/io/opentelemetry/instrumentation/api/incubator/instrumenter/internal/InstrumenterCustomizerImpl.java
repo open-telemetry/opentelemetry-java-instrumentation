@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterC
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
@@ -78,6 +79,12 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   @Override
   public InstrumenterCustomizer addContextCustomizer(ContextCustomizer<?> customizer) {
     this.customizer.addContextCustomizer(customizer);
+    return this;
+  }
+
+  @Override
+  public InstrumenterCustomizer addShouldStartFilter(ShouldStartFilter<?> filter) {
+    customizer.addShouldStartFilter(filter);
     return this;
   }
 

@@ -64,6 +64,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       operationListenerAttributesExtractors = new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
+  final List<ShouldStartFilter<? super REQUEST>> shouldStartFilters = new ArrayList<>();
   private final List<OperationListener> operationListeners = new ArrayList<>();
   private final List<OperationMetrics> operationMetrics = new ArrayList<>();
 
@@ -184,6 +185,17 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addOperationMetrics(OperationMetrics factory) {
     operationMetrics.add(requireNonNull(factory, "operationMetrics"));
+    return this;
+  }
+
+  /**
+   * Adds a {@link ShouldStartFilter} that will be used to determine whether a span should be
+   * started for the given operation. The filter is called before any span creation logic.
+   */
+  @CanIgnoreReturnValue
+  public InstrumenterBuilder<REQUEST, RESPONSE> addShouldStartFilter(
+      ShouldStartFilter<? super REQUEST> filter) {
+    shouldStartFilters.add(requireNonNull(filter, "shouldStartFilter"));
     return this;
   }
 
@@ -434,6 +446,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             @Override
             public void addContextCustomizer(ContextCustomizer<REQUEST> customizer) {
               builder.addContextCustomizer(customizer);
+            }
+
+            @Override
+            public void addShouldStartFilter(ShouldStartFilter<? super REQUEST> filter) {
+              builder.addShouldStartFilter(filter);
             }
 
             @Override

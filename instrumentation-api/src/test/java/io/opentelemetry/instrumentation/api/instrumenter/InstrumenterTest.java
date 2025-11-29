@@ -620,6 +620,21 @@ class InstrumenterTest {
   }
 
   @Test
+  void shouldStartFilter() {
+    ShouldStartFilter<String> filter = (context, request, spanKind, instrumentationName) -> 
+        !request.equals("blocked");
+    
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(), "test", request -> "test span")
+            .addShouldStartFilter(filter)
+            .buildInstrumenter();
+
+    assertThat(instrumenter.shouldStart(Context.root(), "allowed")).isTrue();
+    assertThat(instrumenter.shouldStart(Context.root(), "blocked")).isFalse();
+  }
+
+  @Test
   void instrumentationVersion_default() {
     InstrumenterBuilder<Map<String, String>, Map<String, String>> builder =
         Instrumenter.builder(

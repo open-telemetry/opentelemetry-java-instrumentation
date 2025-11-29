@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesExtractor;
@@ -80,6 +81,15 @@ public interface InstrumenterCustomizer {
    * @return this InstrumenterCustomizer for method chaining
    */
   InstrumenterCustomizer addContextCustomizer(ContextCustomizer<?> customizer);
+
+  /**
+   * Adds a {@link ShouldStartFilter} that will be used to determine whether a span should be
+   * started for the given operation. The filter is called before any span creation logic.
+   *
+   * @param filter the should start filter to add
+   * @return this InstrumenterCustomizer for method chaining
+   */
+  InstrumenterCustomizer addShouldStartFilter(ShouldStartFilter<?> filter);
 
   /**
    * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
