@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource
 import io.opentelemetry.instrumentation.ktor.v2_0.InstrumentationProperties.INSTRUMENTATION_NAME
 import io.opentelemetry.instrumentation.ktor.v2_0.common.AbstractKtorServerTelemetryBuilder
-import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorServerTelemetryUtil
+import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorServerTelemetryUtil.configureTelemetry
 
 class KtorServerTelemetryBuilder internal constructor(
   instrumentationName: String
@@ -21,7 +21,7 @@ class KtorServerTelemetryBuilder internal constructor(
 val KtorServerTelemetry = createRouteScopedPlugin("OpenTelemetry", { KtorServerTelemetryBuilder(INSTRUMENTATION_NAME) }) {
   require(pluginConfig.isOpenTelemetryInitialized()) { "OpenTelemetry must be set" }
 
-  KtorServerTelemetryUtil.configureTelemetry(pluginConfig, application)
+  configureTelemetry(pluginConfig, application)
 
   application.environment.monitor.subscribe(Routing.RoutingCallStarted) { call ->
     HttpServerRoute.update(Context.current(), HttpServerRouteSource.SERVER, { _, arg -> arg!!.route.parent.toString() }, call)
