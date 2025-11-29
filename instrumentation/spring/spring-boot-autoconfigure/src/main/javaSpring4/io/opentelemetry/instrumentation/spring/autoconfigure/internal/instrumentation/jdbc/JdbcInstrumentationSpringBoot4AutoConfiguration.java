@@ -13,7 +13,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
+import org.springframework.boot.jdbc.autoconfigure.DataSourceAutoConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -24,12 +24,12 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnEnabledInstrumentation(module = "jdbc")
 @AutoConfiguration(after = DataSourceAutoConfiguration.class)
 @ConditionalOnBean({DataSource.class})
-@ConditionalOnClass(DataSourceAutoConfiguration.class)
 @Configuration(proxyBeanMethods = false)
-public class JdbcInstrumentationAutoConfiguration {
+@ConditionalOnClass(DataSourceAutoConfiguration.class)
+public class JdbcInstrumentationSpringBoot4AutoConfiguration {
 
   // For error prone
-  public JdbcInstrumentationAutoConfiguration() {}
+  public JdbcInstrumentationSpringBoot4AutoConfiguration() {}
 
   @Bean
   // static to avoid "is not eligible for getting processed by all BeanPostProcessors" warning

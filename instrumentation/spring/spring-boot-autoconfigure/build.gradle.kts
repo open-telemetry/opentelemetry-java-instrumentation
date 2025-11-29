@@ -23,10 +23,18 @@ sourceSets {
       setSrcDirs(listOf("src/main/javaSpring3"))
     }
   }
+  create("javaSpring4") {
+    java {
+      setSrcDirs(listOf("src/main/javaSpring4"))
+    }
+  }
 }
 
 configurations {
   named("javaSpring3CompileOnly") {
+    extendsFrom(configurations["compileOnly"])
+  }
+  named("javaSpring4CompileOnly") {
     extendsFrom(configurations["compileOnly"])
   }
 }
@@ -100,6 +108,8 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
 
+  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:latest.release")
+
   // needed for the Spring Boot 3 support
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
@@ -110,15 +120,19 @@ dependencies {
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   add("javaSpring3CompileOnly", project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
 
-  // tests don't work with spring boot 4 yet
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-actuator:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-aop:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-web:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-webflux:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-data-mongodb:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-data-r2dbc:3.+") // documented limitation
-  latestDepTestLibrary("org.springframework.boot:spring-boot-starter-data-jdbc:3.+") // documented limitation
+  // Spring Boot 4
+  add("javaSpring4CompileOnly", files(sourceSets.main.get().output.classesDirs))
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-autoconfigure:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-jdbc:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-restclient:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-data-mongodb:4.0.0")
+  add("javaSpring4CompileOnly", "org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
+  add("javaSpring4CompileOnly", project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -186,6 +200,28 @@ testing {
       }
     }
 
+    val testSpring4 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation("org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
+        implementation("org.springframework.boot:spring-boot-restclient:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-actuator:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:4.0.0")
+        implementation("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation(project(":instrumentation-api"))
+        implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
+        implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+        runtimeOnly("com.h2database:h2:1.4.197")
+        runtimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
+      }
+    }
+
     val testDeclarativeConfig by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
@@ -208,6 +244,15 @@ configurations.configureEach {
 tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
+
+    // Exclude Spring Boot specific tests from compilation when testLatestDeps is true
+    // These tests are covered by testSpring4 suite
+    if (latestDepTest) {
+      exclude("**/micrometer/MicrometerBridgeAutoConfigurationTest.java")
+      exclude("**/r2dbc/R2DbcInstrumentationAutoConfigurationTest.java")
+      exclude("**/jdbc/JdbcInstrumentationAutoConfigurationTest.java")
+      exclude("**/web/SpringWebInstrumentationAutoConfigurationTest.java")
+    }
   }
 
   withType<Test>().configureEach {
@@ -216,6 +261,17 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  }
+
+  test {
+    // Exclude Spring Boot specific tests when testLatestDeps is true
+    // These tests are covered by testSpring4 suite
+    if (latestDepTest) {
+      exclude("**/micrometer/MicrometerBridgeAutoConfigurationTest.class")
+      exclude("**/r2dbc/R2DbcInstrumentationAutoConfigurationTest.class")
+      exclude("**/jdbc/JdbcInstrumentationAutoConfigurationTest.class")
+      exclude("**/web/SpringWebInstrumentationAutoConfigurationTest.class")
+    }
   }
 
   named<JavaCompile>("compileJavaSpring3Java") {
@@ -234,12 +290,30 @@ tasks {
     isEnabled = testSpring3
   }
 
+  named<JavaCompile>("compileJavaSpring4Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<JavaCompile>("compileTestSpring4Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<Test>("testSpring4") {
+    isEnabled = testSpring3 // same condition as Spring 3 (requires Java 17+)
+  }
+
   named<Jar>("jar") {
     from(sourceSets["javaSpring3"].output)
+    from(sourceSets["javaSpring4"].output)
   }
 
   named<Jar>("sourcesJar") {
     from(sourceSets["javaSpring3"].java)
+    from(sourceSets["javaSpring4"].java)
   }
 
   val testStableSemconv by registering(Test::class) {

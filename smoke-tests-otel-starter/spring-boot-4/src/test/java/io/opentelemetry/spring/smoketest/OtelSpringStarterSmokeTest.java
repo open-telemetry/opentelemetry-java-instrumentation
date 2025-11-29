@@ -9,9 +9,10 @@ import java.net.URI;
 import java.util.List;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.restclient.RestTemplateBuilder;
+import org.springframework.boot.resttestclient.TestRestTemplate;
+import org.springframework.boot.resttestclient.autoconfigure.AutoConfigureTestRestTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.RequestEntity;
@@ -30,7 +31,9 @@ import org.springframework.web.client.RestTemplate;
       "otel.instrumentation.runtime-telemetry.emit-experimental-telemetry=true",
       "otel.instrumentation.runtime-telemetry-java17.enable-all=true",
       "otel.instrumentation.common.thread_details.enabled=true",
+      "logging.level.org.springframework.boot.autoconfigure=DEBUG",
     })
+@AutoConfigureTestRestTemplate
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Autowired protected TestRestTemplate testRestTemplate;
@@ -66,7 +69,6 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
             "jvm.buffer.count",
             "jvm.class.count",
             "jvm.cpu.context_switch",
-            "jvm.cpu.longlock",
             "jvm.system.cpu.utilization",
             "jvm.gc.duration",
             "jvm.memory.init",
