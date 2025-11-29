@@ -42,7 +42,7 @@ public class CountedInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.incubator.Attribute"))));
-    // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
+    // exclude all kotlin suspend methods, these are handled in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
         AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
   }
@@ -57,19 +57,19 @@ public class CountedInstrumentation implements TypeInstrumentation {
     ElementMatcher.Junction<MethodDescription> countedMethods =
         annotatedMethodMatcher.and(not(excludedMethodsMatcher));
 
-    ElementMatcher.Junction<MethodDescription> timedMethodsWithParameters =
+    ElementMatcher.Junction<MethodDescription> countedMethodsWithParameters =
         countedMethods.and(annotatedParametersMatcher);
 
-    ElementMatcher.Junction<MethodDescription> timedMethodsWithoutParameters =
+    ElementMatcher.Junction<MethodDescription> countedMethodsWithoutParameters =
         countedMethods.and(not(annotatedParametersMatcher));
 
     transformer.applyAdviceToMethod(
-        timedMethodsWithoutParameters, CountedInstrumentation.class.getName() + "$CountedAdvice");
+        countedMethodsWithoutParameters, CountedInstrumentation.class.getName() + "$CountedAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
-    // with @MetricsAttribute to avoid unnecessarily copying the arguments into an array.
+    // with @Attribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
-        timedMethodsWithParameters,
+        countedMethodsWithParameters,
         CountedInstrumentation.class.getName() + "$CountedAttributesAdvice");
   }
 

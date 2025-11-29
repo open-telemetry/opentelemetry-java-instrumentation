@@ -42,7 +42,7 @@ public class TimedInstrumentation implements TypeInstrumentation {
                 isAnnotatedWith(
                     named(
                         "application.io.opentelemetry.instrumentation.annotations.incubator.Attribute"))));
-    // exclude all kotlin suspend methods, these are handle in kotlinx-coroutines instrumentation
+    // exclude all kotlin suspend methods, these are handled in kotlinx-coroutines instrumentation
     excludedMethodsMatcher =
         AnnotationExcludedMethods.configureExcludedMethods().or(isKotlinSuspendMethod());
   }
@@ -67,7 +67,7 @@ public class TimedInstrumentation implements TypeInstrumentation {
         timedMethodsWithoutParameters, TimedInstrumentation.class.getName() + "$TimedAdvice");
 
     // Only apply advice for tracing parameters as attributes if any of the parameters are annotated
-    // with @MetricsAttribute to avoid unnecessarily copying the arguments into an array.
+    // with @Attribute to avoid unnecessarily copying the arguments into an array.
     transformer.applyAdviceToMethod(
         timedMethodsWithParameters,
         TimedInstrumentation.class.getName() + "$TimedAttributesAdvice");
