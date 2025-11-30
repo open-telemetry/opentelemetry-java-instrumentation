@@ -36,7 +36,7 @@ val testLatestDeps = findProperty("testLatestDeps") as Boolean
 
 testing {
   suites {
-    val xxlJob33 by registering(JvmTestSuite::class) {
+    val xxlJob33Test by registering(JvmTestSuite::class) {
       dependencies {
         val version = if (testLatestDeps) "latest.release" else "3.3.0"
         implementation("com.xuxueli:xxl-job-core:$version")
@@ -46,14 +46,26 @@ testing {
   }
 }
 
-tasks.withType<Test>().configureEach {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
-}
-
 tasks {
+  withType<Test>().configureEach {
+    // required on jdk17
+    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+  }
+
+  named("compileXxlJob33TestJava", JavaCompile::class).configure {
+    options.release.set(17)
+  }
+  val testJavaVersion =
+    gradle.startParameter.projectProperties.get("testJavaVersion")?.let(JavaVersion::toVersion)
+      ?: JavaVersion.current()
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    named("xxlJob33Test", Test::class).configure {
+      enabled = false
+    }
+  }
+
   check {
     dependsOn(testing.suites)
   }
