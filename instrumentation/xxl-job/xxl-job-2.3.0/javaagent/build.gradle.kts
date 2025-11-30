@@ -27,6 +27,23 @@ dependencies {
   testInstrumentation(project(":instrumentation:xxl-job:xxl-job-2.3.0:javaagent"))
 
   testImplementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+
+  // latest version is tested in a separate test suite
+  latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // documented limitation
+}
+
+val testLatestDeps = findProperty("testLatestDeps") as Boolean
+
+testing {
+  suites {
+    val xxlJob33 by registering(JvmTestSuite::class) {
+      dependencies {
+        val version = if (testLatestDeps) "latest.release" else "3.3.0"
+        implementation("com.xuxueli:xxl-job-core:$version")
+        implementation(project(":instrumentation:xxl-job:xxl-job-common:testing"))
+      }
+    }
+  }
 }
 
 tasks.withType<Test>().configureEach {
@@ -34,4 +51,10 @@ tasks.withType<Test>().configureEach {
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("-Dotel.instrumentation.xxl-job.experimental-span-attributes=true")
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }
