@@ -43,7 +43,7 @@ public abstract class AbstractLettuceClientTest {
 
   protected static class CustomClientResources implements ClientResources {
 
-    private ClientResources delegate;
+    private final ClientResources delegate;
 
     protected CustomClientResources(Builder builder) {
       this.delegate = builder.build();
