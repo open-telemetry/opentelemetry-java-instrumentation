@@ -158,7 +158,12 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes autoIndexId in create
+                                // commands
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   @Test
@@ -191,7 +196,12 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes autoIndexId in create
+                                // commands
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   @Test
@@ -225,7 +235,12 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes autoIndexId in create
+                                // commands
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   @Test
@@ -260,7 +275,11 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes all fields together
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
 
     assertDurationMetric(
         testing(),
@@ -324,7 +343,11 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes all fields together
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   @Test
@@ -378,7 +401,11 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes all fields together
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   @Test
@@ -432,7 +459,11 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes all fields together
+                                "{\"count\":\""
+                                    + collectionName
+                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   @Test
@@ -520,7 +551,12 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                                // mongodb-driver-async 3.6.x includes autoIndexId in create
+                                // commands
+                                "{\"create\":\""
+                                    + collectionName
+                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
   }
 
   protected String createCollectionName() {
