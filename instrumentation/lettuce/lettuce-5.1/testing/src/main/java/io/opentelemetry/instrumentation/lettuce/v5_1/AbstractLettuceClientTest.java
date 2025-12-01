@@ -9,13 +9,27 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.event.EventBus;
+import io.lettuce.core.event.EventPublisherOptions;
+import io.lettuce.core.metrics.CommandLatencyRecorder;
+import io.lettuce.core.resource.ClientResources;
 import io.lettuce.core.resource.DefaultClientResources;
+import io.lettuce.core.resource.Delay;
+import io.lettuce.core.resource.DnsResolver;
+import io.lettuce.core.resource.EventLoopGroupProvider;
+import io.lettuce.core.resource.NettyCustomizer;
+import io.lettuce.core.resource.SocketAddressResolver;
+import io.lettuce.core.tracing.Tracing;
+import io.netty.util.Timer;
+import io.netty.util.concurrent.EventExecutorGroup;
+import io.netty.util.concurrent.Future;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.slf4j.Logger;
@@ -27,10 +41,92 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractLettuceClientTest {
 
-  protected static class CustomClientResources extends DefaultClientResources {
+  protected static class CustomClientResources implements ClientResources {
+
+    private ClientResources delegate;
 
     protected CustomClientResources(Builder builder) {
-      super(builder);
+      this.delegate = builder.build();
+    }
+
+    @Override
+    public Builder mutate() {
+      return delegate.mutate();
+    }
+
+    @Override
+    public Future<Boolean> shutdown() {
+      return delegate.shutdown();
+    }
+
+    @Override
+    public Future<Boolean> shutdown(long l, long l1, TimeUnit timeUnit) {
+      return delegate.shutdown(l, l1, timeUnit);
+    }
+
+    @Override
+    public EventPublisherOptions commandLatencyPublisherOptions() {
+      return delegate.commandLatencyPublisherOptions();
+    }
+
+    @Override
+    public CommandLatencyRecorder commandLatencyRecorder() {
+      return delegate.commandLatencyRecorder();
+    }
+
+    @Override
+    public int computationThreadPoolSize() {
+      return delegate.computationThreadPoolSize();
+    }
+
+    @Override
+    public DnsResolver dnsResolver() {
+      return delegate.dnsResolver();
+    }
+
+    @Override
+    public EventBus eventBus() {
+      return delegate.eventBus();
+    }
+
+    @Override
+    public EventLoopGroupProvider eventLoopGroupProvider() {
+      return delegate.eventLoopGroupProvider();
+    }
+
+    @Override
+    public EventExecutorGroup eventExecutorGroup() {
+      return delegate.eventExecutorGroup();
+    }
+
+    @Override
+    public int ioThreadPoolSize() {
+      return delegate.ioThreadPoolSize();
+    }
+
+    @Override
+    public NettyCustomizer nettyCustomizer() {
+      return delegate.nettyCustomizer();
+    }
+
+    @Override
+    public Delay reconnectDelay() {
+      return delegate.reconnectDelay();
+    }
+
+    @Override
+    public SocketAddressResolver socketAddressResolver() {
+      return delegate.socketAddressResolver();
+    }
+
+    @Override
+    public Timer timer() {
+      return delegate.timer();
+    }
+
+    @Override
+    public Tracing tracing() {
+      return delegate.tracing();
     }
   }
 
