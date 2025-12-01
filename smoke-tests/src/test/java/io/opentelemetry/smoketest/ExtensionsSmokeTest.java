@@ -31,10 +31,20 @@ public class ExtensionsSmokeTest {
   private static final String extensionInlinePath =
       System.getProperty("io.opentelemetry.smoketest.extension.inline.path");
 
-  // TODO: add version constant in TestImageVersions.
-  private static final String IMAGE_VERSION = "jdk17-20251201.122011";
+  // TODO: use reusable docker image when available
+  private static final String IMAGE_VERSION = "jdk17-latest";
 
-  // TODO: test with and without indy mode
+  // TODO: test with virtual fields directly into advice method
+  // - VirtualField.find method call directly in advice method
+  // - implement test in the application that allows to detect it: for example state has been attached to an immutable object
+
+  // TODO: create an "indy compliant extension"
+
+  // TODO: test with and without "indy mode"
+  // inlined extension should work as usual
+  // indy extension is only expected to work in "indy mode"
+
+
 
   @Test
   void inlinedExtension() throws InterruptedException {
@@ -50,6 +60,7 @@ public class ExtensionsSmokeTest {
         .withEnv("OTEL_LOGS_EXPORTER", "none")
         .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:" + TARGET_AGENT_FILENAME)
         .withEnv("OTEL_JAVAAGENT_EXTENSIONS", TARGET_EXTENSION_FILENAME)
+        .withEnv("OTEL_JAVAAGENT_DEBUG", "true")
         .withCopyFileToContainer(
             MountableFile.forHostPath(agentPath), TARGET_AGENT_FILENAME)
         .withCopyFileToContainer(
