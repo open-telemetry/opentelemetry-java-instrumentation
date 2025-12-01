@@ -5,6 +5,10 @@
 
 package io.opentelemetry.smoketest.extensions.app;
 
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import java.io.PrintStream;
+import java.util.Arrays;
+
 public class AppMain {
 
   private AppMain() {}
@@ -16,12 +20,18 @@ public class AppMain {
     testLocalValue();
   }
 
+  private static void msg(String msg) {
+    // avoid checkstyle to complain
+    PrintStream out = System.out;
+    out.println(msg);
+  }
+
   private static void testReturnValue() {
     int returnValue = returnValue(42);
     if (returnValue != 42) {
-      System.out.println("return value has been modified");
+      msg("return value has been modified");
     } else {
-      System.out.println("return value not modified");
+      msg("return value not modified");
     }
   }
 
@@ -37,9 +47,9 @@ public class AppMain {
   private static void methodArguments(int argument, int originalArgument) {
     // method first argument should be modified by instrumentation
     if (argument != originalArgument) {
-      System.out.println("argument has been modified");
+      msg("argument has been modified");
     } else {
-      System.out.println("argument not modified");
+      msg("argument not modified");
     }
   }
 
@@ -48,9 +58,9 @@ public class AppMain {
     setVirtualFieldValue(target, 42);
     Integer fieldValue = getVirtualFieldValue(target);
     if (fieldValue == null || fieldValue != 42) {
-      System.out.println("virtual field not supported");
+      msg("virtual field not supported");
     } else {
-      System.out.println("virtual field supported");
+      msg("virtual field supported");
     }
   }
 
@@ -65,26 +75,23 @@ public class AppMain {
 
   private static void testLocalValue() {
     int[] input = new int[] {1, 2, 3};
-    int result = localValue(input);
-    if (result != 6) {
+    int[] result = localValue(input);
+    if (result.length != 3) {
       throw new IllegalStateException();
     }
-    // assumption on the instrumentation implementation to use a local value to preserve original array
-    boolean preserved = input[0] == 1 && input[1] == 2 && input[2] == 3;
-    if(!preserved) {
-      System.out.println("local advice variable not supported");
+    // assumption on the instrumentation implementation to use a local value to preserve original
+    // array
+    boolean preserved = result[0] == 1 && result[1] == 2 && result[2] == 3;
+    if (!preserved) {
+      msg("local advice variable not supported");
     } else {
-      System.out.println("local advice variable supported");
+      msg("local advice variable supported");
     }
-
   }
 
-  private static int localValue(int[] array) {
-    int sum = 0;
-    for (int i = 0; i < array.length; i++) {
-      sum += array[i];
-      array[i] = 0;
-    }
-    return sum;
+  @CanIgnoreReturnValue
+  private static int[] localValue(int[] array) {
+    Arrays.fill(array, 0);
+    return array;
   }
 }

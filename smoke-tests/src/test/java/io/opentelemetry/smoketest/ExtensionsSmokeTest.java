@@ -92,5 +92,8 @@ public class ExtensionsSmokeTest {
     assertThat(appOutput)
         .describedAs("virtual field support")
         .contains("virtual field supported");
+    assertThat(appOutput)
+        .describedAs("local advice variable support")
+        .contains("local advice variable supported");
   }
 }
