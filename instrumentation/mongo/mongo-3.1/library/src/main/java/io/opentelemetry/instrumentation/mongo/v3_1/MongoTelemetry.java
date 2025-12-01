@@ -19,19 +19,6 @@ public final class MongoTelemetry {
     return builder(openTelemetry).build();
   }
 
-  /** Returns a new {@link MongoTelemetry} configured with the given {@link OpenTelemetry}. */
-  public static MongoTelemetry create(OpenTelemetry openTelemetry, String instrumentationName) {
-    return builder(openTelemetry, instrumentationName).build();
-  }
-
-  /**
-   * Returns a new {@link MongoTelemetryBuilder} configured with the given {@link OpenTelemetry}.
-   */
-  public static MongoTelemetryBuilder builder(
-      OpenTelemetry openTelemetry, String instrumentationName) {
-    return new MongoTelemetryBuilder(openTelemetry, instrumentationName);
-  }
-
   /**
    * Returns a new {@link MongoTelemetryBuilder} configured with the given {@link OpenTelemetry}.
    */

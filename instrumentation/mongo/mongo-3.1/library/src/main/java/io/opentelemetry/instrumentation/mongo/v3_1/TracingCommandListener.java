@@ -14,12 +14,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-final class TracingCommandListener implements CommandListener {
+public final class TracingCommandListener implements CommandListener {
 
   private final Instrumenter<CommandStartedEvent, Void> instrumenter;
   private final Map<Integer, ContextAndRequest> requestMap;
 
-  TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
+  public TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
     this.instrumenter = instrumenter;
     this.requestMap = new ConcurrentHashMap<>();
   }

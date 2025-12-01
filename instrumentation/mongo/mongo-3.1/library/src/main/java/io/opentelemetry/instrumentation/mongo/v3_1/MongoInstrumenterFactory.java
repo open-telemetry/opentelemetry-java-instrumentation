@@ -14,12 +14,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 
-class MongoInstrumenterFactory {
+public final class MongoInstrumenterFactory {
 
   private static final MongoAttributesExtractor attributesExtractor =
       new MongoAttributesExtractor();
 
-  static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
+  public static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
       boolean statementSanitizationEnabled,
