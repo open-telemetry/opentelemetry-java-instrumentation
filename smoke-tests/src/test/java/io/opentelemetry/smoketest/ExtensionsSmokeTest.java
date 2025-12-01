@@ -85,9 +85,12 @@ public class ExtensionsSmokeTest {
         Arrays.asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
     assertThat(appOutput)
         .describedAs("return value instrumentation")
-        .contains("return value has been modified")
+        .contains("return value has been modified");
+    assertThat(appOutput)
         .describedAs("argument value instrumentation")
         .contains("argument has been modified");
-    // TODO add assertion for virtual fields
+    assertThat(appOutput)
+        .describedAs("virtual field support")
+        .contains("virtual field supported");
   }
 }

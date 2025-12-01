@@ -13,6 +13,7 @@ public class AppMain {
     testReturnValue();
     testMethodArguments();
     testVirtualFields();
+    testLocalValue();
   }
 
   private static void testReturnValue() {
@@ -60,5 +61,30 @@ public class AppMain {
   public static Integer getVirtualFieldValue(Object target) {
     // implementation should be provided by instrumentation
     return null;
+  }
+
+  private static void testLocalValue() {
+    int[] input = new int[] {1, 2, 3};
+    int result = localValue(input);
+    if (result != 6) {
+      throw new IllegalStateException();
+    }
+    // assumption on the instrumentation implementation to use a local value to preserve original array
+    boolean preserved = input[0] == 1 && input[1] == 2 && input[2] == 3;
+    if(!preserved) {
+      System.out.println("local advice variable not supported");
+    } else {
+      System.out.println("local advice variable supported");
+    }
+
+  }
+
+  private static int localValue(int[] array) {
+    int sum = 0;
+    for (int i = 0; i < array.length; i++) {
+      sum += array[i];
+      array[i] = 0;
+    }
+    return sum;
   }
 }
