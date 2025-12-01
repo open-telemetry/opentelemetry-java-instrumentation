@@ -61,8 +61,7 @@ class LettuceCompatibilityTest extends AbstractLettuceClientTest {
 
   @Test
   void testEmptyTrace() {
-    String res =
-        testing().runWithSpan("parent", () -> syncCommands.set("TESTSETKEY", "TESTSETVAL"));
+    String res = syncCommands.set("TESTSETKEY", "TESTSETVAL");
     assertThat(res).isEqualTo("OK");
 
     assertThat(testing.spans().isEmpty()).isTrue();
