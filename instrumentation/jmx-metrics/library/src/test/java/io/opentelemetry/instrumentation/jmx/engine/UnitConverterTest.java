@@ -32,15 +32,26 @@ class UnitConverterTest {
   })
   void shouldSupportPredefined_to_s_Conversions(
       Long originalValue, String originalUnit, Double expectedConvertedValue) {
-    // Given
-    String targetUnit = "s";
+    testConversion(originalValue, originalUnit, expectedConvertedValue, "s");
+  }
 
-    // When
+  @ParameterizedTest
+  @CsvSource({
+    "100,1.0", "99,0.99", "1,0.01", "0,0",
+  })
+  void shouldSupportPredefined_percent_Conversions(
+      Long originalValue, Double expectedConvertedValue) {
+    testConversion(originalValue, "%", expectedConvertedValue, "1");
+  }
+
+  private static void testConversion(
+      Long originalValue, String originalUnit, Double expectedConvertedValue, String targetUnit) {
     UnitConverter converter = UnitConverter.getInstance(originalUnit, targetUnit);
+
+    assertThat(converter).isNotNull();
     Number actualValue = converter.convert(originalValue);
 
-    // Then
-    assertEquals(expectedConvertedValue, actualValue);
+    assertThat(expectedConvertedValue).isEqualTo(actualValue);
   }
 
   @ParameterizedTest

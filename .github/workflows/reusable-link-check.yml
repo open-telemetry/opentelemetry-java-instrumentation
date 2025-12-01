@@ -22,7 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
           mise run lint:local-links
-          mise run lint:links-in-modified-files --base origin/${{ github.base_ref }} --head ${{ github.event.pull_request.head.sha }} --event pull_request
+          mise run lint:links-in-modified-files --base origin/${{ github.base_ref }} --head ${{ github.event.pull_request.head.sha }}
 
       - name: Link check for pushes and scheduled workflows
         if: github.event_name != 'pull_request'

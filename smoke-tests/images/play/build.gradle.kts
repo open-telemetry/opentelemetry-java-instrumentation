@@ -1,3 +1,4 @@
+import com.google.cloud.tools.jib.gradle.JibTask
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import play.gradle.Language
 import java.time.LocalDateTime
@@ -43,4 +44,11 @@ jib {
   from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
+}
+
+tasks {
+  withType<JibTask>().configureEach {
+    // Jib tasks access Task.project at execution time which is not compatible with configuration cache
+    notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
+  }
 }

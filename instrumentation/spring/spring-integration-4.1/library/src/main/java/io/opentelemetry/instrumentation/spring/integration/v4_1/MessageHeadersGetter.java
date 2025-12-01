@@ -31,7 +31,11 @@ enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
   }
 
   @Override
-  public String get(MessageWithChannel carrier, String key) {
+  @Nullable
+  public String get(@Nullable MessageWithChannel carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     MessageHeaders headers = carrier.getMessage().getHeaders();
     String nativeHeaderValue = getNativeHeader(headers, key);
     if (nativeHeaderValue != null) {
