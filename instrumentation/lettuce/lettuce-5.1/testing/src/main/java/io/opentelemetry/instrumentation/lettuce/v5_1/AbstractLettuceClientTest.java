@@ -13,7 +13,6 @@ import io.lettuce.core.event.EventBus;
 import io.lettuce.core.event.EventPublisherOptions;
 import io.lettuce.core.metrics.CommandLatencyRecorder;
 import io.lettuce.core.resource.ClientResources;
-import io.lettuce.core.resource.DefaultClientResources;
 import io.lettuce.core.resource.Delay;
 import io.lettuce.core.resource.DnsResolver;
 import io.lettuce.core.resource.EventLoopGroupProvider;
