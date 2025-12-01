@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.servlet.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertAttributesExtractor;
+import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanNameExtractor;
+import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanStatusExtractor;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
@@ -56,12 +60,14 @@ public final class ServletTelemetryBuilder {
   /** Sets the status extractor for server spans. */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setStatusExtractor(
-      UnaryOperator<
-              SpanStatusExtractor<
-                  ServletRequestContext<HttpServletRequest>,
-                  ServletResponseContext<HttpServletResponse>>>
-          statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractor) {
+    builder.setStatusExtractor(
+        convertSpanStatusExtractor(
+            statusExtractor,
+            ServletRequestContext::new,
+            ServletResponseContext::new,
+            ServletRequestContext::request,
+            ServletResponseContext::response));
     return this;
   }
 
@@ -71,11 +77,10 @@ public final class ServletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<
-              ServletRequestContext<HttpServletRequest>,
-              ServletResponseContext<HttpServletResponse>>
-          attributesExtractor) {
-    builder.addAttributesExtractor(attributesExtractor);
+      AttributesExtractor<HttpServletRequest, HttpServletResponse> attributesExtractor) {
+    builder.addAttributesExtractor(
+        convertAttributesExtractor(
+            attributesExtractor, ServletRequestContext::request, ServletResponseContext::response));
     return this;
   }
 
@@ -135,9 +140,10 @@ public final class ServletTelemetryBuilder {
   /** Sets custom server {@link SpanNameExtractor} via transform function. */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<ServletRequestContext<HttpServletRequest>>>
-          serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(serverSpanNameExtractor);
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> serverSpanNameExtractor) {
+    builder.setSpanNameExtractor(
+        convertSpanNameExtractor(
+            serverSpanNameExtractor, ServletRequestContext::new, ServletRequestContext::request));
     return this;
   }
 
