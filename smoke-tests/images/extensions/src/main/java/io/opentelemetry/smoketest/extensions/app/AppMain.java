@@ -12,6 +12,7 @@ public class AppMain {
   public static void main(String[] args) {
     testReturnValue();
     testMethodArguments();
+    testVirtualFields();
   }
 
   private static void testReturnValue() {
@@ -24,6 +25,7 @@ public class AppMain {
   }
 
   private static int returnValue(int value) {
+    // method return value should be modified by instrumentation
     return value;
   }
 
@@ -32,11 +34,32 @@ public class AppMain {
   }
 
   private static void methodArguments(int argument, int originalArgument) {
+    // method first argument should be modified by instrumentation
     if (argument != originalArgument) {
       System.out.println("argument has been modified");
     } else {
       System.out.println("argument not modified");
     }
+  }
+
+  private static void testVirtualFields() {
+    Runnable target = () -> {};
+    setVirtualFieldValue(target, 42);
+    Integer fieldValue = getVirtualFieldValue(target);
+    if(fieldValue == null || fieldValue != 42){
+      System.out.println("virtual field not supported");
+    } else {
+      System.out.println("virtual field supported");
+    }
+  }
+
+  public static void setVirtualFieldValue(Runnable target, Integer value) {
+    // implementation should be provided by instrumentation
+  }
+
+  public static Integer getVirtualFieldValue(Runnable target) {
+    // implementation should be provided by instrumentation
+    return null;
   }
 
 }

@@ -32,7 +32,7 @@ public class ExtensionsSmokeTest {
       System.getProperty("io.opentelemetry.smoketest.extension.inline.path");
 
   // TODO: add version constant in TestImageVersions.
-  private static final String IMAGE_VERSION = "jdk17-20251128.170123";
+  private static final String IMAGE_VERSION = "jdk17-20251201.122011";
 
   // TODO: test with and without indy mode
 

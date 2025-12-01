@@ -6,8 +6,10 @@
 package io.opentelemetry.smoketest.extensions.inlined;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -22,13 +24,25 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   }
 
   @Override
-  public void transform(TypeTransformer typeTransformer) {
-    typeTransformer.applyAdviceToMethod(
-        named("returnValue").and(takesArgument(0, int.class)),
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        named("returnValue")
+            .and(takesArgument(0, int.class)),
         this.getClass().getName() + "$ModifyReturnValueAdvice");
-    typeTransformer.applyAdviceToMethod(
-        named("methodArguments").and(takesArgument(0, int.class)),
+    transformer.applyAdviceToMethod(
+        named("methodArguments")
+            .and(takesArgument(0, int.class)),
         this.getClass().getName() + "$ModifyArgumentsAdvice");
+    transformer.applyAdviceToMethod(
+        named("setVirtualFieldValue")
+            .and(takesArgument(0, Runnable.class))
+            .and(takesArgument(1, Integer.class)),
+        this.getClass().getName() + "$VirtualFieldSetAdvice");
+    transformer.applyAdviceToMethod(
+        named("getVirtualFieldValue")
+            .and(takesArgument(0, Runnable.class))
+            .and(returns(Integer.class)),
+        this.getClass().getName() + "$VirtualFieldGetAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -45,6 +59,23 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(@Advice.Argument(value = 0, readOnly = false) int argument) {
       argument = argument - 1;
+    }
+  }
+
+  public static class VirtualFieldSetAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class)
+    public static void onEnter(@Advice.Argument(0) Runnable target,@Advice.Argument(1) Integer value) {
+      VirtualField<Runnable, Integer> field = VirtualField.find(Runnable.class, Integer.class);
+      field.set(target, value);
+    }
+  }
+
+  public static class VirtualFieldGetAdvice {
+    @SuppressWarnings("UnusedVariable")
+    @Advice.OnMethodExit(suppress = Throwable.class)
+    public static void onExit(@Advice.Argument(0) Runnable target, @Advice.Return(readOnly = false) Integer returnValue) {
+      VirtualField<Runnable, Integer> field = VirtualField.find(Runnable.class, Integer.class);
+      returnValue = field.get(target);
     }
   }
 }
