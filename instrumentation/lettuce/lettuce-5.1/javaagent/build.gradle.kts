@@ -44,7 +44,7 @@ tasks {
 
 testing {
   suites {
-    val test_compatibility by registering(JvmTestSuite::class) {
+    val testCompatibility by registering(JvmTestSuite::class) {
       dependencies {
         implementation("io.lettuce:lettuce-core:5.2.0.RELEASE")
         implementation("io.projectreactor:reactor-core:3.5.3")
@@ -52,5 +52,11 @@ testing {
         implementation(project(":instrumentation:lettuce:lettuce-5.1:testing"))
       }
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

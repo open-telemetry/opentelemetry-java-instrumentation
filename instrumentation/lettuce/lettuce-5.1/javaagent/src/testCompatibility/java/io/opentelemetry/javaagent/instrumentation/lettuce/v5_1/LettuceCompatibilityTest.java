@@ -19,7 +19,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-public class DisableNoEntranceSpanAndMetricsTest extends AbstractLettuceClientTest {
+class LettuceCompatibilityTest extends AbstractLettuceClientTest {
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

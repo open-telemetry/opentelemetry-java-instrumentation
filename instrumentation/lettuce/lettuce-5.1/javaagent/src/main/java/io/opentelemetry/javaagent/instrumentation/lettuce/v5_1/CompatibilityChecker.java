@@ -41,8 +41,6 @@ public class CompatibilityChecker {
             }
           });
       Tracing.getContext();
-      Tracing.clearContext();
-      Tracing.disabled();
       isCompatible = true;
     } catch (Throwable t) {
       isCompatible = false;
