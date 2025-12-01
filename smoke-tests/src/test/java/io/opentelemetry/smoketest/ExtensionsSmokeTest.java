@@ -89,9 +89,7 @@ public class ExtensionsSmokeTest {
     assertThat(appOutput)
         .describedAs("argument value instrumentation")
         .contains("argument has been modified");
-    assertThat(appOutput)
-        .describedAs("virtual field support")
-        .contains("virtual field supported");
+    assertThat(appOutput).describedAs("virtual field support").contains("virtual field supported");
     assertThat(appOutput)
         .describedAs("local advice variable support")
         .contains("local advice variable supported");
