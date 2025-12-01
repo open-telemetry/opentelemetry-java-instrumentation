@@ -5,12 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
-import io.lettuce.core.tracing.TraceContext;
-import io.lettuce.core.tracing.TraceContextProvider;
 import io.lettuce.core.tracing.Tracing;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-import reactor.core.publisher.Mono;
 
 public class CompatibilityChecker {
 
@@ -20,7 +17,7 @@ public class CompatibilityChecker {
   private static final Lock lock = new ReentrantLock();
 
   // related to https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/10997
-  // if users are using  incompatible versions of reactor-core and lettuce
+  // if users are using incompatible versions of reactor-core and lettuce
   // then just disable the instrumentation
   public static boolean checkCompatible() {
     lock.lock();
@@ -28,18 +25,6 @@ public class CompatibilityChecker {
       if (isCompatible != null) {
         return isCompatible;
       }
-      Tracing.withTraceContextProvider(
-          new TraceContextProvider() {
-            @Override
-            public TraceContext getTraceContext() {
-              return null;
-            }
-
-            @Override
-            public Mono<TraceContext> getTraceContextLater() {
-              return TraceContextProvider.super.getTraceContextLater();
-            }
-          });
       Tracing.getContext();
       isCompatible = true;
     } catch (Throwable t) {

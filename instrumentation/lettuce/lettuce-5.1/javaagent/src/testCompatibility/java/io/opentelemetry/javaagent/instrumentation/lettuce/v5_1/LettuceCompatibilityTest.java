@@ -9,6 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.sync.RedisCommands;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.lettuce.v5_1.AbstractLettuceClientTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -60,11 +61,14 @@ class LettuceCompatibilityTest extends AbstractLettuceClientTest {
   }
 
   @Test
-  void testEmptyTrace() {
-    String res = syncCommands.set("TESTSETKEY", "TESTSETVAL");
+  void testInstrumentationDisabled() {
+    String res =
+        testing().runWithSpan("parent", () -> syncCommands.set("TESTSETKEY", "TESTSETVAL"));
     assertThat(res).isEqualTo("OK");
-
-    assertThat(testing.spans().isEmpty()).isTrue();
-    assertThat(testing.metrics().isEmpty()).isTrue();
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 }
