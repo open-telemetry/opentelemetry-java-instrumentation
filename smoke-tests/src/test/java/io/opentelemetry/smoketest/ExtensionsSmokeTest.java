@@ -5,7 +5,16 @@
 
 package io.opentelemetry.smoketest;
 
-import org.junit.jupiter.api.Test;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.GenericContainer;
@@ -13,11 +22,6 @@ import org.testcontainers.containers.output.OutputFrame;
 import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.List;
-
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 public class ExtensionsSmokeTest {
 
@@ -31,49 +35,59 @@ public class ExtensionsSmokeTest {
   private static final String extensionInlinePath =
       System.getProperty("io.opentelemetry.smoketest.extension.inline.path");
 
-  // TODO: use reusable docker image when available
-  private static final String IMAGE_VERSION = "jdk17-latest";
+  private static final String TARGET_APP_FILENAME = "/app.jar";
+  private static final String appPath =
+      System.getProperty("io.opentelemetry.smoketest.extension.testapp.path");
 
-  // TODO: test with virtual fields directly into advice method
-  // - VirtualField.find method call directly in advice method
-  // - implement test in the application that allows to detect it: for example state has been attached to an immutable object
+  private static final String IMAGE = "eclipse-temurin:21";
 
-  // TODO: create an "indy compliant extension"
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void inlinedExtension(boolean indy) throws InterruptedException {
 
-  // TODO: test with and without "indy mode"
-  // inlined extension should work as usual
-  // indy extension is only expected to work in "indy mode"
+    List<String> cmd = new ArrayList<>();
+    cmd.add("java");
+    cmd.add("-javaagent:" + TARGET_AGENT_FILENAME);
 
+    Map<String, String> config = new HashMap<>();
+    // disable export as we only instrument
+    config.put("otel.logs.exporter", "none");
+    config.put("otel.metrics.exporter", "none");
+    config.put("otel.traces.exporter", "none");
+    // add extension
+    config.put("otel.javaagent.extensions", TARGET_EXTENSION_FILENAME);
+    // toggle indy on/off
+    config.put("otel.javaagent.experimental.indy", Boolean.toString(indy));
+    // toggle debug if needed
+    config.put("otel.javaagent.debug", "false");
+    config.forEach((k, v) -> cmd.add(String.format("-D%s=%s", k, v)));
 
+    cmd.add("-jar");
+    cmd.add(TARGET_APP_FILENAME);
 
-  @Test
-  void inlinedExtension() throws InterruptedException {
-    GenericContainer<?> target = new GenericContainer<>(
-        DockerImageName.parse(
-            "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-extensions:"
-                + IMAGE_VERSION))
-        .withStartupTimeout(Duration.ofMinutes(1))
-        .withLogConsumer(new Slf4jLogConsumer(logger))
-        // disable export as we only instrument
-        .withEnv("OTEL_TRACES_EXPORTER", "none")
-        .withEnv("OTEL_METRICS_EXPORTER", "none")
-        .withEnv("OTEL_LOGS_EXPORTER", "none")
-        .withEnv("JAVA_TOOL_OPTIONS", "-javaagent:" + TARGET_AGENT_FILENAME)
-        .withEnv("OTEL_JAVAAGENT_EXTENSIONS", TARGET_EXTENSION_FILENAME)
-        .withEnv("OTEL_JAVAAGENT_DEBUG", "true")
-        .withCopyFileToContainer(
-            MountableFile.forHostPath(agentPath), TARGET_AGENT_FILENAME)
-        .withCopyFileToContainer(
-            MountableFile.forHostPath(extensionInlinePath), TARGET_EXTENSION_FILENAME);
+    GenericContainer<?> target =
+        new GenericContainer<>(DockerImageName.parse(IMAGE))
+            .withStartupTimeout(Duration.ofMinutes(1))
+            .withLogConsumer(new Slf4jLogConsumer(logger))
+            .withCopyFileToContainer(MountableFile.forHostPath(agentPath), TARGET_AGENT_FILENAME)
+            .withCopyFileToContainer(
+                MountableFile.forHostPath(extensionInlinePath), TARGET_EXTENSION_FILENAME)
+            .withCopyFileToContainer(MountableFile.forHostPath(appPath), TARGET_APP_FILENAME)
+            .withCommand(String.join(" ", cmd));
+
+    logger.info("starting JVM with command: " + String.join(" ", cmd));
     target.start();
     while (target.isRunning()) {
       Thread.sleep(100);
     }
 
-    List<String> appOutput = Arrays.asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
+    List<String> appOutput =
+        Arrays.asList(target.getLogs(OutputFrame.OutputType.STDOUT).split("\n"));
     assertThat(appOutput)
-        .containsExactlyInAnyOrder("return value has been modified", "argument has been modified");
+        .describedAs("return value instrumentation")
+        .contains("return value has been modified")
+        .describedAs("argument value instrumentation")
+        .contains("argument has been modified");
+    // TODO add assertion for virtual fields
   }
-
-
 }

@@ -78,15 +78,20 @@ tasks {
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
-    val extensionInlineShadowTask = project(":smoke-tests:images:extensions:inlined").tasks.named<Jar>("jar")
-    val extensionInlineJarPath = extensionInlineShadowTask.flatMap { it.archiveFile }
+    val extensionInlineTask = project(":smoke-tests:extensions:inlined").tasks.named<Jar>("jar")
+    val extensionInlineJarPath = extensionInlineTask.flatMap { it.archiveFile }
 
-    dependsOn(shadowTask, extensionInlineShadowTask)
+    val extensionTestAppTask = project(":smoke-tests:extensions:testapp").tasks.named<Jar>("jar")
+    val extensionTestAppJarPath = extensionTestAppTask.flatMap { it.archiveFile }
+
+    dependsOn(shadowTask, extensionTestAppTask)
 
     doFirst {
       jvmArgs(
         "-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}",
-        "-Dio.opentelemetry.smoketest.extension.inline.path=${extensionInlineJarPath.get()}")
+        "-Dio.opentelemetry.smoketest.extension.inline.path=${extensionInlineJarPath.get()}",
+        "-Dio.opentelemetry.smoketest.extension.testapp.path=${extensionTestAppJarPath.get()}"
+      )
     }
   }
 }
