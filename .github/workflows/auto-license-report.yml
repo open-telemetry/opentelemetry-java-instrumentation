@@ -12,9 +12,7 @@ permissions:
   contents: read
 
 jobs:
-  auto-license-report:
-    permissions:
-      contents: write
+  generate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
@@ -33,16 +31,62 @@ jobs:
         with:
           cache-read-only: true
 
-      - name: Use CLA approved bot
-        run: .github/scripts/use-cla-approved-bot.sh
-
       - name: Update license report
         run: ./gradlew generateLicenseReport --no-build-cache
 
-      - name: Commit and push if there are changes
+      - id: create-patch
+        name: Create patch file
         run: |
-          git add licenses
-          if ! git diff --cached --quiet; then
-            git commit -m "Update license report"
-            git push
+          git diff > patch
+          if [ -s patch ]; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Upload patch file
+        if: steps.create-patch.outputs.exists == 'true'
+        uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5.0.0
+        with:
+          path: patch
+          name: patch
+
+  # separate job is just to isolate the OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY usage a bit
+  apply:
+    runs-on: ubuntu-latest
+    needs: generate
+    steps:
+      - name: Download patch
+        uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6.0.0
+        with:
+          path: ${{ runner.temp }}
+
+      - id: check-patch
+        name: Check patch
+        working-directory: ${{ runner.temp }}
+        run: |
+          if [ -f patch ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        if: steps.check-patch.outputs.exists == 'true'
+        id: otelbot-token
+        with:
+          app-id: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
+      - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        if: steps.check-patch.outputs.exists == 'true'
+        with:
+          token: ${{ steps.otelbot-token.outputs.token }}
+
+      - name: Use CLA approved bot
+        if: steps.check-patch.outputs.exists == 'true'
+        run: .github/scripts/use-cla-approved-bot.sh
+
+      - name: Apply patch and push
+        if: steps.check-patch.outputs.exists == 'true'
+        run: |
+          git apply "${{ runner.temp }}/patch"
+          git add licenses
+          git commit -m "Update license report"
+          git push

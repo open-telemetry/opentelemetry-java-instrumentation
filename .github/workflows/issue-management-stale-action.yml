@@ -68,5 +68,4 @@ jobs:
           stale-pr-message: >
             This PR has been labeled as stale due to lack of activity.
             It will be automatically closed if there is no further activity over the next 14 days.
-          exempt-draft-pr: false
           operations-per-run: 1000

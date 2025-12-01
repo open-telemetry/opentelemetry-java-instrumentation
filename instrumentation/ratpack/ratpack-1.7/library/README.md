@@ -1,6 +1,6 @@
 # Library Instrumentation for Ratpack version 1.7 and higher
 
-Provides OpenTelemetry instrumentation for [Ratpack](https://ratpack.io/), enabling HTTP client and
+Provides OpenTelemetry instrumentation for [Ratpack](https://github.com/ratpack/ratpack), enabling HTTP client and
 server spans and metrics.
 
 ## Quickstart

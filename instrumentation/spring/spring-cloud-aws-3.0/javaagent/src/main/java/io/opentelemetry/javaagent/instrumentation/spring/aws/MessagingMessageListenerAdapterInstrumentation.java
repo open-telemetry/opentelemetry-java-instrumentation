@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,6 +34,7 @@ public class MessagingMessageListenerAdapterInstrumentation implements TypeInstr
   @SuppressWarnings("unused")
   public static class OnMessageAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static SpringAwsUtil.MessageScope methodEnter(@Advice.Argument(0) Message<?> message) {
       return SpringAwsUtil.handleMessage(message);
     }
