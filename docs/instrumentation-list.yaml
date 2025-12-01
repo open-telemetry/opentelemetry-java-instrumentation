@@ -8145,6 +8145,13 @@ libraries:
       - io.micrometer:micrometer-core:1.5.0
   mongo:
   - name: mongo-3.1
+    display_name: MongoDB Driver
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-3.1
     scope:
       name: io.opentelemetry.mongo-3.1
@@ -8153,7 +8160,81 @@ libraries:
       - org.mongodb:mongo-java-driver:[3.1,)
       library:
       - org.mongodb:mongo-java-driver:3.1.0
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: mongo-3.7
+    display_name: MongoDB Driver
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-3.7
     scope:
       name: io.opentelemetry.mongo-3.7
@@ -8161,20 +8242,235 @@ libraries:
       javaagent:
       - org.mongodb:mongodb-driver-core:[3.7, 4.0)
       - org.mongodb:mongo-java-driver:[3.7, 4.0)
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: mongo-4.0
+    display_name: MongoDB Driver
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-4.0
     scope:
       name: io.opentelemetry.mongo-4.0
     target_versions:
       javaagent:
       - org.mongodb:mongodb-driver-core:[4.0,)
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: mongo-async-3.3
+    display_name: MongoDB Driver (Async)
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB async Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-async-3.3
     scope:
       name: io.opentelemetry.mongo-async-3.3
     target_versions:
       javaagent:
       - org.mongodb:mongodb-driver-async:[3.3,)
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   mybatis:
   - name: mybatis-3.2
     disabled_by_default: true

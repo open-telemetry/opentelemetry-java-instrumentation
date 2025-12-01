@@ -34,7 +34,7 @@ class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Docum
 
   @Override
   protected String instrumentationName() {
-    return "io.opentelemetry.mongo-4.0";
+    return "io.opentelemetry.mongo-async-3.3";
   }
 
   @RegisterExtension
