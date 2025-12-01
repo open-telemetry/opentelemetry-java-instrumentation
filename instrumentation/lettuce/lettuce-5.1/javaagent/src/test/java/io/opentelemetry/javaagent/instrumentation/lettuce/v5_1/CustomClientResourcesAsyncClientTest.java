@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.resource.ClientResources;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -22,7 +23,7 @@ class CustomClientResourcesAsyncClientTest extends LettuceAsyncClientTest {
 
   @Override
   protected RedisClient createClient(String uri) {
-    return RedisClient.create(CustomClientResources.create(), uri);
+    return RedisClient.create(ClientResources.create(), uri);
   }
 
   @Override
