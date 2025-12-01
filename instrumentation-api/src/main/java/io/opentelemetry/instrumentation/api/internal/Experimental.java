@@ -32,6 +32,8 @@ public final class Experimental {
   private static volatile BiConsumer<InstrumenterBuilder<?, ?>, AttributesExtractor<?, ?>>
       operationListenerAttributesExtractorAdder;
 
+  private static volatile boolean dynamicAttachEnabled = false;
+
   private Experimental() {}
 
   public static void setRedactQueryParameters(
@@ -84,5 +86,13 @@ public final class Experimental {
           operationListenerAttributesExtractorAdder) {
     Experimental.operationListenerAttributesExtractorAdder =
         (BiConsumer) operationListenerAttributesExtractorAdder;
+  }
+
+  public static void setDynamicAttachEnabled(boolean enabled) {
+    dynamicAttachEnabled = enabled;
+  }
+
+  public static boolean isDynamicAttachEnabled() {
+    return dynamicAttachEnabled;
   }
 }

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.Experimental;
 import java.io.File;
 import java.lang.instrument.Instrumentation;
 import java.lang.reflect.Constructor;
@@ -41,7 +42,7 @@ public final class AgentInitializer {
         new PrivilegedAction<Void>() {
           @Override
           public Void run() {
-            setSystemProperties(agentArgs);
+            setSystemProperties(agentArgs, fromPremain);
             return null;
           }
         });
@@ -215,7 +216,7 @@ public final class AgentInitializer {
   private AgentInitializer() {}
 
   @SuppressWarnings("SystemOut")
-  static void setSystemProperties(@Nullable String agentArgs) {
+  static void setSystemProperties(@Nullable String agentArgs, boolean fromPremain) {
     boolean debug = false;
     if (agentArgs != null && !agentArgs.isEmpty()) {
       for (String option : agentArgs.split(";")) {
@@ -235,6 +236,10 @@ public final class AgentInitializer {
           System.err.println("Setting property [" + key + "] = " + value);
         }
       }
+    }
+
+    if (!fromPremain || getBoolean("otel.javaagent.experimental.dynamic.attach", false)) {
+      Experimental.setDynamicAttachEnabled(true);
     }
   }
 }
