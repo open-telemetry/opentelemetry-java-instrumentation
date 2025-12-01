@@ -3,13 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.incubator.instrumenter;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import java.util.List;
 
-/** A filter that determines whether a span should be started for the given operation. */
+/**
+ * A filter that determines whether a span should be started for the given operation.
+ *
+ * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+ * at any time.
+ */
+@FunctionalInterface
 public interface ShouldStartFilter<REQUEST> {
 
   /**

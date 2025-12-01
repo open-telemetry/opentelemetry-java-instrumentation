@@ -3,13 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.instrumenter;
+package io.opentelemetry.instrumentation.api.internal;
 
+import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
-import java.util.Arrays;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ShouldStartFilter;
 import org.junit.jupiter.api.Test;
 
 class ShouldStartFilterTest {
@@ -29,8 +30,7 @@ class ShouldStartFilterTest {
     ShouldStartFilter<String> filter2 =
         (context, request, spanKind, instrumentationName) -> !request.equals("blocked2");
 
-    ShouldStartFilter<String> compositeFilter =
-        ShouldStartFilter.allOf(Arrays.asList(filter1, filter2));
+    ShouldStartFilter<String> compositeFilter = ShouldStartFilter.allOf(asList(filter1, filter2));
 
     assertThat(compositeFilter.shouldStart(Context.root(), "allowed", SpanKind.CLIENT, "test"))
         .isTrue();
@@ -81,7 +81,7 @@ class ShouldStartFilterTest {
         };
 
     ShouldStartFilter<String> compositeFilter =
-        ShouldStartFilter.allOf(Arrays.asList(lowPriority, highPriority));
+        ShouldStartFilter.allOf(asList(lowPriority, highPriority));
     boolean result =
         compositeFilter.shouldStart(Context.root(), "request", SpanKind.CLIENT, "test");
 

@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerProvider;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizerUtil;
+import io.opentelemetry.instrumentation.api.internal.InternalShouldStartFilter;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -64,7 +65,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>>
       operationListenerAttributesExtractors = new ArrayList<>();
   final List<ContextCustomizer<? super REQUEST>> contextCustomizers = new ArrayList<>();
-  final List<ShouldStartFilter<? super REQUEST>> shouldStartFilters = new ArrayList<>();
+  final List<InternalShouldStartFilter<? super REQUEST>> shouldStartFilters = new ArrayList<>();
   private final List<OperationListener> operationListeners = new ArrayList<>();
   private final List<OperationMetrics> operationMetrics = new ArrayList<>();
 
@@ -189,12 +190,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * Adds a {@link ShouldStartFilter} that will be used to determine whether a span should be
-   * started for the given operation. The filter is called before any span creation logic.
+   * Adds a {@link InternalShouldStartFilter} that will be used to determine whether a span should
+   * be started for the given operation. The filter is called before any span creation logic.
    */
   @CanIgnoreReturnValue
   public InstrumenterBuilder<REQUEST, RESPONSE> addShouldStartFilter(
-      ShouldStartFilter<? super REQUEST> filter) {
+      InternalShouldStartFilter<? super REQUEST> filter) {
     shouldStartFilters.add(requireNonNull(filter, "shouldStartFilter"));
     return this;
   }
@@ -449,7 +450,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
 
             @Override
-            public void addShouldStartFilter(ShouldStartFilter<? super REQUEST> filter) {
+            public void addShouldStartFilter(InternalShouldStartFilter<? super REQUEST> filter) {
               builder.addShouldStartFilter(filter);
             }
 

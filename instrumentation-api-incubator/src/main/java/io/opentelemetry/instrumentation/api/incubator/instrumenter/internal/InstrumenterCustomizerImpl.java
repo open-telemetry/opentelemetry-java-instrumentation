@@ -6,13 +6,14 @@
 package io.opentelemetry.instrumentation.api.incubator.instrumenter.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.InternalInstrumenterCustomizer;
+import io.opentelemetry.instrumentation.api.internal.InternalShouldStartFilter;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import java.util.HashMap;
 import java.util.Map;
@@ -84,7 +85,11 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
 
   @Override
   public InstrumenterCustomizer addShouldStartFilter(ShouldStartFilter<?> filter) {
-    customizer.addShouldStartFilter(filter);
+    InternalShouldStartFilter<Object> internalFilter =
+        (parentContext, request, spanKind, instrumentationName) ->
+            ((ShouldStartFilter<Object>) filter)
+                .shouldStart(parentContext, request, spanKind, instrumentationName);
+    customizer.addShouldStartFilter(internalFilter);
     return this;
   }
 

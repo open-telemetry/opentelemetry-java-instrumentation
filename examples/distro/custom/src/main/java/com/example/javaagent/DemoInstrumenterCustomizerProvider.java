@@ -10,17 +10,17 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
-import io.opentelemetry.instrumentation.api.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
-import io.opentelemetry.api.trace.SpanKind;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -49,7 +49,7 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
   public void customize(InstrumenterCustomizer customizer) {
 
     customizer.addShouldStartFilter(new DemoShouldStartFilter());
-    
+
     String instrumentationName = customizer.getInstrumentationName();
     if (isHttpServerInstrumentation(instrumentationName)) {
       customizeHttpServer(customizer);

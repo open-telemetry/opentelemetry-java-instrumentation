@@ -26,6 +26,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
+import io.opentelemetry.instrumentation.api.internal.InternalShouldStartFilter;
 import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
@@ -621,7 +622,7 @@ class InstrumenterTest {
 
   @Test
   void shouldStartFilter() {
-    ShouldStartFilter<String> filter =
+    InternalShouldStartFilter<String> filter =
         (context, request, spanKind, instrumentationName) -> !request.equals("blocked");
 
     Instrumenter<String, String> instrumenter =

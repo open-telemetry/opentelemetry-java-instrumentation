@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpRouteState;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterAccess;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterContext;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import io.opentelemetry.instrumentation.api.internal.InternalShouldStartFilter;
 import io.opentelemetry.instrumentation.api.internal.SupportabilityMetrics;
 import java.time.Instant;
 import java.util.List;
@@ -85,7 +86,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
   private final boolean propagateOperationListenersToOnEnd;
   private final boolean enabled;
   private final SpanSuppressor spanSuppressor;
-  private final ShouldStartFilter<? super REQUEST> shouldStartFilter;
+  private final InternalShouldStartFilter<? super REQUEST> shouldStartFilter;
 
   // to allow converting generic lists to arrays with toArray
   @SuppressWarnings({"rawtypes", "unchecked"})
@@ -106,8 +107,8 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
     this.shouldStartFilter =
-        ShouldStartFilter.allOf(
-            (List<ShouldStartFilter<Object>>) (List<?>) builder.shouldStartFilters);
+        InternalShouldStartFilter.allOf(
+            (List<InternalShouldStartFilter<Object>>) (List<?>) builder.shouldStartFilters);
   }
 
   /**
