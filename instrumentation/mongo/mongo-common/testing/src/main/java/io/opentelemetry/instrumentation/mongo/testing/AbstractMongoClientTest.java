@@ -7,9 +7,14 @@ package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -48,6 +53,8 @@ public abstract class AbstractMongoClientTest<T> {
   private GenericContainer<?> mongodb;
   protected String host;
   protected int port;
+
+  protected abstract String instrumentationName();
 
   @BeforeAll
   void setup() {
@@ -254,6 +261,16 @@ public abstract class AbstractMongoClientTest<T> {
                                 "{\"count\":\""
                                     + collectionName
                                     + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+
+    assertDurationMetric(
+        testing(),
+        instrumentationName(),
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        DB_COLLECTION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

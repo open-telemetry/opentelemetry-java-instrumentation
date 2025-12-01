@@ -20,6 +20,11 @@ class MongoClientTest extends AbstractMongo31ClientTest {
   protected void configureMongoClientOptions(MongoClientOptions.Builder options) {}
 
   @Override
+  protected String instrumentationName() {
+    return "io.opentelemetry.mongo-3.1";
+  }
+
+  @Override
   protected InstrumentationExtension testing() {
     return testing;
   }

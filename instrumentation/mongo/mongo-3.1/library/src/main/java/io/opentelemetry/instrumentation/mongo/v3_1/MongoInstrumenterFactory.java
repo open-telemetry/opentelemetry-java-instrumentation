@@ -21,6 +21,7 @@ class MongoInstrumenterFactory {
 
   static Instrumenter<CommandStartedEvent, Void> createInstrumenter(
       OpenTelemetry openTelemetry,
+      String instrumentationName,
       boolean statementSanitizationEnabled,
       int maxNormalizedQueryLength) {
 
@@ -30,7 +31,7 @@ class MongoInstrumenterFactory {
         new MongoSpanNameExtractor(dbAttributesGetter, attributesExtractor);
 
     return Instrumenter.<CommandStartedEvent, Void>builder(
-            openTelemetry, "io.opentelemetry.mongo-3.1", spanNameExtractor)
+            openTelemetry, instrumentationName, spanNameExtractor)
         .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
         .addAttributesExtractor(
             ServerAttributesExtractor.create(new MongoNetworkAttributesGetter()))

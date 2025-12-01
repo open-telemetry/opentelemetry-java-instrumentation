@@ -171,26 +171,26 @@ main() {
   done < <(process_descriptors "${INSTRUMENTATIONS[@]}")
   run_gradle_tasks "${gradle_tasks[@]}"
 
-  # Process instrumentations requiring testLatestDeps
-  echo "Processing instrumentations with -PtestLatestDeps=true..."
-  gradle_tasks=()
-  while IFS= read -r line; do
-    gradle_tasks+=("$line")
-  done < <(process_descriptors "${TEST_LATEST_DEPS_INSTRUMENTATIONS[@]}")
-  run_gradle_tasks_with_latest_deps "${gradle_tasks[@]}"
-
-  # Setup colima if needed
-  setup_colima
-
-  # Process colima-specific instrumentations
-  echo "Processing colima instrumentations..."
-  gradle_tasks=()
-  while IFS= read -r line; do
-    gradle_tasks+=("$line")
-  done < <(process_descriptors "${COLIMA_INSTRUMENTATIONS[@]}")
-  run_gradle_tasks "${gradle_tasks[@]}"
-
-  colima stop
+#  # Process instrumentations requiring testLatestDeps
+#  echo "Processing instrumentations with -PtestLatestDeps=true..."
+#  gradle_tasks=()
+#  while IFS= read -r line; do
+#    gradle_tasks+=("$line")
+#  done < <(process_descriptors "${TEST_LATEST_DEPS_INSTRUMENTATIONS[@]}")
+#  run_gradle_tasks_with_latest_deps "${gradle_tasks[@]}"
+#
+#  # Setup colima if needed
+#  setup_colima
+#
+#  # Process colima-specific instrumentations
+#  echo "Processing colima instrumentations..."
+#  gradle_tasks=()
+#  while IFS= read -r line; do
+#    gradle_tasks+=("$line")
+#  done < <(process_descriptors "${COLIMA_INSTRUMENTATIONS[@]}")
+#  run_gradle_tasks "${gradle_tasks[@]}"
+#
+#  colima stop
 
   # uncomment the next line to remove all .telemetry directories
   #find_and_remove_all_telemetry

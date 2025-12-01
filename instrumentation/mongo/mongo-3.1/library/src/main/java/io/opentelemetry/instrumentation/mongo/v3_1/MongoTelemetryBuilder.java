@@ -15,12 +15,14 @@ public final class MongoTelemetryBuilder {
   static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
   private final OpenTelemetry openTelemetry;
+  private final String instrumentationName;
 
   private boolean statementSanitizationEnabled = true;
   private int maxNormalizedQueryLength = DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 
-  MongoTelemetryBuilder(OpenTelemetry openTelemetry) {
+  MongoTelemetryBuilder(OpenTelemetry openTelemetry, String instrumentationName) {
     this.openTelemetry = openTelemetry;
+    this.instrumentationName = instrumentationName;
   }
 
   /**
@@ -50,6 +52,6 @@ public final class MongoTelemetryBuilder {
    */
   public MongoTelemetry build() {
     return new MongoTelemetry(
-        openTelemetry, statementSanitizationEnabled, maxNormalizedQueryLength);
+        openTelemetry, instrumentationName, statementSanitizationEnabled, maxNormalizedQueryLength);
   }
 }

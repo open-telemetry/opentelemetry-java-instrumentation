@@ -36,6 +36,10 @@ import org.reactivestreams.Subscriber;
 import org.reactivestreams.Subscription;
 
 class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
+  @Override
+  protected String instrumentationName() {
+    return "io.opentelemetry.mongo-4.0";
+  }
 
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();

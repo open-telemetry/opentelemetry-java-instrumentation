@@ -16,6 +16,11 @@ class MongoClientTest extends AbstractMongo31ClientTest {
   private static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @Override
+  protected String instrumentationName() {
+    return "io.opentelemetry.mongo-3.1";
+  }
+
+  @Override
   protected void configureMongoClientOptions(MongoClientOptions.Builder options) {
     options.addCommandListener(
         MongoTelemetry.create(testing().getOpenTelemetry()).newCommandListener());

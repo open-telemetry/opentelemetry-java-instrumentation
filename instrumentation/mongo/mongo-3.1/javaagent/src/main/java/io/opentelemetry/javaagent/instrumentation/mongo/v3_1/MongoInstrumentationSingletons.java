@@ -14,7 +14,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 public final class MongoInstrumentationSingletons {
 
   public static final CommandListener LISTENER =
-      MongoTelemetry.builder(GlobalOpenTelemetry.get())
+      MongoTelemetry.builder(GlobalOpenTelemetry.get(), "io.opentelemetry.mongo-3.1")
           .setStatementSanitizationEnabled(
               AgentInstrumentationConfig.get()
                   .getBoolean(
