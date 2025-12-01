@@ -56,13 +56,13 @@ jobs:
           operations-per-run: 1000
 
       # Action #3: Handle stale PRs
-      # - After 180 days inactive: Adds "stale" label + warning comment
+      # - After 90 days inactive: Adds "stale" label + warning comment
       # - After 14 more days inactive: Closes
       - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
         with:
           days-before-issue-stale: -1
           days-before-issue-close: -1
-          days-before-pr-stale: 180
+          days-before-pr-stale: 90
           days-before-pr-close: 14
           stale-pr-label: stale
           stale-pr-message: >
