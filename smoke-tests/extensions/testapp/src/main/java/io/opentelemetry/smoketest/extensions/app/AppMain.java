@@ -12,8 +12,7 @@ public class AppMain {
   public static void main(String[] args) {
     testReturnValue();
     testMethodArguments();
-    // TODO: wip, does not work yet
-    // testVirtualFields();
+    testVirtualFields();
   }
 
   private static void testReturnValue() {
@@ -43,9 +42,8 @@ public class AppMain {
     }
   }
 
-  @SuppressWarnings("unused")
   private static void testVirtualFields() {
-    Runnable target = () -> {};
+    Object target = new Object();
     setVirtualFieldValue(target, 42);
     Integer fieldValue = getVirtualFieldValue(target);
     if (fieldValue == null || fieldValue != 42) {
@@ -55,11 +53,11 @@ public class AppMain {
     }
   }
 
-  public static void setVirtualFieldValue(Runnable target, Integer value) {
+  public static void setVirtualFieldValue(Object target, Integer value) {
     // implementation should be provided by instrumentation
   }
 
-  public static Integer getVirtualFieldValue(Runnable target) {
+  public static Integer getVirtualFieldValue(Object target) {
     // implementation should be provided by instrumentation
     return null;
   }

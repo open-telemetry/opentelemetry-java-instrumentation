@@ -84,7 +84,7 @@ tasks {
     val extensionTestAppTask = project(":smoke-tests:extensions:testapp").tasks.named<Jar>("jar")
     val extensionTestAppJarPath = extensionTestAppTask.flatMap { it.archiveFile }
 
-    dependsOn(shadowTask, extensionTestAppTask)
+    dependsOn(shadowTask, extensionTestAppTask, extensionInlineTask )
 
     doFirst {
       jvmArgs(

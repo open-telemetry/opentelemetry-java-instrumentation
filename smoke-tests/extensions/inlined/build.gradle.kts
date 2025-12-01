@@ -1,5 +1,6 @@
 plugins {
   id("otel.java-conventions")
+  id("io.opentelemetry.instrumentation.javaagent-instrumentation")
 }
 
 dependencies {

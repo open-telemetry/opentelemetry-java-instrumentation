@@ -33,12 +33,12 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
         this.getClass().getName() + "$ModifyArgumentsAdvice");
     transformer.applyAdviceToMethod(
         named("setVirtualFieldValue")
-            .and(takesArgument(0, Runnable.class))
+            .and(takesArgument(0, Object.class))
             .and(takesArgument(1, Integer.class)),
         this.getClass().getName() + "$VirtualFieldSetAdvice");
     transformer.applyAdviceToMethod(
         named("getVirtualFieldValue")
-            .and(takesArgument(0, Runnable.class))
+            .and(takesArgument(0, Object.class))
             .and(returns(Integer.class)),
         this.getClass().getName() + "$VirtualFieldGetAdvice");
   }
@@ -63,8 +63,8 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
   public static class VirtualFieldSetAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static void onEnter(
-        @Advice.Argument(0) Runnable target, @Advice.Argument(1) Integer value) {
-      VirtualField<Runnable, Integer> field = VirtualField.find(Runnable.class, Integer.class);
+        @Advice.Argument(0) Object target, @Advice.Argument(1) Integer value) {
+      VirtualField<Object, Integer> field = VirtualField.find(Object.class, Integer.class);
       field.set(target, value);
     }
   }
@@ -73,8 +73,8 @@ public class SmokeInlinedInstrumentation implements TypeInstrumentation {
     @SuppressWarnings("UnusedVariable")
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit(
-        @Advice.Argument(0) Runnable target, @Advice.Return(readOnly = false) Integer returnValue) {
-      VirtualField<Runnable, Integer> field = VirtualField.find(Runnable.class, Integer.class);
+        @Advice.Argument(0) Object target, @Advice.Return(readOnly = false) Integer returnValue) {
+      VirtualField<Object, Integer> field = VirtualField.find(Object.class, Integer.class);
       returnValue = field.get(target);
     }
   }
