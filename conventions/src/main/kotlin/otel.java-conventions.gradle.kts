@@ -422,7 +422,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "12.1.2"
+  toolVersion = "12.2.0"
   maxWarnings = 0
 }
 
