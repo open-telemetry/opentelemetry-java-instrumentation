@@ -105,7 +105,9 @@ public class Instrumenter<REQUEST, RESPONSE> {
     this.propagateOperationListenersToOnEnd = builder.propagateOperationListenersToOnEnd;
     this.enabled = builder.enabled;
     this.spanSuppressor = builder.buildSpanSuppressor();
-    this.shouldStartFilter = ShouldStartFilter.allOf((List<ShouldStartFilter<Object>>) (List<?>) builder.shouldStartFilters);
+    this.shouldStartFilter =
+        ShouldStartFilter.allOf(
+            (List<ShouldStartFilter<Object>>) (List<?>) builder.shouldStartFilters);
   }
 
   /**
@@ -123,7 +125,7 @@ public class Instrumenter<REQUEST, RESPONSE> {
       return false;
     }
     SpanKind spanKind = spanKindExtractor.extract(request);
-    
+
     if (!shouldStartFilter.shouldStart(parentContext, request, spanKind, instrumentationName)) {
       return false;
     }

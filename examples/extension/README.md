@@ -75,10 +75,17 @@ The `InstrumenterCustomizerProvider` extension point allows you to customize ins
 - Customize context
 - Transform span names to match your naming conventions
 - Apply customizations conditionally based on instrumentation name or type (HTTP client, HTTP server, DB client, etc.)
+- Filter out spans before creation using ShouldStartFilter
 
 ### "I don't want this span at all"
 
 Create an extension to disable selected instrumentation by providing new default settings.
+
+### "I want to filter out specific requests before span creation"
+
+Create an extension with a custom `ShouldStartFilter` to prevent spans from being created for specific requests (e.g., background threads, monitoring operations). This is more efficient than creating spans and then dropping them later, as it prevents the overhead of span creation entirely.
+
+For example, see the `DemoShouldStartFilter` inner class in [DemoInstrumenterCustomizerProvider](src/main/java/com/example/javaagent/DemoInstrumenterCustomizerProvider.java).
 
 ### "I want to edit some attributes that don't depend on any db connection instance"
 

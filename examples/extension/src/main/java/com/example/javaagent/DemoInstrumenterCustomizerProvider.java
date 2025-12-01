@@ -19,7 +19,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.api.trace.SpanKind;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -34,6 +36,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>Custom metrics for HTTP operations
  *   <li>Request correlation IDs via context customization
  *   <li>Custom span name transformation
+ *   <li>Filter out spans before creation using ShouldStartFilter
  * </ul>
  *
  * <p>The customizer will be automatically applied to instrumenters that match the specified
@@ -47,6 +50,9 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
 
   @Override
   public void customize(InstrumenterCustomizer customizer) {
+
+    customizer.addShouldStartFilter(new DemoShouldStartFilter());
+    
     String instrumentationName = customizer.getInstrumentationName();
     if (isHttpServerInstrumentation(instrumentationName)) {
       customizeHttpServer(customizer);
@@ -160,6 +166,17 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
       // Add custom context data that can be accessed throughout the request lifecycle
       context = context.with(REQUEST_ID_KEY, requestId);
       return context;
+    }
+  }
+
+  /** Simple ShouldStartFilter that skips spans for background threads. */
+  private static class DemoShouldStartFilter implements ShouldStartFilter<Object> {
+    @Override
+    public boolean shouldStart(
+        Context parentContext, Object request, SpanKind spanKind, String instrumentationName) {
+      // Skip spans for monitoring/metrics threads to reduce noise
+      String threadName = Thread.currentThread().getName().toLowerCase();
+      return !threadName.contains("metrics") && !threadName.contains("monitor");
     }
   }
 }

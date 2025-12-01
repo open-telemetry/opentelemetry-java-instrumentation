@@ -9,22 +9,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import java.util.List;
 
-/**
- * A filter that determines whether a span should be started for the given operation.
- *
- * <p>This filter is called before any span creation logic and allows for early filtering of spans
- * based on the request context, span kind, and instrumentation name. This is useful for scenarios
- * such as:
- *
- * <ul>
- *   <li>Filtering spans based on thread information (e.g., background threads)
- *   <li>Implementing rate limiting logic before span creation
- *   <li>Custom filtering based on request properties
- * </ul>
- *
- * <p>Filters are executed in priority order (lower numbers = higher priority) and all filters must
- * return {@code true} for a span to be started.
- */
+/** A filter that determines whether a span should be started for the given operation. */
 public interface ShouldStartFilter<REQUEST> {
 
   /**
@@ -36,7 +21,8 @@ public interface ShouldStartFilter<REQUEST> {
    * @param instrumentationName the name of the instrumentation
    * @return {@code true} if the span should be started, {@code false} otherwise
    */
-  boolean shouldStart(Context parentContext, REQUEST request, SpanKind spanKind, String instrumentationName);
+  boolean shouldStart(
+      Context parentContext, REQUEST request, SpanKind spanKind, String instrumentationName);
 
   /**
    * Returns the priority of this filter. Filters with lower numbers have higher priority and are
@@ -57,9 +43,7 @@ public interface ShouldStartFilter<REQUEST> {
     return (parentContext, request, spanKind, instrumentationName) -> true;
   }
 
-  /**
-   * Combines multiple filters into a single composite filter.
-   */
+  /** Combines multiple filters into a single composite filter. */
   static <REQUEST> ShouldStartFilter<REQUEST> allOf(List<ShouldStartFilter<REQUEST>> filters) {
     if (filters.isEmpty()) {
       return none();
@@ -68,9 +52,10 @@ public interface ShouldStartFilter<REQUEST> {
       return filters.get(0);
     }
 
-    List<ShouldStartFilter<REQUEST>> sortedFilters = filters.stream()
-        .sorted((f1, f2) -> Integer.compare(f1.getPriority(), f2.getPriority()))
-        .collect(java.util.stream.Collectors.toList());
+    List<ShouldStartFilter<REQUEST>> sortedFilters =
+        filters.stream()
+            .sorted((f1, f2) -> Integer.compare(f1.getPriority(), f2.getPriority()))
+            .collect(java.util.stream.Collectors.toList());
 
     return (parentContext, request, spanKind, instrumentationName) -> {
       for (ShouldStartFilter<REQUEST> filter : sortedFilters) {

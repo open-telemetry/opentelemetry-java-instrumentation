@@ -411,8 +411,7 @@ class InstrumentationCustomizerTest {
         customizer -> {
           customizerCalled.set(true);
           customizer.addShouldStartFilter(
-              (context, request, spanKind, instrumentationName) -> 
-                  !request.equals("blocked"));
+              (context, request, spanKind, instrumentationName) -> !request.equals("blocked"));
         });
 
     Instrumenter<String, String> instrumenter =

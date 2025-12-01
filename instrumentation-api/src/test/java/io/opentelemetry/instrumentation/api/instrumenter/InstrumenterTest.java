@@ -621,9 +621,9 @@ class InstrumenterTest {
 
   @Test
   void shouldStartFilter() {
-    ShouldStartFilter<String> filter = (context, request, spanKind, instrumentationName) -> 
-        !request.equals("blocked");
-    
+    ShouldStartFilter<String> filter =
+        (context, request, spanKind, instrumentationName) -> !request.equals("blocked");
+
     Instrumenter<String, String> instrumenter =
         Instrumenter.<String, String>builder(
                 otelTesting.getOpenTelemetry(), "test", request -> "test span")
