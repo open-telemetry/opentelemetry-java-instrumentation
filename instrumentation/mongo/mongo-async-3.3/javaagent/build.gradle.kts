@@ -20,7 +20,7 @@ dependencies {
   // Starting with 3.7.0, mongodb-driver-async depends on mongodb-driver-core which contains
   // both sync (com.mongodb.MongoClientSettings) and async (com.mongodb.async.SingleResultCallback)
   // classes, causing the mongo-3.7 instrumentation to match instead of mongo-async-3.3.
-  latestDepTestLibrary("org.mongodb:mongodb-driver-async:3.6.+")
+  latestDepTestLibrary("org.mongodb:mongodb-driver-async:3.6.+") // see above comment
 
   testImplementation(project(":instrumentation:mongo:mongo-common:testing"))
 
