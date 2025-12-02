@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
-      - uses: graalvm/setup-graalvm@eec48106e0bf45f2976c2ff0c3e22395cced8243 # v1.4.2.1
+      - uses: graalvm/setup-graalvm@dec5790292b7b36d7ad368abe856887749c6c520 # v1.4.3.1
         with:
           version: "latest"
           java-version: ${{ matrix.test-java-version }}

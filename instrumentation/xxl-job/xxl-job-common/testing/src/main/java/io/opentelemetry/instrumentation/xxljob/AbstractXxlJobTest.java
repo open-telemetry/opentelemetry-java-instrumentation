@@ -39,13 +39,24 @@ public abstract class AbstractXxlJobTest {
     XxlJobFileAppender.initLogPath("build/xxljob/log");
   }
 
+  private void trigger(JobThread jobThread) {
+    trigger(jobThread, null);
+  }
+
+  protected void trigger(JobThread jobThread, String executorParams) {
+    TriggerParam triggerParam = new TriggerParam();
+    triggerParam.setExecutorTimeout(0);
+    if (executorParams != null) {
+      triggerParam.setExecutorParams(executorParams);
+    }
+    jobThread.pushTriggerQueue(triggerParam);
+    jobThread.start();
+  }
+
   @Test
   void testGlueJob() {
     JobThread jobThread = new JobThread(1, getGlueJobHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "CustomizedGroovyHandler.execute",
         StatusData.unset(),
@@ -59,11 +70,7 @@ public abstract class AbstractXxlJobTest {
   @Test
   void testScriptJob() {
     JobThread jobThread = new JobThread(2, getScriptJobHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorParams("");
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread, "");
     checkXxlJobWithoutCodeAttributes("GLUE(Shell)", StatusData.unset(), GlueTypeEnum.GLUE_SHELL, 2);
     jobThread.toStop("Test finish");
   }
@@ -71,10 +78,7 @@ public abstract class AbstractXxlJobTest {
   @Test
   void testSimpleJob() {
     JobThread jobThread = new JobThread(3, getCustomizeHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "SimpleCustomizedHandler.execute",
         StatusData.unset(),
@@ -84,21 +88,22 @@ public abstract class AbstractXxlJobTest {
     jobThread.toStop("Test finish");
   }
 
+  protected Class<?> getReflectObjectClass() {
+    return ReflectiveMethodsFactory.ReflectObject.class;
+  }
+
   @Test
   public void testMethodJob() {
     // method handle is null if test is not supported by tested version of the library
     Assumptions.assumeTrue(getMethodHandler() != null);
 
     JobThread jobThread = new JobThread(4, getMethodHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "ReflectObject.echo",
         StatusData.unset(),
         GlueTypeEnum.BEAN,
-        "io.opentelemetry.instrumentation.xxljob.ReflectiveMethodsFactory$ReflectObject",
+        getReflectObjectClass().getName(),
         "echo");
     jobThread.toStop("Test finish");
   }
@@ -106,10 +111,7 @@ public abstract class AbstractXxlJobTest {
   @Test
   void testFailedJob() {
     JobThread jobThread = new JobThread(5, getCustomizeFailedHandler());
-    TriggerParam triggerParam = new TriggerParam();
-    triggerParam.setExecutorTimeout(0);
-    jobThread.pushTriggerQueue(triggerParam);
-    jobThread.start();
+    trigger(jobThread);
     checkXxlJob(
         "CustomizedFailedHandler.execute",
         StatusData.error(),
