@@ -23,8 +23,7 @@ public final class MongoInstrumentationSingletons {
           AgentInstrumentationConfig.get()
               .getBoolean(
                   "otel.instrumentation.mongo.statement-sanitizer.enabled",
-                  AgentCommonConfig.get().isStatementSanitizationEnabled()),
-          32 * 1024); // DEFAULT_MAX_NORMALIZED_QUERY_LENGTH
+                  AgentCommonConfig.get().isStatementSanitizationEnabled()));
 
   public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
 
