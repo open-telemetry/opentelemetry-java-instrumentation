@@ -279,6 +279,9 @@ targets:
       target: ':instrumentation:scala-fork-join-2.8:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:sling:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spark-2.3:javaagent'
     - type: gradle
       path: ./
