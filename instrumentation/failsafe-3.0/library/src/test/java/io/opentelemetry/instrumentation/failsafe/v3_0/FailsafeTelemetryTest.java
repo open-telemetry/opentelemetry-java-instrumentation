@@ -15,14 +15,8 @@ import dev.failsafe.RetryPolicy;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.HistogramData;
-import io.opentelemetry.sdk.metrics.data.HistogramPointData;
-import io.opentelemetry.sdk.metrics.data.LongPointData;
-import io.opentelemetry.sdk.metrics.data.SumData;
 import io.opentelemetry.sdk.testing.assertj.LongPointAssert;
 import java.time.Duration;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -117,51 +111,47 @@ final class FailsafeTelemetryTest {
     }
 
     // then
-    testing.waitAndAssertMetrics("io.opentelemetry.failsafe-3.0");
-    assertThat(testing.metrics().size()).isEqualTo(2);
-
-    SumData<LongPointData> executionCountMetric =
-        testing.metrics().stream()
-            .filter(m -> m.getName().equals("failsafe.retry_policy.execution.count"))
-            .findFirst()
-            .get()
-            .getLongSumData();
-    assertThat(executionCountMetric.getPoints().size()).isEqualTo(2);
-    assertThat(executionCountMetric.getPoints())
-        .anyMatch(
-            p ->
-                p.getAttributes().equals(buildExpectedRetryPolicyAttributes("failure"))
-                    && p.getValue() == 2);
-    assertThat(executionCountMetric.getPoints())
-        .anyMatch(
-            p ->
-                p.getAttributes().equals(buildExpectedRetryPolicyAttributes("success"))
-                    && p.getValue() == 3);
-
-    HistogramData attemptsMetric =
-        testing.metrics().stream()
-            .filter(m -> m.getName().equals("failsafe.retry_policy.attempts"))
-            .findFirst()
-            .get()
-            .getHistogramData();
-    Collection<HistogramPointData> pointData = attemptsMetric.getPoints();
-    assertThat(pointData).hasSize(2);
-    assertThat(pointData)
-        .anyMatch(
-            p ->
-                p.getCount() == 3
-                    && p.getMin() == 1
-                    && p.getMax() == 3
-                    && p.getAttributes().equals(buildExpectedRetryPolicyAttributes("success"))
-                    && Arrays.equals(p.getCounts().toArray(), new Long[] {1L, 1L, 1L, 0L, 0L}));
-    assertThat(pointData)
-        .anyMatch(
-            p ->
-                p.getCount() == 2
-                    && p.getMin() == 3
-                    && p.getMax() == 3
-                    && p.getAttributes().equals(buildExpectedRetryPolicyAttributes("failure"))
-                    && Arrays.equals(p.getCounts().toArray(), new Long[] {0L, 0L, 2L, 0L, 0L}));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.failsafe-3.0",
+        metricAssert ->
+            metricAssert
+                .hasName("failsafe.retry_policy.execution.count")
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                buildRetryPolicyAssertion(2, "failure"),
+                                buildRetryPolicyAssertion(3, "success"))));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.failsafe-3.0",
+        metricAssert ->
+            metricAssert
+                .hasName("failsafe.retry_policy.attempts")
+                .hasHistogramSatisfying(
+                    histogramAssert ->
+                        histogramAssert.hasPointsSatisfying(
+                            histogramPointAssert ->
+                                histogramPointAssert
+                                    .hasCount(3)
+                                    .hasMin(1)
+                                    .hasMax(3)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertEquals(
+                                                buildExpectedRetryPolicyAttributes("success"),
+                                                attributes))
+                                    .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
+                            histogramPointAssert ->
+                                histogramPointAssert
+                                    .hasCount(2)
+                                    .hasMin(3)
+                                    .hasMax(3)
+                                    .hasAttributesSatisfying(
+                                        attributes ->
+                                            assertEquals(
+                                                buildExpectedRetryPolicyAttributes("failure"),
+                                                attributes))
+                                    .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
   }
 
   private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(
@@ -175,6 +165,21 @@ final class FailsafeTelemetryTest {
                         Attributes.builder()
                             .put("failsafe.circuit_breaker.name", "testing")
                             .put(expectedAttributeKey, expectedAttributeValue)
+                            .build(),
+                        attributes));
+  }
+
+  private static Consumer<LongPointAssert> buildRetryPolicyAssertion(
+      long expectedValue, String expectedOutcomeValue) {
+    return longSumAssert ->
+        longSumAssert
+            .hasValue(expectedValue)
+            .hasAttributesSatisfying(
+                attributes ->
+                    assertEquals(
+                        Attributes.builder()
+                            .put("failsafe.retry_policy.name", "testing")
+                            .put("failsafe.retry_policy.outcome", expectedOutcomeValue)
                             .build(),
                         attributes));
   }
