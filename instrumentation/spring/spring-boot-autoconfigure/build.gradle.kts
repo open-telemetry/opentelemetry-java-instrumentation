@@ -107,6 +107,7 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-exporter-otlp")
   testImplementation("io.opentelemetry:opentelemetry-exporter-zipkin")
   testImplementation(project(":instrumentation-annotations"))
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
 
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-micrometer-metrics:latest.release")
 
@@ -133,6 +134,7 @@ dependencies {
   add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -214,6 +216,7 @@ testing {
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation(project(":instrumentation-api"))
         implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
+        implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
         implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }

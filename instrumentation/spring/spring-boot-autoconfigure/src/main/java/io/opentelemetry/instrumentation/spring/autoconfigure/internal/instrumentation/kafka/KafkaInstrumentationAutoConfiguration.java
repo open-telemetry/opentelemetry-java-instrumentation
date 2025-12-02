@@ -24,20 +24,12 @@ import org.springframework.kafka.core.KafkaTemplate;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
-@ConditionalOnClass({
-  KafkaTemplate.class,
-  ConcurrentKafkaListenerContainerFactory.class,
-  DefaultKafkaProducerFactoryCustomizer.class
-})
+@ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
 
-  @Bean
-  DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
-      OpenTelemetry openTelemetry) {
-    KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
-    return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
-  }
+  // For error prone
+  public KafkaInstrumentationAutoConfiguration() {}
 
   @Bean
   static SpringKafkaTelemetry getTelemetry(
@@ -63,5 +55,17 @@ public class KafkaInstrumentationAutoConfiguration {
           ObjectProvider<InstrumentationConfig> configProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
         () -> getTelemetry(openTelemetryProvider, configProvider));
+  }
+
+  @ConditionalOnClass(DefaultKafkaProducerFactoryCustomizer.class)
+  @Configuration
+  static class ProducerFactoryCustomizerConfiguration {
+
+    @Bean
+    DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
+        OpenTelemetry openTelemetry) {
+      KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
+      return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
+    }
   }
 }

@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractKafkaInstrumentationAutoConfigurationTest;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import org.junit.jupiter.api.Test;
@@ -18,7 +19,8 @@ import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryC
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 
-class KafkaInstrumentationAutoConfigurationTest {
+class KafkaInstrumentationAutoConfigurationTest
+    extends AbstractKafkaInstrumentationAutoConfigurationTest {
 
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
@@ -26,8 +28,14 @@ class KafkaInstrumentationAutoConfigurationTest {
               InstrumentationConfig.class,
               () -> new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(emptyMap())))
           .withConfiguration(
-              AutoConfigurations.of(KafkaInstrumentationSpringBoot4AutoConfiguration.class))
+              AutoConfigurations.of(
+                  KafkaInstrumentationAutoConfiguration.class,
+                  KafkaInstrumentationSpringBoot4AutoConfiguration.class))
           .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);
+
+  protected ApplicationContextRunner contextRunner() {
+    return runner;
+  }
 
   @Test
   void defaultConfiguration() {
@@ -51,29 +59,5 @@ class KafkaInstrumentationAutoConfigurationTest {
           // Check that interceptors were added (the customizer adds a post processor)
           assertThat(factory.getPostProcessors()).isNotEmpty();
         });
-  }
-
-  @Test
-  void instrumentationDisabled() {
-    runner
-        .withPropertyValues("otel.instrumentation.kafka.enabled=false")
-        .run(
-            context -> {
-              assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isFalse();
-              assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-                  .isFalse();
-            });
-  }
-
-  @Test
-  void listenerInterceptorCanBeDisabled() {
-    runner
-        .withPropertyValues("otel.instrumentation.kafka.autoconfigure-interceptor=false")
-        .run(
-            context -> {
-              assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
-              assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-                  .isFalse();
-            });
   }
 }

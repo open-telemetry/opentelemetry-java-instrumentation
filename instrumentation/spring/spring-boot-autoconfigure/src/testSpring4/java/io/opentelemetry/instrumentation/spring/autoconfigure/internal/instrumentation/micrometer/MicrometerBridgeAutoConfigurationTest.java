@@ -5,17 +5,14 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.micrometer;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
-import org.junit.jupiter.api.Test;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractMicrometerBridgeAutoConfigurationTest;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
-class MicrometerBridgeAutoConfigurationTest {
+class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAutoConfigurationTest {
 
   private final ApplicationContextRunner runner =
       new ApplicationContextRunner()
@@ -23,37 +20,15 @@ class MicrometerBridgeAutoConfigurationTest {
           .withConfiguration(
               AutoConfigurations.of(MicrometerBridgeSpringBoot4AutoConfiguration.class));
 
-  @Test
-  void metricsEnabled() {
-    runner
-        .withConfiguration(AutoConfigurations.of(MetricsAutoConfiguration.class))
-        .withPropertyValues("otel.instrumentation.micrometer.enabled = true")
-        .run(
-            context ->
-                assertThat(context.getBean("otelMeterRegistry", MeterRegistry.class))
-                    .isNotNull()
-                    .isInstanceOf(OpenTelemetryMeterRegistry.class));
+  protected ApplicationContextRunner contextRunner() {
+    return runner;
   }
 
-  @Test
-  void metricsDisabledByDefault() {
-    runner
-        .withConfiguration(AutoConfigurations.of(MetricsAutoConfiguration.class))
-        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
+  protected Class<?> getMetricsAutoConfigurationClass() {
+    return MetricsAutoConfiguration.class;
   }
 
-  @Test
-  void metricsDisabled() {
-    runner
-        .withConfiguration(AutoConfigurations.of(MetricsAutoConfiguration.class))
-        .withPropertyValues("otel.instrumentation.micrometer.enabled = false")
-        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
-  }
-
-  @Test
-  void noActuatorAutoConfiguration() {
-    runner
-        .withPropertyValues("otel.instrumentation.micrometer.enabled = true")
-        .run(context -> assertThat(context.containsBean("otelMeterRegistry")).isFalse());
+  protected Class<?> getMeterRegistryClass() {
+    return MeterRegistry.class;
   }
 }

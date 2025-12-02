@@ -24,7 +24,7 @@ import org.springframework.context.annotation.Configuration;
 @ConditionalOnEnabledInstrumentation(module = "jdbc")
 @AutoConfiguration(after = DataSourceAutoConfiguration.class)
 @ConditionalOnBean({DataSource.class})
-@ConditionalOnClass(DataSourceAutoConfiguration.class)
+@ConditionalOnClass(DataSourceAutoConfiguration.class) // module changed in Spring Boot 4
 @Configuration(proxyBeanMethods = false)
 public class JdbcInstrumentationAutoConfiguration {
 
