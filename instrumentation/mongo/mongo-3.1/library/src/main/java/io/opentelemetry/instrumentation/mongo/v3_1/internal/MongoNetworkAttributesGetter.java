@@ -3,12 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.mongo.v3_1;
+package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import javax.annotation.Nullable;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 class MongoNetworkAttributesGetter implements ServerAttributesGetter<CommandStartedEvent> {
 
   @Nullable

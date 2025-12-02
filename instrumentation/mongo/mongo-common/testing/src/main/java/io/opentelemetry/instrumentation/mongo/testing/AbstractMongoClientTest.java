@@ -36,6 +36,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -48,13 +49,13 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 @TestInstance(PER_CLASS)
 public abstract class AbstractMongoClientTest<T> {
 
+  protected abstract String instrumentationName();
+
   private static final AtomicInteger collectionIndex = new AtomicInteger();
 
   private GenericContainer<?> mongodb;
   protected String host;
   protected int port;
-
-  protected abstract String instrumentationName();
 
   @BeforeAll
   void setup() {
@@ -158,12 +159,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes autoIndexId in create
-                                // commands
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -196,12 +192,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes autoIndexId in create
-                                // commands
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -235,12 +226,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes autoIndexId in create
-                                // commands
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -252,38 +238,39 @@ public abstract class AbstractMongoClientTest<T> {
     long count = testing().runWithSpan("parent", () -> getCollection(dbName, collectionName));
     assertThat(count).isEqualTo(0);
 
+    // versions 3.7+ are instrumented by the mongo-3.7 module and have a different scope
+    AtomicReference<String> scopeName = new AtomicReference<>();
+
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "count",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
-                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes all fields together
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                    span -> {
+                      scopeName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
+                      mongoSpan(
+                          span,
+                          "count",
+                          collectionName,
+                          dbName,
+                          trace.getSpan(0),
+                          asList(
+                              "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                              "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
+                    }));
 
     assertDurationMetric(
         testing(),
-        instrumentationName(),
+        scopeName.get(),
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         DB_NAMESPACE,
@@ -343,11 +330,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes all fields together
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -401,11 +384,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes all fields together
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -459,11 +438,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"count\":\""
                                     + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes all fields together
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -551,12 +526,7 @@ public abstract class AbstractMongoClientTest<T> {
                                     + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
                                 "{\"create\":\""
                                     + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                // mongodb-driver-async 3.6.x includes autoIndexId in create
-                                // commands
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}"))));
+                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   protected String createCollectionName() {

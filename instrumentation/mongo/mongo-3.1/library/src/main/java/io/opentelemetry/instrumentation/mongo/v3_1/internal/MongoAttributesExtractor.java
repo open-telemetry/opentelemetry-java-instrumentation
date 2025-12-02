@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.mongo.v3_1;
+package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitOldDatabaseSemconv;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
@@ -20,6 +20,10 @@ import java.util.Set;
 import javax.annotation.Nullable;
 import org.bson.BsonValue;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 class MongoAttributesExtractor implements AttributesExtractor<CommandStartedEvent, Void> {
   // copied from DbIncubatingAttributes
   private static final AttributeKey<String> DB_MONGODB_COLLECTION =

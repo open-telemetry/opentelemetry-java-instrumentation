@@ -9,8 +9,8 @@ import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.mongo.v3_1.MongoInstrumenterFactory;
-import io.opentelemetry.instrumentation.mongo.v3_1.TracingCommandListener;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 

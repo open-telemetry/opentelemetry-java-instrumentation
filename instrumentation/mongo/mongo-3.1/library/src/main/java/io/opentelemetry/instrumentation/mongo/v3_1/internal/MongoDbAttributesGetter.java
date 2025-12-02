@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.mongo.v3_1;
+package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.MongoException;
 import com.mongodb.ServerAddress;
@@ -24,6 +24,10 @@ import org.bson.codecs.EncoderContext;
 import org.bson.json.JsonWriter;
 import org.bson.json.JsonWriterSettings;
 
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 class MongoDbAttributesGetter implements DbClientAttributesGetter<CommandStartedEvent, Void> {
 
   // copied from DbIncubatingAttributes.DbSystemIncubatingValues
