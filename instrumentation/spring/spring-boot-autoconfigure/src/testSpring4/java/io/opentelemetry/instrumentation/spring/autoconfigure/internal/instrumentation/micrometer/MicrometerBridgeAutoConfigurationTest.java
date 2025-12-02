@@ -20,14 +20,17 @@ class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAuto
           .withConfiguration(
               AutoConfigurations.of(MicrometerBridgeSpringBoot4AutoConfiguration.class));
 
+  @Override
   protected ApplicationContextRunner contextRunner() {
     return runner;
   }
 
+  @Override
   protected Class<?> getMetricsAutoConfigurationClass() {
     return MetricsAutoConfiguration.class;
   }
 
+  @Override
   protected Class<?> getMeterRegistryClass() {
     return MeterRegistry.class;
   }

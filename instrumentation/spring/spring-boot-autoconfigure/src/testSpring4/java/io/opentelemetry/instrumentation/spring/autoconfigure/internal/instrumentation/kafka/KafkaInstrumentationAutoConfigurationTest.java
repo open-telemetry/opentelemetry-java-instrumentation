@@ -33,6 +33,7 @@ class KafkaInstrumentationAutoConfigurationTest
                   KafkaInstrumentationSpringBoot4AutoConfiguration.class))
           .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);
 
+  @Override
   protected ApplicationContextRunner contextRunner() {
     return runner;
   }

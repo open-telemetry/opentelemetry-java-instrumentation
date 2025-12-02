@@ -187,6 +187,24 @@ testing {
       }
     }
 
+    val testSpring2 by registering(JvmTestSuite::class) {
+      dependencies {
+        implementation(project())
+        implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+        implementation(project(":instrumentation-api"))
+        implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
+        implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
+        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
+          exclude("org.junit.vintage", "junit-vintage-engine")
+        }
+        implementation("javax.servlet:javax.servlet-api:3.1.0")
+        runtimeOnly("com.h2database:h2:1.4.197")
+        runtimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
+      }
+    }
+
     val testSpring3 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
@@ -241,20 +259,20 @@ configurations.configureEach {
   if (name.contains("testLogbackMissing")) {
     exclude("ch.qos.logback", "logback-classic")
   }
+  // testSpring2: configure Spring Boot 3.x dependencies for latest dep testing
+  if (name == "testSpring2Implementation") {
+    dependencies {
+      add(name, "org.springframework.boot:spring-boot-starter-web:3.+")
+      add(name, "org.springframework.boot:spring-boot-starter-jdbc:3.+")
+      add(name, "org.springframework.boot:spring-boot-starter-actuator:3.+")
+      add(name, "org.springframework.boot:spring-boot-starter-data-r2dbc:3.+")
+    }
+  }
 }
 
 tasks {
   compileTestJava {
     options.compilerArgs.add("-parameters")
-
-    // Exclude Spring Boot specific tests from compilation when testLatestDeps is true
-    // These tests are covered by testSpring4 suite
-    if (latestDepTest) {
-      exclude("**/micrometer/MicrometerBridgeAutoConfigurationTest.java")
-      exclude("**/r2dbc/R2DbcInstrumentationAutoConfigurationTest.java")
-      exclude("**/jdbc/JdbcInstrumentationAutoConfigurationTest.java")
-      exclude("**/web/SpringWebInstrumentationAutoConfigurationTest.java")
-    }
   }
 
   withType<Test>().configureEach {
@@ -266,17 +284,15 @@ tasks {
   }
 
   test {
-    // Exclude Spring Boot specific tests when testLatestDeps is true
-    // These tests are covered by testSpring4 suite
-    if (latestDepTest) {
-      exclude("**/micrometer/MicrometerBridgeAutoConfigurationTest.class")
-      exclude("**/r2dbc/R2DbcInstrumentationAutoConfigurationTest.class")
-      exclude("**/jdbc/JdbcInstrumentationAutoConfigurationTest.class")
-      exclude("**/web/SpringWebInstrumentationAutoConfigurationTest.class")
-    }
   }
 
   named<JavaCompile>("compileJavaSpring3Java") {
+    sourceCompatibility = "17"
+    targetCompatibility = "17"
+    options.release.set(17)
+  }
+
+  named<JavaCompile>("compileTestSpring2Java") {
     sourceCompatibility = "17"
     targetCompatibility = "17"
     options.release.set(17)
@@ -286,6 +302,10 @@ tasks {
     sourceCompatibility = "17"
     targetCompatibility = "17"
     options.release.set(17)
+  }
+
+  named<Test>("testSpring2") {
+    isEnabled = latestDepTest && testSpring3
   }
 
   named<Test>("testSpring3") {

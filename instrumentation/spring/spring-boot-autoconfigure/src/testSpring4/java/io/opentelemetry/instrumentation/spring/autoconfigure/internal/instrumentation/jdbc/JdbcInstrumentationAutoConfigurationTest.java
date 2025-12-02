@@ -24,6 +24,7 @@ class JdbcInstrumentationAutoConfigurationTest
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  @Override
   protected InstrumentationExtension testing() {
     return testing;
   }
@@ -41,6 +42,7 @@ class JdbcInstrumentationAutoConfigurationTest
                   DataSourceAutoConfiguration.class))
           .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry);
 
+  @Override
   protected ApplicationContextRunner contextRunner() {
     return runner;
   }
