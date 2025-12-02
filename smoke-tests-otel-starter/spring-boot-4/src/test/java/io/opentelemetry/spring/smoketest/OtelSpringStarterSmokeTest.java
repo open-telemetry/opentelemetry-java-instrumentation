@@ -6,8 +6,6 @@
 package io.opentelemetry.spring.smoketest;
 
 import java.net.URI;
-import java.util.List;
-import org.assertj.core.api.AbstractIterableAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.boot.resttestclient.TestRestTemplate;
@@ -54,39 +52,5 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
   void restClientCall(String path) {
     RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(path, String.class);
-  }
-
-  @Override
-  protected void assertAdditionalMetrics() {
-    if (!isFlightRecorderAvailable()) {
-      return;
-    }
-
-    // JFR based metrics
-    for (String metric :
-        List.of(
-            "jvm.cpu.limit",
-            "jvm.buffer.count",
-            "jvm.class.count",
-            "jvm.cpu.context_switch",
-            "jvm.system.cpu.utilization",
-            "jvm.gc.duration",
-            "jvm.memory.init",
-            "jvm.memory.used",
-            "jvm.memory.allocation",
-            "jvm.network.io",
-            "jvm.thread.count")) {
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
-    }
-  }
-
-  private static boolean isFlightRecorderAvailable() {
-    try {
-      return (boolean)
-          Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
-    } catch (ReflectiveOperationException exception) {
-      return false;
-    }
   }
 }

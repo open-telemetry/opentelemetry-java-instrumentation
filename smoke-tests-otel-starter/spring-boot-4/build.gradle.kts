@@ -34,6 +34,7 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("org.testcontainers:testcontainers-kafka")
   testImplementation("org.testcontainers:testcontainers-mongodb")
+  testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
 }
 
 springBoot {

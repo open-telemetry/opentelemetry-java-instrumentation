@@ -259,7 +259,38 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     }
   }
 
-  protected void assertAdditionalMetrics() {}
+  protected void assertAdditionalMetrics() {
+    if (!isFlightRecorderAvailable()) {
+      return;
+    }
+
+    // JFR based metrics
+    for (String metric :
+        Arrays.asList(
+            "jvm.cpu.limit",
+            "jvm.buffer.count",
+            "jvm.class.count",
+            "jvm.cpu.context_switch",
+            "jvm.system.cpu.utilization",
+            "jvm.gc.duration",
+            "jvm.memory.init",
+            "jvm.memory.used",
+            "jvm.memory.allocation",
+            "jvm.network.io",
+            "jvm.thread.count")) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
+    }
+  }
+
+  private static boolean isFlightRecorderAvailable() {
+    try {
+      return (boolean)
+          Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
+    } catch (ReflectiveOperationException exception) {
+      return false;
+    }
+  }
 
   @Test
   void databaseQuery() {
