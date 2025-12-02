@@ -7,14 +7,31 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.RestTemplateBeanPostProcessor;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
+import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
+import java.util.Collections;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.web.client.RestTemplate;
 
 public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
-  protected abstract ApplicationContextRunner contextRunner();
+  protected abstract AutoConfigurations autoConfigurations();
+
+  protected final ApplicationContextRunner contextRunner =
+      new ApplicationContextRunner()
+          .withBean(OpenTelemetry.class, OpenTelemetry::noop)
+          .withBean(
+              InstrumentationConfig.class,
+              () ->
+                  new ConfigPropertiesBridge(
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+          .withBean(RestTemplate.class, RestTemplate::new)
+          .withConfiguration(autoConfigurations());
 
   /**
    * Tests that users create {@link RestTemplate} bean is instrumented.
@@ -27,7 +44,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
    */
   @Test
   void instrumentationEnabled() {
-    contextRunner()
+    contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
         .withPropertyValues("otel.instrumentation.common.default-enabled=false")
         .run(
@@ -51,7 +68,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   @Test
   void instrumentationDisabled() {
-    contextRunner()
+    contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
         .run(
             context ->
@@ -60,7 +77,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   @Test
   void instrumentationDisabledButAllEnabled() {
-    contextRunner()
+    contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=false")
         .withPropertyValues("otel.instrumentation.common.default-enabled=true")
         .run(
@@ -70,7 +87,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   @Test
   void allInstrumentationDisabled() {
-    contextRunner()
+    contextRunner
         .withPropertyValues("otel.instrumentation.common.default-enabled=false")
         .run(
             context ->
@@ -79,13 +96,11 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   @Test
   void defaultConfiguration() {
-    contextRunner()
-        .run(
-            context ->
-                assertThat(
-                        context.getBean(
-                            "otelRestTemplateBeanPostProcessor",
-                            RestTemplateBeanPostProcessor.class))
-                    .isNotNull());
+    contextRunner.run(
+        context ->
+            assertThat(
+                    context.getBean(
+                        "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
+                .isNotNull());
   }
 }

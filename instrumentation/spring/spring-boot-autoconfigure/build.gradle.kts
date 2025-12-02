@@ -283,9 +283,6 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  test {
-  }
-
   named<JavaCompile>("compileJavaSpring3Java") {
     sourceCompatibility = "17"
     targetCompatibility = "17"

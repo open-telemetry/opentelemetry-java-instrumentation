@@ -32,7 +32,7 @@ public class KafkaInstrumentationSpringBoot4AutoConfiguration {
   public KafkaInstrumentationSpringBoot4AutoConfiguration() {}
 
   @Bean
-  static SpringKafkaTelemetry springKafkaTelemetrySpringBoot4(
+  static SpringKafkaTelemetry getTelemetry(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       ObjectProvider<InstrumentationConfig> configProvider) {
     return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
@@ -50,11 +50,11 @@ public class KafkaInstrumentationSpringBoot4AutoConfiguration {
       havingValue = "true",
       matchIfMissing = true)
   static ConcurrentKafkaListenerContainerFactoryPostProcessor
-      otelKafkaListenerContainerFactoryBeanPostProcessorSpringBoot4(
+      otelKafkaListenerContainerFactoryBeanPostProcessor(
           ObjectProvider<OpenTelemetry> openTelemetryProvider,
           ObjectProvider<InstrumentationConfig> configProvider) {
     return new ConcurrentKafkaListenerContainerFactoryPostProcessor(
-        () -> springKafkaTelemetrySpringBoot4(openTelemetryProvider, configProvider));
+        () -> getTelemetry(openTelemetryProvider, configProvider));
   }
 
   @ConditionalOnClass(DefaultKafkaProducerFactoryCustomizer.class)
@@ -62,7 +62,7 @@ public class KafkaInstrumentationSpringBoot4AutoConfiguration {
   static class ProducerFactoryCustomizerConfiguration {
 
     @Bean
-    DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizerSpringBoot4(
+    DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
         ObjectProvider<OpenTelemetry> openTelemetryProvider,
         ObjectProvider<InstrumentationConfig> configProvider) {
       KafkaTelemetry kafkaTelemetry =

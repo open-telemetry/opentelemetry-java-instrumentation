@@ -8,39 +8,23 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractKafkaInstrumentationAutoConfigurationTest;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
-import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 
 class KafkaInstrumentationAutoConfigurationTest
     extends AbstractKafkaInstrumentationAutoConfigurationTest {
 
-  private final ApplicationContextRunner runner =
-      new ApplicationContextRunner()
-          .withBean(
-              InstrumentationConfig.class,
-              () -> new ConfigPropertiesBridge(DefaultConfigProperties.createFromMap(emptyMap())))
-          .withConfiguration(
-              AutoConfigurations.of(
-                  KafkaInstrumentationAutoConfiguration.class,
-                  KafkaInstrumentationSpringBoot4AutoConfiguration.class))
-          .withBean("openTelemetry", OpenTelemetry.class, OpenTelemetry::noop);
-
   @Override
-  protected ApplicationContextRunner contextRunner() {
-    return runner;
+  protected AutoConfigurations autoConfigurations() {
+    return AutoConfigurations.of(KafkaInstrumentationSpringBoot4AutoConfiguration.class);
   }
 
   @Test
   void defaultConfiguration() {
-    runner.run(
+    contextRunner.run(
         context -> {
           assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
           assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
