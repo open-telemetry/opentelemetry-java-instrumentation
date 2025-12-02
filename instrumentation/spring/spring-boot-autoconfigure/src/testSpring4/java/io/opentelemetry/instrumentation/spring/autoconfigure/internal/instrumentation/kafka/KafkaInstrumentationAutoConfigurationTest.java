@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractKafkaInstrumentationAutoConfigurationTest;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
@@ -23,7 +22,7 @@ class KafkaInstrumentationAutoConfigurationTest
   }
 
   @Test
-  void defaultConfiguration() {
+  void defaultConfigurationWithFactoryTesting() {
     contextRunner.run(
         context -> {
           assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();

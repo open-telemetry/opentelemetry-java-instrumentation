@@ -24,7 +24,11 @@ import org.springframework.kafka.core.KafkaTemplate;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
-@ConditionalOnClass({KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class})
+@ConditionalOnClass({
+  KafkaTemplate.class,
+  ConcurrentKafkaListenerContainerFactory.class,
+  DefaultKafkaProducerFactoryCustomizer.class // package changed from Spring Boot 4
+})
 @Configuration
 public class KafkaInstrumentationSpringBoot4AutoConfiguration {
 

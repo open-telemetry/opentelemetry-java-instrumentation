@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,6 +17,7 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
+
   protected abstract AutoConfigurations autoConfigurations();
 
   protected final ApplicationContextRunner contextRunner =
@@ -49,5 +50,15 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
               assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
                   .isFalse();
             });
+  }
+
+  @Test
+  void defaultConfiguration() {
+    contextRunner.run(
+        context -> {
+          assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
+          assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
+              .isTrue();
+        });
   }
 }
