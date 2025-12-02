@@ -11,11 +11,9 @@ import static java.util.Collections.emptySet;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.springframework.http.HttpHeaders;
@@ -28,8 +26,7 @@ import org.springframework.http.HttpHeaders;
 public final class HeaderUtil {
 
   @Nullable private static final MethodHandle GET_HEADERS;
-  @Nullable private static final MethodHandle FOR_EACH;
-  @Nullable private static final MethodHandle KEY_SET;
+  @Nullable private static final MethodHandle HEADER_NAMES;
 
   static {
     GET_HEADERS =
@@ -41,31 +38,15 @@ public final class HeaderUtil {
                     MethodType.methodType(List.class, Object.class))); // before spring web 7.0
 
     // Spring Web 7+
-    MethodHandle forEach = null;
+    MethodHandle headerNames = null;
     try {
-      forEach =
+      headerNames =
           MethodHandles.lookup()
-              .findVirtual(
-                  HttpHeaders.class,
-                  "forEach",
-                  MethodType.methodType(void.class, BiConsumer.class));
+              .findVirtual(HttpHeaders.class, "headerNames", MethodType.methodType(Set.class));
     } catch (Throwable t) {
-      // ignore - will fall back to keySet
+      // ignore - will fall back to casting to Map
     }
-    FOR_EACH = forEach;
-
-    // Spring Web 6 and earlier
-    MethodHandle keySet = null;
-    if (FOR_EACH == null) {
-      try {
-        keySet =
-            MethodHandles.lookup()
-                .findVirtual(Map.class, "keySet", MethodType.methodType(Set.class));
-      } catch (Throwable t) {
-        // ignore
-      }
-    }
-    KEY_SET = keySet;
+    HEADER_NAMES = headerNames;
   }
 
   @Nullable
@@ -100,22 +81,19 @@ public final class HeaderUtil {
 
   @SuppressWarnings("unchecked") // HttpHeaders is a Map in Spring Web 6 and earlier
   public static Set<String> getKeys(HttpHeaders headers) {
-    if (FOR_EACH != null) {
-      // Spring Web 7: HttpHeaders has forEach(BiConsumer) method
+    if (HEADER_NAMES != null) {
+      // Spring Web 7: HttpHeaders has headerNames() method
       try {
-        Set<String> keys = new HashSet<>();
-        FOR_EACH.invoke(headers, (BiConsumer<String, ?>) (key, value) -> keys.add(key));
-        return keys;
+        Set<String> result = (Set<String>) HEADER_NAMES.invoke(headers);
+        if (result != null) {
+          return result;
+        }
       } catch (Throwable t) {
         // ignore
       }
-    } else if (KEY_SET != null) {
+    } else {
       // Spring Web 6 and earlier: HttpHeaders extends Map
-      try {
-        return (Set<String>) KEY_SET.invoke(headers);
-      } catch (Throwable t) {
-        // ignore
-      }
+      return ((Map<String, List<String>>) headers).keySet();
     }
     return emptySet();
   }
