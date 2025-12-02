@@ -119,6 +119,13 @@ tasks.withType<ShadowJar>().configureEach {
 
   // this is for instrumentation on java.util.logging (since java.util.logging itself is shaded above)
   relocate("application.java.util.logging", "java.util.logging")
+
+  // Rename SPI service files to match relocated class names
+  eachFile {
+    if (path.startsWith("META-INF/services/io.opentelemetry.instrumentation")) {
+      path = path.replace("io.opentelemetry.instrumentation", "io.opentelemetry.javaagent.shaded.instrumentation")
+    }
+  }
 }
 
 val compileMuzzle by tasks.registering {
