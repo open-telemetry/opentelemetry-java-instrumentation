@@ -69,7 +69,12 @@ public final class Servlet3TelemetryFilter implements Filter {
         new ServletRequestContext<>(httpRequest);
     ServletResponseContext<HttpServletResponse> responseContext =
         new ServletResponseContext<>(httpResponse);
-    instrumenter.shouldStart(parentContext, requestContext);
+
+    if (!instrumenter.shouldStart(parentContext, requestContext)) {
+      filterChain.doFilter(request, response);
+      return;
+    }
+
     Context context = instrumenter.start(parentContext, requestContext);
 
     if (addTraceIdRequestAttribute) {
