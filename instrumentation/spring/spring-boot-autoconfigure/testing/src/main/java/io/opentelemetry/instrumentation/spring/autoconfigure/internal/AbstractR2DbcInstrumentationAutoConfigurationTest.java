@@ -1,0 +1,52 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
+
+import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
+
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.runner.ApplicationContextRunner;
+import org.springframework.r2dbc.core.DatabaseClient;
+
+public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
+
+  protected abstract LibraryInstrumentationExtension testing();
+
+  protected abstract ApplicationContextRunner contextRunner();
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  @Test
+  void statementSanitizerEnabledByDefault() {
+    contextRunner()
+        .run(
+            context -> {
+              DatabaseClient client = context.getBean(DatabaseClient.class);
+              client
+                  .sql(
+                      "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(255), age INT, PRIMARY KEY (id))")
+                  .fetch()
+                  .all()
+                  .blockLast();
+              client.sql("SELECT * FROM player WHERE id = 1").fetch().all().blockLast();
+              testing()
+                  .waitAndAssertTraces(
+                      trace ->
+                          trace.hasSpansSatisfyingExactly(
+                              span ->
+                                  span.hasAttribute(
+                                      maybeStable(DB_STATEMENT),
+                                      "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
+                      trace ->
+                          trace.hasSpansSatisfyingExactly(
+                              span ->
+                                  span.hasAttribute(
+                                      maybeStable(DB_STATEMENT),
+                                      "SELECT * FROM player WHERE id = ?")));
+            });
+  }
+}

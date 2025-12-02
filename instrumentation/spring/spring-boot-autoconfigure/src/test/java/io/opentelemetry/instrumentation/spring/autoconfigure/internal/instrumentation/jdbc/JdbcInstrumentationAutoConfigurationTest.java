@@ -24,20 +24,25 @@ class JdbcInstrumentationAutoConfigurationTest
   @RegisterExtension
   static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
+  private final ApplicationContextRunner contextRunner =
+      new ApplicationContextRunner()
+          .withBean(
+              InstrumentationConfig.class,
+              () ->
+                  new ConfigPropertiesBridge(
+                      DefaultConfigProperties.createFromMap(Collections.emptyMap())))
+          .withConfiguration(
+              AutoConfigurations.of(
+                  JdbcInstrumentationAutoConfiguration.class, DataSourceAutoConfiguration.class))
+          .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry);
+
+  @Override
   protected InstrumentationExtension testing() {
     return testing;
   }
 
-  protected ApplicationContextRunner runner() {
-    return new ApplicationContextRunner()
-        .withBean(
-            InstrumentationConfig.class,
-            () ->
-                new ConfigPropertiesBridge(
-                    DefaultConfigProperties.createFromMap(Collections.emptyMap())))
-        .withConfiguration(
-            AutoConfigurations.of(
-                JdbcInstrumentationAutoConfiguration.class, DataSourceAutoConfiguration.class))
-        .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry);
+  @Override
+  protected ApplicationContextRunner contextRunner() {
+    return contextRunner;
   }
 }

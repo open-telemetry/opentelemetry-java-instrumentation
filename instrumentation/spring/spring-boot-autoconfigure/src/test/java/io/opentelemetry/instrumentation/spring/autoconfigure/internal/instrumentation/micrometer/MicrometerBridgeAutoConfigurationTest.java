@@ -19,14 +19,17 @@ class MicrometerBridgeAutoConfigurationTest extends AbstractMicrometerBridgeAuto
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withConfiguration(AutoConfigurations.of(MicrometerBridgeAutoConfiguration.class));
 
+  @Override
   protected ApplicationContextRunner contextRunner() {
     return runner;
   }
 
+  @Override
   protected Class<?> getMetricsAutoConfigurationClass() {
     return MetricsAutoConfiguration.class;
   }
 
+  @Override
   protected Class<?> getMeterRegistryClass() {
     return MeterRegistry.class;
   }
