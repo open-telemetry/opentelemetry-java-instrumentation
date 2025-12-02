@@ -7617,10 +7617,34 @@ libraries:
           type: STRING
         - name: server.port
           type: LONG
+      - name: http.server.active_requests
+        description: Number of active HTTP server requests.
+        type: LONG_SUM
+        unit: requests
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: url.scheme
+          type: STRING
       - name: http.server.request.duration
         description: Duration of HTTP server requests.
         type: HISTOGRAM
         unit: s
+        attributes:
+        - name: http.request.method
+          type: STRING
+        - name: http.response.status_code
+          type: LONG
+        - name: http.route
+          type: STRING
+        - name: network.protocol.version
+          type: STRING
+        - name: url.scheme
+          type: STRING
+      - name: http.server.response.body.size
+        description: Size of HTTP server response bodies.
+        type: HISTOGRAM
+        unit: By
         attributes:
         - name: http.request.method
           type: STRING
