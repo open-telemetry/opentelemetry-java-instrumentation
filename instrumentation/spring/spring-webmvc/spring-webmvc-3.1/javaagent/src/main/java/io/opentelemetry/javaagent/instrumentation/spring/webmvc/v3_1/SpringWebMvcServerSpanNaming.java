@@ -14,6 +14,9 @@ public class SpringWebMvcServerSpanNaming {
 
   public static final HttpServerRouteGetter<HttpServletRequest> SERVER_SPAN_NAME =
       (context, request) -> {
+        if (request == null) {
+          return null;
+        }
         Object bestMatchingPattern =
             request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
         if (bestMatchingPattern != null) {
