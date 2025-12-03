@@ -59,7 +59,10 @@ public class AnnotatedMethodInstrumentation implements TypeInstrumentation {
       @Nullable private final Scope scope;
 
       private AdviceScope(
-          CallDepth callDepth, @Nullable SpringWsRequest request, @Nullable Context context, @Nullable Scope scope) {
+          CallDepth callDepth,
+          @Nullable SpringWsRequest request,
+          @Nullable Context context,
+          @Nullable Scope scope) {
         this.callDepth = callDepth;
         this.request = request;
         this.context = context;
