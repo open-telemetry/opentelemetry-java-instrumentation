@@ -166,6 +166,7 @@ readonly INSTRUMENTATIONS=(
   "lettuce:lettuce-5.0:javaagent:testStableSemconv"
   "lettuce:lettuce-5.1:javaagent:test"
   "lettuce:lettuce-5.1:javaagent:testStableSemconv"
+  "mybatis-3.2:javaagent:test"
   "nats:nats-2.17:javaagent:test"
   "nats:nats-2.17:javaagent:testExperimental"
   "netty:netty-3.8:javaagent:test"

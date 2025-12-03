@@ -53,11 +53,3 @@ configurations:
       `http.server.response.size` metrics.
     type: boolean
     default: false
-  - name: otel.instrumentation.netty.connection-telemetry.enabled
-    description: Enable the creation of Connect and DNS spans.
-    type: boolean
-    default: false
-  - name: otel.instrumentation.netty.ssl-telemetry.enabled
-    description: Enable SSL telemetry.
-    type: boolean
-    default: false
