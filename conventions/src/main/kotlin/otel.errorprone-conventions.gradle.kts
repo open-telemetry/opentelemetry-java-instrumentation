@@ -124,6 +124,7 @@ tasks {
 
         // Requires adding compile dependency to JSpecify
         disable("AddNullMarkedToPackageInfo")
+        disable("RequireExplicitNullMarking")
 
         if (testLatestDeps) {
           // Some latest dep tests are compiled for java 17 although the base version uses an older
