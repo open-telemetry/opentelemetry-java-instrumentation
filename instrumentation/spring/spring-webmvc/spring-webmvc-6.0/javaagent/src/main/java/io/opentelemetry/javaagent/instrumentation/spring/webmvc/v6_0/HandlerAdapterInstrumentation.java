@@ -74,31 +74,6 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
         Context parentContext = Context.current();
 
-        // During async redispatches (e.g., after DeferredResult completes), we want to use
-        // the context stored in the request attribute (which includes async work spans)
-        // instead of the current context. We detect async redispatches using the servlet
-        // DispatcherType.
-        if (request.getDispatcherType() == jakarta.servlet.DispatcherType.ASYNC) {
-          Object storedContext =
-              request.getAttribute(
-                  "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.Context");
-          if (storedContext instanceof Context context) {
-            parentContext = context;
-            // The stored context was created in a different thread/phase, so we need to
-            // re-initialize the ServletContextPath for this request to ensure the span
-            // name includes the correct context path.
-            //            parentContext =
-            //                io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath.init(
-            //                    parentContext,
-            //                    req -> {
-            //                      String contextPath = req.getContextPath();
-            //                      return (contextPath == null || contextPath.isEmpty()) ? null :
-            // contextPath;
-            //                    },
-            //                    request);
-          }
-        }
-
         // don't start a new top-level span
         if (!Span.fromContext(parentContext).getSpanContext().isValid()) {
           return null;
