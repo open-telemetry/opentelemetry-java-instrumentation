@@ -43,11 +43,12 @@ public class KafkaInstrumentationAutoConfiguration {
   static SpringKafkaTelemetry getTelemetry(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       ObjectProvider<InstrumentationConfig> configProvider) {
+    InstrumentationConfig config = configProvider.getObject();
     return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
         .setCaptureExperimentalSpanAttributes(
-            configProvider
-                .getObject()
-                .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+            config.getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+        .setMessagingReceiveInstrumentationEnabled(
+            config.getBoolean("otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
         .build();
   }
 
