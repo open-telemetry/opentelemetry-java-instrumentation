@@ -266,6 +266,9 @@ configurations.configureEach {
       add(name, "org.springframework.boot:spring-boot-starter-jdbc:3.+")
       add(name, "org.springframework.boot:spring-boot-starter-actuator:3.+")
       add(name, "org.springframework.boot:spring-boot-starter-data-r2dbc:3.+")
+      add(name, "org.springframework.kafka:spring-kafka:3.+")
+      add(name, project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
+      add(name, project(":instrumentation:spring:spring-kafka-2.7:library"))
     }
   }
 }
