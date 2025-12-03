@@ -155,6 +155,7 @@ readonly INSTRUMENTATIONS=(
   "ktor:ktor-1.0:library:test"
   "ktor:ktor-2.0:library:test"
   "ktor:ktor-3.0:library:test"
+  "ktor:ktor-3.0:library:testExperimental"
   "kubernetes-client-7.0:javaagent:test"
   "kubernetes-client-7.0:javaagent:testExperimental"
   "lettuce:lettuce-4.0:javaagent:test"
