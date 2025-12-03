@@ -159,7 +159,7 @@ dependencies {
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
 
-  codenarc("org.codenarc:CodeNarc:3.6.0")
+  codenarc("org.codenarc:CodeNarc:3.7.0")
   codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.25"))
 
   modules {
@@ -422,7 +422,7 @@ codenarc {
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "12.1.2"
+  toolVersion = "12.2.0"
   maxWarnings = 0
 }
 
