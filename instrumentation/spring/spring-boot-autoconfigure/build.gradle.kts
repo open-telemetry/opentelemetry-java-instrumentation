@@ -305,7 +305,7 @@ tasks {
   }
 
   named<Test>("testSpring2") {
-    isEnabled = latestDepTest && testSpring3
+    isEnabled = testSpring3
   }
 
   named<Test>("testSpring3") {

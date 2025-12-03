@@ -7,6 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread.ThreadDetailsAutoConfiguration;
 import java.time.Duration;
 import org.junit.jupiter.api.AfterAll;
@@ -27,7 +28,7 @@ public abstract class AbstractJvmKafkaSpringStarterSmokeTest
 
   private ApplicationContextRunner contextRunner;
 
-  protected abstract Class<?> kafkaInstrumentationAutoConfigurationClass();
+  protected abstract Class<?> kafkaProducerFactoryCustomizerClass();
 
   protected abstract Class<?> kafkaAutoConfigurationClass();
 
@@ -57,7 +58,8 @@ public abstract class AbstractJvmKafkaSpringStarterSmokeTest
                     ThreadDetailsAutoConfiguration.class,
                     SpringSmokeOtelConfiguration.class,
                     kafkaAutoConfigurationClass(),
-                    kafkaInstrumentationAutoConfigurationClass(),
+                    KafkaInstrumentationAutoConfiguration.class,
+                    kafkaProducerFactoryCustomizerClass(),
                     KafkaConfig.class))
             .withPropertyValues(
                 "otel.instrumentation.kafka.experimental-span-attributes=true",

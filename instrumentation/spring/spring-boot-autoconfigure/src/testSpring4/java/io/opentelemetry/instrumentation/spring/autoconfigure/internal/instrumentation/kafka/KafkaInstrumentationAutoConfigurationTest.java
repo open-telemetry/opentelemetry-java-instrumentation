@@ -8,9 +8,10 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import org.junit.jupiter.api.Test;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.AbstractKafkaInstrumentationAutoConfigurationTest;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
+import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 
 class KafkaInstrumentationAutoConfigurationTest
@@ -18,30 +19,24 @@ class KafkaInstrumentationAutoConfigurationTest
 
   @Override
   protected AutoConfigurations autoConfigurations() {
-    return AutoConfigurations.of(KafkaInstrumentationSpringBoot4AutoConfiguration.class);
+    return AutoConfigurations.of(
+        KafkaInstrumentationAutoConfiguration.class,
+        ProducerFactoryCustomizerSpringBoot4Configuration.class);
   }
 
-  @Test
-  void defaultConfigurationWithFactoryTesting() {
-    contextRunner.run(
-        context -> {
-          assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
-          assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
-              .isTrue();
+  @Override
+  protected void factoryTestAssertion(AssertableApplicationContext context) {
+    DefaultKafkaProducerFactoryCustomizer customizer =
+        context.getBean(
+            "otelKafkaProducerFactoryCustomizer", DefaultKafkaProducerFactoryCustomizer.class);
+    assertThat(customizer).isNotNull();
 
-          DefaultKafkaProducerFactoryCustomizer customizer =
-              context.getBean(
-                  "otelKafkaProducerFactoryCustomizer",
-                  DefaultKafkaProducerFactoryCustomizer.class);
-          assertThat(customizer).isNotNull();
+    // Verify the customizer works by applying it to a producer factory
+    DefaultKafkaProducerFactory<Object, Object> factory =
+        new DefaultKafkaProducerFactory<>(emptyMap());
+    customizer.customize(factory);
 
-          // Verify the customizer works by applying it to a producer factory
-          DefaultKafkaProducerFactory<Object, Object> factory =
-              new DefaultKafkaProducerFactory<>(emptyMap());
-          customizer.customize(factory);
-
-          // Check that interceptors were added (the customizer adds a post processor)
-          assertThat(factory.getPostProcessors()).isNotEmpty();
-        });
+    // Check that interceptors were added (the customizer adds a post processor)
+    assertThat(factory.getPostProcessors()).isNotEmpty();
   }
 }

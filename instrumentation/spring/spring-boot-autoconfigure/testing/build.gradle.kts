@@ -9,6 +9,7 @@ val springBootVersion = "2.7.18"
 
 dependencies {
   compileOnly("org.springframework.boot:spring-boot-restclient:4.0.0")
+  implementation("org.springframework.kafka:spring-kafka:2.9.0")
 
   library("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")

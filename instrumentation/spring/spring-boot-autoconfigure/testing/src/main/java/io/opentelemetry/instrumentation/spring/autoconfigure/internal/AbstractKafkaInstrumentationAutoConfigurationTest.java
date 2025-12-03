@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -14,11 +14,14 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
+import org.springframework.boot.test.context.assertj.AssertableApplicationContext;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 
 public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
 
   protected abstract AutoConfigurations autoConfigurations();
+
+  protected abstract void factoryTestAssertion(AssertableApplicationContext context);
 
   protected final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
@@ -59,6 +62,18 @@ public abstract class AbstractKafkaInstrumentationAutoConfigurationTest {
           assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
           assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
               .isTrue();
+        });
+  }
+
+  @Test
+  void defaultConfigurationWithFactoryTesting() {
+    contextRunner.run(
+        context -> {
+          assertThat(context.containsBean("otelKafkaProducerFactoryCustomizer")).isTrue();
+          assertThat(context.containsBean("otelKafkaListenerContainerFactoryBeanPostProcessor"))
+              .isTrue();
+
+          factoryTestAssertion(context);
         });
   }
 }
