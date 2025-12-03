@@ -30,7 +30,7 @@ public final class JdbcInstrumenterFactory {
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
     return ConfigPropertiesUtil.getBoolean(
-            openTelemetry, "jdbc", "experimental", "capture_query_parameters")
+            openTelemetry, "jdbc", "capture_query_parameters/development")
         .orElse(false);
   }
 
@@ -96,8 +96,7 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry) {
     return createTransactionInstrumenter(
         openTelemetry,
-        ConfigPropertiesUtil.getBoolean(
-                openTelemetry, "jdbc", "experimental", "transaction", "enabled")
+        ConfigPropertiesUtil.getBoolean(openTelemetry, "jdbc", "transaction/development", "enabled")
             .orElse(false));
   }
 
