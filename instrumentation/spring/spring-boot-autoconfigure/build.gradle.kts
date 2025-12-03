@@ -246,6 +246,7 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk")
+        implementation("io.opentelemetry:opentelemetry-exporter-otlp")
         implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
           exclude("org.junit.vintage", "junit-vintage-engine")
         }

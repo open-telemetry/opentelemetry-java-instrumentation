@@ -33,6 +33,21 @@ kotlin {
   }
 }
 
-tasks.test {
-  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+tasks {
+  withType<Test>().configureEach {
+    systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  }
+
+  val testExperimental by registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
+    // this is used for enabling/disabling tests, library instrumentation doesn't use this flag
+    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    systemProperty("metadataConfig", "otel.instrumentation.http.server.emit-experimental-telemetry=true")
+  }
+
+  check {
+    dependsOn(testExperimental)
+  }
 }
