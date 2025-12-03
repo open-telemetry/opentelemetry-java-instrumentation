@@ -39,11 +39,11 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
         KafkaTelemetry.builder(openTelemetry)
             .setMessagingReceiveInstrumentationEnabled(
                 ConfigPropertiesUtil.getBoolean(
-                        openTelemetry, "messaging", "experimental", "receive_telemetry", "enabled")
+                        openTelemetry, "messaging", "receive_telemetry/development", "enabled")
                     .orElse(false))
             .setCapturedHeaders(
                 ConfigPropertiesUtil.getList(
-                    openTelemetry, "messaging", "experimental", "capture_headers"))
+                    openTelemetry, "messaging", "capture_headers/development"))
             .build();
   }
 
