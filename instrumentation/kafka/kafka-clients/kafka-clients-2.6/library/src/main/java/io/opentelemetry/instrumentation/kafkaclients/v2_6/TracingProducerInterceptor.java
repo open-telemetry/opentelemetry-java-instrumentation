@@ -35,7 +35,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
         KafkaTelemetry.builder(openTelemetry)
             .setCapturedHeaders(
                 ConfigPropertiesUtil.getList(
-                    openTelemetry, "messaging", "experimental", "capture_headers"))
+                    openTelemetry, "messaging", "capture_headers/development"))
             .build();
   }
 

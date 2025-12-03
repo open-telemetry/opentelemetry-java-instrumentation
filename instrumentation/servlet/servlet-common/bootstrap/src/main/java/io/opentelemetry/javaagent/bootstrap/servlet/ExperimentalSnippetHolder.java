@@ -14,7 +14,7 @@ public class ExperimentalSnippetHolder {
 
   private static String getSnippetSetting() {
     return ConfigPropertiesUtil.getString(
-            GlobalOpenTelemetry.get(), "servlet", "experimental", "javascript-snippet")
+            GlobalOpenTelemetry.get(), "servlet", "javascript-snippet/development")
         .orElse("");
   }
 

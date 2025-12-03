@@ -24,17 +24,13 @@ public final class AwsSdkSingletons {
     @Override
     protected List<String> getCapturedHeaders() {
       return ConfigPropertiesUtil.getList(
-          GlobalOpenTelemetry.get(), "messaging", "experimental", "capture_headers");
+          GlobalOpenTelemetry.get(), "messaging", "capture_headers/development");
     }
 
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
       return ConfigPropertiesUtil.getBoolean(
-              GlobalOpenTelemetry.get(),
-              "messaging",
-              "experimental",
-              "receive_telemetry",
-              "enabled")
+              GlobalOpenTelemetry.get(), "messaging", "receive_telemetry/development", "enabled")
           .orElse(false);
     }
 
