@@ -93,11 +93,23 @@ public final class NettyClientTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public NettyClientTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorTransformer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
     return this;
   }
 

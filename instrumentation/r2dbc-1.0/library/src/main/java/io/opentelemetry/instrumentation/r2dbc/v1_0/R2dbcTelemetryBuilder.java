@@ -51,9 +51,21 @@ public final class R2dbcTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public R2dbcTelemetryBuilder setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractor) {
+    return setSpanNameExtractorCustomizer(spanNameExtractor);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public R2dbcTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractor) {
     this.spanNameExtractorTransformer = spanNameExtractor;
     return this;

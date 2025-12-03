@@ -437,14 +437,14 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
 
             @Override
-            public void setSpanNameExtractor(
+            public void setSpanNameExtractorCustomizer(
                 UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
               builder.spanNameExtractor =
                   spanNameExtractorTransformer.apply(builder.spanNameExtractor);
             }
 
             @Override
-            public void setSpanStatusExtractor(
+            public void setSpanStatusExtractorCustomizer(
                 UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
                     spanStatusExtractorTransformer) {
               builder.spanStatusExtractor =

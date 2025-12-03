@@ -63,17 +63,41 @@ public final class DubboTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setClientSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setClientSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
+    return setClientSpanNameExtractorCustomizer(clientSpanNameExtractor);
+  }
+
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setClientSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
     this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setServerSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setServerSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractor) {
+    return setServerSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public DubboTelemetryBuilder setServerSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractor) {
     this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
     return this;

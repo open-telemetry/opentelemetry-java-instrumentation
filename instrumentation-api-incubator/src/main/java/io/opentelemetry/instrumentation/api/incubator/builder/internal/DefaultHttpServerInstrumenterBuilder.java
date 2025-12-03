@@ -106,8 +106,18 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  /**
+   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
+      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
+    return setStatusExtractorCustomizer(statusExtractor);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
     this.statusExtractorTransformer = statusExtractor;
     return this;
@@ -172,9 +182,21 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractor(
+      UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractor) {
+    return setSpanNameExtractorCustomizer(spanNameExtractor);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractor) {
     this.spanNameExtractorTransformer = spanNameExtractor;
     return this;

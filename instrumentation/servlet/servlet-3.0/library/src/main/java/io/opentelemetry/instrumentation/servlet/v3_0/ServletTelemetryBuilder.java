@@ -57,11 +57,23 @@ public final class ServletTelemetryBuilder {
     builder = servletBuilder.getBuilder();
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractor) {
-    builder.setStatusExtractor(
+    return setStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /** Sets the status extractor for server spans. */
+  @CanIgnoreReturnValue
+  public ServletTelemetryBuilder setStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractor) {
+    builder.setStatusExtractorCustomizer(
         convertSpanStatusExtractor(
             statusExtractor,
             ServletRequestContext::new,
@@ -137,11 +149,23 @@ public final class ServletTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<HttpServletRequest>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(
+    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ServletTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> serverSpanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(
         convertSpanNameExtractor(
             serverSpanNameExtractor, ServletRequestContext::new, ServletRequestContext::request));
     return this;

@@ -34,11 +34,23 @@ public final class ArmeriaServerTelemetryBuilder {
     builder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+    return setStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /** Sets the status extractor for server spans. */
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractor) {
+    builder.setStatusExtractorCustomizer(statusExtractor);
     return this;
   }
 
@@ -96,11 +108,23 @@ public final class ArmeriaServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<ServiceRequestContext>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(serverSpanNameExtractor);
+    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ServiceRequestContext>> serverSpanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(serverSpanNameExtractor);
     return this;
   }
 

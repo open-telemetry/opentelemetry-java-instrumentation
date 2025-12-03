@@ -84,11 +84,23 @@ public final class RestletTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public RestletTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorTransformer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
     return this;
   }
 

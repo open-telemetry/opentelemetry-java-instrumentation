@@ -40,11 +40,23 @@ public final class HelidonTelemetryBuilder {
             HelidonRequestGetter.INSTANCE);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+    return setStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /** Sets the status extractor for server spans. */
+  @CanIgnoreReturnValue
+  public HelidonTelemetryBuilder setStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractor) {
+    builder.setStatusExtractorCustomizer(statusExtractor);
     return this;
   }
 
@@ -100,11 +112,23 @@ public final class HelidonTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<ServerRequest>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(serverSpanNameExtractor);
+    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public HelidonTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ServerRequest>> serverSpanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(serverSpanNameExtractor);
     return this;
   }
 

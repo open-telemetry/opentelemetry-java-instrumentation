@@ -39,11 +39,23 @@ public final class JavaHttpServerTelemetryBuilder {
             JavaHttpServerExchangeGetter.INSTANCE);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+    return setStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /** Sets the status extractor for server spans. */
+  @CanIgnoreReturnValue
+  public JavaHttpServerTelemetryBuilder setStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
+    builder.setStatusExtractorCustomizer(statusExtractor);
     return this;
   }
 
@@ -101,11 +113,23 @@ public final class JavaHttpServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+  }
+
+  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public JavaHttpServerTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
     return this;
   }
 

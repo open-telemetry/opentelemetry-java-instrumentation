@@ -36,11 +36,23 @@ public final class ArmeriaClientTelemetryBuilder {
     builder = ArmeriaInstrumenterBuilderFactory.getClientBuilder(openTelemetry);
   }
 
-  /** Sets the status extractor for client spans. */
+  /**
+   * Sets the status extractor for client spans.
+   *
+   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ClientRequestContext, RequestLog>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+    return setStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /** Sets the status extractor for client spans. */
+  @CanIgnoreReturnValue
+  public ArmeriaClientTelemetryBuilder setStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<ClientRequestContext, RequestLog>> statusExtractor) {
+    builder.setStatusExtractorCustomizer(statusExtractor);
     return this;
   }
 
@@ -98,11 +110,23 @@ public final class ArmeriaClientTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<ClientRequestContext>> clientSpanNameExtractor) {
-    builder.setSpanNameExtractor(clientSpanNameExtractor);
+    return setSpanNameExtractorCustomizer(clientSpanNameExtractor);
+  }
+
+  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  @CanIgnoreReturnValue
+  public ArmeriaClientTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ClientRequestContext>> clientSpanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(clientSpanNameExtractor);
     return this;
   }
 
