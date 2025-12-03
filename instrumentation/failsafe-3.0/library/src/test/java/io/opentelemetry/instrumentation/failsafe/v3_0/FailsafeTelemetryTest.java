@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.failsafe.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import dev.failsafe.CircuitBreaker;
 import dev.failsafe.CircuitBreakerOpenException;
@@ -64,9 +65,7 @@ final class FailsafeTelemetryTest {
                                 buildCircuitBreakerAssertion(
                                     2, "failsafe.circuit_breaker.outcome", "failure"),
                                 buildCircuitBreakerAssertion(
-                                    3, "failsafe.circuit_breaker.outcome", "success"))));
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.failsafe-3.0",
+                                    3, "failsafe.circuit_breaker.outcome", "success"))),
         metricAssert ->
             metricAssert
                 .hasName("failsafe.circuit_breaker.state_change.count")
@@ -121,9 +120,7 @@ final class FailsafeTelemetryTest {
                         sum.isMonotonic()
                             .hasPointsSatisfying(
                                 buildRetryPolicyAssertion(2, "failure"),
-                                buildRetryPolicyAssertion(3, "success"))));
-    testing.waitAndAssertMetrics(
-        "io.opentelemetry.failsafe-3.0",
+                                buildRetryPolicyAssertion(3, "success"))),
         metricAssert ->
             metricAssert
                 .hasName("failsafe.retry_policy.attempts")
@@ -135,22 +132,14 @@ final class FailsafeTelemetryTest {
                                     .hasCount(3)
                                     .hasMin(1)
                                     .hasMax(3)
-                                    .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertEquals(
-                                                buildExpectedRetryPolicyAttributes("success"),
-                                                attributes))
+                                    .hasAttributes(buildExpectedRetryPolicyAttributes("success"))
                                     .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
                             histogramPointAssert ->
                                 histogramPointAssert
                                     .hasCount(2)
                                     .hasMin(3)
                                     .hasMax(3)
-                                    .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertEquals(
-                                                buildExpectedRetryPolicyAttributes("failure"),
-                                                attributes))
+                                    .hasAttributes(buildExpectedRetryPolicyAttributes("failure"))
                                     .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
   }
 
@@ -159,14 +148,9 @@ final class FailsafeTelemetryTest {
     return longSumAssert ->
         longSumAssert
             .hasValue(expectedValue)
-            .hasAttributesSatisfying(
-                attributes ->
-                    assertEquals(
-                        Attributes.builder()
-                            .put("failsafe.circuit_breaker.name", "testing")
-                            .put(expectedAttributeKey, expectedAttributeValue)
-                            .build(),
-                        attributes));
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("failsafe.circuit_breaker.name"), "testing"),
+                equalTo(stringKey(expectedAttributeKey), expectedAttributeValue));
   }
 
   private static Consumer<LongPointAssert> buildRetryPolicyAssertion(
@@ -174,14 +158,7 @@ final class FailsafeTelemetryTest {
     return longSumAssert ->
         longSumAssert
             .hasValue(expectedValue)
-            .hasAttributesSatisfying(
-                attributes ->
-                    assertEquals(
-                        Attributes.builder()
-                            .put("failsafe.retry_policy.name", "testing")
-                            .put("failsafe.retry_policy.outcome", expectedOutcomeValue)
-                            .build(),
-                        attributes));
+            .hasAttributes(buildExpectedRetryPolicyAttributes(expectedOutcomeValue));
   }
 
   private static Attributes buildExpectedRetryPolicyAttributes(String expectedOutcome) {
