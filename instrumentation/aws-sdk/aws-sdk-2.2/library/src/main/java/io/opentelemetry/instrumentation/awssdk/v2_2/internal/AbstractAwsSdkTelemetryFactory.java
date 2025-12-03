@@ -17,17 +17,17 @@ public abstract class AbstractAwsSdkTelemetryFactory {
   protected abstract List<String> getCapturedHeaders();
 
   private boolean captureExperimentalSpanAttributes() {
-    return getBoolean(false, "aws_sdk", "experimental_span_attributes");
+    return getBoolean(false, "aws_sdk", "span_attributes/development");
   }
 
   protected abstract boolean messagingReceiveInstrumentationEnabled();
 
   private boolean useMessagingPropagator() {
-    return getBoolean(false, "aws_sdk", "experimental_use_propagator_for_messaging");
+    return getBoolean(false, "aws_sdk", "use_propagator_for_messaging/development");
   }
 
   private boolean recordIndividualHttpError() {
-    return getBoolean(false, "aws_sdk", "experimental_record_individual_http_error");
+    return getBoolean(false, "aws_sdk", "record_individual_http_error/development");
   }
 
   private boolean genaiCaptureMessageContent() {
