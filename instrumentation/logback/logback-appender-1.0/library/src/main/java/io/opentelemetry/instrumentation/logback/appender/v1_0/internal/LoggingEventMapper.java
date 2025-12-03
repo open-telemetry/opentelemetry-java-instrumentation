@@ -18,6 +18,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.LoggerProvider;
+import io.opentelemetry.api.logs.Loopback;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
@@ -109,19 +110,26 @@ public final class LoggingEventMapper {
   }
 
   public void emit(LoggerProvider loggerProvider, ILoggingEvent event, long threadId) {
+    Context context = Context.current();
+    // This is an optimization. SDK will automatically filter these logs as well.
+    if (Loopback.isLoopbackOtelSdk(context.get(Loopback.loopbackContextKey))) {
+      return;
+    }
+    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender(0));
+
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
     }
     LogRecordBuilder builder =
         loggerProvider.loggerBuilder(instrumentationName).build().logRecordBuilder();
-    mapLoggingEvent(builder, event, threadId);
+    mapLoggingEvent(builder, event, threadId, context);
     builder.emit();
   }
 
   /** Map the {@link ILoggingEvent} data model onto the {@link LogRecordBuilder}. */
   private void mapLoggingEvent(
-      LogRecordBuilder builder, ILoggingEvent loggingEvent, long threadId) {
+      LogRecordBuilder builder, ILoggingEvent loggingEvent, long threadId, Context context) {
     // message
     String message = loggingEvent.getFormattedMessage();
     if (message != null) {
@@ -225,7 +233,7 @@ public final class LoggingEventMapper {
       captureLogstashMarkerAttributes(builder, loggingEvent);
     }
     // span context
-    builder.setContext(Context.current());
+    builder.setContext(context);
   }
 
   // getInstant is available since Logback 1.3

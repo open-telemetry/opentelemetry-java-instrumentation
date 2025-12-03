@@ -19,6 +19,7 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.extension.incubator.slf4j.Slf4jBridge;
 import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
@@ -36,6 +37,9 @@ public final class OpenTelemetryInstaller {
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal()
             .setServiceClassLoader(extensionClassLoader)
+            .addLoggerProviderCustomizer(
+                (sdkLoggerProviderBuilder, configProperties) ->
+                    sdkLoggerProviderBuilder.addLogRecordProcessor(Slf4jBridge.create()))
             .build();
     ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();

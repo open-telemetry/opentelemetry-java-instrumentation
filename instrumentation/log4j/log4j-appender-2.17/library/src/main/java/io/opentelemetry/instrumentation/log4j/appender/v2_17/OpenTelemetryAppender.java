@@ -10,6 +10,7 @@ import static java.util.Collections.emptyList;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Loopback;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.TraceFlags;
@@ -310,6 +311,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
   }
 
   private void emit(OpenTelemetry openTelemetry, LogEvent event) {
+    Context context = Context.current();
+    // This is an optimization. SDK will automatically filter these logs as well.
+    if (Loopback.isLoopbackOtelSdk(context.get(Loopback.loopbackContextKey))) {
+      return;
+    }
+
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
       instrumentationName = "ROOT";
@@ -318,7 +325,6 @@ public class OpenTelemetryAppender extends AbstractAppender {
     LogRecordBuilder builder =
         openTelemetry.getLogsBridge().loggerBuilder(instrumentationName).build().logRecordBuilder();
     ReadOnlyStringMap contextData = event.getContextData();
-    Context context = Context.current();
     // when using async logger we'll be executing on a different thread than what started logging
     // reconstruct the context from context data
     if (context == Context.root()) {
@@ -339,6 +345,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
                             TraceState.getDefault())));
       }
     }
+    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender(0));
 
     mapper.mapLogEvent(
         builder,
