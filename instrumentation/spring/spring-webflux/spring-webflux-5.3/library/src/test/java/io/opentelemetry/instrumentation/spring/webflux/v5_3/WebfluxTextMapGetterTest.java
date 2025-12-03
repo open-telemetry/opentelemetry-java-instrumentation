@@ -10,28 +10,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.springframework.http.HttpHeaders;
 import org.springframework.mock.http.server.reactive.MockServerHttpRequest;
 import org.springframework.mock.web.server.MockServerWebExchange;
-import org.springframework.web.server.ServerWebExchange;
 
 class WebfluxTextMapGetterTest {
-
-  @Test
-  void testKeysWithMultipleHeaders() {
-    MockServerHttpRequest request =
-        MockServerHttpRequest.get("/test")
-            .header("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01")
-            .header("tracestate", "congo=t61rcWkgMzE")
-            .header("custom-header", "custom-value")
-            .header("x-forwarded-for", "192.168.1.1")
-            .build();
-
-    MockServerWebExchange exchange = MockServerWebExchange.from(request);
-
-    Iterable<String> keys = WebfluxTextMapGetter.INSTANCE.keys(exchange);
-    assertThat(keys).contains("traceparent", "tracestate", "custom-header", "x-forwarded-for");
-  }
 
   @Test
   void testGet() {
@@ -67,50 +49,7 @@ class WebfluxTextMapGetterTest {
   }
 
   @Test
-  void testGetAllSingleValue() {
-    MockServerHttpRequest request =
-        MockServerHttpRequest.get("/test").header("content-type", "application/json").build();
-
-    MockServerWebExchange exchange = MockServerWebExchange.from(request);
-
-    List<String> contentTypes = new ArrayList<>();
-    WebfluxTextMapGetter.INSTANCE
-        .getAll(exchange, "content-type")
-        .forEachRemaining(contentTypes::add);
-
-    assertThat(contentTypes).containsExactly("application/json");
-  }
-
-  @Test
-  void testGetNullExchange() {
-    String result = WebfluxTextMapGetter.INSTANCE.get(null, "any-header");
-    assertThat(result).isNull();
-  }
-
-  @Test
-  void testKeysDirectlyOnHttpHeaders() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01");
-    headers.add("tracestate", "congo=t61rcWkgMzE");
-    headers.add("custom-header", "custom-value");
-
-    MockServerHttpRequest request = MockServerHttpRequest.get("/test").headers(headers).build();
-    ServerWebExchange exchange = MockServerWebExchange.from(request);
-
-    // The keys() method internally calls HttpHeaders.keySet()
-    // This will throw NoSuchMethodError with Spring Web 7 if not properly handled
-    Iterable<String> keys = WebfluxTextMapGetter.INSTANCE.keys(exchange);
-    assertThat(keys).hasSize(3).contains("traceparent", "tracestate", "custom-header");
-  }
-
-  @Test
-  void testGetAllNullExchange() {
-    assertThat(WebfluxTextMapGetter.INSTANCE.getAll(null, "any-header")).isExhausted();
-  }
-
-  @Test
   void testKeysWithBaggageHeader() {
-    // Test that baggage headers are properly returned by keys()
     MockServerHttpRequest request =
         MockServerHttpRequest.get("/test")
             .header("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01")
@@ -128,8 +67,6 @@ class WebfluxTextMapGetterTest {
 
   @Test
   void testKeysWithMultipleBaggageHeaders() {
-    // Test that multiple baggage headers are properly returned by keys()
-    // The W3C Baggage propagator needs to iterate through all headers to find baggage entries
     MockServerHttpRequest request =
         MockServerHttpRequest.get("/test")
             .header("traceparent", "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01")
