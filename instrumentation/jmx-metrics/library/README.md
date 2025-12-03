@@ -32,7 +32,6 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jmx-metrics:OPENT
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 
