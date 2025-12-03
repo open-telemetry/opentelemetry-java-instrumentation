@@ -9,6 +9,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.resource.DefaultClientResources;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -25,6 +26,14 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractLettuceClientTest {
+
+  protected static class CustomClientResources extends DefaultClientResources {
+
+    protected CustomClientResources(Builder builder) {
+      super(builder);
+    }
+  }
+
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
   private static final boolean COMMAND_ENCODING_EVENTS_ENABLED =

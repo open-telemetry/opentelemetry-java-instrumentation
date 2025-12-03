@@ -5,23 +5,23 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_1;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
-import io.lettuce.core.resource.DefaultClientResources;
+import io.lettuce.core.resource.ClientResources;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class DefaultClientResourcesInstrumentation implements TypeInstrumentation {
+public class ClientResourcesInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.lettuce.core.resource.DefaultClientResources");
-  }
+    return implementsInterface(named("io.lettuce.core.resource.ClientResources"));  }
 
   @Override
   public void transform(TypeTransformer transformer) {
@@ -34,7 +34,7 @@ public class DefaultClientResourcesInstrumentation implements TypeInstrumentatio
   public static class BuilderAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
-    public static void methodEnter(@Advice.Return DefaultClientResources.Builder builder) {
+    public static void methodEnter(@Advice.Return ClientResources.Builder builder) {
       if (CompatibilityChecker.checkCompatible()) {
         builder.tracing(TracingHolder.TRACING);
       }
