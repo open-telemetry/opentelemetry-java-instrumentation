@@ -25,7 +25,6 @@ import org.testcontainers.containers.wait.strategy.Wait;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractLettuceClientTest {
-
   protected static final Logger logger = LoggerFactory.getLogger(AbstractLettuceClientTest.class);
 
   private static final boolean COMMAND_ENCODING_EVENTS_ENABLED =
