@@ -157,7 +157,7 @@ include(":smoke-tests:images:servlet:servlet-3.0")
 include(":smoke-tests:images:servlet:servlet-5.0")
 include(":smoke-tests:images:spring-boot")
 include(":smoke-tests:extensions:testapp")
-include(":smoke-tests:extensions:inlined")
+include(":smoke-tests:extensions:extension")
 
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")

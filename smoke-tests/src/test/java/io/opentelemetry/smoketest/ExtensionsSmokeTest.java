@@ -23,7 +23,7 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
-public class ExtensionsSmokeTest {
+class ExtensionsSmokeTest {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtensionsSmokeTest.class);
 
@@ -33,7 +33,7 @@ public class ExtensionsSmokeTest {
 
   private static final String TARGET_EXTENSION_FILENAME = "/opentelemetry-extension.jar";
   private static final String extensionInlinePath =
-      System.getProperty("io.opentelemetry.smoketest.extension.inline.path");
+      System.getProperty("io.opentelemetry.smoketest.extension.path");
 
   private static final String TARGET_APP_FILENAME = "/app.jar";
   private static final String appPath =
