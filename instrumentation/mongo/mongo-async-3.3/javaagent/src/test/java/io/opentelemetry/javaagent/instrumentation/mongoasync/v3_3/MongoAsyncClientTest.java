@@ -32,11 +32,6 @@ import org.opentest4j.TestAbortedException;
 
 class MongoAsyncClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
 
-  @Override
-  protected String instrumentationName() {
-    return "io.opentelemetry.mongo-async-3.3";
-  }
-
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 

@@ -49,8 +49,6 @@ import org.testcontainers.containers.output.Slf4jLogConsumer;
 @TestInstance(PER_CLASS)
 public abstract class AbstractMongoClientTest<T> {
 
-  protected abstract String instrumentationName();
-
   private static final AtomicInteger collectionIndex = new AtomicInteger();
 
   private GenericContainer<?> mongodb;

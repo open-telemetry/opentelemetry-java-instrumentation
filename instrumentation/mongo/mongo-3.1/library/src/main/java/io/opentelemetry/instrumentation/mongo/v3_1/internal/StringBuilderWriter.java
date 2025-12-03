@@ -7,10 +7,6 @@ package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import java.io.Writer;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
 // because StringWriter uses the synchronized StringBuffer
 class StringBuilderWriter extends Writer {
 

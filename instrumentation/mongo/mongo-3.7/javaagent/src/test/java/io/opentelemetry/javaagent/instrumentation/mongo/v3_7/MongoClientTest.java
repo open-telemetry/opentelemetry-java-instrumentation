@@ -33,12 +33,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>> {
-
-  @Override
-  protected String instrumentationName() {
-    return "io.opentelemetry.mongo-3.7";
-  }
-
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
