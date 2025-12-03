@@ -12,6 +12,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.kafka.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -19,7 +20,10 @@ import org.springframework.context.annotation.Configuration;
  */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
 // package changed in Spring Boot 4
-@ConditionalOnClass({DefaultKafkaProducerFactoryCustomizer.class})
+@ConditionalOnClass({
+  DefaultKafkaProducerFactoryCustomizer.class,
+  DefaultKafkaProducerFactory.class
+})
 @Configuration
 public class ProducerFactoryCustomizerConfiguration {
   @Bean
