@@ -20,7 +20,8 @@ import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
-final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer implements RemovableMeter {
+final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
+    implements RemovableMeter, OpenTelemetryInstrument {
 
   private final DistributionStatisticConfig distributionStatisticConfig;
   private final ObservableLongUpDownCounter observableActiveTasks;

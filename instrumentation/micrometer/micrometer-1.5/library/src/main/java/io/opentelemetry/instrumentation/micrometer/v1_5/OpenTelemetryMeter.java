@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-final class OpenTelemetryMeter extends AbstractMeter implements Meter, RemovableMeter {
+final class OpenTelemetryMeter extends AbstractMeter
+    implements Meter, RemovableMeter, OpenTelemetryInstrument {
 
   private final List<AutoCloseable> observableInstruments;
 
