@@ -98,11 +98,10 @@ public abstract class AbstractAws2ClientCoreTest {
 
   protected abstract ClientOverrideConfiguration.Builder createOverrideConfigurationBuilder();
 
-  protected boolean isSqsAttributeInjectionEnabled() {
+  protected static boolean isSqsAttributeInjectionEnabled() {
     // See io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure.TracingExecutionInterceptor
     return ConfigPropertiesUtil.getBoolean(
-            getTesting().getOpenTelemetry(), "aws_sdk", "experimental_use_propagator_for_messaging")
-        .orElse(false);
+        "otel.instrumentation.aws-sdk.experimental-use-propagator-for-messaging", false);
   }
 
   protected void configureSdkClient(SdkClientBuilder<?, ?> builder) {
