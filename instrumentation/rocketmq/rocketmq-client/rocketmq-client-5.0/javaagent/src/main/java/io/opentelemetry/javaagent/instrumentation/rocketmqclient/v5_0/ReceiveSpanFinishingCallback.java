@@ -49,8 +49,14 @@ public final class ReceiveSpanFinishingCallback implements FutureCallback<Receiv
               null,
               timer.startTime(),
               timer.now());
+      // For batch messages, each message should have its own context that properly
+      // links to the individual producer spans through context propagation
       for (MessageView messageView : messageViews) {
-        VirtualFieldStore.setContextByMessage(messageView, context);
+        // Extract context from individual message properties (trace headers)
+        Context messageContext = RocketMqSingletons.propagators()
+            .getTextMapPropagator()
+            .extract(context, messageView, MessageMapGetter.INSTANCE);
+        VirtualFieldStore.setContextByMessage(messageView, messageContext);
       }
     }
   }
