@@ -18,7 +18,7 @@ enum WebfluxTextMapGetter implements TextMapGetter<ServerWebExchange> {
 
   @Override
   public Iterable<String> keys(ServerWebExchange exchange) {
-    return exchange.getRequest().getHeaders().keySet();
+    return HeaderUtil.getKeys(exchange.getRequest().getHeaders());
   }
 
   @Nullable
