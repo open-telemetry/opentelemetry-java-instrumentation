@@ -33,10 +33,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
       AttributeKey.stringKey("iceberg.scan.state");
   private static final AttributeKey<String> DELETE_TYPE =
       AttributeKey.stringKey("iceberg.delete_file.type");
-  private static final List<AttributeKey<?>> advice1 = List.of(SCHEMA_ID, TABLE_NAME);
-  private static final List<AttributeKey<?>> advice2 = List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE);
-  private static final List<AttributeKey<?>> advice3 =
-      List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE, DELETE_TYPE);
+
   private final DoubleHistogram planningDuration;
   private final LongCounter dataFilesCount;
   private final LongCounter dataFilesSize;
@@ -47,18 +44,37 @@ final class IcebergMetricsReporter implements MetricsReporter {
 
   IcebergMetricsReporter(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
+    List<AttributeKey<?>> BASE_ADVICE = List.of(SCHEMA_ID, TABLE_NAME);
+    List<AttributeKey<?>> ADVICE_FOR_DATA_AND_MANIFEST_FILE_COUNTS =
+        List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE);
+    List<AttributeKey<?>> ADVICE_FOR_DELETE_FILE_COUNTS =
+        List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE, DELETE_TYPE);
     planningDuration =
-        applyAdvice(advice1, ScanMetricsBuilderFactory.totalPlanningDuration(meter, "s")).build();
-    dataFilesCount = applyAdvice(advice2, ScanMetricsBuilderFactory.dataFilesCount(meter)).build();
-    dataFilesSize = applyAdvice(advice1, ScanMetricsBuilderFactory.dataFilesSize(meter)).build();
+        applyAdvice(BASE_ADVICE, ScanMetricsBuilderFactory.totalPlanningDuration(meter, "s"))
+            .build();
+    dataFilesCount =
+        applyAdvice(
+                ADVICE_FOR_DATA_AND_MANIFEST_FILE_COUNTS,
+                ScanMetricsBuilderFactory.dataFilesCount(meter))
+            .build();
+    dataFilesSize =
+        applyAdvice(BASE_ADVICE, ScanMetricsBuilderFactory.dataFilesSize(meter)).build();
     deleteFilesCount =
-        applyAdvice(advice3, ScanMetricsBuilderFactory.deleteFilesCount(meter)).build();
+        applyAdvice(
+                ADVICE_FOR_DELETE_FILE_COUNTS, ScanMetricsBuilderFactory.deleteFilesCount(meter))
+            .build();
     deleteFilesSize =
-        applyAdvice(advice1, ScanMetricsBuilderFactory.deleteFilesSize(meter)).build();
+        applyAdvice(BASE_ADVICE, ScanMetricsBuilderFactory.deleteFilesSize(meter)).build();
     dataManifestsCount =
-        applyAdvice(advice2, ScanMetricsBuilderFactory.dataManifestsCount(meter)).build();
+        applyAdvice(
+                ADVICE_FOR_DATA_AND_MANIFEST_FILE_COUNTS,
+                ScanMetricsBuilderFactory.dataManifestsCount(meter))
+            .build();
     deleteManifestsCount =
-        applyAdvice(advice2, ScanMetricsBuilderFactory.deleteManifestsCount(meter)).build();
+        applyAdvice(
+                ADVICE_FOR_DATA_AND_MANIFEST_FILE_COUNTS,
+                ScanMetricsBuilderFactory.deleteManifestsCount(meter))
+            .build();
   }
 
   @Override
@@ -72,7 +88,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
     Attributes scanAttributes =
         Attributes.of(
             SCHEMA_ID,
-            Long.valueOf(scanReport.schemaId()),
+            (long) scanReport.schemaId(),
             TABLE_NAME,
             scanReport.tableName(),
             SNAPSHOT_ID,

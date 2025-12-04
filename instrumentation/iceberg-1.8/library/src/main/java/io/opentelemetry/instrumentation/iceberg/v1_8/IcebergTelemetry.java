@@ -30,8 +30,8 @@ public final class IcebergTelemetry {
    *
    * @param <T1> the child class, returned by method chaining, e.g., {@link
    *     Scan#project(org.apache.iceberg.Schema)}
-   * @param <T2> the type of tasks produces by this scan
-   * @param <T3> the type of task groups produces by this scan
+   * @param <T2> the type of tasks produced by this scan
+   * @param <T3> the type of task groups produced by this scan
    * @param scan the original scan instance that will be instrumented
    * @return an instrumented {@link Scan} instance based on the provided instance
    */
