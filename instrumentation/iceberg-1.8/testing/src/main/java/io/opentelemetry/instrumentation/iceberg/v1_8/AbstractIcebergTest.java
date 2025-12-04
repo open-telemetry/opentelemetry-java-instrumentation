@@ -34,7 +34,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-abstract class AbstractIcebergTest {
+public abstract class AbstractIcebergTest {
   protected static final int FORMAT_VERSION = 2;
   protected static final Schema SCHEMA =
       new Schema(
