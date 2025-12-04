@@ -96,7 +96,6 @@ if (project == rootProject) {
     }
     groovy {
       target("**/*.groovy")
-      targetExclude("buildscripts/codenarc.groovy")
       licenseHeaderFile(
         rootProject.file("buildscripts/spotless.license.java"),
         "(package|import|(?:abstract )?class)"
