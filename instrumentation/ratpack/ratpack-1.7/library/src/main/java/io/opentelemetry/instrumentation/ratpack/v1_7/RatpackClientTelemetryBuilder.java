@@ -84,11 +84,26 @@ public final class RatpackClientTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<RequestSpec>> clientSpanNameExtractor) {
-    builder.setSpanNameExtractor(clientSpanNameExtractor);
+    return setSpanNameExtractorCustomizer(clientSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
+  @CanIgnoreReturnValue
+  public RatpackClientTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<RequestSpec>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 
