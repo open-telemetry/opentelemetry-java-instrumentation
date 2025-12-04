@@ -8362,7 +8362,7 @@ libraries:
   - name: netty-3.8
     display_name: Netty HTTP codec
     description: |
-      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework. Does not currently support capturing HTTP/2 traffic.
+      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework.
     semantic_conventions:
     - HTTP_CLIENT_SPANS
     - HTTP_CLIENT_METRICS
@@ -8506,7 +8506,7 @@ libraries:
   - name: netty-4.0
     display_name: Netty HTTP codec
     description: |
-      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework. Does not currently support capturing HTTP/2 traffic.
+      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework.
     semantic_conventions:
     - HTTP_CLIENT_SPANS
     - HTTP_CLIENT_METRICS
