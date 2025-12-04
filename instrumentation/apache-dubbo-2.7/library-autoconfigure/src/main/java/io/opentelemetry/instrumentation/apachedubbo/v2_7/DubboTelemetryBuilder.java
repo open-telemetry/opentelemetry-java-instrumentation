@@ -75,7 +75,10 @@ public final class DubboTelemetryBuilder {
     return setClientSpanNameExtractorCustomizer(clientSpanNameExtractor);
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default client {@link SpanNameExtractor} and returns a
+   * customized one.
+   */
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setClientSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
@@ -95,7 +98,10 @@ public final class DubboTelemetryBuilder {
     return setServerSpanNameExtractorCustomizer(serverSpanNameExtractor);
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default server {@link SpanNameExtractor} and returns a
+   * customized one.
+   */
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setServerSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractor) {

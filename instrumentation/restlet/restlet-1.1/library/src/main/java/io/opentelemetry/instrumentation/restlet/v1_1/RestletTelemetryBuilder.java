@@ -96,7 +96,10 @@ public final class RestletTelemetryBuilder {
     return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
   public RestletTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorTransformer) {

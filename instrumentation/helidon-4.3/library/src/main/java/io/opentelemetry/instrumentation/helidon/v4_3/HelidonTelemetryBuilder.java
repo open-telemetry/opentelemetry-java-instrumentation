@@ -52,7 +52,10 @@ public final class HelidonTelemetryBuilder {
     return setStatusExtractorCustomizer(statusExtractor);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
+   * customized one.
+   */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractor) {
@@ -124,11 +127,14 @@ public final class HelidonTelemetryBuilder {
     return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<ServerRequest>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+      UnaryOperator<SpanNameExtractor<ServerRequest>> spanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
     return this;
   }
 

@@ -96,11 +96,14 @@ public final class RatpackClientTelemetryBuilder {
     return setSpanNameExtractorCustomizer(clientSpanNameExtractor);
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
   public RatpackClientTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<RequestSpec>> clientSpanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(clientSpanNameExtractor);
+      UnaryOperator<SpanNameExtractor<RequestSpec>> spanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
     return this;
   }
 

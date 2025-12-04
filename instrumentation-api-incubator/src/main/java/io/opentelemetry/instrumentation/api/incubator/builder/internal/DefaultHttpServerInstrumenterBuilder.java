@@ -194,7 +194,10 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
     return setSpanNameExtractorCustomizer(spanNameExtractor);
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractor) {

@@ -100,11 +100,14 @@ public final class RatpackServerTelemetryBuilder {
     return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<Request>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractor) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
     return this;
   }
 
