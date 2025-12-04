@@ -58,8 +58,8 @@ public final class HelidonTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractor) {
-    builder.setStatusExtractorCustomizer(statusExtractor);
+      UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractorCustomizer) {
+    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
     return this;
   }
 
@@ -133,8 +133,8 @@ public final class HelidonTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<ServerRequest>> spanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
+      UnaryOperator<SpanNameExtractor<ServerRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

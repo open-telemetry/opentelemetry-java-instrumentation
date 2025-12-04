@@ -93,8 +93,8 @@ public final class SpringWebMvcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebMvcTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

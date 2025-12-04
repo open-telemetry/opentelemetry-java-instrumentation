@@ -107,8 +107,8 @@ public final class ApacheHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ApacheHttpClientTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<ApacheHttpClientRequest>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<ApacheHttpClientRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

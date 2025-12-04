@@ -106,8 +106,8 @@ public final class RatpackServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public RatpackServerTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
+      UnaryOperator<SpanNameExtractor<Request>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

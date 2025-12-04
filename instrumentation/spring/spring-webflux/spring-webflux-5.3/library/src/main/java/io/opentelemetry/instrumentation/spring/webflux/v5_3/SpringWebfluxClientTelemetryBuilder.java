@@ -111,8 +111,8 @@ public final class SpringWebfluxClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public SpringWebfluxClientTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<ClientRequest>> spanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
+      UnaryOperator<SpanNameExtractor<ClientRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

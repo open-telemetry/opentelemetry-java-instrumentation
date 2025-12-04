@@ -57,8 +57,8 @@ public final class JavaHttpServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
-    builder.setStatusExtractorCustomizer(statusExtractor);
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractorCustomizer) {
+    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
     return this;
   }
 
@@ -134,8 +134,8 @@ public final class JavaHttpServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

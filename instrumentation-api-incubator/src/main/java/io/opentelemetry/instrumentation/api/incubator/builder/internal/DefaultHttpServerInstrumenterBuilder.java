@@ -118,8 +118,8 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
 
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
-    this.statusExtractorTransformer = statusExtractor;
+      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractorCustomizer) {
+    this.statusExtractorTransformer = statusExtractorCustomizer;
     return this;
   }
 
@@ -200,8 +200,8 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
    */
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractor) {
-    this.spanNameExtractorTransformer = spanNameExtractor;
+      UnaryOperator<SpanNameExtractor<REQUEST>> spanNameExtractorCustomizer) {
+    this.spanNameExtractorTransformer = spanNameExtractorCustomizer;
     return this;
   }
 

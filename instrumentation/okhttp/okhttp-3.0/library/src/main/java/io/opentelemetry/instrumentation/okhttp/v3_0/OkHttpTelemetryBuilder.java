@@ -104,8 +104,8 @@ public final class OkHttpTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public OkHttpTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<Interceptor.Chain>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<Interceptor.Chain>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

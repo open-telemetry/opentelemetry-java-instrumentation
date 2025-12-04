@@ -111,8 +111,8 @@ public final class NettyClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public NettyClientTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<NettyRequest>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

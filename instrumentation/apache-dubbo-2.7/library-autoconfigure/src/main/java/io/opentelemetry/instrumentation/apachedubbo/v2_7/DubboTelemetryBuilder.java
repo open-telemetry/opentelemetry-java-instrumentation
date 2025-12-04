@@ -81,8 +81,8 @@ public final class DubboTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setClientSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractor) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+      UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -104,8 +104,8 @@ public final class DubboTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setServerSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractor) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+      UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorCustomizer) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractorCustomizer;
     return this;
   }
 

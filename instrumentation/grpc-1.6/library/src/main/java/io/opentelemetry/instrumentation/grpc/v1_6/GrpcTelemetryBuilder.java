@@ -112,8 +112,8 @@ public final class GrpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractor) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+      UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorCustomizer) {
+    this.clientSpanNameExtractorTransformer = clientSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -135,8 +135,8 @@ public final class GrpcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractor) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+      UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorCustomizer) {
+    this.serverSpanNameExtractorTransformer = serverSpanNameExtractorCustomizer;
     return this;
   }
 

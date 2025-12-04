@@ -69,8 +69,8 @@ public final class R2dbcTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public R2dbcTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractor) {
-    this.spanNameExtractorTransformer = spanNameExtractor;
+      UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorCustomizer) {
+    this.spanNameExtractorTransformer = spanNameExtractorCustomizer;
     return this;
   }
 

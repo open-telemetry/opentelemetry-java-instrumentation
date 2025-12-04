@@ -52,8 +52,8 @@ public final class ArmeriaServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractor) {
-    builder.setStatusExtractorCustomizer(statusExtractor);
+      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractorCustomizer) {
+    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
     return this;
   }
 
@@ -129,8 +129,8 @@ public final class ArmeriaServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<ServiceRequestContext>> spanNameExtractor) {
-    builder.setSpanNameExtractorCustomizer(spanNameExtractor);
+      UnaryOperator<SpanNameExtractor<ServiceRequestContext>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

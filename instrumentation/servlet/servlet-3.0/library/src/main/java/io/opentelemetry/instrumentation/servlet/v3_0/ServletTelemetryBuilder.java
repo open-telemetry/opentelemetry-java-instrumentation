@@ -75,10 +75,10 @@ public final class ServletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractor) {
+      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractorCustomizer) {
     builder.setStatusExtractorCustomizer(
         convertSpanStatusExtractor(
-            statusExtractor,
+            statusExtractorCustomizer,
             ServletRequestContext::new,
             ServletResponseContext::new,
             ServletRequestContext::request,
@@ -170,10 +170,10 @@ public final class ServletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractor) {
+      UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractorCustomizer) {
     builder.setSpanNameExtractorCustomizer(
         convertSpanNameExtractor(
-            spanNameExtractor, ServletRequestContext::new, ServletRequestContext::request));
+            spanNameExtractorCustomizer, ServletRequestContext::new, ServletRequestContext::request));
     return this;
   }
 
