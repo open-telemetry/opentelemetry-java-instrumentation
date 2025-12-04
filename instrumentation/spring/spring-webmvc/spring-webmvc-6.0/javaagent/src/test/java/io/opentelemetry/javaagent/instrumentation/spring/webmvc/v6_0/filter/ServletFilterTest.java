@@ -102,9 +102,5 @@ class ServletFilterTest extends AbstractServletFilterTest {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setResponseCodeOnNonStandardHttpMethod(400);
-    if (testLatestDeps) {
-      options.setExpectedException(
-          new IllegalArgumentException(ServerEndpoint.EXCEPTION.getBody()));
-    }
   }
 }
