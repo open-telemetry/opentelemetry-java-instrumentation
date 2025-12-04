@@ -150,18 +150,24 @@ public final class ConfigPropertiesUtil {
     if (isDeclarativeConfig(openTelemetry)) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       ConfigProvider configProvider = extendedOpenTelemetry.getConfigProvider();
-      DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
-      if (instrumentationConfig == null) {
-        return empty();
-      }
-      DeclarativeConfigProperties node = instrumentationConfig.getStructured("java", empty());
-      // last part is the leaf property
-      for (int i = 0; i < propertyName.length - 1; i++) {
-        node = node.getStructured(propertyName[i], empty());
-      }
-      return node;
+      return getConfigProperties(configProvider, propertyName);
     }
     return null;
+  }
+
+  /** Returns the DeclarativeConfigProperties node for the given property name parts. */
+  public static DeclarativeConfigProperties getConfigProperties(
+      ConfigProvider configProvider, String[] propertyName) {
+    DeclarativeConfigProperties instrumentationConfig = configProvider.getInstrumentationConfig();
+    if (instrumentationConfig == null) {
+      return empty();
+    }
+    DeclarativeConfigProperties node = instrumentationConfig.getStructured("java", empty());
+    // last part is the leaf property
+    for (int i = 0; i < propertyName.length - 1; i++) {
+      node = node.getStructured(propertyName[i], empty());
+    }
+    return node;
   }
 
   public static String toSystemProperty(String[] propertyName) {
