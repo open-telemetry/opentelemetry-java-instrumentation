@@ -31,27 +31,8 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   void addContextCustomizer(ContextCustomizer<REQUEST> customizer);
 
-  /**
-   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  default void setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
-    setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
-  }
-
   void setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer);
-
-  /**
-   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
-   */
-  @Deprecated
-  default void setSpanStatusExtractor(
-      UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
-          spanStatusExtractorTransformer) {
-    setSpanStatusExtractorCustomizer(spanStatusExtractorTransformer);
-  }
 
   void setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
