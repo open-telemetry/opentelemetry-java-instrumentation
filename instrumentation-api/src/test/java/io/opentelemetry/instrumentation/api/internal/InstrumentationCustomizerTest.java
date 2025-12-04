@@ -404,6 +404,27 @@ class InstrumentationCustomizerTest {
                             .hasAttributes(Attributes.empty())));
   }
 
+  @Test
+  void testAddShouldStartFilter() {
+    AtomicBoolean customizerCalled = new AtomicBoolean();
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.addShouldStartFilter(
+              (context, request, spanKind, instrumentationName) -> !request.equals("blocked"));
+        });
+
+    Instrumenter<String, String> instrumenter =
+        Instrumenter.<String, String>builder(
+                otelTesting.getOpenTelemetry(), "test", unused -> "span")
+            .buildInstrumenter();
+
+    assertThat(customizerCalled).isTrue();
+
+    assertThat(instrumenter.shouldStart(Context.root(), "allowed")).isTrue();
+    assertThat(instrumenter.shouldStart(Context.root(), "blocked")).isFalse();
+  }
+
   static class AttributesExtractor1
       implements AttributesExtractor<Map<String, String>, Map<String, String>> {
 

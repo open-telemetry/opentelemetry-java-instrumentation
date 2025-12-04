@@ -10,10 +10,12 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.metrics.LongCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizer;
 import io.opentelemetry.instrumentation.api.incubator.instrumenter.InstrumenterCustomizerProvider;
+import io.opentelemetry.instrumentation.api.incubator.instrumenter.ShouldStartFilter;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
@@ -32,6 +34,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>Custom metrics for HTTP operations
  *   <li>Request correlation IDs via context customization
  *   <li>Custom span name transformation
+ *   <li>Filter out spans before creation using ShouldStartFilter
  * </ul>
  *
  * <p>The customizer will be automatically applied to instrumenters that match the specified
@@ -44,6 +47,9 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
 
   @Override
   public void customize(InstrumenterCustomizer customizer) {
+
+    customizer.addShouldStartFilter(new DemoShouldStartFilter());
+
     String instrumentationName = customizer.getInstrumentationName();
     if (isHttpServerInstrumentation(instrumentationName)) {
       customizeHttpServer(customizer);
@@ -157,6 +163,17 @@ public class DemoInstrumenterCustomizerProvider implements InstrumenterCustomize
       // Add custom context data that can be accessed throughout the request lifecycle
       context = context.with(REQUEST_ID_KEY, requestId);
       return context;
+    }
+  }
+
+  /** Simple ShouldStartFilter that skips spans for monitoring threads. */
+  private static class DemoShouldStartFilter implements ShouldStartFilter<Object> {
+    @Override
+    public boolean shouldStart(
+        Context parentContext, Object request, SpanKind spanKind, String instrumentationName) {
+      // Skip spans for monitoring/metrics threads to reduce noise
+      String threadName = Thread.currentThread().getName().toLowerCase();
+      return !threadName.contains("metrics") && !threadName.contains("monitor");
     }
   }
 }

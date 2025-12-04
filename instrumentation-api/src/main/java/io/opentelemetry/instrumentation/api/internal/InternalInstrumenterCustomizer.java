@@ -31,6 +31,8 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   void addContextCustomizer(ContextCustomizer<REQUEST> customizer);
 
+  void addShouldStartFilter(InternalShouldStartFilter<? super REQUEST> filter);
+
   void setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer);
 

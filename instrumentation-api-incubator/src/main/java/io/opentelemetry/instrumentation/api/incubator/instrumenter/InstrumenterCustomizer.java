@@ -82,6 +82,15 @@ public interface InstrumenterCustomizer {
   InstrumenterCustomizer addContextCustomizer(ContextCustomizer<?> customizer);
 
   /**
+   * Adds a {@link ShouldStartFilter} that will be used to determine whether a span should be
+   * started for the given operation. The filter is called before any span creation logic.
+   *
+   * @param filter the should start filter to add
+   * @return this InstrumenterCustomizer for method chaining
+   */
+  InstrumenterCustomizer addShouldStartFilter(ShouldStartFilter<?> filter);
+
+  /**
    * Sets a transformer function that will modify the {@link SpanNameExtractor}. This allows
    * customizing how span names are generated for the instrumented operations.
    *
