@@ -933,6 +933,9 @@ targets:
       target: ':instrumentation:servlet:servlet-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:servlet:servlet-3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:servlet:servlet-5.0:javaagent'
     - type: gradle
       path: ./
@@ -942,7 +945,10 @@ targets:
       target: ':instrumentation:servlet:servlet-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:servlet:servlet-javax-common:javaagent'
+      target: ':instrumentation:servlet:servlet-common:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:servlet:servlet-javax-common:library'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-batch-3.0:javaagent'

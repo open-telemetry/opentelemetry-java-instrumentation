@@ -98,7 +98,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   private final HttpServerTestOptions options = new HttpServerTestOptions();
 
   @BeforeAll
-  void setupOptions() {
+  protected void setupOptions() {
     options.expectedServerSpanNameMapper = this::expectedServerSpanName;
     options.expectedHttpRoute = this::expectedHttpRoute;
 

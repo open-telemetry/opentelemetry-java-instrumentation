@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import me.champeau.jmh.JMHTask
 import net.ltgt.gradle.errorprone.errorprone
 
@@ -44,7 +43,7 @@ tasks {
   val jmhStartFlightRecording = gradle.startParameter.projectProperties.get("jmh.startFlightRecording")
 
   named<JMHTask>("jmh") {
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar").get()
     inputs.files(layout.files(shadowTask))
 
     // note: without an exporter, toSpanData() won't even be called

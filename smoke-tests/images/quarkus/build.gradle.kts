@@ -17,11 +17,11 @@ plugins {
   id("java")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.30.0"
+  id("io.quarkus") version "3.30.2"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.30.0"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.30.2"))
   implementation("io.quarkus:quarkus-rest")
 }
 
@@ -65,6 +65,8 @@ tasks {
 
   withType<JibTask>().configureEach {
     dependsOn(quarkusBuild)
+    // Jib tasks access Task.project at execution time which is not compatible with configuration cache
+    notCompatibleWithConfigurationCache("Jib task accesses Task.project at execution time")
   }
 
   compileJava {
