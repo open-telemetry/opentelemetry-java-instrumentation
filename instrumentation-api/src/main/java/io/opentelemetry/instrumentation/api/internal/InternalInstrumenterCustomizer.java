@@ -41,7 +41,7 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
   }
 
   void setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer);
+      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer);
 
   /**
    * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
@@ -55,5 +55,5 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   void setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
-          spanStatusExtractorTransformer);
+          spanStatusExtractorCustomizer);
 }
