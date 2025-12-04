@@ -100,6 +100,7 @@ public final class FailsafeTelemetry {
         meter
             .histogramBuilder("failsafe.retry_policy.attempts")
             .setDescription("Number of attempts for each execution.")
+            .setUnit("{retry_attempt}")
             .ofLongs()
             .setExplicitBucketBoundariesAdvice(Arrays.asList(1L, 2L, 3L, 5L))
             .build();
