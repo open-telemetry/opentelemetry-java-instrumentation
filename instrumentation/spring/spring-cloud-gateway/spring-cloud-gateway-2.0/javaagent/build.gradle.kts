@@ -11,12 +11,12 @@ muzzle {
     assertInverse.set(true)
   }
 
-  // Spring Cloud Gateway 5.0+ split into separate artifacts
-  // see spring-cloud-starter-gateway-server-webmvc-5.0 for mvc
+  // Spring Cloud Gateway 4.3.0+ split into separate artifacts
+  // see spring-cloud-starter-gateway-server-webmvc-4.3 for mvc
   pass {
     group.set("org.springframework.cloud")
     module.set("spring-cloud-starter-gateway-server-webflux")
-    versions.set("[5.0.0,]")
+    versions.set("[4.3.0,]")
     assertInverse.set(true)
   }
 }
