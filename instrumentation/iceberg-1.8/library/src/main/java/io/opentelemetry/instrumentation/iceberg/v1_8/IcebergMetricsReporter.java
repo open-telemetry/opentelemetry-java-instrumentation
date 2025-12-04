@@ -33,6 +33,11 @@ final class IcebergMetricsReporter implements MetricsReporter {
       AttributeKey.stringKey("iceberg.scan.state");
   private static final AttributeKey<String> DELETE_TYPE =
       AttributeKey.stringKey("iceberg.delete_file.type");
+  private static final List<AttributeKey<?>> BASE_ADVICE = List.of(SCHEMA_ID, TABLE_NAME);
+  private static final List<AttributeKey<?>> ADVICE_FOR_DATA_AND_MANIFEST_FILE_COUNTS =
+      List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE);
+  private static final List<AttributeKey<?>> ADVICE_FOR_DELETE_FILE_COUNTS =
+      List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE, DELETE_TYPE);
 
   private final DoubleHistogram planningDuration;
   private final LongCounter dataFilesCount;
@@ -44,11 +49,7 @@ final class IcebergMetricsReporter implements MetricsReporter {
 
   IcebergMetricsReporter(OpenTelemetry openTelemetry) {
     Meter meter = openTelemetry.getMeter(INSTRUMENTATION_NAME);
-    List<AttributeKey<?>> BASE_ADVICE = List.of(SCHEMA_ID, TABLE_NAME);
-    List<AttributeKey<?>> ADVICE_FOR_DATA_AND_MANIFEST_FILE_COUNTS =
-        List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE);
-    List<AttributeKey<?>> ADVICE_FOR_DELETE_FILE_COUNTS =
-        List.of(SCHEMA_ID, TABLE_NAME, SCAN_STATE, DELETE_TYPE);
+
     planningDuration =
         applyAdvice(BASE_ADVICE, ScanMetricsBuilderFactory.totalPlanningDuration(meter, "s"))
             .build();
