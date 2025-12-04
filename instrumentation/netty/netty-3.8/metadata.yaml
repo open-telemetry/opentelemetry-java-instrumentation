@@ -1,7 +1,7 @@
 display_name: Netty HTTP codec
 description: >
   This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP
-  server metrics for the Netty framework. Does not currently support capturing HTTP/2 traffic.
+  server metrics for the Netty framework.
 semantic_conventions:
   - HTTP_CLIENT_SPANS
   - HTTP_CLIENT_METRICS
@@ -51,13 +51,5 @@ configurations:
       Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size`
       and `http.response.body.size` attributes to spans, and records `http.server.request.size` and
       `http.server.response.size` metrics.
-    type: boolean
-    default: false
-  - name: otel.instrumentation.netty.connection-telemetry.enabled
-    description: Enable the creation of Connect and DNS spans.
-    type: boolean
-    default: false
-  - name: otel.instrumentation.netty.ssl-telemetry.enabled
-    description: Enable SSL telemetry.
     type: boolean
     default: false
