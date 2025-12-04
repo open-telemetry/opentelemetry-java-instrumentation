@@ -20,10 +20,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.servlet.function.ServerRequest;
 
-/**
- * Instrumentation for Spring Cloud Gateway Server WebMVC. This instruments
- * GatewayDelegatingRouterFunction which wraps routes and sets route attributes.
- */
 public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
 
   @Override
@@ -40,7 +36,6 @@ public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstr
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Instrument the route method that processes requests
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
@@ -56,7 +51,7 @@ public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstr
     public static void methodExit(
         @Advice.This Object thisObj, @Advice.Argument(0) ServerRequest request) {
       Context context = Context.current();
-      // Record gateway route info as attributes (not as HTTP route)
+      // Record gateway route info as attributes
       // The HTTP route should remain the actual path pattern from Spring WebMVC
       ServerRequestHelper.extractAttributes(thisObj, request, context);
     }

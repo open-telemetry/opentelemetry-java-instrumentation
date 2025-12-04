@@ -620,7 +620,7 @@ include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:j
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.2:testing")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webflux-5.0:testing")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-5.0:javaagent")
-include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-5.0:testing")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing")
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-1.8:javaagent")

@@ -14,6 +14,8 @@ muzzle {
 dependencies {
   library("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:5.0.0")
 
+  implementation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent"))
+
   testInstrumentation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:javaagent"))
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
 

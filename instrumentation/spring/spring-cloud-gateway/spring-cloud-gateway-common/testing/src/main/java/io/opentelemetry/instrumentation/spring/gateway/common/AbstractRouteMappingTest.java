@@ -20,7 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
@@ -54,8 +53,7 @@ public abstract class AbstractRouteMappingTest {
     client = WebClient.builder("h1c://localhost:" + port).followRedirects().build();
   }
 
-  @Test
-  void gatewayRouteMappingTest() {
+  protected void testGatewayRouteMapping() {
     String requestBody = "gateway";
     AggregatedHttpResponse response = client.post("/gateway/echo", requestBody).aggregate().join();
     assertThat(response.status().code()).isEqualTo(200);
