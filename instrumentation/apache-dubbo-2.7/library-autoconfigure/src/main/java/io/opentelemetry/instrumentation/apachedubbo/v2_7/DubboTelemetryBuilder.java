@@ -38,9 +38,9 @@ public final class DubboTelemetryBuilder {
   @Nullable private String peerService;
   private final List<AttributesExtractor<DubboRequest, Result>> attributesExtractors =
       new ArrayList<>();
-  private UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer =
       UnaryOperator.identity();
-  private UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorCustomizer =
       UnaryOperator.identity();
 
   DubboTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -82,7 +82,7 @@ public final class DubboTelemetryBuilder {
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setClientSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DubboRequest>> clientSpanNameExtractorCustomizer) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractorCustomizer;
+    this.clientSpanNameExtractorCustomizer = clientSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -105,7 +105,7 @@ public final class DubboTelemetryBuilder {
   @CanIgnoreReturnValue
   public DubboTelemetryBuilder setServerSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DubboRequest>> serverSpanNameExtractorCustomizer) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractorCustomizer;
+    this.serverSpanNameExtractorCustomizer = serverSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -117,9 +117,9 @@ public final class DubboTelemetryBuilder {
     SpanNameExtractor<DubboRequest> spanNameExtractor =
         RpcSpanNameExtractor.create(rpcAttributesGetter);
     SpanNameExtractor<DubboRequest> clientSpanNameExtractor =
-        clientSpanNameExtractorTransformer.apply(spanNameExtractor);
+        clientSpanNameExtractorCustomizer.apply(spanNameExtractor);
     SpanNameExtractor<DubboRequest> serverSpanNameExtractor =
-        serverSpanNameExtractorTransformer.apply(spanNameExtractor);
+        serverSpanNameExtractorCustomizer.apply(spanNameExtractor);
     DubboClientNetworkAttributesGetter netClientAttributesGetter =
         new DubboClientNetworkAttributesGetter();
     DubboNetworkServerAttributesGetter netServerAttributesGetter =

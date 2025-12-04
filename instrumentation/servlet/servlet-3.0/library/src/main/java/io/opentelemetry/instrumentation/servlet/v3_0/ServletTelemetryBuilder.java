@@ -75,7 +75,8 @@ public final class ServletTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractorCustomizer) {
+      UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>>
+          statusExtractorCustomizer) {
     builder.setStatusExtractorCustomizer(
         convertSpanStatusExtractor(
             statusExtractorCustomizer,
@@ -173,7 +174,9 @@ public final class ServletTelemetryBuilder {
       UnaryOperator<SpanNameExtractor<HttpServletRequest>> spanNameExtractorCustomizer) {
     builder.setSpanNameExtractorCustomizer(
         convertSpanNameExtractor(
-            spanNameExtractorCustomizer, ServletRequestContext::new, ServletRequestContext::request));
+            spanNameExtractorCustomizer,
+            ServletRequestContext::new,
+            ServletRequestContext::request));
     return this;
   }
 

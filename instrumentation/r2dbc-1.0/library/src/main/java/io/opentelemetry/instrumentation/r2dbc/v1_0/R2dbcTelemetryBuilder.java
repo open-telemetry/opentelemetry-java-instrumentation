@@ -21,7 +21,7 @@ public final class R2dbcTelemetryBuilder {
 
   private final R2dbcInstrumenterBuilder instrumenterBuilder;
   private boolean statementSanitizationEnabled = true;
-  private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorCustomizer =
       UnaryOperator.identity();
   private final SqlCommenterBuilder sqlCommenterBuilder = SqlCommenter.builder();
 
@@ -70,7 +70,7 @@ public final class R2dbcTelemetryBuilder {
   @CanIgnoreReturnValue
   public R2dbcTelemetryBuilder setSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<DbExecution>> spanNameExtractorCustomizer) {
-    this.spanNameExtractorTransformer = spanNameExtractorCustomizer;
+    this.spanNameExtractorCustomizer = spanNameExtractorCustomizer;
     return this;
   }
 
@@ -79,7 +79,7 @@ public final class R2dbcTelemetryBuilder {
    */
   public R2dbcTelemetry build() {
     return new R2dbcTelemetry(
-        instrumenterBuilder.build(spanNameExtractorTransformer, statementSanitizationEnabled),
+        instrumenterBuilder.build(spanNameExtractorCustomizer, statementSanitizationEnabled),
         sqlCommenterBuilder.build());
   }
 }

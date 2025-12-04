@@ -52,7 +52,8 @@ public final class ArmeriaServerTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractorCustomizer) {
+      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>>
+          statusExtractorCustomizer) {
     builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
     return this;
   }

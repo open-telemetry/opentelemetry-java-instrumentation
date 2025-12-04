@@ -39,9 +39,9 @@ public final class GrpcTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
 
-  private UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorCustomizer =
       UnaryOperator.identity();
-  private UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorCustomizer =
       UnaryOperator.identity();
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
@@ -113,7 +113,7 @@ public final class GrpcTelemetryBuilder {
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorCustomizer) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractorCustomizer;
+    this.clientSpanNameExtractorCustomizer = clientSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -136,7 +136,7 @@ public final class GrpcTelemetryBuilder {
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerSpanNameExtractorCustomizer(
       UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorCustomizer) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractorCustomizer;
+    this.serverSpanNameExtractorCustomizer = serverSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -189,9 +189,9 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetry build() {
     SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
     SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor =
-        clientSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+        clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
     SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor =
-        serverSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+        serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);
