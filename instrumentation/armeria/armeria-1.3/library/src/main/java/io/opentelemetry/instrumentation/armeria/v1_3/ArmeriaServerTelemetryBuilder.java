@@ -37,13 +37,13 @@ public final class ArmeriaServerTelemetryBuilder {
   /**
    * Sets the status extractor for server spans.
    *
-   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractor) {
-    return setStatusExtractorCustomizer(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
   /**
@@ -51,10 +51,10 @@ public final class ArmeriaServerTelemetryBuilder {
    * customized one.
    */
   @CanIgnoreReturnValue
-  public ArmeriaServerTelemetryBuilder setStatusExtractorCustomizer(
+  public ArmeriaServerTelemetryBuilder setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>>
-          statusExtractorCustomizer) {
-    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 

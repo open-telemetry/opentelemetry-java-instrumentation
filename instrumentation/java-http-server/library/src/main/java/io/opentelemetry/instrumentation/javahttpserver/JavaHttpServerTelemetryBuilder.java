@@ -42,13 +42,13 @@ public final class JavaHttpServerTelemetryBuilder {
   /**
    * Sets the status extractor for server spans.
    *
-   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
-    return setStatusExtractorCustomizer(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
   /**
@@ -56,9 +56,10 @@ public final class JavaHttpServerTelemetryBuilder {
    * customized one.
    */
   @CanIgnoreReturnValue
-  public JavaHttpServerTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractorCustomizer) {
-    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
+  public JavaHttpServerTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 

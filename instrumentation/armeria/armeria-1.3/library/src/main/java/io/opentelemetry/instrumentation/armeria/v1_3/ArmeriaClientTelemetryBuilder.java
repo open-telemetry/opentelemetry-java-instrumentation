@@ -39,13 +39,13 @@ public final class ArmeriaClientTelemetryBuilder {
   /**
    * Sets the status extractor for client spans.
    *
-   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaClientTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ClientRequestContext, RequestLog>> statusExtractor) {
-    return setStatusExtractorCustomizer(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
   /**
@@ -53,10 +53,10 @@ public final class ArmeriaClientTelemetryBuilder {
    * customized one.
    */
   @CanIgnoreReturnValue
-  public ArmeriaClientTelemetryBuilder setStatusExtractorCustomizer(
+  public ArmeriaClientTelemetryBuilder setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<ClientRequestContext, RequestLog>>
-          statusExtractorCustomizer) {
-    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 

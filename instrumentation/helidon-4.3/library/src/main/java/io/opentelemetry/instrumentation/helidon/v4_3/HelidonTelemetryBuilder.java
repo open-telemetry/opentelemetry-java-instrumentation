@@ -43,13 +43,13 @@ public final class HelidonTelemetryBuilder {
   /**
    * Sets the status extractor for server spans.
    *
-   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public HelidonTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractor) {
-    return setStatusExtractorCustomizer(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
   /**
@@ -57,9 +57,10 @@ public final class HelidonTelemetryBuilder {
    * customized one.
    */
   @CanIgnoreReturnValue
-  public HelidonTelemetryBuilder setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>> statusExtractorCustomizer) {
-    builder.setStatusExtractorCustomizer(statusExtractorCustomizer);
+  public HelidonTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<ServerRequest, ServerResponse>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 

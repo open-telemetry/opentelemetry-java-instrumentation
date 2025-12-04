@@ -60,13 +60,13 @@ public final class ServletTelemetryBuilder {
   /**
    * Sets the status extractor for server spans.
    *
-   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public ServletTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>> statusExtractor) {
-    return setStatusExtractorCustomizer(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
   /**
@@ -74,12 +74,12 @@ public final class ServletTelemetryBuilder {
    * customized one.
    */
   @CanIgnoreReturnValue
-  public ServletTelemetryBuilder setStatusExtractorCustomizer(
+  public ServletTelemetryBuilder setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<HttpServletRequest, HttpServletResponse>>
-          statusExtractorCustomizer) {
-    builder.setStatusExtractorCustomizer(
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(
         convertSpanStatusExtractor(
-            statusExtractorCustomizer,
+            spanStatusExtractorCustomizer,
             ServletRequestContext::new,
             ServletResponseContext::new,
             ServletRequestContext::request,

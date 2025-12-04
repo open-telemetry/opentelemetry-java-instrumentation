@@ -47,7 +47,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
 
   private final List<AttributesExtractor<? super REQUEST, ? super RESPONSE>> additionalExtractors =
       new ArrayList<>();
-  private UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractorCustomizer =
+  private UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> spanStatusExtractorCustomizer =
       UnaryOperator.identity();
   private final HttpServerAttributesExtractorBuilder<REQUEST, RESPONSE>
       httpAttributesExtractorBuilder;
@@ -107,19 +107,19 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   /**
-   * @deprecated Use {@link #setStatusExtractorCustomizer(UnaryOperator)} instead.
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
    */
   @Deprecated
   @CanIgnoreReturnValue
   public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractor) {
-    return setStatusExtractorCustomizer(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> statusExtractorCustomizer) {
-    this.statusExtractorCustomizer = statusExtractorCustomizer;
+  public DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<REQUEST, RESPONSE>> spanStatusExtractorCustomizer) {
+    this.spanStatusExtractorCustomizer = spanStatusExtractorCustomizer;
     return this;
   }
 
@@ -229,7 +229,8 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
         Instrumenter.<REQUEST, RESPONSE>builder(
                 openTelemetry, instrumentationName, spanNameExtractor)
             .setSpanStatusExtractor(
-                statusExtractorCustomizer.apply(HttpSpanStatusExtractor.create(attributesGetter)))
+                spanStatusExtractorCustomizer.apply(
+                    HttpSpanStatusExtractor.create(attributesGetter)))
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())

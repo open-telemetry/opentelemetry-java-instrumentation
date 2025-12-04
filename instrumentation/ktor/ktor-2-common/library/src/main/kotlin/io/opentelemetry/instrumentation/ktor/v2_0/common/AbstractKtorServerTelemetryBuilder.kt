@@ -44,7 +44,7 @@ abstract class AbstractKtorServerTelemetryBuilder(private val instrumentationNam
   }
 
   fun spanStatusExtractor(extract: SpanStatusData.(SpanStatusExtractor<ApplicationRequest, ApplicationResponse>) -> Unit) {
-    builder.setStatusExtractorCustomizer { prevExtractor ->
+    builder.setSpanStatusExtractorCustomizer { prevExtractor ->
       SpanStatusExtractor {
           spanStatusBuilder: SpanStatusBuilder,
           request: ApplicationRequest,
