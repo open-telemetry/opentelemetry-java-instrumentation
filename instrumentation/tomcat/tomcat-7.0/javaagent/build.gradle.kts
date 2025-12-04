@@ -19,7 +19,6 @@ dependencies {
 
   compileOnly("org.apache.tomcat.embed:tomcat-embed-core:7.0.4")
 
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   // Make sure nothing breaks due to both 7.0 and 10.0 modules being present together
   testInstrumentation(project(":instrumentation:tomcat:tomcat-10.0:javaagent"))
   // testing whether instrumentation still works when jakarta servlet api is also present
