@@ -18,10 +18,6 @@ nullaway {
 
 tasks {
   withType<JavaCompile>().configureEach {
-    options.errorprone {
-      // workaround for https://github.com/google/error-prone/issues/5387
-      check("RequireExplicitNullMarking", CheckSeverity.OFF)
-    }
     options.errorprone.nullaway {
       if (name.contains("test", ignoreCase = true)) {
         disable()
@@ -34,3 +30,4 @@ tasks {
     }
   }
 }
+
