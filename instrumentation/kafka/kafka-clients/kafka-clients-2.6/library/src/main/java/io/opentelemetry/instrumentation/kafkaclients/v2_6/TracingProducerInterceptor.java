@@ -5,10 +5,9 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
-import static java.util.Collections.emptyList;
-
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.util.Map;
 import java.util.Objects;
@@ -28,12 +27,17 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 @Deprecated
 public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, V> {
 
-  private static final KafkaTelemetry telemetry =
-      KafkaTelemetry.builder(GlobalOpenTelemetry.get())
-          .setCapturedHeaders(
-              ConfigPropertiesUtil.getList(
-                  "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
-          .build();
+  private static final KafkaTelemetry telemetry;
+
+  static {
+    OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    telemetry =
+        KafkaTelemetry.builder(openTelemetry)
+            .setCapturedHeaders(
+                ConfigPropertiesUtil.getList(
+                    openTelemetry, "messaging", "experimental", "capture_headers"))
+            .build();
+  }
 
   @Nullable private String clientId;
 
