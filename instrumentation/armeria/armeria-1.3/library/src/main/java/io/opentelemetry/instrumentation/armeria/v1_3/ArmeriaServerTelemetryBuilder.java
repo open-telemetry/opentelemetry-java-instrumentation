@@ -34,11 +34,27 @@ public final class ArmeriaServerTelemetryBuilder {
     builder = ArmeriaInstrumenterBuilderFactory.getServerBuilder(openTelemetry);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<ServiceRequestContext, RequestLog>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 
@@ -96,11 +112,26 @@ public final class ArmeriaServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public ArmeriaServerTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<ServiceRequestContext>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(serverSpanNameExtractor);
+    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
+  @CanIgnoreReturnValue
+  public ArmeriaServerTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ServiceRequestContext>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 
