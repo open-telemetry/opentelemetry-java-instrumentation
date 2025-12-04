@@ -12,9 +12,11 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.internal.ConfigUtil;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
@@ -26,6 +28,26 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesUtil {
 
   private static final boolean supportsDeclarativeConfig = supportsDeclarativeConfig();
+
+  private static final Map<String, String> config = load();
+
+  public static Map<String, String> load() {
+    Map<String, String> config = new HashMap<>();
+    System.getenv()
+        .forEach(
+            (name, value) -> config.put(ConfigUtil.normalizeEnvironmentVariableKey(name), value));
+    ConfigUtil.safeSystemProperties()
+        .forEach(
+            (key, value) ->
+                config.put(ConfigUtil.normalizePropertyKey(key.toString()), value.toString()));
+    return config;
+  }
+
+  /** Resets the cached config for testing purposes. */
+  public static void resetForTest() {
+    config.clear();
+    config.putAll(load());
+  }
 
   private static boolean supportsDeclarativeConfig() {
     try {
@@ -91,11 +113,7 @@ public final class ConfigPropertiesUtil {
    */
   @Nullable
   public static String getString(String propertyName) {
-    String value = System.getProperty(propertyName);
-    if (value != null) {
-      return value;
-    }
-    return System.getenv(toEnvVarName(propertyName));
+    return config.get(ConfigUtil.normalizePropertyKey(propertyName));
   }
 
   /**
@@ -136,10 +154,6 @@ public final class ConfigPropertiesUtil {
         .collect(Collectors.toList());
   }
 
-  private static String toEnvVarName(String propertyName) {
-    return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
-  }
-
   private static String leaf(String[] propertyName) {
     return propertyName[propertyName.length - 1];
   }
@@ -174,7 +188,7 @@ public final class ConfigPropertiesUtil {
     for (int i = 0; i < propertyName.length; i++) {
       if (propertyName[i].endsWith("/development")) {
         propertyName[i] =
-            "experimental-" + propertyName[i].substring(0, propertyName[i].length() - 12);
+            "experimental." + propertyName[i].substring(0, propertyName[i].length() - 12);
       }
     }
     return "otel.instrumentation." + String.join(".", propertyName).replace('_', '-');
