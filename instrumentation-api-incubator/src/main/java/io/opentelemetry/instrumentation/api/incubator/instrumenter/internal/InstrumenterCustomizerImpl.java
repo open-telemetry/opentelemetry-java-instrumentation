@@ -84,15 +84,15 @@ public final class InstrumenterCustomizerImpl implements InstrumenterCustomizer 
   @Override
   @SuppressWarnings("FunctionalInterfaceClash") // interface has deprecated overload
   public InstrumenterCustomizer setSpanNameExtractorCustomizer(
-      UnaryOperator<SpanNameExtractor<?>> spanNameExtractor) {
-    customizer.setSpanNameExtractorCustomizer(spanNameExtractor);
+      UnaryOperator<SpanNameExtractor<?>> spanNameExtractorCustomizer) {
+    customizer.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 
   @Override
   public InstrumenterCustomizer setSpanStatusExtractorCustomizer(
-      UnaryOperator<SpanStatusExtractor<?, ?>> spanStatusExtractor) {
-    customizer.setSpanStatusExtractorCustomizer(spanStatusExtractor);
+      UnaryOperator<SpanStatusExtractor<?, ?>> spanStatusExtractorCustomizer) {
+    customizer.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 }
