@@ -954,9 +954,6 @@ targets:
       target: ':instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-boot-autoconfigure:testing'
-    - type: gradle
-      path: ./
       target: ':instrumentation:spring:spring-boot-resources:javaagent'
     - type: gradle
       path: ./
