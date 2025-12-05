@@ -33,9 +33,21 @@ public class Gateway43MvcTestApplication {
           }
         };
 
-    return route("test-route-id")
-        .POST("/gateway/echo", echoHandler)
-        .before(uri("http://mock.response"))
-        .build();
+    RouterFunction<ServerResponse> mainRoute =
+        route("test-route-id")
+            .POST("/gateway/echo", echoHandler)
+            .before(uri("http://mock.response"))
+            .build();
+
+    RouterFunction<ServerResponse> uuidRoute =
+        route().POST("/uuid/echo", echoHandler).before(uri("http://mock.uuid")).build();
+
+    RouterFunction<ServerResponse> fakeUuidRoute =
+        route("ffffffff-ffff-ffff-ffff-ffff")
+            .POST("/fake/echo", echoHandler)
+            .before(uri("http://mock.fake"))
+            .build();
+
+    return mainRoute.and(uuidRoute).and(fakeUuidRoute);
   }
 }

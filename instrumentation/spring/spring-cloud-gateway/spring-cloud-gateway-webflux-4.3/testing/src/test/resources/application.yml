@@ -8,3 +8,14 @@ spring:
               predicates:
                 - Path=/gateway/echo
               order: 2023
+            # Route without ID - will get random UUID (should be filtered out)
+            - uri: h1c://mock.uuid
+              predicates:
+                - Path=/uuid/echo
+              order: 0
+            # Route with fake UUID ID (should NOT be filtered out)
+            - id: ffffffff-ffff-ffff-ffff-ffff
+              uri: h1c://mock.fake
+              predicates:
+                - Path=/fake/echo
+              order: 0

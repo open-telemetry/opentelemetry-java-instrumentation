@@ -70,6 +70,55 @@ public abstract class AbstractRouteMappingTest {
                 span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
   }
 
+  @Test
+  protected void testRandomUuidRouteFiltering() {
+    String requestBody = "gateway";
+    AggregatedHttpResponse response = client.post("/uuid/echo", requestBody).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8()).isEqualTo(requestBody);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(getRandomUuidSpanName())
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfying(getRandomUuidExpectedAttributes()),
+                span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
+  }
+
+  @Test
+  protected void testFakeUuidRouteNotFiltered() {
+    String requestBody = "gateway";
+    String routeId = "ffffffff-ffff-ffff-ffff-ffff";
+    AggregatedHttpResponse response = client.post("/fake/echo", requestBody).aggregate().join();
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8()).isEqualTo(requestBody);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(getFakeUuidSpanName(routeId))
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfying(getFakeUuidExpectedAttributes(routeId)),
+                span -> span.hasName(getInternalSpanName()).hasKind(SpanKind.INTERNAL)));
+  }
+
+  protected String getRandomUuidSpanName() {
+    return "POST";
+  }
+
+  protected List<AttributeAssertion> getRandomUuidExpectedAttributes() {
+    return buildAttributeAssertions("h1c://mock.uuid", 0, 0);
+  }
+
+  protected String getFakeUuidSpanName(String routeId) {
+    return "POST " + routeId;
+  }
+
+  protected List<AttributeAssertion> getFakeUuidExpectedAttributes(String routeId) {
+    return buildAttributeAssertions(routeId, "h1c://mock.fake", 0, 0);
+  }
+
   protected List<AttributeAssertion> buildAttributeAssertions(
       @Nullable String routeId, String uri, int order, int filterSize) {
     List<AttributeAssertion> assertions = new ArrayList<>();

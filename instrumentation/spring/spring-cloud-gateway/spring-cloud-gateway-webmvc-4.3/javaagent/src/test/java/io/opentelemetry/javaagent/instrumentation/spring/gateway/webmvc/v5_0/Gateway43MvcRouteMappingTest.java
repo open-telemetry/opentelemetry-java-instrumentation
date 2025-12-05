@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.gateway.webmvc.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.spring.gateway.common.AbstractRouteMappingTest;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
@@ -37,8 +37,31 @@ class Gateway43MvcRouteMappingTest extends AbstractRouteMappingTest {
   @Override
   protected List<AttributeAssertion> getExpectedAttributes() {
     List<AttributeAssertion> assertions = new ArrayList<>();
-    assertions.add(
-        equalTo(AttributeKey.stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
+    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), "test-route-id"));
+    return assertions;
+  }
+
+  @Override
+  protected String getRandomUuidSpanName() {
+    // WebMVC uses HTTP route in span name, not gateway route ID
+    return "POST /uuid/echo";
+  }
+
+  @Override
+  protected List<AttributeAssertion> getRandomUuidExpectedAttributes() {
+    return new ArrayList<>();
+  }
+
+  @Override
+  protected String getFakeUuidSpanName(String routeId) {
+    // WebMVC uses HTTP route in span name, not gateway route ID
+    return "POST /fake/echo";
+  }
+
+  @Override
+  protected List<AttributeAssertion> getFakeUuidExpectedAttributes(String routeId) {
+    List<AttributeAssertion> assertions = new ArrayList<>();
+    assertions.add(equalTo(stringKey("spring-cloud-gateway.route.id"), routeId));
     return assertions;
   }
 }
