@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.tooling;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.io.ByteArrayInputStream;
@@ -33,6 +34,7 @@ class SpanLoggingCustomizerProviderTest {
     if (propertyValue != null) {
       System.setProperty("otel.javaagent.debug", propertyValue);
     }
+    ConfigPropertiesUtil.resetForTest();
     String yaml =
         alreadyAdded
             ? "file_format: \"1.0-rc.1\"\n"
