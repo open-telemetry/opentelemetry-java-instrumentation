@@ -29,7 +29,6 @@ import org.springframework.kafka.core.KafkaTemplate;
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
 
-  // For error prone
   public KafkaInstrumentationAutoConfiguration() {}
 
   @Bean

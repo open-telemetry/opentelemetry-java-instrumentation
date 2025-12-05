@@ -25,8 +25,11 @@ import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 }) // package changed in 4+
 @Configuration
 public class ProducerFactoryCustomizerSpringBoot4Configuration {
+
+  public ProducerFactoryCustomizerSpringBoot4Configuration() {}
+
   @Bean
-  DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
+  static DefaultKafkaProducerFactoryCustomizer otelKafkaProducerFactoryCustomizer(
       OpenTelemetry openTelemetry) {
     KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(openTelemetry);
     return producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap);
