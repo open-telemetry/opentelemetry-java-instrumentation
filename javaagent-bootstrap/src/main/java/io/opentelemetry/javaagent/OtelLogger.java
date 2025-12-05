@@ -1,3 +1,8 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.javaagent;
 
 import io.opentelemetry.api.common.Attributes;
@@ -9,5 +14,11 @@ import javax.annotation.Nullable;
 @FunctionalInterface
 public interface OtelLogger {
 
-  void record(Context context, String scopeName, @Nullable String eventName, @Nullable Value<?> body, Attributes attributes, Severity severity);
+  void record(
+      Context context,
+      String scopeName,
+      @Nullable String eventName,
+      @Nullable Value<?> body,
+      Attributes attributes,
+      Severity severity);
 }

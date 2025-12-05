@@ -21,7 +21,6 @@ public class OtelLoggingInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(
-        new LoggerFactoryInstrumentation());
+    return singletonList(new LoggerFactoryInstrumentation());
   }
 }

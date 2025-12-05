@@ -61,11 +61,16 @@ public final class OpenTelemetryInstaller {
   }
 
   static LogRecordProcessor bridgeProcessor() {
-    return (context, logRecord) -> OtelLoggerHolder.get().record(context,
-        logRecord.getInstrumentationScopeInfo().getName(),
-        logRecord.getEventName(),
-        logRecord.getBodyValue(),
-        logRecord.getAttributes(), logRecord.getSeverity());
+    return (context, logRecord) -> {
+      OtelLoggerHolder.get()
+          .record(
+              context,
+              logRecord.getInstrumentationScopeInfo().getName(),
+              logRecord.getEventName(),
+              logRecord.getBodyValue(),
+              logRecord.getAttributes(),
+              logRecord.getSeverity());
+    };
   }
 
   // Visible for testing

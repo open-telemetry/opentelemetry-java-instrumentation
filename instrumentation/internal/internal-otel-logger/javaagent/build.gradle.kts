@@ -43,9 +43,9 @@ dependencies {
 }
 
 // TODO
-//if (latestDepTest) {
+// if (latestDepTest) {
 //  // spring 6 requires java 17
 //  otelJava {
 //    minJavaVersionSupported.set(JavaVersion.VERSION_17)
 //  }
-//}
+// }
