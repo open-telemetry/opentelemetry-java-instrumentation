@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.PekkoRouteHolder;
 import java.nio.charset.Charset;
 import org.apache.pekko.http.scaladsl.model.Uri;
@@ -47,7 +46,7 @@ public class RouteWrapper implements Function1<RequestContext, Future<RouteResul
 
     @Override
     public Unit apply(Try<RouteResult> tryResult) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       PekkoRouteHolder routeHolder = PekkoRouteHolder.get(context);
       if (routeHolder != null && tryResult.isSuccess()) {
         RouteResult result = tryResult.get();
