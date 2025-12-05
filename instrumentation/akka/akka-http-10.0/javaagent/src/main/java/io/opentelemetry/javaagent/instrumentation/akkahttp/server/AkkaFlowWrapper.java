@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.errorResponse;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.instrumenter;
 
@@ -118,7 +117,7 @@ public class AkkaFlowWrapper
               HttpRequest request = grab(requestIn);
 
               TracingRequest tracingRequest = TracingRequest.EMPTY;
-              Context parentContext = currentContext();
+              Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
                 context = AkkaRouteHolder.init(context);
