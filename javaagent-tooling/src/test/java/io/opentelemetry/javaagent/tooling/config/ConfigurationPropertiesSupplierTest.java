@@ -10,6 +10,7 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.javaagent.tooling.OpenTelemetryInstaller;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
@@ -33,6 +34,7 @@ class ConfigurationPropertiesSupplierTest {
   void setUp() {
     GlobalOpenTelemetry.resetForTest();
     ConfigurationFile.resetForTest();
+    ConfigPropertiesUtil.resetForTest();
   }
 
   // regression for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/6696
@@ -43,6 +45,7 @@ class ConfigurationPropertiesSupplierTest {
     Path configFile = tempDir.resolve("test-config.properties");
     Files.write(configFile, singleton("custom.key = 42"));
     System.setProperty(ConfigurationFile.CONFIGURATION_FILE_PROPERTY, configFile.toString());
+    ConfigPropertiesUtil.resetForTest();
 
     // when
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =

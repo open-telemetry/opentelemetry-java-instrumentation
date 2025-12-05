@@ -105,6 +105,7 @@ testing {
 
     val testConfigFile by registering(JvmTestSuite::class) {
       dependencies {
+        implementation(project(":instrumentation-api"))
         implementation(project(":javaagent-tooling"))
         // requires mockito-inline
         implementation("uk.org.webcompere:system-stubs-jupiter")
