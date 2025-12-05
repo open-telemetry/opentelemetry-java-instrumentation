@@ -130,7 +130,8 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
               entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT potato"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -148,7 +149,8 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM potato WHERE id=?"),
               entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT potato"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();
@@ -176,7 +178,8 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_STATEMENT, "SELECT *"),
               entry(DbIncubatingAttributes.DB_OPERATION, "SELECT"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT *"),
-              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
@@ -186,7 +189,8 @@ class SqlClientAttributesExtractorTest {
       assertThat(attributes.build())
           .containsOnly(
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT *"),
-              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"));
+              entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT"));
     }
   }
 
@@ -217,7 +221,8 @@ class SqlClientAttributesExtractorTest {
               entry(DbIncubatingAttributes.DB_CASSANDRA_TABLE, "table"),
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
               entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbAttributes.DB_COLLECTION_NAME, "table"));
+              entry(DbAttributes.DB_COLLECTION_NAME, "table"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT table"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(attributes.build())
           .containsOnly(
@@ -229,7 +234,8 @@ class SqlClientAttributesExtractorTest {
           .containsOnly(
               entry(DbAttributes.DB_QUERY_TEXT, "SELECT * FROM table"),
               entry(DbAttributes.DB_OPERATION_NAME, "SELECT"),
-              entry(DbAttributes.DB_COLLECTION_NAME, "table"));
+              entry(DbAttributes.DB_COLLECTION_NAME, "table"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "SELECT table"));
     }
   }
 
@@ -279,6 +285,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
@@ -294,6 +301,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 
@@ -331,6 +339,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
@@ -342,6 +351,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 
@@ -379,7 +389,8 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "INSERT"),
-              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
@@ -393,7 +404,8 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_NAMESPACE, "potatoes"),
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "INSERT"),
-              entry(DbAttributes.DB_COLLECTION_NAME, "potato"));
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"));
     }
 
     assertThat(endAttributes.build().isEmpty()).isTrue();

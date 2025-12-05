@@ -13,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -89,7 +90,11 @@ class EntityManagerTest extends AbstractHibernateTest {
                         span,
                         trace.getSpan(0),
                         "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "SELECT db1.Value"),
+                span ->
+                    assertClientSpan(
+                        span,
+                        trace.getSpan(1),
+                        emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value"),
                 span ->
                     assertClientSpan(
                         span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(3)),
@@ -140,7 +145,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -153,7 +158,10 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null)),
                 span ->
                     assertTransactionCommitSpan(
                         span,
@@ -179,7 +187,7 @@ class EntityManagerTest extends AbstractHibernateTest {
                         .hasStatus(StatusData.unset())
                         .hasEvents(emptyList()),
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))));
   }
@@ -325,11 +333,14 @@ class EntityManagerTest extends AbstractHibernateTest {
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
             satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
+            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+            satisfies(
+                DB_QUERY_SUMMARY, val -> val.satisfiesAnyOf(v -> {}, v -> assertThat(v).isNull())));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static void assertClientSpan(SpanDataAssert span, SpanData parent, String spanName) {
+    String querySummary = emitStableDatabaseSemconv() ? spanName.replace("db1.", "") : null;
     span.hasName(spanName)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
@@ -340,7 +351,8 @@ class EntityManagerTest extends AbstractHibernateTest {
             equalTo(DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : "h2:mem:"),
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
             satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-            equalTo(maybeStable(DB_SQL_TABLE), "Value"));
+            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+            equalTo(DB_QUERY_SUMMARY, querySummary));
   }
 
   private static void assertSessionSpan(SpanDataAssert span, SpanData parent, String spanName) {

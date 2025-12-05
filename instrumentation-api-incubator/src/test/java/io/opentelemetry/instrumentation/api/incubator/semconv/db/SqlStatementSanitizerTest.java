@@ -51,11 +51,13 @@ class SqlStatementSanitizerTest {
     String query = sb.toString();
 
     String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
-    SqlStatementInfo expected = SqlStatementInfo.create(sanitizedQuery, "SELECT", "table");
 
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.getFullStatement()).isEqualTo(sanitizedQuery);
+    assertThat(result.getOperation()).isEqualTo("SELECT");
+    assertThat(result.getMainIdentifier()).isEqualTo("table");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
   }
 
   @ParameterizedTest
@@ -154,6 +156,73 @@ class SqlStatementSanitizerTest {
         SqlStatementSanitizer.create(true).sanitize(largeStatement).getFullStatement();
     assertThat(sanitizedLarge).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
+  }
+
+  @ParameterizedTest
+  @MethodSource("querySummaryArgs")
+  void querySummary(String sql, String expectedSummary) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(sql);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
+  }
+
+  @Test
+  void querySummaryIsTruncated() {
+    // Build a query with many tables to exceed 255 character limit
+    StringBuilder sql = new StringBuilder("SELECT * FROM ");
+    for (int i = 0; i < 50; i++) {
+      if (i > 0) {
+        sql.append(", ");
+      }
+      sql.append("very_long_table_name_").append(i);
+    }
+    String result = SqlStatementSanitizer.create(true).sanitize(sql.toString()).getQuerySummary();
+    assertThat(result).isNotNull();
+    assertThat(result.length()).isLessThanOrEqualTo(255);
+    // For implicit join (comma-separated tables), mainIdentifier is null so only first table is in
+    // summary
+    assertThat(result).isEqualTo("SELECT very_long_table_name_0");
+  }
+
+  private static Stream<Arguments> querySummaryArgs() {
+    return Stream.of(
+        // Basic SELECT
+        Arguments.of("SELECT * FROM wuser_table", "SELECT wuser_table"),
+        Arguments.of("SELECT * FROM wuser_table WHERE username = ?", "SELECT wuser_table"),
+        // INSERT with SELECT subquery - INSERT target + SELECT operation (SELECT target not tracked
+        // after extraction done)
+        Arguments.of(
+            "INSERT INTO shipping_details (order_id, address) SELECT order_id, address FROM orders WHERE order_id = ?",
+            "INSERT shipping_details SELECT"),
+        // SELECT with multiple tables (implicit join) - only first table tracked since extraction
+        // stops on comma
+        Arguments.of(
+            "SELECT * FROM songs, artists WHERE songs.artist_id == artists.id", "SELECT songs"),
+        // SELECT with subquery in FROM - only SELECT operation, no table from subquery
+        Arguments.of(
+            "SELECT order_date FROM (SELECT * FROM orders o JOIN customers c ON o.customer_id = c.customer_id)",
+            "SELECT"),
+        // SELECT with JOIN - first table tracked, extraction stops on JOIN
+        Arguments.of("SELECT * FROM table1 JOIN table2 ON table1.id = table2.id", "SELECT table1"),
+        // DELETE
+        Arguments.of("DELETE FROM users WHERE id = ?", "DELETE users"),
+        // UPDATE
+        Arguments.of("UPDATE users SET name = ? WHERE id = ?", "UPDATE users"),
+        // CALL stored procedure
+        Arguments.of("CALL some_stored_procedure", "CALL some_stored_procedure"),
+        // MERGE
+        Arguments.of("MERGE INTO target USING source ON target.id = source.id", "MERGE target"),
+        // CREATE TABLE
+        Arguments.of("CREATE TABLE users (id INT, name VARCHAR(100))", "CREATE TABLE users"),
+        // DROP TABLE
+        Arguments.of("DROP TABLE users", "DROP TABLE users"),
+        // ALTER TABLE
+        Arguments.of("ALTER TABLE users ADD COLUMN email VARCHAR(100)", "ALTER TABLE users"),
+        // CREATE INDEX (no table in summary)
+        Arguments.of("CREATE INDEX idx_name ON users (name)", "CREATE INDEX"),
+        // Unknown operation
+        Arguments.of("and now for something completely different", null),
+        Arguments.of("", null),
+        Arguments.of(null, null));
   }
 
   private static Stream<Arguments> sqlArgs() {
@@ -267,12 +336,12 @@ class SqlStatementSanitizerTest {
   }
 
   private static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
-    return sql -> SqlStatementInfo.create(sql, operation, identifier);
+    return sql -> SqlStatementInfo.create(sql, operation, identifier, null);
   }
 
   private static Function<String, SqlStatementInfo> expect(
       String sql, String operation, String identifier) {
-    return ignored -> SqlStatementInfo.create(sql, operation, identifier);
+    return ignored -> SqlStatementInfo.create(sql, operation, identifier, null);
   }
 
   private static Stream<Arguments> simplifyArgs() {

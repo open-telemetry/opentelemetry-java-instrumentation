@@ -14,12 +14,17 @@ class MultiQuery {
 
   @Nullable private final String mainIdentifier;
   @Nullable private final String operation;
+  @Nullable private final String querySummary;
   private final Set<String> statements;
 
   private MultiQuery(
-      @Nullable String mainIdentifier, @Nullable String operation, Set<String> statements) {
+      @Nullable String mainIdentifier,
+      @Nullable String operation,
+      @Nullable String querySummary,
+      Set<String> statements) {
     this.mainIdentifier = mainIdentifier;
     this.operation = operation;
+    this.querySummary = querySummary;
     this.statements = statements;
   }
 
@@ -27,6 +32,7 @@ class MultiQuery {
       Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
     UniqueValue uniqueMainIdentifier = new UniqueValue();
     UniqueValue uniqueOperation = new UniqueValue();
+    UniqueValue uniqueQuerySummary = new UniqueValue();
     Set<String> uniqueStatements = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
       SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
@@ -34,12 +40,17 @@ class MultiQuery {
       uniqueMainIdentifier.set(mainIdentifier);
       String operation = sanitizedStatement.getOperation();
       uniqueOperation.set(operation);
+      String querySummary = sanitizedStatement.getQuerySummary();
+      uniqueQuerySummary.set(querySummary);
       uniqueStatements.add(
           statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
     }
 
     return new MultiQuery(
-        uniqueMainIdentifier.getValue(), uniqueOperation.getValue(), uniqueStatements);
+        uniqueMainIdentifier.getValue(),
+        uniqueOperation.getValue(),
+        uniqueQuerySummary.getValue(),
+        uniqueStatements);
   }
 
   @Nullable
@@ -50,6 +61,11 @@ class MultiQuery {
   @Nullable
   public String getOperation() {
     return operation;
+  }
+
+  @Nullable
+  public String getQuerySummary() {
+    return querySummary;
   }
 
   public Set<String> getStatements() {

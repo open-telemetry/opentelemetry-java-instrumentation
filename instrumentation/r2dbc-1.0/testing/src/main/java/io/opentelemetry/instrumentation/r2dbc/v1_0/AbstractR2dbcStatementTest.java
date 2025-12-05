@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -161,13 +162,18 @@ public abstract class AbstractR2dbcStatementTest {
                   .blockLast(Duration.ofMinutes(1));
             });
 
+    String spanName =
+        emitStableDatabaseSemconv()
+            ? parameter.operation + (parameter.table != null ? " " + parameter.table : "")
+            : parameter.spanName;
+
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(parameter.spanName)
+                        span.hasName(spanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -182,6 +188,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                                 equalTo(maybeStable(DB_OPERATION), parameter.operation),
                                 equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? spanName : null),
                                 equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),

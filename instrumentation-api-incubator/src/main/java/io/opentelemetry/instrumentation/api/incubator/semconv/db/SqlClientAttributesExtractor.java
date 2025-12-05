@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorU
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -119,6 +120,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
             DB_QUERY_TEXT,
             statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
         internalSet(attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operation : operation);
+        internalSet(attributes, DB_QUERY_SUMMARY, sanitizedStatement.getQuerySummary());
         if (!SQL_CALL.equals(operation)) {
           internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
         }
@@ -130,6 +132,7 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
         String operation =
             multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH";
         internalSet(attributes, DB_OPERATION_NAME, operation);
+        internalSet(attributes, DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
 
         if (multiQuery.getMainIdentifier() != null
             && (multiQuery.getOperation() == null || !SQL_CALL.equals(multiQuery.getOperation()))) {

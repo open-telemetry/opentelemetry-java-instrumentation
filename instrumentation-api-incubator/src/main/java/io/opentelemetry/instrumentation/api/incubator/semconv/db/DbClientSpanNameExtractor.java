@@ -111,9 +111,18 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
             namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
       }
 
+      // For stable semconv, use query summary as span name if available
       if (rawQueryTexts.size() == 1) {
         SqlStatementInfo sanitizedStatement =
             SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+        String querySummary = sanitizedStatement.getQuerySummary();
+        if (querySummary != null) {
+          if (isBatch(request)) {
+            return "BATCH " + querySummary;
+          }
+          return querySummary;
+        }
+        // Fall back to old behavior if no query summary
         String operation = sanitizedStatement.getOperation();
         if (isBatch(request)) {
           operation = "BATCH " + operation;
@@ -122,6 +131,11 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       }
 
       MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
+      String querySummary = multiQuery.getQuerySummary();
+      if (querySummary != null) {
+        return "BATCH " + querySummary;
+      }
+      // Fall back to old behavior if no query summary
       return computeSpanName(
           namespace,
           multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",

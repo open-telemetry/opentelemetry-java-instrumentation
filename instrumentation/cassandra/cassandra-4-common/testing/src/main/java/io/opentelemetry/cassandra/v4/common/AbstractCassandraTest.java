@@ -5,11 +5,13 @@
 
 package io.opentelemetry.cassandra.v4.common;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -151,7 +153,10 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.spanName : null))));
 
     session.close();
   }
@@ -205,7 +210,10 @@ public abstract class AbstractCassandraTest {
                                     val -> val.isInstanceOf(Boolean.class)),
                                 equalTo(maybeStable(DB_CASSANDRA_PAGE_SIZE), 5000),
                                 equalTo(maybeStable(DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT), 0),
-                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                                equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? parameter.spanName : null)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -263,7 +271,7 @@ public abstract class AbstractCassandraTest {
                     "sync_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT sync_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT sync_test.users",
                     "SELECT",
                     "users"))));
   }
@@ -317,9 +325,16 @@ public abstract class AbstractCassandraTest {
                     "async_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT async_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT async_test.users",
                     "SELECT",
                     "users"))));
+  }
+
+  protected static String querySummary(String operation, String table) {
+    if (table == null) {
+      return operation;
+    }
+    return operation + " " + table;
   }
 
   protected static class Parameter {
