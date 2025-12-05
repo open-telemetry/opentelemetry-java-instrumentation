@@ -112,10 +112,10 @@ public final class LoggingEventMapper {
   public void emit(LoggerProvider loggerProvider, ILoggingEvent event, long threadId) {
     Context context = Context.current();
     // This is an optimization. SDK will automatically filter these logs as well.
-    if (Loopback.isLoopbackOtelSdk(context.get(Loopback.loopbackContextKey))) {
+    if (Loopback.isLoopback(context)) {
       return;
     }
-    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender());
+    context = Loopback.withLoopback(context);
 
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {

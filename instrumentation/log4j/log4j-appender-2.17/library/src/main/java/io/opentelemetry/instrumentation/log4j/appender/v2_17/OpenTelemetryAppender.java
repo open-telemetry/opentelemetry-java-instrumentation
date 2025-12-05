@@ -313,7 +313,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   private void emit(OpenTelemetry openTelemetry, LogEvent event) {
     Context context = Context.current();
     // This is an optimization. SDK will automatically filter these logs as well.
-    if (Loopback.isLoopbackOtelSdk(context.get(Loopback.loopbackContextKey))) {
+    if (Loopback.isLoopback(context)) {
       return;
     }
 
@@ -345,7 +345,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
                             TraceState.getDefault())));
       }
     }
-    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender());
+    context = Loopback.withLoopback(context);
 
     mapper.mapLogEvent(
         builder,
