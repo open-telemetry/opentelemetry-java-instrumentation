@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.mongo.v3_1;
+package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import static io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetryBuilder.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
+import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mongodb.event.CommandStartedEvent;

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.mongo.v3_1;
+package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.event.CommandFailedEvent;
 import com.mongodb.event.CommandListener;
@@ -14,12 +14,16 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-final class TracingCommandListener implements CommandListener {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class TracingCommandListener implements CommandListener {
 
   private final Instrumenter<CommandStartedEvent, Void> instrumenter;
   private final Map<Integer, ContextAndRequest> requestMap;
 
-  TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
+  public TracingCommandListener(Instrumenter<CommandStartedEvent, Void> instrumenter) {
     this.instrumenter = instrumenter;
     this.requestMap = new ConcurrentHashMap<>();
   }
