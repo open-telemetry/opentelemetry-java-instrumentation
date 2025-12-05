@@ -5,18 +5,11 @@
 
 package io.opentelemetry.instrumentation.api.instrumenter;
 
-import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -61,8 +54,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
           ConfigPropertiesUtil.getString(
               "otel.instrumentation.experimental.span-suppression-strategy"));
 
-  static boolean isIncubator = isIncubator();
-
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
   SpanNameExtractor<? super REQUEST> spanNameExtractor;
@@ -91,20 +82,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             builder.operationListenerAttributesExtractors.add(
                 requireNonNull(
                     operationListenerAttributesExtractor, "operationListenerAttributesExtractor")));
-  }
-
-  private static boolean isIncubator() {
-    try {
-      Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
-      return true;
-    } catch (ClassNotFoundException e) {
-      // The incubator module is not available.
-      // This only happens in OpenTelemetry API instrumentation tests, where an older version of
-      // OpenTelemetry API is used that does not have ExtendedOpenTelemetry.
-      // Having the incubator module without ExtendedOpenTelemetry class should still return false
-      // for those tests to avoid a ClassNotFoundException.
-      return false;
-    }
   }
 
   InstrumenterBuilder(
@@ -320,7 +297,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
       InstrumenterConstructor<REQUEST, RESPONSE> constructor,
       SpanKindExtractor<? super REQUEST> spanKindExtractor) {
 
-    addThreadDetailsAttributeExtractor(this);
     applyCustomizers(this);
 
     this.spanKindExtractor = spanKindExtractor;
@@ -435,6 +411,11 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
 
             @Override
+            public OpenTelemetry getOpenTelemetry() {
+              return builder.openTelemetry;
+            }
+
+            @Override
             public boolean hasType(SpanKey type) {
               return spanKeys.contains(type);
             }
@@ -478,28 +459,7 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
   }
 
-  private static <RESPONSE, REQUEST> void addThreadDetailsAttributeExtractor(
-      InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    if (isIncubator && builder.openTelemetry instanceof ExtendedOpenTelemetry) {
-      // Declarative config is used.
-      // Otherwise, thread details are configured in
-      // io.opentelemetry.javaagent.tooling.AgentTracerProviderConfigurer.
 
-      DeclarativeConfigProperties instrumentationConfig =
-          ((ExtendedOpenTelemetry) builder.openTelemetry)
-              .getConfigProvider()
-              .getInstrumentationConfig();
-
-      if (instrumentationConfig != null
-          && instrumentationConfig
-              .getStructured("java", empty())
-              .getStructured("common", empty())
-              .getStructured("thread_details", empty())
-              .getBoolean("enabled", false)) {
-        builder.addAttributesExtractor(new ThreadDetailsAttributesExtractor<>());
-      }
-    }
-  }
 
   private interface InstrumenterConstructor<RQ, RS> {
     Instrumenter<RQ, RS> create(InstrumenterBuilder<RQ, RS> builder);
@@ -544,27 +504,5 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             builder.propagateOperationListenersToOnEnd();
           }
         });
-  }
-
-  private static class ThreadDetailsAttributesExtractor<RESPONSE, REQUEST>
-      implements AttributesExtractor<REQUEST, RESPONSE> {
-    // attributes are not stable yet
-    private static final AttributeKey<Long> THREAD_ID = longKey("thread.id");
-    private static final AttributeKey<String> THREAD_NAME = stringKey("thread.name");
-
-    @Override
-    public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-      Thread currentThread = Thread.currentThread();
-      attributes.put(THREAD_ID, currentThread.getId());
-      attributes.put(THREAD_NAME, currentThread.getName());
-    }
-
-    @Override
-    public void onEnd(
-        AttributesBuilder attributes,
-        Context context,
-        REQUEST request,
-        @Nullable RESPONSE response,
-        @Nullable Throwable error) {}
   }
 }
