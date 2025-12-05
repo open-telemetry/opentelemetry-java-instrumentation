@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.time.Duration
 
 plugins {
@@ -72,7 +71,7 @@ tasks {
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val agentJarPath = shadowTask.flatMap { it.archiveFile }
     inputs.files(agentJarPath)
       .withPropertyName("javaagent")
