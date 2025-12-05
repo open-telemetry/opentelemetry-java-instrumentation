@@ -8250,6 +8250,13 @@ libraries:
       - io.micrometer:micrometer-core:1.5.0
   mongo:
   - name: mongo-3.1
+    display_name: MongoDB Driver
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-3.1
     scope:
       name: io.opentelemetry.mongo-3.1
@@ -8258,7 +8265,81 @@ libraries:
       - org.mongodb:mongo-java-driver:[3.1,)
       library:
       - org.mongodb:mongo-java-driver:3.1.0
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: mongo-3.7
+    display_name: MongoDB Driver
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-3.7
     scope:
       name: io.opentelemetry.mongo-3.7
@@ -8266,22 +8347,240 @@ libraries:
       javaagent:
       - org.mongodb:mongodb-driver-core:[3.7, 4.0)
       - org.mongodb:mongo-java-driver:[3.7, 4.0)
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: mongo-4.0
+    display_name: MongoDB Driver
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-4.0
     scope:
       name: io.opentelemetry.mongo-4.0
     target_versions:
       javaagent:
       - org.mongodb:mongodb-driver-core:[4.0,)
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   - name: mongo-async-3.3
+    display_name: MongoDB Driver (Async)
+    description: |
+      This instrumentation enables database client spans and database client metrics for the MongoDB async Java driver.
+    semantic_conventions:
+    - DATABASE_CLIENT_SPANS
+    - DATABASE_CLIENT_METRICS
+    library_link: https://www.mongodb.com/docs/drivers/java-drivers/
     source_path: instrumentation/mongo/mongo-async-3.3
     scope:
       name: io.opentelemetry.mongo-async-3.3
     target_versions:
       javaagent:
       - org.mongodb:mongodb-driver-async:[3.3,)
+    configurations:
+    - name: otel.instrumentation.mongo.statement-sanitizer.enabled
+      description: |
+        Enables statement sanitization for MongoDB queries. Takes precedence over otel.instrumentation.common.db-statement-sanitizer.enabled.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.common.db-statement-sanitizer.enabled
+      description: Enables statement sanitization for database queries.
+      type: boolean
+      default: true
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.connection_string
+          type: STRING
+        - name: db.mongodb.collection
+          type: STRING
+        - name: db.name
+          type: STRING
+        - name: db.operation
+          type: STRING
+        - name: db.statement
+          type: STRING
+        - name: db.system
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+    - when: otel.semconv-stability.opt-in=database
+      metrics:
+      - name: db.client.operation.duration
+        description: Duration of database client operations.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
+      spans:
+      - span_kind: CLIENT
+        attributes:
+        - name: db.collection.name
+          type: STRING
+        - name: db.namespace
+          type: STRING
+        - name: db.operation.name
+          type: STRING
+        - name: db.query.text
+          type: STRING
+        - name: db.system.name
+          type: STRING
+        - name: server.address
+          type: STRING
+        - name: server.port
+          type: LONG
   mybatis:
   - name: mybatis-3.2
+    display_name: MyBatis
+    description: This instrumentation enables spans for MyBatis mapper method executions.
+    library_link: https://mybatis.org/mybatis-3/
     disabled_by_default: true
     source_path: instrumentation/mybatis-3.2
     scope:
@@ -8289,9 +8588,23 @@ libraries:
     target_versions:
       javaagent:
       - org.mybatis:mybatis:[3.2.0,)
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes:
+        - name: code.function
+          type: STRING
+        - name: code.namespace
+          type: STRING
   nats:
   - name: nats-2.17
-    description: This instrumentation provides messaging spans for NATS
+    display_name: NATS Client
+    description: This instrumentation enables messaging spans for NATS message producers
+      and consumers.
+    semantic_conventions:
+    - MESSAGING_SPANS
+    library_link: https://nats.io/
     source_path: instrumentation/nats/nats-2.17
     scope:
       name: io.opentelemetry.nats-2.17
@@ -8302,7 +8615,8 @@ libraries:
       - io.nats:jnats:2.17.2
     configurations:
     - name: otel.instrumentation.messaging.experimental.capture-headers
-      description: Allows configuring headers to capture as span attributes.
+      description: |
+        Enables capturing messaging headers as span attributes. Provide a comma-separated list of header names to capture.
       type: list
       default: ''
     telemetry:
@@ -8342,6 +8656,15 @@ libraries:
           type: STRING
   netty:
   - name: netty-3.8
+    display_name: Netty HTTP codec
+    description: |
+      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://netty.io/
     source_path: instrumentation/netty/netty-3.8
     scope:
       name: io.opentelemetry.netty-3.8
@@ -8349,6 +8672,47 @@ libraries:
     target_versions:
       javaagent:
       - io.netty:netty:[3.8.0.Final,4)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
     telemetry:
     - when: default
       metrics:
@@ -8436,6 +8800,15 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: netty-4.0
+    display_name: Netty HTTP codec
+    description: |
+      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://netty.io/
     source_path: instrumentation/netty/netty-4.0
     scope:
       name: io.opentelemetry.netty-4.0
@@ -8445,12 +8818,52 @@ libraries:
       - io.netty:netty-all:[4.0.0.Final,4.1.0.Final)
       - io.netty:netty-codec-http:[4.0.0.Final,4.1.0.Final)
     configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
     - name: otel.instrumentation.netty.connection-telemetry.enabled
-      description: Enable the creation of Connect and DNS spans
+      description: Enable the creation of Connect and DNS spans.
       type: boolean
       default: false
     - name: otel.instrumentation.netty.ssl-telemetry.enabled
-      description: Enable SSL telemetry
+      description: Enable SSL telemetry.
       type: boolean
       default: false
     telemetry:
@@ -8540,6 +8953,15 @@ libraries:
         - name: user_agent.original
           type: STRING
   - name: netty-4.1
+    display_name: Netty HTTP codec
+    description: |
+      This instrumentation enables HTTP client spans, HTTP client metrics, HTTP server spans, and HTTP server metrics for the Netty framework. Does not currently support capturing HTTP/2 traffic.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    - HTTP_SERVER_SPANS
+    - HTTP_SERVER_METRICS
+    library_link: https://netty.io/
     source_path: instrumentation/netty/netty-4.1
     scope:
       name: io.opentelemetry.netty-4.1
@@ -8551,12 +8973,52 @@ libraries:
       library:
       - io.netty:netty-codec-http:4.1.0.Final
     configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
+    - name: otel.instrumentation.http.server.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP server telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.server.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP server telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.server.request.size` and `http.server.response.size` metrics.
+      type: boolean
+      default: false
     - name: otel.instrumentation.netty.connection-telemetry.enabled
-      description: Enable the creation of Connect and DNS spans
+      description: Enable the creation of Connect and DNS spans.
       type: boolean
       default: false
     - name: otel.instrumentation.netty.ssl-telemetry.enabled
-      description: Enable SSL telemetry
+      description: Enable SSL telemetry.
       type: boolean
       default: false
     telemetry:
