@@ -196,9 +196,15 @@ testing {
         implementation(project(":instrumentation-api"))
         implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
         implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
-        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
-          exclude("org.junit.vintage", "junit-vintage-engine")
-        }
+        // configure Spring Boot 3.x dependencies for latest dep testing
+        val version = if (latestDepTest) "3.+" else springBootVersion
+        implementation("org.springframework.boot:spring-boot-starter-test:$version")
+        implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
+        implementation("org.springframework.boot:spring-boot-starter-web:$version")
+        implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
+        implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
+        val springKafkaVersion = if (latestDepTest) "3.+" else "2.9.0"
+        implementation("org.springframework.kafka:spring-kafka:$springKafkaVersion")
         implementation("javax.servlet:javax.servlet-api:3.1.0")
         runtimeOnly("com.h2database:h2:1.4.197")
         runtimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
@@ -208,14 +214,13 @@ testing {
     val testSpring3 by registering(JvmTestSuite::class) {
       dependencies {
         implementation(project())
-        implementation("org.springframework.boot:spring-boot-starter-web:3.2.4")
+        val version = if (latestDepTest) "3.+" else "3.2.4"
+        implementation("org.springframework.boot:spring-boot-starter-web:$version")
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
         implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
         implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-6.0:library"))
         implementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
-        implementation("org.springframework.boot:spring-boot-starter-test:3.2.4") {
-          exclude("org.junit.vintage", "junit-vintage-engine")
-        }
+        implementation("org.springframework.boot:spring-boot-starter-test:$version")
       }
     }
 
@@ -223,20 +228,19 @@ testing {
       dependencies {
         implementation(project())
         implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        implementation("org.springframework.boot:spring-boot-starter-jdbc:4.0.0")
-        implementation("org.springframework.boot:spring-boot-restclient:4.0.0")
-        implementation("org.springframework.boot:spring-boot-starter-kafka:4.0.0")
-        implementation("org.springframework.boot:spring-boot-starter-actuator:4.0.0")
-        implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:4.0.0")
-        implementation("org.springframework.boot:spring-boot-starter-micrometer-metrics:4.0.0")
+        val version = if (latestDepTest) "latest.release" else "4.0.0"
+        implementation("org.springframework.boot:spring-boot-starter-jdbc:$version")
+        implementation("org.springframework.boot:spring-boot-restclient:$version")
+        implementation("org.springframework.boot:spring-boot-starter-kafka:$version")
+        implementation("org.springframework.boot:spring-boot-starter-actuator:$version")
+        implementation("org.springframework.boot:spring-boot-starter-data-r2dbc:$version")
+        implementation("org.springframework.boot:spring-boot-starter-micrometer-metrics:$version")
         implementation("io.opentelemetry:opentelemetry-sdk")
         implementation("io.opentelemetry:opentelemetry-sdk-testing")
         implementation(project(":instrumentation-api"))
         implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
         implementation(project(":instrumentation:spring:spring-boot-autoconfigure:testing"))
-        implementation("org.springframework.boot:spring-boot-starter-test:4.0.0") {
-          exclude("org.junit.vintage", "junit-vintage-engine")
-        }
+        implementation("org.springframework.boot:spring-boot-starter-test:$version")
         runtimeOnly("com.h2database:h2:1.4.197")
         runtimeOnly("io.r2dbc:r2dbc-h2:1.0.0.RELEASE")
       }
@@ -259,18 +263,6 @@ testing {
 configurations.configureEach {
   if (name.contains("testLogbackMissing")) {
     exclude("ch.qos.logback", "logback-classic")
-  }
-  // testSpring2: configure Spring Boot 3.x dependencies for latest dep testing
-  if (name == "testSpring2Implementation") {
-    dependencies {
-      add(name, "org.springframework.boot:spring-boot-starter-web:3.+")
-      add(name, "org.springframework.boot:spring-boot-starter-jdbc:3.+")
-      add(name, "org.springframework.boot:spring-boot-starter-actuator:3.+")
-      add(name, "org.springframework.boot:spring-boot-starter-data-r2dbc:3.+")
-      add(name, "org.springframework.kafka:spring-kafka:3.+")
-      add(name, project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
-      add(name, project(":instrumentation:spring:spring-kafka-2.7:library"))
-    }
   }
 }
 

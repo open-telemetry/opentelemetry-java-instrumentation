@@ -27,6 +27,6 @@ import org.springframework.boot.test.context.SpringBootTest;
       AbstractKafkaSpringStarterSmokeTest.KafkaConfig.class
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@EnabledInNativeImage
+@EnabledInNativeImage // see AbstractJvmKafkaSpringStarterSmokeTest for the JVM test
 @RequiresDockerCompose
-class GraalVmNativeKafkaSpringStarterSmokeTest extends KafkaSpringStarterSmokeTest {}
+class GraalVmNativeKafkaSpringStarterSmokeTest extends AbstractKafkaSpringStarterSmokeTest {}
