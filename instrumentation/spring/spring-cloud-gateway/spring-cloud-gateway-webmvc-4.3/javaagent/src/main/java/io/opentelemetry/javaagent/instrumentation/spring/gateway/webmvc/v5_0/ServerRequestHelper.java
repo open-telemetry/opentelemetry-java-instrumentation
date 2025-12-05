@@ -13,6 +13,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.instrumentation.spring.gateway.common.GatewayRouteHelper;
 import java.lang.reflect.Field;
+import javax.annotation.Nullable;
 import org.springframework.cloud.gateway.server.mvc.common.MvcUtils;
 import org.springframework.cloud.gateway.server.mvc.handler.GatewayDelegatingRouterFunction;
 import org.springframework.web.servlet.function.ServerRequest;
@@ -22,7 +23,7 @@ import org.springframework.web.servlet.function.ServerRequest;
  * ServerRequest and adding it to spans.
  */
 public final class ServerRequestHelper {
-  private static final Field routeIdField;
+  @Nullable private static final Field routeIdField;
 
   static {
     Field routeIdField1 = null;
@@ -47,11 +48,6 @@ public final class ServerRequestHelper {
       return;
     }
 
-    setRouteIdAttribute(gatewayRouterFunction, serverSpan);
-    setRouteUriAttribute(request, serverSpan);
-  }
-
-  private static void setRouteIdAttribute(Object gatewayRouterFunction, Span serverSpan) {
     try {
       String routeId = (String) routeIdField.get(gatewayRouterFunction);
       String convergedRouteId = GatewayRouteHelper.convergeRouteId(routeId);
@@ -61,9 +57,7 @@ public final class ServerRequestHelper {
     } catch (Exception e) {
       // Silently ignore
     }
-  }
 
-  private static void setRouteUriAttribute(ServerRequest request, Span serverSpan) {
     request
         .attribute(MvcUtils.GATEWAY_REQUEST_URL_ATTR)
         .ifPresent(uri -> serverSpan.setAttribute(ROUTE_URI_ATTRIBUTE, uri.toString()));
