@@ -28,7 +28,6 @@ public final class Slf4jOtelLogger implements OtelLogger {
   }
 
   @Override
-  @SuppressWarnings("CheckReturnValue")
   public void record(
       Context context,
       String scopeName,
@@ -47,6 +46,7 @@ public final class Slf4jOtelLogger implements OtelLogger {
     }
   }
 
+  @SuppressWarnings("CheckReturnValue")
   private static void recordInternal(
       String scopeName,
       @Nullable String eventName,

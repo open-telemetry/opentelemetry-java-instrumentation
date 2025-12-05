@@ -345,7 +345,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
                             TraceState.getDefault())));
       }
     }
-    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender(0));
+    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender());
 
     mapper.mapLogEvent(
         builder,

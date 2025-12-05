@@ -115,7 +115,7 @@ public final class LoggingEventMapper {
     if (Loopback.isLoopbackOtelSdk(context.get(Loopback.loopbackContextKey))) {
       return;
     }
-    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender(0));
+    context = context.with(Loopback.loopbackContextKey, Loopback.withLoopbackOtelAppender());
 
     String instrumentationName = event.getLoggerName();
     if (instrumentationName == null || instrumentationName.isEmpty()) {
