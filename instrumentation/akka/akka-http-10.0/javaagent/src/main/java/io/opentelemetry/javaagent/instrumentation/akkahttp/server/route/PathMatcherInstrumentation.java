@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 
-import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteHolderSingletons.PREFIX;
+import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteUtil.PREFIX;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

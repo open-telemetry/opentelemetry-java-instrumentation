@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 import akka.http.scaladsl.server.RequestContext;
 import akka.http.scaladsl.server.RouteResult;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import scala.Function1;
 import scala.concurrent.Future;
 import scala.runtime.AbstractFunction1;
@@ -22,7 +21,7 @@ public class AkkaRouteWrapper extends AbstractFunction1<RequestContext, Future<R
 
   @Override
   public Future<RouteResult> apply(RequestContext ctx) {
-    Context context = Java8BytecodeBridge.currentContext();
+    Context context = Context.current();
     AkkaRouteHolder routeHolder = AkkaRouteHolder.get(context);
     if (routeHolder == null) {
       return route.apply(ctx);
