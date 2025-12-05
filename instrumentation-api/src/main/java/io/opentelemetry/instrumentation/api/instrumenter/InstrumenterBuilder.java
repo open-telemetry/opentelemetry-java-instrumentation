@@ -488,8 +488,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     }
   }
 
-
-
   private interface InstrumenterConstructor<RQ, RS> {
     Instrumenter<RQ, RS> create(InstrumenterBuilder<RQ, RS> builder);
 
