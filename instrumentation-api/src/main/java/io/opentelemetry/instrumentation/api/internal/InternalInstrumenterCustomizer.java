@@ -31,10 +31,10 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   void addContextCustomizer(ContextCustomizer<REQUEST> customizer);
 
-  void setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer);
+  void setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer);
 
-  void setSpanStatusExtractor(
+  void setSpanStatusExtractorCustomizer(
       UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
-          spanStatusExtractorTransformer);
+          spanStatusExtractorCustomizer);
 }

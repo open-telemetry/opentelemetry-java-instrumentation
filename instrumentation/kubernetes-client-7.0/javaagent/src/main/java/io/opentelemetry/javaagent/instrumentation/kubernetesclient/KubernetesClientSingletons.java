@@ -37,7 +37,7 @@ public class KubernetesClientSingletons {
                         new KubernetesExperimentalAttributesExtractor());
                   }
                 })
-            .setSpanNameExtractor(
+            .setSpanNameExtractorCustomizer(
                 requestSpanNameExtractor ->
                     request -> KubernetesRequestDigest.parse(request).toString())
             .build();

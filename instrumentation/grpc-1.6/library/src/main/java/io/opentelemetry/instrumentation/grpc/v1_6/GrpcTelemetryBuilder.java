@@ -39,9 +39,9 @@ public final class GrpcTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   @Nullable private String peerService;
 
-  private UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorCustomizer =
       UnaryOperator.identity();
-  private UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorTransformer =
+  private UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorCustomizer =
       UnaryOperator.identity();
   private final List<AttributesExtractor<? super GrpcRequest, ? super Status>>
       additionalExtractors = new ArrayList<>();
@@ -94,19 +94,49 @@ public final class GrpcTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom client {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom client {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setClientSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractor) {
-    this.clientSpanNameExtractorTransformer = clientSpanNameExtractor;
+    return setClientSpanNameExtractorCustomizer(clientSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default client {@link SpanNameExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setClientSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<GrpcRequest>> clientSpanNameExtractorCustomizer) {
+    this.clientSpanNameExtractorCustomizer = clientSpanNameExtractorCustomizer;
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setServerSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractor) {
-    this.serverSpanNameExtractorTransformer = serverSpanNameExtractor;
+    return setServerSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default server {@link SpanNameExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public GrpcTelemetryBuilder setServerSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<GrpcRequest>> serverSpanNameExtractorCustomizer) {
+    this.serverSpanNameExtractorCustomizer = serverSpanNameExtractorCustomizer;
     return this;
   }
 
@@ -159,9 +189,9 @@ public final class GrpcTelemetryBuilder {
   public GrpcTelemetry build() {
     SpanNameExtractor<GrpcRequest> originalSpanNameExtractor = new GrpcSpanNameExtractor();
     SpanNameExtractor<? super GrpcRequest> clientSpanNameExtractor =
-        clientSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+        clientSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
     SpanNameExtractor<? super GrpcRequest> serverSpanNameExtractor =
-        serverSpanNameExtractorTransformer.apply(originalSpanNameExtractor);
+        serverSpanNameExtractorCustomizer.apply(originalSpanNameExtractor);
 
     InstrumenterBuilder<GrpcRequest, Status> clientInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, clientSpanNameExtractor);

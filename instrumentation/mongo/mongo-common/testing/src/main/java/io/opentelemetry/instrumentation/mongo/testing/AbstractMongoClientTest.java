@@ -7,9 +7,14 @@ package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
@@ -31,6 +36,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import java.net.Socket;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -230,30 +236,45 @@ public abstract class AbstractMongoClientTest<T> {
     long count = testing().runWithSpan("parent", () -> getCollection(dbName, collectionName));
     assertThat(count).isEqualTo(0);
 
+    // versions 3.7+ are instrumented by the mongo-3.7 module and have a different scope
+    AtomicReference<String> scopeName = new AtomicReference<>();
+
     testing()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "count",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
-                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+                    span -> {
+                      scopeName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
+                      mongoSpan(
+                          span,
+                          "count",
+                          collectionName,
+                          dbName,
+                          trace.getSpan(0),
+                          asList(
+                              "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                              "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                              "{\"count\":\""
+                                  + collectionName
+                                  + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
+                    }));
+
+    assertDurationMetric(
+        testing(),
+        scopeName.get(),
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        DB_NAMESPACE,
+        DB_COLLECTION_NAME,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

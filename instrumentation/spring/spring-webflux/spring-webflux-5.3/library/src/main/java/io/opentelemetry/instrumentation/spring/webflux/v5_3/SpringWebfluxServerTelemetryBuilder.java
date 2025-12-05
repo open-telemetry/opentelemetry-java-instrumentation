@@ -94,11 +94,26 @@ public final class SpringWebfluxServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom server {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom server {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public SpringWebfluxServerTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<ServerWebExchange>> serverSpanNameExtractor) {
-    builder.setSpanNameExtractor(serverSpanNameExtractor);
+    return setSpanNameExtractorCustomizer(serverSpanNameExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebfluxServerTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<ServerWebExchange>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 

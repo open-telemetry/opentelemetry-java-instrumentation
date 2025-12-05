@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.mongo.v3_1;
+package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.event.CommandStartedEvent;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;

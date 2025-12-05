@@ -39,11 +39,27 @@ public final class JavaHttpServerTelemetryBuilder {
             JavaHttpServerExchangeGetter.INSTANCE);
   }
 
-  /** Sets the status extractor for server spans. */
+  /**
+   * Sets the status extractor for server spans.
+   *
+   * @deprecated Use {@link #setSpanStatusExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setStatusExtractor(
       UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>> statusExtractor) {
-    builder.setStatusExtractor(statusExtractor);
+    return setSpanStatusExtractorCustomizer(statusExtractor);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanStatusExtractor} and returns a
+   * customized one.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpServerTelemetryBuilder setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<HttpExchange, HttpExchange>>
+          spanStatusExtractorCustomizer) {
+    builder.setSpanStatusExtractorCustomizer(spanStatusExtractorCustomizer);
     return this;
   }
 
@@ -101,11 +117,26 @@ public final class JavaHttpServerTelemetryBuilder {
     return this;
   }
 
-  /** Sets custom {@link SpanNameExtractor} via transform function. */
+  /**
+   * Sets custom {@link SpanNameExtractor} via transform function.
+   *
+   * @deprecated Use {@link #setSpanNameExtractorCustomizer(UnaryOperator)} instead.
+   */
+  @Deprecated
   @CanIgnoreReturnValue
   public JavaHttpServerTelemetryBuilder setSpanNameExtractor(
       UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorTransformer) {
-    builder.setSpanNameExtractor(spanNameExtractorTransformer);
+    return setSpanNameExtractorCustomizer(spanNameExtractorTransformer);
+  }
+
+  /**
+   * Sets a customizer that receives the default {@link SpanNameExtractor} and returns a customized
+   * one.
+   */
+  @CanIgnoreReturnValue
+  public JavaHttpServerTelemetryBuilder setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<HttpExchange>> spanNameExtractorCustomizer) {
+    builder.setSpanNameExtractorCustomizer(spanNameExtractorCustomizer);
     return this;
   }
 
