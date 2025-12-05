@@ -11,6 +11,7 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.bootstrap.OtelLoggerHolder;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -19,7 +20,7 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
-import io.opentelemetry.sdk.extension.incubator.slf4j.Slf4jBridge;
+import io.opentelemetry.sdk.logs.LogRecordProcessor;
 import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
@@ -38,8 +39,7 @@ public final class OpenTelemetryInstaller {
             .setResultAsGlobal()
             .setServiceClassLoader(extensionClassLoader)
             .addLoggerProviderCustomizer(
-                (sdkLoggerProviderBuilder, configProperties) ->
-                    sdkLoggerProviderBuilder.addLogRecordProcessor(Slf4jBridge.create()))
+                (builder, unused) -> builder.addLogRecordProcessor(bridgeProcessor()))
             .build();
     ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
@@ -58,6 +58,14 @@ public final class OpenTelemetryInstaller {
     }
 
     return autoConfiguredSdk;
+  }
+
+  static LogRecordProcessor bridgeProcessor() {
+    return (context, logRecord) -> OtelLoggerHolder.get().record(context,
+        logRecord.getInstrumentationScopeInfo().getName(),
+        logRecord.getEventName(),
+        logRecord.getBodyValue(),
+        logRecord.getAttributes(), logRecord.getSeverity());
   }
 
   // Visible for testing
