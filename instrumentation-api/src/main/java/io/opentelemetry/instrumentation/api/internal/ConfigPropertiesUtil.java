@@ -35,11 +35,12 @@ public final class ConfigPropertiesUtil {
 
   public static Map<String, String> load() {
     Map<String, String> config = new HashMap<>();
-    System.getenv()
-        .forEach((name, value) -> config.put(normalizeEnvironmentVariableKey(name), value));
-    safeSystemProperties()
-        .forEach(
-            (key, value) -> config.put(normalizePropertyKey(key.toString()), value.toString()));
+    for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+      config.put(normalizeEnvironmentVariableKey(entry.getKey()), entry.getValue());
+    }
+    for (Map.Entry<Object, Object> entry : safeSystemProperties().entrySet()) {
+      config.put(normalizePropertyKey(entry.getKey().toString()), entry.getValue().toString());
+    }
     return config;
   }
 
