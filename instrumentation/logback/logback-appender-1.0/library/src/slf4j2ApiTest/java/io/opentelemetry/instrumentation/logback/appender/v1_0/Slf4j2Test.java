@@ -98,7 +98,7 @@ class Slf4j2Test {
   }
 
   @Test
-  void arguments() {
+  void argumentsAndTemplate() {
     logger
         .atInfo()
         .setMessage("log message {} and {}, bool {}, long {}")
