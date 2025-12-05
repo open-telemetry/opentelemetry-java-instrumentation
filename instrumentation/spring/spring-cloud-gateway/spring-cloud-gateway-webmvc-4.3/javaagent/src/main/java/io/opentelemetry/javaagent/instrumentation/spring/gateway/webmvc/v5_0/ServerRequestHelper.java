@@ -13,9 +13,8 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.instrumentation.spring.gateway.common.GatewayRouteHelper;
 import java.lang.reflect.Field;
-import java.net.URI;
-import java.util.Optional;
 import org.springframework.cloud.gateway.server.mvc.common.MvcUtils;
+import org.springframework.cloud.gateway.server.mvc.handler.GatewayDelegatingRouterFunction;
 import org.springframework.web.servlet.function.ServerRequest;
 
 /**
@@ -23,12 +22,23 @@ import org.springframework.web.servlet.function.ServerRequest;
  * ServerRequest and adding it to spans.
  */
 public final class ServerRequestHelper {
+  private static final Field routeIdField;
 
-  private ServerRequestHelper() {}
+  static {
+    Field routeIdField1 = null;
+    try {
+      routeIdField1 = GatewayDelegatingRouterFunction.class.getDeclaredField("routeId");
+      routeIdField1.setAccessible(true);
+    } catch (NoSuchFieldException ignored) {
+      // Ignored
+    }
+
+    routeIdField = routeIdField1;
+  }
 
   public static void extractAttributes(
       Object gatewayRouterFunction, ServerRequest request, Context context) {
-    if (!GatewayRouteHelper.shouldCaptureExperimentalSpanAttributes()) {
+    if (routeIdField == null || !GatewayRouteHelper.shouldCaptureExperimentalSpanAttributes()) {
       return;
     }
 
@@ -37,9 +47,12 @@ public final class ServerRequestHelper {
       return;
     }
 
+    setRouteIdAttribute(gatewayRouterFunction, serverSpan);
+    setRouteUriAttribute(request, serverSpan);
+  }
+
+  private static void setRouteIdAttribute(Object gatewayRouterFunction, Span serverSpan) {
     try {
-      Field routeIdField = gatewayRouterFunction.getClass().getDeclaredField("routeId");
-      routeIdField.setAccessible(true);
       String routeId = (String) routeIdField.get(gatewayRouterFunction);
       String convergedRouteId = GatewayRouteHelper.convergeRouteId(routeId);
       if (convergedRouteId != null) {
@@ -48,9 +61,13 @@ public final class ServerRequestHelper {
     } catch (Exception e) {
       // Silently ignore
     }
-
-    Optional<Object> requestUrlOpt = request.attribute(MvcUtils.GATEWAY_REQUEST_URL_ATTR);
-    requestUrlOpt.ifPresent(
-        uri -> serverSpan.setAttribute(ROUTE_URI_ATTRIBUTE, ((URI) uri).toASCIIString()));
   }
+
+  private static void setRouteUriAttribute(ServerRequest request, Span serverSpan) {
+    request
+        .attribute(MvcUtils.GATEWAY_REQUEST_URL_ATTR)
+        .ifPresent(uri -> serverSpan.setAttribute(ROUTE_URI_ATTRIBUTE, uri.toString()));
+  }
+
+  private ServerRequestHelper() {}
 }

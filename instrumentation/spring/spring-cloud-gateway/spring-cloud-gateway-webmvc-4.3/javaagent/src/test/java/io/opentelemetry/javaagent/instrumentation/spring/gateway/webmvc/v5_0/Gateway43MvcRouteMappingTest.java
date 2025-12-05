@@ -12,19 +12,12 @@ import io.opentelemetry.instrumentation.spring.gateway.common.AbstractRouteMappi
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.util.ArrayList;
 import java.util.List;
-import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
     classes = {Gateway43MvcTestApplication.class})
 class Gateway43MvcRouteMappingTest extends AbstractRouteMappingTest {
-
-  @Test
-  void gatewayRouteMappingTest() {
-    testGatewayRouteMapping();
-  }
-
   @Override
   protected String getSpanName() {
     return "POST /gateway/echo";

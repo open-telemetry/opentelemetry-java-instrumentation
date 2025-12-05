@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.gateway.webmvc.v5_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -21,12 +20,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.web.servlet.function.ServerRequest;
 
 public class GatewayDelegatingRouterFunctionInstrumentation implements TypeInstrumentation {
-
-  @Override
-  public ElementMatcher<ClassLoader> classLoaderOptimization() {
-    return hasClassesNamed(
-        "org.springframework.cloud.gateway.server.mvc.handler.GatewayDelegatingRouterFunction");
-  }
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
