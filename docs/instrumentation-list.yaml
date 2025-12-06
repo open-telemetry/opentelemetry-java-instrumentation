@@ -3946,6 +3946,25 @@ libraries:
           type: STRING
         - name: failsafe.circuit_breaker.state
           type: STRING
+      - name: failsafe.retry_policy.attempts
+        description: Number of attempts for each execution.
+        type: HISTOGRAM
+        unit: attempt
+        attributes:
+        - name: failsafe.retry_policy.name
+          type: STRING
+        - name: failsafe.retry_policy.outcome
+          type: STRING
+      - name: failsafe.retry_policy.execution.count
+        description: Count of execution attempts processed by the retry policy, where
+          one execution represents the total number of attempts.
+        type: LONG_SUM
+        unit: execution
+        attributes:
+        - name: failsafe.retry_policy.name
+          type: STRING
+        - name: failsafe.retry_policy.outcome
+          type: STRING
   finagle:
   - name: finagle-http-23.11
     description: |
