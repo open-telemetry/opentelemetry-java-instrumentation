@@ -13,6 +13,8 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -118,7 +120,8 @@ class ProcedureCallTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("CALL test.TEST_PROC")
+                    span.hasName(
+                            emitStableDatabaseSemconv() ? "CALL TEST_PROC" : "CALL test.TEST_PROC")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -129,7 +132,13 @@ class ProcedureCallTest {
                             equalTo(
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
-                            equalTo(maybeStable(DB_OPERATION), "CALL")),
+                            equalTo(maybeStable(DB_OPERATION), "CALL"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
