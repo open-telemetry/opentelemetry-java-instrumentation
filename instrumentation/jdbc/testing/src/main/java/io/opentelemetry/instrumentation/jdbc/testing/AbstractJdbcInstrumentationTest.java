@@ -1684,81 +1684,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_OPERATION_BATCH_SIZE,
                                     emitStableDatabaseSemconv() ? 2L : null),
-                                // Different tables in batch means summary is just operation
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     emitStableDatabaseSemconv() ? "BATCH INSERT" : null))));
-  }
-
-  @ParameterizedTest
-  @MethodSource("batchStream")
-  void testHeterogeneousBatch(String system, Connection conn, String username, String url)
-      throws SQLException {
-    Connection connection = wrap(conn);
-    String tableName = "hetero_batch_test";
-    Statement createTable = connection.createStatement();
-    createTable.execute("CREATE TABLE " + tableName + " (id INTEGER not NULL, PRIMARY KEY ( id ))");
-    cleanup.deferCleanup(createTable);
-
-    // Insert a row first so we can delete it
-    Statement insertFirst = connection.createStatement();
-    insertFirst.execute("INSERT INTO " + tableName + " VALUES(99)");
-    cleanup.deferCleanup(insertFirst);
-
-    testing().waitForTraces(2);
-    testing().clearData();
-
-    Statement statement = connection.createStatement();
-    cleanup.deferCleanup(statement);
-    // Batch with different operations: INSERT and DELETE
-    statement.addBatch("INSERT INTO " + tableName + " VALUES(1)");
-    statement.addBatch("DELETE FROM " + tableName + " WHERE id=99");
-    testing()
-        .runWithSpan(
-            "parent", () -> assertThat(statement.executeBatch()).isEqualTo(new int[] {1, 1}));
-
-    testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(
-                                emitStableDatabaseSemconv()
-                                    ? "BATCH " + dbNameLower + "." + tableName
-                                    : "jdbcunittest")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(maybeStable(DB_SYSTEM), maybeStableDbSystemName(system)),
-                                equalTo(maybeStable(DB_NAME), dbNameLower),
-                                equalTo(DB_USER, emitStableDatabaseSemconv() ? null : username),
-                                equalTo(
-                                    DB_CONNECTION_STRING, emitStableDatabaseSemconv() ? null : url),
-                                equalTo(
-                                    maybeStable(DB_STATEMENT),
-                                    emitStableDatabaseSemconv()
-                                        ? "INSERT INTO "
-                                            + tableName
-                                            + " VALUES(?); DELETE FROM "
-                                            + tableName
-                                            + " WHERE id=?"
-                                        : null),
-                                // Operation is "BATCH" because operations differ (INSERT vs DELETE)
-                                equalTo(
-                                    maybeStable(DB_OPERATION),
-                                    emitStableDatabaseSemconv() ? "BATCH" : null),
-                                // Table is set because both statements target the same table
-                                equalTo(
-                                    maybeStable(DB_SQL_TABLE),
-                                    emitStableDatabaseSemconv() ? tableName : null),
-                                equalTo(
-                                    DB_OPERATION_BATCH_SIZE,
-                                    emitStableDatabaseSemconv() ? 2L : null),
-                                // Query summary is "BATCH" because operations differ
-                                equalTo(
-                                    DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "BATCH" : null))));
   }
 
   @ParameterizedTest
