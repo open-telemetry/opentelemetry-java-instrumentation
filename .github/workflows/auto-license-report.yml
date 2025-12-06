@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - 'renovate/**/*'
+      - 'otelbot/**/*'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
