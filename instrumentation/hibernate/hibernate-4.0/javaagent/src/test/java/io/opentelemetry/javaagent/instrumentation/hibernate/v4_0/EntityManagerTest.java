@@ -260,15 +260,9 @@ class EntityManagerTest extends AbstractHibernateTest {
                             satisfies(
                                 maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null)),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)

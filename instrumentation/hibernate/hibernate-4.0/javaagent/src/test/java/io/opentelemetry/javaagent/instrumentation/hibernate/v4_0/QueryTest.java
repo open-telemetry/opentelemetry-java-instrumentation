@@ -148,15 +148,9 @@ class QueryTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                }))));
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null))));
   }
 
   private static Stream<Arguments> providesArgumentsSingleCall() {
@@ -231,15 +225,9 @@ class QueryTest extends AbstractHibernateTest {
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "SELECT Value" : null)),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)

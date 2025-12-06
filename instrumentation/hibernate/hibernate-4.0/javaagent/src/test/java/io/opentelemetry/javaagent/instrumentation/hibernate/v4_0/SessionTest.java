@@ -821,15 +821,9 @@ class SessionTest extends AbstractHibernateTest {
                                 stringAssert -> stringAssert.startsWith("insert")),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "INSERT Value" : null)),
                 span -> {
                   span.hasName("Session.save " + Value.class.getName())
                       .hasKind(INTERNAL)
@@ -868,15 +862,9 @@ class SessionTest extends AbstractHibernateTest {
                                 stringAssert -> stringAssert.startsWith("insert")),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "INSERT Value" : null)),
                 span ->
                     span.hasName("DELETE db1.Value")
                         .hasKind(CLIENT)
@@ -893,15 +881,9 @@ class SessionTest extends AbstractHibernateTest {
                                 stringAssert -> stringAssert.startsWith("delete")),
                             equalTo(maybeStable(DB_OPERATION), "DELETE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                }))));
+                                emitStableDatabaseSemconv() ? "DELETE Value" : null))));
 
     assertThat(sessionId1.get()).isNotEqualTo(sessionId2.get());
     assertThat(sessionId1.get()).isNotEqualTo(sessionId3.get());

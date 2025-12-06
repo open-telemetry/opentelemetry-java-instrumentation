@@ -94,15 +94,9 @@ class SpringJpaTest {
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null)),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -164,15 +158,9 @@ class SpringJpaTest {
                                             "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "INSERT Customer" : null)),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -249,15 +237,9 @@ class SpringJpaTest {
                                             "insert into Customer (.*) values \\(.* \\?, \\?\\)"))),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })));
+                                emitStableDatabaseSemconv() ? "INSERT Customer" : null)));
           }
         });
     testing.clearData();
@@ -310,15 +292,9 @@ class SpringJpaTest {
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null)),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -350,15 +326,9 @@ class SpringJpaTest {
                                 "update Customer set firstName=?, lastName=? where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "UPDATE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                }))));
+                                emitStableDatabaseSemconv() ? "UPDATE Customer" : null))));
     testing.clearData();
 
     Customer foundCustomer =
@@ -405,15 +375,9 @@ class SpringJpaTest {
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                }))));
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
@@ -457,15 +421,9 @@ class SpringJpaTest {
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null)),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -498,15 +456,9 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "DELETE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })));
+                                emitStableDatabaseSemconv() ? "DELETE Customer" : null)));
 
           } else {
             String findAction;
@@ -548,15 +500,9 @@ class SpringJpaTest {
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })),
+                                emitStableDatabaseSemconv() ? "SELECT Customer" : null)),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -597,15 +543,9 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "DELETE"),
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val -> {
-                                  if (emitStableDatabaseSemconv()) {
-                                    val.isInstanceOf(String.class);
-                                  } else {
-                                    val.isNull();
-                                  }
-                                })));
+                                emitStableDatabaseSemconv() ? "DELETE Customer" : null)));
           }
         });
   }
