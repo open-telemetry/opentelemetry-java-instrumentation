@@ -11,16 +11,17 @@ import javax.annotation.Nullable;
 @AutoValue
 public abstract class SqlStatementInfo {
 
+  private static final String SQL_CALL = "CALL";
   private static final int QUERY_SUMMARY_MAX_LENGTH = 255;
 
   public static SqlStatementInfo create(
-      @Nullable String fullStatement,
-      @Nullable String operation,
-      @Nullable String identifier,
+      @Nullable String queryText,
+      @Nullable String operationName,
+      @Nullable String target,
       @Nullable String querySummary) {
     String truncatedQuerySummary = truncateQuerySummary(querySummary);
     return new AutoValue_SqlStatementInfo(
-        fullStatement, operation, identifier, truncatedQuerySummary);
+        queryText, operationName, target, truncatedQuerySummary);
   }
 
   /**
@@ -42,13 +43,64 @@ public abstract class SqlStatementInfo {
   }
 
   @Nullable
-  public abstract String getFullStatement();
+  public abstract String getQueryText();
+
+  /**
+   * @deprecated Use {@link #getQueryText()} instead.
+   */
+  @Deprecated
+  @Nullable
+  public String getFullStatement() {
+    return getQueryText();
+  }
 
   @Nullable
-  public abstract String getOperation();
+  public abstract String getOperationName();
+
+  /**
+   * @deprecated Use {@link #getOperationName()} instead.
+   */
+  @Deprecated
+  @Nullable
+  public String getOperation() {
+    return getOperationName();
+  }
+
+  /**
+   * Returns the table/collection name, or null for CALL operations.
+   *
+   * @see #getStoredProcedureName()
+   */
+  @Nullable
+  public String getCollectionName() {
+    return SQL_CALL.equals(getOperationName()) ? null : getTarget();
+  }
+
+  /** Returns the stored procedure name for CALL operations, or null for other operations. */
+  @Nullable
+  public String getStoredProcedureName() {
+    return SQL_CALL.equals(getOperationName()) ? getTarget() : null;
+  }
+
+  /**
+   * Returns the main identifier from the SQL statement - either the table/collection name or stored
+   * procedure name depending on the operation.
+   *
+   * <p>For setting the {@code db.collection.name} attribute, use {@link #getCollectionName()}
+   * instead which returns null for CALL operations.
+   *
+   * @deprecated Use {@link #getCollectionName()} for db.collection.name attribute, or {@link
+   *     #getStoredProcedureName()} for stored procedure name. This method may be used for span
+   *     names where both table and procedure names are needed.
+   */
+  @Deprecated
+  @Nullable
+  public String getMainIdentifier() {
+    return getTarget();
+  }
 
   @Nullable
-  public abstract String getMainIdentifier();
+  abstract String getTarget();
 
   /**
    * Returns a low cardinality summary of the database query suitable for use as a span name or

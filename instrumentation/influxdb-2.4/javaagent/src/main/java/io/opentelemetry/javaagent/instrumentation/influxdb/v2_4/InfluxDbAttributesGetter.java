@@ -13,7 +13,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
   @Nullable
   @Override
   public String getDbQueryText(InfluxDbRequest request) {
-    return request.getSqlStatementInfo().getFullStatement();
+    return request.getSqlStatementInfo().getQueryText();
   }
 
   @Nullable
@@ -22,7 +22,7 @@ final class InfluxDbAttributesGetter implements DbClientAttributesGetter<InfluxD
     if (request.getOperation() != null) {
       return request.getOperation();
     }
-    return request.getSqlStatementInfo().getOperation();
+    return request.getSqlStatementInfo().getOperationName();
   }
 
   @Override

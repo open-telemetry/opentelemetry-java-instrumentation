@@ -359,6 +359,61 @@ class SqlClientAttributesExtractorTest {
   }
 
   @Test
+  void shouldExtractHeterogeneousMultiQueryBatchAttributes() {
+    // given - batch with different operations (INSERT and DELETE)
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.name", "potatoes");
+    request.put(
+        "db.statements",
+        Arrays.asList("INSERT INTO potato VALUES(1)", "DELETE FROM potato WHERE id=2"));
+    request.put(DB_OPERATION_BATCH_SIZE.getKey(), 2L);
+
+    Context context = Context.root();
+
+    AttributesExtractor<Map<String, Object>, Void> underTest =
+        SqlClientAttributesExtractor.create(new TestMultiAttributesGetter());
+
+    // when
+    AttributesBuilder startAttributes = Attributes.builder();
+    underTest.onStart(startAttributes, context, request);
+
+    AttributesBuilder endAttributes = Attributes.builder();
+    underTest.onEnd(endAttributes, context, request, null, null);
+
+    // then - operation should be "BATCH" (not "BATCH INSERT" or "BATCH DELETE")
+    // and query summary should also be "BATCH" since operations differ
+    if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbIncubatingAttributes.DB_NAME, "potatoes"),
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(
+                  DbAttributes.DB_QUERY_TEXT,
+                  "INSERT INTO potato VALUES(?); DELETE FROM potato WHERE id=?"),
+              entry(DbAttributes.DB_OPERATION_NAME, "BATCH"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "BATCH"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    } else if (SemconvStability.emitOldDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(entry(DbIncubatingAttributes.DB_NAME, "potatoes"));
+    } else if (SemconvStability.emitStableDatabaseSemconv()) {
+      assertThat(startAttributes.build())
+          .containsOnly(
+              entry(DbAttributes.DB_NAMESPACE, "potatoes"),
+              entry(
+                  DbAttributes.DB_QUERY_TEXT,
+                  "INSERT INTO potato VALUES(?); DELETE FROM potato WHERE id=?"),
+              entry(DbAttributes.DB_OPERATION_NAME, "BATCH"),
+              entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "BATCH"),
+              entry(DB_OPERATION_BATCH_SIZE, 2L));
+    }
+
+    assertThat(endAttributes.build().isEmpty()).isTrue();
+  }
+
+  @Test
   void shouldIgnoreBatchSizeOne() {
     // given
     Map<String, Object> request = new HashMap<>();

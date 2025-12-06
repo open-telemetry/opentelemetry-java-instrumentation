@@ -12,64 +12,62 @@ import javax.annotation.Nullable;
 
 class MultiQuery {
 
-  @Nullable private final String mainIdentifier;
-  @Nullable private final String operation;
-  @Nullable private final String querySummary;
-  private final Set<String> statements;
+  @Nullable private final String collectionName;
+  private final String operationName;
+  private final String querySummary;
+  private final Set<String> queryTexts;
 
   private MultiQuery(
-      @Nullable String mainIdentifier,
-      @Nullable String operation,
-      @Nullable String querySummary,
-      Set<String> statements) {
-    this.mainIdentifier = mainIdentifier;
-    this.operation = operation;
+      @Nullable String collectionName,
+      String operationName,
+      String querySummary,
+      Set<String> queryTexts) {
+    this.collectionName = collectionName;
+    this.operationName = operationName;
     this.querySummary = querySummary;
-    this.statements = statements;
+    this.queryTexts = queryTexts;
   }
 
   static MultiQuery analyze(
       Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
-    UniqueValue uniqueMainIdentifier = new UniqueValue();
-    UniqueValue uniqueOperation = new UniqueValue();
+    UniqueValue uniqueCollectionName = new UniqueValue();
+    UniqueValue uniqueOperationName = new UniqueValue();
     UniqueValue uniqueQuerySummary = new UniqueValue();
-    Set<String> uniqueStatements = new LinkedHashSet<>();
+    Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
       SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
-      String mainIdentifier = sanitizedStatement.getMainIdentifier();
-      uniqueMainIdentifier.set(mainIdentifier);
-      String operation = sanitizedStatement.getOperation();
-      uniqueOperation.set(operation);
-      String querySummary = sanitizedStatement.getQuerySummary();
-      uniqueQuerySummary.set(querySummary);
-      uniqueStatements.add(
-          statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+      uniqueCollectionName.set(sanitizedStatement.getCollectionName());
+      uniqueOperationName.set(sanitizedStatement.getOperationName());
+      uniqueQuerySummary.set(sanitizedStatement.getQuerySummary());
+      uniqueQueryTexts.add(
+          statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
     }
 
-    return new MultiQuery(
-        uniqueMainIdentifier.getValue(),
-        uniqueOperation.getValue(),
-        uniqueQuerySummary.getValue(),
-        uniqueStatements);
+    String operationName = uniqueOperationName.getValue();
+    String querySummary = uniqueQuerySummary.getValue();
+
+    String collectionName = uniqueCollectionName.getValue();
+    String batchOperationName = operationName != null ? "BATCH " + operationName : "BATCH";
+    String batchQuerySummary = querySummary != null ? "BATCH " + querySummary : batchOperationName;
+
+    return new MultiQuery(collectionName, batchOperationName, batchQuerySummary, uniqueQueryTexts);
   }
 
   @Nullable
-  public String getMainIdentifier() {
-    return mainIdentifier;
+  public String getCollectionName() {
+    return collectionName;
   }
 
-  @Nullable
-  public String getOperation() {
-    return operation;
+  public String getOperationName() {
+    return operationName;
   }
 
-  @Nullable
   public String getQuerySummary() {
     return querySummary;
   }
 
-  public Set<String> getStatements() {
-    return statements;
+  public Set<String> getQueryTexts() {
+    return queryTexts;
   }
 
   private static class UniqueValue {

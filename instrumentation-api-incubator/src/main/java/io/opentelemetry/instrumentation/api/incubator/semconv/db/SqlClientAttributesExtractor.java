@@ -60,8 +60,6 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
     return new SqlClientAttributesExtractorBuilder<>(getter);
   }
 
-  private static final String SQL_CALL = "CALL";
-
   private final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   private final InternalNetworkAttributesExtractor<REQUEST, RESPONSE> internalNetworkExtractor;
   private final ServerAttributesExtractor<REQUEST, RESPONSE> serverAttributesExtractor;
@@ -95,15 +93,13 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (rawQueryTexts.size() == 1) { // for backcompat(?)
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
-        String operation = sanitizedStatement.getOperation();
+        String operation = sanitizedStatement.getOperationName();
         internalSet(
             attributes,
             DB_STATEMENT,
-            statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+            statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
         internalSet(attributes, DB_OPERATION, operation);
-        if (!SQL_CALL.equals(operation)) {
-          internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getMainIdentifier());
-        }
+        internalSet(attributes, oldSemconvTableAttribute, sanitizedStatement.getCollectionName());
       }
     }
 
@@ -114,38 +110,25 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
       if (rawQueryTexts.size() == 1) {
         String rawQueryText = rawQueryTexts.iterator().next();
         SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
-        String operation = sanitizedStatement.getOperation();
+        String operation = sanitizedStatement.getOperationName();
         internalSet(
             attributes,
             DB_QUERY_TEXT,
-            statementSanitizationEnabled ? sanitizedStatement.getFullStatement() : rawQueryText);
+            statementSanitizationEnabled ? sanitizedStatement.getQueryText() : rawQueryText);
         internalSet(attributes, DB_OPERATION_NAME, isBatch ? "BATCH " + operation : operation);
         String querySummary = sanitizedStatement.getQuerySummary();
         internalSet(
             attributes,
             DB_QUERY_SUMMARY,
             isBatch && querySummary != null ? "BATCH " + querySummary : querySummary);
-        if (!SQL_CALL.equals(operation)) {
-          internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getMainIdentifier());
-        }
+        internalSet(attributes, DB_COLLECTION_NAME, sanitizedStatement.getCollectionName());
       } else if (rawQueryTexts.size() > 1) {
         MultiQuery multiQuery =
             MultiQuery.analyze(getter.getRawQueryTexts(request), statementSanitizationEnabled);
-        internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getStatements()));
-
-        String operation =
-            multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH";
-        internalSet(attributes, DB_OPERATION_NAME, operation);
-        String querySummary = multiQuery.getQuerySummary();
-        internalSet(
-            attributes,
-            DB_QUERY_SUMMARY,
-            querySummary != null ? "BATCH " + querySummary : null);
-
-        if (multiQuery.getMainIdentifier() != null
-            && (multiQuery.getOperation() == null || !SQL_CALL.equals(multiQuery.getOperation()))) {
-          internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getMainIdentifier());
-        }
+        internalSet(attributes, DB_QUERY_TEXT, join("; ", multiQuery.getQueryTexts()));
+        internalSet(attributes, DB_OPERATION_NAME, multiQuery.getOperationName());
+        internalSet(attributes, DB_QUERY_SUMMARY, multiQuery.getQuerySummary());
+        internalSet(attributes, DB_COLLECTION_NAME, multiQuery.getCollectionName());
       }
     }
 

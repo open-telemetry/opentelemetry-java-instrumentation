@@ -21,7 +21,7 @@ class SqlStatementSanitizerTest {
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
-    assertThat(result.getFullStatement()).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(expected);
   }
 
   @ParameterizedTest
@@ -29,7 +29,7 @@ class SqlStatementSanitizerTest {
   void normalizeCouchbase(String original, String expected) {
     SqlStatementInfo result =
         SqlStatementSanitizer.create(true).sanitize(original, SqlDialect.COUCHBASE);
-    assertThat(result.getFullStatement()).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(expected);
   }
 
   @ParameterizedTest
@@ -37,9 +37,9 @@ class SqlStatementSanitizerTest {
   void simplifySql(String original, Function<String, SqlStatementInfo> expectedFunction) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
     SqlStatementInfo expected = expectedFunction.apply(original);
-    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
-    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
-    assertThat(result.getMainIdentifier()).isEqualToIgnoringCase(expected.getMainIdentifier());
+    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
   }
 
   @Test
@@ -54,9 +54,9 @@ class SqlStatementSanitizerTest {
 
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
-    assertThat(result.getFullStatement()).isEqualTo(sanitizedQuery);
-    assertThat(result.getOperation()).isEqualTo("SELECT");
-    assertThat(result.getMainIdentifier()).isEqualTo("table");
+    assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
+    assertThat(result.getOperationName()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isEqualTo("table");
     assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
   }
 
@@ -66,9 +66,9 @@ class SqlStatementSanitizerTest {
       String actual, Function<String, SqlStatementInfo> expectFunc) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(actual);
     SqlStatementInfo expected = expectFunc.apply(actual);
-    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
-    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
-    assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
+    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
   }
 
   @Test
@@ -88,7 +88,7 @@ class SqlStatementSanitizerTest {
       s += String.valueOf(i);
     }
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
-    assertThat(result.getFullStatement()).isEqualTo("?");
+    assertThat(result.getQueryText()).isEqualTo("?");
   }
 
   @Test
@@ -98,7 +98,7 @@ class SqlStatementSanitizerTest {
       s += String.valueOf(i);
     }
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
-    assertThat(result.getFullStatement()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
+    assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
   @Test
@@ -107,7 +107,7 @@ class SqlStatementSanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getQueryText();
     assertThat(sanitized.length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(sanitized).doesNotContain("1234");
   }
@@ -132,7 +132,7 @@ class SqlStatementSanitizerTest {
     }
     s.append("?)");
 
-    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getQueryText();
 
     assertThat(sanitized).isEqualTo("select col from table where col in (?)");
   }
@@ -142,7 +142,7 @@ class SqlStatementSanitizerTest {
     // test that short statement is cached
     String shortStatement = "SELECT * FROM TABLE WHERE FIELD = 1234";
     String sanitizedShort =
-        SqlStatementSanitizer.create(true).sanitize(shortStatement).getFullStatement();
+        SqlStatementSanitizer.create(true).sanitize(shortStatement).getQueryText();
     assertThat(sanitizedShort).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(shortStatement)).isTrue();
 
@@ -153,7 +153,7 @@ class SqlStatementSanitizerTest {
     }
     String largeStatement = s.toString();
     String sanitizedLarge =
-        SqlStatementSanitizer.create(true).sanitize(largeStatement).getFullStatement();
+        SqlStatementSanitizer.create(true).sanitize(largeStatement).getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
   }
