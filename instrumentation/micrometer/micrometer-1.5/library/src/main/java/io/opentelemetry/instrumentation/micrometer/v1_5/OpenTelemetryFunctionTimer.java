@@ -20,7 +20,7 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 
 final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
-    implements FunctionTimer, RemovableMeter {
+    implements FunctionTimer, RemovableMeter, OpenTelemetryInstrument {
   private final TimeUnit baseTimeUnit;
   private final ObservableLongCounter observableCount;
   private final ObservableDoubleCounter observableTotalTime;

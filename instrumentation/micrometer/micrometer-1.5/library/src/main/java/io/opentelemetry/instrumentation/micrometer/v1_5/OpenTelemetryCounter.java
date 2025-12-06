@@ -18,7 +18,8 @@ import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.api.metrics.Meter;
 import java.util.Collections;
 
-final class OpenTelemetryCounter extends AbstractMeter implements Counter, RemovableMeter {
+final class OpenTelemetryCounter extends AbstractMeter
+    implements Counter, RemovableMeter, OpenTelemetryInstrument {
 
   // TODO: use bound instruments when they're available
   private final DoubleCounter otelCounter;

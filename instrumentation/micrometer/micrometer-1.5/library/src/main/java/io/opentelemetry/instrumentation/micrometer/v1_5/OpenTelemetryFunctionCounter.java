@@ -19,7 +19,7 @@ import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 
 final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
-    implements FunctionCounter, RemovableMeter {
+    implements FunctionCounter, RemovableMeter, OpenTelemetryInstrument {
 
   private final ObservableDoubleCounter observableCount;
 

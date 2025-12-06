@@ -28,7 +28,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
-final class OpenTelemetryTimer extends AbstractTimer implements RemovableMeter {
+final class OpenTelemetryTimer extends AbstractTimer
+    implements RemovableMeter, OpenTelemetryInstrument {
 
   private final Measurements measurements;
   private final TimeWindowMax max;

@@ -19,7 +19,8 @@ import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 import javax.annotation.Nullable;
 
-final class OpenTelemetryGauge<T> extends AbstractMeter implements Gauge, RemovableMeter {
+final class OpenTelemetryGauge<T> extends AbstractMeter
+    implements Gauge, RemovableMeter, OpenTelemetryInstrument {
 
   private final ObservableDoubleGauge observableGauge;
 

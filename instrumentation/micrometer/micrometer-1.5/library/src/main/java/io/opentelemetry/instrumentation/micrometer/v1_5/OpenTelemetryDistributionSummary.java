@@ -27,7 +27,7 @@ import java.util.concurrent.atomic.DoubleAdder;
 import java.util.concurrent.atomic.LongAdder;
 
 final class OpenTelemetryDistributionSummary extends AbstractDistributionSummary
-    implements RemovableMeter {
+    implements RemovableMeter, OpenTelemetryInstrument {
 
   private final Measurements measurements;
   private final TimeWindowMax max;
