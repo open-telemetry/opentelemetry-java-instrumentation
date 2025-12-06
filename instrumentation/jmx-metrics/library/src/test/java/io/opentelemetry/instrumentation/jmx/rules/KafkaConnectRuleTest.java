@@ -92,20 +92,13 @@ class KafkaConnectRuleTest {
     JmxConfig config = loadKafkaConnectConfig();
 
     JmxRule connectorTaskRule =
-        getRuleForBean(
-            config, "kafka.connect:type=connector-task-metrics,connector=*,task=*");
+        getRuleForBean(config, "kafka.connect:type=connector-task-metrics,connector=*,task=*");
 
     StateMapping stateMapping = getMetric(connectorTaskRule, "status").getStateMapping();
     assertThat(stateMapping.isEmpty()).isFalse();
     assertThat(stateMapping.getStateKeys())
         .contains(
-            "running",
-            "failed",
-            "paused",
-            "unassigned",
-            "restarting",
-            "destroyed",
-            "unknown");
+            "running", "failed", "paused", "unassigned", "restarting", "destroyed", "unknown");
     assertThat(stateMapping.getDefaultStateKey()).isEqualTo("unknown");
     assertThat(stateMapping.getStateValue("DESTROYED")).isEqualTo("destroyed");
     assertThat(stateMapping.getStateValue("RESTARTING")).isEqualTo("restarting");
@@ -139,8 +132,7 @@ class KafkaConnectRuleTest {
 
     startKafkaConnectTelemetry();
 
-    assertLongSum(
-        "kafka.connect.worker.connector.count", Attributes.empty(), 1);
+    assertLongSum("kafka.connect.worker.connector.count", Attributes.empty(), 1);
     assertLongSum("kafka.connect.worker.task.count", Attributes.empty(), 2);
 
     Attributes connectorStatusAttributes =
@@ -151,8 +143,7 @@ class KafkaConnectRuleTest {
             .put("kafka.connect.connector.type.raw", "source")
             .put("kafka.connect.connector.version", "1.2.3")
             .build();
-    assertLongSum(
-        "kafka.connect.connector.status", connectorStatusAttributes, 1);
+    assertLongSum("kafka.connect.connector.status", connectorStatusAttributes, 1);
 
     Attributes taskStatusAttributes =
         Attributes.builder()
@@ -171,8 +162,7 @@ class KafkaConnectRuleTest {
   @Test
   void apacheSpecificMetricsAreReportedWhenPresent() throws Exception {
     registerMBean(
-        "kafka.connect:type=connect-worker-rebalance-metrics",
-        mapOf("connect-protocol", "eager"));
+        "kafka.connect:type=connect-worker-rebalance-metrics", mapOf("connect-protocol", "eager"));
 
     registerMBean(
         "kafka.connect:type=connect-worker-metrics,connector=apache-connector",
@@ -224,7 +214,9 @@ class KafkaConnectRuleTest {
         1);
 
     Attributes connectorTaskAttributes =
-        Attributes.of(io.opentelemetry.api.common.AttributeKey.stringKey("kafka.connect.connector"), "apache-connector");
+        Attributes.of(
+            io.opentelemetry.api.common.AttributeKey.stringKey("kafka.connect.connector"),
+            "apache-connector");
     assertLongSum("kafka.connect.worker.connector.task.running", connectorTaskAttributes, 2);
 
     assertLongSum(
@@ -380,7 +372,7 @@ class KafkaConnectRuleTest {
         metricName,
         metrics ->
             metrics.anySatisfy(
-              metric -> {
+                metric -> {
                   boolean matched =
                       metric.getLongGaugeData().getPoints().stream()
                           .anyMatch(
@@ -410,7 +402,8 @@ class KafkaConnectRuleTest {
    * Minimal DynamicMBean implementation backed by a simple attribute map. This keeps the functional
    * Kafka Connect coverage self contained in the test file.
    */
-  static class MapBackedDynamicMBean extends NotificationBroadcasterSupport implements DynamicMBean {
+  static class MapBackedDynamicMBean extends NotificationBroadcasterSupport
+      implements DynamicMBean {
 
     private final Map<String, Object> attributes;
     private long sequenceNumber = 1;
@@ -479,12 +472,7 @@ class KafkaConnectRuleTest {
           (name, value) ->
               infos.add(
                   new javax.management.MBeanAttributeInfo(
-                      name,
-                      value.getClass().getName(),
-                      name + " attribute",
-                      true,
-                      true,
-                      false)));
+                      name, value.getClass().getName(), name + " attribute", true, true, false)));
       return new MBeanInfo(
           this.getClass().getName(),
           "Map backed test MBean",
