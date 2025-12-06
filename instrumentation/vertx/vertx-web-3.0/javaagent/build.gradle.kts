@@ -13,6 +13,8 @@ muzzle {
 
 dependencies {
   compileOnly("io.vertx:vertx-web:3.0.0")
+  compileOnly("io.vertx:vertx-codegen:3.0.0")
+  compileOnly("io.vertx:vertx-docgen:3.0.0")
 
   // We need both version as different versions of Vert.x use different versions of Netty
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
