@@ -50,7 +50,7 @@ public final class AdviceUtils {
 
   @FunctionalInterface
   interface OnSpanEnd {
-    void end(Throwable throwable);
+    void end(@Nullable Throwable throwable);
   }
 
   private static class ContextMono<T> extends Mono<T> {

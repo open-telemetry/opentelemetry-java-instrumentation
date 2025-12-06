@@ -39,6 +39,9 @@ public final class WebfluxSingletons {
 
   public static HttpServerRouteGetter<ServerWebExchange> httpRouteGetter() {
     return (context, exchange) -> {
+      if (exchange == null) {
+        return null;
+      }
       Object bestPatternObj = exchange.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
       if (bestPatternObj == null) {
         return null;
