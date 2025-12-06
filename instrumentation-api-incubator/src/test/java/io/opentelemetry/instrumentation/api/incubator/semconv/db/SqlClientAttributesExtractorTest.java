@@ -285,7 +285,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "BATCH INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
@@ -301,7 +301,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "BATCH INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 
@@ -339,7 +339,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "BATCH INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     } else if (SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
@@ -351,7 +351,7 @@ class SqlClientAttributesExtractorTest {
               entry(DbAttributes.DB_QUERY_TEXT, "INSERT INTO potato VALUES(?)"),
               entry(DbAttributes.DB_OPERATION_NAME, "BATCH INSERT"),
               entry(DbAttributes.DB_COLLECTION_NAME, "potato"),
-              entry(DbAttributes.DB_QUERY_SUMMARY, "INSERT potato"),
+              entry(DbAttributes.DB_QUERY_SUMMARY, "BATCH INSERT potato"),
               entry(DB_OPERATION_BATCH_SIZE, 2L));
     }
 

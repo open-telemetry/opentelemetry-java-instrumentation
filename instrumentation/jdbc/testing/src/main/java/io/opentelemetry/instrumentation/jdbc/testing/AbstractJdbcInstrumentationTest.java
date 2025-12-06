@@ -1621,7 +1621,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? 2L : null),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "INSERT " + tableName : null))));
+                                    emitStableDatabaseSemconv()
+                                        ? "BATCH INSERT " + tableName
+                                        : null))));
   }
 
   @ParameterizedTest
@@ -1788,7 +1790,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                                     emitStableDatabaseSemconv() ? 2L : null),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? "INSERT " + tableName : null))));
+                                    emitStableDatabaseSemconv()
+                                        ? "BATCH INSERT " + tableName
+                                        : null))));
   }
 
   // test that sqlcommenter is not enabled by default
