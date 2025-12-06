@@ -174,8 +174,8 @@ rules:
         desc: Whether this worker is currently rebalancing.
         metricAttribute:
           kafka.connect.worker.rebalance.state:
-            rebalancing: [true, TRUE]
-            idle: [false, FALSE]
+            rebalancing: ["true", "TRUE"]
+            idle: ["false", "FALSE"]
             unknown: "*"
       # kafka.connect.worker.rebalance.since_last
       time-since-last-rebalance-ms:
