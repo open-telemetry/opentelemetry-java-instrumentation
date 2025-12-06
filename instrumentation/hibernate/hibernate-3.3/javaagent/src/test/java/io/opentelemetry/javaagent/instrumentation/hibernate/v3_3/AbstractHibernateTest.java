@@ -81,7 +81,14 @@ abstract class AbstractHibernateTest {
             satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
             satisfies(
-                DB_QUERY_SUMMARY, val -> val.satisfiesAnyOf(v -> {}, v -> assertThat(v).isNull())));
+                DB_QUERY_SUMMARY,
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isInstanceOf(String.class);
+                  } else {
+                    val.isNull();
+                  }
+                }));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation

@@ -129,10 +129,13 @@ class EntityManagerTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })));
 
           } else {
             trace.hasSpansSatisfyingExactly(
@@ -166,10 +169,13 @@ class EntityManagerTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -256,10 +262,13 @@ class EntityManagerTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -286,10 +295,13 @@ class EntityManagerTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation

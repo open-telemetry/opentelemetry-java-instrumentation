@@ -96,10 +96,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -163,10 +166,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -245,10 +251,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })));
           }
         });
     testing.clearData();
@@ -303,10 +312,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -340,10 +352,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
     testing.clearData();
 
     Customer foundCustomer =
@@ -392,10 +407,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
@@ -441,10 +459,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -479,10 +500,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })));
 
           } else {
             String findAction;
@@ -526,10 +550,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -572,10 +599,13 @@ class SpringJpaTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })));
           }
         });
   }

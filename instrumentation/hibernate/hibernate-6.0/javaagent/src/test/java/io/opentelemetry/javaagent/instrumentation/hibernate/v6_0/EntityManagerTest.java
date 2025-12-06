@@ -335,12 +335,18 @@ class EntityManagerTest extends AbstractHibernateTest {
             satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
             satisfies(
-                DB_QUERY_SUMMARY, val -> val.satisfiesAnyOf(v -> {}, v -> assertThat(v).isNull())));
+                DB_QUERY_SUMMARY,
+                val -> {
+                  if (emitStableDatabaseSemconv()) {
+                    val.isInstanceOf(String.class);
+                  } else {
+                    val.isNull();
+                  }
+                }));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   private static void assertClientSpan(SpanDataAssert span, SpanData parent, String spanName) {
-    String querySummary = emitStableDatabaseSemconv() ? spanName.replace("db1.", "") : null;
     span.hasName(spanName)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
@@ -352,7 +358,7 @@ class EntityManagerTest extends AbstractHibernateTest {
             satisfies(maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
             satisfies(maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-            equalTo(DB_QUERY_SUMMARY, querySummary));
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? spanName : null));
   }
 
   private static void assertSessionSpan(SpanDataAssert span, SpanData parent, String spanName) {

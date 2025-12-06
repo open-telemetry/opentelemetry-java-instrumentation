@@ -91,10 +91,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -206,10 +209,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -357,10 +363,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -387,10 +396,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
   }
 
   private static Stream<Arguments> provideArgumentsHibernateReplicate() {
@@ -519,10 +531,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
   }
 
   private static Stream<Arguments> provideArgumentsHibernateCommitAction() {
@@ -704,10 +719,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -805,10 +823,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span -> {
                   span.hasName("Session.save " + Value.class.getName())
                       .hasKind(INTERNAL)
@@ -849,10 +870,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("DELETE db1.Value")
                         .hasKind(CLIENT)
@@ -871,10 +895,13 @@ class SessionTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
 
     assertThat(sessionId1.get()).isNotEqualTo(sessionId2.get());
     assertThat(sessionId1.get()).isNotEqualTo(sessionId3.get());

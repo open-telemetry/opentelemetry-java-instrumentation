@@ -87,10 +87,13 @@ class QueryTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -147,10 +150,13 @@ class QueryTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class))))));
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                }))));
   }
 
   private static Stream<Arguments> providesArgumentsSingleCall() {
@@ -227,10 +233,13 @@ class QueryTest extends AbstractHibernateTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
                             satisfies(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                val -> {
+                                  if (emitStableDatabaseSemconv()) {
+                                    val.isInstanceOf(String.class);
+                                  } else {
+                                    val.isNull();
+                                  }
+                                })),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
