@@ -223,7 +223,7 @@ rules:
       status:
         metric: status
         type: state
-        desc: Connector lifecycle state indicator (1 when the state matches the attribute value)
+        desc: Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.
         metricAttribute:
           kafka.connect.connector.state:
             running: [running, RUNNING]
@@ -392,7 +392,7 @@ rules:
       status:
         metric: status
         type: state
-        desc: The status of the connector task. One of 'unassigned', 'running', 'paused', 'failed', or 'restarting'.
+        desc: The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.
         metricAttribute:
           kafka.connect.task.state:
             running: [running, RUNNING]
@@ -400,6 +400,7 @@ rules:
             paused: [paused, PAUSED]
             unassigned: [unassigned, UNASSIGNED]
             restarting: [restarting, RESTARTING]
+            destroyed: [destroyed, DESTROYED]
             unknown: "*"
       # kafka.connect.task.class
       task-class:
