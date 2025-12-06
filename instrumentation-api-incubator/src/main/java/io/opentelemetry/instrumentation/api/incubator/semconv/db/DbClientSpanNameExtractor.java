@@ -49,25 +49,25 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       @Nullable String collectionName,
       @Nullable String storedProcedureName) {
     // Use whichever identifier is available (they're mutually exclusive)
-    String identifier = collectionName != null ? collectionName : storedProcedureName;
+    String mainIdentifier = collectionName != null ? collectionName : storedProcedureName;
 
     if (operation == null) {
       return dbName == null ? DEFAULT_SPAN_NAME : dbName;
     }
 
     StringBuilder name = new StringBuilder(operation);
-    if (dbName != null || identifier != null) {
+    if (dbName != null || mainIdentifier != null) {
       name.append(' ');
     }
     // skip db name if identifier already has a db name prefixed to it
-    if (dbName != null && (identifier == null || identifier.indexOf('.') == -1)) {
+    if (dbName != null && (mainIdentifier == null || mainIdentifier.indexOf('.') == -1)) {
       name.append(dbName);
-      if (identifier != null) {
+      if (mainIdentifier != null) {
         name.append('.');
       }
     }
-    if (identifier != null) {
-      name.append(identifier);
+    if (mainIdentifier != null) {
+      name.append(mainIdentifier);
     }
     return name.toString();
   }

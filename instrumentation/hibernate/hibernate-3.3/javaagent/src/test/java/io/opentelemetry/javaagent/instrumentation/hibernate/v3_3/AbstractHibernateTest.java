@@ -94,7 +94,6 @@ abstract class AbstractHibernateTest {
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
   static void assertClientSpan(SpanDataAssert span, SpanData parent, String verb) {
     String spanName = emitStableDatabaseSemconv() ? verb + " Value" : verb + " db1.Value";
-    String querySummary = emitStableDatabaseSemconv() ? verb + " Value" : null;
     span.hasName(spanName)
         .hasKind(SpanKind.CLIENT)
         .hasParent(parent)
@@ -108,7 +107,7 @@ abstract class AbstractHibernateTest {
                 stringAssert -> stringAssert.startsWith(verb.toLowerCase(Locale.ROOT))),
             equalTo(maybeStable(DB_OPERATION), verb),
             equalTo(maybeStable(DB_SQL_TABLE), "Value"),
-            equalTo(DB_QUERY_SUMMARY, querySummary));
+            equalTo(DB_QUERY_SUMMARY, emitStableDatabaseSemconv() ? spanName : null));
   }
 
   static SpanDataAssert assertSessionSpan(SpanDataAssert span, SpanData parent, String spanName) {

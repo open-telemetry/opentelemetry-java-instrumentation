@@ -57,18 +57,20 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    String spanName = SemconvStability.emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname";
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(spanName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "SELECT"
+                                : "SELECT dbname")
                         .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                SemconvStability.emitStableDatabaseSemconv() ? spanName : null))));
+                                SemconvStability.emitStableDatabaseSemconv() ? "SELECT" : null))));
 
     assertDurationMetric(
         testing,
@@ -227,18 +229,20 @@ class JdbcTelemetryTest {
     testing.runWithSpan(
         "parent", () -> dataSource.getConnection().createStatement().execute("SELECT 1;"));
 
-    String spanName = SemconvStability.emitStableDatabaseSemconv() ? "SELECT" : "SELECT dbname";
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent"),
                 span ->
-                    span.hasName(spanName)
+                    span.hasName(
+                            SemconvStability.emitStableDatabaseSemconv()
+                                ? "SELECT"
+                                : "SELECT dbname")
                         .hasAttributesSatisfying(
                             equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
-                                SemconvStability.emitStableDatabaseSemconv() ? spanName : null))));
+                                SemconvStability.emitStableDatabaseSemconv() ? "SELECT" : null))));
   }
 
   @Test

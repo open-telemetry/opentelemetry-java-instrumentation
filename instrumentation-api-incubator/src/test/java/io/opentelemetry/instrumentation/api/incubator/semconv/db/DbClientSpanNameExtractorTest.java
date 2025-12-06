@@ -37,8 +37,6 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    // For stable semconv, span name is the query summary (without namespace)
-    // For old semconv, span name includes the namespace
     assertEquals(
         SemconvStability.emitStableDatabaseSemconv() ? "SELECT table" : "SELECT database.table",
         spanName);
@@ -157,8 +155,6 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    // For stable semconv, multi-query batch uses query summary
-    // For old semconv, only namespace is used
     assertEquals(
         SemconvStability.emitStableDatabaseSemconv() ? "BATCH INSERT table" : "database", spanName);
   }
@@ -181,8 +177,6 @@ class DbClientSpanNameExtractorTest {
     String spanName = underTest.extract(dbRequest);
 
     // then
-    // For stable semconv, single-query batch uses query summary with BATCH prefix
-    // For old semconv, it uses the full span name format with namespace
     assertEquals(
         SemconvStability.emitStableDatabaseSemconv()
             ? "BATCH INSERT table"
