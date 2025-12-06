@@ -87,4 +87,29 @@ class RestClientInstrumentationAutoConfigurationTest {
                         "otelRestClientBeanPostProcessor", RestClientBeanPostProcessor.class))
                 .isNotNull());
   }
+
+  /**
+   * Tests that the bean post-processor returns the original bean instance when the interceptor is
+   * already present, avoiding unnecessary bean creation.
+   */
+  @Test
+  void doesNotCreateNewBeanWhenInterceptorAlreadyPresent() {
+    contextRunner
+        .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
+        .run(
+            context -> {
+              RestClient originalBean = context.getBean(RestClient.class);
+              RestClientBeanPostProcessor postProcessor =
+                  context.getBean(
+                      "otelRestClientBeanPostProcessor", RestClientBeanPostProcessor.class);
+
+              // Process the bean again - should return the same instance since interceptor is
+              // already present
+              Object processedBean =
+                  postProcessor.postProcessAfterInitialization(originalBean, "restClient");
+
+              // Verify that the same instance is returned
+              assertThat(processedBean).isSameAs(originalBean);
+            });
+  }
 }

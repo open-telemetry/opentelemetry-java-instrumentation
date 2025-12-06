@@ -40,18 +40,25 @@ final class RestClientBeanPostProcessor implements BeanPostProcessor {
       RestClient restClient, OpenTelemetry openTelemetry, InstrumentationConfig config) {
     ClientHttpRequestInterceptor instrumentationInterceptor = getInterceptor(openTelemetry, config);
 
-    return restClient
-        .mutate()
-        .requestInterceptors(
-            interceptors -> {
-              if (interceptors.stream()
-                  .noneMatch(
-                      interceptor ->
-                          interceptor.getClass() == instrumentationInterceptor.getClass())) {
-                interceptors.add(0, instrumentationInterceptor);
-              }
-            })
-        .build();
+    // Use a flag to track if the interceptor was actually added
+    boolean[] interceptorAdded = {false};
+    RestClient result =
+        restClient
+            .mutate()
+            .requestInterceptors(
+                interceptors -> {
+                  if (interceptors.stream()
+                      .noneMatch(
+                          interceptor ->
+                              interceptor.getClass() == instrumentationInterceptor.getClass())) {
+                    interceptors.add(0, instrumentationInterceptor);
+                    interceptorAdded[0] = true;
+                  }
+                })
+            .build();
+
+    // Return the original bean if no interceptor was added
+    return interceptorAdded[0] ? result : restClient;
   }
 
   static ClientHttpRequestInterceptor getInterceptor(
