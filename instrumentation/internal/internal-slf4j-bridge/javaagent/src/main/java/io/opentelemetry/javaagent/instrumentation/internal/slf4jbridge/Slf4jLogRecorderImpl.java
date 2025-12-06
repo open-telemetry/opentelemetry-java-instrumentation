@@ -10,21 +10,21 @@ import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.OtelLogger;
+import io.opentelemetry.javaagent.Slf4jLogRecorder;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
-import io.opentelemetry.javaagent.bootstrap.logging.OtelLoggerBridge;
 import javax.annotation.Nullable;
+import io.opentelemetry.javaagent.bootstrap.logging.Slf4jBridgeInstaller;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 import org.slf4j.spi.LoggingEventBuilder;
 
-public final class Slf4jOtelLogger implements OtelLogger {
+public final class Slf4jLogRecorderImpl implements Slf4jLogRecorder {
 
-  private Slf4jOtelLogger() {}
+  private Slf4jLogRecorderImpl() {}
 
   public static void install() {
-    OtelLoggerBridge.installSlf4jLogger(new Slf4jOtelLogger());
+    Slf4jBridgeInstaller.installSlf4jLogger(new Slf4jLogRecorderImpl());
   }
 
   @Override
@@ -40,14 +40,14 @@ public final class Slf4jOtelLogger implements OtelLogger {
       if (callDepth.getAndIncrement() > 0) {
         return;
       }
-      recordInternal(scopeName, eventName, bodyValue, attributes, severity);
+      recordToSlf4j(scopeName, eventName, bodyValue, attributes, severity);
     } finally {
       callDepth.decrementAndGet();
     }
   }
 
   @SuppressWarnings("CheckReturnValue")
-  private static void recordInternal(
+  public static void recordToSlf4j(
       String scopeName,
       @Nullable String eventName,
       @Nullable Value<?> bodyValue,

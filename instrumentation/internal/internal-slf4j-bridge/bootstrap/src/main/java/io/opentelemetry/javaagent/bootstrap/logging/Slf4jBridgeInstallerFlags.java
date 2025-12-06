@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.bootstrap.logging;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public final class OtelLoggerFlags {
+public final class Slf4jBridgeInstallerFlags {
 
-  private OtelLoggerFlags() {}
+  private Slf4jBridgeInstallerFlags() {}
 
   public static final AtomicBoolean IS_INSTALLED = new AtomicBoolean(false);
 }

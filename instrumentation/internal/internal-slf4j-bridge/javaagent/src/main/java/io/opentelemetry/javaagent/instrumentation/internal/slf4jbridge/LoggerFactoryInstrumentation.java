@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.internal.slf4jbridge;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
-import io.opentelemetry.javaagent.bootstrap.logging.OtelLoggerFlags;
+import io.opentelemetry.javaagent.bootstrap.logging.Slf4jBridgeInstallerFlags;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -35,8 +35,8 @@ public class LoggerFactoryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class)
     public static void onExit() {
-      if (OtelLoggerFlags.IS_INSTALLED.compareAndSet(false, true)) {
-        Slf4jOtelLogger.install();
+      if (Slf4jBridgeInstallerFlags.IS_INSTALLED.compareAndSet(false, true)) {
+        Slf4jLogRecorderImpl.install();
       }
     }
   }

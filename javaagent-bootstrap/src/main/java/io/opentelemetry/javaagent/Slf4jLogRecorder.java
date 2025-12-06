@@ -12,7 +12,7 @@ import io.opentelemetry.context.Context;
 import javax.annotation.Nullable;
 
 @FunctionalInterface
-public interface OtelLogger {
+public interface Slf4jLogRecorder {
 
   void record(
       Context context,

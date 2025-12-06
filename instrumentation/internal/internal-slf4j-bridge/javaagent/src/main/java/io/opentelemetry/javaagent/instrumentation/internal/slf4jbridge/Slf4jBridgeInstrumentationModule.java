@@ -13,10 +13,10 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
-public class OtelLoggingInstrumentationModule extends InstrumentationModule {
+public class Slf4jBridgeInstrumentationModule extends InstrumentationModule {
 
-  public OtelLoggingInstrumentationModule() {
-    super("internal-otel-logger");
+  public Slf4jBridgeInstrumentationModule() {
+    super("internal-slf4j-bridge");
   }
 
   @Override

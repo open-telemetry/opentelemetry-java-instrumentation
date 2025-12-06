@@ -24,28 +24,4 @@ dependencies {
       strictly("2.0.0")
     }
   }
-
-  // TODO
-//  if (latestDepTest) {
-//    testImplementation("ch.qos.logback:logback-classic:latest.release")
-//  } else {
-//    testImplementation("ch.qos.logback:logback-classic") {
-//      version {
-//        strictly("1.2.11")
-//      }
-//    }
-//    testImplementation("org.slf4j:slf4j-api") {
-//      version {
-//        strictly("1.7.36")
-//      }
-//    }
-//  }
 }
-
-// TODO
-// if (latestDepTest) {
-//  // spring 6 requires java 17
-//  otelJava {
-//    minJavaVersionSupported.set(JavaVersion.VERSION_17)
-//  }
-// }
