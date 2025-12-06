@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStability
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStableDbSystemName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -86,7 +87,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -632,7 +633,10 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(maybeStable(DB_SQL_TABLE), table),
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
-                                    expectedParameterValue))));
+                                    expectedParameterValue),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? spanName : null))));
   }
 
   public interface ThrowingConsumer<T, E extends Throwable> {

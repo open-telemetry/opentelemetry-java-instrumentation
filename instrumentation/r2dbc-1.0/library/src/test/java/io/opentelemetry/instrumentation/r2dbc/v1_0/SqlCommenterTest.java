@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.r2dbc.spi.ConnectionFactoryOptions.CONNECT_TIMEOUT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DATABASE;
 import static io.r2dbc.spi.ConnectionFactoryOptions.DRIVER;
@@ -139,7 +140,7 @@ class SqlCommenterTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT " + DB)
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB)
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0)),
                 span ->

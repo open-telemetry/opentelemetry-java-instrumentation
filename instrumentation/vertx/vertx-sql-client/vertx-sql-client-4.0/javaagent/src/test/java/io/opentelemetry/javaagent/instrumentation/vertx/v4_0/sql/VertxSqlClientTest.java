@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emi
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
@@ -141,7 +142,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -152,7 +153,10 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "test"),
                             equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port)),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT test" : null)),
                 span ->
                     span.hasName("callback")
                         .hasKind(SpanKind.INTERNAL)
@@ -248,7 +252,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("SELECT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -259,7 +263,10 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "test"),
                             equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "SELECT test" : null))));
   }
 
   @Test
@@ -279,7 +286,7 @@ class VertxSqlClientTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                 span ->
-                    span.hasName("INSERT tempdb.test")
+                    span.hasName(emitStableDatabaseSemconv() ? "INSERT test" : "INSERT tempdb.test")
                         .hasKind(SpanKind.CLIENT)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
@@ -292,7 +299,10 @@ class VertxSqlClientTest {
                             equalTo(maybeStable(DB_SQL_TABLE), "test"),
                             equalTo(PEER_SERVICE, "test-peer-service"),
                             equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_QUERY_SUMMARY,
+                                emitStableDatabaseSemconv() ? "INSERT test" : null))));
   }
 
   @Test
@@ -368,7 +378,8 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT tempdb.test")
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -379,7 +390,10 @@ class VertxSqlClientTest {
                                 equalTo(maybeStable(DB_SQL_TABLE), "test"),
                                 equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, host),
-                                equalTo(SERVER_PORT, port)),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? "SELECT test" : null)),
                     span ->
                         span.hasName("callback")
                             .hasKind(SpanKind.INTERNAL)
@@ -434,7 +448,8 @@ class VertxSqlClientTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT tempdb.test")
+                        span.hasName(
+                                emitStableDatabaseSemconv() ? "SELECT test" : "SELECT tempdb.test")
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -444,6 +459,9 @@ class VertxSqlClientTest {
                                     maybeStable(DB_STATEMENT), "select * from test where id = $1"),
                                 equalTo(maybeStable(DB_OPERATION), "SELECT"),
                                 equalTo(maybeStable(DB_SQL_TABLE), "test"),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? "SELECT test" : null),
                                 equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, host),
                                 equalTo(SERVER_PORT, port)),

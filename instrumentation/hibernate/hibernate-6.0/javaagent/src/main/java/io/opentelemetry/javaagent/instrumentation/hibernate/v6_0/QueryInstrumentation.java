@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getOperationNameForQuery;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.SpanNameUtil.getSpanNameForQuery;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -88,7 +88,7 @@ public class QueryInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
-          new HibernateOperation(getOperationNameForQuery(queryString), sessionInfo);
+          new HibernateOperation(getSpanNameForQuery(queryString), sessionInfo);
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }

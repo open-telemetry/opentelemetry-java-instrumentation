@@ -21,7 +21,7 @@ class SqlStatementSanitizerTest {
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
-    assertThat(result.getFullStatement()).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(expected);
   }
 
   @ParameterizedTest
@@ -29,7 +29,7 @@ class SqlStatementSanitizerTest {
   void normalizeCouchbase(String original, String expected) {
     SqlStatementInfo result =
         SqlStatementSanitizer.create(true).sanitize(original, SqlDialect.COUCHBASE);
-    assertThat(result.getFullStatement()).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(expected);
   }
 
   @ParameterizedTest
@@ -37,9 +37,9 @@ class SqlStatementSanitizerTest {
   void simplifySql(String original, Function<String, SqlStatementInfo> expectedFunction) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(original);
     SqlStatementInfo expected = expectedFunction.apply(original);
-    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
-    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
-    assertThat(result.getMainIdentifier()).isEqualToIgnoringCase(expected.getMainIdentifier());
+    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualToIgnoringCase(expected.getCollectionName());
   }
 
   @Test
@@ -51,11 +51,13 @@ class SqlStatementSanitizerTest {
     String query = sb.toString();
 
     String sanitizedQuery = query.replace("=123", "=?").substring(0, AutoSqlSanitizer.LIMIT);
-    SqlStatementInfo expected = SqlStatementInfo.create(sanitizedQuery, "SELECT", "table");
 
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
 
-    assertThat(result).isEqualTo(expected);
+    assertThat(result.getQueryText()).isEqualTo(sanitizedQuery);
+    assertThat(result.getOperationName()).isEqualTo("SELECT");
+    assertThat(result.getCollectionName()).isEqualTo("table");
+    assertThat(result.getQuerySummary()).isEqualTo("SELECT table");
   }
 
   @ParameterizedTest
@@ -64,9 +66,9 @@ class SqlStatementSanitizerTest {
       String actual, Function<String, SqlStatementInfo> expectFunc) {
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(actual);
     SqlStatementInfo expected = expectFunc.apply(actual);
-    assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
-    assertThat(result.getOperation()).isEqualTo(expected.getOperation());
-    assertThat(result.getMainIdentifier()).isEqualTo(expected.getMainIdentifier());
+    assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
+    assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
+    assertThat(result.getCollectionName()).isEqualTo(expected.getCollectionName());
   }
 
   @Test
@@ -86,7 +88,7 @@ class SqlStatementSanitizerTest {
       s += String.valueOf(i);
     }
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
-    assertThat(result.getFullStatement()).isEqualTo("?");
+    assertThat(result.getQueryText()).isEqualTo("?");
   }
 
   @Test
@@ -96,7 +98,7 @@ class SqlStatementSanitizerTest {
       s += String.valueOf(i);
     }
     SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(s);
-    assertThat(result.getFullStatement()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
+    assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
   @Test
@@ -105,7 +107,7 @@ class SqlStatementSanitizerTest {
     for (int i = 0; i < 10000; i++) {
       s.append("SELECT * FROM TABLE WHERE FIELD = 1234 AND ");
     }
-    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getQueryText();
     assertThat(sanitized.length()).isLessThanOrEqualTo(AutoSqlSanitizer.LIMIT);
     assertThat(sanitized).doesNotContain("1234");
   }
@@ -130,7 +132,7 @@ class SqlStatementSanitizerTest {
     }
     s.append("?)");
 
-    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getFullStatement();
+    String sanitized = SqlStatementSanitizer.create(true).sanitize(s.toString()).getQueryText();
 
     assertThat(sanitized).isEqualTo("select col from table where col in (?)");
   }
@@ -140,7 +142,7 @@ class SqlStatementSanitizerTest {
     // test that short statement is cached
     String shortStatement = "SELECT * FROM TABLE WHERE FIELD = 1234";
     String sanitizedShort =
-        SqlStatementSanitizer.create(true).sanitize(shortStatement).getFullStatement();
+        SqlStatementSanitizer.create(true).sanitize(shortStatement).getQueryText();
     assertThat(sanitizedShort).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(shortStatement)).isTrue();
 
@@ -151,9 +153,76 @@ class SqlStatementSanitizerTest {
     }
     String largeStatement = s.toString();
     String sanitizedLarge =
-        SqlStatementSanitizer.create(true).sanitize(largeStatement).getFullStatement();
+        SqlStatementSanitizer.create(true).sanitize(largeStatement).getQueryText();
     assertThat(sanitizedLarge).doesNotContain("1234");
     assertThat(SqlStatementSanitizer.isCached(largeStatement)).isFalse();
+  }
+
+  @ParameterizedTest
+  @MethodSource("querySummaryArgs")
+  void querySummary(String sql, String expectedSummary) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(sql);
+    assertThat(result.getQuerySummary()).isEqualTo(expectedSummary);
+  }
+
+  @Test
+  void querySummaryIsTruncated() {
+    // Build a query with many tables to exceed 255 character limit
+    StringBuilder sql = new StringBuilder("SELECT * FROM ");
+    for (int i = 0; i < 50; i++) {
+      if (i > 0) {
+        sql.append(", ");
+      }
+      sql.append("very_long_table_name_").append(i);
+    }
+    String result = SqlStatementSanitizer.create(true).sanitize(sql.toString()).getQuerySummary();
+    assertThat(result).isNotNull();
+    assertThat(result.length()).isLessThanOrEqualTo(255);
+    // For implicit join (comma-separated tables), mainIdentifier is null so only first table is in
+    // summary
+    assertThat(result).isEqualTo("SELECT very_long_table_name_0");
+  }
+
+  private static Stream<Arguments> querySummaryArgs() {
+    return Stream.of(
+        // Basic SELECT
+        Arguments.of("SELECT * FROM wuser_table", "SELECT wuser_table"),
+        Arguments.of("SELECT * FROM wuser_table WHERE username = ?", "SELECT wuser_table"),
+        // INSERT with SELECT subquery - INSERT target + SELECT operation (SELECT target not tracked
+        // after extraction done)
+        Arguments.of(
+            "INSERT INTO shipping_details (order_id, address) SELECT order_id, address FROM orders WHERE order_id = ?",
+            "INSERT shipping_details SELECT"),
+        // SELECT with multiple tables (implicit join) - only first table tracked since extraction
+        // stops on comma
+        Arguments.of(
+            "SELECT * FROM songs, artists WHERE songs.artist_id == artists.id", "SELECT songs"),
+        // SELECT with subquery in FROM - only SELECT operation, no table from subquery
+        Arguments.of(
+            "SELECT order_date FROM (SELECT * FROM orders o JOIN customers c ON o.customer_id = c.customer_id)",
+            "SELECT"),
+        // SELECT with JOIN - first table tracked, extraction stops on JOIN
+        Arguments.of("SELECT * FROM table1 JOIN table2 ON table1.id = table2.id", "SELECT table1"),
+        // DELETE
+        Arguments.of("DELETE FROM users WHERE id = ?", "DELETE users"),
+        // UPDATE
+        Arguments.of("UPDATE users SET name = ? WHERE id = ?", "UPDATE users"),
+        // CALL stored procedure
+        Arguments.of("CALL some_stored_procedure", "CALL some_stored_procedure"),
+        // MERGE
+        Arguments.of("MERGE INTO target USING source ON target.id = source.id", "MERGE target"),
+        // CREATE TABLE
+        Arguments.of("CREATE TABLE users (id INT, name VARCHAR(100))", "CREATE TABLE users"),
+        // DROP TABLE
+        Arguments.of("DROP TABLE users", "DROP TABLE users"),
+        // ALTER TABLE
+        Arguments.of("ALTER TABLE users ADD COLUMN email VARCHAR(100)", "ALTER TABLE users"),
+        // CREATE INDEX (no table in summary)
+        Arguments.of("CREATE INDEX idx_name ON users (name)", "CREATE INDEX"),
+        // Unknown operation
+        Arguments.of("and now for something completely different", null),
+        Arguments.of("", null),
+        Arguments.of(null, null));
   }
 
   private static Stream<Arguments> sqlArgs() {
@@ -267,12 +336,12 @@ class SqlStatementSanitizerTest {
   }
 
   private static Function<String, SqlStatementInfo> expect(String operation, String identifier) {
-    return sql -> SqlStatementInfo.create(sql, operation, identifier);
+    return sql -> SqlStatementInfo.create(sql, operation, identifier, null);
   }
 
   private static Function<String, SqlStatementInfo> expect(
       String sql, String operation, String identifier) {
-    return ignored -> SqlStatementInfo.create(sql, operation, identifier);
+    return ignored -> SqlStatementInfo.create(sql, operation, identifier, null);
   }
 
   private static Stream<Arguments> simplifyArgs() {
