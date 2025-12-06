@@ -85,22 +85,17 @@ if (project == rootProject) {
         ".gitattributes",
         ".gitconfig",
         ".editorconfig",
-        "**/*.md",
-        "**/*.sh",
-        "**/*.dockerfile",
-        "**/gradle.properties"
+        "*.md",
+        "gradle.properties",
+        ".github/**/*.md",
+        ".github/**/*.sh",
+        "docs/**/*.md",
+        "examples/**/*.md",
+        "examples/**/gradle.properties",
+        "licenses/**/*.md"
       )
       leadingTabsToSpaces()
       trimTrailingWhitespace()
-      endWithNewline()
-    }
-    groovy {
-      target("**/*.groovy")
-      targetExclude("**/build/**")
-      licenseHeaderFile(
-        rootProject.file("buildscripts/spotless.license.java"),
-        "(package|import|(?:abstract )?class)"
-      )
       endWithNewline()
     }
     predeclareDeps()
