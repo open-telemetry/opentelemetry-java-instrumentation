@@ -19,6 +19,8 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STAT
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYSTEM;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_USER;
 
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
+
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import io.opentelemetry.api.trace.SpanKind;
@@ -86,7 +88,7 @@ public abstract class AbstractPreparedStatementParametersTest {
             null,
             "SELECT 3, ?",
             "SELECT 3, ?",
-            "SELECT " + dbNameLower,
+            emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbNameLower,
             "h2:mem:",
             null),
         Arguments.of(
@@ -632,7 +634,10 @@ public abstract class AbstractPreparedStatementParametersTest {
                                 equalTo(maybeStable(DB_SQL_TABLE), table),
                                 equalTo(
                                     DB_QUERY_PARAMETER.getAttributeKey("0"),
-                                    expectedParameterValue))));
+                                    expectedParameterValue),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    emitStableDatabaseSemconv() ? spanName : null))));
   }
 
   public interface ThrowingConsumer<T, E extends Throwable> {
