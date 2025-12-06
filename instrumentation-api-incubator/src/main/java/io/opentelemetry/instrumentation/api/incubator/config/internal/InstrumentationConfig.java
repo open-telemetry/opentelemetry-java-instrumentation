@@ -132,7 +132,7 @@ public interface InstrumentationConfig {
   /**
    * Returns the {@link ConfigProvider} if declarative configuration is used.
    *
-   * @return the {@link ConfigProvider} or {@code null} if no provider is available
+   * @return the {@link ConfigProvider} or {@code null} if declarative configuration is not used
    */
   @Nullable
   ConfigProvider getConfigProvider();

@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
@@ -32,8 +35,17 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean getBoolean(String name, boolean defaultValue) {
-      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
+    protected boolean getBoolean(boolean defaultValue, String... name) {
+      InstrumentationConfig instrumentationConfig = AgentInstrumentationConfig.get();
+      ConfigProvider configProvider = instrumentationConfig.getConfigProvider();
+      if (configProvider != null) {
+        // don't use to InstrumentationConfig, which would use a bridge back to declarative config
+        return ConfigPropertiesUtil.getConfigProperties(configProvider, name)
+            .getBoolean(name[name.length - 1], defaultValue);
+      }
+
+      return instrumentationConfig.getBoolean(
+          ConfigPropertiesUtil.toSystemProperty(name), defaultValue);
     }
   }
 
