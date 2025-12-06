@@ -66,8 +66,6 @@ jobs:
       - name: Find or create metadata update branch
         if: steps.diffcheck.outputs.has_diff == 'true'
         id: findbranch
-        env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="otelbot/metadata-update-main"
           echo "branch=$BRANCH_NAME" >> $GITHUB_OUTPUT
@@ -75,8 +73,6 @@ jobs:
 
       - name: Commit and push changes
         if: steps.diffcheck.outputs.has_diff == 'true'
-        env:
-          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           git commit -m "chore: update instrumentation list [automated]" || echo "No changes to commit."
@@ -105,7 +101,7 @@ jobs:
       - name: Add label to PR
         if: steps.createpr.outputs.new_pr == 'true'
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
           BRANCH_NAME="${{ steps.findbranch.outputs.branch }}"
           PR_URL=$(gh pr list --state open --head "$BRANCH_NAME" --json url -q '.[0].url')
