@@ -21,7 +21,15 @@ jobs:
       pull-requests: write # for adding label and assignee to PR
 
     steps:
+      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
+        id: otelbot-token
+        with:
+          app-id: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_APP_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+
       - uses: actions/checkout@1af3b93b6815bc44a9784bd300feb67ff0d1eeb3 # v6.0.0
+        with:
+          token: ${{ steps.otelbot-token.outputs.token }}
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -54,13 +62,6 @@ jobs:
       - name: Use CLA approved github bot
         if: steps.diffcheck.outputs.has_diff == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
-
-      - uses: actions/create-github-app-token@7e473efe3cb98aa54f8d4bac15400b15fad77d94 # v2.2.0
-        if: steps.diffcheck.outputs.has_diff == 'true'
-        id: otelbot-token
-        with:
-          app-id: ${{ vars.OTELBOT_APP_ID }}
-          private-key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
 
       - name: Find or create metadata update branch
         if: steps.diffcheck.outputs.has_diff == 'true'
