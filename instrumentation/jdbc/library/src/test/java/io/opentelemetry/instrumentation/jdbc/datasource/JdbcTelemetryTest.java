@@ -300,7 +300,7 @@ class JdbcTelemetryTest {
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv()
-                                    ? "INSERT test"
+                                    ? "BATCH INSERT test"
                                     : null))));
   }
 }
