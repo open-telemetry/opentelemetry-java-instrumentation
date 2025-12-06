@@ -14,7 +14,7 @@ muzzle {
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
 dependencies {
-  bootstrap(project(":instrumentation:internal:internal-otel-logger:bootstrap"))
+  bootstrap(project(":instrumentation:internal:internal-slf4j-bridge:bootstrap"))
 
   compileOnly(project(":javaagent-bootstrap"))
 

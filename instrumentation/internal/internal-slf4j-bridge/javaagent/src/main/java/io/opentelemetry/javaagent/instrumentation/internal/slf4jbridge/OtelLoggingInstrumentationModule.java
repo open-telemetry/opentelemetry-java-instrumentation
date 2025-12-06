@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.internal.otellogging;
+package io.opentelemetry.javaagent.instrumentation.internal.slf4jbridge;
 
 import static java.util.Collections.singletonList;
 
