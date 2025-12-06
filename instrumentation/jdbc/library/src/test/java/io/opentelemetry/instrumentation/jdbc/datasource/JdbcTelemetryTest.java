@@ -64,8 +64,8 @@ class JdbcTelemetryTest {
                 span -> span.hasName("parent"),
                 span ->
                     span.hasName(spanName)
-                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"))
-                        .hasAttribute(
+                        .hasAttributesSatisfying(
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT ?;"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv() ? spanName : null))));
@@ -234,8 +234,8 @@ class JdbcTelemetryTest {
                 span -> span.hasName("parent"),
                 span ->
                     span.hasName(spanName)
-                        .hasAttribute(equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"))
-                        .hasAttribute(
+                        .hasAttributesSatisfying(
+                            equalTo(maybeStable(DB_STATEMENT), "SELECT 1;"),
                             equalTo(
                                 DB_QUERY_SUMMARY,
                                 SemconvStability.emitStableDatabaseSemconv() ? spanName : null))));
