@@ -17,20 +17,20 @@ formatting between the docs are cosmetic; bean names align across both variants.
 
 ## Worker metrics
 
-| Metric Name                                      | Type          | Unit        | Attributes | Description                                                                                 |
-|-------------------------------------------------|---------------|-------------|------------|---------------------------------------------------------------------------------------------|
-| kafka.connect.worker.connector.count            | UpDownCounter | {connector} |            | The number of connectors run in this worker.                                                |
-| kafka.connect.worker.connector.startup.attempts | Counter       | {attempt}   |            | The total number of connector startups that this worker has attempted.                      |
-| kafka.connect.worker.connector.startup.failure.percentage | Gauge | 1           |            | The average percentage of this worker's connectors starts that failed.                      |
-| kafka.connect.worker.connector.startup.failure.total | Counter | {startup}   |            | The total number of connector starts that failed.                                           |
-| kafka.connect.worker.connector.startup.success.percentage | Gauge | 1         |            | The average percentage of this worker's connectors starts that succeeded.                   |
-| kafka.connect.worker.connector.startup.success.total | Counter | {startup}   |            | The total number of connector starts that succeeded.                                        |
-| kafka.connect.worker.task.count                 | UpDownCounter | {task}      |            | The number of tasks run in this worker.                                                     |
-| kafka.connect.worker.task.startup.attempts      | Counter       | {attempt}   |            | The total number of task startups that this worker has attempted.                           |
-| kafka.connect.worker.task.startup.failure.percentage | Gauge  | 1           |            | The average percentage of this worker's tasks starts that failed.                           |
-| kafka.connect.worker.task.startup.failure.total | Counter       | {startup}   |            | The total number of task starts that failed.                                                |
-| kafka.connect.worker.task.startup.success.percentage | Gauge  | 1           |            | The average percentage of this worker's tasks starts that succeeded.                        |
-| kafka.connect.worker.task.startup.success.total | Counter       | {startup}   |            | The total number of task starts that succeeded.                                             |
+| Metric Name                                               | Type          | Unit        | Attributes | Description                                                               |
+|-----------------------------------------------------------|---------------|-------------|------------|---------------------------------------------------------------------------|
+| kafka.connect.worker.connector.count                      | UpDownCounter | {connector} |            | The number of connectors run in this worker.                              |
+| kafka.connect.worker.connector.startup.attempts           | Counter       | {attempt}   |            | The total number of connector startups that this worker has attempted.    |
+| kafka.connect.worker.connector.startup.failure.percentage | Gauge         | 1           |            | The average percentage of this worker's connectors starts that failed.    |
+| kafka.connect.worker.connector.startup.failure.total      | Counter       | {startup}   |            | The total number of connector starts that failed.                         |
+| kafka.connect.worker.connector.startup.success.percentage | Gauge         | 1           |            | The average percentage of this worker's connectors starts that succeeded. |
+| kafka.connect.worker.connector.startup.success.total      | Counter       | {startup}   |            | The total number of connector starts that succeeded.                      |
+| kafka.connect.worker.task.count                           | UpDownCounter | {task}      |            | The number of tasks run in this worker.                                   |
+| kafka.connect.worker.task.startup.attempts                | Counter       | {attempt}   |            | The total number of task startups that this worker has attempted.         |
+| kafka.connect.worker.task.startup.failure.percentage      | Gauge         | 1           |            | The average percentage of this worker's tasks starts that failed.         |
+| kafka.connect.worker.task.startup.failure.total           | Counter       | {startup}   |            | The total number of task starts that failed.                              |
+| kafka.connect.worker.task.startup.success.percentage      | Gauge         | 1           |            | The average percentage of this worker's tasks starts that succeeded.      |
+| kafka.connect.worker.task.startup.success.total           | Counter       | {startup}   |            | The total number of task starts that succeeded.                           |
 
 ## Worker connector task metrics
 
