@@ -490,6 +490,7 @@ public class TelemetryConverter {
     }
   }
 
+  @SuppressWarnings("deprecation") // need to support deprecated EXTENDED_ATTRIBUTES type
   private static ExtendedAttributes fromProtoExtended(List<KeyValue> attributes) {
     ExtendedAttributesBuilder converted = ExtendedAttributes.builder();
     for (KeyValue attribute : attributes) {
