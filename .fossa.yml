@@ -1140,6 +1140,12 @@ targets:
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spring:spring-data:spring-data-1.8:javaagent'
     - type: gradle
       path: ./

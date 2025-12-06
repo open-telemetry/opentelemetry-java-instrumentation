@@ -126,6 +126,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass(
             "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.netty.NettyWebServer$")
+        .allowClass("org.springframework.boot.reactor.netty.NettyWebServer$")
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda")
         .allowClass("org.springframework.boot.tomcat.TomcatEmbeddedContext$$Lambda")
         .allowClass("org.springframework.boot.tomcat.TomcatWebServer$")
