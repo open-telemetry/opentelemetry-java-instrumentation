@@ -44,6 +44,7 @@ dependencyResolutionManagement {
     // spring boot 3.0 is not compatible with graalvm native image
     addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
     addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
+    addSpringBootCatalog("springBoot40", "4.0.0", "4.+")
   }
 }
 
@@ -81,7 +82,8 @@ develocity {
     }
 
     if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")
+    ) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
@@ -161,6 +163,7 @@ include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
 include(":smoke-tests-otel-starter:spring-boot-3.2")
+include(":smoke-tests-otel-starter:spring-boot-4")
 include(":smoke-tests-otel-starter:spring-boot-common")
 include(":smoke-tests-otel-starter:spring-boot-reactive-2")
 include(":smoke-tests-otel-starter:spring-boot-reactive-3")
@@ -613,6 +616,7 @@ include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
+include(":instrumentation:spring:spring-boot-autoconfigure:testing")
 include(":instrumentation:spring:spring-boot-resources:javaagent")
 include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
 include(":instrumentation:spring:spring-cloud-aws-3.0:javaagent")

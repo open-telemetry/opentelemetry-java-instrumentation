@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.r2dbc;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_STATEMENT;
@@ -15,33 +15,30 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.r2dbc.R2dbcAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.r2dbc.core.DatabaseClient;
 
-class R2DbcInstrumentationAutoConfigurationTest {
+public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
 
-  @RegisterExtension
-  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+  protected abstract LibraryInstrumentationExtension testing();
 
-  private final ApplicationContextRunner runner =
+  protected abstract AutoConfigurations autoConfigurations();
+
+  protected final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(
               InstrumentationConfig.class,
               () ->
                   new ConfigPropertiesBridge(
                       DefaultConfigProperties.createFromMap(Collections.emptyMap())))
-          .withConfiguration(
-              AutoConfigurations.of(
-                  R2dbcInstrumentationAutoConfiguration.class, R2dbcAutoConfiguration.class))
-          .withBean("openTelemetry", OpenTelemetry.class, testing::getOpenTelemetry);
+          .withConfiguration(autoConfigurations())
+          .withBean("openTelemetry", OpenTelemetry.class, testing()::getOpenTelemetry);
 
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void statementSanitizerEnabledByDefault() {
-    runner.run(
+    contextRunner.run(
         context -> {
           DatabaseClient client = context.getBean(DatabaseClient.class);
           client
@@ -51,18 +48,19 @@ class R2DbcInstrumentationAutoConfigurationTest {
               .all()
               .blockLast();
           client.sql("SELECT * FROM player WHERE id = 1").fetch().all().blockLast();
-          testing.waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasAttribute(
-                              maybeStable(DB_STATEMENT),
-                              "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasAttribute(
-                              maybeStable(DB_STATEMENT), "SELECT * FROM player WHERE id = ?")));
+          testing()
+              .waitAndAssertTraces(
+                  trace ->
+                      trace.hasSpansSatisfyingExactly(
+                          span ->
+                              span.hasAttribute(
+                                  maybeStable(DB_STATEMENT),
+                                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
+                  trace ->
+                      trace.hasSpansSatisfyingExactly(
+                          span ->
+                              span.hasAttribute(
+                                  maybeStable(DB_STATEMENT), "SELECT * FROM player WHERE id = ?")));
         });
   }
 }

@@ -5,7 +5,7 @@ services:
       - "27017:27017"
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:6.2.10
+    image: confluentinc/cp-zookeeper:7.7.7
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -13,7 +13,7 @@ services:
       - "22181:2181"
 
   kafka:
-    image: confluentinc/cp-kafka:6.2.10
+    image: confluentinc/cp-kafka:7.7.7
     ports:
       - 9094:9094
     depends_on:

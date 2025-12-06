@@ -20,7 +20,10 @@ import org.springframework.context.annotation.Configuration;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnClass({MongoClientSettings.class, MongoClientSettingsBuilderCustomizer.class})
+@ConditionalOnClass({
+  MongoClientSettings.class,
+  MongoClientSettingsBuilderCustomizer.class
+}) // module changed in Spring Boot 4
 @ConditionalOnEnabledInstrumentation(module = "mongo")
 @Configuration
 public class MongoClientInstrumentationAutoConfiguration {

@@ -2,7 +2,10 @@ org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
 io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.annotations.InstrumentationAnnotationsAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.KafkaInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.ProducerFactoryCustomizerSpringBoot4Configuration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka.ProducerFactoryCustomizerConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.mongo.MongoClientInstrumentationAutoConfiguration,\
+io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.mongo.MongoClientInstrumentationSpringBoot4AutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.logging.OpenTelemetryAppenderAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.jdbc.JdbcInstrumentationAutoConfiguration,\
 io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.micrometer.MicrometerBridgeAutoConfiguration,\
