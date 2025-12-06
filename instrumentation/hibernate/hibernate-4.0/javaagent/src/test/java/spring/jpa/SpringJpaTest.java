@@ -14,6 +14,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -72,7 +73,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -89,7 +93,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName(.*)from Customer(.*)"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -130,7 +140,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("INSERT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "INSERT Customer"
+                                : "INSERT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -147,7 +160,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "insert into Customer (.*) values \\(.*, \\?, \\?\\)"))),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -203,7 +222,10 @@ class SpringJpaTest {
                                         .getAttributes()
                                         .get(stringKey("hibernate.session_id"))))),
                 span ->
-                    span.hasName("INSERT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "INSERT Customer"
+                                : "INSERT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
@@ -220,7 +242,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "insert into Customer (.*) values \\(.* \\?, \\?\\)"))),
                             equalTo(maybeStable(DB_OPERATION), "INSERT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))));
           }
         });
     testing.clearData();
@@ -252,7 +280,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -269,7 +300,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -283,7 +320,10 @@ class SpringJpaTest {
                                         .getAttributes()
                                         .get(stringKey("hibernate.session_id"))))),
                 span ->
-                    span.hasName("UPDATE test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "UPDATE Customer"
+                                : "UPDATE test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(3))
                         .hasAttributesSatisfyingExactly(
@@ -297,7 +337,13 @@ class SpringJpaTest {
                                 maybeStable(DB_STATEMENT),
                                 "update Customer set firstName=?, lastName=? where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "UPDATE"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class))))));
     testing.clearData();
 
     Customer foundCustomer =
@@ -323,7 +369,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -340,7 +389,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)(where ([^.]+).lastName=\\?)"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"))));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class))))));
     testing.clearData();
 
     testing.runWithSpan("parent", () -> repo.delete(foundCustomer));
@@ -363,7 +418,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -380,7 +438,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Session.delete spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -398,7 +462,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("DELETE test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "DELETE Customer"
+                                : "DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
@@ -409,7 +476,13 @@ class SpringJpaTest {
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "DELETE"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))));
 
           } else {
             String findAction;
@@ -430,7 +503,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "SELECT Customer"
+                                : "SELECT test.Customer")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -447,7 +523,13 @@ class SpringJpaTest {
                                         Pattern.compile(
                                             "select ([^.]+).id([^,]*), ([^.]+).firstName([^,]*), ([^.]+).lastName (.*)from Customer (.*)where ([^.]+).id=\\?"))),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Session.merge spring.jpa.Customer")
                         .hasKind(INTERNAL)
@@ -473,7 +555,10 @@ class SpringJpaTest {
                                 stringKey("hibernate.session_id"),
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("DELETE test.Customer")
+                    span.hasName(
+                            emitStableDatabaseSemconv()
+                                ? "DELETE Customer"
+                                : "DELETE test.Customer")
                         .hasKind(CLIENT)
                         .hasAttributesSatisfyingExactly(
                             equalTo(maybeStable(DB_SYSTEM), "hsqldb"),
@@ -484,7 +569,13 @@ class SpringJpaTest {
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_STATEMENT), "delete from Customer where id=?"),
                             equalTo(maybeStable(DB_OPERATION), "DELETE"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Customer")));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Customer"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))));
           }
         });
   }

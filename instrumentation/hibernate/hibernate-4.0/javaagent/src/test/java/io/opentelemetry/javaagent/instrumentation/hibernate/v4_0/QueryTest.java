@@ -15,6 +15,7 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_OPERATION;
@@ -83,7 +84,13 @@ class QueryTest extends AbstractHibernateTest {
                                 maybeStable(DB_STATEMENT), val -> val.isInstanceOf(String.class)),
                             satisfies(
                                 maybeStable(DB_OPERATION), val -> val.isInstanceOf(String.class)),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
@@ -125,7 +132,7 @@ class QueryTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -137,7 +144,13 @@ class QueryTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value"))));
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class))))));
   }
 
   private static Stream<Arguments> providesArgumentsSingleCall() {
@@ -199,7 +212,7 @@ class QueryTest extends AbstractHibernateTest {
                                 HIBERNATE_SESSION_ID,
                                 val -> assertThat(val).isInstanceOf(String.class))),
                 span ->
-                    span.hasName("SELECT db1.Value")
+                    span.hasName(emitStableDatabaseSemconv() ? "SELECT Value" : "SELECT db1.Value")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
@@ -211,7 +224,13 @@ class QueryTest extends AbstractHibernateTest {
                                 emitStableDatabaseSemconv() ? null : "h2:mem:"),
                             satisfies(maybeStable(DB_STATEMENT), val -> val.startsWith("select ")),
                             equalTo(maybeStable(DB_OPERATION), "SELECT"),
-                            equalTo(maybeStable(DB_SQL_TABLE), "Value")),
+                            equalTo(maybeStable(DB_SQL_TABLE), "Value"),
+                            satisfies(
+                                DB_QUERY_SUMMARY,
+                                val ->
+                                    val.satisfiesAnyOf(
+                                        v -> assertThat(v).isNull(),
+                                        v -> assertThat(v).isInstanceOf(String.class)))),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
