@@ -330,13 +330,6 @@ public abstract class AbstractCassandraTest {
                     "users"))));
   }
 
-  protected static String querySummary(String operation, String table) {
-    if (table == null) {
-      return operation;
-    }
-    return operation + " " + table;
-  }
-
   protected static class Parameter {
     public final String keyspace;
     public final String statement;
