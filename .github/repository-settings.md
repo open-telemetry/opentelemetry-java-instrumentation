@@ -29,3 +29,4 @@ private admin repo.
 ### Organization variables
 
 - `OTELBOT_APP_ID`
+- `OTELBOT_JAVA_INSTRUMENTATION_APP_ID` (scoped only to this repo)
