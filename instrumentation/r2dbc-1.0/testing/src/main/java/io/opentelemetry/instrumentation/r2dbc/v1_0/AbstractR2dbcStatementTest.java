@@ -162,18 +162,13 @@ public abstract class AbstractR2dbcStatementTest {
                   .blockLast(Duration.ofMinutes(1));
             });
 
-    String spanName =
-        emitStableDatabaseSemconv()
-            ? parameter.operation + (parameter.table != null ? " " + parameter.table : "")
-            : parameter.spanName;
-
     getTesting()
         .waitAndAssertTraces(
             trace ->
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName(spanName)
+                        span.hasName(parameter.spanName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
@@ -190,7 +185,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 equalTo(maybeStable(DB_SQL_TABLE), parameter.table),
                                 equalTo(
                                     DB_QUERY_SUMMARY,
-                                    emitStableDatabaseSemconv() ? spanName : null),
+                                    emitStableDatabaseSemconv() ? parameter.spanName : null),
                                 equalTo(PEER_SERVICE, "test-peer-service"),
                                 equalTo(SERVER_ADDRESS, container.getHost()),
                                 equalTo(SERVER_PORT, port)),
@@ -212,7 +207,7 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT 3",
                                 "SELECT ?",
-                                "SELECT " + DB,
+                                emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + DB,
                                 null,
                                 "SELECT"))),
                     Arguments.of(
@@ -222,7 +217,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(255), last_name VARCHAR(255))",
                                 "CREATE TABLE person (id SERIAL PRIMARY KEY, first_name VARCHAR(?), last_name VARCHAR(?))",
-                                "CREATE TABLE " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "CREATE TABLE person"
+                                    : "CREATE TABLE " + DB + ".person",
                                 "person",
                                 "CREATE TABLE"))),
                     Arguments.of(
@@ -232,7 +229,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "INSERT INTO person (id, first_name, last_name) values (1, 'tom', 'johnson')",
                                 "INSERT INTO person (id, first_name, last_name) values (?, ?, ?)",
-                                "INSERT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "INSERT person"
+                                    : "INSERT " + DB + ".person",
                                 "person",
                                 "INSERT"))),
                     Arguments.of(
@@ -242,7 +241,9 @@ public abstract class AbstractR2dbcStatementTest {
                                 system.system,
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
-                                "SELECT " + DB + ".person",
+                                emitStableDatabaseSemconv()
+                                    ? "SELECT person"
+                                    : "SELECT " + DB + ".person",
                                 "person",
                                 "SELECT")))));
   }

@@ -13,7 +13,6 @@ import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalT
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.ExperimentalTestHelper.experimentalSatisfies;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_NAME;
@@ -133,12 +132,9 @@ class ProcedureCallTest {
                                 DB_CONNECTION_STRING,
                                 emitStableDatabaseSemconv() ? null : "hsqldb:mem:"),
                             equalTo(maybeStable(DB_OPERATION), "CALL"),
-                            satisfies(
+                            equalTo(
                                 DB_QUERY_SUMMARY,
-                                val ->
-                                    val.satisfiesAnyOf(
-                                        v -> assertThat(v).isNull(),
-                                        v -> assertThat(v).isInstanceOf(String.class)))),
+                                emitStableDatabaseSemconv() ? "CALL TEST_PROC" : null)),
                 span ->
                     span.hasName("Transaction.commit")
                         .hasKind(INTERNAL)
