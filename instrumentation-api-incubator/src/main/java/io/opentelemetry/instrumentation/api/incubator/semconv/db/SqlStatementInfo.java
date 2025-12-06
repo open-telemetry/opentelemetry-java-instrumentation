@@ -17,11 +17,11 @@ public abstract class SqlStatementInfo {
   public static SqlStatementInfo create(
       @Nullable String queryText,
       @Nullable String operationName,
+      // collectionName and storedProcedureName are compressed into this one field for efficiency
       @Nullable String target,
       @Nullable String querySummary) {
     String truncatedQuerySummary = truncateQuerySummary(querySummary);
-    return new AutoValue_SqlStatementInfo(
-        queryText, operationName, target, truncatedQuerySummary);
+    return new AutoValue_SqlStatementInfo(queryText, operationName, target, truncatedQuerySummary);
   }
 
   /**

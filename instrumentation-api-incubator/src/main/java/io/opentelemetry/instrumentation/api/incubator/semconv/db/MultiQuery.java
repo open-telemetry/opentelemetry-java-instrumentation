@@ -13,16 +13,19 @@ import javax.annotation.Nullable;
 class MultiQuery {
 
   @Nullable private final String collectionName;
+  @Nullable private final String storedProcedureName;
   private final String operationName;
   private final String querySummary;
   private final Set<String> queryTexts;
 
   private MultiQuery(
       @Nullable String collectionName,
+      @Nullable String storedProcedureName,
       String operationName,
       String querySummary,
       Set<String> queryTexts) {
     this.collectionName = collectionName;
+    this.storedProcedureName = storedProcedureName;
     this.operationName = operationName;
     this.querySummary = querySummary;
     this.queryTexts = queryTexts;
@@ -31,12 +34,14 @@ class MultiQuery {
   static MultiQuery analyze(
       Collection<String> rawQueryTexts, boolean statementSanitizationEnabled) {
     UniqueValue uniqueCollectionName = new UniqueValue();
+    UniqueValue uniqueStoredProcedureName = new UniqueValue();
     UniqueValue uniqueOperationName = new UniqueValue();
     UniqueValue uniqueQuerySummary = new UniqueValue();
     Set<String> uniqueQueryTexts = new LinkedHashSet<>();
     for (String rawQueryText : rawQueryTexts) {
       SqlStatementInfo sanitizedStatement = SqlStatementSanitizerUtil.sanitize(rawQueryText);
       uniqueCollectionName.set(sanitizedStatement.getCollectionName());
+      uniqueStoredProcedureName.set(sanitizedStatement.getStoredProcedureName());
       uniqueOperationName.set(sanitizedStatement.getOperationName());
       uniqueQuerySummary.set(sanitizedStatement.getQuerySummary());
       uniqueQueryTexts.add(
@@ -47,15 +52,26 @@ class MultiQuery {
     String querySummary = uniqueQuerySummary.getValue();
 
     String collectionName = uniqueCollectionName.getValue();
+    String storedProcedureName = uniqueStoredProcedureName.getValue();
     String batchOperationName = operationName != null ? "BATCH " + operationName : "BATCH";
     String batchQuerySummary = querySummary != null ? "BATCH " + querySummary : batchOperationName;
 
-    return new MultiQuery(collectionName, batchOperationName, batchQuerySummary, uniqueQueryTexts);
+    return new MultiQuery(
+        collectionName,
+        storedProcedureName,
+        batchOperationName,
+        batchQuerySummary,
+        uniqueQueryTexts);
   }
 
   @Nullable
   public String getCollectionName() {
     return collectionName;
+  }
+
+  @Nullable
+  public String getStoredProcedureName() {
+    return storedProcedureName;
   }
 
   public String getOperationName() {
