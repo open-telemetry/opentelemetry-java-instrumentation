@@ -4,6 +4,12 @@
 
 ### ⚠️ Breaking Changes
 
+- Rename `otel.experimental.javascript-snippet` to 
+  `otel.instrumentation.servlet.experimental.javascript-snippet` to follow naming conventions
+  ([#15339](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15339))
+
+### ⚠️ Breaking Changes
+
 - ActiveMQ Classic JMX metrics: rename attributes and metrics to align
   with semantic conventions (see PR description for specifics)
   ([#14996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14996))
