@@ -108,6 +108,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.servlet.filter.")
         .allowClass("org.springframework.boot.web.server.servlet.context.")
         .allowClass("org.springframework.boot.web.embedded.netty.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.reactor.netty.GracefulShutdown$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.tomcat.GracefulShutdown$$Lambda")
         .allowClass("org.springframework.boot.tomcat.GracefulShutdown$$Lambda")
         .allowClass("org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory$$Lambda")

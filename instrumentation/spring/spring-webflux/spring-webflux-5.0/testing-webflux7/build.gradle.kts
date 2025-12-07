@@ -4,7 +4,6 @@ plugins {
 }
 
 dependencies {
-  // Register instrumentations with the test agent
   testInstrumentation(project(":instrumentation:spring:spring-core-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
@@ -15,6 +14,7 @@ dependencies {
   testImplementation(project(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing"))
 
   testImplementation("org.springframework.boot:spring-boot-starter-webflux:4.0.0")
+  testImplementation("org.springframework:spring-web:7.0.0")
   testImplementation("org.springframework.boot:spring-boot-starter-test:4.0.0")
   testImplementation("org.springframework.boot:spring-boot-starter-reactor-netty:4.0.0")
 }

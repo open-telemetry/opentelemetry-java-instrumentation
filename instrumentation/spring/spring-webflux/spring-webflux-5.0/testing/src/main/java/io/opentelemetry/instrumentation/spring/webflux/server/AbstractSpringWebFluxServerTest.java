@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webflux.v7_0.server.base;
+package io.opentelemetry.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.PATH_PARAM;
@@ -19,10 +19,10 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 
-public abstract class SpringWebFluxServerTest
+public abstract class AbstractSpringWebFluxServerTest
     extends AbstractHttpServerTest<ConfigurableApplicationContext> {
 
-  protected static final ServerEndpoint NESTED_PATH =
+  public static final ServerEndpoint NESTED_PATH =
       new ServerEndpoint("NESTED_PATH", "nestedPath/hello/world", 200, "nested path");
 
   protected abstract Class<?> getApplicationClass();

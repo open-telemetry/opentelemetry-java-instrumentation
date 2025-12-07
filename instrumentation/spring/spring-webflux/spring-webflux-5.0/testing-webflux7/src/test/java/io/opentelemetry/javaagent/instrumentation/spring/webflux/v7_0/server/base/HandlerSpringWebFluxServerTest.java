@@ -15,12 +15,13 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
+import io.opentelemetry.instrumentation.spring.webflux.server.AbstractSpringWebFluxServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 
-public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServerTest {
+public abstract class HandlerSpringWebFluxServerTest extends AbstractSpringWebFluxServerTest {
 
   @Override
   protected SpanDataAssert assertHandlerSpan(
@@ -64,6 +65,8 @@ public abstract class HandlerSpringWebFluxServerTest extends SpringWebFluxServer
     // Mono that the controller returns completes) should end before the server span (which needs
     // the result of the Mono)
     options.setVerifyServerSpanEndTime(false);
+
+    options.setHasHandlerSpan(t -> false);
 
     options.setResponseCodeOnNonStandardHttpMethod(404);
   }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webflux.v7_0.server.base;
+package io.opentelemetry.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.EXCEPTION;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.NOT_FOUND;
@@ -14,19 +14,18 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.Locale;
 
-public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxServerTest {
+public abstract class HandlerSpringWebFluxServerTest extends AbstractSpringWebFluxServerTest {
 
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    String handlerSpanName =
-        ServerTestController.class.getSimpleName() + "." + endpoint.name().toLowerCase(Locale.ROOT);
+    String handlerSpanName = ServerTestRouteFactory.class.getSimpleName() + "$$Lambda.handle";
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle";
     }
@@ -43,19 +42,30 @@ public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxSer
                       satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     } else if (endpoint == NOT_FOUND) {
       span.hasStatus(StatusData.error());
-      // Spring 7 uses NoResourceFoundException instead of ResponseStatusException
-      span.hasEventsSatisfyingExactly(
-          event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(
-                          EXCEPTION_TYPE,
-                          "org.springframework.web.reactive.resource.NoResourceFoundException"),
-                      satisfies(
-                          EXCEPTION_MESSAGE,
-                          val -> val.startsWith("404 NOT_FOUND \"No static resource notFound")),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      if (Boolean.getBoolean("testLatestDeps")) {
+        span.hasEventsSatisfyingExactly(
+            event ->
+                event
+                    .hasName("exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            EXCEPTION_TYPE,
+                            "org.springframework.web.reactive.resource.NoResourceFoundException"),
+                        equalTo(
+                            EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      } else {
+        span.hasEventsSatisfyingExactly(
+            event ->
+                event
+                    .hasName("exception")
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            EXCEPTION_TYPE,
+                            "org.springframework.web.server.ResponseStatusException"),
+                        equalTo(EXCEPTION_MESSAGE, "Response status 404"),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      }
     }
     return span;
   }
@@ -68,11 +78,14 @@ public abstract class ControllerSpringWebFluxServerTest extends SpringWebFluxSer
     // the result of the Mono)
     options.setVerifyServerSpanEndTime(false);
 
-    options.setResponseCodeOnNonStandardHttpMethod(405);
+    options.setResponseCodeOnNonStandardHttpMethod(404);
+  }
 
-    // TODO fails on java 21
-    // span name set to "HTTP
-    // org.springframework.web.reactive.function.server.RequestPredicates$$Lambda/0x00007fa574969238@4aaf6fa2"
-    options.disableTestNonStandardHttpMethod();
+  @Override
+  public String expectedHttpRoute(ServerEndpoint endpoint, String method) {
+    if (HttpConstants._OTHER.equals(method)) {
+      return getContextPath() + "/**";
+    }
+    return super.expectedHttpRoute(endpoint, method);
   }
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webflux.v7_0.server.base;
+package io.opentelemetry.instrumentation.spring.webflux.server;
 
 import static io.opentelemetry.instrumentation.spring.webflux.server.AbstractSpringWebFluxServerTest.NESTED_PATH;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
@@ -13,8 +13,8 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import java.util.function.Supplier;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.reactive.function.server.ServerResponse.BodyBuilder;
@@ -43,7 +43,7 @@ public abstract class ServerTestRouteFactory {
 
               return respond(
                   endpoint,
-                  ServerResponse.status(endpoint.getStatus())
+                  ServerResponse.status(HttpStatus.resolve(endpoint.getStatus()))
                       .header(HttpHeaders.LOCATION, endpoint.getBody()),
                   "",
                   null);
@@ -96,7 +96,7 @@ public abstract class ServerTestRouteFactory {
 
               return respond(
                   endpoint,
-                  ServerResponse.status(endpoint.getStatus())
+                  ServerResponse.status(HttpStatus.resolve(endpoint.getStatus()))
                       .header(
                           "X-Test-Response",
                           request.headers().asHttpHeaders().getFirst("X-Test-Request")),
@@ -107,13 +107,18 @@ public abstract class ServerTestRouteFactory {
             path("/nestedPath"),
             nest(
                 path("/hello"),
-                route(path("/world"), request -> respond(NESTED_PATH, null, null, null))));
+                route(
+                    path("/world"),
+                    request -> {
+                      ServerEndpoint endpoint = NESTED_PATH;
+                      return respond(endpoint, null, null, null);
+                    })));
   }
 
   protected Mono<ServerResponse> respond(
       ServerEndpoint endpoint, BodyBuilder bodyBuilder, String body, Runnable spanAction) {
     if (bodyBuilder == null) {
-      bodyBuilder = ServerResponse.status(endpoint.getStatus());
+      bodyBuilder = ServerResponse.status(HttpStatus.resolve(endpoint.getStatus()));
     }
     if (body == null) {
       body = endpoint.getBody() != null ? endpoint.getBody() : "";
@@ -122,15 +127,9 @@ public abstract class ServerTestRouteFactory {
       spanAction = () -> {};
     }
 
-    return wrapResponse(endpoint, bodyBuilder.bodyValue(body), spanAction);
+    return wrapResponse(endpoint, bodyBuilder.syncBody(body), spanAction);
   }
 
   protected abstract Mono<ServerResponse> wrapResponse(
       ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction);
-
-  protected <T> T controller(ServerEndpoint endpoint, Supplier<T> handler) {
-    return endpoint.getBody() == null && endpoint != ServerEndpoint.EXCEPTION
-        ? null
-        : handler.get();
-  }
 }
