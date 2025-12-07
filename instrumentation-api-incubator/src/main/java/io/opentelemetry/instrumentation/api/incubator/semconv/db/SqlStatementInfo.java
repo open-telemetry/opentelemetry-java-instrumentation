@@ -90,8 +90,7 @@ public abstract class SqlStatementInfo {
    * instead which returns null for CALL operations.
    *
    * @deprecated Use {@link #getCollectionName()} for db.collection.name attribute, or {@link
-   *     #getStoredProcedureName()} for stored procedure name. This method may be used for span
-   *     names where both table and procedure names are needed.
+   *     #getStoredProcedureName()} for stored procedure name.
    */
   @Deprecated
   @Nullable

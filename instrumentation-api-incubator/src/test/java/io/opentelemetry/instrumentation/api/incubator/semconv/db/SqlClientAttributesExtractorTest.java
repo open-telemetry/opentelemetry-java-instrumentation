@@ -360,7 +360,7 @@ class SqlClientAttributesExtractorTest {
 
   @Test
   void shouldExtractHeterogeneousMultiQueryBatchAttributes() {
-    // given - batch with different operations (INSERT and DELETE)
+    // given
     Map<String, Object> request = new HashMap<>();
     request.put("db.name", "potatoes");
     request.put(
@@ -380,8 +380,7 @@ class SqlClientAttributesExtractorTest {
     AttributesBuilder endAttributes = Attributes.builder();
     underTest.onEnd(endAttributes, context, request, null, null);
 
-    // then - operation should be "BATCH" (not "BATCH INSERT" or "BATCH DELETE")
-    // and query summary should also be "BATCH" since operations differ
+    // then
     if (SemconvStability.emitStableDatabaseSemconv() && SemconvStability.emitOldDatabaseSemconv()) {
       assertThat(startAttributes.build())
           .containsOnly(
