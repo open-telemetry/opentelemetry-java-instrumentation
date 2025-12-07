@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.time.Duration
 
 plugins {
@@ -24,7 +23,7 @@ dependencies {
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.33.1")
+  implementation("com.google.protobuf:protobuf-java-util:4.33.2")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
@@ -72,7 +71,7 @@ tasks {
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
     val agentJarPath = shadowTask.flatMap { it.archiveFile }
     inputs.files(agentJarPath)
       .withPropertyName("javaagent")

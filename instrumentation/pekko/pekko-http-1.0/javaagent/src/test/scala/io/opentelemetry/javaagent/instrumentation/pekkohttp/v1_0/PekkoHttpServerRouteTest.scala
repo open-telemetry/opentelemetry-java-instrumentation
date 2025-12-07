@@ -20,6 +20,8 @@ import org.apache.pekko.http.scaladsl.server.Route
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 
 import java.net.{URI, URISyntaxException}
 import java.util.function.Consumer
@@ -50,7 +52,6 @@ class PekkoHttpServerRouteTest {
   }
 
   @Test def testPathPrefix(): Unit = {
-    import org.apache.pekko.http.scaladsl.server.Directives._
     val route =
       pathPrefix("a") {
         pathPrefix("b") {
@@ -88,26 +89,44 @@ class PekkoHttpServerRouteTest {
     test(route, "/foo/number-123", "GET /foo/*")
   }
 
-  @Test def testPipe(): Unit = {
+  @ParameterizedTest
+  @CsvSource(
+    Array(
+      "/i42, GET /i*",
+      "/hCAFE, GET /h*"
+    )
+  )
+  def testPipe(requestPath: String, expectedName: String): Unit = {
     val route = path("i" ~ IntNumber | "h" ~ HexIntNumber) { _ =>
       complete("ok")
     }
-    test(route, "/i42", "GET /i*")
-    test(route, "/hCAFE", "GET /h*")
+    test(route, requestPath, expectedName)
   }
 
-  @Test def testMapExtractor(): Unit = {
+  @ParameterizedTest
+  @CsvSource(
+    Array(
+      "/colours/red, GET /colours/red",
+      "/colours/green, GET /colours/green"
+    )
+  )
+  def testMapExtractor(requestPath: String, expectedName: String): Unit = {
     val route = path("colours" / Map("red" -> 1, "green" -> 2, "blue" -> 3)) {
       _ => complete("ok")
     }
-    test(route, "/colours/red", "GET /colours/red")
-    test(route, "/colours/green", "GET /colours/green")
+    test(route, requestPath, expectedName)
   }
 
-  @Test def testNotMatch(): Unit = {
+  @ParameterizedTest
+  @CsvSource(
+    Array(
+      "/fooish, GET /foo*",
+      "/fooish/123, GET /foo*"
+    )
+  )
+  def testNotMatch(requestPath: String, expectedName: String): Unit = {
     val route = pathPrefix("foo" ~ not("bar")) { complete("ok") }
-    test(route, "/fooish", "GET /foo*")
-    test(route, "/fooish/123", "GET /foo*")
+    test(route, requestPath, expectedName)
   }
 
   @Test def testProvide(): Unit = {
@@ -121,12 +140,18 @@ class PekkoHttpServerRouteTest {
     test(route, "/foo/bar", "GET /foo/bar")
   }
 
-  @Test def testOptional(): Unit = {
+  @ParameterizedTest
+  @CsvSource(
+    Array(
+      "/foo/bar/X42/edit, GET /foo/bar/X*/edit",
+      "/foo/bar/X/edit, GET /foo/bar/X/edit"
+    )
+  )
+  def testOptional(requestPath: String, expectedName: String): Unit = {
     val route = path("foo" / "bar" / "X" ~ IntNumber.? / ("edit" | "create")) {
       _ => complete("ok")
     }
-    test(route, "/foo/bar/X42/edit", "GET /foo/bar/X*/edit")
-    test(route, "/foo/bar/X/edit", "GET /foo/bar/X/edit")
+    test(route, requestPath, expectedName)
   }
 
   @Test def testNoMatches(): Unit = {
@@ -186,6 +211,51 @@ class PekkoHttpServerRouteTest {
     test(route, "/test/foo/1", "GET /test/foo/*")
   }
 
+  @Test def testRouteWithUUID(): Unit = {
+    val route =
+      pathPrefix("foo") {
+        pathPrefix("api") {
+          pathPrefix("v2") {
+            pathPrefix("bar") {
+              path(JavaUUID) { _ =>
+                complete("ok")
+              }
+            }
+          }
+        }
+      }
+
+    test(
+      route,
+      "/foo/api/v2/bar/5bb7c7d8-0128-4349-86af-fe718f4f8059",
+      "GET /foo/api/v2/bar/*"
+    )
+  }
+
+  @Test def testRouteWithSegment(): Unit = {
+    val route =
+      pathPrefix("api") {
+        pathPrefix("v2") {
+          pathPrefix("orders") {
+            path(Segment) { _ =>
+              complete("ok")
+            }
+          }
+        }
+      }
+
+    test(route, "/api/v2/orders/order123", "GET /api/v2/orders/*")
+  }
+
+  @Test def testRouteWithSubSegment(): Unit = {
+    val route =
+      pathPrefix("api" / "v2" / "orders" / Segment / "status") { _ =>
+        complete("ok")
+      }
+
+    test(route, "/api/v2/orders/order123/status", "GET /api/v2/orders/*/status")
+  }
+
   def test(
       route: Route,
       path: String,
@@ -193,7 +263,6 @@ class PekkoHttpServerRouteTest {
       expectedStatus: Int = 200,
       expectedMsg: String = "ok"
   ): Unit = {
-    testing.clearData()
     val port = PortUtils.findOpenPort
     val address: URI = buildAddress(port)
     val binding =
