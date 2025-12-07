@@ -67,6 +67,10 @@ class Jetty12ServerInstrumentation implements TypeInstrumentation {
 
       public void end(Request request, Response response, @Nullable Throwable throwable) {
         scope.close();
+        // Don't end the span here - it will be ended by the HttpStream callbacks
+        // registered in Jetty12Helper.start(). This ensures metrics are captured
+        // correctly regardless of whether virtual threads are enabled.
+        // Only end immediately if there's an exception, as the callbacks may not fire.
         if (throwable != null) {
           helper().end(context, request, response, throwable);
         }
