@@ -79,8 +79,7 @@ WHITESPACE           = [ \t\r\n]+
   }
 
   private void appendOperationToSummary(String operation) {
-    // Avoid duplicate entries when subqueries have same operation
-    if (operation != null && !operation.equals(lastQuerySummaryItem)) {
+    if (operation != null) {
       if (querySummaryBuilder.length() > 0) {
         querySummaryBuilder.append(' ');
       }
@@ -139,11 +138,33 @@ WHITESPACE           = [ \t\r\n]+
   private boolean insideComment = false;
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
+  // Tracks how many SELECT keywords we've seen (to track targets for subqueries)
+  private int selectCount = 0;
+  // Tracks whether we're expecting the next identifier after FROM for a subsequent SELECT's query summary
+  private boolean expectingTargetForSubsequentSelect = false;
   private SqlDialect dialect;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
       this.operation = operation;
+    }
+  }
+
+  // Called when we see FROM and have a subsequent SELECT pending
+  private void handleFromForSubsequentSelect() {
+    // Capture target for subsequent SELECTs:
+    // - selectCount > 1: nested SELECT (e.g., SELECT FROM (SELECT FROM orders))
+    // - selectCount >= 1 && extractionDone: SELECT after main operation done (e.g., INSERT INTO t SELECT FROM orders)
+    if (selectCount > 1 || (selectCount >= 1 && extractionDone)) {
+      expectingTargetForSubsequentSelect = true;
+    }
+  }
+
+  // Called when we capture a target after FROM for subsequent SELECT's query summary
+  private void handleTargetForSubsequentSelect(String target) {
+    if (expectingTargetForSubsequentSelect && target != null) {
+      appendTargetToSummary(target);
+      expectingTargetForSubsequentSelect = false;
     }
   }
 
@@ -412,6 +433,7 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment) {
             setOperation(new Select());
             appendOperationToSummary("SELECT");
+            selectCount++;
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -481,13 +503,17 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
-          if (!insideComment && !extractionDone) {
-            if (operation == NoOp.INSTANCE) {
-              // hql/jpql queries may skip SELECT and start with FROM clause
-              // treat such queries as SELECT queries
-              setOperation(new Select());
+          if (!insideComment) {
+            if (!extractionDone) {
+              if (operation == NoOp.INSTANCE) {
+                // hql/jpql queries may skip SELECT and start with FROM clause
+                // treat such queries as SELECT queries
+                setOperation(new Select());
+              }
+              extractionDone = operation.handleFrom();
             }
-            extractionDone = operation.handleFrom();
+            // For subsequent SELECTs (nested or after INSERT), prepare to capture target
+            handleFromForSubsequentSelect();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -537,8 +563,13 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleIdentifier();
+          if (!insideComment) {
+            if (!extractionDone) {
+              extractionDone = operation.handleIdentifier();
+            } else {
+              // For subsequent SELECTs (e.g., SELECT in INSERT...SELECT), capture target for summary
+              handleTargetForSubsequentSelect(readIdentifierName());
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;

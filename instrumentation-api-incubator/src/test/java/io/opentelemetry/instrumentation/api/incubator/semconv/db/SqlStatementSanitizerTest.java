@@ -188,19 +188,18 @@ class SqlStatementSanitizerTest {
         // Basic SELECT
         Arguments.of("SELECT * FROM wuser_table", "SELECT wuser_table"),
         Arguments.of("SELECT * FROM wuser_table WHERE username = ?", "SELECT wuser_table"),
-        // INSERT with SELECT subquery - INSERT target + SELECT operation (SELECT target not tracked
-        // after extraction done)
+        // INSERT with SELECT subquery - INSERT target + SELECT operation + SELECT target
         Arguments.of(
             "INSERT INTO shipping_details (order_id, address) SELECT order_id, address FROM orders WHERE order_id = ?",
-            "INSERT shipping_details SELECT"),
+            "INSERT shipping_details SELECT orders"),
         // SELECT with multiple tables (implicit join) - only first table tracked since extraction
         // stops on comma
         Arguments.of(
             "SELECT * FROM songs, artists WHERE songs.artist_id == artists.id", "SELECT songs"),
-        // SELECT with subquery in FROM - only SELECT operation, no table from subquery
+        // SELECT with subquery in FROM - outer SELECT + inner SELECT + inner table
         Arguments.of(
             "SELECT order_date FROM (SELECT * FROM orders o JOIN customers c ON o.customer_id = c.customer_id)",
-            "SELECT"),
+            "SELECT SELECT orders"),
         // SELECT with JOIN - first table tracked, extraction stops on JOIN
         Arguments.of("SELECT * FROM table1 JOIN table2 ON table1.id = table2.id", "SELECT table1"),
         // DELETE
