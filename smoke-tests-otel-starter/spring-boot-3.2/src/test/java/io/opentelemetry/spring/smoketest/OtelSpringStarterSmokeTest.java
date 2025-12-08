@@ -6,9 +6,9 @@
 package io.opentelemetry.spring.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.semconv.HttpAttributes;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,18 +41,19 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                 .body(String.class))
         .isEqualTo("pong");
 
-    if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
-      // ignore the trace for creating the db table
-      testing.waitAndAssertTraces(trace -> {}, OtelSpringStarterSmokeTest::assertClient);
-    } else {
-      testing.waitAndAssertTraces(OtelSpringStarterSmokeTest::assertClient);
-    }
-  }
+    // ignore the trace for creating the db table
+    await()
+        .until(
+            () ->
+                testing.getExportedSpans().stream()
+                    .anyMatch(span -> span.getKind() == SpanKind.SERVER));
 
-  private static void assertClient(TraceAssert traceAssert) {
-    traceAssert.hasSpansSatisfyingExactly(
-        span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
-        span -> span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
-        span -> withSpanAssert(span));
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+                span ->
+                    span.hasKind(SpanKind.SERVER).hasAttribute(HttpAttributes.HTTP_ROUTE, "/ping"),
+                span -> withSpanAssert(span)));
   }
 }
