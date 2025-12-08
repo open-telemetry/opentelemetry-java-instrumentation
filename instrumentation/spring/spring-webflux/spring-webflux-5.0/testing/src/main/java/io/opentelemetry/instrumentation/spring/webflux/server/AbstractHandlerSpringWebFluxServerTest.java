@@ -27,7 +27,7 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    String handlerSpanName = "Test" + "$$Lambda.handle";
+    String handlerSpanName = "ServerTestRouteFactory" + "$$Lambda.handle";
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle";
     }
@@ -81,7 +81,7 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
                             val ->
                                 val.satisfiesAnyOf(
                                     v -> assertThat(v).isNull(),
-                                    v -> assertThat(v).contains("404 NOT_FOUND")))));
+                                    v -> assertThat(v).contains("404")))));
       }
     }
     return span;

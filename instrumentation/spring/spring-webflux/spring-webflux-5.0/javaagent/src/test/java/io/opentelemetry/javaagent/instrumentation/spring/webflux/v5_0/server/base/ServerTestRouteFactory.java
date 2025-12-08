@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base.SpringWebFluxServerTest.NESTED_PATH;
+import static io.opentelemetry.instrumentation.spring.webflux.server.AbstractSpringWebFluxServerTest.NESTED_PATH;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.path;
 import static org.springframework.web.reactive.function.server.RouterFunctions.nest;
@@ -106,12 +106,7 @@ public abstract class ServerTestRouteFactory {
             path("/nestedPath"),
             nest(
                 path("/hello"),
-                route(
-                    path("/world"),
-                    request -> {
-                      ServerEndpoint endpoint = NESTED_PATH;
-                      return respond(endpoint, null, null, null);
-                    })));
+                route(path("/world"), request -> respond(NESTED_PATH, null, null, null))));
   }
 
   protected Mono<ServerResponse> respond(

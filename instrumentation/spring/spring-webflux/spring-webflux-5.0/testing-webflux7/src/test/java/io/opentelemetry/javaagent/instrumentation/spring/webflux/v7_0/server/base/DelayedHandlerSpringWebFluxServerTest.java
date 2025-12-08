@@ -49,13 +49,15 @@ class DelayedHandlerSpringWebFluxServerTest extends AbstractHandlerSpringWebFlux
       return response
           .delayElement(Duration.ofMillis(10))
           .map(
-              original ->
-                  controller(
-                      endpoint,
-                      () -> {
-                        spanAction.run();
-                        return original;
-                      }));
+              original -> {
+                System.out.println("In wrapResponse map for endpoint " + endpoint);
+                return controller(
+                    endpoint,
+                    () -> {
+                      spanAction.run();
+                      return original;
+                    });
+              });
     }
   }
 }

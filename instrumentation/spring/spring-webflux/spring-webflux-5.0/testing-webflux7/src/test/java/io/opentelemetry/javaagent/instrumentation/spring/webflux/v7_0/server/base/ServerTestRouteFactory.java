@@ -13,7 +13,6 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
-import java.util.function.Supplier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -127,10 +126,4 @@ public abstract class ServerTestRouteFactory {
 
   protected abstract Mono<ServerResponse> wrapResponse(
       ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction);
-
-  protected <T> T controller(ServerEndpoint endpoint, Supplier<T> handler) {
-    return endpoint.getBody() == null && endpoint != ServerEndpoint.EXCEPTION
-        ? null
-        : handler.get();
-  }
 }

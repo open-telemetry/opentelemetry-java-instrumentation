@@ -46,8 +46,12 @@ class ImmediateHandlerSpringWebFluxServerTest
     @Override
     protected Mono<ServerResponse> wrapResponse(
         ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
-      spanAction.run();
-      return response;
+      return controller(
+          endpoint,
+          () -> {
+            spanAction.run();
+            return response;
+          });
     }
   }
 }
