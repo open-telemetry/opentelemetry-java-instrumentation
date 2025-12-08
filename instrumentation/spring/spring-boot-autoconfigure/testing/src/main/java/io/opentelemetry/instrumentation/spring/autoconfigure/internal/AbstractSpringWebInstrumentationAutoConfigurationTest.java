@@ -3,12 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web;
+package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.RestTemplateBeanPostProcessor;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.Collections;
@@ -17,9 +18,11 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.web.client.RestTemplate;
 
-class SpringWebInstrumentationAutoConfigurationTest {
+public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
-  private final ApplicationContextRunner contextRunner =
+  protected abstract AutoConfigurations autoConfigurations();
+
+  protected final ApplicationContextRunner contextRunner =
       new ApplicationContextRunner()
           .withBean(OpenTelemetry.class, OpenTelemetry::noop)
           .withBean(
@@ -28,8 +31,7 @@ class SpringWebInstrumentationAutoConfigurationTest {
                   new ConfigPropertiesBridge(
                       DefaultConfigProperties.createFromMap(Collections.emptyMap())))
           .withBean(RestTemplate.class, RestTemplate::new)
-          .withConfiguration(
-              AutoConfigurations.of(SpringWebInstrumentationAutoConfiguration.class));
+          .withConfiguration(autoConfigurations());
 
   /**
    * Tests that users create {@link RestTemplate} bean is instrumented.

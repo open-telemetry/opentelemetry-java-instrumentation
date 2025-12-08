@@ -80,6 +80,7 @@ jobs:
           ./gradlew assemble -x javadoc
           -x :smoke-tests-otel-starter:spring-boot-3:collectReachabilityMetadata
           -x :smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata
+          -x :smoke-tests-otel-starter:spring-boot-4:collectReachabilityMetadata
           -x :smoke-tests-otel-starter:spring-boot-reactive-3:collectReachabilityMetadata
           --no-build-cache --no-daemon
 
