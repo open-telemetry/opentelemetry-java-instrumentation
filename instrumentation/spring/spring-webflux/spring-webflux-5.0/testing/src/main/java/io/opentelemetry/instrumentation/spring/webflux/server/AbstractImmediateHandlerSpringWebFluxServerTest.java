@@ -8,17 +8,9 @@ package io.opentelemetry.instrumentation.spring.webflux.server;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
-import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.web.reactive.function.server.RouterFunction;
-import org.springframework.web.reactive.function.server.ServerResponse;
-import reactor.core.publisher.Mono;
 
 /**
  * Tests the case where "controller" span is created within the route handler method scope, and the
@@ -27,40 +19,40 @@ import reactor.core.publisher.Mono;
  * deferred actions. For exception endpoint, the exception is thrown within route handler method
  * scope.
  */
-public class AbstractImmediateHandlerSpringWebFluxServerTest
-    extends HandlerSpringWebFluxServerTest {
-  @Override
-  protected Class<?> getApplicationClass() {
-    return Application.class;
-  }
+public abstract class AbstractImmediateHandlerSpringWebFluxServerTest
+    extends AbstractHandlerSpringWebFluxServerTest {
+  //  @Override
+  //  protected Class<?> getApplicationClass() {
+  //    return Application.class;
+  //  }
 
-  @Configuration
-  @EnableAutoConfiguration
-  static class Application {
-    @Bean
-    RouterFunction<ServerResponse> router() {
-      return new RouteFactory().createRoutes();
-    }
+  //  @Configuration
+  //  @EnableAutoConfiguration
+  //  static class Application {
+  //    @Bean
+  //    RouterFunction<ServerResponse> router() {
+  //      return new RouteFactory().createRoutes();
+  //    }
+  //
+  //    @Bean
+  //    NettyReactiveWebServerFactory nettyFactory() {
+  //      return new NettyReactiveWebServerFactory();
+  //    }
+  //  }
 
-    @Bean
-    NettyReactiveWebServerFactory nettyFactory() {
-      return new NettyReactiveWebServerFactory();
-    }
-  }
-
-  static class RouteFactory extends ServerTestRouteFactory {
-
-    @Override
-    protected Mono<ServerResponse> wrapResponse(
-        ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
-      return controller(
-          endpoint,
-          () -> {
-            spanAction.run();
-            return response;
-          });
-    }
-  }
+  //  static class RouteFactory extends ServerTestRouteFactory {
+  //
+  //    @Override
+  //    protected Mono<ServerResponse> wrapResponse(
+  //        ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
+  //      return controller(
+  //          endpoint,
+  //          () -> {
+  //            spanAction.run();
+  //            return response;
+  //          });
+  //    }
+  //  }
 
   @Test
   void nestedPath() {

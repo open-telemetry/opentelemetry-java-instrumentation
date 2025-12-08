@@ -12,6 +12,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
@@ -20,12 +21,13 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 
-public abstract class HandlerSpringWebFluxServerTest extends AbstractSpringWebFluxServerTest {
+public abstract class AbstractHandlerSpringWebFluxServerTest
+    extends AbstractSpringWebFluxServerTest {
 
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    String handlerSpanName = ServerTestRouteFactory.class.getSimpleName() + "$$Lambda.handle";
+    String handlerSpanName = "Test" + "$$Lambda.handle";
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle";
     }
@@ -60,11 +62,26 @@ public abstract class HandlerSpringWebFluxServerTest extends AbstractSpringWebFl
                 event
                     .hasName("exception")
                     .hasAttributesSatisfyingExactly(
-                        equalTo(
+                        satisfies(
                             EXCEPTION_TYPE,
-                            "org.springframework.web.server.ResponseStatusException"),
-                        equalTo(EXCEPTION_MESSAGE, "Response status 404"),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+                            val ->
+                                val.satisfiesAnyOf(
+                                    // changed in spring 7+
+                                    v ->
+                                        assertThat(v)
+                                            .isEqualTo(
+                                                "org.springframework.web.server.ResponseStatusException"),
+                                    v ->
+                                        assertThat(v)
+                                            .isEqualTo(
+                                                "org.springframework.web.reactive.resource.NoResourceFoundException"))),
+                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            EXCEPTION_MESSAGE,
+                            val ->
+                                val.satisfiesAnyOf(
+                                    v -> assertThat(v).isNull(),
+                                    v -> assertThat(v).contains("404 NOT_FOUND")))));
       }
     }
     return span;

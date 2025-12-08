@@ -97,7 +97,23 @@ final class TestInstrumenters {
   private static <T, E extends Throwable> T runWithInstrumenter(
       String spanName, Instrumenter<String, Void> instrumenter, ThrowingSupplier<T, E> callback)
       throws E {
-    Context context = instrumenter.start(Context.current(), spanName);
+    System.out.println("=== TestInstrumenters.runWithInstrumenter() CALLED ===");
+    System.out.println("  Span name: " + spanName);
+    System.out.println("  Thread: " + Thread.currentThread().getName());
+
+    Context parentContext = Context.current();
+    System.out.println("  Parent context: " + parentContext);
+
+    boolean shouldStart = instrumenter.shouldStart(parentContext, spanName);
+    System.out.println("  shouldStart: " + shouldStart);
+
+    if (!shouldStart) {
+      System.out.println("  Instrumenter refused to start span, running callback without span");
+      return callback.get();
+    }
+
+    Context context = instrumenter.start(parentContext, spanName);
+    System.out.println("  Started context: " + context);
 
     T result;
     try (Scope ignored = context.makeCurrent()) {
@@ -107,6 +123,7 @@ final class TestInstrumenters {
       throw t;
     }
     instrumenter.end(context, spanName, null, null);
+    System.out.println("  Span ended successfully");
     return result;
   }
 
