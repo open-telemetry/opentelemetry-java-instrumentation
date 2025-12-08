@@ -70,10 +70,11 @@ class KafkaConnectRuleTest {
         .allSatisfy(
             rule -> {
               assertThat(rule.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE);
-              rule
-                  .getMapping()
+              rule.getMapping()
                   .values()
-                  .forEach(metric -> assertThat(metric.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE));
+                  .forEach(
+                      metric ->
+                          assertThat(metric.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE));
             });
   }
 
