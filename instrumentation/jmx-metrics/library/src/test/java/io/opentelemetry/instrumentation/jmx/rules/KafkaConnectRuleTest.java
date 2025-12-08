@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
+import io.opentelemetry.instrumentation.jmx.engine.MetricInfo;
 import io.opentelemetry.instrumentation.jmx.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.yaml.Metric;
@@ -62,6 +63,21 @@ class KafkaConnectRuleTest {
   }
 
   @Test
+  void kafkaConnectRulesUseBasicMetricTypes() throws Exception {
+    JmxConfig config = loadKafkaConnectConfig();
+
+    assertThat(config.getRules())
+        .allSatisfy(
+            rule -> {
+              assertThat(rule.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE);
+              rule
+                  .getMapping()
+                  .values()
+                  .forEach(metric -> assertThat(metric.getMetricType()).isNotEqualTo(MetricInfo.Type.STATE));
+            });
+  }
+
+  @Test
   void connectorStatusStateMappingPresent() throws Exception {
     JmxConfig config = loadKafkaConnectConfig();
 
@@ -69,6 +85,8 @@ class KafkaConnectRuleTest {
         getRuleForBean(config, "kafka.connect:type=connector-metrics,connector=*");
 
     StateMapping stateMapping = getMetric(connectorRule, "status").getStateMapping();
+    assertThat(getMetric(connectorRule, "status").getMetricType())
+        .isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
     assertThat(stateMapping.isEmpty()).isFalse();
     assertThat(stateMapping.getStateKeys())
         .contains(
@@ -95,6 +113,8 @@ class KafkaConnectRuleTest {
         getRuleForBean(config, "kafka.connect:type=connector-task-metrics,connector=*,task=*");
 
     StateMapping stateMapping = getMetric(connectorTaskRule, "status").getStateMapping();
+    assertThat(getMetric(connectorTaskRule, "status").getMetricType())
+        .isEqualTo(MetricInfo.Type.UPDOWNCOUNTER);
     assertThat(stateMapping.isEmpty()).isFalse();
     assertThat(stateMapping.getStateKeys())
         .contains(

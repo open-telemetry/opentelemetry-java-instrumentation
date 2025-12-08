@@ -1,8 +1,8 @@
 # Kafka Connect Metrics
 
 Here is the list of metrics based on MBeans exposed by Apache Kafka Connect. String-valued JMX
-attributes (class/type/version information) are exported as state metrics with value `1` and
-carry the raw string value as metric attributes.
+attributes (class/type/version information) are exported as `UpDownCounter` metrics with value `1`
+and carry the raw string value as metric attributes.
 
 ## Compatibility
 

@@ -131,7 +131,7 @@ rules:
       # kafka.connect.worker.rebalance.protocol
       connect-protocol:
         metric: protocol
-        type: state
+        type: updowncounter
         desc: The Connect protocol used by this cluster.
         metricAttribute:
           kafka.connect.protocol.state:
@@ -147,7 +147,7 @@ rules:
       # kafka.connect.worker.rebalance.leader
       leader-name:
         metric: leader
-        type: state
+        type: updowncounter
         desc: The name of the group leader.
         metricAttribute:
           kafka.connect.worker.leader.state:
@@ -169,7 +169,7 @@ rules:
       # kafka.connect.worker.rebalance.active
       rebalancing:
         metric: active
-        type: state
+        type: updowncounter
         unit: "1"
         desc: Whether this worker is currently rebalancing.
         metricAttribute:
@@ -196,7 +196,7 @@ rules:
       # kafka.connect.connector.class
       connector-class:
         metric: class
-        type: state
+        type: updowncounter
         desc: The name of the connector class.
         metricAttribute:
           kafka.connect.connector.class.state:
@@ -204,7 +204,7 @@ rules:
       # kafka.connect.connector.type
       connector-type:
         metric: type
-        type: state
+        type: updowncounter
         desc: The type of the connector. One of 'source' or 'sink'.
         metricAttribute:
           kafka.connect.connector.type:
@@ -214,7 +214,7 @@ rules:
       # kafka.connect.connector.version
       connector-version:
         metric: version
-        type: state
+        type: updowncounter
         desc: The version of the connector class, as reported by the connector.
         metricAttribute:
           kafka.connect.connector.version.state:
@@ -222,7 +222,7 @@ rules:
       # kafka.connect.connector.status
       status:
         metric: status
-        type: state
+        type: updowncounter
         desc: Connector lifecycle state indicator (1 when the state matches the attribute value). Supports Apache and Confluent status values.
         metricAttribute:
           kafka.connect.connector.state:
@@ -247,7 +247,7 @@ rules:
       # kafka.connect.predicate.class
       predicate-class:
         metric: class
-        type: state
+        type: updowncounter
         desc: The class name of the predicate class
         metricAttribute:
           kafka.connect.predicate.class.state:
@@ -255,7 +255,7 @@ rules:
       # kafka.connect.predicate.version
       predicate-version:
         metric: version
-        type: state
+        type: updowncounter
         desc: The version of the predicate class
         metricAttribute:
           kafka.connect.predicate.version.state:
@@ -293,7 +293,7 @@ rules:
       # kafka.connect.task.connector.class
       connector-class:
         metric: connector.class
-        type: state
+        type: updowncounter
         desc: The name of the connector class.
         metricAttribute:
           kafka.connect.task.connector.class.state:
@@ -301,7 +301,7 @@ rules:
       # kafka.connect.task.connector.type
       connector-type:
         metric: connector.type
-        type: state
+        type: updowncounter
         desc: The type of the connector. One of 'source' or 'sink'.
         metricAttribute:
           kafka.connect.task.connector.type:
@@ -311,7 +311,7 @@ rules:
       # kafka.connect.task.connector.version
       connector-version:
         metric: connector.version
-        type: state
+        type: updowncounter
         desc: The version of the connector class, as reported by the connector.
         metricAttribute:
           kafka.connect.task.connector.version.state:
@@ -319,7 +319,7 @@ rules:
       # kafka.connect.task.header.converter.class
       header-converter-class:
         metric: header.converter.class
-        type: state
+        type: updowncounter
         desc: The fully qualified class name from header.converter
         metricAttribute:
           kafka.connect.task.header.converter.class.state:
@@ -327,7 +327,7 @@ rules:
       # kafka.connect.task.header.converter.version
       header-converter-version:
         metric: header.converter.version
-        type: state
+        type: updowncounter
         desc: The version instantiated for header.converter. May be undefined
         metricAttribute:
           kafka.connect.task.header.converter.version.state:
@@ -335,7 +335,7 @@ rules:
       # kafka.connect.task.key.converter.class
       key-converter-class:
         metric: key.converter.class
-        type: state
+        type: updowncounter
         desc: The fully qualified class name from key.converter
         metricAttribute:
           kafka.connect.task.key.converter.class.state:
@@ -343,7 +343,7 @@ rules:
       # kafka.connect.task.key.converter.version
       key-converter-version:
         metric: key.converter.version
-        type: state
+        type: updowncounter
         desc: The version instantiated for key.converter. May be undefined
         metricAttribute:
           kafka.connect.task.key.converter.version.state:
@@ -391,7 +391,7 @@ rules:
       # kafka.connect.task.status
       status:
         metric: status
-        type: state
+        type: updowncounter
         desc: The status of the connector task. Supports Apache (unassigned, running, paused, failed, restarting) and Confluent (unassigned, running, paused, failed, destroyed) values.
         metricAttribute:
           kafka.connect.task.state:
@@ -405,7 +405,7 @@ rules:
       # kafka.connect.task.class
       task-class:
         metric: task.class
-        type: state
+        type: updowncounter
         desc: The class name of the task.
         metricAttribute:
           kafka.connect.task.class.state:
@@ -413,7 +413,7 @@ rules:
       # kafka.connect.task.version
       task-version:
         metric: task.version
-        type: state
+        type: updowncounter
         desc: The version of the task.
         metricAttribute:
           kafka.connect.task.version.state:
@@ -421,7 +421,7 @@ rules:
       # kafka.connect.task.value.converter.class
       value-converter-class:
         metric: value.converter.class
-        type: state
+        type: updowncounter
         desc: The fully qualified class name from value.converter
         metricAttribute:
           kafka.connect.task.value.converter.class.state:
@@ -429,7 +429,7 @@ rules:
       # kafka.connect.task.value.converter.version
       value-converter-version:
         metric: value.converter.version
-        type: state
+        type: updowncounter
         desc: The version instantiated for value.converter. May be undefined
         metricAttribute:
           kafka.connect.task.value.converter.version.state:
@@ -447,7 +447,7 @@ rules:
       # kafka.connect.transform.class
       transform-class:
         metric: class
-        type: state
+        type: updowncounter
         desc: The class name of the transformation class
         metricAttribute:
           kafka.connect.transform.class.state:
@@ -455,7 +455,7 @@ rules:
       # kafka.connect.transform.version
       transform-version:
         metric: version
-        type: state
+        type: updowncounter
         desc: The version of the transformation class
         metricAttribute:
           kafka.connect.transform.version.state:
