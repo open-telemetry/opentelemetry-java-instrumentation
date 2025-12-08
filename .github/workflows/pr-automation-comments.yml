@@ -42,7 +42,7 @@ jobs:
                 "",
                 "### Checklist",
                 "- Migration notes added to the PR description",
-                "- Breaking change is documented in the "Unreleased" section of the [Changelog](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/CHANGELOG.md), preferably as part of this PR.",
+                "- Breaking change is documented in the \"Unreleased\" section of the [Changelog](https://github.com/open-telemetry/opentelemetry-java-instrumentation/blob/main/CHANGELOG.md), preferably as part of this PR.",
                 "- Consider if this change requires a major version bump",
                 "",
                 "Your migration notes will be included in the release notes to help users upgrade smoothly. The more detailed and helpful they are, the better the user experience will be.",
