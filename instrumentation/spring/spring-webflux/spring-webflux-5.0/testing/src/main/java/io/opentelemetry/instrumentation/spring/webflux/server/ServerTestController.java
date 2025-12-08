@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.webflux.server;
 import static io.opentelemetry.instrumentation.spring.webflux.server.AbstractSpringWebFluxServerTest.NESTED_PATH;
 
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.function.Supplier;
 import org.springframework.http.HttpStatus;
@@ -19,6 +20,27 @@ import reactor.core.publisher.Mono;
 
 @SuppressWarnings("IdentifierName") // method names are snake_case to match endpoints
 public abstract class ServerTestController {
+
+  // Spring 5.x uses setStatusCode(HttpStatus), Spring 6+ uses setStatusCode(HttpStatusCode)
+  private static final Method setStatusCodeMethod;
+
+  static {
+    Method method;
+    try {
+      // Try Spring 6+ signature first (HttpStatusCode interface)
+      Class<?> httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
+      method = ServerHttpResponse.class.getMethod("setStatusCode", httpStatusCodeClass);
+    } catch (ClassNotFoundException | NoSuchMethodException e) {
+      // Fall back to Spring 5.x signature (HttpStatus enum)
+      try {
+        method = ServerHttpResponse.class.getMethod("setStatusCode", HttpStatus.class);
+      } catch (NoSuchMethodException ex) {
+        throw new IllegalStateException(ex);
+      }
+    }
+    setStatusCodeMethod = method;
+  }
+
   @GetMapping("/success")
   public Mono<String> success(ServerHttpResponse response) {
     ServerEndpoint endpoint = ServerEndpoint.SUCCESS;
@@ -134,6 +156,11 @@ public abstract class ServerTestController {
   protected abstract <T> Mono<T> wrapControllerMethod(ServerEndpoint endpoint, Supplier<T> handler);
 
   protected void setStatus(ServerHttpResponse response, ServerEndpoint endpoint) {
-    response.setStatusCode(HttpStatus.resolve(endpoint.getStatus()));
+    HttpStatus status = HttpStatus.resolve(endpoint.getStatus());
+    try {
+      setStatusCodeMethod.invoke(response, status);
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Failed to set status code", e);
+    }
   }
 }
