@@ -150,16 +150,6 @@ rules:
     metricAttribute:
       kafka.connect.connector: param(connector)
     mapping:
-      # kafka.connect.connector.type
-      connector-type:
-        metric: type
-        type: updowncounter
-        desc: The type of the connector. One of 'source' or 'sink'.
-        metricAttribute:
-          kafka.connect.connector.type:
-            sink: [sink, SINK]
-            source: [source, SOURCE]
-            unknown: "*"
       # kafka.connect.connector.status
       status:
         metric: status
@@ -194,16 +184,6 @@ rules:
         type: gauge
         unit: "{record}"
         desc: The number of records in the largest batch the task has processed so far.
-      # kafka.connect.task.connector.class
-      connector-type:
-        metric: connector.type
-        type: updowncounter
-        desc: The type of the connector. One of 'source' or 'sink'.
-        metricAttribute:
-          kafka.connect.task.connector.type:
-            sink: [sink, SINK]
-            source: [source, SOURCE]
-            unknown: "*"
       # kafka.connect.task.offset.commit.avg.time
       offset-commit-avg-time-ms:
         metric: offset.commit.avg.time
