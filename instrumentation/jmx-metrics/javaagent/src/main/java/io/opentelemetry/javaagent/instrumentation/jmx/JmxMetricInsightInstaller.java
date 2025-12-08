@@ -13,6 +13,8 @@ import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import java.io.InputStream;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.logging.Level;
@@ -33,15 +35,34 @@ public class JmxMetricInsightInstaller implements AgentListener {
           JmxTelemetry.builder(GlobalOpenTelemetry.get())
               .beanDiscoveryDelay(beanDiscoveryDelay(config));
 
-      try {
-        config.getList("otel.jmx.config").stream().map(Paths::get).forEach(jmx::addCustomRules);
-        config.getList("otel.jmx.target.system").forEach(jmx::addClassPathRules);
-      } catch (RuntimeException e) {
-        // for now only log JMX errors as they do not prevent agent startup
-        logger.log(Level.SEVERE, "Error while loading JMX configuration", e);
-      }
+      config.getList("otel.jmx.config").stream()
+          .map(Paths::get)
+          .forEach(path -> addFileRules(path, jmx));
+      config.getList("otel.jmx.target.system").forEach(target -> addClasspathRules(target, jmx));
 
       jmx.build().start();
+    }
+  }
+
+  private static void addFileRules(Path path, JmxTelemetryBuilder builder) {
+    try {
+      builder.addRules(path);
+    } catch (RuntimeException e) {
+      // for now only log JMX metric configuration errors as they do not prevent agent startup
+      logger.log(Level.SEVERE, "Error while loading JMX configuration from " + path, e);
+    }
+  }
+
+  private static void addClasspathRules(String target, JmxTelemetryBuilder builder) {
+    ClassLoader classLoader = JmxTelemetryBuilder.class.getClassLoader();
+    String resource = String.format("jmx/rules/%s.yaml", target);
+    InputStream input = classLoader.getResourceAsStream(resource);
+    try {
+      builder.addRules(input);
+    } catch (RuntimeException e) {
+      // for now only log JMX metric configuration errors as they do not prevent agent startup
+      logger.log(
+          Level.SEVERE, "Error while loading JMX configuration from classpath " + resource, e);
     }
   }
 
