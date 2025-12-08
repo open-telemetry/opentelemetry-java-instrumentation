@@ -141,16 +141,26 @@ class KafkaConnectRuleTest {
     registerMBean(
         "kafka.connect:type=connector-task-metrics,connector=confluent-connector,task=0",
         mapOf(
-            "status", "DESTROYED",
-            "connector-type", "sink",
-            "batch-size-avg", 1L,
-            "batch-size-max", 2L,
-            "offset-commit-avg-time-ms", 5L,
-            "offset-commit-failure-percentage", 0.0d,
-            "offset-commit-max-time-ms", 6L,
-            "offset-commit-success-percentage", 100.0d,
-            "pause-ratio", 0.0d,
-            "running-ratio", 1.0d));
+            "status",
+            "DESTROYED",
+            "connector-type",
+            "sink",
+            "batch-size-avg",
+            1L,
+            "batch-size-max",
+            2L,
+            "offset-commit-avg-time-ms",
+            5L,
+            "offset-commit-failure-percentage",
+            0.0d,
+            "offset-commit-max-time-ms",
+            6L,
+            "offset-commit-success-percentage",
+            100.0d,
+            "pause-ratio",
+            0.0d,
+            "running-ratio",
+            1.0d));
 
     startKafkaConnectTelemetry();
 
@@ -187,16 +197,26 @@ class KafkaConnectRuleTest {
     registerMBean(
         "kafka.connect:type=connector-task-metrics,connector=apache-connector,task=1",
         mapOf(
-            "connector-type", "source",
-            "status", "RUNNING",
-            "batch-size-avg", 4L,
-            "batch-size-max", 5L,
-            "offset-commit-avg-time-ms", 6L,
-            "offset-commit-failure-percentage", 0.0d,
-            "offset-commit-max-time-ms", 7L,
-            "offset-commit-success-percentage", 100.0d,
-            "pause-ratio", 0.0d,
-            "running-ratio", 1.0d));
+            "connector-type",
+            "source",
+            "status",
+            "RUNNING",
+            "batch-size-avg",
+            4L,
+            "batch-size-max",
+            5L,
+            "offset-commit-avg-time-ms",
+            6L,
+            "offset-commit-failure-percentage",
+            0.0d,
+            "offset-commit-max-time-ms",
+            7L,
+            "offset-commit-success-percentage",
+            100.0d,
+            "pause-ratio",
+            0.0d,
+            "running-ratio",
+            1.0d));
 
     registerMBean(
         "kafka.connect:type=source-task-metrics,connector=apache-connector,task=1",
