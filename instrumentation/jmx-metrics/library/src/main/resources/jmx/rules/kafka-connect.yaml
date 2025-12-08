@@ -16,27 +16,15 @@ rules:
         type: counter
         unit: "{attempt}"
         desc: The total number of connector startups that this worker has attempted.
-      # kafka.connect.worker.connector.startup.failure.percentage
-      connector-startup-failure-percentage:
-        metric: connector.startup.failure.percentage
-        type: gauge
-        unit: '1'
-        desc: The average percentage of this worker's connectors starts that failed.
       # kafka.connect.worker.connector.startup.failure.total
       connector-startup-failure-total:
-        metric: connector.startup.failure.total
+        metric: connector.startup.failures
         type: counter
         unit: "{startup}"
         desc: The total number of connector starts that failed.
-      # kafka.connect.worker.connector.startup.success.percentage
-      connector-startup-success-percentage:
-        metric: connector.startup.success.percentage
-        type: gauge
-        unit: '1'
-        desc: The average percentage of this worker's connectors starts that succeeded.
       # kafka.connect.worker.connector.startup.success.total
       connector-startup-success-total:
-        metric: connector.startup.success.total
+        metric: connector.startup.successes
         type: counter
         unit: "{startup}"
         desc: The total number of connector starts that succeeded.
@@ -52,27 +40,15 @@ rules:
         type: counter
         unit: "{attempt}"
         desc: The total number of task startups that this worker has attempted.
-      # kafka.connect.worker.task.startup.failure.percentage
-      task-startup-failure-percentage:
-        metric: task.startup.failure.percentage
-        type: gauge
-        unit: '1'
-        desc: The average percentage of this worker's tasks starts that failed.
       # kafka.connect.worker.task.startup.failure.total
       task-startup-failure-total:
-        metric: task.startup.failure.total
+        metric: task.startup.failures
         type: counter
         unit: "{startup}"
         desc: The total number of task starts that failed.
-      # kafka.connect.worker.task.startup.success.percentage
-      task-startup-success-percentage:
-        metric: task.startup.success.percentage
-        type: gauge
-        unit: '1'
-        desc: The average percentage of this worker's tasks starts that succeeded.
       # kafka.connect.worker.task.startup.success.total
       task-startup-success-total:
-        metric: task.startup.success.total
+        metric: task.startup.successes
         type: counter
         unit: "{startup}"
         desc: The total number of task starts that succeeded.
