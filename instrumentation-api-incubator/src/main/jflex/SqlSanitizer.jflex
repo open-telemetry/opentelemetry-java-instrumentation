@@ -270,6 +270,10 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingTableName = false;
     boolean mainTableSetAlready = false;
     int identifiersAfterMainFromClause = 0;
+    // Tracks whether we're in a comma-separated table list (implicit join)
+    boolean inImplicitJoin = false;
+    // Counter for identifiers after each comma in implicit join
+    int identifiersAfterComma = 0;
 
     boolean handleFrom() {
       if (parenLevel == 0) {
@@ -292,6 +296,17 @@ WHITESPACE           = [ \t\r\n]+
     boolean handleIdentifier() {
       if (identifiersAfterMainFromClause > 0) {
         ++identifiersAfterMainFromClause;
+      }
+
+      // Handle identifiers in implicit join (comma-separated tables)
+      if (inImplicitJoin) {
+        ++identifiersAfterComma;
+        // First identifier after comma is the table name - add it to summary
+        if (identifiersAfterComma == 1) {
+          String tableName = readIdentifierName();
+          appendTargetToSummary(tableName);
+        }
+        return false;
       }
 
       if (!expectingTableName) {
@@ -328,7 +343,14 @@ WHITESPACE           = [ \t\r\n]+
       if (identifiersAfterMainFromClause > 0
           && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
         mainIdentifier = null;
-        return true;
+        inImplicitJoin = true;
+        identifiersAfterComma = 0;
+        // Don't return true - continue processing to capture more table names for summary
+        return false;
+      }
+      // Reset counter for next table in implicit join
+      if (inImplicitJoin) {
+        identifiersAfterComma = 0;
       }
       return false;
     }

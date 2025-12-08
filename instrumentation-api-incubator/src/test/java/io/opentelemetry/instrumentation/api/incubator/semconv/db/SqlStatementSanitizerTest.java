@@ -173,9 +173,9 @@ class SqlStatementSanitizerTest {
     String result = SqlStatementSanitizer.create(true).sanitize(sql.toString()).getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result.length()).isLessThanOrEqualTo(255);
-    // For implicit join (comma-separated tables), mainIdentifier is null so only first table is in
-    // summary
-    assertThat(result).isEqualTo("SELECT very_long_table_name_0");
+    // Implicit join (comma-separated tables) should include all table names in the summary
+    // but truncated at 255 characters
+    assertThat(result).startsWith("SELECT very_long_table_name_0 very_long_table_name_1");
   }
 
   private static Stream<Arguments> sqlArgs() {
@@ -341,11 +341,21 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "select col from table where col in (select * from anotherTable)",
             expect("SELECT", null, "SELECT table SELECT anotherTable")),
-        Arguments.of("select col from table1, table2", expect("SELECT", null, "SELECT table1")),
         Arguments.of(
-            "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1")),
+            "select col from table1, table2", expect("SELECT", null, "SELECT table1 table2")),
         Arguments.of(
-            "select col from table1 as t1, table2 as t2", expect("SELECT", null, "SELECT table1")),
+            "select col from table1 t1, table2 t2", expect("SELECT", null, "SELECT table1 table2")),
+        Arguments.of(
+            "select col from table1 as t1, table2 as t2",
+            expect("SELECT", null, "SELECT table1 table2")),
+        // Example from semantic conventions: multiple tables in FROM clause
+        Arguments.of(
+            "SELECT * FROM songs, artists WHERE songs.artist_id = artists.id",
+            expect(
+                "SELECT * FROM songs, artists WHERE songs.artist_id = artists.id",
+                "SELECT",
+                null,
+                "SELECT songs artists")),
         Arguments.of(
             "select col from table where col in (1, 2, 3)",
             expect("select col from table where col in (?)", "SELECT", "table", "SELECT table")),
