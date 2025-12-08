@@ -5,63 +5,41 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server.route;
 
-import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
+import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
+import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import akka.http.scaladsl.server.RequestContext;
+import akka.http.scaladsl.server.RouteResult;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import scala.Function1;
+import scala.concurrent.Future;
 
 public class RouteConcatenationInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return namedOneOf(
-        // scala 2.11
-        "akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation$$anonfun$$tilde$1",
-        // scala 2.12 and later
-        "akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
+    return named("akka.http.scaladsl.server.RouteConcatenation$RouteWithConcatenation");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        namedOneOf(
-            // scala 2.11
-            "apply",
-            // scala 2.12 and later
-            "$anonfun$$tilde$1"),
-        this.getClass().getName() + "$ApplyAdvice");
-
-    // This advice seems to be only needed when defining routes with java dsl. Since java dsl tests
-    // use scala 2.12 we are going to skip instrumenting this for scala 2.11.
-    transformer.applyAdviceToMethod(
-        namedOneOf("$anonfun$$tilde$2"), this.getClass().getName() + "$Apply2Advice");
+    transformer.applyAdviceToMethod(isConstructor(), this.getClass().getName() + "$ApplyAdvice");
+    transformer.applyAdviceToMethod(named("$tilde"), this.getClass().getName() + "$ApplyAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ApplyAdvice {
 
+    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      // when routing dsl uses concat(path(...) {...}, path(...) {...}) we'll restore the currently
-      // matched route after each matcher so that match attempts that failed wouldn't get recorded
-      // in the route
-      AkkaRouteHolder.save();
-    }
-
-    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class)
-    public static void onExit() {
-      AkkaRouteHolder.restore();
-    }
-  }
-
-  @SuppressWarnings("unused")
-  public static class Apply2Advice {
-
-    @Advice.OnMethodEnter(suppress = Throwable.class)
-    public static void onEnter() {
-      AkkaRouteHolder.reset();
+    public static Object onEnter(
+        @Advice.Argument(0) Function1<RequestContext, Future<RouteResult>> route) {
+      return new AkkaRouteWrapper(route);
     }
   }
 }
