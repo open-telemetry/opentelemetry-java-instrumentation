@@ -60,7 +60,7 @@ public class TransactionInstrumentation implements TypeInstrumentation {
 
       Context parentContext = Java8BytecodeBridge.currentContext();
       HibernateOperation hibernateOperation =
-          new HibernateOperation("Transaction.commit", sessionInfo);
+          HibernateOperation.fromSpanName("Transaction.commit", sessionInfo);
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }

@@ -184,5 +184,104 @@ class DbClientSpanNameExtractorTest {
         spanName);
   }
 
+  @Test
+  void shouldFallBackToServerAddressAndPort() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getServerAddress(dbRequest)).thenReturn("localhost");
+      when(dbAttributesGetter.getServerPort(dbRequest)).thenReturn(5432);
+    } else {
+      // Old semconv does not use server address/port for span names
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertEquals(
+        SemconvStability.emitStableDatabaseSemconv() ? "localhost:5432" : "DB Query", spanName);
+  }
+
+  @Test
+  void shouldFallBackToServerAddressWithoutPort() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getServerAddress(dbRequest)).thenReturn("localhost");
+      when(dbAttributesGetter.getServerPort(dbRequest)).thenReturn(null);
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertEquals(SemconvStability.emitStableDatabaseSemconv() ? "localhost" : "DB Query", spanName);
+  }
+
+  @Test
+  void shouldFallBackToDbSystemName() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getDbSystem(dbRequest)).thenReturn("postgresql");
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertEquals(
+        SemconvStability.emitStableDatabaseSemconv() ? "postgresql" : "DB Query", spanName);
+  }
+
+  @Test
+  void shouldUseOperationWithServerAddressFallback() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(dbAttributesGetter.getDbOperationName(dbRequest)).thenReturn("PING");
+    if (SemconvStability.emitStableDatabaseSemconv()) {
+      when(dbAttributesGetter.getServerAddress(dbRequest)).thenReturn("localhost");
+      when(dbAttributesGetter.getServerPort(dbRequest)).thenReturn(6379);
+    }
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertEquals(
+        SemconvStability.emitStableDatabaseSemconv() ? "PING localhost:6379" : "PING", spanName);
+  }
+
+  @Test
+  void shouldPreferNamespaceOverServerAddress() {
+    // given
+    DbRequest dbRequest = new DbRequest();
+
+    when(dbAttributesGetter.getDbNamespace(dbRequest)).thenReturn("mydb");
+    // Note: not stubbing serverAddress/serverPort because namespace takes priority,
+    // and the stubs would be unnecessary
+
+    SpanNameExtractor<DbRequest> underTest = DbClientSpanNameExtractor.create(dbAttributesGetter);
+
+    // when
+    String spanName = underTest.extract(dbRequest);
+
+    // then
+    assertEquals("mydb", spanName);
+  }
+
   static class DbRequest {}
 }

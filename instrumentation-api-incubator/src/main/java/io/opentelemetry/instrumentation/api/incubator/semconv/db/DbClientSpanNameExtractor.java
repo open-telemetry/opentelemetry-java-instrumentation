@@ -72,6 +72,70 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     return name.toString();
   }
 
+  /**
+   * Computes the span name following stable semconv fallback order.
+   *
+   * <p>Fallback order:
+   *
+   * <ol>
+   *   <li>{db.query.summary} if available
+   *   <li>{db.operation.name} {target} if operation is available
+   *   <li>{target} if only target is available
+   *   <li>{db.system.name} if nothing else is available
+   * </ol>
+   *
+   * <p>Target fallback order: collection_name → stored_procedure_name → namespace →
+   * server.address:server.port
+   */
+  protected String computeSpanNameStable(
+      DbClientAttributesGetter<REQUEST, ?> getter,
+      REQUEST request,
+      @Nullable String operation,
+      @Nullable String collectionName,
+      @Nullable String storedProcedureName) {
+    // Determine target following fallback order: collection → stored_procedure → namespace →
+    // server:port
+    String target = collectionName;
+    if (target == null) {
+      target = storedProcedureName;
+    }
+    if (target == null) {
+      target = getter.getDbNamespace(request);
+    }
+    if (target == null) {
+      String serverAddress = getter.getServerAddress(request);
+      if (serverAddress != null) {
+        Integer serverPort = getter.getServerPort(request);
+        if (serverPort != null) {
+          target = serverAddress + ":" + serverPort;
+        } else {
+          target = serverAddress;
+        }
+      }
+    }
+
+    // Build span name
+    if (operation != null) {
+      if (target != null) {
+        return operation + " " + target;
+      }
+      return operation;
+    }
+
+    // No operation - use target alone
+    if (target != null) {
+      return target;
+    }
+
+    // Final fallback to db.system.name
+    String dbSystem = getter.getDbSystem(request);
+    if (dbSystem != null) {
+      return dbSystem;
+    }
+
+    return DEFAULT_SPAN_NAME;
+  }
+
   private static final class GenericDbClientSpanNameExtractor<REQUEST>
       extends DbClientSpanNameExtractor<REQUEST> {
 
@@ -85,6 +149,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
     public String extract(REQUEST request) {
       String namespace = getter.getDbNamespace(request);
       String operationName = getter.getDbOperationName(request);
+      if (SemconvStability.emitStableDatabaseSemconv()) {
+        return computeSpanNameStable(getter, request, operationName, null, null);
+      }
       return computeSpanName(namespace, operationName, null, null);
     }
   }
@@ -104,6 +171,9 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
+        if (SemconvStability.emitStableDatabaseSemconv()) {
+          return computeSpanNameStable(getter, request, null, null, null);
+        }
         return computeSpanName(namespace, null, null, null);
       }
 
@@ -131,13 +201,14 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           }
           return querySummary;
         }
-        // Fall back to old behavior if no query summary
+        // Fall back to stable semconv span naming
         String operation = sanitizedStatement.getOperationName();
         if (isBatch(request)) {
-          operation = "BATCH " + operation;
+          operation = operation != null ? "BATCH " + operation : "BATCH";
         }
-        return computeSpanName(
-            namespace,
+        return computeSpanNameStable(
+            getter,
+            request,
             operation,
             sanitizedStatement.getCollectionName(),
             sanitizedStatement.getStoredProcedureName());
@@ -145,12 +216,12 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
 
       MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
       String querySummary = multiQuery.getQuerySummary();
-      // Fall back to old behavior if query summary equals operation (no common table)
+      // Fall back to stable semconv span naming if query summary equals operation (no common table)
       if (!querySummary.equals(multiQuery.getOperationName())) {
         return querySummary;
       }
-      return computeSpanName(
-          namespace, multiQuery.getOperationName(), multiQuery.getCollectionName(), null);
+      return computeSpanNameStable(
+          getter, request, multiQuery.getOperationName(), multiQuery.getCollectionName(), null);
     }
 
     private boolean isBatch(REQUEST request) {

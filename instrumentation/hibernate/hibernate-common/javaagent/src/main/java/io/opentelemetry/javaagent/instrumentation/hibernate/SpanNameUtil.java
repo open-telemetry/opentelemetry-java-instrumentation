@@ -16,21 +16,22 @@ public final class SpanNameUtil {
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
   public static String getSpanNameForQuery(String query) {
-    // set span name to default value that is used when sql sanitizer fails to extract
+    // set operation name to default value that is used when sql sanitizer fails to extract
     // operation name
-    String spanName = "Hibernate Query";
+    String operationName = "Hibernate Query";
     SqlStatementInfo info = sanitizer.sanitize(query);
+
     if (info.getOperationName() != null) {
-      spanName = info.getOperationName();
+      operationName = info.getOperationName();
       String identifier = info.getCollectionName();
       if (identifier == null) {
         identifier = info.getStoredProcedureName();
       }
       if (identifier != null) {
-        spanName += " " + identifier;
+        operationName += " " + identifier;
       }
     }
-    return spanName;
+    return operationName;
   }
 
   public static String getSessionMethodOperationName(String methodName) {

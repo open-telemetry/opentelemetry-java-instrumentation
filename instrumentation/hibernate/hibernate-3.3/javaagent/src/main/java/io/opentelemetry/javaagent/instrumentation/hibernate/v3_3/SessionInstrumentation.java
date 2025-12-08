@@ -107,7 +107,8 @@ public class SessionInstrumentation implements TypeInstrumentation {
       String entityName =
           getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
       HibernateOperation hibernateOperation =
-          new HibernateOperation(getSessionMethodOperationName(name), entityName, sessionInfo);
+          HibernateOperation.fromOperationName(
+              getSessionMethodOperationName(name), entityName, sessionInfo);
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }
