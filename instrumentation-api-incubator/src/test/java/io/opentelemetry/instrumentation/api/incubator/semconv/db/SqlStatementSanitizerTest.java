@@ -306,13 +306,13 @@ class SqlStatementSanitizerTest {
             expect("SELECT", "schema.table", "SELECT schema.table")),
         Arguments.of(
             "SELECT x, y, z FROM `schema table`",
-            expect("SELECT", "schema table", "SELECT schema table")),
+            expect("SELECT", "schema table", "SELECT `schema table`")),
         Arguments.of(
             "SELECT x, y, z FROM `schema`.`table`",
             expect("SELECT", "`schema`.`table`", "SELECT `schema`.`table`")),
         Arguments.of(
             "SELECT x, y, z FROM \"schema table\"",
-            expect("SELECT", "schema table", "SELECT schema table")),
+            expect("SELECT", "schema table", "SELECT \"schema table\"")),
         Arguments.of(
             "SELECT x, y, z FROM \"schema\".\"table\"",
             expect("SELECT", "\"schema\".\"table\"", "SELECT \"schema\".\"table\"")),
@@ -391,10 +391,11 @@ class SqlStatementSanitizerTest {
         Arguments.of(
             "insert into db.table where lalala", expect("INSERT", "db.table", "INSERT db.table")),
         Arguments.of(
-            "insert into `db table` where lalala", expect("INSERT", "db table", "INSERT db table")),
+            "insert into `db table` where lalala",
+            expect("INSERT", "db table", "INSERT `db table`")),
         Arguments.of(
             "insert into \"db table\" where lalala",
-            expect("INSERT", "db table", "INSERT db table")),
+            expect("INSERT", "db table", "INSERT \"db table\"")),
         Arguments.of("insert without i-n-t-o", expect("INSERT", null, "INSERT")),
 
         // Delete
@@ -403,10 +404,10 @@ class SqlStatementSanitizerTest {
             expect("DELETE", "table", "DELETE table")),
         Arguments.of(
             "delete from `my table` where something something",
-            expect("DELETE", "my table", "DELETE my table")),
+            expect("DELETE", "my table", "DELETE `my table`")),
         Arguments.of(
             "delete from \"my table\" where something something",
-            expect("DELETE", "my table", "DELETE my table")),
+            expect("DELETE", "my table", "DELETE \"my table\"")),
         Arguments.of(
             "delete from foo where x IN (1,2,3)",
             expect("delete from foo where x IN (?)", "DELETE", "foo", "DELETE foo")),
@@ -419,17 +420,18 @@ class SqlStatementSanitizerTest {
             expect("update table set answer=?", "UPDATE", "table", "UPDATE table")),
         Arguments.of(
             "update `my table` set answer=42",
-            expect("update `my table` set answer=?", "UPDATE", "my table", "UPDATE my table")),
+            expect("update `my table` set answer=?", "UPDATE", "my table", "UPDATE `my table`")),
         Arguments.of(
             "update `my table` set answer=42 where x IN('a', 'b') AND y In ('a',  'b')",
             expect(
                 "update `my table` set answer=? where x IN(?) AND y In (?)",
                 "UPDATE",
                 "my table",
-                "UPDATE my table")),
+                "UPDATE `my table`")),
         Arguments.of(
             "update \"my table\" set answer=42",
-            expect("update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE my table")),
+            expect(
+                "update \"my table\" set answer=?", "UPDATE", "my table", "UPDATE \"my table\"")),
         Arguments.of("update /*table", expect("UPDATE", null, "UPDATE")),
 
         // Call
@@ -440,8 +442,8 @@ class SqlStatementSanitizerTest {
 
         // Merge
         Arguments.of("merge into table", expect("MERGE", "table", "MERGE table")),
-        Arguments.of("merge into `my table`", expect("MERGE", "my table", "MERGE my table")),
-        Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE my table")),
+        Arguments.of("merge into `my table`", expect("MERGE", "my table", "MERGE `my table`")),
+        Arguments.of("merge into \"my table\"", expect("MERGE", "my table", "MERGE \"my table\"")),
         Arguments.of(
             "merge table (into is optional in some dbs)", expect("MERGE", "table", "MERGE table")),
         Arguments.of("merge (into )))", expect("MERGE", null, "MERGE")),
@@ -454,11 +456,12 @@ class SqlStatementSanitizerTest {
 
   private static Stream<Arguments> ddlArgs() {
     return Stream.of(
-        Arguments.of("CREATE TABLE `table`", expect("CREATE TABLE", "table", "CREATE TABLE table")),
+        Arguments.of(
+            "CREATE TABLE `table`", expect("CREATE TABLE", "table", "CREATE TABLE `table`")),
         Arguments.of(
             "CREATE TABLE IF NOT EXISTS table",
             expect("CREATE TABLE", "table", "CREATE TABLE table")),
-        Arguments.of("DROP TABLE `if`", expect("DROP TABLE", "if", "DROP TABLE if")),
+        Arguments.of("DROP TABLE `if`", expect("DROP TABLE", "if", "DROP TABLE `if`")),
         Arguments.of(
             "ALTER TABLE table ADD CONSTRAINT c FOREIGN KEY (foreign_id) REFERENCES ref (id)",
             expect("ALTER TABLE", "table", "ALTER TABLE table")),

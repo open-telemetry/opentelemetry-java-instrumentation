@@ -238,7 +238,8 @@ WHITESPACE           = [ \t\r\n]+
     boolean handleIdentifier() {
       if (shouldHandleIdentifier()) {
         mainIdentifier = readIdentifierName();
-        appendTargetToSummary(mainIdentifier);
+        // Use yytext() to preserve quotes in query summary per semantic conventions
+        appendTargetToSummary(yytext());
       }
       return true;
     }
@@ -303,8 +304,8 @@ WHITESPACE           = [ \t\r\n]+
         ++identifiersAfterComma;
         // First identifier after comma is the table name - add it to summary
         if (identifiersAfterComma == 1) {
-          String tableName = readIdentifierName();
-          appendTargetToSummary(tableName);
+          // Use yytext() to preserve quotes in query summary per semantic conventions
+          appendTargetToSummary(yytext());
         }
         return false;
       }
@@ -326,7 +327,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
       mainIdentifier = readIdentifierName();
-      appendTargetToSummary(mainIdentifier);
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       mainTableSetAlready = true;
       expectingTableName = false;
       // start counting identifiers after encountering main from clause
@@ -370,7 +372,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
       mainIdentifier = readIdentifierName();
-      appendTargetToSummary(mainIdentifier);
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -389,7 +392,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
       mainIdentifier = readIdentifierName();
-      appendTargetToSummary(mainIdentifier);
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -397,7 +401,8 @@ WHITESPACE           = [ \t\r\n]+
   private class Update extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
-      appendTargetToSummary(mainIdentifier);
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -405,7 +410,8 @@ WHITESPACE           = [ \t\r\n]+
   private class Call extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
-      appendTargetToSummary(mainIdentifier);
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
 
@@ -418,7 +424,8 @@ WHITESPACE           = [ \t\r\n]+
   private class Merge extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
-      appendTargetToSummary(mainIdentifier);
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
