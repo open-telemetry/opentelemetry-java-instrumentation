@@ -135,21 +135,22 @@ class KafkaConnectRuleTest {
     registerMBean(
         "kafka.connect:type=connector-metrics,connector=confluent-connector",
         mapOf(
-            "connector-class", "io.test.MyConnector",
             "connector-type", "source",
-            "connector-version", "1.2.3",
             "status", "RUNNING"));
 
     registerMBean(
         "kafka.connect:type=connector-task-metrics,connector=confluent-connector,task=0",
         mapOf(
             "status", "DESTROYED",
-            "connector-class", "io.test.MyConnector",
             "connector-type", "sink",
-            "connector-version", "9.9",
-            "task-class", "io.test.Task",
-            "task-version", "1.0",
-            "offset-commit-avg-time-ms", 5L));
+            "batch-size-avg", 1L,
+            "batch-size-max", 2L,
+            "offset-commit-avg-time-ms", 5L,
+            "offset-commit-failure-percentage", 0.0d,
+            "offset-commit-max-time-ms", 6L,
+            "offset-commit-success-percentage", 100.0d,
+            "pause-ratio", 0.0d,
+            "running-ratio", 1.0d));
 
     startKafkaConnectTelemetry();
 
@@ -160,9 +161,6 @@ class KafkaConnectRuleTest {
         Attributes.builder()
             .put("kafka.connect.connector", "confluent-connector")
             .put("kafka.connect.connector.state", "running")
-            .put("kafka.connect.connector.class", "io.test.MyConnector")
-            .put("kafka.connect.connector.type.raw", "source")
-            .put("kafka.connect.connector.version", "1.2.3")
             .build();
     assertLongSum("kafka.connect.connector.status", connectorStatusAttributes, 1);
 
@@ -170,11 +168,6 @@ class KafkaConnectRuleTest {
         Attributes.builder()
             .put("kafka.connect.connector", "confluent-connector")
             .put("kafka.connect.task.id", "0")
-            .put("kafka.connect.connector.class", "io.test.MyConnector")
-            .put("kafka.connect.connector.type.raw", "sink")
-            .put("kafka.connect.connector.version", "9.9")
-            .put("kafka.connect.task.class", "io.test.Task")
-            .put("kafka.connect.task.version", "1.0")
             .put("kafka.connect.task.state", "destroyed")
             .build();
     assertLongSum("kafka.connect.task.status", taskStatusAttributes, 1);
@@ -192,27 +185,18 @@ class KafkaConnectRuleTest {
             "connector-unassigned-task-count", 0L));
 
     registerMBean(
-        "kafka.connect:type=connector-predicate-metrics,connector=apache-connector,task=1,predicate=sample",
-        mapOf("predicate-class", "io.test.Predicate", "predicate-version", "2.1.0"));
-
-    registerMBean(
-        "kafka.connect:type=connector-transform-metrics,connector=apache-connector,task=1,transform=mask",
-        mapOf("transform-class", "io.test.Transform", "transform-version", "0.9.0"));
-
-    registerMBean(
         "kafka.connect:type=connector-task-metrics,connector=apache-connector,task=1",
         mapOf(
-            "connector-class", "io.test.ApacheConnector",
             "connector-type", "source",
-            "connector-version", "3.0",
-            "task-class", "io.test.Task",
-            "task-version", "3.1",
-            "header-converter-class", "io.test.HeaderConverter",
-            "header-converter-version", "1.0",
-            "key-converter-class", "io.test.KeyConverter",
-            "key-converter-version", "1.1",
-            "value-converter-class", "io.test.ValueConverter",
-            "value-converter-version", "1.2"));
+            "status", "RUNNING",
+            "batch-size-avg", 4L,
+            "batch-size-max", 5L,
+            "offset-commit-avg-time-ms", 6L,
+            "offset-commit-failure-percentage", 0.0d,
+            "offset-commit-max-time-ms", 7L,
+            "offset-commit-success-percentage", 100.0d,
+            "pause-ratio", 0.0d,
+            "running-ratio", 1.0d));
 
     registerMBean(
         "kafka.connect:type=source-task-metrics,connector=apache-connector,task=1",
@@ -239,50 +223,6 @@ class KafkaConnectRuleTest {
             io.opentelemetry.api.common.AttributeKey.stringKey("kafka.connect.connector"),
             "apache-connector");
     assertLongSum("kafka.connect.worker.connector.task.running", connectorTaskAttributes, 2);
-
-    assertLongSum(
-        "kafka.connect.predicate.class",
-        Attributes.builder()
-            .put("kafka.connect.connector", "apache-connector")
-            .put("kafka.connect.task.id", "1")
-            .put("kafka.connect.predicate", "sample")
-            .put("kafka.connect.predicate.class", "io.test.Predicate")
-            .put("kafka.connect.predicate.class.state", "configured")
-            .put("kafka.connect.predicate.version", "2.1.0")
-            .build(),
-        1);
-
-    assertLongSum(
-        "kafka.connect.transform.class",
-        Attributes.builder()
-            .put("kafka.connect.connector", "apache-connector")
-            .put("kafka.connect.task.id", "1")
-            .put("kafka.connect.transform", "mask")
-            .put("kafka.connect.transform.class", "io.test.Transform")
-            .put("kafka.connect.transform.class.state", "configured")
-            .put("kafka.connect.transform.version", "0.9.0")
-            .build(),
-        1);
-
-    Attributes connectorTaskMetaAttributes =
-        Attributes.builder()
-            .put("kafka.connect.connector", "apache-connector")
-            .put("kafka.connect.task.id", "1")
-            .put("kafka.connect.connector.class", "io.test.ApacheConnector")
-            .put("kafka.connect.connector.type.raw", "source")
-            .put("kafka.connect.connector.version", "3.0")
-            .put("kafka.connect.task.class", "io.test.Task")
-            .put("kafka.connect.task.version", "3.1")
-            .build();
-    assertLongSum(
-        "kafka.connect.task.header.converter.class",
-        Attributes.builder()
-            .putAll(connectorTaskMetaAttributes)
-            .put("kafka.connect.converter.header.class", "io.test.HeaderConverter")
-            .put("kafka.connect.task.header.converter.class.state", "configured")
-            .put("kafka.connect.converter.header.version", "1.0")
-            .build(),
-        1);
 
     assertLongGauge(
         "kafka.connect.source.transaction.size.max",

@@ -1,15 +1,14 @@
 # Kafka Connect Metrics
 
 Here is the list of metrics based on MBeans exposed by Apache Kafka Connect. String-valued JMX
-attributes (class/type/version information) are exported as `UpDownCounter` metrics with value `1`
-and carry the raw string value as metric attributes.
+attributes are exported as `UpDownCounter` metrics with value `1` and only include connector/task
+identifiers alongside any state-mapping attributes.
 
 ## Compatibility
 
 This rule set targets both Apache Kafka Connect and Confluent Platform. Apache documents several
 metrics not surfaced in Confluent docs (worker rebalance protocol, per-connector task counts on
-workers, predicate/transform metadata, connector task metadata including converter info, source
-transaction size stats, and sink record lag max); all of them are included below. Status metrics use
+workers, source transaction size stats, and sink record lag max); all of them are included below. Status metrics use
 the superset of values across both variants (connector: running, paused, stopped, failed,
 restarting, unassigned, degraded; task: running, paused, failed, restarting, unassigned,
 destroyed) and fall back to `unknown` for any new values. Differences in bean placeholder
@@ -46,14 +45,11 @@ formatting between the docs are cosmetic; bean names align across both variants.
 
 ## Worker rebalance metrics
 
-All metrics include `kafka.connect.worker.leader`.
-
 | Metric Name                                    | Type          | Unit        | Attributes                           | Description                                                                     |
 |------------------------------------------------|---------------|-------------|--------------------------------------|---------------------------------------------------------------------------------|
 | kafka.connect.worker.rebalance.completed.total | Counter       | {rebalance} |                                      | The total number of rebalances completed by this worker.                        |
 | kafka.connect.worker.rebalance.protocol        | UpDownCounter | 1           | kafka.connect.protocol.state         | The Connect protocol used by this cluster.                                      |
 | kafka.connect.worker.rebalance.epoch           | UpDownCounter | {epoch}     |                                      | The epoch or generation number of this worker.                                  |
-| kafka.connect.worker.rebalance.leader          | UpDownCounter | 1           | kafka.connect.worker.leader.state    | The name of the group leader.                                                   |
 | kafka.connect.worker.rebalance.avg.time        | Gauge         | s           |                                      | The average time in milliseconds spent by this worker to rebalance.             |
 | kafka.connect.worker.rebalance.max.time        | Gauge         | s           |                                      | The maximum time in milliseconds spent by this worker to rebalance.             |
 | kafka.connect.worker.rebalance.active          | UpDownCounter | 1           | kafka.connect.worker.rebalance.state | Whether this worker is currently rebalancing.                                   |
@@ -61,39 +57,22 @@ All metrics include `kafka.connect.worker.leader`.
 
 ## Connector metrics
 
-Attributes: `kafka.connect.connector`, `kafka.connect.connector.class`, `kafka.connect.connector.version`, `kafka.connect.connector.type.raw`.
+Attributes: `kafka.connect.connector` and the state attribute shown.
 
-| Metric Name                     | Type          | Unit | Attributes                            | Description                                                                                                                                                                 |
-|---------------------------------|---------------|------|---------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| kafka.connect.connector.class   | UpDownCounter | 1    | kafka.connect.connector.class.state   | The name of the connector class.                                                                                                                                            |
-| kafka.connect.connector.type    | UpDownCounter | 1    | kafka.connect.connector.type          | The type of the connector. One of 'source' or 'sink'.                                                                                                                       |
-| kafka.connect.connector.version | UpDownCounter | 1    | kafka.connect.connector.version.state | The version of the connector class, as reported by the connector.                                                                                                           |
-| kafka.connect.connector.status  | UpDownCounter | 1    | kafka.connect.connector.state         | Connector lifecycle state indicator (1 when the state matches the attribute value); accepts running, paused, stopped, failed, restarting, unassigned, degraded, or unknown. |
-
-## Predicate metrics
-
-Attributes: `kafka.connect.connector`, `kafka.connect.task.id`, `kafka.connect.predicate`, `kafka.connect.predicate.class`, `kafka.connect.predicate.version`.
-
-| Metric Name                     | Type          | Unit | Attributes                            | Description                            |
-|---------------------------------|---------------|------|---------------------------------------|----------------------------------------|
-| kafka.connect.predicate.class   | UpDownCounter | 1    | kafka.connect.predicate.class.state   | The class name of the predicate class. |
-| kafka.connect.predicate.version | UpDownCounter | 1    | kafka.connect.predicate.version.state | The version of the predicate class.    |
+| Metric Name                     | Type          | Unit | Attributes                             | Description                                                                                                                                                                 |
+|---------------------------------|---------------|------|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| kafka.connect.connector.type    | UpDownCounter | 1    | kafka.connect.connector.type           | The type of the connector. One of 'source' or 'sink'.                                                                                                                       |
+| kafka.connect.connector.status  | UpDownCounter | 1    | kafka.connect.connector.state          | Connector lifecycle state indicator (1 when the state matches the attribute value); accepts running, paused, stopped, failed, restarting, unassigned, degraded, or unknown. |
 
 ## Connector task metrics
 
-Attributes include `kafka.connect.connector`, `kafka.connect.task.id`, connector class/type/version, converter class/version attributes, and task class/version.
+All metrics include `kafka.connect.connector` and `kafka.connect.task.id`. Attributes column lists any additional state attributes.
 
 | Metric Name                                         | Type          | Unit     | Attributes                                        | Description                                                                                                        |
 |-----------------------------------------------------|---------------|----------|---------------------------------------------------|--------------------------------------------------------------------------------------------------------------------|
 | kafka.connect.task.batch.size.avg                   | Gauge         | {record} |                                                   | The average number of records in the batches the task has processed so far.                                        |
 | kafka.connect.task.batch.size.max                   | Gauge         | {record} |                                                   | The number of records in the largest batch the task has processed so far.                                          |
-| kafka.connect.task.connector.class                  | UpDownCounter | 1        | kafka.connect.task.connector.class.state          | The name of the connector class.                                                                                   |
 | kafka.connect.task.connector.type                   | UpDownCounter | 1        | kafka.connect.task.connector.type                 | The type of the connector. One of 'source' or 'sink'.                                                              |
-| kafka.connect.task.connector.version                | UpDownCounter | 1        | kafka.connect.task.connector.version.state        | The version of the connector class, as reported by the connector.                                                  |
-| kafka.connect.task.header.converter.class           | UpDownCounter | 1        | kafka.connect.task.header.converter.class.state   | The fully qualified class name from header.converter.                                                              |
-| kafka.connect.task.header.converter.version         | UpDownCounter | 1        | kafka.connect.task.header.converter.version.state | The version instantiated for header.converter. May be undefined.                                                   |
-| kafka.connect.task.key.converter.class              | UpDownCounter | 1        | kafka.connect.task.key.converter.class.state      | The fully qualified class name from key.converter.                                                                 |
-| kafka.connect.task.key.converter.version            | UpDownCounter | 1        | kafka.connect.task.key.converter.version.state    | The version instantiated for key.converter. May be undefined.                                                      |
 | kafka.connect.task.offset.commit.avg.time           | Gauge         | s        |                                                   | The average time in milliseconds taken by this task to commit offsets.                                             |
 | kafka.connect.task.offset.commit.failure.percentage | Gauge         | 1        |                                                   | The average percentage of this task's offset commit attempts that failed.                                          |
 | kafka.connect.task.offset.commit.max.time           | Gauge         | s        |                                                   | The maximum time in milliseconds taken by this task to commit offsets.                                             |
@@ -101,19 +80,6 @@ Attributes include `kafka.connect.connector`, `kafka.connect.task.id`, connector
 | kafka.connect.task.pause.ratio                      | Gauge         | 1        |                                                   | The fraction of time this task has spent in the pause state.                                                       |
 | kafka.connect.task.running.ratio                    | Gauge         | 1        |                                                   | The fraction of time this task has spent in the running state.                                                     |
 | kafka.connect.task.status                           | UpDownCounter | 1        | kafka.connect.task.state                          | The status of the connector task; supports running, paused, failed, restarting, unassigned, destroyed, or unknown. |
-| kafka.connect.task.class                            | UpDownCounter | 1        | kafka.connect.task.class.state                    | The class name of the task.                                                                                        |
-| kafka.connect.task.version                          | UpDownCounter | 1        | kafka.connect.task.version.state                  | The version of the task.                                                                                           |
-| kafka.connect.task.value.converter.class            | UpDownCounter | 1        | kafka.connect.task.value.converter.class.state    | The fully qualified class name from value.converter.                                                               |
-| kafka.connect.task.value.converter.version          | UpDownCounter | 1        | kafka.connect.task.value.converter.version.state  | The version instantiated for value.converter. May be undefined.                                                    |
-
-## Transform metrics
-
-Attributes: `kafka.connect.connector`, `kafka.connect.task.id`, `kafka.connect.transform`, `kafka.connect.transform.class`, `kafka.connect.transform.version`.
-
-| Metric Name                     | Type          | Unit | Attributes                            | Description                                 |
-|---------------------------------|---------------|------|---------------------------------------|---------------------------------------------|
-| kafka.connect.transform.class   | UpDownCounter | 1    | kafka.connect.transform.class.state   | The class name of the transformation class. |
-| kafka.connect.transform.version | UpDownCounter | 1    | kafka.connect.transform.version.state | The version of the transformation class.    |
 
 ## Sink task metrics
 
