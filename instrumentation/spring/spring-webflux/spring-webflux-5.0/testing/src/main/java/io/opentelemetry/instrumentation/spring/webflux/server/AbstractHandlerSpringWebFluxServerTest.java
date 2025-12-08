@@ -27,7 +27,7 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
   @Override
   protected SpanDataAssert assertHandlerSpan(
       SpanDataAssert span, String method, ServerEndpoint endpoint) {
-    String handlerSpanName = "ServerTestRouteFactory" + "$$Lambda.handle";
+    String handlerSpanName = "ServerTestRouteFactory$$Lambda.handle";
     if (endpoint == NOT_FOUND) {
       handlerSpanName = "ResourceWebHandler.handle";
     }
@@ -76,12 +76,7 @@ public abstract class AbstractHandlerSpringWebFluxServerTest
                                             .isEqualTo(
                                                 "org.springframework.web.reactive.resource.NoResourceFoundException"))),
                         satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
-                        satisfies(
-                            EXCEPTION_MESSAGE,
-                            val ->
-                                val.satisfiesAnyOf(
-                                    v -> assertThat(v).isNull(),
-                                    v -> assertThat(v).contains("404")))));
+                        satisfies(EXCEPTION_MESSAGE, val -> val.contains("404"))));
       }
     }
     return span;
