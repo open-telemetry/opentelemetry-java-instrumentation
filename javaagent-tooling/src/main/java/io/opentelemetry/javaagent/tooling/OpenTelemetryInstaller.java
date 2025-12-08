@@ -9,8 +9,10 @@ import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.bootstrap.Slf4jBridgeLogRecorderHolder;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -19,6 +21,8 @@ import io.opentelemetry.sdk.autoconfigure.internal.AutoConfigureUtil;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigurationException;
 import io.opentelemetry.sdk.common.CompletableResultCode;
+import io.opentelemetry.sdk.logs.LogRecordProcessor;
+import io.opentelemetry.sdk.logs.ReadWriteLogRecord;
 import java.util.Arrays;
 
 public final class OpenTelemetryInstaller {
@@ -36,6 +40,8 @@ public final class OpenTelemetryInstaller {
         AutoConfiguredOpenTelemetrySdk.builder()
             .setResultAsGlobal()
             .setServiceClassLoader(extensionClassLoader)
+            .addLoggerProviderCustomizer(
+                (builder, unused) -> builder.addLogRecordProcessor(new Slf4jBridgeAgentProcessor()))
             .build();
     ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
@@ -54,6 +60,20 @@ public final class OpenTelemetryInstaller {
     }
 
     return autoConfiguredSdk;
+  }
+
+  private static class Slf4jBridgeAgentProcessor implements LogRecordProcessor {
+    @Override
+    public void onEmit(Context context, ReadWriteLogRecord logRecord) {
+      Slf4jBridgeLogRecorderHolder.get()
+          .record(
+              context,
+              logRecord.getInstrumentationScopeInfo().getName(),
+              logRecord.getEventName(),
+              logRecord.getBodyValue(),
+              logRecord.getAttributes(),
+              logRecord.getSeverity());
+    }
   }
 
   // Visible for testing
