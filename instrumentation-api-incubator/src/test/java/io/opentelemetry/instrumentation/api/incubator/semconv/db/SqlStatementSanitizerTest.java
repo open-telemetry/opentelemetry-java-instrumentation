@@ -172,10 +172,10 @@ class SqlStatementSanitizerTest {
     }
     String result = SqlStatementSanitizer.create(true).sanitize(sql.toString()).getQuerySummary();
     assertThat(result).isNotNull();
-    assertThat(result.length()).isLessThanOrEqualTo(255);
-    // Implicit join (comma-separated tables) should include all table names in the summary
-    // but truncated at 255 characters
-    assertThat(result).startsWith("SELECT very_long_table_name_0 very_long_table_name_1");
+    assertThat(result)
+        .isEqualTo(
+            "SELECT very_long_table_name_0 very_long_table_name_1 very_long_table_name_2 very_long_table_name_3 very_long_table_name_4 very_long_table_name_5 very_long_table_name_6 very_long_table_name_7 very_long_table_name_8 very_long_table_name_9");
+    assertThat(result.length()).isEqualTo(236);
   }
 
   private static Stream<Arguments> sqlArgs() {
