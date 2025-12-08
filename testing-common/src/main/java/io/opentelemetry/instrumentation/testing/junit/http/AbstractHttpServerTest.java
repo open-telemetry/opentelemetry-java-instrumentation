@@ -121,19 +121,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   public static <T, E extends Throwable> T controller(
       ServerEndpoint endpoint, ThrowingSupplier<T, E> closure) throws E {
-    System.out.println("=== controller() CALLED ===");
-    System.out.println("  Endpoint: " + endpoint);
-    System.out.println("  Thread: " + Thread.currentThread().getName());
-    System.out.println("  Current span: " + Span.current());
-    System.out.println(
-        "  Current span context valid: " + Span.current().getSpanContext().isValid());
-
     assert Span.current().getSpanContext().isValid() : "Controller should have a parent span.";
     if (endpoint == NOT_FOUND) {
-      System.out.println("  Endpoint is NOT_FOUND, skipping controller span");
       return closure.get();
     }
-    System.out.println("  Calling GlobalTraceUtil.runWithSpan('controller', ...)");
     return GlobalTraceUtil.runWithSpan("controller", closure);
   }
 

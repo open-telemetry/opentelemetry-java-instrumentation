@@ -47,10 +47,6 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
   @Override
   public void transform(TypeTransformer transformer) {
-    // Get the class name being transformed - this requires accessing transformer internals
-    // For now, just log that we're transforming
-    System.out.println("=== HandlerAdapterInstrumentation.transform() called ===");
-    System.out.println("  Applying advice to 'handle' method");
     transformer.applyAdviceToMethod(
         isMethod()
             .and(isPublic())
@@ -59,7 +55,6 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
             .and(takesArgument(1, Object.class))
             .and(takesArguments(2)),
         this.getClass().getName() + "$HandleAdvice");
-    System.out.println("=== HandlerAdapterInstrumentation advice applied ===");
   }
 
   @SuppressWarnings("unused")
@@ -76,13 +71,7 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope enter(ServerWebExchange exchange, Object handler) {
-        System.out.println("=== HandlerAdapter.enter() called ===");
-        System.out.println(
-            "  Handler: " + (handler != null ? handler.getClass().getName() : "null"));
-        System.out.println("  Thread: " + Thread.currentThread().getName());
-
         Context parentContext = Context.current();
-        System.out.println("  Parent context: " + parentContext);
 
         // HttpRouteSource.CONTROLLER has useFirst true, and it will update http.route only once
         // using the last portion of the nested path.
@@ -93,20 +82,13 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
             parentContext, HttpServerRouteSource.NESTED_CONTROLLER, httpRouteGetter(), exchange);
 
         if (handler == null) {
-          System.out.println("  Handler is null, returning null");
           return null;
         }
 
-        boolean shouldStart = instrumenter().shouldStart(parentContext, handler);
-        System.out.println("  shouldStart: " + shouldStart);
-
-        if (!shouldStart) {
-          System.out.println("  instrumenter().shouldStart returned false, returning null");
+        if (!instrumenter().shouldStart(parentContext, handler)) {
           return null;
         }
-
         Context context = instrumenter().start(parentContext, handler);
-        System.out.println("  Started new context: " + context);
         return new AdviceScope(context, context.makeCurrent());
       }
 
@@ -132,13 +114,10 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
     }
 
     @Nullable
-    @Advice.OnMethodEnter
+    @Advice.OnMethodEnter(suppress = Throwable.class)
     public static AdviceScope methodEnter(
         @Advice.Argument(0) ServerWebExchange exchange, @Advice.Argument(1) Object handler) {
-      System.out.println("=== HandlerAdapter.methodEnter() CALLED ===");
-      AdviceScope scope = AdviceScope.enter(exchange, handler);
-      System.out.println("  Returning AdviceScope: " + scope);
-      return scope;
+      return AdviceScope.enter(exchange, handler);
     }
 
     @AssignReturned.ToReturned
@@ -150,18 +129,11 @@ public class HandlerAdapterInstrumentation implements TypeInstrumentation {
         @Advice.Thrown Throwable throwable,
         @Advice.Enter @Nullable AdviceScope adviceScope) {
 
-      System.out.println("=== HandlerAdapter.methodExit() CALLED ===");
-      System.out.println("  AdviceScope: " + adviceScope);
-      System.out.println("  Throwable: " + throwable);
-
       if (adviceScope == null) {
-        System.out.println("  AdviceScope is null, returning original mono");
         return mono;
       }
 
-      Mono<HandlerResult> result = adviceScope.exit(throwable, exchange, handler, mono);
-      System.out.println("  Returning wrapped mono");
-      return result;
+      return adviceScope.exit(throwable, exchange, handler, mono);
     }
   }
 }

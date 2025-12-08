@@ -21,38 +21,6 @@ import org.junit.jupiter.api.Test;
  */
 public abstract class AbstractImmediateHandlerSpringWebFluxServerTest
     extends AbstractHandlerSpringWebFluxServerTest {
-  //  @Override
-  //  protected Class<?> getApplicationClass() {
-  //    return Application.class;
-  //  }
-
-  //  @Configuration
-  //  @EnableAutoConfiguration
-  //  static class Application {
-  //    @Bean
-  //    RouterFunction<ServerResponse> router() {
-  //      return new RouteFactory().createRoutes();
-  //    }
-  //
-  //    @Bean
-  //    NettyReactiveWebServerFactory nettyFactory() {
-  //      return new NettyReactiveWebServerFactory();
-  //    }
-  //  }
-
-  //  static class RouteFactory extends ServerTestRouteFactory {
-  //
-  //    @Override
-  //    protected Mono<ServerResponse> wrapResponse(
-  //        ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
-  //      return controller(
-  //          endpoint,
-  //          () -> {
-  //            spanAction.run();
-  //            return response;
-  //          });
-  //    }
-  //  }
 
   @Test
   void nestedPath() {
