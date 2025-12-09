@@ -9,6 +9,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -21,8 +22,11 @@ public final class VertxSqlInstrumenterFactory {
 
   public static Instrumenter<VertxSqlClientRequest, Void> createInstrumenter(
       String instrumentationName) {
+    boolean ansiQuotes = AgentCommonConfig.get().isStatementSanitizationAnsiQuotes();
     SpanNameExtractor<VertxSqlClientRequest> spanNameExtractor =
-        DbClientSpanNameExtractor.create(VertxSqlClientAttributesGetter.INSTANCE);
+        DbClientSpanNameExtractor.create(
+            VertxSqlClientAttributesGetter.INSTANCE,
+            ansiQuotes ? SqlDialect.ANSI_QUOTES : SqlDialect.DEFAULT);
 
     InstrumenterBuilder<VertxSqlClientRequest, Void> builder =
         Instrumenter.<VertxSqlClientRequest, Void>builder(
@@ -31,6 +35,7 @@ public final class VertxSqlInstrumenterFactory {
                 SqlClientAttributesExtractor.builder(VertxSqlClientAttributesGetter.INSTANCE)
                     .setStatementSanitizationEnabled(
                         AgentCommonConfig.get().isStatementSanitizationEnabled())
+                    .setSetStatementSanitizationAnsiQuotes(ansiQuotes)
                     .build())
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(VertxSqlClientNetAttributesGetter.INSTANCE))

@@ -36,7 +36,21 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
    */
   public static <REQUEST> SpanNameExtractor<REQUEST> create(
       SqlClientAttributesGetter<REQUEST, ?> getter) {
-    return new SqlClientSpanNameExtractor<>(getter);
+    return create(getter, SqlDialect.DEFAULT);
+  }
+
+  /**
+   * Returns a {@link SpanNameExtractor} that constructs the span name according to DB semantic
+   * conventions: {@code <db.operation> <db.name>.<identifier>}.
+   *
+   * @see SqlStatementInfo#getOperation() used to extract {@code <db.operation>}.
+   * @see DbClientAttributesGetter#getDbNamespace(Object) used to extract {@code <db.namespace>}.
+   * @see SqlStatementInfo#getMainIdentifier() used to extract {@code <db.table>} or stored
+   *     procedure name.
+   */
+  public static <REQUEST> SpanNameExtractor<REQUEST> create(
+      SqlClientAttributesGetter<REQUEST, ?> getter, SqlDialect sqlDialect) {
+    return new SqlClientSpanNameExtractor<>(getter, sqlDialect.ansiQuotes());
   }
 
   private static final String DEFAULT_SPAN_NAME = "DB Query";
@@ -87,14 +101,19 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
       extends DbClientSpanNameExtractor<REQUEST> {
 
     private final SqlClientAttributesGetter<REQUEST, ?> getter;
+    private final boolean ansiQuotes;
 
-    private SqlClientSpanNameExtractor(SqlClientAttributesGetter<REQUEST, ?> getter) {
+    private SqlClientSpanNameExtractor(
+        SqlClientAttributesGetter<REQUEST, ?> getter, boolean ansiQuotes) {
       this.getter = getter;
+      this.ansiQuotes = ansiQuotes;
     }
 
     @Override
     public String extract(REQUEST request) {
       String namespace = getter.getDbNamespace(request);
+      SqlDialect dialect =
+          SqlStatementSanitizerUtil.getDialect(getter.getDbSystem(request), ansiQuotes);
       Collection<String> rawQueryTexts = getter.getRawQueryTexts(request);
 
       if (rawQueryTexts.isEmpty()) {
@@ -106,14 +125,14 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
           return computeSpanName(namespace, null, null);
         }
         SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next(), dialect);
         return computeSpanName(
             namespace, sanitizedStatement.getOperation(), sanitizedStatement.getMainIdentifier());
       }
 
       if (rawQueryTexts.size() == 1) {
         SqlStatementInfo sanitizedStatement =
-            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next());
+            SqlStatementSanitizerUtil.sanitize(rawQueryTexts.iterator().next(), dialect);
         String operation = sanitizedStatement.getOperation();
         if (isBatch(request)) {
           operation = "BATCH " + operation;
@@ -121,7 +140,7 @@ public abstract class DbClientSpanNameExtractor<REQUEST> implements SpanNameExtr
         return computeSpanName(namespace, operation, sanitizedStatement.getMainIdentifier());
       }
 
-      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, false);
+      MultiQuery multiQuery = MultiQuery.analyze(rawQueryTexts, dialect, false);
       return computeSpanName(
           namespace,
           multiQuery.getOperation() != null ? "BATCH " + multiQuery.getOperation() : "BATCH",

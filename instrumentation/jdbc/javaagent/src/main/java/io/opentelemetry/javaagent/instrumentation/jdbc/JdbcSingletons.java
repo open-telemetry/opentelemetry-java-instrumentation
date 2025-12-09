@@ -54,6 +54,10 @@ public final class JdbcSingletons {
                 .getBoolean(
                     "otel.instrumentation.jdbc.statement-sanitizer.enabled",
                     AgentCommonConfig.get().isStatementSanitizationEnabled()),
+            AgentInstrumentationConfig.get()
+                .getBoolean(
+                    "otel.instrumentation.jdbc.statement-sanitizer.ansi-quotes",
+                    AgentCommonConfig.get().isStatementSanitizationAnsiQuotes()),
             CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =

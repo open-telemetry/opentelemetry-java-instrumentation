@@ -27,6 +27,11 @@ public final class R2dbcSingletons {
                     .getBoolean(
                         "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
                         AgentCommonConfig.get().isStatementSanitizationEnabled()))
+            .setStatementSanitizationAnsiQuotes(
+                AgentInstrumentationConfig.get()
+                    .getBoolean(
+                        "otel.instrumentation.r2dbc.statement-sanitizer.ansi-quotes",
+                        AgentCommonConfig.get().isStatementSanitizationAnsiQuotes()))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     R2dbcSqlAttributesGetter.INSTANCE,

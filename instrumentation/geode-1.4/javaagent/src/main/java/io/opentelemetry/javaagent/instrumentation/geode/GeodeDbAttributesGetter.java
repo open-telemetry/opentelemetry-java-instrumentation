@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.GEODE;
+
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
@@ -32,7 +34,7 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Nullable
   public String getDbQueryText(GeodeRequest request) {
     // sanitized statement is cached
-    return sanitizer.sanitize(request.getQuery()).getFullStatement();
+    return sanitizer.sanitize(request.getQuery(), GEODE).getFullStatement();
   }
 
   @Override

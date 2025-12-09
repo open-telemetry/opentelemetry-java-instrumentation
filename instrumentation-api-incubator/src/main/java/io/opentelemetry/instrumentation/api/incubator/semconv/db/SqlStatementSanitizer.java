@@ -45,15 +45,15 @@ public final class SqlStatementSanitizer {
     // cache growing too large
     // https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13180
     if (statement.length() > LARGE_STATEMENT_THRESHOLD) {
-      return sanitizeImpl(statement, dialect);
+      return sanitizeImpl(statement, dialect.ansiQuotes());
     }
     return sqlToStatementInfoCache.computeIfAbsent(
-        CacheKey.create(statement, dialect), k -> sanitizeImpl(statement, dialect));
+        CacheKey.create(statement, dialect), k -> sanitizeImpl(statement, dialect.ansiQuotes()));
   }
 
-  private static SqlStatementInfo sanitizeImpl(String statement, SqlDialect dialect) {
+  private static SqlStatementInfo sanitizeImpl(String statement, boolean ansiQuotes) {
     supportability.incrementCounter(SQL_STATEMENT_SANITIZER_CACHE_MISS);
-    return AutoSqlSanitizer.sanitize(statement, dialect);
+    return AutoSqlSanitizer.sanitize(statement, ansiQuotes);
   }
 
   // visible for tests

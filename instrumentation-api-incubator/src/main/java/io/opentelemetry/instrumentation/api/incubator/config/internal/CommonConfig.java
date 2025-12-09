@@ -34,6 +34,7 @@ public final class CommonConfig {
   private final Set<String> knownHttpRequestMethods;
   private final EnduserConfig enduserConfig;
   private final boolean statementSanitizationEnabled;
+  private final boolean statementSanitizationAnsiQuotes;
   private final boolean sqlCommenterEnabled;
   private final boolean emitExperimentalHttpClientTelemetry;
   private final boolean emitExperimentalHttpServerTelemetry;
@@ -88,6 +89,8 @@ public final class CommonConfig {
                 new ArrayList<>(HttpConstants.KNOWN_METHODS)));
     statementSanitizationEnabled =
         config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true);
+    statementSanitizationAnsiQuotes =
+        config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.ansi-quotes", false);
     sqlCommenterEnabled =
         config.getBoolean(
             "otel.instrumentation.common.experimental.db-sqlcommenter.enabled", false);
@@ -140,6 +143,10 @@ public final class CommonConfig {
 
   public boolean isStatementSanitizationEnabled() {
     return statementSanitizationEnabled;
+  }
+
+  public boolean isStatementSanitizationAnsiQuotes() {
+    return statementSanitizationAnsiQuotes;
   }
 
   public boolean isSqlCommenterEnabled() {

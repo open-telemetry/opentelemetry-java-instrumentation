@@ -21,6 +21,7 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
   boolean captureQueryParameters = false;
+  boolean setStatementSanitizationAnsiQuotes = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
@@ -50,6 +51,19 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   }
 
   /**
+   * Sets whether the SQL sanitizer should treat double-quoted fragments as string literals or
+   * identifiers. By default, double quotes are used for string literals. When the sanitizer is able
+   * to detect that the used database does not support double-quoted string literals then this flag
+   * will be automatically switched.
+   */
+  @CanIgnoreReturnValue
+  public SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE>
+      setSetStatementSanitizationAnsiQuotes(boolean setStatementSanitizationAnsiQuotes) {
+    this.setStatementSanitizationAnsiQuotes = setStatementSanitizationAnsiQuotes;
+    return this;
+  }
+
+  /**
    * Sets whether the query parameters should be captured as span attributes named {@code
    * db.query.parameter.<key>}. Enabling this option disables the statement sanitization. Disabled
    * by default.
@@ -70,6 +84,10 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    */
   public AttributesExtractor<REQUEST, RESPONSE> build() {
     return new SqlClientAttributesExtractor<>(
-        getter, oldSemconvTableAttribute, statementSanitizationEnabled, captureQueryParameters);
+        getter,
+        oldSemconvTableAttribute,
+        statementSanitizationEnabled,
+        setStatementSanitizationAnsiQuotes,
+        captureQueryParameters);
   }
 }
