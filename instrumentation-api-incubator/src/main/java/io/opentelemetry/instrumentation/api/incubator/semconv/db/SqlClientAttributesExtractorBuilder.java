@@ -20,8 +20,8 @@ public final class SqlClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
   final SqlClientAttributesGetter<REQUEST, RESPONSE> getter;
   AttributeKey<String> oldSemconvTableAttribute = DB_SQL_TABLE;
   boolean statementSanitizationEnabled = true;
-  boolean captureQueryParameters = false;
   boolean setStatementSanitizationAnsiQuotes = false;
+  boolean captureQueryParameters = false;
 
   SqlClientAttributesExtractorBuilder(SqlClientAttributesGetter<REQUEST, RESPONSE> getter) {
     this.getter = getter;
