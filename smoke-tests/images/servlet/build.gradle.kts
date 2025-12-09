@@ -192,8 +192,8 @@ tasks {
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
   val pushMatrix by registering(DockerPushImage::class) {
-    mustRunAfter(buildLinuxTestImages)
-    mustRunAfter(buildWindowsTestImages)
+    dependsOn(buildLinuxTestImages)
+    dependsOn(buildWindowsTestImages)
     group = "publishing"
     description = "Push all Docker images for the test matrix"
     images.set(linuxImages + windowsImages)
