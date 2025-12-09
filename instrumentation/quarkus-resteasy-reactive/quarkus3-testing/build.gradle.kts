@@ -45,12 +45,20 @@ val quarkusTestBaseRuntimeClasspathConfiguration by configurations.creating {
 val quarkusTestCompileOnlyConfiguration by configurations.creating {
 }
 
-val testModelPath = layout.buildDirectory.file("quarkus-app-test-model.dat").get().asFile.toPath()
+val testModelPath = layout.buildDirectory.file("quarkus-app-test-model.dat")
 
-val buildModel = tasks.register("buildModel") {
-  dependsOn(configurations.named("testRuntimeClasspath"))
+val buildModel = if (findProperty("skipTests") as String? != "true") {
+  tasks.register("buildModel") {
+    val modelPath = testModelPath.get().asFile.toPath()
 
-  if (testModelPath.notExists()) {
+    inputs.files(configurations.named("testRuntimeClasspath"))
+    outputs.file(testModelPath)
+
+    // Quarkus GradleApplicationModelBuilder requires Project at execution time
+    notCompatibleWithConfigurationCache("Quarkus GradleApplicationModelBuilder.buildAll() requires Project reference")
+
+    onlyIf { modelPath.notExists() }
+
     doLast {
       val modelParameter = ModelParameterImpl()
       modelParameter.mode = LaunchMode.TEST.toString()
@@ -59,17 +67,20 @@ val buildModel = tasks.register("buildModel") {
         modelParameter,
         project
       )
-      BootstrapUtils.serializeAppModel(model as ApplicationModel?, testModelPath)
+      BootstrapUtils.serializeAppModel(model as ApplicationModel?, modelPath)
     }
   }
-  outputs.file(testModelPath)
+} else {
+  null
 }
 
 tasks {
   test {
-    dependsOn(buildModel)
+    if (buildModel != null) {
+      dependsOn(buildModel)
+    }
 
-    systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.toString())
+    systemProperty("quarkus-internal-test.serialized-app-model.path", testModelPath.get().asFile.toString())
   }
 
   if (findProperty("denyUnsafe") as Boolean) {

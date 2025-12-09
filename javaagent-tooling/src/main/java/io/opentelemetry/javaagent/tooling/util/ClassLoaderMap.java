@@ -20,9 +20,12 @@ import net.bytebuddy.description.modifier.Visibility;
 class ClassLoaderMap {
   private static final Cache<ClassLoader, WeakReference<Map<Object, Object>>> data = Cache.weak();
   private static final Map<Object, Object> bootLoaderData = new ConcurrentHashMap<>();
+  private static final HelperInjector helperInjector =
+      HelperInjector.forDynamicTypes(
+          ClassLoaderMap.class.getSimpleName(), Collections.emptyList(), null);
   static Injector defaultInjector =
       (classLoader, className, bytes) -> {
-        HelperInjector.injectHelperClasses(
+        helperInjector.injectHelperClasses(
             classLoader, Collections.singletonMap(className, () -> bytes));
         return Class.forName(className, false, classLoader);
       };
@@ -64,7 +67,7 @@ class ClassLoaderMap {
     return map;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // casting reflection result
   private static Map<Object, Object> createMap(ClassLoader classLoader, Injector classInjector) {
     String className =
         "io.opentelemetry.javaagent.ClassLoaderData$$"

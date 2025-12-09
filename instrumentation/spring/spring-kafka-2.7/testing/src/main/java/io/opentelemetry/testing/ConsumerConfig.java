@@ -68,6 +68,13 @@ public class ConsumerConfig {
     factory.setConsumerFactory(consumerFactory);
     factory.setBatchListener(false);
     factory.setAutoStartup(true);
+    try {
+      // available since spring 2.8
+      Class.forName("org.springframework.kafka.listener.CommonErrorHandler");
+      ConsumerConfigUtil.addErrorHandler(factory);
+    } catch (ClassNotFoundException e) {
+      // ignore
+    }
     customizerProvider.ifAvailable(factory::setContainerCustomizer);
     return factory;
   }

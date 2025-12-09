@@ -6,8 +6,7 @@
 package io.opentelemetry.instrumentation.jmx.yaml;
 
 import static java.util.Collections.emptyList;
-import static java.util.logging.Level.INFO;
-import static java.util.logging.Level.WARNING;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
 import java.io.InputStream;
@@ -46,7 +45,7 @@ public class RuleParser {
 
   private RuleParser() {}
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   public JmxConfig loadConfig(InputStream is) {
     LoadSettings settings = LoadSettings.builder().build();
     Load yaml = new Load(settings);
@@ -69,7 +68,7 @@ public class RuleParser {
             .collect(Collectors.toList()));
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static JmxRule parseJmxRule(Map<String, Object> ruleYaml) {
     JmxRule jmxRule = new JmxRule();
 
@@ -92,7 +91,7 @@ public class RuleParser {
     return jmxRule;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static Map<String, Metric> parseMappings(@Nullable Map<String, Object> mappingYaml) {
     Map<String, Metric> mappings = new LinkedHashMap<>();
     if (mappingYaml != null) {
@@ -125,7 +124,7 @@ public class RuleParser {
     return metric;
   }
 
-  @SuppressWarnings("unchecked")
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static void parseMetricStructure(
       Map<String, Object> metricStructureYaml, MetricStructure out) {
 
@@ -163,21 +162,20 @@ public class RuleParser {
    *
    * @param conf the metric configuration
    * @param is the InputStream with the YAML rules
-   * @param id identifier of the YAML ruleset, such as a filename
+   * @throws IllegalArgumentException when unable to parse YAML
    */
-  public void addMetricDefsTo(MetricConfiguration conf, InputStream is, String id) {
+  public void addMetricDefsTo(MetricConfiguration conf, InputStream is) {
     try {
       JmxConfig config = loadConfig(is);
-      logger.log(INFO, "{0}: found {1} metric rules", new Object[] {id, config.getRules().size()});
+      logger.log(FINE, "found {1} metric rules", config.getRules().size());
       config.addMetricDefsTo(conf);
     } catch (Exception exception) {
-      logger.log(
-          WARNING,
-          "Failed to parse YAML rules from {0}: {1}",
-          new Object[] {id, rootCause(exception)});
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
-      logger.log(WARNING, exception.toString());
+      String msg =
+          String.format(
+              "Failed to parse YAML rules : %s %s", rootCause(exception), exception.getMessage());
+      throw new IllegalArgumentException(msg, exception);
     }
   }
 

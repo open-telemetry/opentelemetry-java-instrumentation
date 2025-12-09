@@ -15,7 +15,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 // with some null parameters like HttpClient.executeMethod(null, request, null)
 // but this construct is not allowed in commons-httpclient v2 that is used for regular otel testing
 @EnabledIfSystemProperty(named = "testLatestDeps", matches = "true")
-public class CommonsHttpClientLatestDepsTest extends AbstractCommonsHttpClientTest {
+class CommonsHttpClientLatestDepsTest extends AbstractCommonsHttpClientTest {
   @Override
   public int sendRequest(HttpMethod request, String method, URI uri, Map<String, String> headers)
       throws Exception {

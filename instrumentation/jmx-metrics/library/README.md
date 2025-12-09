@@ -32,16 +32,23 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-jmx-metrics:OPENT
 
 ```java
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.jmx.engine.JmxMetricInsight;
-import io.opentelemetry.instrumentation.jmx.engine.MetricConfiguration;
+import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
+import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
+
+import java.time.Duration;
 
 // Get an OpenTelemetry instance
 OpenTelemetry openTelemetry = ...;
 
-JmxMetricInsight jmxMetricInsight = JmxMetricInsight.createService(openTelemetry, 5000);
+JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
+  // Configure included metrics (optional)
+  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/jetty.yaml"), "jetty")
+  .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"), "tomcat")
+  // Configure custom metrics (optional)
+  .addRules(Paths.get("/path/to/custom-jmx.yaml"))
+  // delay bean discovery by 5 seconds
+  .beanDiscoveryDelay(Duration.ofSeconds(5))
+  .build();
 
-// Configure your JMX metrics
-MetricConfiguration config = new MetricConfiguration();
-
-jmxMetricInsight.startLocal(config);
+jmxTelemetry.start();
 ```

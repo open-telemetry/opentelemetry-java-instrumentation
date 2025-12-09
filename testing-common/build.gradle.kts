@@ -66,9 +66,4 @@ tasks {
   javadoc {
     enabled = false
   }
-
-  jar {
-    // When there are duplicates between multiple shaded dependencies, just ignore them.
-    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-  }
 }

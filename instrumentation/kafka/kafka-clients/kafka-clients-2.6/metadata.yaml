@@ -1,14 +1,5 @@
-description: >
-  This instrumentation provides a library integration that enables messaging spans and metrics for Apache Kafka 2.6+ clients.
+description: This standalone instrumentation enables messaging spans for Kafka producers and consumers, and collects internal Kafka client metrics.
+display_name: Apache Kafka Client
 library_link: https://kafka.apache.org/
-configurations:
-  - name: otel.instrumentation.messaging.experimental.capture-headers
-    description: A comma-separated list of header names to capture as span attributes.
-    type: list
-    default: ''
-  - name: otel.instrumentation.messaging.experimental.receive-telemetry.enabled
-    description: >
-      Enables experimental receive telemetry, which will cause consumers to start a new trace, with
-      only a span link connecting it to the producer trace.
-    type: boolean
-    default: false
+semantic_conventions:
+  - MESSAGING_SPANS

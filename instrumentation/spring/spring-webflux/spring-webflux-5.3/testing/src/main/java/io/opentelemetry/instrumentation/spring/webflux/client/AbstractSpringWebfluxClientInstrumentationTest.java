@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
 
 public abstract class AbstractSpringWebfluxClientInstrumentationTest
     extends AbstractHttpClientTest<WebClient.RequestBodySpec> {
@@ -58,6 +59,10 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   @Override
   public int sendRequest(
       WebClient.RequestBodySpec request, String method, URI uri, Map<String, String> headers) {
+    if (Webflux7Util.isWebflux7) {
+      return Webflux7Util.doRequest(request);
+    }
+
     ClientResponse response = requireNonNull(request.exchange().block());
     return getStatusCode(response);
   }
@@ -69,11 +74,16 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
       URI uri,
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
-    request
-        .exchange()
-        .subscribe(
-            response -> httpClientResult.complete(getStatusCode(response)),
-            httpClientResult::complete);
+    if (Webflux7Util.isWebflux7) {
+      Webflux7Util.sendRequestWithCallback(
+          request, httpClientResult::complete, httpClientResult::complete);
+    } else {
+      request
+          .exchange()
+          .subscribe(
+              response -> httpClientResult.complete(getStatusCode(response)),
+              httpClientResult::complete);
+    }
   }
 
   @Override
@@ -164,12 +174,17 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
             () ->
                 testing.runWithSpan(
                     "parent",
-                    () ->
-                        buildRequest("GET", uri, emptyMap())
-                            .exchange()
-                            // apply Mono timeout that is way shorter than HTTP request timeout
-                            .timeout(Duration.ofSeconds(1))
-                            .block()));
+                    () -> {
+                      WebClient.RequestBodySpec request = buildRequest("GET", uri, emptyMap());
+                      Mono<ClientResponse> mono;
+                      if (Webflux7Util.isWebflux7) {
+                        mono = Webflux7Util.exchangeToMono(request);
+                      } else {
+                        mono = request.exchange();
+                      }
+                      // apply Mono timeout that is way shorter than HTTP request timeout
+                      return mono.timeout(Duration.ofSeconds(1)).block();
+                    }));
 
     testing.waitAndAssertTraces(
         trace ->

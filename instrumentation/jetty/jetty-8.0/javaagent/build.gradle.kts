@@ -21,7 +21,6 @@ dependencies {
   implementation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-11.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-12.0:javaagent"))
 
@@ -37,4 +36,8 @@ if (latestDepTest) {
   otelJava {
     minJavaVersionSupported.set(JavaVersion.VERSION_11)
   }
+}
+
+tasks.test {
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
 }

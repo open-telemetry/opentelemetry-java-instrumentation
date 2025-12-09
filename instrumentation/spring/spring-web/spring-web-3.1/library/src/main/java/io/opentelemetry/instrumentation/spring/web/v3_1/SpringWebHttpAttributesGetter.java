@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.spring.web.v3_1;
 
-import static java.util.Collections.emptyList;
-
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -20,32 +18,15 @@ enum SpringWebHttpAttributesGetter
     implements HttpClientAttributesGetter<HttpRequest, ClientHttpResponse> {
   INSTANCE;
 
-  @Override
-  public String getHttpRequestMethod(HttpRequest httpRequest) {
-    return httpRequest.getMethod().name();
-  }
-
-  @Override
-  @Nullable
-  public String getUrlFull(HttpRequest httpRequest) {
-    return httpRequest.getURI().toString();
-  }
-
-  @Override
-  public List<String> getHttpRequestHeader(HttpRequest httpRequest, String name) {
-    return httpRequest.getHeaders().getOrDefault(name, emptyList());
-  }
-
   @Nullable private static final MethodHandle GET_STATUS_CODE;
-
   @Nullable private static final MethodHandle STATUS_CODE_VALUE;
 
   static {
+    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
+
     MethodHandle getStatusCode = null;
     MethodHandle statusCodeValue = null;
     Class<?> httpStatusCodeClass = null;
-
-    MethodHandles.Lookup lookup = MethodHandles.publicLookup();
 
     try {
       httpStatusCodeClass = Class.forName("org.springframework.http.HttpStatusCode");
@@ -76,6 +57,23 @@ enum SpringWebHttpAttributesGetter
   }
 
   @Override
+  public String getHttpRequestMethod(HttpRequest httpRequest) {
+    return httpRequest.getMethod().name();
+  }
+
+  @Override
+  @Nullable
+  public String getUrlFull(HttpRequest httpRequest) {
+    return httpRequest.getURI().toString();
+  }
+
+  @Override
+  public List<String> getHttpRequestHeader(HttpRequest httpRequest, String name) {
+    return HeaderUtil.getHeader(httpRequest.getHeaders(), name);
+  }
+
+  @Override
+  @Nullable
   public Integer getHttpResponseStatusCode(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, @Nullable Throwable error) {
 
@@ -94,7 +92,7 @@ enum SpringWebHttpAttributesGetter
   @Override
   public List<String> getHttpResponseHeader(
       HttpRequest httpRequest, ClientHttpResponse clientHttpResponse, String name) {
-    return clientHttpResponse.getHeaders().getOrDefault(name, emptyList());
+    return HeaderUtil.getHeader(clientHttpResponse.getHeaders(), name);
   }
 
   @Override

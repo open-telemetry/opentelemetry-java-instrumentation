@@ -6,7 +6,6 @@ plugins {
   `java-library`
   groovy
   checkstyle
-  codenarc
   idea
 
   id("otel.errorprone-conventions")
@@ -158,9 +157,6 @@ dependencies {
 
   compileOnly("com.google.code.findbugs:jsr305")
   compileOnly("com.google.errorprone:error_prone_annotations")
-
-  codenarc("org.codenarc:CodeNarc:3.6.0")
-  codenarc(platform("org.codehaus.groovy:groovy-bom:3.0.25"))
 
   modules {
     // checkstyle uses the very old google-collections which causes Java 9 module conflict with
@@ -415,14 +411,10 @@ afterEvaluate {
   }
 }
 
-codenarc {
-  configFile = rootProject.file("buildscripts/codenarc.groovy")
-}
-
 checkstyle {
   configFile = rootProject.file("buildscripts/checkstyle.xml")
   // this version should match the version of google_checks.xml used as basis for above configuration
-  toolVersion = "12.1.1"
+  toolVersion = "12.2.0"
   maxWarnings = 0
 }
 
@@ -467,7 +459,7 @@ configurations.configureEach {
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-extension-api")).using(project(":javaagent-extension-api"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent-tooling")).using(project(":javaagent-tooling"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")).using(project(":testing:agent-for-testing"))
-      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common"))
+      substitute(module("io.opentelemetry.javaagent:opentelemetry-testing-common")).using(project(":testing-common:with-shaded-dependencies"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-muzzle")).using(project(":muzzle"))
       substitute(module("io.opentelemetry.javaagent:opentelemetry-javaagent")).using(project(":javaagent"))
     }

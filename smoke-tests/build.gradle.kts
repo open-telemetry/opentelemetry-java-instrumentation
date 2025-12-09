@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import java.time.Duration
 
 plugins {
@@ -11,30 +10,26 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
   maxJavaVersionForTests.set(JavaVersion.VERSION_11)
 }
-val dockerJavaVersion = "3.6.0"
+val dockerJavaVersion = "3.7.0"
 dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  implementation(platform("io.grpc:grpc-bom:1.76.0"))
+  implementation(platform("io.grpc:grpc-bom:1.77.0"))
   implementation("org.slf4j:slf4j-api")
   implementation("io.opentelemetry:opentelemetry-api")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   implementation("org.testcontainers:testcontainers")
   implementation("com.fasterxml.jackson.core:jackson-databind")
-  implementation("com.google.protobuf:protobuf-java-util:4.33.0")
+  implementation("com.google.protobuf:protobuf-java-util:4.33.2")
   implementation("io.grpc:grpc-netty-shaded")
   implementation("io.grpc:grpc-protobuf")
   implementation("io.grpc:grpc-stub")
 
   implementation("com.github.docker-java:docker-java-core:$dockerJavaVersion")
   implementation("com.github.docker-java:docker-java-transport-httpclient5:$dockerJavaVersion")
-
-  // make IntelliJ see shaded Armeria and protobuf
-  compileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
-  testCompileOnly(project(":testing:dependencies-shaded-for-testing", configuration = "shadow"))
 }
 
 tasks {
@@ -76,13 +71,14 @@ tasks {
       }
     }
 
-    val shadowTask = project(":javaagent").tasks.named<ShadowJar>("shadowJar").get()
-    inputs.files(layout.files(shadowTask))
+    val shadowTask = project(":javaagent").tasks.named<Jar>("shadowJar")
+    val agentJarPath = shadowTask.flatMap { it.archiveFile }
+    inputs.files(agentJarPath)
       .withPropertyName("javaagent")
       .withNormalizer(ClasspathNormalizer::class)
 
     doFirst {
-      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${shadowTask.archiveFile.get()}")
+      jvmArgs("-Dio.opentelemetry.smoketest.agent.shadowJar.path=${agentJarPath.get()}")
     }
   }
 }

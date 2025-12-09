@@ -15,7 +15,7 @@ dependencies {
   api("org.eclipse.jetty:apache-jstl:11.0.0")
   api("org.eclipse.jetty:apache-jsp:11.0.0")
 
-  implementation(project(":testing-common"))
+  implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   implementation("org.jsoup:jsoup:1.13.1")
 
   implementation("org.glassfish:jakarta.el:4.0.2")

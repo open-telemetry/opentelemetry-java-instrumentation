@@ -20,7 +20,6 @@ dependencies {
 
   testImplementation(project(":instrumentation:jsf:jsf-javax-common:testing"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
-  testInstrumentation(project(":instrumentation:servlet:servlet-javax-common:javaagent"))
 }
 
 val latestDepTest = findProperty("testLatestDeps") as Boolean
@@ -57,4 +56,6 @@ tasks {
 
 tasks.withType<Test>().configureEach {
   jvmArgs("-Dotel.instrumentation.common.experimental.controller-telemetry.enabled=true")
+  systemProperty("collectMetadata", findProperty("collectMetadata")?.toString() ?: "false")
+  systemProperty("metadataConfig", "otel.instrumentation.common.experimental.controller-telemetry.enabled=true")
 }

@@ -6,9 +6,8 @@ dependencies {
   compileOnly("org.springframework:spring-webmvc:6.0.0")
   compileOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
-  testImplementation(project(":testing-common"))
-  testImplementation("org.springframework.boot:spring-boot-starter-web:3.0.0")
-  testImplementation("org.springframework.boot:spring-boot-starter-test:3.0.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
 }
 
 // spring 6 requires java 17
@@ -26,5 +25,9 @@ tasks {
     sourceCompatibility = "1.8"
     targetCompatibility = "1.8"
     options.release.set(null as Int?)
+  }
+
+  withType<Test>().configureEach {
+    systemProperty("testLatestDeps", findProperty("testLatestDeps") as Boolean)
   }
 }

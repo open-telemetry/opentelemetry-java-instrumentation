@@ -3,7 +3,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
   api("software.amazon.awssdk:apache-client:2.2.0")
   // older versions don't play nice with armeria http server

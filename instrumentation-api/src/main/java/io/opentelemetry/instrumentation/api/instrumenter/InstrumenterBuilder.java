@@ -395,13 +395,24 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static <REQUEST, RESPONSE> void applyCustomizers(
       InstrumenterBuilder<REQUEST, RESPONSE> builder) {
-    for (InternalInstrumenterCustomizerProvider provider :
-        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders()) {
+    List<InternalInstrumenterCustomizerProvider> customizerProviders =
+        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
+    if (customizerProviders.isEmpty()) {
+      return;
+    }
+
+    Set<SpanKey> spanKeys = builder.getSpanKeysFromAttributesExtractors();
+    for (InternalInstrumenterCustomizerProvider provider : customizerProviders) {
       provider.customize(
           new InternalInstrumenterCustomizer<REQUEST, RESPONSE>() {
             @Override
             public String getInstrumentationName() {
               return builder.instrumentationName;
+            }
+
+            @Override
+            public boolean hasType(SpanKey type) {
+              return spanKeys.contains(type);
             }
 
             @Override
@@ -426,10 +437,18 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
             }
 
             @Override
-            public void setSpanNameExtractor(
-                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer) {
+            public void setSpanNameExtractorCustomizer(
+                UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer) {
               builder.spanNameExtractor =
-                  spanNameExtractorTransformer.apply(builder.spanNameExtractor);
+                  spanNameExtractorCustomizer.apply(builder.spanNameExtractor);
+            }
+
+            @Override
+            public void setSpanStatusExtractorCustomizer(
+                UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+                    spanStatusExtractorCustomizer) {
+              builder.spanStatusExtractor =
+                  spanStatusExtractorCustomizer.apply(builder.spanStatusExtractor);
             }
           });
     }

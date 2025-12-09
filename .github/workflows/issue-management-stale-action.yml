@@ -21,7 +21,7 @@ jobs:
       # Action #1: Handle issues/PRs awaiting author feedback
       # - After 7 days inactive: Adds "stale" label + warning comment
       # - After 7 more days inactive: Closes
-      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
+      - uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
           only-labels: "needs author feedback"
           days-before-stale: 7
@@ -40,7 +40,7 @@ jobs:
       # - Targets: Issues with "enhancement" label (but NOT "needs author feedback")
       # - After 365 days inactive: Adds "stale" label + closes immediately (no warning period)
       # - Skips: Issues with "needs author feedback" to avoid conflicts with Action #1
-      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
+      - uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
           only-labels: "enhancement"
           # Skip issues that need author feedback (handled by the first action with 7+7 day policy)
@@ -56,17 +56,16 @@ jobs:
           operations-per-run: 1000
 
       # Action #3: Handle stale PRs
-      # - After 180 days inactive: Adds "stale" label + warning comment
+      # - After 90 days inactive: Adds "stale" label + warning comment
       # - After 14 more days inactive: Closes
-      - uses: actions/stale@5f858e3efba33a5ca4407a664cc011ad407f2008 # v10.1.0
+      - uses: actions/stale@997185467fa4f803885201cee163a9f38240193d # v10.1.1
         with:
           days-before-issue-stale: -1
           days-before-issue-close: -1
-          days-before-pr-stale: 180
+          days-before-pr-stale: 90
           days-before-pr-close: 14
           stale-pr-label: stale
           stale-pr-message: >
             This PR has been labeled as stale due to lack of activity.
             It will be automatically closed if there is no further activity over the next 14 days.
-          exempt-draft-pr: false
           operations-per-run: 1000

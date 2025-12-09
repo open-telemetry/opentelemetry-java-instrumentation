@@ -15,7 +15,7 @@ import zio.ZEnvironment;
 import zio.ZIO;
 import zio.ZIO$;
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings("unchecked") // fine
 public final class TracingSupervisor extends Supervisor<Object> {
 
   public static final TracingSupervisor INSTANCE = new TracingSupervisor();
@@ -25,7 +25,7 @@ public final class TracingSupervisor extends Supervisor<Object> {
   private TracingSupervisor() {}
 
   @Override
-  @SuppressWarnings("rawtypes")
+  @SuppressWarnings("rawtypes") // fine
   public ZIO value(Object trace) {
     return ZIO$.MODULE$.unit();
   }

@@ -106,7 +106,6 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
     optionsBuilder.setExpectedClientSpanNameMapper(
         (uri, method) -> method + " " + getTemplate(uri));
     optionsBuilder.setExpectedUrlTemplateMapper(SpringRestTemplateTest::getTemplate);
-    optionsBuilder.setHasUrlTemplate(true);
   }
 
   private static String getTemplate(URI uri) {

@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
   id("otel.java-conventions")
@@ -8,11 +7,11 @@ otelJava {
   minJavaVersionSupported.set(JavaVersion.VERSION_11)
 }
 
-val agentShadowJar = project(":javaagent").tasks.named<ShadowJar>("shadowJar")
+val agentShadowJar = project(":javaagent").tasks.named<Jar>("shadowJar")
 
 dependencies {
   testImplementation(project(":smoke-tests"))
-  testImplementation(project(":testing-common"))
+  testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("org.apache.kafka:kafka-clients:3.6.1")
   testImplementation("io.opentelemetry:opentelemetry-exporter-logging")

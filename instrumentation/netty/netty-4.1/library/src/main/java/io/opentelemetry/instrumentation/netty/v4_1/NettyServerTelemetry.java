@@ -11,7 +11,7 @@ import io.netty.channel.CombinedChannelDuplexHandler;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.netty.common.v4_0.HttpRequestAndChannel;
+import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.ProtocolEventHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerRequestTracingHandler;
 import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerResponseBeforeCommitHandler;
@@ -21,11 +21,11 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.server.HttpServerTra
 /** Entrypoint for instrumenting Netty HTTP servers. */
 public final class NettyServerTelemetry {
 
-  private final Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter;
+  private final Instrumenter<NettyRequest, HttpResponse> instrumenter;
   private final ProtocolEventHandler protocolEventHandler;
 
   NettyServerTelemetry(
-      Instrumenter<HttpRequestAndChannel, HttpResponse> instrumenter,
+      Instrumenter<NettyRequest, HttpResponse> instrumenter,
       ProtocolEventHandler protocolEventHandler) {
     this.instrumenter = instrumenter;
     this.protocolEventHandler = protocolEventHandler;

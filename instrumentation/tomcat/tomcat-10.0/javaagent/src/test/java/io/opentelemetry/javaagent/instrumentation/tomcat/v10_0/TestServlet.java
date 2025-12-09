@@ -18,6 +18,14 @@ class TestServlet extends HttpServlet {
   protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
     String path = req.getServletPath();
 
+    // these are set by servlet instrumentation
+    if (req.getAttribute("trace_id") == null) {
+      throw new IllegalStateException("trace_id attribute not found");
+    }
+    if (req.getAttribute("span_id") == null) {
+      throw new IllegalStateException("span_id attribute not found");
+    }
+
     ServerEndpoint serverEndpoint = ServerEndpoint.forPath(path);
     if (serverEndpoint != null) {
       AbstractHttpServerTest.controller(

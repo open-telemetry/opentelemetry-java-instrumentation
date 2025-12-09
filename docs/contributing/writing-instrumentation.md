@@ -282,7 +282,6 @@ You can use the `@RegisterExtension` annotation to make sure that the instrument
 picked up by JUnit. Then, return the same extension instance in the `testing()` method
 implementation so that it's used in all test scenarios implemented in the abstract class.
 
-
 ## Writing Java agent instrumentation
 
 Now that you have working and tested library instrumentation, implement the javaagent

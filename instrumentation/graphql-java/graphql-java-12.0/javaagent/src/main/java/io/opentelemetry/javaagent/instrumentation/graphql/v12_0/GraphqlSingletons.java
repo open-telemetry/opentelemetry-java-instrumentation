@@ -13,6 +13,9 @@ import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class GraphqlSingletons {
 
+  private static final boolean CAPTURE_QUERY =
+      AgentInstrumentationConfig.get()
+          .getBoolean("otel.instrumentation.graphql.capture-query", true);
   private static final boolean QUERY_SANITIZATION_ENABLED =
       AgentInstrumentationConfig.get()
           .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
@@ -23,6 +26,7 @@ public final class GraphqlSingletons {
 
   private static final GraphQLTelemetry TELEMETRY =
       GraphQLTelemetry.builder(GlobalOpenTelemetry.get())
+          .setCaptureQuery(CAPTURE_QUERY)
           .setSanitizeQuery(QUERY_SANITIZATION_ENABLED)
           .setAddOperationNameToSpanName(ADD_OPERATION_NAME_TO_SPAN_NAME)
           .build();

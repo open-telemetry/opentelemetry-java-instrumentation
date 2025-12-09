@@ -9,6 +9,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import java.util.function.UnaryOperator;
 
 /**
@@ -19,6 +20,8 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   String getInstrumentationName();
 
+  boolean hasType(SpanKey type);
+
   void addAttributesExtractor(AttributesExtractor<REQUEST, RESPONSE> extractor);
 
   void addAttributesExtractors(
@@ -28,6 +31,10 @@ public interface InternalInstrumenterCustomizer<REQUEST, RESPONSE> {
 
   void addContextCustomizer(ContextCustomizer<REQUEST> customizer);
 
-  void setSpanNameExtractor(
-      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorTransformer);
+  void setSpanNameExtractorCustomizer(
+      UnaryOperator<SpanNameExtractor<? super REQUEST>> spanNameExtractorCustomizer);
+
+  void setSpanStatusExtractorCustomizer(
+      UnaryOperator<SpanStatusExtractor<? super REQUEST, ? super RESPONSE>>
+          spanStatusExtractorCustomizer);
 }

@@ -28,7 +28,7 @@ import org.springframework.context.annotation.Configuration;
 @AutoConfigureAfter({MetricsAutoConfiguration.class, OpenTelemetryAutoConfiguration.class})
 @AutoConfigureBefore(CompositeMeterRegistryAutoConfiguration.class)
 @ConditionalOnBean(Clock.class)
-@ConditionalOnClass(MeterRegistry.class)
+@ConditionalOnClass(MeterRegistry.class) // module changed in Spring Boot 4
 @Configuration
 public class MicrometerBridgeAutoConfiguration {
 

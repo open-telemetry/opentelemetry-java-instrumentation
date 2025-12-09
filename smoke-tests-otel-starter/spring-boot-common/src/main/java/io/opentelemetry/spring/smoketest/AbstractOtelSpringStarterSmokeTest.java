@@ -31,7 +31,6 @@ import io.opentelemetry.semconv.incubating.CodeIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -41,22 +40,17 @@ import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
+import org.junit.jupiter.api.condition.OS;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.boot.test.web.client.TestRestTemplate;
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.RequestEntity;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.web.client.RestTemplate;
 
 /**
  * This test class enforces the order of the tests to make sure that {@link #shouldSendTelemetry()},
@@ -64,20 +58,21 @@ import org.springframework.web.client.RestTemplate;
  */
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
-class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
-
-  @Autowired private TestRestTemplate testRestTemplate;
+abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private Environment environment;
   @Autowired private OtelSpringProperties otelSpringProperties;
   @Autowired private OtelResourceProperties otelResourceProperties;
   @Autowired private OtlpExporterProperties otlpExporterProperties;
-  @Autowired private RestTemplateBuilder restTemplateBuilder;
   @Autowired private JdbcTemplate jdbcTemplate;
+
+  abstract void makeClientCall();
+
+  abstract void restClientCall(String path);
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
-  private int port;
+  protected int port;
 
   @Configuration(proxyBeanMethods = false)
   static class TestConfiguration {
@@ -152,15 +147,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   @org.junit.jupiter.api.Order(1)
   @SuppressWarnings("deprecation") // testing deprecated code semconv
   void shouldSendTelemetry() {
-    HttpHeaders headers = new HttpHeaders();
-    headers.add("key", "value");
+    makeClientCall();
 
-    testRestTemplate.exchange(
-        new RequestEntity<>(
-            null, headers, HttpMethod.GET, URI.create(OtelSpringStarterSmokeTestController.PING)),
-        String.class);
-
-    // Span
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -223,7 +211,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
 
     double javaVersion = Double.parseDouble(System.getProperty("java.specification.version"));
     // See https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/13503
-    if (javaVersion < 23) {
+    // Also not available on Windows (getSystemLoadAverage returns -1)
+    if (javaVersion < 23 && !OS.WINDOWS.isCurrentOs()) {
       jmxMetrics.add("jvm.system.cpu.load_1m");
     }
 
@@ -270,7 +259,38 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
     }
   }
 
-  protected void assertAdditionalMetrics() {}
+  protected void assertAdditionalMetrics() {
+    if (!isFlightRecorderAvailable()) {
+      return;
+    }
+
+    // JFR based metrics
+    for (String metric :
+        Arrays.asList(
+            "jvm.cpu.limit",
+            "jvm.buffer.count",
+            "jvm.class.count",
+            "jvm.cpu.context_switch",
+            "jvm.system.cpu.utilization",
+            "jvm.gc.duration",
+            "jvm.memory.init",
+            "jvm.memory.used",
+            "jvm.memory.allocation",
+            "jvm.network.io",
+            "jvm.thread.count")) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.runtime-telemetry-java17", metric, AbstractIterableAssert::isNotEmpty);
+    }
+  }
+
+  private static boolean isFlightRecorderAvailable() {
+    try {
+      return (boolean)
+          Class.forName("jdk.jfr.FlightRecorder").getMethod("isAvailable").invoke(null);
+    } catch (ReflectiveOperationException exception) {
+      return false;
+    }
+  }
 
   @Test
   void databaseQuery() {
@@ -299,8 +319,8 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   void restTemplate() {
     testing.clearAllExportedData();
 
-    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
-    restTemplate.getForObject(OtelSpringStarterSmokeTestController.PING, String.class);
+    restClientCall(OtelSpringStarterSmokeTestController.PING);
+
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
@@ -314,9 +334,7 @@ class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest 
   void shouldRedactSomeUrlParameters() {
     testing.clearAllExportedData();
 
-    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
-    restTemplate.getForObject(
-        "/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0", String.class);
+    restClientCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
 
     testing.waitAndAssertTraces(
         traceAssert ->

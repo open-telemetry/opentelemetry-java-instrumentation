@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.nullaway-conventions")
 }
 
 dependencies {
@@ -16,7 +17,9 @@ dependencies {
 
   implementation(project(":instrumentation:reactor:reactor-3.1:library"))
 
-  testImplementation(project(":testing-common"))
+  // SpringExtension in spring-test 7 requires JUnit 6
+  testImplementation(platform("org.junit:junit-bom:6.0.1"))
+
   testLibrary("org.springframework:spring-test:6.0.0")
 }
 

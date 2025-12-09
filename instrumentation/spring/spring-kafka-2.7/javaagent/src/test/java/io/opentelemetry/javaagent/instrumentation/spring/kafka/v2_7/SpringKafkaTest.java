@@ -177,64 +177,126 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
             satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("producer"),
-              span ->
-                  span.hasName("testSingleTopic publish")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "kafka"),
-                          equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
-                          equalTo(MESSAGING_OPERATION, "publish"),
-                          satisfies(
-                              MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
-                          satisfies(
-                              MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
-                          equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
-                          satisfies(
-                              MESSAGING_CLIENT_ID,
-                              stringAssert -> stringAssert.startsWith("producer"))));
+    // trace structure differs in latest dep tests because CommonErrorHandler is only set for latest
+    // dep tests
+    if (Boolean.getBoolean("testLatestDeps")) {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+          trace -> {
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("testSingleTopic publish")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                            satisfies(
+                                MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("producer"))));
 
-          producer.set(trace.getSpan(1));
-        },
-        trace ->
+            producer.set(trace.getSpan(1));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  receiveSpanAssert,
+                  span ->
+                      span.hasName("testSingleTopic process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(1)),
+                  span -> span.hasName("handle exception").hasParent(trace.getSpan(1)),
+                  span ->
+                      span.hasName("testSingleTopic process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(4)),
+                  span -> span.hasName("handle exception").hasParent(trace.getSpan(4)),
+                  span ->
+                      span.hasName("testSingleTopic process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(7))));
+
+    } else {
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER),
+          trace -> {
             trace.hasSpansSatisfyingExactly(
-                receiveSpanAssert,
+                span -> span.hasName("producer"),
                 span ->
-                    span.hasName("testSingleTopic process")
-                        .hasKind(SpanKind.CONSUMER)
+                    span.hasName("testSingleTopic publish")
+                        .hasKind(SpanKind.PRODUCER)
                         .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("boom"))
-                        .hasAttributesSatisfyingExactly(processAttributes),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                receiveSpanAssert,
-                span ->
-                    span.hasName("testSingleTopic process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("boom"))
-                        .hasAttributesSatisfyingExactly(processAttributes),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                receiveSpanAssert,
-                span ->
-                    span.hasName("testSingleTopic process")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(producer.get().getSpanContext()))
-                        .hasAttributesSatisfyingExactly(processAttributes),
-                span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_SYSTEM, "kafka"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "testSingleTopic"),
+                            equalTo(MESSAGING_OPERATION, "publish"),
+                            satisfies(
+                                MESSAGING_DESTINATION_PARTITION_ID,
+                                AbstractStringAssert::isNotEmpty),
+                            satisfies(
+                                MESSAGING_KAFKA_MESSAGE_OFFSET, AbstractLongAssert::isNotNegative),
+                            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, "10"),
+                            satisfies(
+                                MESSAGING_CLIENT_ID,
+                                stringAssert -> stringAssert.startsWith("producer"))));
+
+            producer.set(trace.getSpan(1));
+          },
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  receiveSpanAssert,
+                  span ->
+                      span.hasName("testSingleTopic process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  receiveSpanAssert,
+                  span ->
+                      span.hasName("testSingleTopic process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasStatus(StatusData.error())
+                          .hasException(new IllegalArgumentException("boom"))
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(1))),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  receiveSpanAssert,
+                  span ->
+                      span.hasName("testSingleTopic process")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasParent(trace.getSpan(0))
+                          .hasLinks(LinkData.create(producer.get().getSpanContext()))
+                          .hasAttributesSatisfyingExactly(processAttributes),
+                  span -> span.hasName("consumer").hasParent(trace.getSpan(1))));
+    }
   }
 
   @Test

@@ -53,6 +53,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
 
     builder
         .ignoreClass("org.springframework.aop.")
+        .allowClass("org.springframework.aop.interceptor.AsyncExecutionInterceptor$")
         .ignoreClass("org.springframework.cache.")
         .ignoreClass("org.springframework.dao.")
         .ignoreClass("org.springframework.ejb.")
@@ -104,13 +105,20 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass("org.springframework.boot.logging.logback.")
         .allowClass("org.springframework.boot.web.filter.")
         .allowClass("org.springframework.boot.web.servlet.")
+        .allowClass("org.springframework.boot.servlet.filter.")
+        .allowClass("org.springframework.boot.web.server.servlet.context.")
         .allowClass("org.springframework.boot.web.embedded.netty.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.reactor.netty.GracefulShutdown$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.tomcat.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.GracefulShutdown$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.servlet.TomcatServletWebServerFactory$$Lambda")
         .allowClass(
             "org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory$$Lambda")
         .allowClass(
             "org.springframework.boot.actuate.metrics.web.reactive.server.MetricsWebFilter$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.BackgroundPreinitializer$")
+        .allowClass(
+            "org.springframework.boot.autoconfigure.preinitialize.BackgroundPreinitializingApplicationListener$")
         .allowClass(
             "org.springframework.boot.autoconfigure.cassandra.CassandraAutoConfiguration$$Lambda")
         .allowClass("org.springframework.boot.autoconfigure.condition.OnClassCondition$")
@@ -119,7 +127,11 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .allowClass(
             "org.springframework.boot.autoconfigure.web.WebProperties$Resources$Cache$Cachecontrol$$Lambda")
         .allowClass("org.springframework.boot.web.embedded.netty.NettyWebServer$")
+        .allowClass("org.springframework.boot.reactor.netty.NettyWebServer$")
         .allowClass("org.springframework.boot.web.embedded.tomcat.TomcatEmbeddedContext$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.TomcatEmbeddedContext$$Lambda")
+        .allowClass("org.springframework.boot.tomcat.TomcatWebServer$")
+        .allowClass("org.springframework.boot.tomcat.TomcatEmbeddedWebappClassLoader")
         .allowClass(
             "org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainer$")
         .allowClass(
