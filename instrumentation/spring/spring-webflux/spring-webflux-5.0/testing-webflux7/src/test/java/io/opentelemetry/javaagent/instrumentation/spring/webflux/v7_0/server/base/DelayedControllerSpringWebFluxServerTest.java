@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.v7_0.server.base;
 
 import io.opentelemetry.instrumentation.spring.webflux.server.AbstractControllerSpringWebFluxServerTest;
 import io.opentelemetry.instrumentation.spring.webflux.server.ServerTestController;
@@ -11,9 +11,11 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.time.Duration;
 import java.util.function.Supplier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
-import org.springframework.boot.web.embedded.netty.NettyReactiveWebServerFactory;
+import org.springframework.boot.reactor.netty.NettyReactiveWebServerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatusCode;
+import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
@@ -49,6 +51,11 @@ class DelayedControllerSpringWebFluxServerTest extends AbstractControllerSpringW
       return Mono.just("")
           .delayElement(Duration.ofMillis(10))
           .map(unused -> controller(endpoint, handler::get));
+    }
+
+    @Override
+    protected void setStatus(ServerHttpResponse response, ServerEndpoint endpoint) {
+      response.setStatusCode(HttpStatusCode.valueOf(endpoint.getStatus()));
     }
   }
 }

@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
+import io.opentelemetry.instrumentation.spring.webflux.server.AbstractHandlerSpringWebFluxServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.time.Duration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -20,7 +21,7 @@ import reactor.core.publisher.Mono;
  * map step, which follows a delay step. For exception endpoint, the exception is thrown within the
  * last map step.
  */
-class DelayedHandlerSpringWebFluxServerTest extends HandlerSpringWebFluxServerTest {
+class DelayedHandlerSpringWebFluxServerTest extends AbstractHandlerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application.class;

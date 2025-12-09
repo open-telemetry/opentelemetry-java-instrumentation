@@ -81,7 +81,9 @@ public class SpringWebFluxTestApplication {
                 throw new IllegalStateException(e);
               }
               return Mono.delay(Duration.ofMillis(100))
-                  .then(ServerResponse.ok().body(BodyInserters.fromObject("ok")));
+                  .then(
+                      ServerResponse.ok()
+                          .body(BodyInserters.fromPublisher(Mono.just("ok"), String.class)));
             });
   }
 
@@ -96,31 +98,37 @@ public class SpringWebFluxTestApplication {
     Mono<ServerResponse> defaultGreet() {
       return ServerResponse.ok()
           .contentType(MediaType.TEXT_PLAIN)
-          .body(BodyInserters.fromObject(DEFAULT_RESPONSE));
+          .body(BodyInserters.fromPublisher(Mono.just(DEFAULT_RESPONSE), String.class));
     }
 
     Mono<ServerResponse> doubleGreet() {
       return ServerResponse.ok()
           .contentType(MediaType.TEXT_PLAIN)
-          .body(BodyInserters.fromObject(DEFAULT_RESPONSE + DEFAULT_RESPONSE));
+          .body(
+              BodyInserters.fromPublisher(
+                  Mono.just(DEFAULT_RESPONSE + DEFAULT_RESPONSE), String.class));
     }
 
     Mono<ServerResponse> customGreet(ServerRequest request) {
       return ServerResponse.ok()
           .contentType(MediaType.TEXT_PLAIN)
-          .body(BodyInserters.fromObject(DEFAULT_RESPONSE + " " + request.pathVariable("name")));
+          .body(
+              BodyInserters.fromPublisher(
+                  Mono.just(DEFAULT_RESPONSE + " " + request.pathVariable("name")), String.class));
     }
 
     Mono<ServerResponse> customGreetWithWord(ServerRequest request) {
       return ServerResponse.ok()
           .contentType(MediaType.TEXT_PLAIN)
           .body(
-              BodyInserters.fromObject(
-                  DEFAULT_RESPONSE
-                      + " "
-                      + request.pathVariable("name")
-                      + " "
-                      + request.pathVariable("word")));
+              BodyInserters.fromPublisher(
+                  Mono.just(
+                      DEFAULT_RESPONSE
+                          + " "
+                          + request.pathVariable("name")
+                          + " "
+                          + request.pathVariable("word")),
+                  String.class));
     }
 
     Mono<ServerResponse> intResponse(Mono<FooModel> mono) {

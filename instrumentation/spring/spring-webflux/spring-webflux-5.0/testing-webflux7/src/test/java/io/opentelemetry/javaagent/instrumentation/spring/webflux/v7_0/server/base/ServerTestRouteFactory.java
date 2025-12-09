@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
+package io.opentelemetry.javaagent.instrumentation.spring.webflux.v7_0.server.base;
 
 import static io.opentelemetry.instrumentation.spring.webflux.server.AbstractSpringWebFluxServerTest.NESTED_PATH;
 import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
@@ -121,7 +121,7 @@ public abstract class ServerTestRouteFactory {
       spanAction = () -> {};
     }
 
-    return wrapResponse(endpoint, bodyBuilder.syncBody(body), spanAction);
+    return wrapResponse(endpoint, bodyBuilder.bodyValue(body), spanAction);
   }
 
   protected abstract Mono<ServerResponse> wrapResponse(
