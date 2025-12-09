@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientSingletons.instrumenter;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.client.PekkoHttpClientSingletons.setter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -45,7 +44,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
         @ToArgument(value = 0, index = 0, typing = Assigner.Typing.DYNAMIC))
     @Advice.OnMethodEnter(suppress = Throwable.class)
     public static Object[] methodEnter(@Advice.Argument(value = 0) HttpRequest request) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, request)) {
         return new Object[] {request, null, null};
       }
@@ -90,7 +89,7 @@ public class HttpExtClientInstrumentation implements TypeInstrumentation {
       responseFuture.onComplete(
           new OnCompleteHandler(context, request), thiz.system().dispatcher());
 
-      return FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), currentContext());
+      return FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), Context.current());
     }
   }
 }
