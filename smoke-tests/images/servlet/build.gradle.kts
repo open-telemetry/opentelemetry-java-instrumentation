@@ -177,8 +177,6 @@ val targets = mapOf(
   ),
 )
 
-val matrix = mutableListOf<String>()
-
 tasks {
   val buildLinuxTestImages by registering {
     group = "build"
@@ -190,16 +188,16 @@ tasks {
     description = "Builds all Windows Docker images for the test matrix"
   }
 
+  val linuxImages = createDockerTasks(buildLinuxTestImages, false)
+  val windowsImages = createDockerTasks(buildWindowsTestImages, true)
+
   val pushMatrix by registering(DockerPushImage::class) {
     mustRunAfter(buildLinuxTestImages)
     mustRunAfter(buildWindowsTestImages)
     group = "publishing"
     description = "Push all Docker images for the test matrix"
-    images.set(matrix)
+    images.set(linuxImages + windowsImages)
   }
-
-  createDockerTasks(buildLinuxTestImages, false)
-  createDockerTasks(buildWindowsTestImages, true)
 
   val printSmokeTestsConfigurations by registering {
     doFirst {
@@ -357,9 +355,6 @@ fun configureImage(
     images.add(image)
     dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
     buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash, "imageHash" to serverImageHash))
-    doLast {
-      matrix.add(image)
-    }
   }
 
   parentTask.configure {
@@ -368,7 +363,7 @@ fun configureImage(
   return image
 }
 
-fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
+fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): Set<String> {
   val resultImages = mutableSetOf<String>()
   for ((server, matrices) in targets) {
     val smokeTestServer = findProperty("smokeTestServer")
@@ -397,4 +392,5 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
       }
     }
   }
+  return resultImages
 }
