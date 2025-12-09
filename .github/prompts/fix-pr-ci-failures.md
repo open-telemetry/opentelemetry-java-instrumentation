@@ -77,9 +77,9 @@ Do not stop a given execution until you have worked through all phases below.
 - For each failed task:
   - Analyze the failure
   - Implement the fix
-    - For spotless failures: `./gradlew spotlessApply` to auto-fix formatting issues
-  - **Test loc
-  ally before committing**:
+    - To fix spotless failures: Run `./gradlew :<failed-module-path>:spotlessApply`
+  - **Test locally before committing**:
+    - For markdown lint failures: `mise run lint:markdown`
     - For compilation errors: `./gradlew <failed-task-path>`
     - For test failures: `./gradlew <failed-test-task>`
     - Verify the fix resolves the issue
