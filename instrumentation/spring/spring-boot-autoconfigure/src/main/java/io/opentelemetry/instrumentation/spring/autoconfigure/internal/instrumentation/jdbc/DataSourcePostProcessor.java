@@ -67,6 +67,8 @@ final class DataSourcePostProcessor implements BeanPostProcessor, Ordered {
               .setStatementSanitizationEnabled(
                   InstrumentationConfigUtil.isStatementSanitizationEnabled(
                       config, "otel.instrumentation.jdbc.statement-sanitizer.enabled"))
+              .setStatementSanitizationAnsiQuotes(InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                  config, "otel.instrumentation.jdbc.statement-sanitizer.ansi-quotes"))
               .setCaptureQueryParameters(
                   config.getBoolean(
                       "otel.instrumentation.jdbc.experimental.capture-query-parameters", false))

@@ -60,14 +60,15 @@ class InstrumenterContextTest {
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
     // verify that sanitized statement was cached, see SqlStatementSanitizerUtil
     assertThat(InstrumenterContext.get()).containsKey("sanitized-sql-map");
-    Map<String, SqlStatementInfo> sanitizedMap =
-        (Map<String, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
-    assertThat(sanitizedMap).containsKey(testQuery);
+    Map<Object, SqlStatementInfo> sanitizedMap =
+        (Map<Object, SqlStatementInfo>) InstrumenterContext.get().get("sanitized-sql-map");
+    assertThat(sanitizedMap).hasSize(1);
+    Object key = sanitizedMap.keySet().iterator().next();
+    assertThat(key.toString()).contains(testQuery);
 
     // replace cached sanitization result to verify it is used
     sanitizedMap.put(
-        testQuery,
-        SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
+        key, SqlStatementInfo.create("SELECT name2 FROM test2 WHERE id = ?", "SELECT", "test2"));
     {
       AttributesBuilder builder = Attributes.builder();
       attributesExtractor.onStart(builder, Context.root(), null);

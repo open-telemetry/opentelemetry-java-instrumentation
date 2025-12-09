@@ -285,6 +285,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.common.db-statement-sanitizer.ansi-quotes",
+      "type": "java.lang.Boolean",
+      "description": "Sets whether the SQL sanitizer should treat double-quoted fragments as string literals or identifiers. By default, double quotes are used for string literals. When the sanitizer is able to detect that the used database does not support double-quoted string literals then this flag will be automatically switched.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.common.default-enabled",
       "type": "java.lang.Boolean",
       "description": "Enables all instrumentations. Set to <code>false</code> to disable all instrumentations and then enable specific modules individually, e.g. <code>otel.instrumentation.jdbc.enabled=true</code>.",
@@ -356,6 +362,12 @@
       "type": "java.lang.Boolean",
       "description": "Enables the DB statement sanitization.",
       "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.jdbc.statement-sanitizer.ansi-quotes",
+      "type": "java.lang.Boolean",
+      "description": "Sets whether the SQL sanitizer should treat double-quoted fragments as string literals or identifiers. By default, double quotes are used for string literals. When the sanitizer is able to detect that the used database does not support double-quoted string literals then this flag will be automatically switched.",
+      "defaultValue": false
     },
     {
       "name": "otel.instrumentation.jdbc.experimental.capture-query-parameters",
@@ -517,6 +529,12 @@
       "type": "java.lang.Boolean",
       "description": "Enables the DB statement sanitization.",
       "defaultValue": true
+    },
+    {
+      "name": "otel.instrumentation.r2dbc.statement-sanitizer.ansi-quotes",
+      "type": "java.lang.Boolean",
+      "description": "Sets whether the SQL sanitizer should treat double-quoted fragments as string literals or identifiers. By default, double quotes are used for string literals. When the sanitizer is able to detect that the used database does not support double-quoted string literals then this flag will be automatically switched.",
+      "defaultValue": false
     },
     {
       "name": "otel.instrumentation.runtime-telemetry.capture-gc-cause",
