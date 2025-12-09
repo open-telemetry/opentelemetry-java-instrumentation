@@ -15,8 +15,16 @@ import javax.annotation.Nullable;
 @Deprecated
 public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
 
+  /**
+   * @deprecated Use {@link DbClientAttributesGetter#getDbSystemName} instead.
+   */
+  @Deprecated
+  @Nullable
   String getDbSystem(REQUEST request);
 
+  /**
+   * @deprecated There is no replacement at this time.
+   */
   @Deprecated
   @Nullable
   default String getUser(REQUEST request) {
@@ -24,14 +32,23 @@ public interface DbClientCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   @Nullable
-  String getDbNamespace(REQUEST request);
+  default String getDbNamespace(REQUEST request) {
+    return null;
+  }
 
+  /**
+   * @deprecated There is no replacement at this time.
+   */
   @Deprecated
   @Nullable
   default String getConnectionString(REQUEST request) {
     return null;
   }
 
+  /**
+   * @deprecated Use {@link DbClientAttributesGetter#getResponseStatusCode} instead.
+   */
+  @Deprecated
   @Nullable
   default String getResponseStatus(@Nullable RESPONSE response, @Nullable Throwable error) {
     return null;

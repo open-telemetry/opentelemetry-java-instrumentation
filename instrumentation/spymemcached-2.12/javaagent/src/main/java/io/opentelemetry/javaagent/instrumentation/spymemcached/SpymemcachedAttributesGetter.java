@@ -12,7 +12,7 @@ public class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
 
   @Override
-  public String getDbSystem(SpymemcachedRequest spymemcachedRequest) {
+  public String getDbSystemName(SpymemcachedRequest spymemcachedRequest) {
     return "memcached";
   }
 
