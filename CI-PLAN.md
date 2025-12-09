@@ -33,8 +33,12 @@ Note: All jobs with parameters in parentheses (e.g., Java version, VM, indy sett
   - Fix: Same as above
 
 ## Notes
-The failures are all related to the db.query.summary implementation. The span name is being set to "localhost" instead of "DB Query". This is happening in test cases that involve getClientInfo exceptions.
+The failures were all related to the db.query.summary implementation. The span name was being set to "localhost" instead of "DB Query" when SQL could not be parsed.
 
-The issue appears to be that when there's no actual SQL statement (e.g., during getClientInfo operations that fail), the query summary logic is returning the server name ("localhost") as the span name instead of falling back to "DB Query".
+**Root cause**: When SQL statement cannot be parsed (e.g., "testing 123" which is not valid SQL), the sanitizer returns null for operation, collection, and querySummary. The span name logic was incorrectly falling back to server.address as the span name.
 
-Root cause: The implementation needs to handle cases where there is no SQL statement and fall back to an appropriate default span name.
+**Solution**: According to OpenTelemetry semantic conventions for database spans, `server.address` should only be used as part of the `{target}` when combined with an operation (e.g., "SELECT localhost"). When there is no operation, the fallback should be `db.system.name` or the default "DB Query" span name.
+
+**Fix applied**: Updated `DbClientSpanNameExtractor.computeSpanNameStable()` to only use server.address when an operation is available. When no operation exists, it now properly falls back to db.system.name or "DB Query".
+
+**Commit**: 11e7b49ed1
