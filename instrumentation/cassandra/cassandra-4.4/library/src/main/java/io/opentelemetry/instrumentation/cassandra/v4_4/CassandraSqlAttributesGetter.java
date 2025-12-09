@@ -23,7 +23,7 @@ final class CassandraSqlAttributesGetter
   private static final String CASSANDRA = "cassandra";
 
   @Override
-  public String getDbSystem(CassandraRequest request) {
+  public String getDbSystemName(CassandraRequest request) {
     return CASSANDRA;
   }
 

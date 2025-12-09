@@ -77,7 +77,7 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       internalSet(
           attributes,
           DB_SYSTEM_NAME,
-          SemconvStability.stableDbSystemName(getter.getDbSystem(request)));
+          SemconvStability.stableDbSystemName(getter.getDbSystemName(request)));
       internalSet(attributes, DB_NAMESPACE, getter.getDbNamespace(request));
       internalSet(attributes, DB_QUERY_TEXT, getter.getDbQueryText(request));
       internalSet(attributes, DB_OPERATION_NAME, getter.getDbOperationName(request));
@@ -114,7 +114,8 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
         internalSet(attributes, ERROR_TYPE, error.getClass().getName());
       }
       if (error != null || response != null) {
-        internalSet(attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatus(response, error));
+        internalSet(
+            attributes, DB_RESPONSE_STATUS_CODE, getter.getResponseStatusCode(response, error));
       }
     }
   }

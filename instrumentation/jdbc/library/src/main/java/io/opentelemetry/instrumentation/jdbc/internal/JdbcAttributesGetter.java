@@ -22,7 +22,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getDbSystem(DbRequest request) {
+  public String getDbSystemName(DbRequest request) {
     return request.getDbInfo().getSystem();
   }
 
@@ -59,7 +59,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Nullable
   @Override
-  public String getResponseStatus(@Nullable Void response, @Nullable Throwable error) {
+  public String getResponseStatusCode(@Nullable Void response, @Nullable Throwable error) {
     if (error instanceof SQLException) {
       return Integer.toString(((SQLException) error).getErrorCode());
     }

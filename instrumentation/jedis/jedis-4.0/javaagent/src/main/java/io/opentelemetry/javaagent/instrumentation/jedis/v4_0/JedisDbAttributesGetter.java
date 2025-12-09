@@ -15,7 +15,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(JedisRequest request) {
+  public String getDbSystemName(JedisRequest request) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.REDIS;
   }
 

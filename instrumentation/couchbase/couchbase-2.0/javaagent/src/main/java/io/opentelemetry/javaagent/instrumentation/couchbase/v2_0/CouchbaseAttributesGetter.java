@@ -16,7 +16,7 @@ final class CouchbaseAttributesGetter
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override
-  public String getDbSystem(CouchbaseRequestInfo couchbaseRequest) {
+  public String getDbSystemName(CouchbaseRequestInfo couchbaseRequest) {
     return DbIncubatingAttributes.DbSystemIncubatingValues.COUCHBASE;
   }
 

@@ -61,4 +61,31 @@ public interface DbClientAttributesGetter<REQUEST, RESPONSE>
   default String getDbOperationName(REQUEST request) {
     return getOperation(request);
   }
+
+  // TODO: make this required to implement
+  default String getDbSystemName(REQUEST request) {
+    String dbSystem = getDbSystem(request);
+    if (dbSystem == null) {
+      throw new UnsupportedOperationException(
+          "Must override getDbSystemName() or getDbSystem() (deprecated)");
+    }
+    return dbSystem;
+  }
+
+  /**
+   * @deprecated Use {@link #getDbSystemName} instead.
+   */
+  @Deprecated
+  @Nullable
+  default String getDbSystem(REQUEST request) {
+    // overriding in order to provide a default implementation temporarily,
+    // so subclasses don't need to override this method
+    return null;
+  }
+
+  // TODO: make this required to implement
+  @Nullable
+  default String getResponseStatusCode(@Nullable RESPONSE response, @Nullable Throwable error) {
+    return getResponseStatus(response, error);
+  }
 }
