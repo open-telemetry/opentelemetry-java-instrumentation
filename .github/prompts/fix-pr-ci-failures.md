@@ -16,7 +16,7 @@ Do not stop a given execution until you have worked through all phases below.
 2. Check that the branch is up-to-date with remote: `git fetch && git status` - exit and warn if behind
 3. Get the current branch name using `git branch --show-current`
 4. Find the PR for this branch using `gh pr list --head <branch-name> --json number,title` and extract the PR number
-5. Use `gh pr view <pr-number> --json statusCheckRollup` to get the list of all failed CI jobs
+5. Use `gh pr view <pr-number> --json statusCheckRollup --jq '.statusCheckRollup[] | select(.conclusion == "FAILURE") | {name: .name, detailsUrl: .detailsUrl}'` to get the list of all failed CI jobs
 6. Check if there are actually CI failures to fix - if all jobs passed, exit early
 
 ## Phase 1: Gather Information
@@ -26,22 +26,22 @@ Do not stop a given execution until you have worked through all phases below.
 
 1. Get repository info: `gh repo view --json owner,name`
 2. For unique job type that failed
-    - **Important**: Ignore duplicate jobs that only differ by parameters inside of parenthesis. For example:
-        - In `abc / def (x, y, z)`, the job is `abc / def` while x, y, and z are parameters
-    - **Strategy**: Download logs for 1-2 representative jobs first to identify patterns (e.g., one "build" job, one "test0" job)
-    - Compilation failures typically repeat across all jobs, so you don't need every log file
-  - Retrieve logs for selected representative jobs:
-    - Get the job ID from the failed run by examining the PR status checks JSON
-    - Download logs using: `cd /tmp && gh auth token | xargs -I {} curl -sSfL -H "Authorization: token {}" -o <job-name>.log "https://api.github.com/repos/<owner>/<repo>/actions/jobs/<job-id>/logs"`
-    - Example: `cd /tmp && gh auth token | xargs -I {} curl -sSfL -H "Authorization: token {}" -o test0-java8-indy-false.log "https://api.github.com/repos/open-telemetry/opentelemetry-java-instrumentation/actions/jobs/53713949850/logs"`
-    - The GitHub API responds with an HTTP 302 redirect to blob storage; `-L` (already included) ensures the download follows the redirect and saves the final log contents.
-    - Find all gradle tasks that failed:
-        - Search for failed tasks: `grep "Task.*FAILED" /tmp/<job-name>.log`
-        - Look for test failures: `grep "FAILED" /tmp/<job-name>.log | grep -E "(Test|test)"`
-        - Example output: `> Task :instrumentation:cassandra:cassandra-4.0:javaagent:test FAILED`
-    - Extract error context:
-        - For compilation errors: `grep -B 5 -A 20 "error:" /tmp/<job-name>.log`
-        - For task failures: `grep -B 2 -A 15 "Task.*FAILED" /tmp/<job-name>.log`
+   - **Important**: Ignore duplicate jobs that only differ by parameters inside of parenthesis. For example:
+     - In `abc / def (x, y, z)`, the job is `abc / def` while x, y, and z are parameters
+   - **Strategy**: Download logs for 1-2 representative jobs first to identify patterns (e.g., one "build" job, one "test0" job)
+   - Compilation failures typically repeat across all jobs, so you don't need every log file
+   - Retrieve logs for selected representative jobs:
+     - Get the job ID from the failed run by examining the PR status checks JSON
+     - Download logs using: `cd /tmp && gh auth token | xargs -I {} curl -sSfL -H "Authorization: token {}" -o <job-name>.log "https://api.github.com/repos/<owner>/<repo>/actions/jobs/<job-id>/logs"`
+     - Example: `cd /tmp && gh auth token | xargs -I {} curl -sSfL -H "Authorization: token {}" -o test0-java8-indy-false.log "https://api.github.com/repos/open-telemetry/opentelemetry-java-instrumentation/actions/jobs/53713949850/logs"`
+     - The GitHub API responds with an HTTP 302 redirect to blob storage; `-L` (already included) ensures the download follows the redirect and saves the final log contents.
+     - Find all gradle tasks that failed:
+       - Search for failed tasks: `grep "Task.*FAILED" /tmp/<job-name>.log`
+       - Look for test failures: `grep "FAILED" /tmp/<job-name>.log | grep -E "(Test|test)"`
+       - Example output: `> Task :instrumentation:cassandra:cassandra-4.0:javaagent:test FAILED`
+     - Extract error context:
+       - For compilation errors: `grep -B 5 -A 20 "error:" /tmp/<job-name>.log`
+       - For task failures: `grep -B 2 -A 15 "Task.*FAILED" /tmp/<job-name>.log`
 
 ## Phase 2: Create CI-PLAN.md
 
@@ -60,7 +60,7 @@ Do not stop a given execution until you have worked through all phases below.
 - [ ] Task: <gradle-task-path>
   - Seen in: <job-name-1>, <job-name-2>, ...
   - Log files: /tmp/<file1>.log, /tmp/<file2>.log
-  
+
 - [ ] Task: <gradle-task-path>
   - Seen in: <job-name-1>, <job-name-2>, ...
   - Log files: /tmp/<file1>.log, /tmp/<file2>.log
@@ -77,7 +77,9 @@ Do not stop a given execution until you have worked through all phases below.
 - For each failed task:
   - Analyze the failure
   - Implement the fix
-  - **Test locally before committing**:
+    - For spotless failures: `./gradlew spotlessApply` to auto-fix formatting issues
+  - **Test loc
+  ally before committing**:
     - For compilation errors: `./gradlew <failed-task-path>`
     - For test failures: `./gradlew <failed-test-task>`
     - Verify the fix resolves the issue
