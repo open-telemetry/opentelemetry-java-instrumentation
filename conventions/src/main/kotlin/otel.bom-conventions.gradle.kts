@@ -9,6 +9,14 @@ if (!project.name.startsWith("bom")) {
   throw IllegalStateException("Name of BOM projects must start with 'bom'.")
 }
 
+// Force evaluation of all non-BOM subprojects so that we can filter them by plugin
+// and add them as dependency constraints below
+rootProject.subprojects.forEach { subproject ->
+  if (!subproject.name.startsWith("bom")) {
+    evaluationDependsOn(subproject.path)
+  }
+}
+
 val otelBom = extensions.create<OtelBomExtension>("otelBom")
 
 afterEvaluate {
