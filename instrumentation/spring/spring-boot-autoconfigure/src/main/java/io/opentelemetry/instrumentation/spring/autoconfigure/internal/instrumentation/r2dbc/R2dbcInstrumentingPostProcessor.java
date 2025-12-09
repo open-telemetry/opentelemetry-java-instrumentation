@@ -37,8 +37,10 @@ class R2dbcInstrumentingPostProcessor implements BeanPostProcessor {
               InstrumentationConfigUtil.isStatementSanitizationEnabled(
                   configProvider.getObject(),
                   "otel.instrumentation.r2dbc.statement-sanitizer.enabled"))
-          .setStatementSanitizationAnsiQuotes(InstrumentationConfigUtil.isStatementSanitizationEnabled(
-              configProvider.getObject(), "otel.instrumentation.r2dbc.statement-sanitizer.ansi-quotes"))
+          .setStatementSanitizationAnsiQuotes(
+              InstrumentationConfigUtil.isStatementSanitizationEnabled(
+                  configProvider.getObject(),
+                  "otel.instrumentation.r2dbc.statement-sanitizer.ansi-quotes"))
           .build()
           .wrapConnectionFactory(connectionFactory, getConnectionFactoryOptions(connectionFactory));
     }

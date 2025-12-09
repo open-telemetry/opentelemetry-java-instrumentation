@@ -46,8 +46,10 @@ public final class InstrumentationConfigUtil {
         key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
   }
 
-  public static boolean isStatementSanitizationAnsiQuotes(InstrumentationConfig config, String key) {
+  public static boolean isStatementSanitizationAnsiQuotes(
+      InstrumentationConfig config, String key) {
     return config.getBoolean(
-        key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.ansi-quotes", false));
+        key,
+        config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.ansi-quotes", false));
   }
 }
