@@ -1,0 +1,13 @@
+description: >
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for Play Framework actions (controller spans are disabled by default).
+display_name: Play Framework
+library_link: https://www.playframework.com/
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+configurations:
+  - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+    description: Enables the creation of experimental controller spans.
+    type: boolean
+    default: false
