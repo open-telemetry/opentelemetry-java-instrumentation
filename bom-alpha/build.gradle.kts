@@ -10,6 +10,9 @@ javaPlatform {
   allowDependencies()
 }
 
+// Need this since we access :dependencyManagement configurations below
+evaluationDependsOn(":dependencyManagement")
+
 dependencies {
   api(platform("io.opentelemetry:opentelemetry-bom"))
   api(platform("io.opentelemetry:opentelemetry-bom-alpha"))

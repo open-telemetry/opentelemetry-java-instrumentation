@@ -9,11 +9,6 @@ if (!project.name.startsWith("bom")) {
   throw IllegalStateException("Name of BOM projects must start with 'bom'.")
 }
 
-rootProject.subprojects.forEach { subproject ->
-  if (!subproject.name.startsWith("bom")) {
-    evaluationDependsOn(subproject.path)
-  }
-}
 val otelBom = extensions.create<OtelBomExtension>("otelBom")
 
 afterEvaluate {
@@ -41,7 +36,6 @@ afterEvaluate {
 }
 
 // this applies version numbers to the SDK bom and SDK alpha bom which are dependencies of the instrumentation boms
-evaluationDependsOn(":dependencyManagement")
 val dependencyManagementConf = configurations.create("dependencyManagement") {
   isCanBeConsumed = false
   isCanBeResolved = false
