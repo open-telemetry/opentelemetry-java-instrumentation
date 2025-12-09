@@ -52,30 +52,24 @@ val develocityServer = "https://develocity.opentelemetry.io"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 
-// if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
-val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
-
 develocity {
-  if (useScansGradleCom) {
-    buildScan {
-      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-      termsOfUseAgree = "yes"
-    }
-  } else {
+  if (develocityAccessKey.isNotEmpty()) {
     server = develocityServer
-    buildScan {
-      publishing.onlyIf { it.isAuthenticated }
+  }
 
+  buildScan {
+    if (develocityAccessKey.isNotEmpty()) {
       gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
       gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
       }
+    } else if (isCI) {
+      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+      termsOfUseAgree = "yes"
+    } else {
+      publishing.onlyIf { false }
     }
-  }
-
-  buildScan {
-    uploadInBackground = !isCI
 
     capture {
       fileFingerprints = true
@@ -93,11 +87,10 @@ develocity {
   }
 }
 
-if (!useScansGradleCom) {
-  buildCache {
-    remote(develocity.buildCache) {
-      isPush = isCI && develocityAccessKey.isNotEmpty()
-    }
+buildCache {
+  remote(HttpBuildCache::class) {
+    url = uri("$develocityServer/cache/")
+    isPush = isCI && develocityAccessKey.isNotEmpty()
   }
 }
 
