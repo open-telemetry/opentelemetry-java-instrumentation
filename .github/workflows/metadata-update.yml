@@ -2,6 +2,15 @@ name: Metadata Update
 
 on:
   workflow_dispatch:  # allow this to be manually triggered
+    inputs:
+      debug_logging:
+        description: 'Enable debug logging'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
   schedule:
     - cron: "00 1 * * *" # daily at 1:00 UTC
 
@@ -44,6 +53,8 @@ jobs:
         uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5.0.0
 
       - name: Collect telemetry
+        env:
+          DEBUG_LOGGING: ${{ inputs.debug_logging || 'false' }}
         run: ./instrumentation-docs/ci-collect.sh
 
       - name: Run documentation analyzer
