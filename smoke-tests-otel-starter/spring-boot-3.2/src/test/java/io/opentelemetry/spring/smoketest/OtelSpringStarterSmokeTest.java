@@ -6,7 +6,6 @@
 package io.opentelemetry.spring.smoketest;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.semconv.HttpAttributes;
