@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.2.2"
+  id("com.gradle.develocity") version "4.3"
 }
 
 dependencyResolutionManagement {
