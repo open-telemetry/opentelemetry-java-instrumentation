@@ -41,13 +41,6 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
                 .body(String.class))
         .isEqualTo("pong");
 
-    // ignore the trace for creating the db table
-    await()
-        .until(
-            () ->
-                testing.getExportedSpans().stream()
-                    .anyMatch(span -> span.getKind() == SpanKind.SERVER));
-
     testing.waitAndAssertTraces(
         traceAssert ->
             traceAssert.hasSpansSatisfyingExactly(
