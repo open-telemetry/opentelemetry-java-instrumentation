@@ -37,6 +37,10 @@ DOLLAR_QUOTED_STR    = "$$" [^$]* "$$"
 BACKTICK_QUOTED_STR  = "`" [^`]* "`"
 POSTGRE_PARAM_MARKER = "$"[0-9]*
 WHITESPACE           = [ \t\r\n]+
+// alphanumeric strings with underscores
+// matches unquoted passwords for SAP HANA
+// https://help.sap.com/docs/SAP_HANA_PLATFORM/b3ee5778bc2e4a089d3299b82ec762a7/61662e3032ad4f8dbdb5063a21a7d706.html?locale=en-US
+ALPHANUM             = ([:letter:] | [0-9] | "_")+
 
 %{
   static SqlStatementInfo sanitize(String statement, SqlDialect dialect) {
@@ -162,6 +166,10 @@ WHITESPACE           = [ \t\r\n]+
 
     boolean expectingOperationTarget() {
       return false;
+    }
+
+    boolean shouldAppendIdentifierOrLiteral() {
+      return true;
     }
 
     SqlStatementInfo getResult(String fullStatement) {
@@ -356,6 +364,22 @@ WHITESPACE           = [ \t\r\n]+
   private class Alter extends DdlOperation {
   }
 
+  private class Password extends Operation {
+    boolean expectingPassword = true;
+
+    boolean shouldAppendIdentifierOrLiteral() {
+      boolean result = !expectingPassword;
+      expectingPassword = false;
+
+      return result;
+    }
+
+    SqlStatementInfo getResult(String fullStatement) {
+      return SqlStatementInfo.create(fullStatement, null, null);
+    }
+  }
+
+
   private SqlStatementInfo getResult() {
     if (builder.length() > LIMIT) {
       builder.delete(LIMIT, builder.length());
@@ -485,6 +509,13 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "PASSWORD" {
+          if (!insideComment) {
+            setOperation(new Password());
+          }
+          appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
 
   {COMMA} {
           if (!insideComment && !extractionDone) {
@@ -497,7 +528,11 @@ WHITESPACE           = [ \t\r\n]+
           if (!insideComment && !extractionDone) {
             extractionDone = operation.handleIdentifier();
           }
-          appendCurrentFragment();
+          if (operation.shouldAppendIdentifierOrLiteral()) {
+            appendCurrentFragment();
+          } else {
+            builder.append('?');
+          }
           if (isOverLimit()) return YYEOF;
       }
 
@@ -528,7 +563,9 @@ WHITESPACE           = [ \t\r\n]+
       }
 
   // here is where the actual sanitization happens
-  {BASIC_NUM} | {HEX_NUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+  {BASIC_NUM} | {HEX_NUM} | {ALPHANUM} | {QUOTED_STR} | {DOLLAR_QUOTED_STR} {
+          // we are calling this to let operation know that a literal was encountered
+          operation.shouldAppendIdentifierOrLiteral();
           builder.append('?');
           if (isOverLimit()) return YYEOF;
       }
@@ -540,7 +577,11 @@ WHITESPACE           = [ \t\r\n]+
             if (!insideComment && !extractionDone) {
               extractionDone = operation.handleIdentifier();
             }
-            appendCurrentFragment();
+            if (operation.shouldAppendIdentifierOrLiteral()) {
+              appendCurrentFragment();
+            } else {
+              builder.append('?');
+            }
           }
           if (isOverLimit()) return YYEOF;
       }

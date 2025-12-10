@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class SqlStatementSanitizerTest {
 
@@ -40,6 +41,22 @@ class SqlStatementSanitizerTest {
     assertThat(result.getFullStatement()).isEqualTo(expected.getFullStatement());
     assertThat(result.getOperation()).isEqualTo(expected.getOperation());
     assertThat(result.getMainIdentifier()).isEqualToIgnoringCase(expected.getMainIdentifier());
+  }
+
+  // test that passwords are sanitized in SAP HANA CONNECT statements
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "CONNECT new_user PASSWORD Password1",
+        "CONNECT new_user PASSWORD 1Password",
+        "CONNECT new_user PASSWORD \"Password1\""
+      })
+  void sanitizePassword(String query) {
+    SqlStatementInfo result = SqlStatementSanitizer.create(true).sanitize(query);
+
+    assertThat(result.getFullStatement()).isEqualTo("CONNECT new_user PASSWORD ?");
+    assertThat(result.getOperation()).isNull();
+    assertThat(result.getMainIdentifier()).isNull();
   }
 
   @Test
