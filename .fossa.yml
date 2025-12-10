@@ -159,6 +159,9 @@ targets:
       target: ':instrumentation:hystrix-1.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:iceberg-1.8:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:influxdb-2.4:javaagent'
     - type: gradle
       path: ./
