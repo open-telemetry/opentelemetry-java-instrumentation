@@ -26,15 +26,15 @@ public final class ServerRequestHelper {
   @Nullable private static final Field routeIdField;
 
   static {
-    Field routeIdField1 = null;
+    Field field = null;
     try {
-      routeIdField1 = GatewayDelegatingRouterFunction.class.getDeclaredField("routeId");
-      routeIdField1.setAccessible(true);
-    } catch (NoSuchFieldException ignored) {
+      field = GatewayDelegatingRouterFunction.class.getDeclaredField("routeId");
+      field.setAccessible(true);
+    } catch (Exception ignored) {
       // Ignored
     }
 
-    routeIdField = routeIdField1;
+    routeIdField = field;
   }
 
   public static void extractAttributes(
@@ -48,14 +48,16 @@ public final class ServerRequestHelper {
       return;
     }
 
+    String routeId = null;
     try {
-      String routeId = (String) routeIdField.get(gatewayRouterFunction);
-      String convergedRouteId = GatewayRouteHelper.convergeRouteId(routeId);
-      if (convergedRouteId != null) {
-        serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, convergedRouteId);
-      }
-    } catch (Exception e) {
+      routeId = (String) routeIdField.get(gatewayRouterFunction);
+    } catch (Exception ignored) {
       // Silently ignore
+    }
+
+    String convergedRouteId = GatewayRouteHelper.convergeRouteId(routeId);
+    if (convergedRouteId != null) {
+      serverSpan.setAttribute(ROUTE_ID_ATTRIBUTE, convergedRouteId);
     }
 
     request
