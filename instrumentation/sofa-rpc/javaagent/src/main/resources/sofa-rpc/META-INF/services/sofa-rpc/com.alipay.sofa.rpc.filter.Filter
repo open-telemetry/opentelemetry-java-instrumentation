@@ -1,0 +1,3 @@
+io.opentelemetry.javaagent.instrumentation.sofa.rpc.OpenTelemetryClientFilter
+io.opentelemetry.javaagent.instrumentation.sofa.rpc.OpenTelemetryServerFilter
+
