@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "smoke-tests/images/early-jdk8/**"
-      - ".github/workflows/pr-smoke-test-early-jdk8-images.yml"
+      - ".github/workflows/publish-smoke-test-early-jdk8-images.yml"
     branches:
       - main
   workflow_dispatch:
