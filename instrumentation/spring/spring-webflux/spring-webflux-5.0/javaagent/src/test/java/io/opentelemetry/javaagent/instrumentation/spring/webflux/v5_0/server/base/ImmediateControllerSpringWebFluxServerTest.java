@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webflux.v5_0.server.base;
 
+import io.opentelemetry.instrumentation.spring.webflux.server.AbstractControllerSpringWebFluxServerTest;
+import io.opentelemetry.instrumentation.spring.webflux.server.ServerTestController;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import java.util.function.Supplier;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -20,7 +22,7 @@ import reactor.core.publisher.Mono;
  * <p>{@code Mono<String>} from a handler is already a fully constructed response with no deferred
  * actions. For exception endpoint, the exception is thrown within controller method scope.
  */
-class ImmediateControllerSpringWebFluxServerTest extends ControllerSpringWebFluxServerTest {
+class ImmediateControllerSpringWebFluxServerTest extends AbstractControllerSpringWebFluxServerTest {
   @Override
   protected Class<?> getApplicationClass() {
     return Application.class;

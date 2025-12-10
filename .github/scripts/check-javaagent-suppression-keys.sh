@@ -33,6 +33,10 @@ for file in $(find instrumentation -name "*Module.java"); do
     # TODO module is missing a base version
     continue
   fi
+  if [[ "$simple_module_name" == spring-cloud-gateway-webmvc ]]; then
+    # webmvc variant uses spring-cloud-gateway as base name
+    simple_module_name="spring-cloud-gateway"
+  fi
 
   if [ "$module_name" == "$simple_module_name" ]; then
     expected="super\(\n? *\"$simple_module_name\""

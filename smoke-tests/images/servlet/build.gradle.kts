@@ -177,8 +177,6 @@ val targets = mapOf(
   ),
 )
 
-val matrix = mutableListOf<String>()
-
 tasks {
   val buildLinuxTestImages by registering {
     group = "build"
@@ -190,16 +188,16 @@ tasks {
     description = "Builds all Windows Docker images for the test matrix"
   }
 
+  val linuxImages = createDockerTasks(buildLinuxTestImages, false)
+  val windowsImages = createDockerTasks(buildWindowsTestImages, true)
+
   val pushMatrix by registering(DockerPushImage::class) {
-    mustRunAfter(buildLinuxTestImages)
-    mustRunAfter(buildWindowsTestImages)
+    dependsOn(buildLinuxTestImages)
+    dependsOn(buildWindowsTestImages)
     group = "publishing"
     description = "Push all Docker images for the test matrix"
-    images.set(matrix)
+    images.set(linuxImages + windowsImages)
   }
-
-  createDockerTasks(buildLinuxTestImages, false)
-  createDockerTasks(buildWindowsTestImages, true)
 
   val printSmokeTestsConfigurations by registering {
     doFirst {
@@ -308,11 +306,11 @@ fun configureImage(
       throw GradleException("Unexpected vm: $vm")
     } else {
       when (jdk) {
-        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:63bb8aad02000edbc5f90222a018862f546a0ac21ec01d6b31af6202083297e8"
-        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:a0910e6646e71de764f56ea19238719cb150ffabb46c0f9d3323e4cb697d59dc"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:ad9a76a79afef5f01b49d3a7487e017305cb76f7421cd88e9424ee1c96fe8c09"
-        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:bd69dbe68315b72ebfa0d708511176c3317dd0c500dc462e7041570983f14c49"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:58f8efd0e2b137c19e192a3d1a36e9efe070d6f59784bc4a84f551e6c148b35c"
+        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:d92ff04da09450bb0dc9742e74d4fec66f73cb36bcfb03338cfc410c02a3506d"
+        "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:07c3fe25b1f5adff6a7ccdedc93e7b874a409448a97a9d6019092022cecbaffb"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:8fa5ce4c63b39bc83923e965956ee596dfd6e4a050d52d79043bf172caf59245"
+        "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:6236238cddc4fea7f294e4eb42f059b90ae3be854ed98c4e5f6694798e451909"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:b597266e56bd857c5a7fa9952419bb434e6d18d90733ef992556751f171e7f28"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }
@@ -357,9 +355,6 @@ fun configureImage(
     images.add(image)
     dockerFile.set(File(dockerWorkingDir.get().asFile, dockerFileName))
     buildArgs.set(extraArgs + mapOf("jdk" to jdk, "vm" to vm, "version" to version, "jdkImageName" to jdkImageName, "jdkImageHash" to jdkImageHash, "imageHash" to serverImageHash))
-    doLast {
-      matrix.add(image)
-    }
   }
 
   parentTask.configure {
@@ -368,7 +363,7 @@ fun configureImage(
   return image
 }
 
-fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
+fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): Set<String> {
   val resultImages = mutableSetOf<String>()
   for ((server, matrices) in targets) {
     val smokeTestServer = findProperty("smokeTestServer")
@@ -397,4 +392,5 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean) {
       }
     }
   }
+  return resultImages
 }

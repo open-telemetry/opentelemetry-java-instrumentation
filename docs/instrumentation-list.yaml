@@ -9128,6 +9128,12 @@ libraries:
           type: STRING
   okhttp:
   - name: okhttp-2.2
+    display_name: OkHttp
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for OkHttp.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     source_path: instrumentation/okhttp/okhttp-2.2
     scope:
       name: io.opentelemetry.okhttp-2.2
@@ -9135,6 +9141,34 @@ libraries:
     target_versions:
       javaagent:
       - com.squareup.okhttp:okhttp:[2.2,3)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -9175,6 +9209,13 @@ libraries:
         - name: url.full
           type: STRING
   - name: okhttp-3.0
+    display_name: OkHttp
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for OkHttp.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://square.github.io/okhttp/
     source_path: instrumentation/okhttp/okhttp-3.0
     scope:
       name: io.opentelemetry.okhttp-3.0
@@ -9184,6 +9225,34 @@ libraries:
       - com.squareup.okhttp3:okhttp:[3.0,)
       library:
       - com.squareup.okhttp3:okhttp:3.0.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -9231,8 +9300,12 @@ libraries:
           type: STRING
   openai:
   - name: openai-java-1.1
+    display_name: OpenAI Java SDK
     description: This instrumentation enables Gen AI client spans and metrics for
-      OpenAI Java SDK 1.1+.
+      the OpenAI Java SDK.
+    semantic_conventions:
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRICS
     library_link: https://github.com/openai/openai-java
     source_path: instrumentation/openai/openai-java-1.1
     scope:
@@ -9464,8 +9537,11 @@ libraries:
           type: STRING
   oracle:
   - name: oracle-ucp-11.2
-    description: The Oracle Universal Connection Pool (UCP) instrumentation generates
-      connection pool metrics.
+    display_name: Oracle UCP
+    description: |
+      The Oracle Universal Connection Pool (UCP) instrumentation enables database connection pool metrics for Oracle UCP data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://docs.oracle.com/database/121/JJUCP/
     source_path: instrumentation/oracle-ucp-11.2
     scope:
@@ -9532,9 +9608,11 @@ libraries:
           type: STRING
   oshi:
   - name: oshi
-    description: When the OSHI library is detected on the classpath, this instrumentation
-      will use the system class loader to load classes from the oshi-core jar that
-      are then used to generate system metrics.
+    display_name: OSHI
+    description: |
+      When the OSHI library is detected on the classpath, this instrumentation enables system metrics for memory, disk, and network operations.
+    semantic_conventions:
+    - SYSTEM_METRICS
     library_link: https://github.com/oshi/oshi/
     source_path: instrumentation/oshi
     scope:
@@ -9546,7 +9624,8 @@ libraries:
       - com.github.oshi:oshi-core:5.3.1
     configurations:
     - name: otel.instrumentation.oshi.experimental-metrics.enabled
-      description: Enable the OSHI process runtime metrics.
+      description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time`
+        metrics.
       type: boolean
       default: false
     telemetry:

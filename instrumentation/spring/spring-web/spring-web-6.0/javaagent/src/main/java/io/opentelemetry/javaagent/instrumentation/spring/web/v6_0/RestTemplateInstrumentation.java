@@ -37,6 +37,7 @@ public class RestTemplateInstrumentation implements TypeInstrumentation {
   public static class UrlTemplateAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Nullable
     public static Scope onEnter(@Advice.Argument(1) String uriTemplate) {
       if (uriTemplate != null) {
         String path = UrlParser.getPath(uriTemplate);

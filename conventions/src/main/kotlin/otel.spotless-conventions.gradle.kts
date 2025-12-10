@@ -85,14 +85,9 @@ if (project == rootProject) {
         ".gitattributes",
         ".gitconfig",
         ".editorconfig",
-        "*.md",
         "gradle.properties",
-        ".github/**/*.md",
         ".github/**/*.sh",
-        "docs/**/*.md",
-        "examples/**/*.md",
-        "examples/**/gradle.properties",
-        "licenses/**/*.md"
+        "examples/**/gradle.properties"
       )
       leadingTabsToSpaces()
       trimTrailingWhitespace()
