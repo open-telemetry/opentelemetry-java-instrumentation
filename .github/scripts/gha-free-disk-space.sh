@@ -6,4 +6,6 @@
 df -h
 sudo rm -rf /usr/local/lib/android
 sudo rm -rf /usr/share/dotnet
+sudo rm -rf /usr/local/julia*
+sudo rm -rf /usr/share/swift
 df -h
