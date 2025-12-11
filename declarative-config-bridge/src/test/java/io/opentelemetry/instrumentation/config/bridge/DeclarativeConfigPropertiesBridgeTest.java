@@ -149,5 +149,10 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isTrue();
     assertThat(bridge.getBoolean(prefix + ".experimental.gc-profiler.experimental.metrics"))
         .isTrue();
+
+    // experimental in the middle of the property name should be preserved
+    assertThat(
+            bridge.getBoolean("otel.instrumentation.runtime-telemetry.emit-experimental-telemetry"))
+        .isTrue();
   }
 }

@@ -183,7 +183,7 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
     }
     // Split the remainder of the property on "."
     return property
-        .replaceAll("experimental[.-]([^.]+)", "$1/development")
+        .replaceAll(".experimental[.-]([^.]+)", ".$1/development")
         .replace('-', '_')
         .split("\\.");
   }
