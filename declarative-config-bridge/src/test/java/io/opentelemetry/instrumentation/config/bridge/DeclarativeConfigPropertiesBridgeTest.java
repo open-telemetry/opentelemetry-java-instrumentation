@@ -60,7 +60,7 @@ class DeclarativeConfigPropertiesBridgeTest {
         .isTrue();
 
     // common cases
-    assertThat(bridge.getBoolean("otel.instrumentation.runtime-telemetry.enabled")).isFalse();
+    assertThat(bridge.getBoolean("otel.instrumentation.runtime-telemetry.enabled")).isTrue();
 
     // check all the types
     Map<String, String> expectedMap = new HashMap<>();
@@ -140,5 +140,14 @@ class DeclarativeConfigPropertiesBridgeTest {
     assertThat(bridge.getBoolean("otel.javaagent.debug")).isTrue();
     assertThat(bridge.getBoolean("otel.javaagent.experimental.indy")).isTrue();
     assertThat(bridge.getString("otel.javaagent.logging")).isEqualTo("application");
+  }
+
+  @Test
+  void developmentTranslation() {
+    String prefix = "otel.instrumentation.runtime-telemetry";
+    assertThat(bridge.getBoolean(prefix + ".experimental-gc-profiler.experimental-metrics"))
+        .isTrue();
+    assertThat(bridge.getBoolean(prefix + ".experimental.gc-profiler.experimental.metrics"))
+        .isTrue();
   }
 }

@@ -5,10 +5,11 @@ instrumentation/development:
       full_name:
         preserved: true
     agent:
-      experimental:
-        indy: true
+      indy/development: true
     runtime_telemetry:
-      enabled: false
+      enabled: true
+      gc_profiler/development:
+        metrics/development: true
     example_instrumentation:
       string_key: value
       bool_key: true

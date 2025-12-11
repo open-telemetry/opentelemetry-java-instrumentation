@@ -182,7 +182,10 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
     }
     // Split the remainder of the property on "."
-    return property.replace('-', '_').split("\\.");
+    return property
+        .replaceAll("experimental[.-]([^.]+)", "$1/development")
+        .replace('-', '_')
+        .split("\\.");
   }
 
   private String translateProperty(String property) {
