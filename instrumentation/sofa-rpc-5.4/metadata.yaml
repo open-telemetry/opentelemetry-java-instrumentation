@@ -5,7 +5,7 @@ description: >
   
   **Version compatibility**: 
   
-  This instrumentation uses Muzzle to verify compatibility with SOFARPC versions 5.0.0 and above.
+  This instrumentation uses muzzle to verify compatibility with SOFARPC versions 5.0.0 and above.
   The instrumentation has been tested and verified with SOFARPC 5.4.0 through 5.12.0+.
   
   - **Minimum supported version**: 5.0.0 (required for requestBaggage support used in context propagation)
