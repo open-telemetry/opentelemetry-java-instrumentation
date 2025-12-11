@@ -106,6 +106,7 @@ readonly INSTRUMENTATIONS=(
   "http-url-connection:javaagent:test"
   "hystrix-1.4:javaagent:test"
   "hystrix-1.4:javaagent:testExperimental"
+  "iceberg-1.8:library:test"
   "influxdb-2.4:javaagent:test"
   "influxdb-2.4:javaagent:testStableSemconv"
   "java-http-client:javaagent:test"

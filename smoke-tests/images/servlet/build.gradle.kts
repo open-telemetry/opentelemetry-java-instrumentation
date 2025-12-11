@@ -254,10 +254,11 @@ fun configureImage(
     version = version.substringBefore("-")
   }
 
-  // Using separate build directory for different image
-  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject")
   val dockerFileName = "$dockerfile.${if (isWindows) "windows." else ""}dockerfile"
   val platformSuffix = if (isWindows) "-windows" else ""
+
+  // Using separate build directory for different images
+  val dockerWorkingDir = layout.buildDirectory.dir("docker-$server-$version-jdk$jdk-$vm-$warProject-$platformSuffix")
 
   val prepareTask = tasks.register<Copy>("${server}ImagePrepare-$version-jdk$jdk-$vm$platformSuffix") {
     val warTask = project(":smoke-tests:images:servlet:$warProject").tasks.named<War>("war")
