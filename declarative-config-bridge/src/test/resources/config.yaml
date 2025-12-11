@@ -7,7 +7,7 @@ instrumentation/development:
     agent:
       indy/development: true
     runtime_telemetry:
-      emit_experimental_telemetry: true
+      emit_experimental_telemetry/development: true
       enabled: true
       gc_profiler/development:
         metrics/development: true
