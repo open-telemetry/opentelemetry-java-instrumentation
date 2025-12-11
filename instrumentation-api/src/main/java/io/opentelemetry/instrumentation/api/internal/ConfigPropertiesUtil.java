@@ -14,10 +14,8 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Arrays;
 import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Collectors;
@@ -30,25 +28,6 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesUtil {
 
   private static final boolean supportsDeclarativeConfig = supportsDeclarativeConfig();
-
-  private static final Map<String, String> config = load();
-
-  public static Map<String, String> load() {
-    Map<String, String> config = new HashMap<>();
-    for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
-      config.put(normalizeEnvironmentVariableKey(entry.getKey()), entry.getValue());
-    }
-    for (Map.Entry<Object, Object> entry : safeSystemProperties().entrySet()) {
-      config.put(normalizePropertyKey(entry.getKey().toString()), entry.getValue().toString());
-    }
-    return config;
-  }
-
-  /** Resets the cached config for testing purposes. */
-  public static void resetForTest() {
-    config.clear();
-    config.putAll(load());
-  }
 
   private static boolean supportsDeclarativeConfig() {
     try {
@@ -114,7 +93,7 @@ public final class ConfigPropertiesUtil {
    */
   @Nullable
   public static String getString(String propertyName) {
-    return config.get(normalizePropertyKey(propertyName));
+    return ConfigUtil.getString(normalizePropertyKey(propertyName));
   }
 
   /**
