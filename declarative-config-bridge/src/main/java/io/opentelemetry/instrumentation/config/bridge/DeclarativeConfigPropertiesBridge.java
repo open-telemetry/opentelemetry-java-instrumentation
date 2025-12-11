@@ -17,6 +17,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -51,6 +52,9 @@ import javax.annotation.Nullable;
 final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
 
   private static final String OTEL_INSTRUMENTATION_PREFIX = "otel.instrumentation.";
+  private static final Pattern EXPERIMENTAL_PATTERN = Pattern.compile("\\.experimental[.-]([^.]+)");
+  private static final Pattern EXPERIMENTAL_IN_NAME_PATTERN =
+      Pattern.compile("\\.([^.]+experimental[^.]+)");
 
   private final DeclarativeConfigProperties baseNode;
 
@@ -182,9 +186,9 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
       property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
     }
     // Split the remainder of the property on "."
-    return property
-        .replaceAll("\\.experimental[.-]([^.]+)", ".$1/development")
-        .replaceAll("\\.([^.]+experimental[^.]+)", ".$1/development")
+    return EXPERIMENTAL_IN_NAME_PATTERN
+        .matcher(EXPERIMENTAL_PATTERN.matcher(property).replaceAll(".$1/development"))
+        .replaceAll(".$1/development")
         .replace('-', '_')
         .split("\\.");
   }
