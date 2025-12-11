@@ -1,3 +1,0 @@
-io.opentelemetry.instrumentation.sofa.rpc.OpenTelemetryClientFilter
-io.opentelemetry.instrumentation.sofa.rpc.OpenTelemetryServerFilter
-

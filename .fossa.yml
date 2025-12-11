@@ -279,6 +279,12 @@ targets:
       target: ':instrumentation:scala-fork-join-2.8:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:sofa-rpc-5.4:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:sofa-rpc-5.4:library-autoconfigure'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spark-2.3:javaagent'
     - type: gradle
       path: ./
