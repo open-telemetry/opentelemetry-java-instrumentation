@@ -52,20 +52,19 @@ final class ConfigUtil {
   public static String getString(String key) {
     String normalizedKey = normalizePropertyKey(key);
 
-    String systemProperty =
-        safeSystemProperties().entrySet().stream()
-            .filter(entry -> normalizedKey.equals(normalizePropertyKey(entry.getKey().toString())))
-            .map(entry -> entry.getValue().toString())
-            .findFirst()
-            .orElse(null);
-    if (systemProperty != null) {
-      return systemProperty;
+    for (Map.Entry<Object, Object> entry : safeSystemProperties().entrySet()) {
+      if (normalizedKey.equals(normalizePropertyKey(entry.getKey().toString()))) {
+        return entry.getValue().toString();
+      }
     }
-    return System.getenv().entrySet().stream()
-        .filter(entry -> normalizedKey.equals(normalizeEnvironmentVariableKey(entry.getKey())))
-        .map(Map.Entry::getValue)
-        .findFirst()
-        .orElse(null);
+
+    for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+      if (normalizedKey.equals(normalizeEnvironmentVariableKey(entry.getKey()))) {
+        return entry.getValue();
+      }
+    }
+
+    return null;
   }
 
   /**
