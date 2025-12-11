@@ -14,6 +14,7 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

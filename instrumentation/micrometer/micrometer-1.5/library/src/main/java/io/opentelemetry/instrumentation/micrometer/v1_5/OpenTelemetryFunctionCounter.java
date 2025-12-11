@@ -15,6 +15,7 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.Collections;
 import java.util.function.ToDoubleFunction;
 
