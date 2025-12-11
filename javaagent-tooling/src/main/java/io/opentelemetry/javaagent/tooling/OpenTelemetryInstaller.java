@@ -7,10 +7,12 @@ package io.opentelemetry.javaagent.tooling;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
 import io.opentelemetry.javaagent.bootstrap.OpenTelemetrySdkAccess;
+import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -34,17 +36,20 @@ public final class OpenTelemetryInstaller {
 
     AutoConfiguredOpenTelemetrySdk autoConfiguredSdk =
         AutoConfiguredOpenTelemetrySdk.builder()
-            .setResultAsGlobal()
+            // Don't use setResultAsGlobal() - we need to wrap the SDK before setting as global
             .setServiceClassLoader(extensionClassLoader)
             .build();
     ConfigProvider configProvider = AutoConfigureUtil.getConfigProvider(autoConfiguredSdk);
     OpenTelemetrySdk sdk = autoConfiguredSdk.getOpenTelemetrySdk();
+    ConfigProperties configProperties = AutoConfigureUtil.getConfig(autoConfiguredSdk);
 
     setForceFlush(sdk);
 
     if (configProvider != null) {
-      // We create a new instance of AutoConfiguredOpenTelemetrySdk, which has a ConfigProperties
-      // instance that can be used to read properties from the configuration file.
+      // YAML was used - the SDK already implements ExtendedOpenTelemetry with ConfigProvider
+      GlobalOpenTelemetry.set(sdk);
+      // We create a new instance of AutoConfiguredOpenTelemetrySdk,
+      // which has a ConfigProperties instance bridged from the declarative config.
       // This allows most instrumentations to be unaware of which configuration style is used.
       return SdkAutoconfigureAccess.create(
           sdk,
@@ -53,7 +58,22 @@ public final class OpenTelemetryInstaller {
           configProvider);
     }
 
-    return autoConfiguredSdk;
+    // System properties/env vars were used - create a ConfigProvider backed by ConfigProperties.
+    // This ensures GlobalOpenTelemetry.get() returns an ExtendedOpenTelemetry with
+    // a working getConfigProvider(), allowing instrumentations to use a single API.
+    ConfigProvider generatedConfigProvider =
+        ConfigPropertiesBackedConfigProvider.create(configProperties);
+
+    // Wrap the SDK so it implements ExtendedOpenTelemetry with our generated ConfigProvider
+    ExtendedOpenTelemetrySdkWrapper wrappedSdk =
+        new ExtendedOpenTelemetrySdkWrapper(sdk, generatedConfigProvider);
+    GlobalOpenTelemetry.set(wrappedSdk);
+
+    return SdkAutoconfigureAccess.create(
+        sdk,
+        SdkAutoconfigureAccess.getResource(autoConfiguredSdk),
+        configProperties,
+        generatedConfigProvider);
   }
 
   // Visible for testing
