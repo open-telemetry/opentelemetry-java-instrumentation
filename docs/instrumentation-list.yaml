@@ -5190,6 +5190,18 @@ libraries:
           type: STRING
         - name: hystrix.group
           type: STRING
+  iceberg:
+  - name: iceberg-1.8
+    description: This standalone instrumentation enables metrics for Apache Iceberg
+      scans.
+    library_link: https://iceberg.apache.org/
+    source_path: instrumentation/iceberg-1.8
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.iceberg-1.8
+    target_versions:
+      library:
+      - org.apache.iceberg:iceberg-core:1.8.1
   influxdb:
   - name: influxdb-2.4
     display_name: InfluxDB Client
@@ -10429,13 +10441,22 @@ libraries:
       name: io.opentelemetry.spring-cloud-gateway-2.0
     target_versions:
       javaagent:
-      - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
+      - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,)
+      - org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:[4.3.0,]
     configurations:
     - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
       description: |
         Enables experimental `spring-cloud-gateway.route` attributes (e.g., `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
       type: boolean
       default: false
+  - name: spring-cloud-gateway-webmvc-4.3
+    source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-webmvc-4.3
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-cloud-gateway-webmvc-4.3
+    target_versions:
+      javaagent:
+      - org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:[4.3.0,)
   - name: spring-core-2.0
     description: |
       This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
