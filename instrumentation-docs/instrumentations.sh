@@ -193,6 +193,8 @@ readonly INSTRUMENTATIONS=(
   "oshi:javaagent:test"
   "oshi:javaagent:testExperimental"
   "pekko:pekko-http-1.0:javaagent:test"
+  "play:play-mvc:play-mvc-2.4:javaagent:test"
+  "play:play-mvc:play-mvc-2.6:javaagent:test"
   "play:play-ws:play-ws-1.0:javaagent:test"
   "play:play-ws:play-ws-2.0:javaagent:test"
   "play:play-ws:play-ws-2.1:javaagent:test"
