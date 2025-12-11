@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.2.2"
+  id("com.gradle.develocity") version "4.3"
 }
 
 dependencyResolutionManagement {
@@ -304,6 +304,8 @@ include(":instrumentation:hikaricp-3.0:library")
 include(":instrumentation:hikaricp-3.0:testing")
 include(":instrumentation:http-url-connection:javaagent")
 include(":instrumentation:hystrix-1.4:javaagent")
+include(":instrumentation:iceberg-1.8:library")
+include(":instrumentation:iceberg-1.8:testing")
 include(":instrumentation:influxdb-2.4:javaagent")
 include(":instrumentation:internal:internal-application-logger:bootstrap")
 include(":instrumentation:internal:internal-application-logger:javaagent")
@@ -615,6 +617,9 @@ include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
 include(":instrumentation:spring:spring-cloud-aws-3.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.2:testing")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webflux-4.3:testing")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing")
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-1.8:javaagent")

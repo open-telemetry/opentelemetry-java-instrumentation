@@ -346,6 +346,17 @@
       "defaultValue": false
     },
     {
+      "name": "otel.instrumentation.messaging.experimental.receive-telemetry.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables experimental receive telemetry, which will cause consumers to start a new trace, with only a span link connecting it to the producer trace.",
+      "defaultValue": false
+    },
+    {
+      "name": "otel.instrumentation.messaging.experimental.capture-headers",
+      "type": "java.util.List<java.lang.String>",
+      "description": "A comma-separated list of header names to capture as span attributes."
+    },
+    {
       "name": "otel.instrumentation.jdbc.enabled",
       "type": "java.lang.Boolean",
       "description": "Enable the JDBC instrumentation.",

@@ -32,6 +32,7 @@ public class RouteOnSuccess implements Consumer<HandlerFunction<?>> {
     HttpServerRoute.update(Context.current(), HttpServerRouteSource.CONTROLLER, route);
   }
 
+  @Nullable
   private static String parsePredicateString(RouterFunction<?> routerFunction) {
     String routerFunctionString = routerFunction.toString();
     // Router functions containing lambda predicates should not end up in span tags since they are

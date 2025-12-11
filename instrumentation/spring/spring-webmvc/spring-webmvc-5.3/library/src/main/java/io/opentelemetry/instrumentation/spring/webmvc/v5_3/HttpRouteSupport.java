@@ -96,7 +96,10 @@ final class HttpRouteSupport {
   }
 
   @Nullable
-  String getHttpRoute(Context context, HttpServletRequest request) {
+  String getHttpRoute(Context context, @Nullable HttpServletRequest request) {
+    if (request == null) {
+      return null;
+    }
     boolean parsePath = this.parseRequestPath;
     Object previousValue = null;
     if (parsePath) {

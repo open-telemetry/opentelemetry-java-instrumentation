@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
@@ -35,11 +37,16 @@ public class KafkaInstrumentationAutoConfiguration {
   static SpringKafkaTelemetry getTelemetry(
       ObjectProvider<OpenTelemetry> openTelemetryProvider,
       ObjectProvider<InstrumentationConfig> configProvider) {
+    InstrumentationConfig config = configProvider.getObject();
     return SpringKafkaTelemetry.builder(openTelemetryProvider.getObject())
         .setCaptureExperimentalSpanAttributes(
-            configProvider
-                .getObject()
-                .getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+            config.getBoolean("otel.instrumentation.kafka.experimental-span-attributes", false))
+        .setMessagingReceiveInstrumentationEnabled(
+            config.getBoolean(
+                "otel.instrumentation.messaging.experimental.receive-telemetry.enabled", false))
+        .setCapturedHeaders(
+            config.getList(
+                "otel.instrumentation.messaging.experimental.capture-headers", emptyList()))
         .build();
   }
 
