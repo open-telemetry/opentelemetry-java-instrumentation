@@ -46,6 +46,18 @@ public final class DeclarativeConfigUtil {
     return emptyList();
   }
 
+  public static Optional<DeclarativeConfigProperties> getStructuredConfig(
+      OpenTelemetry openTelemetry, String... propertyPath) {
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
+    return Optional.ofNullable(node != null ? node.getStructured(leaf(propertyPath)) : null);
+  }
+
+  public static Optional<List<DeclarativeConfigProperties>> getStructuredList(
+      OpenTelemetry openTelemetry, String... propertyPath) {
+    DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
+    return Optional.ofNullable(node != null ? node.getStructuredList(leaf(propertyPath)) : null);
+  }
+
   @Nullable
   private static DeclarativeConfigProperties getDeclarativeConfigNode(
       OpenTelemetry openTelemetry, String... propertyPath) {

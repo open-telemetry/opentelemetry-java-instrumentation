@@ -27,8 +27,9 @@ public class MethodsConfig {
 
   private MethodsConfig() {}
 
-  static List<TypeInstrumentation> parseDeclarativeConfig(DeclarativeConfigProperties methods) {
-    return methods.getStructuredList("include", emptyList()).stream()
+  static List<TypeInstrumentation> parseDeclarativeConfig(
+      List<DeclarativeConfigProperties> include) {
+    return include.stream()
         .flatMap(MethodsConfig::parseMethodInstrumentation)
         .collect(Collectors.toList());
   }
