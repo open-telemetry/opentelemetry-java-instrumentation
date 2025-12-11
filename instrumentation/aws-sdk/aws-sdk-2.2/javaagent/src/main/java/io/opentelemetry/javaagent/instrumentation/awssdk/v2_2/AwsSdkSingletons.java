@@ -35,17 +35,16 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean getBoolean(boolean defaultValue, String... name) {
+    protected boolean getBoolean(String... name) {
       InstrumentationConfig instrumentationConfig = AgentInstrumentationConfig.get();
       ConfigProvider configProvider = instrumentationConfig.getConfigProvider();
       if (configProvider != null) {
         // don't use to InstrumentationConfig, which would use a bridge back to declarative config
         return ConfigPropertiesUtil.getConfigProperties(configProvider, name)
-            .getBoolean(name[name.length - 1], defaultValue);
+            .getBoolean(name[name.length - 1], false);
       }
 
-      return instrumentationConfig.getBoolean(
-          ConfigPropertiesUtil.toSystemProperty(name), defaultValue);
+      return instrumentationConfig.getBoolean(ConfigPropertiesUtil.toSystemProperty(name), false);
     }
   }
 

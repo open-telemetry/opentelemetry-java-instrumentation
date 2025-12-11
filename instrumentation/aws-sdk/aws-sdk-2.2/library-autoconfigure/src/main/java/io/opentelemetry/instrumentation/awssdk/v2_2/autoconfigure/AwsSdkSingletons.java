@@ -35,8 +35,8 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean getBoolean(boolean defaultValue, String... name) {
-      return ConfigPropertiesUtil.getBoolean(GlobalOpenTelemetry.get(), name).orElse(defaultValue);
+    protected boolean getBoolean(String... name) {
+      return ConfigPropertiesUtil.getBoolean(GlobalOpenTelemetry.get(), name).orElse(false);
     }
   }
 
