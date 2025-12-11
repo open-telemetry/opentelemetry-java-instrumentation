@@ -48,8 +48,10 @@ public final class SofaRpcTelemetryBuilder {
   }
 
   /** Sets the {@code peer.service} attribute for RPC client spans. */
-  public void setPeerService(String peerService) {
+  @CanIgnoreReturnValue
+  public SofaRpcTelemetryBuilder setPeerService(String peerService) {
     this.peerService = peerService;
+    return this;
   }
 
   /**
