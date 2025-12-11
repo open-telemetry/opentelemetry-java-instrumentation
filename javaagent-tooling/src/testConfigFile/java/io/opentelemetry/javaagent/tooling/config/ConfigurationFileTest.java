@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.tooling.config;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -37,7 +36,9 @@ class ConfigurationFileTest {
     String path = createFile("config", "property1=val-env");
     environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", path);
 
-    assertThat(load()).containsEntry("property1", "val-env");
+    Map<String, String> properties = ConfigurationFile.loadConfigFile();
+
+    assertThat(properties).containsEntry("property1", "val-env");
   }
 
   @Test
@@ -45,7 +46,9 @@ class ConfigurationFileTest {
     String path = createFile("config", "property1=val-sys");
     systemProperties.set("otel.javaagent.configuration-file", path);
 
-    assertThat(load()).containsEntry("property1", "val-sys");
+    Map<String, String> properties = ConfigurationFile.loadConfigFile();
+
+    assertThat(properties).containsEntry("property1", "val-sys");
   }
 
   @Test
@@ -55,19 +58,25 @@ class ConfigurationFileTest {
     systemProperties.set("otel.javaagent.configuration-file", path);
     environmentVariables.set("OTEL_JAVAAGENT_CONFIGURATION_FILE", pathEnv);
 
-    assertThat(load()).containsEntry("property1", "val-sys");
+    Map<String, String> properties = ConfigurationFile.loadConfigFile();
+
+    assertThat(properties).containsEntry("property1", "val-sys");
   }
 
   @Test
   void shouldReturnEmptyPropertiesIfFileDoesNotExist() {
     systemProperties.set("otel.javaagent.configuration-file", "somePath");
 
-    assertThat(load()).isEmpty();
+    Map<String, String> properties = ConfigurationFile.loadConfigFile();
+
+    assertThat(properties).isEmpty();
   }
 
   @Test
   void shouldReturnEmptyPropertiesIfPropertyIsNotSet() {
-    assertThat(load()).isEmpty();
+    Map<String, String> properties = ConfigurationFile.loadConfigFile();
+
+    assertThat(properties).isEmpty();
   }
 
   private String createFile(String name, String contents) throws IOException {
@@ -77,10 +86,5 @@ class ConfigurationFileTest {
       writer.write(contents);
     }
     return file.getAbsolutePath();
-  }
-
-  private static Map<String, String> load() {
-    ConfigPropertiesUtil.resetForTest();
-    return ConfigurationFile.loadConfigFile();
   }
 }
