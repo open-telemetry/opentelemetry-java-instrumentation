@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### ⚠️ Breaking Changes
+
+- Logback appender `captureArguments` option split into two options: `captureTemplate` and `captureArguments`
+  ([#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423))
+
+
 ## Version 2.22.0 (2025-11-20)
 
 ### ⚠️ Breaking Changes

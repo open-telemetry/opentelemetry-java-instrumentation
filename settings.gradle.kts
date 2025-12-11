@@ -22,7 +22,7 @@ plugins {
   // ./gradlew :smoke-tests:images:servlet:buildLinuxTestImages pushMatrix -PsmokeTestServer=jetty
   // ./gradlew :smoke-tests:images:servlet:buildWindowsTestImages pushMatrix -PsmokeTestServer=jetty
   id("com.bmuschko.docker-remote-api") version "10.0.0" apply false
-  id("com.gradle.develocity") version "4.2.2"
+  id("com.gradle.develocity") version "4.3"
 }
 
 dependencyResolutionManagement {
@@ -44,6 +44,7 @@ dependencyResolutionManagement {
     // spring boot 3.0 is not compatible with graalvm native image
     addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
     addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
+    addSpringBootCatalog("springBoot40", "4.0.0", "4.+")
   }
 }
 
@@ -51,37 +52,32 @@ val develocityServer = "https://develocity.opentelemetry.io"
 val isCI = System.getenv("CI") != null
 val develocityAccessKey = System.getenv("DEVELOCITY_ACCESS_KEY") ?: ""
 
-// if develocity access key is not given and we are in CI, then we publish to scans.gradle.com
-val useScansGradleCom = isCI && develocityAccessKey.isEmpty()
-
 develocity {
-  if (useScansGradleCom) {
-    buildScan {
-      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
-      termsOfUseAgree = "yes"
-    }
-  } else {
+  if (develocityAccessKey.isNotEmpty()) {
     server = develocityServer
-    buildScan {
-      publishing.onlyIf { it.isAuthenticated }
+  }
 
+  buildScan {
+    if (develocityAccessKey.isNotEmpty()) {
       gradle.startParameter.projectProperties["testJavaVersion"]?.let { tag(it) }
       gradle.startParameter.projectProperties["testJavaVM"]?.let { tag(it) }
       gradle.startParameter.projectProperties["smokeTestSuite"]?.let {
         value("Smoke test suite", it)
       }
+    } else if (isCI) {
+      termsOfUseUrl = "https://gradle.com/help/legal-terms-of-use"
+      termsOfUseAgree = "yes"
+    } else {
+      publishing.onlyIf { false }
     }
-  }
-
-  buildScan {
-    uploadInBackground = !isCI
 
     capture {
       fileFingerprints = true
     }
 
     if (!gradle.startParameter.taskNames.contains("listTestsInPartition") &&
-      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")) {
+      !gradle.startParameter.taskNames.contains(":test-report:reportFlakyTests")
+    ) {
       buildScanPublished {
         File("build-scan.txt").printWriter().use { writer ->
           writer.println(buildScanUri)
@@ -91,11 +87,10 @@ develocity {
   }
 }
 
-if (!useScansGradleCom) {
-  buildCache {
-    remote(develocity.buildCache) {
-      isPush = isCI && develocityAccessKey.isNotEmpty()
-    }
+buildCache {
+  remote(HttpBuildCache::class) {
+    url = uri("$develocityServer/cache/")
+    isPush = isCI && develocityAccessKey.isNotEmpty()
   }
 }
 
@@ -161,6 +156,7 @@ include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
 include(":smoke-tests-otel-starter:spring-boot-3.2")
+include(":smoke-tests-otel-starter:spring-boot-4")
 include(":smoke-tests-otel-starter:spring-boot-common")
 include(":smoke-tests-otel-starter:spring-boot-reactive-2")
 include(":smoke-tests-otel-starter:spring-boot-reactive-3")
@@ -308,6 +304,8 @@ include(":instrumentation:hikaricp-3.0:library")
 include(":instrumentation:hikaricp-3.0:testing")
 include(":instrumentation:http-url-connection:javaagent")
 include(":instrumentation:hystrix-1.4:javaagent")
+include(":instrumentation:iceberg-1.8:library")
+include(":instrumentation:iceberg-1.8:testing")
 include(":instrumentation:influxdb-2.4:javaagent")
 include(":instrumentation:internal:internal-application-logger:bootstrap")
 include(":instrumentation:internal:internal-application-logger:javaagent")
@@ -595,7 +593,9 @@ include(":instrumentation:rxjava:rxjava-3-common:testing")
 include(":instrumentation:scala-fork-join-2.8:javaagent")
 include(":instrumentation:servlet:servlet-2.2:javaagent")
 include(":instrumentation:servlet:servlet-3.0:javaagent")
+include(":instrumentation:servlet:servlet-3.0:javaagent-testing")
 include(":instrumentation:servlet:servlet-3.0:javaagent-unit-tests")
+include(":instrumentation:servlet:servlet-3.0:library")
 include(":instrumentation:servlet:servlet-3.0:testing")
 include(":instrumentation:servlet:servlet-5.0:javaagent")
 include(":instrumentation:servlet:servlet-5.0:javaagent-unit-tests")
@@ -605,16 +605,21 @@ include(":instrumentation:servlet:servlet-5.0:testing")
 include(":instrumentation:servlet:servlet-5.0:tomcat-testing")
 include(":instrumentation:servlet:servlet-common:bootstrap")
 include(":instrumentation:servlet:servlet-common:javaagent")
-include(":instrumentation:servlet:servlet-javax-common:javaagent")
+include(":instrumentation:servlet:servlet-common:library")
+include(":instrumentation:servlet:servlet-javax-common:library")
 include(":instrumentation:spark-2.3:javaagent")
 include(":instrumentation:spring:spring-batch-3.0:javaagent")
 include(":instrumentation:spring:spring-boot-actuator-autoconfigure-2.0:javaagent")
 include(":instrumentation:spring:spring-boot-autoconfigure")
+include(":instrumentation:spring:spring-boot-autoconfigure:testing")
 include(":instrumentation:spring:spring-boot-resources:javaagent")
 include(":instrumentation:spring:spring-boot-resources:javaagent-unit-tests")
 include(":instrumentation:spring:spring-cloud-aws-3.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.2:testing")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webflux-4.3:testing")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent")
+include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent")
 include(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing")
 include(":instrumentation:spring:spring-core-2.0:javaagent")
 include(":instrumentation:spring:spring-data:spring-data-1.8:javaagent")
@@ -643,6 +648,7 @@ include(":instrumentation:spring:spring-web:spring-web-3.1:library")
 include(":instrumentation:spring:spring-web:spring-web-6.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:javaagent")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing")
+include(":instrumentation:spring:spring-webflux:spring-webflux-5.0:testing-webflux7")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:library")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing")
 include(":instrumentation:spring:spring-webflux:spring-webflux-5.3:testing-webflux7")

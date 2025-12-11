@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.akkahttp.server;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.errorResponse;
 import static io.opentelemetry.javaagent.instrumentation.akkahttp.server.AkkaHttpServerSingletons.instrumenter;
 
@@ -23,6 +22,8 @@ import akka.stream.stage.GraphStage;
 import akka.stream.stage.GraphStageLogic;
 import akka.stream.stage.OutHandler;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.instrumentation.akkahttp.server.route.AkkaRouteHolder;
 import java.util.ArrayDeque;
@@ -116,7 +117,7 @@ public class AkkaFlowWrapper
               HttpRequest request = grab(requestIn);
 
               TracingRequest tracingRequest = TracingRequest.EMPTY;
-              Context parentContext = currentContext();
+              Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
                 context = AkkaRouteHolder.init(context);
@@ -158,6 +159,15 @@ public class AkkaFlowWrapper
                 List<HttpHeader> headers = responseMutator.getHeaders();
                 if (!headers.isEmpty()) {
                   response = (HttpResponse) response.addHeaders(headers);
+                }
+
+                AkkaRouteHolder routeHolder = AkkaRouteHolder.get(tracingRequest.context);
+                if (routeHolder != null) {
+                  routeHolder.pushIfNotCompletelyMatched("*");
+                  HttpServerRoute.update(
+                      tracingRequest.context,
+                      HttpServerRouteSource.CONTROLLER,
+                      routeHolder.route());
                 }
 
                 instrumenter().end(tracingRequest.context, tracingRequest.request, response, null);

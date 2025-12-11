@@ -7,13 +7,24 @@ muzzle {
   pass {
     group.set("org.springframework.cloud")
     module.set("spring-cloud-starter-gateway")
-    versions.set("[2.0.0.RELEASE,]")
+    versions.set("[2.0.0.RELEASE,)")
+    assertInverse.set(true)
+  }
+
+  // Spring Cloud Gateway 4.3.0+ split into separate artifacts
+  // see spring-cloud-starter-gateway-server-webmvc-4.3 for mvc
+  pass {
+    group.set("org.springframework.cloud")
+    module.set("spring-cloud-starter-gateway-server-webflux")
+    versions.set("[4.3.0,]")
     assertInverse.set(true)
   }
 }
 
 dependencies {
   library("org.springframework.cloud:spring-cloud-starter-gateway:2.0.0.RELEASE")
+
+  implementation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))

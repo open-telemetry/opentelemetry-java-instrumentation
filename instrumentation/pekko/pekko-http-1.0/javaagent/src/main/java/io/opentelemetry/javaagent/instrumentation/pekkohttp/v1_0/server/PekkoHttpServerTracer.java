@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.PekkoHttpServerSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
@@ -99,7 +98,7 @@ public class PekkoHttpServerTracer
             public void onPush() {
               HttpRequest request = grab(requestIn);
               PekkoTracingRequest tracingRequest = PekkoTracingRequest.EMPTY;
-              Context parentContext = currentContext();
+              Context parentContext = Context.current();
               if (instrumenter().shouldStart(parentContext, request)) {
                 Context context = instrumenter().start(parentContext, request);
                 context = PekkoRouteHolder.init(context);

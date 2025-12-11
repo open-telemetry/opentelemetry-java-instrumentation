@@ -45,10 +45,8 @@ public class FilteredAppConfig implements WebMvcConfigurer {
   @Override
   public void configureContentNegotiation(ContentNegotiationConfigurer configurer) {
     configurer
-        .favorPathExtension(false)
         .favorParameter(true)
         .ignoreAcceptHeader(true)
-        .useJaf(false)
         .defaultContentTypeStrategy(webRequest -> Collections.singletonList(MediaType.TEXT_PLAIN));
   }
 

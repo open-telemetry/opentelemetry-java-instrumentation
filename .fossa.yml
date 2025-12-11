@@ -159,6 +159,9 @@ targets:
       target: ':instrumentation:hystrix-1.4:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:iceberg-1.8:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:influxdb-2.4:javaagent'
     - type: gradle
       path: ./
@@ -930,6 +933,9 @@ targets:
       target: ':instrumentation:servlet:servlet-3.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:servlet:servlet-3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:servlet:servlet-5.0:javaagent'
     - type: gradle
       path: ./
@@ -939,7 +945,10 @@ targets:
       target: ':instrumentation:servlet:servlet-common:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:servlet:servlet-javax-common:javaagent'
+      target: ':instrumentation:servlet:servlet-common:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:servlet:servlet-javax-common:library'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-batch-3.0:javaagent'
@@ -1132,6 +1141,12 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-data:spring-data-1.8:javaagent'
