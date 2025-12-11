@@ -52,24 +52,24 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   private static final SpanSuppressionStrategy spanSuppressionStrategy;
 
   static {
-    // Try new config first
-    String value = ConfigPropertiesUtil.getString("otel.instrumentation.common.experimental.span-suppression-strategy");
+    String value =
+        ConfigPropertiesUtil.getString(
+            "otel.instrumentation.common.experimental.span-suppression-strategy");
 
-    // If new config is not found → fallback to old config
     if (value == null) {
-      value = ConfigPropertiesUtil.getString("otel.instrumentation.experimental.span-suppression-strategy");
+      value =
+          ConfigPropertiesUtil.getString(
+              "otel.instrumentation.experimental.span-suppression-strategy");
 
       if (value != null) {
         logger.warning(
             "Using deprecated config: otel.instrumentation.experimental.span-suppression-strategy. "
-                + "Use otel.instrumentation.common.experimental.span-suppression-strategy instead."
-        );
+                + "Use otel.instrumentation.common.experimental.span-suppression-strategy instead.");
       }
     }
 
     spanSuppressionStrategy = SpanSuppressionStrategy.fromConfig(value);
   }
-
 
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
