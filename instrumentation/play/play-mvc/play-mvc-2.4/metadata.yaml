@@ -1,7 +1,7 @@
 display_name: Play MVC
 description: >
   This instrumentation enriches HTTP server spans with route information, and enables controller
-  spans for Play Framework actions (controller spans are disabled by default).
+  spans for Play Framework (controller spans are disabled by default).
 features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
