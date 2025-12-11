@@ -7,22 +7,23 @@ package io.opentelemetry.javaagent.instrumentation.graphql.v12_0;
 
 import graphql.execution.instrumentation.Instrumentation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.graphql.internal.InstrumentationUtil;
 import io.opentelemetry.instrumentation.graphql.v12_0.GraphQLTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class GraphqlSingletons {
 
   private static final boolean CAPTURE_QUERY =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.capture-query", true);
+      DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "graphql", "capture_query")
+          .orElse(true);
   private static final boolean QUERY_SANITIZATION_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.graphql.query-sanitizer.enabled", true);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "graphql", "query_sanitizer", "enabled")
+          .orElse(true);
   private static final boolean ADD_OPERATION_NAME_TO_SPAN_NAME =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.graphql.add-operation-name-to-span-name.enabled", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "graphql", "add_operation_name_to_span_name", "enabled")
+          .orElse(false);
 
   private static final GraphQLTelemetry TELEMETRY =
       GraphQLTelemetry.builder(GlobalOpenTelemetry.get())

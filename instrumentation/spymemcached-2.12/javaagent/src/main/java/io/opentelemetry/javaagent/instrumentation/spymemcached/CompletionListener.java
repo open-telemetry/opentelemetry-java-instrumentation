@@ -7,17 +7,19 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached;
 
 import static io.opentelemetry.javaagent.instrumentation.spymemcached.SpymemcachedSingletons.instrumenter;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.ExecutionException;
 
 public abstract class CompletionListener<T> {
 
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.spymemcached.experimental-span-attributes", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "spymemcached", "span_attributes/development")
+          .orElse(false);
 
   private static final String DB_COMMAND_CANCELLED = "spymemcached.command.cancelled";
   private static final String MEMCACHED_RESULT = "spymemcached.result";
