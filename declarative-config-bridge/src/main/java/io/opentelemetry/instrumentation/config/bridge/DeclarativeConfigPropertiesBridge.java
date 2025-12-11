@@ -182,15 +182,22 @@ final class DeclarativeConfigPropertiesBridge implements ConfigProperties {
   }
 
   static String[] getSegments(String property) {
+    // Remove "otel.instrumentation." prefix if present
     if (property.startsWith(OTEL_INSTRUMENTATION_PREFIX)) {
       property = property.substring(OTEL_INSTRUMENTATION_PREFIX.length());
     }
-    // Split the remainder of the property on "."
-    return EXPERIMENTAL_IN_NAME_PATTERN
-        .matcher(EXPERIMENTAL_PATTERN.matcher(property).replaceAll(".$1/development"))
-        .replaceAll(".$1/development")
-        .replace('-', '_')
-        .split("\\.");
+
+    // Transform experimental patterns:
+    // - ".experimental-foo" or ".experimental.foo" becomes ".foo/development"
+    String transformed = EXPERIMENTAL_PATTERN.matcher(property).replaceAll(".$1/development");
+    // - ".foo-experimental-bar" becomes ".foo_experimental_bar/development"
+    transformed = EXPERIMENTAL_IN_NAME_PATTERN.matcher(transformed).replaceAll(".$1/development");
+
+    // Replace dashes with underscores for property normalization
+    transformed = transformed.replace('-', '_');
+
+    // Split into segments on dots
+    return transformed.split("\\.");
   }
 
   private String translateProperty(String property) {
