@@ -1,2 +1,5 @@
-description: This standalone instrumentation enables metrics for Apache Iceberg scans.
+display_name: Apache Iceberg
+description: >
+  This instrumentation provides a standalone library integration that enables metrics for Apache
+  Iceberg table scans.
 library_link: https://iceberg.apache.org/
