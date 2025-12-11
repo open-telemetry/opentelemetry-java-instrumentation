@@ -19,7 +19,6 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTe
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -28,11 +27,6 @@ import org.junitpioneer.jupiter.SetEnvironmentVariable;
 import org.junitpioneer.jupiter.SetSystemProperty;
 
 class ConfigPropertiesUtilTest {
-
-  @BeforeEach
-  void setUp() {
-    ConfigPropertiesUtil.resetForTest();
-  }
 
   @SetEnvironmentVariable(key = "TEST_PROPERTY_STRING", value = "env")
   @SetSystemProperty(key = "test.property.string", value = "sys")
