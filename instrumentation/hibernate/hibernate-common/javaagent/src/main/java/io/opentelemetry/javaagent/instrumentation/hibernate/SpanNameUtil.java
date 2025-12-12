@@ -10,23 +10,28 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSan
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.util.function.Function;
 
-public final class OperationNameUtil {
+public final class SpanNameUtil {
 
   private static final SqlStatementSanitizer sanitizer =
       SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
 
-  public static String getOperationNameForQuery(String query) {
-    // set operation to default value that is used when sql sanitizer fails to extract
+  public static String getSpanNameForQuery(String query) {
+    // set operation name to default value that is used when sql sanitizer fails to extract
     // operation name
-    String operation = "Hibernate Query";
+    String operationName = "Hibernate Query";
     SqlStatementInfo info = sanitizer.sanitize(query);
-    if (info.getOperation() != null) {
-      operation = info.getOperation();
-      if (info.getMainIdentifier() != null) {
-        operation += " " + info.getMainIdentifier();
+
+    if (info.getOperationName() != null) {
+      operationName = info.getOperationName();
+      String identifier = info.getCollectionName();
+      if (identifier == null) {
+        identifier = info.getStoredProcedureName();
+      }
+      if (identifier != null) {
+        operationName += " " + identifier;
       }
     }
-    return operation;
+    return operationName;
   }
 
   public static String getSessionMethodOperationName(String methodName) {
@@ -58,5 +63,5 @@ public final class OperationNameUtil {
     return entityName;
   }
 
-  private OperationNameUtil() {}
+  private SpanNameUtil() {}
 }

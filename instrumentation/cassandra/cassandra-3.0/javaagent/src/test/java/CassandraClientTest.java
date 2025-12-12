@@ -3,10 +3,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitStableDatabaseSemconv;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.junit.db.SemconvStabilityUtil.maybeStable;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -129,7 +131,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null))));
     } else {
       testing.waitAndAssertTraces(
           trace ->
@@ -147,7 +152,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table))));
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null))));
     }
 
     session.close();
@@ -202,7 +210,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_NAME), parameter.keyspace),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -225,7 +236,10 @@ class CassandraClientTest {
                               equalTo(maybeStable(DB_SYSTEM), "cassandra"),
                               equalTo(maybeStable(DB_STATEMENT), parameter.expectedStatement),
                               equalTo(maybeStable(DB_OPERATION), parameter.operation),
-                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table)),
+                              equalTo(maybeStable(DB_CASSANDRA_TABLE), parameter.table),
+                              equalTo(
+                                  DB_QUERY_SUMMARY,
+                                  emitStableDatabaseSemconv() ? parameter.spanName : null)),
                   span ->
                       span.hasName("callbackListener")
                           .hasKind(SpanKind.INTERNAL)
@@ -303,7 +317,7 @@ class CassandraClientTest {
                     "sync_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT sync_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT sync_test.users",
                     "SELECT",
                     "users"))));
   }
@@ -357,7 +371,7 @@ class CassandraClientTest {
                     "async_test",
                     "SELECT * FROM users where name = 'alice' ALLOW FILTERING",
                     "SELECT * FROM users where name = ? ALLOW FILTERING",
-                    "SELECT async_test.users",
+                    emitStableDatabaseSemconv() ? "SELECT users" : "SELECT async_test.users",
                     "SELECT",
                     "users"))));
   }

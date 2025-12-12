@@ -25,7 +25,7 @@ final class ClickHouseAttributesGetter
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
-    return request.getSqlStatementInfo().getFullStatement();
+    return request.getSqlStatementInfo().getQueryText();
   }
 
   @Nullable
@@ -34,7 +34,7 @@ final class ClickHouseAttributesGetter
     if (request.getSqlStatementInfo() == null) {
       return null;
     }
-    return request.getSqlStatementInfo().getOperation();
+    return request.getSqlStatementInfo().getOperationName();
   }
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues

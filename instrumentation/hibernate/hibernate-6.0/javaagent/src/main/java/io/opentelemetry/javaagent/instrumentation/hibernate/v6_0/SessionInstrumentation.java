@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.hibernate.v6_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getEntityName;
-import static io.opentelemetry.javaagent.instrumentation.hibernate.OperationNameUtil.getSessionMethodOperationName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.SpanNameUtil.getEntityName;
+import static io.opentelemetry.javaagent.instrumentation.hibernate.SpanNameUtil.getSessionMethodOperationName;
 import static io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Hibernate6Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
@@ -115,7 +115,8 @@ public class SessionInstrumentation implements TypeInstrumentation {
       String entityName =
           getEntityName(descriptor, arg0, arg1, EntityNameUtil.bestGuessEntityName(session));
       HibernateOperation hibernateOperation =
-          new HibernateOperation(getSessionMethodOperationName(name), entityName, sessionInfo);
+          HibernateOperation.fromOperationName(
+              getSessionMethodOperationName(name), entityName, sessionInfo);
 
       return HibernateOperationScope.start(hibernateOperation, parentContext, instrumenter());
     }

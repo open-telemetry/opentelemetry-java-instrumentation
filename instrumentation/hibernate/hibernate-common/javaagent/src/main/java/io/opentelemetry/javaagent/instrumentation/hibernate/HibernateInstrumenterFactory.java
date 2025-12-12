@@ -19,7 +19,7 @@ public final class HibernateInstrumenterFactory {
       String instrumentationName) {
     InstrumenterBuilder<HibernateOperation, Void> instrumenterBuilder =
         Instrumenter.builder(
-            GlobalOpenTelemetry.get(), instrumentationName, HibernateOperation::getName);
+            GlobalOpenTelemetry.get(), instrumentationName, HibernateOperation::getSpanName);
 
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       instrumenterBuilder.addAttributesExtractor(new HibernateExperimentalAttributesExtractor());

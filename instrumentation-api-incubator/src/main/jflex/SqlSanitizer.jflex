@@ -53,7 +53,7 @@ WHITESPACE           = [ \t\r\n]+
       return sanitizer.getResult();
     } catch (java.io.IOException e) {
       // should never happen
-      return SqlStatementInfo.create(null, null, null);
+      return SqlStatementInfo.create(null, null, null, null);
     }
   }
 
@@ -65,6 +65,10 @@ WHITESPACE           = [ \t\r\n]+
   private static final String IN_STATEMENT_NORMALIZED = "$1(?)";
 
   private final StringBuilder builder = new StringBuilder();
+  // Builds the query summary: operations and targets in order of appearance
+  private final StringBuilder querySummaryBuilder = new StringBuilder();
+  // Tracks the last item added to query summary to avoid duplicates
+  private String lastQuerySummaryItem = null;
 
   private void appendCurrentFragment() {
     builder.append(zzBuffer, zzStartRead, zzMarkedPos - zzStartRead);
@@ -72,6 +76,26 @@ WHITESPACE           = [ \t\r\n]+
 
   private boolean isOverLimit() {
     return builder.length() > LIMIT;
+  }
+
+  private void appendOperationToSummary(String operation) {
+    if (operation != null) {
+      if (querySummaryBuilder.length() > 0) {
+        querySummaryBuilder.append(' ');
+      }
+      querySummaryBuilder.append(operation);
+      lastQuerySummaryItem = operation;
+    }
+  }
+
+  private void appendTargetToSummary(String target) {
+    if (target != null && !target.equals(lastQuerySummaryItem)) {
+      if (querySummaryBuilder.length() > 0) {
+        querySummaryBuilder.append(' ');
+      }
+      querySummaryBuilder.append(target);
+      lastQuerySummaryItem = target;
+    }
   }
 
   private String removeQuotes(String identifierName, String quote) {
@@ -114,11 +138,33 @@ WHITESPACE           = [ \t\r\n]+
   private boolean insideComment = false;
   private Operation operation = NoOp.INSTANCE;
   private boolean extractionDone = false;
+  // Tracks how many SELECT keywords we've seen (to track targets for subqueries)
+  private int selectCount = 0;
+  // Tracks whether we're expecting the next identifier after FROM for a subsequent SELECT's query summary
+  private boolean expectingTargetForSubsequentSelect = false;
   private SqlDialect dialect;
 
   private void setOperation(Operation operation) {
     if (this.operation == NoOp.INSTANCE) {
       this.operation = operation;
+    }
+  }
+
+  // Called when we see FROM and have a subsequent SELECT pending
+  private void handleFromForSubsequentSelect() {
+    // Capture target for subsequent SELECTs:
+    // - selectCount > 1: nested SELECT (e.g., SELECT FROM (SELECT FROM orders))
+    // - selectCount >= 1 && extractionDone: SELECT after main operation done (e.g., INSERT INTO t SELECT FROM orders)
+    if (selectCount > 1 || (selectCount >= 1 && extractionDone)) {
+      expectingTargetForSubsequentSelect = true;
+    }
+  }
+
+  // Called when we capture a target after FROM for subsequent SELECT's query summary
+  private void handleTargetForSubsequentSelect(String target) {
+    if (expectingTargetForSubsequentSelect && target != null) {
+      appendTargetToSummary(target);
+      expectingTargetForSubsequentSelect = false;
     }
   }
 
@@ -164,8 +210,8 @@ WHITESPACE           = [ \t\r\n]+
       return false;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier);
+    SqlStatementInfo getResult(String fullStatement, String querySummary) {
+      return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT), mainIdentifier, querySummary);
     }
   }
 
@@ -179,6 +225,7 @@ WHITESPACE           = [ \t\r\n]+
 
     boolean handleOperationTarget(String target) {
       operationTarget = target;
+      appendOperationToSummary(target);
       expectingOperationTarget = false;
       return false;
     }
@@ -191,23 +238,25 @@ WHITESPACE           = [ \t\r\n]+
     boolean handleIdentifier() {
       if (shouldHandleIdentifier()) {
         mainIdentifier = readIdentifierName();
+        // Use yytext() to preserve quotes in query summary per semantic conventions
+        appendTargetToSummary(yytext());
       }
       return true;
     }
 
-    SqlStatementInfo getResult(String fullStatement) {
+    SqlStatementInfo getResult(String fullStatement, String querySummary) {
       if (!"".equals(operationTarget)) {
-        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier);
+        return SqlStatementInfo.create(fullStatement, getClass().getSimpleName().toUpperCase(java.util.Locale.ROOT) + " " + operationTarget, mainIdentifier, querySummary);
       }
-      return super.getResult(fullStatement);
+      return super.getResult(fullStatement, querySummary);
     }
   }
 
   private static class NoOp extends Operation {
     static final Operation INSTANCE = new NoOp();
 
-    SqlStatementInfo getResult(String fullStatement) {
-      return SqlStatementInfo.create(fullStatement, null, null);
+    SqlStatementInfo getResult(String fullStatement, String querySummary) {
+      return SqlStatementInfo.create(fullStatement, null, null, querySummary);
     }
   }
 
@@ -222,6 +271,10 @@ WHITESPACE           = [ \t\r\n]+
     boolean expectingTableName = false;
     boolean mainTableSetAlready = false;
     int identifiersAfterMainFromClause = 0;
+    // Tracks whether we're in a comma-separated table list (implicit join)
+    boolean inImplicitJoin = false;
+    // Counter for identifiers after each comma in implicit join
+    int identifiersAfterComma = 0;
 
     boolean handleFrom() {
       if (parenLevel == 0) {
@@ -246,6 +299,17 @@ WHITESPACE           = [ \t\r\n]+
         ++identifiersAfterMainFromClause;
       }
 
+      // Handle identifiers in implicit join (comma-separated tables)
+      if (inImplicitJoin) {
+        ++identifiersAfterComma;
+        // First identifier after comma is the table name - add it to summary
+        if (identifiersAfterComma == 1) {
+          // Use yytext() to preserve quotes in query summary per semantic conventions
+          appendTargetToSummary(yytext());
+        }
+        return false;
+      }
+
       if (!expectingTableName) {
         return false;
       }
@@ -263,6 +327,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
       mainIdentifier = readIdentifierName();
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       mainTableSetAlready = true;
       expectingTableName = false;
       // start counting identifiers after encountering main from clause
@@ -279,7 +345,14 @@ WHITESPACE           = [ \t\r\n]+
       if (identifiersAfterMainFromClause > 0
           && identifiersAfterMainFromClause <= FROM_TABLE_REF_MAX_IDENTIFIERS) {
         mainIdentifier = null;
-        return true;
+        inImplicitJoin = true;
+        identifiersAfterComma = 0;
+        // Don't return true - continue processing to capture more table names for summary
+        return false;
+      }
+      // Reset counter for next table in implicit join
+      if (inImplicitJoin) {
+        identifiersAfterComma = 0;
       }
       return false;
     }
@@ -299,6 +372,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
       mainIdentifier = readIdentifierName();
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -317,6 +392,8 @@ WHITESPACE           = [ \t\r\n]+
       }
 
       mainIdentifier = readIdentifierName();
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -324,6 +401,8 @@ WHITESPACE           = [ \t\r\n]+
   private class Update extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -331,6 +410,8 @@ WHITESPACE           = [ \t\r\n]+
   private class Call extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
 
@@ -343,6 +424,8 @@ WHITESPACE           = [ \t\r\n]+
   private class Merge extends Operation {
     boolean handleIdentifier() {
       mainIdentifier = readIdentifierName();
+      // Use yytext() to preserve quotes in query summary per semantic conventions
+      appendTargetToSummary(yytext());
       return true;
     }
   }
@@ -365,7 +448,8 @@ WHITESPACE           = [ \t\r\n]+
     // Normalize all 'in (?, ?, ...)' statements to in (?) to reduce cardinality
     String normalizedStatement = IN_STATEMENT_PATTERN.matcher(fullStatement).replaceAll(IN_STATEMENT_NORMALIZED);
 
-    return operation.getResult(normalizedStatement);
+    String querySummary = querySummaryBuilder.length() > 0 ? querySummaryBuilder.toString() : null;
+    return operation.getResult(normalizedStatement, querySummary);
   }
 
 %}
@@ -377,6 +461,8 @@ WHITESPACE           = [ \t\r\n]+
   "SELECT" {
           if (!insideComment) {
             setOperation(new Select());
+            appendOperationToSummary("SELECT");
+            selectCount++;
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -384,6 +470,7 @@ WHITESPACE           = [ \t\r\n]+
   "INSERT" {
           if (!insideComment) {
             setOperation(new Insert());
+            appendOperationToSummary("INSERT");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -391,6 +478,7 @@ WHITESPACE           = [ \t\r\n]+
   "DELETE" {
           if (!insideComment) {
             setOperation(new Delete());
+            appendOperationToSummary("DELETE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -398,6 +486,7 @@ WHITESPACE           = [ \t\r\n]+
   "UPDATE" {
           if (!insideComment) {
             setOperation(new Update());
+            appendOperationToSummary("UPDATE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -405,6 +494,7 @@ WHITESPACE           = [ \t\r\n]+
   "CALL" {
           if (!insideComment) {
             setOperation(new Call());
+            appendOperationToSummary("CALL");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -412,6 +502,7 @@ WHITESPACE           = [ \t\r\n]+
   "MERGE" {
           if (!insideComment) {
             setOperation(new Merge());
+            appendOperationToSummary("MERGE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -419,6 +510,7 @@ WHITESPACE           = [ \t\r\n]+
   "CREATE" {
           if (!insideComment) {
             setOperation(new Create());
+            appendOperationToSummary("CREATE");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -426,6 +518,7 @@ WHITESPACE           = [ \t\r\n]+
   "DROP" {
           if (!insideComment) {
             setOperation(new Drop());
+            appendOperationToSummary("DROP");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -433,6 +526,7 @@ WHITESPACE           = [ \t\r\n]+
   "ALTER" {
           if (!insideComment) {
             setOperation(new Alter());
+            appendOperationToSummary("ALTER");
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -452,13 +546,17 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   "FROM" {
-          if (!insideComment && !extractionDone) {
-            if (operation == NoOp.INSTANCE) {
-              // hql/jpql queries may skip SELECT and start with FROM clause
-              // treat such queries as SELECT queries
-              setOperation(new Select());
+          if (!insideComment) {
+            if (!extractionDone) {
+              if (operation == NoOp.INSTANCE) {
+                // hql/jpql queries may skip SELECT and start with FROM clause
+                // treat such queries as SELECT queries
+                setOperation(new Select());
+              }
+              extractionDone = operation.handleFrom();
             }
-            extractionDone = operation.handleFrom();
+            // For subsequent SELECTs (nested or after INSERT), prepare to capture target
+            handleFromForSubsequentSelect();
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
@@ -521,8 +619,13 @@ WHITESPACE           = [ \t\r\n]+
           if (isOverLimit()) return YYEOF;
       }
   {IDENTIFIER} {
-          if (!insideComment && !extractionDone) {
-            extractionDone = operation.handleIdentifier();
+          if (!insideComment) {
+            if (!extractionDone) {
+              extractionDone = operation.handleIdentifier();
+            } else {
+              // For subsequent SELECTs (e.g., SELECT in INSERT...SELECT), capture target for summary
+              handleTargetForSubsequentSelect(readIdentifierName());
+            }
           }
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
