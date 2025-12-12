@@ -71,6 +71,8 @@
   ([#15540](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15540))
 - Spring starter: add missing Kafka configuration options
   ([#15592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15592))
+- OpenTelemetry API interop: support new GlobalOpenTelemetry methods introduced in 1.57
+  ([#15620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15620))
 
 ### 🛠️ Bug fixes
 
