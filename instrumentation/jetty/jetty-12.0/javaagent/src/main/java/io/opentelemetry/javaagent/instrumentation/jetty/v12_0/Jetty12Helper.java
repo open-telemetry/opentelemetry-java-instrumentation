@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletAsyncContext;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.server.HttpStream;
 import org.eclipse.jetty.server.Request;
@@ -27,7 +28,15 @@ public class Jetty12Helper {
 
   public Context start(Context parentContext, Request request, Response response) {
     Context context = instrumenter.start(parentContext, request);
-    request.addFailureListener(throwable -> end(context, request, response, throwable));
+    // Use AtomicBoolean to ensure the span ends exactly once
+    AtomicBoolean spanEnded = new AtomicBoolean(false);
+
+    request.addFailureListener(
+        throwable -> {
+          if (spanEnded.compareAndSet(false, true)) {
+            end(context, request, response, throwable);
+          }
+        });
     // detect request completion
     // https://github.com/jetty/jetty.project/blob/52d94174e2c7a6e794c6377dcf9cd3ed0b9e1806/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/handler/EventsHandler.java#L75
     request.addHttpStreamWrapper(
@@ -35,13 +44,17 @@ public class Jetty12Helper {
             new HttpStream.Wrapper(stream) {
               @Override
               public void succeeded() {
-                end(context, request, response, null);
+                if (spanEnded.compareAndSet(false, true)) {
+                  end(context, request, response, null);
+                }
                 super.succeeded();
               }
 
               @Override
               public void failed(Throwable throwable) {
-                end(context, request, response, throwable);
+                if (spanEnded.compareAndSet(false, true)) {
+                  end(context, request, response, throwable);
+                }
                 super.failed(throwable);
               }
             });
