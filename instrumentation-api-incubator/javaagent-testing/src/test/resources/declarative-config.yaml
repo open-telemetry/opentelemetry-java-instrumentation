@@ -5,7 +5,7 @@ instrumentation/development:
   java:
     http:
       client:
-        emit_experimental_telemetry: true
+        emit_experimental_telemetry/development: true
         url_template_rules:
           - pattern: "http://localhost:.*/hello/.*"
             template: "/hello/*"
