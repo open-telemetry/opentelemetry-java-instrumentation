@@ -9,6 +9,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.internal.EnumerationUtil;
 import java.util.Collections;
 import java.util.Iterator;
+import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 
 enum JavaxHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> {
@@ -20,12 +21,19 @@ enum JavaxHttpServletRequestGetter implements TextMapGetter<HttpServletRequest> 
   }
 
   @Override
-  public String get(HttpServletRequest carrier, String key) {
+  @Nullable
+  public String get(@Nullable HttpServletRequest carrier, String key) {
+    if (carrier == null) {
+      return null;
+    }
     return carrier.getHeader(key);
   }
 
   @Override
-  public Iterator<String> getAll(HttpServletRequest carrier, String key) {
+  public Iterator<String> getAll(@Nullable HttpServletRequest carrier, String key) {
+    if (carrier == null) {
+      return Collections.emptyIterator();
+    }
     return EnumerationUtil.asIterator(carrier.getHeaders(key));
   }
 }

@@ -16,9 +16,11 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleCounter;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.Collections;
 
-final class OpenTelemetryCounter extends AbstractMeter implements Counter, RemovableMeter {
+final class OpenTelemetryCounter extends AbstractMeter
+    implements Counter, RemovableMeter, OpenTelemetryInstrument {
 
   // TODO: use bound instruments when they're available
   private final DoubleCounter otelCounter;

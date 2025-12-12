@@ -5190,6 +5190,95 @@ libraries:
           type: STRING
         - name: hystrix.group
           type: STRING
+  iceberg:
+  - name: iceberg-1.8
+    display_name: Apache Iceberg
+    description: |
+      This instrumentation provides a standalone library integration that enables metrics for Apache Iceberg table scans.
+    library_link: https://iceberg.apache.org/
+    source_path: instrumentation/iceberg-1.8
+    minimum_java_version: 11
+    scope:
+      name: io.opentelemetry.iceberg-1.8
+    target_versions:
+      library:
+      - org.apache.iceberg:iceberg-core:1.8.1
+    telemetry:
+    - when: default
+      metrics:
+      - name: iceberg.scan.data_files.count
+        description: The number of data files.
+        type: LONG_SUM
+        unit: file
+        attributes:
+        - name: iceberg.scan.state
+          type: STRING
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
+      - name: iceberg.scan.data_files.size
+        description: The total size of all scanned data files.
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
+      - name: iceberg.scan.data_manifests.count
+        description: The number of data manifests.
+        type: LONG_SUM
+        unit: file
+        attributes:
+        - name: iceberg.scan.state
+          type: STRING
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
+      - name: iceberg.scan.delete_files.count
+        description: The number of delete files.
+        type: LONG_SUM
+        unit: file
+        attributes:
+        - name: iceberg.delete_file.type
+          type: STRING
+        - name: iceberg.scan.state
+          type: STRING
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
+      - name: iceberg.scan.delete_files.size
+        description: The total size of all scanned delete files.
+        type: LONG_SUM
+        unit: By
+        attributes:
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
+      - name: iceberg.scan.delete_manifests.count
+        description: The number of delete manifests.
+        type: LONG_SUM
+        unit: file
+        attributes:
+        - name: iceberg.scan.state
+          type: STRING
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
+      - name: iceberg.scan.planning.duration
+        description: The total duration needed to plan the scan.
+        type: HISTOGRAM
+        unit: s
+        attributes:
+        - name: iceberg.schema.id
+          type: LONG
+        - name: iceberg.table.name
+          type: STRING
   influxdb:
   - name: influxdb-2.4
     display_name: InfluxDB Client
@@ -9128,6 +9217,12 @@ libraries:
           type: STRING
   okhttp:
   - name: okhttp-2.2
+    display_name: OkHttp
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for OkHttp.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
     source_path: instrumentation/okhttp/okhttp-2.2
     scope:
       name: io.opentelemetry.okhttp-2.2
@@ -9135,6 +9230,34 @@ libraries:
     target_versions:
       javaagent:
       - com.squareup.okhttp:okhttp:[2.2,3)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -9175,6 +9298,13 @@ libraries:
         - name: url.full
           type: STRING
   - name: okhttp-3.0
+    display_name: OkHttp
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for OkHttp.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://square.github.io/okhttp/
     source_path: instrumentation/okhttp/okhttp-3.0
     scope:
       name: io.opentelemetry.okhttp-3.0
@@ -9184,6 +9314,34 @@ libraries:
       - com.squareup.okhttp3:okhttp:[3.0,)
       library:
       - com.squareup.okhttp3:okhttp:3.0.0
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -9231,8 +9389,12 @@ libraries:
           type: STRING
   openai:
   - name: openai-java-1.1
+    display_name: OpenAI Java SDK
     description: This instrumentation enables Gen AI client spans and metrics for
-      OpenAI Java SDK 1.1+.
+      the OpenAI Java SDK.
+    semantic_conventions:
+    - GENAI_CLIENT_SPANS
+    - GENAI_CLIENT_METRICS
     library_link: https://github.com/openai/openai-java
     source_path: instrumentation/openai/openai-java-1.1
     scope:
@@ -9464,8 +9626,11 @@ libraries:
           type: STRING
   oracle:
   - name: oracle-ucp-11.2
-    description: The Oracle Universal Connection Pool (UCP) instrumentation generates
-      connection pool metrics.
+    display_name: Oracle UCP
+    description: |
+      The Oracle Universal Connection Pool (UCP) instrumentation enables database connection pool metrics for Oracle UCP data sources.
+    semantic_conventions:
+    - DATABASE_POOL_METRICS
     library_link: https://docs.oracle.com/database/121/JJUCP/
     source_path: instrumentation/oracle-ucp-11.2
     scope:
@@ -9532,9 +9697,11 @@ libraries:
           type: STRING
   oshi:
   - name: oshi
-    description: When the OSHI library is detected on the classpath, this instrumentation
-      will use the system class loader to load classes from the oshi-core jar that
-      are then used to generate system metrics.
+    display_name: OSHI
+    description: |
+      When the OSHI library is detected on the classpath, this instrumentation enables system metrics for memory, disk, and network operations.
+    semantic_conventions:
+    - SYSTEM_METRICS
     library_link: https://github.com/oshi/oshi/
     source_path: instrumentation/oshi
     scope:
@@ -9546,7 +9713,8 @@ libraries:
       - com.github.oshi:oshi-core:5.3.1
     configurations:
     - name: otel.instrumentation.oshi.experimental-metrics.enabled
-      description: Enable the OSHI process runtime metrics.
+      description: Enable the experimental `runtime.java.memory` and `runtime.java.cpu_time`
+        metrics.
       type: boolean
       default: false
     telemetry:
@@ -9794,13 +9962,37 @@ libraries:
           type: STRING
   play:
   - name: play-mvc-2.4
+    display_name: Play MVC
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Play Framework (controller spans are disabled by default).
+    library_link: https://www.playframework.com/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/play/play-mvc/play-mvc-2.4
     scope:
       name: io.opentelemetry.play-mvc-2.4
     target_versions:
       javaagent:
       - com.typesafe.play:play_2.11:[2.4.0,2.6)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: play-mvc-2.6
+    display_name: Play MVC
+    description: |
+      This instrumentation enriches HTTP server spans with route information, and enables controller spans for Play Framework actions (controller spans are disabled by default).
+    library_link: https://www.playframework.com/
+    features:
+    - HTTP_ROUTE
+    - CONTROLLER_SPANS
     source_path: instrumentation/play/play-mvc/play-mvc-2.6
     scope:
       name: io.opentelemetry.play-mvc-2.6
@@ -9809,7 +10001,24 @@ libraries:
       - com.typesafe.play:play_$scalaVersion:[2.6.0,)
       - com.typesafe.play:play_2.12:[2.6.0,)
       - com.typesafe.play:play_2.13:[2.6.0,)
+    configurations:
+    - name: otel.instrumentation.common.experimental.controller-telemetry.enabled
+      description: Enables the creation of experimental controller spans.
+      type: boolean
+      default: false
+    telemetry:
+    - when: default
+      spans:
+      - span_kind: INTERNAL
+        attributes: []
   - name: play-ws-1.0
+    display_name: Play WS
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Play WS.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://www.playframework.com/
     source_path: instrumentation/play/play-ws/play-ws-1.0
     scope:
       name: io.opentelemetry.play-ws-1.0
@@ -9818,6 +10027,34 @@ libraries:
       javaagent:
       - com.typesafe.play:play-ahc-ws-standalone_2.12:[1.0.0,2.0.0)
       - com.typesafe.play:play-ahc-ws-standalone_2.11:[1.0.0,2.0.0)
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -9858,6 +10095,13 @@ libraries:
         - name: url.full
           type: STRING
   - name: play-ws-2.0
+    display_name: Play WS
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Play WS.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://www.playframework.com/
     source_path: instrumentation/play/play-ws/play-ws-2.0
     scope:
       name: io.opentelemetry.play-ws-2.0
@@ -9867,6 +10111,34 @@ libraries:
       - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.0.0,2.1.0)
       - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.0.6,2.1.0)
       - com.typesafe.play:play-ahc-ws-standalone_2.11:[2.0.0,]
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -9907,6 +10179,13 @@ libraries:
         - name: url.full
           type: STRING
   - name: play-ws-2.1
+    display_name: Play WS
+    description: This instrumentation enables HTTP client spans and HTTP client metrics
+      for Play WS.
+    semantic_conventions:
+    - HTTP_CLIENT_SPANS
+    - HTTP_CLIENT_METRICS
+    library_link: https://www.playframework.com/
     source_path: instrumentation/play/play-ws/play-ws-2.1
     scope:
       name: io.opentelemetry.play-ws-2.1
@@ -9915,6 +10194,34 @@ libraries:
       javaagent:
       - com.typesafe.play:play-ahc-ws-standalone_2.13:[2.1.0,]
       - com.typesafe.play:play-ahc-ws-standalone_2.12:[2.1.0,]
+    configurations:
+    - name: otel.instrumentation.http.known-methods
+      description: |
+        Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`.
+      type: list
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+    - name: otel.instrumentation.http.client.capture-request-headers
+      description: List of HTTP request headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.http.client.capture-response-headers
+      description: List of HTTP response headers to capture in HTTP client telemetry.
+      type: list
+      default: ''
+    - name: otel.instrumentation.common.peer-service-mapping
+      description: Used to specify a mapping from host names or IP addresses to peer
+        services.
+      type: map
+      default: ''
+    - name: otel.instrumentation.http.client.emit-experimental-telemetry
+      description: |
+        Enable the capture of experimental HTTP client telemetry. Adds the `http.request.body.size` and `http.response.body.size` attributes to spans, and records `http.client.request.size` and `http.client.response.size` metrics.
+      type: boolean
+      default: false
+    - name: otel.instrumentation.http.client.experimental.redact-query-parameters
+      description: Redact sensitive URL parameters. See https://opentelemetry.io/docs/specs/semconv/http/http-spans.
+      type: boolean
+      default: true
     telemetry:
     - when: default
       metrics:
@@ -10350,13 +10657,22 @@ libraries:
       name: io.opentelemetry.spring-cloud-gateway-2.0
     target_versions:
       javaagent:
-      - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,]
+      - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,)
+      - org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:[4.3.0,]
     configurations:
     - name: otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
       description: |
         Enables experimental `spring-cloud-gateway.route` attributes (e.g., `spring-cloud-gateway.route.id`, `spring-cloud-gateway.route.uri`, etc.) on spans.
       type: boolean
       default: false
+  - name: spring-cloud-gateway-webmvc-4.3
+    source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-webmvc-4.3
+    minimum_java_version: 17
+    scope:
+      name: io.opentelemetry.spring-cloud-gateway-webmvc-4.3
+    target_versions:
+      javaagent:
+      - org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:[4.3.0,)
   - name: spring-core-2.0
     description: |
       This instrumentation ensures proper context propagation for asynchronous operations within Spring Core. It modifies how tasks are submitted and executed to ensure that spans created by other instrumentations are correctly linked across thread boundaries, rather than generating any new telemetry itself.
@@ -11755,6 +12071,10 @@ internal:
   source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
   scope:
     name: io.opentelemetry.opentelemetry-api-1.56
+- name: opentelemetry-api-1.57
+  source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
+  scope:
+    name: io.opentelemetry.opentelemetry-api-1.57
 - name: opentelemetry-instrumentation-api
   source_path: instrumentation/opentelemetry-instrumentation-api
   scope:

@@ -34,7 +34,13 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
             .and(takesArguments(0))
             .and(returns(boolean.class)),
         OpenTelemetryInstrumentation.class.getName() + "$IsSetAdvice");
-    // TODO: instrument getOrNoop();
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(isStatic())
+            .and(named("getOrNoop"))
+            .and(takesArguments(0))
+            .and(returns(named("application.io.opentelemetry.api.OpenTelemetry"))),
+        OpenTelemetryInstrumentation.class.getName() + "$GetOrNoopAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -43,6 +49,15 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit
     public static boolean methodExit() {
       return true;
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class GetOrNoopAdvice {
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit
+    public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
+      return application.io.opentelemetry.api.GlobalOpenTelemetry.get();
     }
   }
 }

@@ -257,7 +257,7 @@ dependencies {
     }
     v1_57Deps("io.opentelemetry:$it") {
       version {
-        strictly("1.57.0-alpha-SNAPSHOT")
+        strictly("1.57.0-alpha")
       }
     }
   }

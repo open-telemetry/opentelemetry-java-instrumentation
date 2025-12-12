@@ -20,4 +20,9 @@ class GlobalOpenTelemetryTest {
   void isSet() {
     assertThat(GlobalOpenTelemetry.isSet()).isTrue();
   }
+
+  @Test
+  void getOrNoop() {
+    assertThat(GlobalOpenTelemetry.getOrNoop()).isEqualTo(GlobalOpenTelemetry.get());
+  }
 }

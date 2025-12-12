@@ -27,10 +27,6 @@ public final class OkHttp2Singletons {
         new TracingInterceptor(INSTRUMENTER, GlobalOpenTelemetry.get().getPropagators());
   }
 
-  public static Instrumenter<Request, Response> instrumenter() {
-    return INSTRUMENTER;
-  }
-
   public static Interceptor tracingInterceptor() {
     return TRACING_INTERCEPTOR;
   }
