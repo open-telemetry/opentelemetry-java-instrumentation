@@ -6,10 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.springframework.web.servlet.ModelAndView;
 
 public final class SpringWebMvcInstrumenterFactory {
@@ -27,7 +27,14 @@ public final class SpringWebMvcInstrumenterFactory {
             instrumentationName,
             CodeSpanNameExtractor.create(codeAttributesGetter))
         .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-        .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+        .setEnabled(
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(),
+                    "java",
+                    "common",
+                    "controller_telemetry/development",
+                    "enabled")
+                .orElse(false))
         .buildInstrumenter();
   }
 
@@ -35,7 +42,14 @@ public final class SpringWebMvcInstrumenterFactory {
     return Instrumenter.<ModelAndView, Void>builder(
             GlobalOpenTelemetry.get(), instrumentationName, new ModelAndViewSpanNameExtractor())
         .addAttributesExtractor(new ModelAndViewAttributesExtractor())
-        .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
+        .setEnabled(
+            DeclarativeConfigUtil.getBoolean(
+                    GlobalOpenTelemetry.get(),
+                    "java",
+                    "common",
+                    "view_telemetry/development",
+                    "enabled")
+                .orElse(false))
         .buildInstrumenter();
   }
 }

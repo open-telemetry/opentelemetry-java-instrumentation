@@ -12,11 +12,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class JFinalSingletons {
 
@@ -34,7 +34,14 @@ public final class JFinalSingletons {
                 GlobalOpenTelemetry.get(),
                 "io.opentelemetry.jfinal-3.2",
                 CodeSpanNameExtractor.create(codedAttributesGetter))
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
+                    .orElse(false))
             .addAttributesExtractor(CodeAttributesExtractor.create(codedAttributesGetter))
             .buildInstrumenter();
   }

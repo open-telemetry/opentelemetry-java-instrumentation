@@ -53,8 +53,8 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   static {
     PROPERTY_MAPPINGS = new HashMap<>();
-    // Add mappings as needed, e.g.:
-    // PROPERTY_MAPPINGS.put("common.enabled", "otel.instrumentation.common.default-enabled");
+    // Javaagent-specific property (not under otel.instrumentation prefix)
+    PROPERTY_MAPPINGS.put("javaagent.indy/development.enabled", "otel.javaagent.experimental.indy");
 
     LIST_MAPPINGS = new HashMap<>();
     LIST_MAPPINGS.put(
@@ -160,13 +160,13 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
    * Translates a single declarative config name segment to system property format.
    *
    * <p>Handles the "/development" suffix convention used for experimental properties in declarative
-   * config, translating it to the "experimental-" prefix used in flat properties.
+   * config, translating it to the "experimental." prefix used in flat properties.
    */
   private static String translateName(String name) {
-    // Handle /development suffix → experimental- prefix
-    // e.g., "span_attributes/development" → "experimental-span-attributes"
+    // Handle /development suffix → experimental. prefix
+    // e.g., "controller_telemetry/development" → "experimental.controller-telemetry"
     if (name.endsWith("/development")) {
-      return "experimental-"
+      return "experimental."
           + name.substring(0, name.length() - "/development".length()).replace('_', '-');
     }
     // Convert snake_case to kebab-case (the convention for flat properties)

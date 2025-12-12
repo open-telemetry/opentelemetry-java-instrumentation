@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 
 final class ReactorKafkaSingletons {
 
@@ -18,13 +18,25 @@ final class ReactorKafkaSingletons {
 
   private static final Instrumenter<KafkaProcessRequest, Void> PROCESS_INSTRUMENTER =
       new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+          .setCapturedHeaders(
+              DeclarativeConfigUtil.getList(
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "messaging",
+                      "capture_headers/development")
+                  .orElse(Collections.emptyList()))
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(
                       GlobalOpenTelemetry.get(), "java", "kafka", "experimental_span_attributes")
                   .orElse(false))
           .setMessagingReceiveInstrumentationEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
+              DeclarativeConfigUtil.getBoolean(
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "messaging",
+                      "receive_telemetry/development",
+                      "enabled")
+                  .orElse(false))
           .createConsumerProcessInstrumenter();
 
   public static Instrumenter<KafkaProcessRequest, Void> processInstrumenter() {

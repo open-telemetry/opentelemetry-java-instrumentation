@@ -6,11 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessageOperation;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 import org.springframework.amqp.core.Message;
 
 public final class SpringRabbitSingletons {
@@ -30,7 +31,13 @@ public final class SpringRabbitSingletons {
                 MessagingSpanNameExtractor.create(getter, operation))
             .addAttributesExtractor(
                 MessagingAttributesExtractor.builder(getter, operation)
-                    .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+                    .setCapturedHeaders(
+                        DeclarativeConfigUtil.getList(
+                                GlobalOpenTelemetry.get(),
+                                "java",
+                                "messaging",
+                                "capture_headers/development")
+                            .orElse(Collections.emptyList()))
                     .build())
             .buildConsumerInstrumenter(MessageHeaderGetter.INSTANCE);
   }

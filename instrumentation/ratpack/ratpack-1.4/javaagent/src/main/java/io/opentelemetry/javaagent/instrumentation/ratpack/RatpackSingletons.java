@@ -8,19 +8,28 @@ package io.opentelemetry.javaagent.instrumentation.ratpack;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import ratpack.handling.Context;
 
 public final class RatpackSingletons {
 
+  private static final boolean CONTROLLER_TELEMETRY_ENABLED =
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "common",
+              "controller_telemetry/development",
+              "enabled")
+          .orElse(false);
+
   private static final Instrumenter<String, Void> INSTRUMENTER =
       Instrumenter.<String, Void>builder(
               GlobalOpenTelemetry.get(), "io.opentelemetry.ratpack-1.4", s -> s)
-          .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+          .setEnabled(CONTROLLER_TELEMETRY_ENABLED)
           .buildInstrumenter();
 
   public static Instrumenter<String, Void> instrumenter() {
@@ -30,7 +39,7 @@ public final class RatpackSingletons {
   public static void updateSpanNames(io.opentelemetry.context.Context otelContext, Context ctx) {
     String matchedRoute = updateServerSpanName(otelContext, ctx);
     // update ratpack span name
-    if (ExperimentalConfig.get().controllerTelemetryEnabled()) {
+    if (CONTROLLER_TELEMETRY_ENABLED) {
       Span.fromContext(otelContext).updateName(matchedRoute);
     }
   }

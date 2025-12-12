@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
@@ -38,7 +37,14 @@ public class HttpJspPageInstrumentationSingletons {
                 "io.opentelemetry.jsp-2.3",
                 HttpJspPageInstrumentationSingletons::spanNameOnRender)
             .addAttributesExtractor(new RenderAttributesExtractor())
-            .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
+            .setEnabled(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "view_telemetry/development",
+                        "enabled")
+                    .orElse(false))
             .buildInstrumenter(SpanKindExtractor.alwaysInternal());
   }
 

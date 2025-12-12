@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.cxf;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class CxfSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxws-cxf-3.0";
@@ -18,7 +18,10 @@ public class CxfSingletons {
     INSTRUMENTER =
         Instrumenter.<CxfRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, CxfRequest::spanName)
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(), "java", "common", "controller_telemetry/development", "enabled")
+                    .orElse(false))
             .buildInstrumenter();
   }
 

@@ -9,7 +9,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableSet;
 import static net.bytebuddy.matcher.ElementMatchers.any;
 
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.Ordered;
 import java.util.Collections;
@@ -156,12 +156,13 @@ public abstract class InstrumentationModule implements Ordered {
     return Collections.emptyList();
   }
 
-  // InstrumentationModule is loaded before ExperimentalConfig is initialized
+  // InstrumentationModule is loaded before GlobalOpenTelemetry is initialized
   private static class IndyConfigurationHolder {
     private static final boolean indyEnabled;
 
     static {
-      indyEnabled = ExperimentalConfig.get().indyEnabled();
+      indyEnabled =
+          AgentInstrumentationConfig.get().getBoolean("otel.javaagent.experimental.indy", false);
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
       }

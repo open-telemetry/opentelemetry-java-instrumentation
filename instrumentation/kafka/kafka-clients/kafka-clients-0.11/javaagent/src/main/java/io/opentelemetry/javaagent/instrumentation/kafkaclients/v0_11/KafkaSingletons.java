@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProducerRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 import org.apache.kafka.clients.producer.RecordMetadata;
 
 public final class KafkaSingletons {
@@ -30,13 +30,25 @@ public final class KafkaSingletons {
   static {
     KafkaInstrumenterFactory instrumenterFactory =
         new KafkaInstrumenterFactory(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME)
-            .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+            .setCapturedHeaders(
+                DeclarativeConfigUtil.getList(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "messaging",
+                        "capture_headers/development")
+                    .orElse(Collections.emptyList()))
             .setCaptureExperimentalSpanAttributes(
                 DeclarativeConfigUtil.getBoolean(
                         GlobalOpenTelemetry.get(), "java", "kafka", "experimental_span_attributes")
                     .orElse(false))
             .setMessagingReceiveInstrumentationEnabled(
-                ExperimentalConfig.get().messagingReceiveInstrumentationEnabled());
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "messaging",
+                        "receive_telemetry/development",
+                        "enabled")
+                    .orElse(false));
     PRODUCER_INSTRUMENTER = instrumenterFactory.createProducerInstrumenter();
     CONSUMER_RECEIVE_INSTRUMENTER = instrumenterFactory.createConsumerReceiveInstrumenter();
     CONSUMER_PROCESS_INSTRUMENTER = instrumenterFactory.createConsumerProcessInstrumenter();

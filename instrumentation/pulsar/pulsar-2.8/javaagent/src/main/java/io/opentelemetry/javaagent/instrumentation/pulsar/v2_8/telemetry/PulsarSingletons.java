@@ -26,8 +26,8 @@ import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.PropagatorBasedSpanLinksExtractor;
 import io.opentelemetry.instrumentation.api.internal.Timer;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.VirtualFieldStore;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.apache.pulsar.client.api.Consumer;
@@ -41,9 +41,17 @@ public final class PulsarSingletons {
   private static final TextMapPropagator PROPAGATOR =
       TELEMETRY.getPropagators().getTextMapPropagator();
   private static final List<String> capturedHeaders =
-      ExperimentalConfig.get().getMessagingHeaders();
+      DeclarativeConfigUtil.getList(
+              GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
+          .orElse(Collections.emptyList());
   private static final boolean receiveInstrumentationEnabled =
-      ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "messaging",
+              "receive_telemetry/development",
+              "enabled")
+          .orElse(false);
 
   private static final Instrumenter<PulsarRequest, Void> CONSUMER_PROCESS_INSTRUMENTER =
       createConsumerProcessInstrumenter();

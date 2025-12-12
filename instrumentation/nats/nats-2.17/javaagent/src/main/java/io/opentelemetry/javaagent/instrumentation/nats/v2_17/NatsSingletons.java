@@ -9,15 +9,18 @@ import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumen
 import static io.opentelemetry.instrumentation.nats.v2_17.internal.NatsInstrumenterFactory.createProducerInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.nats.v2_17.internal.NatsRequest;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 import java.util.List;
 
 public final class NatsSingletons {
 
   private static final List<String> capturedHeaders =
-      ExperimentalConfig.get().getMessagingHeaders();
+      DeclarativeConfigUtil.getList(
+              GlobalOpenTelemetry.get(), "java", "messaging", "capture_headers/development")
+          .orElse(Collections.emptyList());
 
   public static final Instrumenter<NatsRequest, NatsRequest> PRODUCER_INSTRUMENTER =
       createProducerInstrumenter(GlobalOpenTelemetry.get(), capturedHeaders);

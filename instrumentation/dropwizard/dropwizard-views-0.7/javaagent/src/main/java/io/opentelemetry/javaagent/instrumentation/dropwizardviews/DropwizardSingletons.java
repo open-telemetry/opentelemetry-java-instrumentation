@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.dropwizardviews;
 
 import io.dropwizard.views.View;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class DropwizardSingletons {
 
@@ -17,7 +17,14 @@ public final class DropwizardSingletons {
   private static final Instrumenter<View, Void> INSTRUMENTER =
       Instrumenter.<View, Void>builder(
               GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, DropwizardSingletons::spanName)
-          .setEnabled(ExperimentalConfig.get().viewTelemetryEnabled())
+          .setEnabled(
+              DeclarativeConfigUtil.getBoolean(
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "common",
+                      "view_telemetry/development",
+                      "enabled")
+                  .orElse(false))
           .buildInstrumenter();
 
   private static String spanName(View view) {

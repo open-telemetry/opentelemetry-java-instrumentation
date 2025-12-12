@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.tapestry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import org.apache.tapestry5.runtime.ComponentEventException;
 
 public class TapestrySingletons {
@@ -27,7 +27,14 @@ public class TapestrySingletons {
                   }
                   return ErrorCauseExtractor.getDefault().extract(error);
                 })
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
+                    .orElse(false))
             .buildInstrumenter();
   }
 

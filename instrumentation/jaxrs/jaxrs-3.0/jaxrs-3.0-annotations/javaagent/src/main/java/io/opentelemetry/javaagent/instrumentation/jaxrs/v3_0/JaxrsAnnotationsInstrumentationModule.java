@@ -9,7 +9,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static java.util.Arrays.asList;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.ExperimentalInstrumentationModule;
@@ -44,7 +43,9 @@ public class JaxrsAnnotationsInstrumentationModule extends InstrumentationModule
     // This instrumentation produces controller telemetry and sets http route. Http route is set by
     // this instrumentation only when it was not already set by a jax-rs framework instrumentation.
     // This instrumentation uses complex type matcher, disabling it can improve startup performance.
-    return super.defaultEnabled(config) && ExperimentalConfig.get().controllerTelemetryEnabled();
+    return super.defaultEnabled(config)
+        && config.getBoolean(
+            "otel.instrumentation.common.experimental.controller-telemetry.enabled", false);
   }
 
   @Override

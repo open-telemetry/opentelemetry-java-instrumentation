@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.struts.v2_3;
 
 import com.opensymphony.xwork2.ActionInvocation;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class StrutsSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.struts-2.3";
@@ -26,7 +26,14 @@ public class StrutsSingletons {
                 INSTRUMENTATION_NAME,
                 CodeSpanNameExtractor.create(codeAttributesGetter))
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
+                    .orElse(false))
             .buildInstrumenter();
   }
 

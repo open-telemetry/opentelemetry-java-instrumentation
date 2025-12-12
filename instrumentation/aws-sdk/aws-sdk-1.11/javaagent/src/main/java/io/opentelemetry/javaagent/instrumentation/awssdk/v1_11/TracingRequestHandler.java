@@ -15,7 +15,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import java.util.Collections;
 
 /**
  * A {@link RequestHandler2} for use in the agent. Unlike library instrumentation, the agent will
@@ -40,8 +40,20 @@ public class TracingRequestHandler extends RequestHandler2 {
                       GlobalOpenTelemetry.get(), "java", "aws_sdk", "experimental_span_attributes")
                   .orElse(false))
           .setMessagingReceiveInstrumentationEnabled(
-              ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())
-          .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
+              DeclarativeConfigUtil.getBoolean(
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "messaging",
+                      "receive_telemetry/development",
+                      "enabled")
+                  .orElse(false))
+          .setCapturedHeaders(
+              DeclarativeConfigUtil.getList(
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "messaging",
+                      "capture_headers/development")
+                  .orElse(Collections.emptyList()))
           .build()
           .newRequestHandler();
 

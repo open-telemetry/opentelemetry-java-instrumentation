@@ -11,12 +11,12 @@ import com.twitter.finatra.http.internal.routing.Route;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ClassNames;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public final class FinatraSingletons {
 
@@ -36,7 +36,14 @@ public final class FinatraSingletons {
                         ? ClassNames.simpleName(request.controllerClass())
                         : "<unknown>")
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
+            .setEnabled(
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "common",
+                        "controller_telemetry/development",
+                        "enabled")
+                    .orElse(false))
             .buildInstrumenter();
   }
 
