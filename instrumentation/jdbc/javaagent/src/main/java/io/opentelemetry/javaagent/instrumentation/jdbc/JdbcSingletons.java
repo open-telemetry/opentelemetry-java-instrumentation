@@ -12,13 +12,13 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcAttributesGetter;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
@@ -40,7 +40,7 @@ public final class JdbcSingletons {
   static {
     AttributesExtractor<DbRequest, Void> peerServiceExtractor =
         PeerServiceAttributesExtractor.create(
-            JdbcAttributesGetter.INSTANCE, AgentCommonConfig.get().getPeerServiceResolver());
+            JdbcAttributesGetter.INSTANCE, PeerServiceResolver.create(GlobalOpenTelemetry.get()));
 
     CAPTURE_QUERY_PARAMETERS =
         AgentInstrumentationConfig.get()

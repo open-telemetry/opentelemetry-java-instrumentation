@@ -9,6 +9,7 @@ import io.netty.channel.ChannelPromise;
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
@@ -57,7 +58,7 @@ public final class ReactorNettySingletons {
             NettyConnectionInstrumentationFlag.DISABLED);
     CONNECTION_INSTRUMENTER =
         instrumenterFactory.createConnectionInstrumenter(
-            AgentCommonConfig.get().getPeerServiceResolver());
+            PeerServiceResolver.create(GlobalOpenTelemetry.get()));
   }
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {

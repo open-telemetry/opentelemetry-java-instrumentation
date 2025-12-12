@@ -15,11 +15,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class LettuceSingletons {
@@ -55,7 +55,7 @@ public final class LettuceSingletons {
             .addAttributesExtractor(ServerAttributesExtractor.create(netAttributesGetter))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
-                    netAttributesGetter, AgentCommonConfig.get().getPeerServiceResolver()))
+                    netAttributesGetter, PeerServiceResolver.create(GlobalOpenTelemetry.get())))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
             .setEnabled(
                 AgentInstrumentationConfig.get()

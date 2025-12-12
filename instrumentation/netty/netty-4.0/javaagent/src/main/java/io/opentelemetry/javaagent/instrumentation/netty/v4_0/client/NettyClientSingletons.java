@@ -10,6 +10,7 @@ import static io.opentelemetry.instrumentation.netty.common.v4_0.internal.client
 import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.NettyRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterBuilderFactory;
@@ -45,7 +46,7 @@ public final class NettyClientSingletons {
             enabledOrErrorOnly(sslTelemetryEnabled));
     INSTRUMENTER = factory.instrumenter();
     CONNECTION_INSTRUMENTER =
-        factory.createConnectionInstrumenter(AgentCommonConfig.get().getPeerServiceResolver());
+        factory.createConnectionInstrumenter(PeerServiceResolver.create(GlobalOpenTelemetry.get()));
     SSL_INSTRUMENTER = factory.createSslInstrumenter();
   }
 

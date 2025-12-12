@@ -11,6 +11,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceResolver;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -43,7 +44,7 @@ public final class VertxSqlInstrumenterFactory {
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     VertxSqlClientNetAttributesGetter.INSTANCE,
-                    AgentCommonConfig.get().getPeerServiceResolver()))
+                    PeerServiceResolver.create(GlobalOpenTelemetry.get())))
             .addOperationMetrics(DbClientMetrics.get());
 
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
