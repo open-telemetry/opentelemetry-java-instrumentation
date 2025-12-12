@@ -28,7 +28,6 @@ import io.opentelemetry.javaagent.bootstrap.LambdaTransformerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizer;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseMutator;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizer;
 import io.opentelemetry.javaagent.bootstrap.internal.sqlcommenter.SqlCommenterCustomizerHolder;
@@ -38,7 +37,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.internal.EarlyInstru
 import io.opentelemetry.javaagent.tooling.asyncannotationsupport.WeakRefAsyncOperationEndStrategies;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.bootstrap.BootstrapPackagesConfigurer;
-import io.opentelemetry.javaagent.tooling.config.ConfigPropertiesBridge;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import io.opentelemetry.javaagent.tooling.field.FieldBackedImplementationConfiguration;
 import io.opentelemetry.javaagent.tooling.field.VirtualFieldImplementationInstaller;
@@ -167,9 +165,6 @@ public class AgentInstaller {
         installOpenTelemetrySdk(extensionClassLoader, earlyConfig);
 
     ConfigProperties sdkConfig = AutoConfigureUtil.getConfig(autoConfiguredSdk);
-    AgentInstrumentationConfig.internalInitializeConfig(
-        new ConfigPropertiesBridge(
-            sdkConfig, AutoConfigureUtil.getConfigProvider(autoConfiguredSdk)));
     copyNecessaryConfigToSystemProperties(sdkConfig);
 
     setBootstrapPackages(sdkConfig, extensionClassLoader);
