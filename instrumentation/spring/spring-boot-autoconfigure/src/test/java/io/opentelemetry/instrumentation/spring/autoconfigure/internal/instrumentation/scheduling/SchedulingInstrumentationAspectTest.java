@@ -9,6 +9,7 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
@@ -59,7 +60,7 @@ class SchedulingInstrumentationAspectTest {
             testing.getOpenTelemetry(),
             new ConfigPropertiesBridge(
                 DefaultConfigProperties.createFromMap(Collections.emptyMap()),
-                OpenTelemetry.noop()));
+                ConfigProvider.noop()));
     factory.addAspect(aspect);
 
     schedulingTester = factory.getProxy();

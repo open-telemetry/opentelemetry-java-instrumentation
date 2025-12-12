@@ -6,9 +6,7 @@
 package io.opentelemetry.javaagent.tooling.config;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static java.util.Objects.requireNonNull;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
@@ -23,16 +21,16 @@ import javax.annotation.Nullable;
 public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   private final ConfigProperties configProperties;
-  @Nullable private final ConfigProvider configProvider;
-  private final OpenTelemetry openTelemetry;
+  private final ConfigProvider configProvider;
+  private final boolean useDeclarativeConfig;
 
   public ConfigPropertiesBridge(
       ConfigProperties configProperties,
-      @Nullable ConfigProvider configProvider,
-      OpenTelemetry openTelemetry) {
+      ConfigProvider configProvider,
+      boolean useDeclarativeConfig) {
     this.configProperties = configProperties;
     this.configProvider = configProvider;
-    this.openTelemetry = openTelemetry;
+    this.useDeclarativeConfig = useDeclarativeConfig;
   }
 
   @Nullable
@@ -119,13 +117,13 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
 
   @Override
   public boolean isDeclarative() {
-    return configProvider != null;
+    return useDeclarativeConfig;
   }
 
   @Override
   public DeclarativeConfigProperties getDeclarativeConfig(String node) {
     DeclarativeConfigProperties config =
-        InstrumentationConfigUtil.javaInstrumentationConfig(requireNonNull(configProvider), node);
+        InstrumentationConfigUtil.javaInstrumentationConfig(configProvider, node);
     if (config == null) {
       // there is no declarative config for this node
       return empty();
@@ -137,10 +135,5 @@ public final class ConfigPropertiesBridge implements InstrumentationConfig {
   @Override
   public ConfigProvider getConfigProvider() {
     return configProvider;
-  }
-
-  @Override
-  public OpenTelemetry getOpenTelemetry() {
-    return openTelemetry;
   }
 }

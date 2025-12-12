@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.time.Duration;
@@ -131,12 +130,8 @@ public interface InstrumentationConfig {
   DeclarativeConfigProperties getDeclarativeConfig(String node);
 
   /**
-   * Returns the {@link ConfigProvider} if declarative configuration is used.
-   *
-   * @return the {@link ConfigProvider} or {@code null} if declarative configuration is not used
+   * @return the {@link ConfigProvider}, which is a bridge to ConfigProperties if declarative
+   *     configuration is not used
    */
-  @Nullable
   ConfigProvider getConfigProvider();
-
-  OpenTelemetry getOpenTelemetry();
 }

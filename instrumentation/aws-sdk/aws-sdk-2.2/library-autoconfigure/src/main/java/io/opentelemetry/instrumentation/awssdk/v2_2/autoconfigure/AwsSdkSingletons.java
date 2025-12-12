@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
@@ -35,8 +36,8 @@ public final class AwsSdkSingletons {
     }
 
     @Override
-    protected boolean getBoolean(String... name) {
-      return ConfigPropertiesUtil.getBoolean(GlobalOpenTelemetry.get(), name).orElse(false);
+    protected ConfigProvider getConfigProvider() {
+      return ConfigPropertiesUtil.getConfigProvider(GlobalOpenTelemetry.get());
     }
   }
 

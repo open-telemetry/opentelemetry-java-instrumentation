@@ -133,7 +133,7 @@ public final class ConfigPropertiesUtil {
     return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
   }
 
-  private static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
+  public static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
     if (isDeclarativeConfig(openTelemetry)) {
       ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
       return extendedOpenTelemetry.getConfigProvider();

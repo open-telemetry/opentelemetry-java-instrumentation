@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.web.RestTemplateBeanPostProcessor;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
@@ -30,7 +31,7 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
               () ->
                   new ConfigPropertiesBridge(
                       DefaultConfigProperties.createFromMap(Collections.emptyMap()),
-                      OpenTelemetry.noop()))
+                      ConfigProvider.noop()))
           .withBean(RestTemplate.class, RestTemplate::new)
           .withConfiguration(autoConfigurations());
 

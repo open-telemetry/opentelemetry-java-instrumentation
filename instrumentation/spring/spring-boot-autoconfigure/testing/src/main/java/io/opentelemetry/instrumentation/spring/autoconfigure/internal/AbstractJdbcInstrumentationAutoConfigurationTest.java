@@ -11,6 +11,7 @@ import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -36,7 +37,7 @@ public abstract class AbstractJdbcInstrumentationAutoConfigurationTest {
               InstrumentationConfig.class,
               () ->
                   new ConfigPropertiesBridge(
-                      DefaultConfigProperties.createFromMap(emptyMap()), OpenTelemetry.noop()))
+                      DefaultConfigProperties.createFromMap(emptyMap()), ConfigProvider.noop()))
           .withConfiguration(autoConfigurations())
           .withBean("openTelemetry", OpenTelemetry.class, testing()::getOpenTelemetry);
 
