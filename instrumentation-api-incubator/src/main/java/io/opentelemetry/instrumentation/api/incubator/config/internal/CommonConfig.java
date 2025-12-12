@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;

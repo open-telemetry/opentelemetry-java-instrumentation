@@ -34,4 +34,6 @@ public class ConfigProviderUtil {
     }
     return BRIDGED_CONFIG_PROVIDER;
   }
+
+  private ConfigProviderUtil() {}
 }
