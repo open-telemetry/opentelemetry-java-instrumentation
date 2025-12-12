@@ -9,9 +9,11 @@ import static java.util.Collections.emptyList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.ContextCustomizer;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.servlet.internal.ServletAccessor;
@@ -22,7 +24,9 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
@@ -88,9 +92,16 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
         httpAttributesGetter = new ServletHttpAttributesGetter<>(accessor);
     SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor =
         HttpSpanNameExtractor.builder(httpAttributesGetter)
-            .setKnownMethods(AgentCommonConfig.get().getKnownHttpRequestMethods())
+            .setKnownMethods(getKnownHttpMethods())
             .build();
 
     return build(instrumentationName, accessor, spanNameExtractor, httpAttributesGetter);
+  }
+
+  private static Set<String> getKnownHttpMethods() {
+    return DeclarativeConfigUtil.getList(
+            GlobalOpenTelemetry.get(), "general", "http", "known_methods")
+        .map(HashSet::new)
+        .orElse(HttpConstants.KNOWN_METHODS);
   }
 }

@@ -7,11 +7,14 @@ package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionAttributesExtractor;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFunctionInstrumenter;
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -21,14 +24,21 @@ import java.util.Set;
 public final class AwsLambdaEventsInstrumenterFactory {
 
   public static AwsLambdaFunctionInstrumenter createInstrumenter(
-      OpenTelemetry openTelemetry, String instrumentationName, Set<String> knownMethods) {
+      OpenTelemetry openTelemetry, String instrumentationName) {
     return new AwsLambdaFunctionInstrumenter(
         openTelemetry,
         Instrumenter.builder(
                 openTelemetry, instrumentationName, AwsLambdaEventsInstrumenterFactory::spanName)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
-            .addAttributesExtractor(new ApiGatewayProxyAttributesExtractor(knownMethods))
+            .addAttributesExtractor(
+                new ApiGatewayProxyAttributesExtractor(getKnownHttpMethods(openTelemetry)))
             .buildInstrumenter(SpanKindExtractor.alwaysServer()));
+  }
+
+  private static Set<String> getKnownHttpMethods(OpenTelemetry openTelemetry) {
+    return DeclarativeConfigUtil.getList(openTelemetry, "general", "http", "known_methods")
+        .map(HashSet::new)
+        .orElse(HttpConstants.KNOWN_METHODS);
   }
 
   private static String spanName(AwsLambdaRequest input) {

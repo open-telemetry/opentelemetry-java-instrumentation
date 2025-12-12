@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
@@ -37,13 +36,14 @@ public final class DeclarativeConfigUtil {
     return Optional.ofNullable(node != null ? node.getInt(leaf(propertyPath)) : null);
   }
 
-  public static List<String> getList(OpenTelemetry openTelemetry, String... propertyPath) {
+  public static Optional<List<String>> getList(
+      OpenTelemetry openTelemetry, String... propertyPath) {
     DeclarativeConfigProperties node = getDeclarativeConfigNode(openTelemetry, propertyPath);
     if (node != null) {
       List<String> list = node.getScalarList(leaf(propertyPath), String.class);
-      return list != null ? list : emptyList();
+      return Optional.ofNullable(list);
     }
-    return emptyList();
+    return Optional.empty();
   }
 
   public static Optional<DeclarativeConfigProperties> getStructuredConfig(

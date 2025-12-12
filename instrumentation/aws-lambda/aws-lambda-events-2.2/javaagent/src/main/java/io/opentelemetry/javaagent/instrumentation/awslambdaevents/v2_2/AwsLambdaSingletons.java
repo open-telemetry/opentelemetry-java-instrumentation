@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.AwsLambdaFun
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrapperConfiguration;
 import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaEventsInstrumenterFactory;
 import io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal.AwsLambdaSqsInstrumenterFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.time.Duration;
 
@@ -20,9 +19,7 @@ public final class AwsLambdaSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.aws-lambda-events-2.2";
   private static final AwsLambdaFunctionInstrumenter FUNCTION_INSTRUMENTER =
       AwsLambdaEventsInstrumenterFactory.createInstrumenter(
-          GlobalOpenTelemetry.get(),
-          INSTRUMENTATION_NAME,
-          AgentCommonConfig.get().getKnownHttpRequestMethods());
+          GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME);
   private static final Instrumenter<SQSEvent, Void> MESSAGE_TRACER =
       AwsLambdaSqsInstrumenterFactory.forEvent(GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME);
   private static final Duration FLUSH_TIMEOUT =

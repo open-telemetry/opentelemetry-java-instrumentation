@@ -26,16 +26,19 @@ package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 import static io.opentelemetry.instrumentation.api.internal.AttributesExtractorUtil.internalSet;
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.HttpAttributes;
 import io.opentelemetry.semconv.UrlAttributes;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
@@ -45,11 +48,17 @@ class HttpSpanDecorator extends BaseSpanDecorator {
 
   private static final String POST_METHOD = "POST";
   private static final String GET_METHOD = "GET";
-  private static final Set<String> knownMethods =
-      AgentCommonConfig.get().getKnownHttpRequestMethods();
+  private static final Set<String> knownMethods = getKnownHttpMethods();
 
   protected String getProtocol() {
     return "http";
+  }
+
+  private static Set<String> getKnownHttpMethods() {
+    return DeclarativeConfigUtil.getList(
+            GlobalOpenTelemetry.get(), "general", "http", "known_methods")
+        .map(HashSet::new)
+        .orElse(HttpConstants.KNOWN_METHODS);
   }
 
   protected static String getHttpMethod(Exchange exchange, Endpoint endpoint) {
