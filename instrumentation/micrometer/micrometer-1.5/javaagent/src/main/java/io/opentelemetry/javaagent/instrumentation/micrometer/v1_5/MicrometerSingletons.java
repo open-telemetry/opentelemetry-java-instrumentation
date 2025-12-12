@@ -7,10 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.Iterator;
 
 public final class MicrometerSingletons {
@@ -18,17 +17,21 @@ public final class MicrometerSingletons {
   private static final MeterRegistry METER_REGISTRY;
 
   static {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
     METER_REGISTRY =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
             .setPrometheusMode(
-                config.getBoolean("otel.instrumentation.micrometer.prometheus-mode.enabled", false))
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(), "java", "micrometer", "prometheus_mode", "enabled")
+                    .orElse(false))
             .setBaseTimeUnit(
                 TimeUnitParser.parseConfigValue(
-                    config.getString("otel.instrumentation.micrometer.base-time-unit")))
+                    DeclarativeConfigUtil.getString(
+                            GlobalOpenTelemetry.get(), "java", "micrometer", "base_time_unit")
+                        .orElse(null)))
             .setMicrometerHistogramGaugesEnabled(
-                config.getBoolean(
-                    "otel.instrumentation.micrometer.histogram-gauges.enabled", false))
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(), "java", "micrometer", "histogram_gauges", "enabled")
+                    .orElse(false))
             .build();
   }
 

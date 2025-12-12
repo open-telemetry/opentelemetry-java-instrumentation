@@ -13,10 +13,10 @@ import io.grpc.ManagedChannelBuilder;
 import io.grpc.ServerBuilder;
 import io.grpc.ServerInterceptor;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.grpc.v1_6.GrpcTelemetry;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ContextStorageBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -38,19 +38,23 @@ public final class GrpcSingletons {
 
   static {
     boolean emitMessageEvents =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.grpc.emit-message-events", true);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "java", "grpc", "emit_message_events")
+            .orElse(true);
 
     boolean experimentalSpanAttributes =
-        AgentInstrumentationConfig.get()
-            .getBoolean("otel.instrumentation.grpc.experimental-span-attributes", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "java", "grpc", "experimental_span_attributes")
+            .orElse(false);
 
     List<String> clientRequestMetadata =
-        AgentInstrumentationConfig.get()
-            .getList("otel.instrumentation.grpc.capture-metadata.client.request", emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(), "java", "grpc", "capture_metadata", "client", "request")
+            .orElse(emptyList());
     List<String> serverRequestMetadata =
-        AgentInstrumentationConfig.get()
-            .getList("otel.instrumentation.grpc.capture-metadata.server.request", emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(), "java", "grpc", "capture_metadata", "server", "request")
+            .orElse(emptyList());
 
     GrpcTelemetry telemetry =
         GrpcTelemetry.builder(GlobalOpenTelemetry.get())

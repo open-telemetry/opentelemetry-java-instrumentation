@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.oshi;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.oshi.ProcessMetrics;
 import io.opentelemetry.instrumentation.oshi.SystemMetrics;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -23,8 +23,9 @@ public final class MetricsRegistration {
       observables.addAll(SystemMetrics.registerObservers(GlobalOpenTelemetry.get()));
 
       // ProcessMetrics don't follow the spec
-      if (AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.oshi.experimental-metrics.enabled", false)) {
+      if (DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "oshi", "experimental_metrics", "enabled")
+          .orElse(false)) {
         observables.addAll(ProcessMetrics.registerObservers(GlobalOpenTelemetry.get()));
       }
       Thread cleanupTelemetry = new Thread(() -> MetricsRegistration.closeObservables(observables));
