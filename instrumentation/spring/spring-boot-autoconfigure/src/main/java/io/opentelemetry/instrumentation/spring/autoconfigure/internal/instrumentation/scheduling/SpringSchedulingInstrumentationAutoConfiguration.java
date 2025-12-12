@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.scheduling;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
@@ -26,7 +25,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 class SpringSchedulingInstrumentationAutoConfiguration {
   @Bean
   SpringSchedulingInstrumentationAspect springSchedulingInstrumentationAspect(
-      OpenTelemetry openTelemetry, InstrumentationConfig config) {
-    return new SpringSchedulingInstrumentationAspect(openTelemetry, config);
+      OpenTelemetry openTelemetry) {
+    return new SpringSchedulingInstrumentationAspect(openTelemetry);
   }
 }

@@ -9,7 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.function.Function;
 
 /**
@@ -37,8 +37,23 @@ public final class InstrumentationConfigUtil {
     return builder;
   }
 
-  public static boolean isStatementSanitizationEnabled(ConfigProperties config, String key) {
-    return config.getBoolean(
-        key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
+  /**
+   * Check if statement sanitization is enabled for a specific instrumentation.
+   *
+   * @param openTelemetry the OpenTelemetry instance
+   * @param instrumentationName the name of the instrumentation (e.g., "jdbc", "r2dbc", "mongo")
+   * @return true if statement sanitization is enabled
+   */
+  public static boolean isStatementSanitizationEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    // Check instrumentation-specific setting first
+    return DeclarativeConfigUtil.getBoolean(
+            openTelemetry, instrumentationName, "statement_sanitizer", "enabled")
+        // Fall back to common setting
+        .or(
+            () ->
+                DeclarativeConfigUtil.getBoolean(
+                    openTelemetry, "common", "db_statement_sanitizer", "enabled"))
+        .orElse(true);
   }
 }
