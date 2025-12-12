@@ -177,6 +177,10 @@ class ConfigPropertiesUtilTest {
         .isEqualTo("otel.instrumentation.a-b.c.d");
     assertThat(ConfigPropertiesUtil.toSystemProperty(new String[] {"a_b/development", "c", "d"}))
         .isEqualTo("otel.instrumentation.experimental.a-b.c.d");
+    assertThat(
+            ConfigPropertiesUtil.toSystemProperty(
+                new String[] {"a_experimental_b/development", "c", "d"}))
+        .isEqualTo("otel.instrumentation.a-experimental-b.c.d");
   }
 
   @SetEnvironmentVariable(key = "OTEL_INSTRUMENTATION_TEST_PROPERTY_LIST", value = "a,b,c")

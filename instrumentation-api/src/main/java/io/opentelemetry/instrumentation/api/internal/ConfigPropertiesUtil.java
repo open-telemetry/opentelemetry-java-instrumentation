@@ -163,9 +163,10 @@ public final class ConfigPropertiesUtil {
 
   public static String toSystemProperty(String[] propertyName) {
     for (int i = 0; i < propertyName.length; i++) {
-      if (propertyName[i].endsWith("/development")) {
-        propertyName[i] =
-            "experimental." + propertyName[i].substring(0, propertyName[i].length() - 12);
+      String node = propertyName[i];
+      if (node.endsWith("/development")) {
+        String prefix = node.contains("experimental") ? "" : "experimental.";
+        propertyName[i] = prefix + node.substring(0, node.length() - 12);
       }
     }
     return "otel.instrumentation." + String.join(".", propertyName).replace('_', '-');
