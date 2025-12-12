@@ -4,9 +4,94 @@
 
 ### ⚠️ Breaking Changes
 
-- Logback appender `captureArguments` option split into two options: `captureTemplate` and `captureArguments`
+- ActiveMQ Classic JMX metrics: rename attributes and metrics to align
+  with semantic conventions (see PR description for specifics)
+  ([#14996](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14996))
+- Library instrumentation: remove previously deprecated methods from telemetry builders
+  ([#15324](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15324))
+- Logback: `captureArguments` no longer captures message template, use `captureTemplate`
   ([#15423](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15423))
+- Play: disable controller spans by default,
+  re-enable with `otel.instrumentation.common.experimental.controller-telemetry.enabled=true`
+  ([#15604](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15604))
 
+### 🚫 Deprecations
+
+- Library instrumentation: deprecate `setSpanNameExtractor()` and `setStatusExtractor()`
+  in favor of `setSpanNameExtractorCustomizer()` and `setStatusExtractorCustomizer()`
+  ([#15529](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15529))
+
+### 🌟 New javaagent instrumentation
+
+- Apache ElasticJob
+  ([#14933](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14933))
+
+### 🌟 New library instrumentation
+
+- Apache Iceberg
+  ([#15114](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15114))
+- Servlets
+  ([#15473](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15473))
+
+### 📈 Enhancements
+
+- Spring starter: add declarative config logging exporter
+  ([#14917](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/14917))
+- Failsafe: add support for `RetryPolicy`
+  ([#15255](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15255),
+   [#15537](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15537))
+- GraphQL: add option to disable capturing query documents
+  ([#15384](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15384))
+- JMX metrics: allow any classpath resource path in rules
+  ([#15413](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15413))
+- Spring Boot actuator autoconfigure: support Spring Boot 4
+  ([#15433](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15433))
+- Spring JMS: support Spring Boot 4
+  ([#15434](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15434))
+- Spring starter: support Spring Boot 4
+  ([#15459](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15459))
+- Lettuce: support custom `ClientResources`
+  ([#15470](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15470))
+- Lettuce: add reactor-core compatibility checker
+  ([#15472](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15472))
+- Servlet: propagate context explicitly for async runnables
+  ([#15476](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15476))
+- Servlet: always add `trace_id` and `span_id` attributes to requests
+  ([#15485](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15485))
+- Pekko HTTP: separate route instrumentation from HTTP server instrumentation
+  ([#15499](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15499))
+- MongoDB: emit versioned scope name
+  ([#15500](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15500))
+- Spring WebFlux: support Spring Boot 4
+  ([#15502](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15502),
+   [#15574](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15574))
+- Spring WebMVC: support Spring Boot 4
+  ([#15525](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15525))
+- Spring Cloud Gateway: support Spring Boot 4
+  ([#15540](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15540))
+- Spring starter: add missing Kafka configuration options
+  ([#15592](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15592))
+- OpenTelemetry API interop: support new GlobalOpenTelemetry methods introduced in 1.57
+  ([#15620](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15620))
+
+### 🛠️ Bug fixes
+
+- Spring Web/WebFlux: restore GraalVM native-image compatibility
+  ([#15306](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15306))
+- Spring Kafka: end span in `afterRecord` callback
+  ([#15367](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15367))
+- Spring starter: fix environment variable overrides for array properties in declarative config
+  ([#15424](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15424))
+- Ktor: prevent double `end()` calls in `KtorServerTelemetry`
+  ([#15452](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15452))
+- OpenTelemetry API interop: fix null handling in `ExtendedOpenTelemetry` declarative config
+  ([#15478](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15478))
+- Akka HTTP: fix `http.route` attribute capture and span naming
+  ([#15504](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15504))
+- Extensions: fix SPI loading for `InstrumenterCustomizerProvider` and related classes
+  ([#15538](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15538))
+- Sanitize sql statements that may contain unquoted passwords
+  ([#15607](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/15607))
 
 ## Version 2.22.0 (2025-11-20)
 
