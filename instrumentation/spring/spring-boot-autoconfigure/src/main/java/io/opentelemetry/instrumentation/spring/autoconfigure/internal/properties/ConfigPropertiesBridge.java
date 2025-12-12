@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties;
 
 import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;

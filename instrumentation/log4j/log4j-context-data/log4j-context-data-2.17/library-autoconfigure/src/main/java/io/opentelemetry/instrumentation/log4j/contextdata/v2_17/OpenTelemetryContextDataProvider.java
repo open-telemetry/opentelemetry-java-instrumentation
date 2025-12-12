@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.log4j.contextdata.v2_17;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -17,6 +18,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttribute
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.util.ContextDataProvider;
 
@@ -26,8 +28,12 @@ import org.apache.logging.log4j.core.util.ContextDataProvider;
  */
 public class OpenTelemetryContextDataProvider implements ContextDataProvider {
   private static final boolean BAGGAGE_ENABLED =
-      ConfigPropertiesUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "log4j_context_data", "add_baggage")
+      Optional.ofNullable(
+              InstrumentationConfigUtil.getOrNull(
+                  ConfigPropertiesUtil.getConfigProvider(GlobalOpenTelemetry.get()),
+                  config -> config.getBoolean("add_baggage"),
+                  "java",
+                  "log4j_context_data"))
           .orElse(false);
 
   private static final boolean configuredResourceAttributeAccessible =

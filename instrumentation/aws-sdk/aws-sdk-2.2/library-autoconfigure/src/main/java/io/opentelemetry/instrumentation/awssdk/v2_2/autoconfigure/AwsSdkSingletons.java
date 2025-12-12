@@ -7,10 +7,12 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import java.util.List;
+import java.util.Optional;
 
 public final class AwsSdkSingletons {
 
@@ -30,8 +32,12 @@ public final class AwsSdkSingletons {
 
     @Override
     protected boolean messagingReceiveInstrumentationEnabled() {
-      return ConfigPropertiesUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "messaging", "receive_telemetry/development", "enabled")
+      return Optional.ofNullable(
+              InstrumentationConfigUtil.getOrNull(
+                  getConfigProvider(),
+                  config -> config.getBoolean("messaging.receive_telemetry/development"),
+                  "java",
+                  "aws_sdk"))
           .orElse(false);
     }
 

@@ -27,6 +27,14 @@ public final class ConfigPropertiesUtil {
 
   private static final boolean supportsDeclarativeConfig = supportsDeclarativeConfig();
 
+  static final AbstractBridgedConfigProvider BRIDGED_CONFIG_PROVIDER =
+      new AbstractBridgedConfigProvider() {
+        @Override
+        protected AbstractSystemPropertiesDeclarativeConfigProperties getProperties(String name) {
+          return new SystemPropertiesDeclarativeConfigProperties(name, null);
+        }
+      };
+
   private static boolean supportsDeclarativeConfig() {
     try {
       Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
@@ -45,21 +53,12 @@ public final class ConfigPropertiesUtil {
    * Returns the boolean value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link #getBoolean(OpenTelemetry, String...)} instead to support
+   * <p>It's recommended to use {@link #getConfigProvider(OpenTelemetry)} instead to support
    * Declarative Config.
    */
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
     String strValue = getString(propertyName);
     return strValue == null ? defaultValue : Boolean.parseBoolean(strValue);
-  }
-
-  /**
-   * Returns the boolean value of the given property name from Declarative Config if available,
-   * otherwise falls back to system properties and environment variables.
-   */
-  public static Optional<Boolean> getBoolean(OpenTelemetry openTelemetry, String... propertyName) {
-    return Optional.ofNullable(
-        getValue(openTelemetry, propertyName, DeclarativeConfigProperties::getBoolean));
   }
 
   /**
@@ -135,15 +134,9 @@ public final class ConfigPropertiesUtil {
 
   public static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
     if (isDeclarativeConfig(openTelemetry)) {
-      ExtendedOpenTelemetry extendedOpenTelemetry = (ExtendedOpenTelemetry) openTelemetry;
-      return extendedOpenTelemetry.getConfigProvider();
+      return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
     }
-    return new AbstractBridgedConfigProvider() {
-      @Override
-      protected AbstractSystemPropertiesDeclarativeConfigProperties getProperties(String name) {
-        return new SystemPropertiesDeclarativeConfigProperties(name, null);
-      }
-    };
+    return BRIDGED_CONFIG_PROVIDER;
   }
 
   public static String toSystemProperty(String[] nodes) {

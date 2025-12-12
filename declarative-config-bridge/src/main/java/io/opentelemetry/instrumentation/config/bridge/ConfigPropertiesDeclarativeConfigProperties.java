@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
-
 import io.opentelemetry.instrumentation.api.internal.AbstractBridgedConfigProvider;
 import io.opentelemetry.instrumentation.api.internal.AbstractSystemPropertiesDeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;

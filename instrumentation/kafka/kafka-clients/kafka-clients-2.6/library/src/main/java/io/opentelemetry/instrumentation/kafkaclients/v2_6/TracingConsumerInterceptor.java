@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.api.internal.Timer;
@@ -15,6 +16,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerInterceptor;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
@@ -38,8 +40,13 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
     telemetry =
         KafkaTelemetry.builder(openTelemetry)
             .setMessagingReceiveInstrumentationEnabled(
-                ConfigPropertiesUtil.getBoolean(
-                        openTelemetry, "messaging", "receive_telemetry/development", "enabled")
+                Optional.ofNullable(
+                        InstrumentationConfigUtil.getOrNull(
+                            ConfigPropertiesUtil.getConfigProvider(openTelemetry),
+                            config -> config.getBoolean("enabled"),
+                            "java",
+                            "messaging",
+                            "receive_telemetry/development"))
                     .orElse(false))
             .setCapturedHeaders(
                 ConfigPropertiesUtil.getList(

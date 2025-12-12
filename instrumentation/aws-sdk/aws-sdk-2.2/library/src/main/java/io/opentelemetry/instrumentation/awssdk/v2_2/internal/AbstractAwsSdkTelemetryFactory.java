@@ -24,6 +24,7 @@ public abstract class AbstractAwsSdkTelemetryFactory {
             InstrumentationConfigUtil.getOrNull(
                 getConfigProvider(),
                 config -> config.getBoolean("span_attributes/development"),
+                "java",
                 "aws_sdk"))
         .orElse(false);
   }
@@ -35,6 +36,7 @@ public abstract class AbstractAwsSdkTelemetryFactory {
             InstrumentationConfigUtil.getOrNull(
                 getConfigProvider(),
                 config -> config.getBoolean("use_propagator_for_messaging/development"),
+                "java",
                 "aws_sdk"))
         .orElse(false);
   }
@@ -44,6 +46,7 @@ public abstract class AbstractAwsSdkTelemetryFactory {
             InstrumentationConfigUtil.getOrNull(
                 getConfigProvider(),
                 config -> config.getBoolean("record_individual_http_error/development"),
+                "java",
                 "aws_sdk"))
         .orElse(false);
   }
@@ -53,6 +56,7 @@ public abstract class AbstractAwsSdkTelemetryFactory {
             InstrumentationConfigUtil.getOrNull(
                 getConfigProvider(),
                 config -> config.getBoolean("capture_message_content"),
+                "java",
                 "genai"))
         .orElse(false);
   }

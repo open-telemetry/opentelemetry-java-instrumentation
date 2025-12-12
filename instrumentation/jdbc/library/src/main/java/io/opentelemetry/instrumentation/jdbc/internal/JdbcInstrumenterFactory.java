@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.code.CodeSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
@@ -19,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.List;
+import java.util.Optional;
 import javax.sql.DataSource;
 
 /**
@@ -29,8 +31,12 @@ public final class JdbcInstrumenterFactory {
   public static final String INSTRUMENTATION_NAME = "io.opentelemetry.jdbc";
 
   public static boolean captureQueryParameters(OpenTelemetry openTelemetry) {
-    return ConfigPropertiesUtil.getBoolean(
-            openTelemetry, "jdbc", "capture_query_parameters/development")
+    return Optional.ofNullable(
+            InstrumentationConfigUtil.getOrNull(
+                ConfigPropertiesUtil.getConfigProvider(openTelemetry),
+                config -> config.getBoolean("capture_query_parameters/development"),
+                "java",
+                "jdbc"))
         .orElse(false);
   }
 
@@ -45,8 +51,13 @@ public final class JdbcInstrumenterFactory {
         openTelemetry,
         emptyList(),
         true,
-        ConfigPropertiesUtil.getBoolean(
-                openTelemetry, "common", "db_statement_sanitizer", "enabled")
+        Optional.ofNullable(
+                InstrumentationConfigUtil.getOrNull(
+                    ConfigPropertiesUtil.getConfigProvider(openTelemetry),
+                    config -> config.getBoolean("enabled"),
+                    "java",
+                    "common",
+                    "db_statement_sanitizer"))
             .orElse(true),
         captureQueryParameters);
   }
@@ -96,7 +107,13 @@ public final class JdbcInstrumenterFactory {
       OpenTelemetry openTelemetry) {
     return createTransactionInstrumenter(
         openTelemetry,
-        ConfigPropertiesUtil.getBoolean(openTelemetry, "jdbc", "transaction/development", "enabled")
+        Optional.ofNullable(
+                InstrumentationConfigUtil.getOrNull(
+                    ConfigPropertiesUtil.getConfigProvider(openTelemetry),
+                    config -> config.getBoolean("enabled"),
+                    "java",
+                    "jdbc",
+                    "transaction/development"))
             .orElse(false));
   }
 

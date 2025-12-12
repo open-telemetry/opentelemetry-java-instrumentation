@@ -23,6 +23,8 @@ package io.opentelemetry.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.INSTRUMENTATION_NAME;
 
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
@@ -42,6 +44,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -64,14 +67,25 @@ public final class OpenTelemetryDriver implements Driver {
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
+    ConfigProvider configProvider = ConfigPropertiesUtil.getConfigProvider(openTelemetry);
     boolean defaultValue =
-        ConfigPropertiesUtil.getBoolean(
-                openTelemetry, "common", "db_sqlcommenter/development", "enabled")
+        Optional.ofNullable(
+                InstrumentationConfigUtil.getOrNull(
+                    configProvider,
+                    config -> config.getBoolean("enabled"),
+                    "java",
+                    "common",
+                    "db_sqlcommenter/development"))
             .orElse(false);
     return SqlCommenter.builder()
         .setEnabled(
-            ConfigPropertiesUtil.getBoolean(
-                    openTelemetry, "jdbc", "sqlcommenter/development", "enabled")
+            Optional.ofNullable(
+                    InstrumentationConfigUtil.getOrNull(
+                        configProvider,
+                        config -> config.getBoolean("enabled"),
+                        "java",
+                        "jdbc",
+                        "sqlcommenter/development"))
                 .orElse(defaultValue))
         .build();
   }

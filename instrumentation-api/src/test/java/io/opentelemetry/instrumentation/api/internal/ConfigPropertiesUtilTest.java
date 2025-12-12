@@ -10,7 +10,9 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.DeclarativeConfigurationBuilder;
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.ExperimentalLanguageSpecificInstrumentationModel;
@@ -18,6 +20,7 @@ import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.Instru
 import io.opentelemetry.sdk.extension.incubator.fileconfig.internal.model.OpenTelemetryConfigurationModel;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -134,7 +137,13 @@ class ConfigPropertiesUtilTest {
     assertThat(ConfigPropertiesUtil.getBoolean("otel.instrumentation.test.property.boolean", false))
         .isEqualTo(expected);
     assertThat(
-            ConfigPropertiesUtil.getBoolean(OpenTelemetry.noop(), "test", "property", "boolean")
+            Optional.ofNullable(
+                    InstrumentationConfigUtil.<Boolean>getOrNull(
+                        ConfigPropertiesUtil.getConfigProvider(GlobalOpenTelemetry.get()),
+                        config -> config.getBoolean("boolean"),
+                        "java",
+                        "test",
+                        "property"))
                 .orElse(false))
         .isEqualTo(expected);
   }
@@ -143,18 +152,21 @@ class ConfigPropertiesUtilTest {
     return Stream.of(
         Arguments.of(true, true),
         Arguments.of(false, false),
-        Arguments.of("invalid", false),
-        Arguments.of("true", false), // no type coercion in declarative config
-        Arguments.of(null, false));
+        Arguments.of("invalid", null),
+        Arguments.of("true", null), // no type coercion in declarative config
+        Arguments.of(null, null));
   }
 
   @ParameterizedTest
   @MethodSource("booleanValuesProvider")
-  void getBoolean_declarativeConfig(Object property, boolean expected) {
+  void getBoolean_declarativeConfig(Object property, Boolean expected) {
     assertThat(
-            ConfigPropertiesUtil.getBoolean(
-                    DeclarativeConfiguration.create(model(property)), "foo", "bar")
-                .orElse(false))
+            InstrumentationConfigUtil.<Boolean>getOrNull(
+                ConfigPropertiesUtil.getConfigProvider(
+                    DeclarativeConfiguration.create(model(property))),
+                config -> config.getBoolean("bar"),
+                "java",
+                "foo"))
         .isEqualTo(expected);
   }
 
