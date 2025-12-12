@@ -21,9 +21,6 @@ import net.bytebuddy.matcher.ElementMatchers;
 
 public final class AnnotationExcludedMethods {
 
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.opentelemetry-instrumentation-annotations.exclude-methods";
-
   /*
   Returns a matcher for all methods that should be excluded from auto-instrumentation by
   annotation-based advices.

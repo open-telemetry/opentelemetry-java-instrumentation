@@ -29,15 +29,15 @@ public final class R2dbcSingletons {
                         "r2dbc",
                         "statement_sanitizer",
                         "enabled")
-                    .or(
+                    .orElseGet(
                         () ->
                             DeclarativeConfigUtil.getBoolean(
-                                GlobalOpenTelemetry.get(),
-                                "java",
-                                "db",
-                                "statement_sanitizer",
-                                "enabled"))
-                    .orElse(true))
+                                    GlobalOpenTelemetry.get(),
+                                    "java",
+                                    "db",
+                                    "statement_sanitizer",
+                                    "enabled")
+                                .orElse(true)))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     R2dbcSqlAttributesGetter.INSTANCE,
@@ -51,15 +51,15 @@ public final class R2dbcSingletons {
                 "experimental",
                 "sqlcommenter",
                 "enabled")
-            .or(
+            .orElseGet(
                 () ->
                     DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(),
-                        "java",
-                        "common",
-                        "db",
-                        "sqlcommenter/development"))
-            .orElse(false));
+                            GlobalOpenTelemetry.get(),
+                            "java",
+                            "common",
+                            "db",
+                            "sqlcommenter/development")
+                        .orElse(false)));
     Experimental.customizeSqlCommenter(
         builder,
         sqlCommenterBuilder ->

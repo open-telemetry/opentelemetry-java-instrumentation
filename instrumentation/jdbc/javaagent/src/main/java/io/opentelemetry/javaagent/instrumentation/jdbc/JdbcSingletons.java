@@ -57,15 +57,15 @@ public final class JdbcSingletons {
             true,
             DeclarativeConfigUtil.getBoolean(
                     GlobalOpenTelemetry.get(), "java", "jdbc", "statement_sanitizer", "enabled")
-                .or(
+                .orElseGet(
                     () ->
                         DeclarativeConfigUtil.getBoolean(
-                            GlobalOpenTelemetry.get(),
-                            "java",
-                            "db",
-                            "statement_sanitizer",
-                            "enabled"))
-                .orElse(true),
+                                GlobalOpenTelemetry.get(),
+                                "java",
+                                "db",
+                                "statement_sanitizer",
+                                "enabled")
+                            .orElse(true)),
             CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =
@@ -130,15 +130,15 @@ public final class JdbcSingletons {
                 "experimental",
                 "sqlcommenter",
                 "enabled")
-            .or(
+            .orElseGet(
                 () ->
                     DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(),
-                        "java",
-                        "common",
-                        "db",
-                        "sqlcommenter/development"))
-            .orElse(false));
+                            GlobalOpenTelemetry.get(),
+                            "java",
+                            "common",
+                            "db",
+                            "sqlcommenter/development")
+                        .orElse(false)));
     SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
     return builder.build();
   }

@@ -21,15 +21,15 @@ public final class MongoInstrumentationSingletons {
           "io.opentelemetry.mongo-async-3.3",
           DeclarativeConfigUtil.getBoolean(
                   GlobalOpenTelemetry.get(), "java", "mongo", "statement_sanitizer", "enabled")
-              .or(
+              .orElseGet(
                   () ->
                       DeclarativeConfigUtil.getBoolean(
-                          GlobalOpenTelemetry.get(),
-                          "java",
-                          "db",
-                          "statement_sanitizer",
-                          "enabled"))
-              .orElse(true));
+                              GlobalOpenTelemetry.get(),
+                              "java",
+                              "db",
+                              "statement_sanitizer",
+                              "enabled")
+                          .orElse(true)));
 
   public static final CommandListener LISTENER = new TracingCommandListener(INSTRUMENTER);
 

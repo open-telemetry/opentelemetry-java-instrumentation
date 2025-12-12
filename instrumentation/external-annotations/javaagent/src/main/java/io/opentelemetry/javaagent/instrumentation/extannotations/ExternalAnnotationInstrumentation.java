@@ -67,11 +67,6 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
           "kamon.annotation.api.Trace",
           "org.springframework.cloud.sleuth.annotation.NewSpan");
 
-  private static final String TRACE_ANNOTATIONS_CONFIG =
-      "otel.instrumentation.external-annotations.include";
-  private static final String TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG =
-      "otel.instrumentation.external-annotations.exclude-methods";
-
   private final ElementMatcher.Junction<ClassLoader> classLoaderOptimization;
   private final ElementMatcher.Junction<NamedElement> traceAnnotationMatcher;
 
