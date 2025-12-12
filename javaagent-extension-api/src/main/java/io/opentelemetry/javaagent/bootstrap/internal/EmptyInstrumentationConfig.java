@@ -67,12 +67,6 @@ final class EmptyInstrumentationConfig implements InstrumentationConfig {
   }
 
   @Override
-  public DeclarativeConfigProperties getDeclarativeConfig(String node) {
-    throw new IllegalStateException(
-        "Declarative configuration is not supported in the empty instrumentation config");
-  }
-
-  @Override
   public ConfigProvider getConfigProvider() {
     return ConfigProvider.noop();
   }

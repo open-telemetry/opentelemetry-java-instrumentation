@@ -5,10 +5,12 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
 import static java.util.Collections.emptyList;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
@@ -127,7 +129,15 @@ public interface InstrumentationConfig {
    * @return the declarative configuration properties for the given node name
    * @throws IllegalStateException if {@link #isDeclarative()} returns {@code false}
    */
-  DeclarativeConfigProperties getDeclarativeConfig(String node);
+  default DeclarativeConfigProperties getDeclarativeConfig(String node) {
+    DeclarativeConfigProperties config =
+        InstrumentationConfigUtil.javaInstrumentationConfig(getConfigProvider(), node);
+    if (config == null) {
+      // there is no declarative config for this node
+      return empty();
+    }
+    return config;
+  }
 
   /**
    * Returns the {@link ConfigProvider}, which is a bridge to ConfigProperties if declarative
