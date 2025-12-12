@@ -11,10 +11,12 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -55,9 +57,21 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
       if (returnValue != null) {
         return returnValue;
       }
-      boolean traceId = AgentCommonConfig.get().getTraceIdKey().equals(key);
-      boolean spanId = AgentCommonConfig.get().getSpanIdKey().equals(key);
-      boolean traceFlags = AgentCommonConfig.get().getTraceFlagsKey().equals(key);
+      String traceIdKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "trace_id")
+              .orElse(LoggingContextConstants.TRACE_ID);
+      String spanIdKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "span_id")
+              .orElse(LoggingContextConstants.SPAN_ID);
+      String traceFlagsKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "trace_flags")
+              .orElse(LoggingContextConstants.TRACE_FLAGS);
+      boolean traceId = traceIdKey.equals(key);
+      boolean spanId = spanIdKey.equals(key);
+      boolean traceFlags = traceFlagsKey.equals(key);
 
       if (!traceId && !spanId && !traceFlags) {
         return ConfiguredResourceAttributesHolder.getAttributeValue(key);

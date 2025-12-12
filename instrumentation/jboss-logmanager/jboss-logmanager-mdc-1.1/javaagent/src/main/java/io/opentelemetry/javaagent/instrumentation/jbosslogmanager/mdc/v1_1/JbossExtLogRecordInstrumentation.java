@@ -11,8 +11,10 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
@@ -57,9 +59,21 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) String key,
         @Advice.Return @Nullable String value) {
 
-      boolean traceId = AgentCommonConfig.get().getTraceIdKey().equals(key);
-      boolean spanId = AgentCommonConfig.get().getSpanIdKey().equals(key);
-      boolean traceFlags = AgentCommonConfig.get().getTraceFlagsKey().equals(key);
+      String traceIdKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "trace_id")
+              .orElse(LoggingContextConstants.TRACE_ID);
+      String spanIdKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "span_id")
+              .orElse(LoggingContextConstants.SPAN_ID);
+      String traceFlagsKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "trace_flags")
+              .orElse(LoggingContextConstants.TRACE_FLAGS);
+      boolean traceId = traceIdKey.equals(key);
+      boolean spanId = spanIdKey.equals(key);
+      boolean traceFlags = traceFlagsKey.equals(key);
 
       if (!traceId && !spanId && !traceFlags) {
         return value;
@@ -93,9 +107,22 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
     public static Map<String, String> onExit(
         @Advice.This ExtLogRecord record, @Advice.Return Map<String, String> value) {
 
-      if (value.containsKey(AgentCommonConfig.get().getTraceIdKey())
-          && value.containsKey(AgentCommonConfig.get().getSpanIdKey())
-          && value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
+      String traceIdKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "trace_id")
+              .orElse(LoggingContextConstants.TRACE_ID);
+      String spanIdKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "span_id")
+              .orElse(LoggingContextConstants.SPAN_ID);
+      String traceFlagsKey =
+          DeclarativeConfigUtil.getString(
+                  GlobalOpenTelemetry.get(), "general", "logging", "trace_flags")
+              .orElse(LoggingContextConstants.TRACE_FLAGS);
+
+      if (value.containsKey(traceIdKey)
+          && value.containsKey(spanIdKey)
+          && value.containsKey(traceFlagsKey)) {
         return value;
       }
 
@@ -104,16 +131,16 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
         return value;
       }
 
-      if (!value.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
-        value.put(AgentCommonConfig.get().getTraceIdKey(), spanContext.getTraceId());
+      if (!value.containsKey(traceIdKey)) {
+        value.put(traceIdKey, spanContext.getTraceId());
       }
 
-      if (!value.containsKey(AgentCommonConfig.get().getSpanIdKey())) {
-        value.put(AgentCommonConfig.get().getSpanIdKey(), spanContext.getSpanId());
+      if (!value.containsKey(spanIdKey)) {
+        value.put(spanIdKey, spanContext.getSpanId());
       }
 
-      if (!value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
-        value.put(AgentCommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
+      if (!value.containsKey(traceFlagsKey)) {
+        value.put(traceFlagsKey, spanContext.getTraceFlags().asHex());
       }
       return value;
     }
