@@ -210,11 +210,17 @@ class ConfigPropertiesUtilTest {
 
   @Test
   void getList_none() {
-    assertList(emptyList());
+    assertList(null);
   }
 
   private static void assertList(List<String> expected) {
-    assertThat(ConfigPropertiesUtil.getList(OpenTelemetry.noop(), "test", "property", "list"))
+    assertThat(
+            InstrumentationConfigUtil.<List<String>>getOrNull(
+                ConfigPropertiesUtil.getConfigProvider(OpenTelemetry.noop()),
+                config -> config.getScalarList("list", String.class),
+                "java",
+                "test",
+                "property"))
         .isEqualTo(expected);
   }
 
@@ -223,16 +229,20 @@ class ConfigPropertiesUtilTest {
         Arguments.of(asList("a", "b", "c"), asList("a", "b", "c")),
         Arguments.of(singletonList("single"), singletonList("single")),
         Arguments.of(emptyList(), emptyList()),
-        Arguments.of("invalid", emptyList()),
-        Arguments.of(null, emptyList()));
+        Arguments.of("invalid", null),
+        Arguments.of(null, null));
   }
 
   @ParameterizedTest
   @MethodSource("listValuesProvider")
   void getList_declarativeConfig(Object property, List<String> expected) {
     assertThat(
-            ConfigPropertiesUtil.getList(
-                DeclarativeConfiguration.create(model(property)), "foo", "bar"))
+            InstrumentationConfigUtil.<List<String>>getOrNull(
+                ConfigPropertiesUtil.getConfigProvider(
+                    DeclarativeConfiguration.create(model(property))),
+                config -> config.getScalarList("bar", String.class),
+                "java",
+                "foo"))
         .isEqualTo(expected);
   }
 }

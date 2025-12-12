@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.autoconfigure;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
@@ -26,8 +28,13 @@ public final class AwsSdkSingletons {
 
     @Override
     protected List<String> getCapturedHeaders() {
-      return ConfigPropertiesUtil.getList(
-          GlobalOpenTelemetry.get(), "messaging", "capture_headers/development");
+      return Optional.ofNullable(
+              InstrumentationConfigUtil.getOrNull(
+                  ConfigPropertiesUtil.getConfigProvider(GlobalOpenTelemetry.get()),
+                  config -> config.getScalarList("capture_headers/development", String.class),
+                  "java",
+                  "messaging"))
+          .orElse(emptyList());
     }
 
     @Override

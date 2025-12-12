@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11.autoconfigure;
 
+import static java.util.Collections.emptyList;
+
 import com.amazonaws.AmazonWebServiceRequest;
 import com.amazonaws.Request;
 import com.amazonaws.Response;
@@ -44,7 +46,13 @@ public class TracingRequestHandler extends RequestHandler2 {
                         "aws_sdk"))
                 .orElse(false))
         .setCapturedHeaders(
-            ConfigPropertiesUtil.getList(openTelemetry, "messaging", "capture_headers/development"))
+            Optional.ofNullable(
+                    InstrumentationConfigUtil.getOrNull(
+                        configProvider,
+                        config -> config.getScalarList("capture_headers/development", String.class),
+                        "java",
+                        "messaging"))
+                .orElse(emptyList()))
         .build()
         .newRequestHandler();
   }

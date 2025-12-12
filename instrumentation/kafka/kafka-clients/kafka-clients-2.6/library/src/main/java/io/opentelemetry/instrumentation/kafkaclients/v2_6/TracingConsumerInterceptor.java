@@ -5,9 +5,12 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.v2_6;
 
+import static java.util.Collections.emptyList;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
@@ -37,20 +40,27 @@ public class TracingConsumerInterceptor<K, V> implements ConsumerInterceptor<K, 
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
+    ConfigProvider configProvider = ConfigPropertiesUtil.getConfigProvider(openTelemetry);
     telemetry =
         KafkaTelemetry.builder(openTelemetry)
             .setMessagingReceiveInstrumentationEnabled(
                 Optional.ofNullable(
                         InstrumentationConfigUtil.getOrNull(
-                            ConfigPropertiesUtil.getConfigProvider(openTelemetry),
+                            configProvider,
                             config -> config.getBoolean("enabled"),
                             "java",
                             "messaging",
                             "receive_telemetry/development"))
                     .orElse(false))
             .setCapturedHeaders(
-                ConfigPropertiesUtil.getList(
-                    openTelemetry, "messaging", "capture_headers/development"))
+                Optional.ofNullable(
+                        InstrumentationConfigUtil.getOrNull(
+                            configProvider,
+                            config ->
+                                config.getScalarList("capture_headers/development", String.class),
+                            "java",
+                            "messaging"))
+                    .orElse(emptyList()))
             .build();
   }
 
