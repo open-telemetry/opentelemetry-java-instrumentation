@@ -29,7 +29,11 @@ public final class SpringIntegrationSingletons {
           .setCapturedHeaders(ExperimentalConfig.get().getMessagingHeaders())
           .setProducerSpanEnabled(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(), "java", "spring_integration", "producer", "enabled")
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "spring_integration",
+                      "producer",
+                      "enabled")
                   .orElse(false))
           .build()
           .newChannelInterceptor();

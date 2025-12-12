@@ -37,10 +37,7 @@ public final class LoggingEventMapper {
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(),
-              "java",
-              "jboss-logmanager",
-              "experimental_log_attributes")
+              GlobalOpenTelemetry.get(), "java", "jboss-logmanager", "experimental_log_attributes")
           .orElse(false);
 
   // cached as an optimization

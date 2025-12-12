@@ -35,7 +35,8 @@ public class MethodInstrumentationModule extends InstrumentationModule
   private static List<TypeInstrumentation> createInstrumentations() {
     // First try structured declarative config (YAML format)
     Optional<List<TypeInstrumentation>> structured =
-        DeclarativeConfigUtil.getStructuredList(GlobalOpenTelemetry.get(), "java", "methods", "include")
+        DeclarativeConfigUtil.getStructuredList(
+                GlobalOpenTelemetry.get(), "java", "methods", "include")
             .map(MethodsConfig::parseDeclarativeConfig);
     if (structured.isPresent()) {
       return structured.get();

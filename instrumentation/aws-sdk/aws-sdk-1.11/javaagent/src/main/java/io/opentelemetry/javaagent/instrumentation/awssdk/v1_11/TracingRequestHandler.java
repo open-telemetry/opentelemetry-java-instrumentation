@@ -37,10 +37,7 @@ public class TracingRequestHandler extends RequestHandler2 {
       AwsSdkTelemetry.builder(GlobalOpenTelemetry.get())
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(),
-                      "java",
-                      "aws-sdk",
-                      "experimental_span_attributes")
+                      GlobalOpenTelemetry.get(), "java", "aws-sdk", "experimental_span_attributes")
                   .orElse(false))
           .setMessagingReceiveInstrumentationEnabled(
               ExperimentalConfig.get().messagingReceiveInstrumentationEnabled())

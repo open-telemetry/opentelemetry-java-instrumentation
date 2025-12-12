@@ -20,7 +20,12 @@ public enum VertxRedisClientAttributesGetter
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DeclarativeConfigUtil.getBoolean(
-                  GlobalOpenTelemetry.get(), "java", "common", "db", "statement_sanitizer", "enabled")
+                  GlobalOpenTelemetry.get(),
+                  "java",
+                  "common",
+                  "db",
+                  "statement_sanitizer",
+                  "enabled")
               .orElse(true));
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues

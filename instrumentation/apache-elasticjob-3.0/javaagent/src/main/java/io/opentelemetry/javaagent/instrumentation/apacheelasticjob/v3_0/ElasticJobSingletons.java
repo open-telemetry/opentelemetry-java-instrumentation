@@ -18,7 +18,10 @@ public final class ElasticJobSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.apache-elasticjob-3.0";
   private static final boolean CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "apache_elasticjob", "experimental_span_attributes")
+              GlobalOpenTelemetry.get(),
+              "java",
+              "apache_elasticjob",
+              "experimental_span_attributes")
           .orElse(false);
 
   private static final Instrumenter<ElasticJobProcessRequest, Void> INSTRUMENTER =

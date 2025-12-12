@@ -43,10 +43,7 @@ public class HooksInstrumentation implements TypeInstrumentation {
       ContextPropagationOperator.builder()
           .setCaptureExperimentalSpanAttributes(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(),
-                      "java",
-                      "reactor",
-                      "experimental_span_attributes")
+                      GlobalOpenTelemetry.get(), "java", "reactor", "experimental_span_attributes")
                   .orElse(false))
           .build()
           .registerOnEachOperator();

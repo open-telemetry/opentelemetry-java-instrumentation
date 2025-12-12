@@ -21,7 +21,11 @@ public final class MicrometerSingletons {
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
             .setPrometheusMode(
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "micrometer", "prometheus_mode", "enabled")
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "micrometer",
+                        "prometheus_mode",
+                        "enabled")
                     .orElse(false))
             .setBaseTimeUnit(
                 TimeUnitParser.parseConfigValue(
@@ -30,7 +34,11 @@ public final class MicrometerSingletons {
                         .orElse(null)))
             .setMicrometerHistogramGaugesEnabled(
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "java", "micrometer", "histogram_gauges", "enabled")
+                        GlobalOpenTelemetry.get(),
+                        "java",
+                        "micrometer",
+                        "histogram_gauges",
+                        "enabled")
                     .orElse(false))
             .build();
   }

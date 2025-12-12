@@ -32,7 +32,12 @@ public abstract class RedissonRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DeclarativeConfigUtil.getBoolean(
-                  GlobalOpenTelemetry.get(), "java", "common", "db", "statement_sanitizer", "enabled")
+                  GlobalOpenTelemetry.get(),
+                  "java",
+                  "common",
+                  "db",
+                  "statement_sanitizer",
+                  "enabled")
               .orElse(true));
 
   public static RedissonRequest create(InetSocketAddress address, Object command) {

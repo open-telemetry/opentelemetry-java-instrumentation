@@ -28,10 +28,12 @@ public final class SpanDecoratingContextDataInjector implements ContextDataInjec
               GlobalOpenTelemetry.get(), "java", "log4j-context-data", "add_baggage")
           .orElse(false);
   private static final String TRACE_ID_KEY =
-      DeclarativeConfigUtil.getString(GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
+      DeclarativeConfigUtil.getString(
+              GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
           .orElse(LoggingContextConstants.TRACE_ID);
   private static final String SPAN_ID_KEY =
-      DeclarativeConfigUtil.getString(GlobalOpenTelemetry.get(), "java", "common", "logging", "span_id")
+      DeclarativeConfigUtil.getString(
+              GlobalOpenTelemetry.get(), "java", "common", "logging", "span_id")
           .orElse(LoggingContextConstants.SPAN_ID);
   private static final String TRACE_FLAGS_KEY =
       DeclarativeConfigUtil.getString(

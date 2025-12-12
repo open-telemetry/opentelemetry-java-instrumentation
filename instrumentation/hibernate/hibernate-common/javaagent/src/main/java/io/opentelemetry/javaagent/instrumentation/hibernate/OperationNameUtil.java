@@ -16,7 +16,12 @@ public final class OperationNameUtil {
   private static final SqlStatementSanitizer sanitizer =
       SqlStatementSanitizer.create(
           DeclarativeConfigUtil.getBoolean(
-                  GlobalOpenTelemetry.get(), "java", "common", "db", "statement_sanitizer", "enabled")
+                  GlobalOpenTelemetry.get(),
+                  "java",
+                  "common",
+                  "db",
+                  "statement_sanitizer",
+                  "enabled")
               .orElse(true));
 
   public static String getOperationNameForQuery(String query) {

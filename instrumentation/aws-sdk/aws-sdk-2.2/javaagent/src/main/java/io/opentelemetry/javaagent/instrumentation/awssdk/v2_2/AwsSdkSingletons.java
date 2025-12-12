@@ -35,7 +35,8 @@ public final class AwsSdkSingletons {
     @Override
     protected boolean getBoolean(String name, boolean defaultValue) {
       // Convert otel.instrumentation.xxx.yyy to java/xxx/yyy format
-      String converted = name.replace("otel.instrumentation.", "").replace(".", "_").replace("-", "_");
+      String converted =
+          name.replace("otel.instrumentation.", "").replace(".", "_").replace("-", "_");
       String[] parts = converted.split("_", 2);
       if (parts.length == 2) {
         return DeclarativeConfigUtil.getBoolean(

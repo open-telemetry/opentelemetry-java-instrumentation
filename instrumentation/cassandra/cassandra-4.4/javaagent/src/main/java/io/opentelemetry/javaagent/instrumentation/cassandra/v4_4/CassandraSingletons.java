@@ -15,7 +15,12 @@ final class CassandraSingletons {
       CassandraTelemetry.builder(GlobalOpenTelemetry.get())
           .setStatementSanitizationEnabled(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(), "java", "common", "db", "statement_sanitizer", "enabled")
+                      GlobalOpenTelemetry.get(),
+                      "java",
+                      "common",
+                      "db",
+                      "statement_sanitizer",
+                      "enabled")
                   .orElse(true))
           .build();
 
