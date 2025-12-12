@@ -12,6 +12,7 @@ import com.openai.models.embeddings.CreateEmbeddingResponse;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.instrumentation.api.incubator.semconv.genai.CaptureMessageOptions;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiSpanNameExtractor;
@@ -27,6 +28,10 @@ public final class OpenAITelemetryBuilder {
 
   private boolean captureMessageContent;
 
+  // TODO(cirilla-zmh): Java Instrumentation is still not support structural attributes for
+  //  'gen_ai.input.messages'. Implement this once it's supported.
+  private boolean emitExperimentalConventions;
+
   OpenAITelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
   }
@@ -40,6 +45,14 @@ public final class OpenAITelemetryBuilder {
   @CanIgnoreReturnValue
   public OpenAITelemetryBuilder setCaptureMessageContent(boolean captureMessageContent) {
     this.captureMessageContent = captureMessageContent;
+    return this;
+  }
+
+  /** Sets whether emitted the latest experimental version of GenAI conventions. */
+  @CanIgnoreReturnValue
+  public OpenAITelemetryBuilder setEmitExperimentalConventions(
+      boolean emitExperimentalConventions) {
+    this.emitExperimentalConventions = emitExperimentalConventions;
     return this;
   }
 
@@ -68,6 +81,9 @@ public final class OpenAITelemetryBuilder {
 
     Logger eventLogger = openTelemetry.getLogsBridge().get(INSTRUMENTATION_NAME);
     return new OpenAITelemetry(
-        chatInstrumenter, embeddingsInstrumenter, eventLogger, captureMessageContent);
+        chatInstrumenter,
+        embeddingsInstrumenter,
+        eventLogger,
+        CaptureMessageOptions.create(captureMessageContent, emitExperimentalConventions));
   }
 }
