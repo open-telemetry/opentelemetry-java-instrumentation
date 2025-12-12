@@ -43,7 +43,9 @@ public final class R2dbcSingletons {
         AgentInstrumentationConfig.get()
             .getBoolean(
                 "otel.instrumentation.r2dbc.experimental.sqlcommenter.enabled",
-                AgentCommonConfig.get().isSqlCommenterEnabled()));
+                DeclarativeConfigUtil.getBoolean(
+                        GlobalOpenTelemetry.get(), "general", "db", "sqlcommenter/development")
+                    .orElse(false)));
     Experimental.customizeSqlCommenter(
         builder,
         sqlCommenterBuilder ->
