@@ -21,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.testing.junit.message.SemconvMessageStabilityUtil;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -193,7 +194,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -216,7 +217,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
     return assertions;
@@ -257,7 +258,7 @@ public abstract class KafkaClientBaseTest {
     if (testHeaders) {
       assertions.add(
           equalTo(
-              AttributeKey.stringArrayKey("messaging.header.Test_Message_Header"),
+              SemconvMessageStabilityUtil.headerAttributeKey("Test-Message-Header"),
               Collections.singletonList("test")));
     }
 
