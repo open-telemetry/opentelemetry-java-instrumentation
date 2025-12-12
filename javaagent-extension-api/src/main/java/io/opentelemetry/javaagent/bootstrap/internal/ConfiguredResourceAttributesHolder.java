@@ -7,7 +7,9 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -28,9 +30,9 @@ public final class ConfiguredResourceAttributesHolder {
 
   public static void initialize(Attributes resourceAttribute) {
     List<String> mdcResourceAttributes =
-        AgentInstrumentationConfig.get()
-            .getList(
-                "otel.instrumentation.common.mdc.resource-attributes", Collections.emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(), "java", "common", "mdc", "resource_attributes")
+            .orElse(Collections.emptyList());
     for (String key : mdcResourceAttributes) {
       String value = resourceAttribute.get(stringKey(key));
       if (value != null) {

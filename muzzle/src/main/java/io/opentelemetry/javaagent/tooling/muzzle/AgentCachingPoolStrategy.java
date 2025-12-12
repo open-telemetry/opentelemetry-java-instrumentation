@@ -6,10 +6,11 @@
 package io.opentelemetry.javaagent.tooling.muzzle;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldAccessorMarker;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -52,9 +53,14 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   // Many things are package visible for testing purposes --
   // others to avoid creation of synthetic accessors
 
-  private static final boolean REFLECTION_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.internal-reflection.enabled", true);
+  // Lazy initialization holder - REFLECTION_ENABLED is read after GlobalOpenTelemetry is set
+  private static class ReflectionEnabledHolder {
+    static final boolean REFLECTION_ENABLED =
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "java", "internal_reflection", "enabled")
+            .orElse(true);
+  }
+
   private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   static final int TYPE_CAPACITY = 64;
@@ -626,7 +632,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
             for (Class<?> interfaceClass : clazz.getInterfaces()) {
               // virtual field accessors are removed by internal-reflection instrumentation
               // we do this extra check for tests run with internal-reflection disabled
-              if (!REFLECTION_ENABLED
+              if (!ReflectionEnabledHolder.REFLECTION_ENABLED
                   && VirtualFieldAccessorMarker.class.isAssignableFrom(interfaceClass)) {
                 continue;
               }

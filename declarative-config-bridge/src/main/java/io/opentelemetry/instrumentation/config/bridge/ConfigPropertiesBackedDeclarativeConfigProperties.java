@@ -53,8 +53,6 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   static {
     PROPERTY_MAPPINGS = new HashMap<>();
-    // Javaagent-specific property (not under otel.instrumentation prefix)
-    PROPERTY_MAPPINGS.put("javaagent.indy/development.enabled", "otel.javaagent.experimental.indy");
 
     LIST_MAPPINGS = new HashMap<>();
     LIST_MAPPINGS.put(
@@ -116,6 +114,9 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
    *   <li>Checking explicit mappings first
    *   <li>Falling back to standard conversion: prefix + kebab-case path
    * </ol>
+   *
+   * <p>Special handling for "javaagent" prefix: paths starting with "javaagent." are mapped to
+   * "otel.javaagent." instead of "otel.instrumentation.javaagent.".
    */
   private static String toPropertyKey(String fullPath) {
     // Check explicit mappings first
@@ -123,8 +124,16 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
     if (mapped != null) {
       return mapped;
     }
+
+    String translatedPath = translatePath(fullPath);
+
+    // Handle javaagent prefix specially: otel.javaagent.* instead of otel.instrumentation.javaagent.*
+    if (translatedPath.startsWith("javaagent.")) {
+      return "otel." + translatedPath;
+    }
+
     // Standard conversion: otel.instrumentation. + kebab-case path
-    return "otel.instrumentation." + translatePath(fullPath);
+    return "otel.instrumentation." + translatedPath;
   }
 
   /**
