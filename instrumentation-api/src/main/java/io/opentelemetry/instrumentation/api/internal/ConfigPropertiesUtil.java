@@ -5,17 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.internal;
 
-import static io.opentelemetry.api.incubator.config.DeclarativeConfigProperties.empty;
-
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
-import io.opentelemetry.api.incubator.config.ConfigProvider;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.BiFunction;
 import javax.annotation.Nullable;
 
 /**
@@ -24,36 +14,12 @@ import javax.annotation.Nullable;
  */
 public final class ConfigPropertiesUtil {
 
-  private static final boolean supportsDeclarativeConfig = supportsDeclarativeConfig();
-
-  static final AbstractBridgedConfigProvider BRIDGED_CONFIG_PROVIDER =
-      new AbstractBridgedConfigProvider() {
-        @Override
-        protected AbstractSystemPropertiesDeclarativeConfigProperties getProperties(String name) {
-          return new SystemPropertiesDeclarativeConfigProperties(name, null);
-        }
-      };
-
-  private static boolean supportsDeclarativeConfig() {
-    try {
-      Class.forName("io.opentelemetry.api.incubator.ExtendedOpenTelemetry");
-      return true;
-    } catch (ClassNotFoundException e) {
-      // The incubator module is not available.
-      // This only happens in OpenTelemetry API instrumentation tests, where an older version of
-      // OpenTelemetry API is used that does not have ExtendedOpenTelemetry.
-      // Having the incubator module without ExtendedOpenTelemetry class should still return false
-      // for those tests to avoid a ClassNotFoundException.
-      return false;
-    }
-  }
-
   /**
    * Returns the boolean value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link #getConfigProvider(OpenTelemetry)} instead to support
-   * Declarative Config.
+   * <p>It's recommended to use {@link ConfigProviderUtil#getConfigProvider(OpenTelemetry)} instead
+   * to support Declarative Config.
    */
   public static boolean getBoolean(String propertyName, boolean defaultValue) {
     String strValue = getString(propertyName);
@@ -63,6 +29,9 @@ public final class ConfigPropertiesUtil {
   /**
    * Returns the int value of the given property name from system properties and environment
    * variables.
+   *
+   * <p>It's recommended to use {@link ConfigProviderUtil#getConfigProvider(OpenTelemetry)} instead
+   * to support Declarative Config.
    */
   public static int getInt(String propertyName, int defaultValue) {
     String strValue = getString(propertyName);
@@ -80,65 +49,12 @@ public final class ConfigPropertiesUtil {
    * Returns the string value of the given property name from system properties and environment
    * variables.
    *
-   * <p>It's recommended to use {@link #getString(OpenTelemetry, String...)} instead to support
-   * Declarative Config.
+   * <p>It's recommended to use {@link ConfigProviderUtil#getConfigProvider(OpenTelemetry)} instead
+   * to support Declarative Config.
    */
   @Nullable
   public static String getString(String propertyName) {
     return ConfigUtil.getString(ConfigUtil.normalizePropertyKey(propertyName));
-  }
-
-  /**
-   * Returns the string value of the given property name from Declarative Config if available,
-   * otherwise falls back to system properties and environment variables.
-   */
-  public static Optional<String> getString(OpenTelemetry openTelemetry, String... propertyName) {
-    return Optional.ofNullable(
-        getValue(openTelemetry, propertyName, DeclarativeConfigProperties::getString));
-  }
-
-  private static <T> T getValue(
-      OpenTelemetry openTelemetry,
-      String[] propertyName,
-      BiFunction<DeclarativeConfigProperties, String, T> getter) {
-    DeclarativeConfigProperties instrumentationConfig =
-        getConfigProvider(openTelemetry).getInstrumentationConfig();
-    DeclarativeConfigProperties node =
-        instrumentationConfig == null
-            ? empty()
-            : instrumentationConfig.getStructured("java", empty());
-    // last part is the leaf property
-    for (int i = 0; i < propertyName.length - 1; i++) {
-      node = node.getStructured(propertyName[i], empty());
-    }
-    return getter.apply(node, propertyName[propertyName.length - 1]);
-  }
-
-  /** Returns true if the given OpenTelemetry instance supports Declarative Config. */
-  public static boolean isDeclarativeConfig(OpenTelemetry openTelemetry) {
-    return supportsDeclarativeConfig && openTelemetry instanceof ExtendedOpenTelemetry;
-  }
-
-  public static ConfigProvider getConfigProvider(OpenTelemetry openTelemetry) {
-    if (isDeclarativeConfig(openTelemetry)) {
-      return ((ExtendedOpenTelemetry) openTelemetry).getConfigProvider();
-    }
-    return BRIDGED_CONFIG_PROVIDER;
-  }
-
-  public static String toSystemProperty(String[] nodes) {
-    return toSystemProperty(new ArrayList<>(Arrays.asList(nodes)));
-  }
-
-  public static String toSystemProperty(List<String> nodes) {
-    for (int i = 0; i < nodes.size(); i++) {
-      String node = nodes.get(i);
-      if (node.endsWith("/development")) {
-        String prefix = node.contains("experimental") ? "" : "experimental.";
-        nodes.set(i, prefix + node.substring(0, node.length() - 12));
-      }
-    }
-    return "otel.instrumentation." + String.join(".", nodes).replace('_', '-');
   }
 
   private ConfigPropertiesUtil() {}

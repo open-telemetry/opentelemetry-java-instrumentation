@@ -15,7 +15,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.awssdk.v1_11.AwsSdkTelemetry;
 import java.util.Optional;
 
@@ -27,7 +27,7 @@ public class TracingRequestHandler extends RequestHandler2 {
   private static final RequestHandler2 DELEGATE = buildDelegate(GlobalOpenTelemetry.get());
 
   private static RequestHandler2 buildDelegate(OpenTelemetry openTelemetry) {
-    ConfigProvider configProvider = ConfigPropertiesUtil.getConfigProvider(openTelemetry);
+    ConfigProvider configProvider = ConfigProviderUtil.getConfigProvider(openTelemetry);
     return AwsSdkTelemetry.builder(openTelemetry)
         .setCaptureExperimentalSpanAttributes(
             Optional.ofNullable(

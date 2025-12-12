@@ -9,7 +9,9 @@ import static java.util.Objects.requireNonNull;
 import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -20,6 +22,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterBuilderAccess;
@@ -371,10 +374,12 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
     // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
     // for instrumentations, so we need to handle both declarative and non-declarative configs here
     String value =
-        ConfigPropertiesUtil.isDeclarativeConfig(openTelemetry)
-            ? ConfigPropertiesUtil.getString(
-                    openTelemetry, "common", "span_suppression_strategy/development")
-                .orElse(null)
+        ConfigProviderUtil.isDeclarativeConfig(openTelemetry)
+            ? InstrumentationConfigUtil.getOrNull(
+                ConfigProviderUtil.getConfigProvider(GlobalOpenTelemetry.get()),
+                config -> config.getString("span_suppression_strategy/development"),
+                "java",
+                "common")
             : ConfigPropertiesUtil.getString(
                 "otel.instrumentation.experimental.span-suppression-strategy");
     return new SpanSuppressors.ByContextKey(

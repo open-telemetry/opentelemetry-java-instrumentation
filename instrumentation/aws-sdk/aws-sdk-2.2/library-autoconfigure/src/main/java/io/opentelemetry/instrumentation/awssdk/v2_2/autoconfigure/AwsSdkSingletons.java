@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
 import java.util.List;
@@ -30,7 +30,7 @@ public final class AwsSdkSingletons {
     protected List<String> getCapturedHeaders() {
       return Optional.ofNullable(
               InstrumentationConfigUtil.getOrNull(
-                  ConfigPropertiesUtil.getConfigProvider(GlobalOpenTelemetry.get()),
+                  ConfigProviderUtil.getConfigProvider(GlobalOpenTelemetry.get()),
                   config -> config.getScalarList("capture_headers/development", String.class),
                   "java",
                   "messaging"))
@@ -50,7 +50,7 @@ public final class AwsSdkSingletons {
 
     @Override
     protected ConfigProvider getConfigProvider() {
-      return ConfigPropertiesUtil.getConfigProvider(GlobalOpenTelemetry.get());
+      return ConfigProviderUtil.getConfigProvider(GlobalOpenTelemetry.get());
     }
   }
 

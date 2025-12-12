@@ -18,13 +18,13 @@ import javax.annotation.Nullable;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-public abstract class AbstractSystemPropertiesDeclarativeConfigProperties
+public abstract class AbstractBridgedDeclarativeConfigProperties
     implements DeclarativeConfigProperties {
   protected final String node;
-  @Nullable protected final AbstractSystemPropertiesDeclarativeConfigProperties parent;
+  @Nullable protected final AbstractBridgedDeclarativeConfigProperties parent;
 
-  public AbstractSystemPropertiesDeclarativeConfigProperties(
-      String node, @Nullable AbstractSystemPropertiesDeclarativeConfigProperties parent) {
+  public AbstractBridgedDeclarativeConfigProperties(
+      String node, @Nullable AbstractBridgedDeclarativeConfigProperties parent) {
     this.node = node;
     this.parent = parent;
   }
@@ -34,6 +34,12 @@ public abstract class AbstractSystemPropertiesDeclarativeConfigProperties
         .map(String::trim)
         .filter(s -> !s.isEmpty())
         .collect(Collectors.toList());
+  }
+
+  @Nullable
+  @Override
+  public String getString(String name) {
+    return getStringValue(getSystemProperty(name));
   }
 
   @Nullable
@@ -97,8 +103,7 @@ public abstract class AbstractSystemPropertiesDeclarativeConfigProperties
     return value == null
         ? null
         : (List<T>)
-            AbstractSystemPropertiesDeclarativeConfigProperties.filterBlanksAndNulls(
-                value.split(","));
+            AbstractBridgedDeclarativeConfigProperties.filterBlanksAndNulls(value.split(","));
   }
 
   @Nullable
@@ -123,13 +128,16 @@ public abstract class AbstractSystemPropertiesDeclarativeConfigProperties
     throw new UnsupportedOperationException();
   }
 
-  protected abstract AbstractSystemPropertiesDeclarativeConfigProperties newChild(String node);
+  protected abstract AbstractBridgedDeclarativeConfigProperties newChild(String node);
 
-  protected String getSystemProperty(String name) {
+  @Nullable
+  protected abstract String getStringValue(String systemPropertyKey);
+
+  private String getSystemProperty(String name) {
     List<String> nodes = new ArrayList<>();
     addSystemPropertyPathNodes(nodes);
     nodes.add(name);
-    return ConfigPropertiesUtil.toSystemProperty(nodes);
+    return toSystemProperty(nodes);
   }
 
   private void addSystemPropertyPathNodes(List<String> parts) {
@@ -137,5 +145,16 @@ public abstract class AbstractSystemPropertiesDeclarativeConfigProperties
       parent.addSystemPropertyPathNodes(parts);
     }
     parts.add(node);
+  }
+
+  static String toSystemProperty(List<String> nodes) {
+    for (int i = 0; i < nodes.size(); i++) {
+      String node = nodes.get(i);
+      if (node.endsWith("/development")) {
+        String prefix = node.contains("experimental") ? "" : "experimental.";
+        nodes.set(i, prefix + node.substring(0, node.length() - 12));
+      }
+    }
+    return "otel.instrumentation." + String.join(".", nodes).replace('_', '-');
   }
 }

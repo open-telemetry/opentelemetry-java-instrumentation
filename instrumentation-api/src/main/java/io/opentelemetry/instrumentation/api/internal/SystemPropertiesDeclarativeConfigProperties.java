@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.api.internal;
 import javax.annotation.Nullable;
 
 class SystemPropertiesDeclarativeConfigProperties
-    extends AbstractSystemPropertiesDeclarativeConfigProperties {
+    extends AbstractBridgedDeclarativeConfigProperties {
 
   SystemPropertiesDeclarativeConfigProperties(
       String node, @Nullable SystemPropertiesDeclarativeConfigProperties parent) {
@@ -17,12 +17,12 @@ class SystemPropertiesDeclarativeConfigProperties
 
   @Nullable
   @Override
-  public String getString(String name) {
-    return ConfigPropertiesUtil.getString(getSystemProperty(name));
+  public String getStringValue(String systemPropertyKey) {
+    return ConfigPropertiesUtil.getString(systemPropertyKey);
   }
 
   @Override
-  protected AbstractSystemPropertiesDeclarativeConfigProperties newChild(String node) {
+  protected AbstractBridgedDeclarativeConfigProperties newChild(String node) {
     return new SystemPropertiesDeclarativeConfigProperties(node, this);
   }
 }

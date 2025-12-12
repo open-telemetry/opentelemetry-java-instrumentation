@@ -11,7 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,7 +40,7 @@ public class TracingProducerInterceptor<K, V> implements ProducerInterceptor<K, 
             .setCapturedHeaders(
                 Optional.ofNullable(
                         InstrumentationConfigUtil.getOrNull(
-                            ConfigPropertiesUtil.getConfigProvider(openTelemetry),
+                            ConfigProviderUtil.getConfigProvider(openTelemetry),
                             config ->
                                 config.getScalarList("capture_headers/development", String.class),
                             "java",

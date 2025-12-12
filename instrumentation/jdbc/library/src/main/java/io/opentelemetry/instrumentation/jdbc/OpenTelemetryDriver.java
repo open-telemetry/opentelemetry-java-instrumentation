@@ -27,7 +27,7 @@ import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.InstrumentationConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ConfigPropertiesUtil;
+import io.opentelemetry.instrumentation.api.internal.ConfigProviderUtil;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.jdbc.internal.DbRequest;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
@@ -67,7 +67,7 @@ public final class OpenTelemetryDriver implements Driver {
   private static final List<Driver> DRIVER_CANDIDATES = new CopyOnWriteArrayList<>();
 
   private static SqlCommenter getSqlCommenter(OpenTelemetry openTelemetry) {
-    ConfigProvider configProvider = ConfigPropertiesUtil.getConfigProvider(openTelemetry);
+    ConfigProvider configProvider = ConfigProviderUtil.getConfigProvider(openTelemetry);
     boolean defaultValue =
         Optional.ofNullable(
                 InstrumentationConfigUtil.getOrNull(

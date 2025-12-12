@@ -7,12 +7,12 @@ package io.opentelemetry.instrumentation.config.bridge;
 
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.instrumentation.api.internal.AbstractBridgedConfigProvider;
-import io.opentelemetry.instrumentation.api.internal.AbstractSystemPropertiesDeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.internal.AbstractBridgedDeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import javax.annotation.Nullable;
 
 public class ConfigPropertiesDeclarativeConfigProperties
-    extends AbstractSystemPropertiesDeclarativeConfigProperties {
+    extends AbstractBridgedDeclarativeConfigProperties {
 
   private final ConfigProperties configProperties;
 
@@ -27,7 +27,7 @@ public class ConfigPropertiesDeclarativeConfigProperties
   public static ConfigProvider create(ConfigProperties configProperties) {
     return new AbstractBridgedConfigProvider() {
       @Override
-      protected AbstractSystemPropertiesDeclarativeConfigProperties getProperties(String name) {
+      protected AbstractBridgedDeclarativeConfigProperties getProperties(String name) {
         return new ConfigPropertiesDeclarativeConfigProperties(configProperties, name, null);
       }
     };
@@ -35,12 +35,12 @@ public class ConfigPropertiesDeclarativeConfigProperties
 
   @Nullable
   @Override
-  public String getString(String name) {
-    return configProperties.getString(name);
+  public String getStringValue(String systemPropertyKey) {
+    return configProperties.getString(systemPropertyKey);
   }
 
   @Override
-  protected AbstractSystemPropertiesDeclarativeConfigProperties newChild(String node) {
+  protected AbstractBridgedDeclarativeConfigProperties newChild(String node) {
     return new ConfigPropertiesDeclarativeConfigProperties(configProperties, node, this);
   }
 }
