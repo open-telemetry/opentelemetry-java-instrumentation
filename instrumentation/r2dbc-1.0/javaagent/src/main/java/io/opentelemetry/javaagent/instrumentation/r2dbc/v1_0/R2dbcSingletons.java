@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.r2dbc.v1_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetry;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.shaded.R2dbcTelemetryBuilder;
@@ -26,7 +27,13 @@ public final class R2dbcSingletons {
                 AgentInstrumentationConfig.get()
                     .getBoolean(
                         "otel.instrumentation.r2dbc.statement-sanitizer.enabled",
-                        AgentCommonConfig.get().isStatementSanitizationEnabled()))
+                        DeclarativeConfigUtil.getBoolean(
+                                GlobalOpenTelemetry.get(),
+                                "general",
+                                "db",
+                                "statement_sanitizer",
+                                "enabled")
+                            .orElse(true)))
             .addAttributesExtractor(
                 PeerServiceAttributesExtractor.create(
                     R2dbcSqlAttributesGetter.INSTANCE,

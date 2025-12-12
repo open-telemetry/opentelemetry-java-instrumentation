@@ -6,16 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class InfluxDbRequest {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(
+          DeclarativeConfigUtil.getBoolean(
+                  GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+              .orElse(true));
 
   public static InfluxDbRequest create(
       String host, int port, String dbName, String operation, String sql) {

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jdbc;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcInstrumenterFactory.createDataSourceInstrumenter;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.PeerServiceAttributesExtractor;
@@ -53,7 +54,13 @@ public final class JdbcSingletons {
             AgentInstrumentationConfig.get()
                 .getBoolean(
                     "otel.instrumentation.jdbc.statement-sanitizer.enabled",
-                    AgentCommonConfig.get().isStatementSanitizationEnabled()),
+                    DeclarativeConfigUtil.getBoolean(
+                            GlobalOpenTelemetry.get(),
+                            "general",
+                            "db",
+                            "statement_sanitizer",
+                            "enabled")
+                        .orElse(true)),
             CAPTURE_QUERY_PARAMETERS);
 
     TRANSACTION_INSTRUMENTER =

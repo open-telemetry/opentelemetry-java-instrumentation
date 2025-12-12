@@ -23,10 +23,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachecamel.decorators;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.instrumentation.apachecamel.CamelDirection;
 import io.opentelemetry.semconv.DbAttributes;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
@@ -38,7 +39,10 @@ import org.apache.camel.Exchange;
 class DbSpanDecorator extends BaseSpanDecorator {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(
+          DeclarativeConfigUtil.getBoolean(
+                  GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+              .orElse(true));
 
   private final String component;
   private final String system;

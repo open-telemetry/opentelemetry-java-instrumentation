@@ -5,16 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(
+          DeclarativeConfigUtil.getBoolean(
+                  GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+              .orElse(true));
 
   @SuppressWarnings("deprecation") // using deprecated DbSystemIncubatingValues
   @Override

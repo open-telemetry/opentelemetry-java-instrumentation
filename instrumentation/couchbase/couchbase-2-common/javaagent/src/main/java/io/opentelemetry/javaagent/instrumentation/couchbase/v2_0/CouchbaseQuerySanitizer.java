@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementInfo;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlStatementSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -17,7 +18,10 @@ import javax.annotation.Nullable;
 public final class CouchbaseQuerySanitizer {
 
   private static final SqlStatementSanitizer sanitizer =
-      SqlStatementSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      SqlStatementSanitizer.create(
+          DeclarativeConfigUtil.getBoolean(
+                  GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+              .orElse(true));
 
   @Nullable private static final Class<?> QUERY_CLASS;
   @Nullable private static final Class<?> STATEMENT_CLASS;

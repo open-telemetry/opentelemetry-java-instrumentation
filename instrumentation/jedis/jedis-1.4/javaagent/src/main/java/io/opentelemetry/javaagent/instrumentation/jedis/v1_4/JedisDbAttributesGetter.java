@@ -5,15 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v1_4;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes;
 
 final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisRequest, Void> {
 
   private static final RedisCommandSanitizer sanitizer =
-      RedisCommandSanitizer.create(AgentCommonConfig.get().isStatementSanitizationEnabled());
+      RedisCommandSanitizer.create(
+          DeclarativeConfigUtil.getBoolean(
+                  GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+              .orElse(true));
 
   @Override
   public String getDbSystem(JedisRequest request) {
