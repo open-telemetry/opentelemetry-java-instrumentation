@@ -9,7 +9,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
@@ -47,12 +46,11 @@ class ConfigPropertiesBridgeTest {
 
     return Stream.of(
         Arguments.of(
-            "config properties",
-            new ConfigPropertiesBridge(configProperties, null, OpenTelemetry.noop())),
+            "config properties", new ConfigPropertiesBridge(configProperties, null, false)),
         Arguments.of(
             "declarative config",
             new ConfigPropertiesBridge(
-                configProperties, SdkConfigProvider.create(emptyModel), OpenTelemetry.noop())));
+                configProperties, SdkConfigProvider.create(emptyModel), false)));
   }
 
   @ParameterizedTest(name = "{0}")
@@ -100,12 +98,11 @@ class ConfigPropertiesBridgeTest {
 
     return Stream.of(
         Arguments.of(
-            "config properties",
-            new ConfigPropertiesBridge(configProperties, null, OpenTelemetry.noop())),
+            "config properties", new ConfigPropertiesBridge(configProperties, null, false)),
         Arguments.of(
             "declarative config",
             new ConfigPropertiesBridge(
-                configProperties, SdkConfigProvider.create(emptyModel), OpenTelemetry.noop())));
+                configProperties, SdkConfigProvider.create(emptyModel), false)));
   }
 
   private static Map<String, String> getProperties() {
