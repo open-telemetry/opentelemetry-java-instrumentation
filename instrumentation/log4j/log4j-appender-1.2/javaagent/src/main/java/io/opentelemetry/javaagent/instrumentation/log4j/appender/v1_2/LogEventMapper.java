@@ -13,9 +13,9 @@ import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.SemconvStability;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.semconv.CodeAttributes;
 import io.opentelemetry.semconv.ExceptionAttributes;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
@@ -48,8 +48,12 @@ public final class LogEventMapper {
   private static final int TRACE_INT = 5000;
 
   private static final boolean captureExperimentalAttributes =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "log4j-appender",
+              "experimental_log_attributes")
+          .orElse(false);
 
   private final Map<String, AttributeKey<String>> captureMdcAttributes;
 
@@ -57,15 +61,23 @@ public final class LogEventMapper {
   private final boolean captureAllMdcAttributes;
 
   private final boolean captureEventName =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.log4j-appender.experimental.capture-event-name", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "log4j-appender",
+              "experimental",
+              "capture_event_name")
+          .orElse(false);
 
   private LogEventMapper() {
     List<String> captureMdcAttributes =
-        AgentInstrumentationConfig.get()
-            .getList(
-                "otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes",
-                emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental",
+                "capture_mdc_attributes")
+            .orElse(emptyList());
     this.captureMdcAttributes =
         captureMdcAttributes.stream()
             .collect(Collectors.toMap(attr -> attr, LogEventMapper::getMdcAttributeKey));
@@ -74,9 +86,13 @@ public final class LogEventMapper {
   }
 
   boolean captureCodeAttributes =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.log4j-appender.experimental.capture-code-attributes", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "log4j-appender",
+              "experimental",
+              "capture_code_attributes")
+          .orElse(false);
 
   public void capture(
       String fqcn, Category logger, Priority level, Object message, Throwable throwable) {

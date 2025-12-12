@@ -11,12 +11,12 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 
 public final class LogbackSingletons {
   private static final boolean ADD_BAGGAGE =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.logback-mdc.add-baggage", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "logback-mdc", "add_baggage")
+          .orElse(false);
   private static final String TRACE_ID_KEY =
       DeclarativeConfigUtil.getString(GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
           .orElse(LoggingContextConstants.TRACE_ID);

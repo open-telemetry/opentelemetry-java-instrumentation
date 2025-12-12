@@ -10,10 +10,9 @@ import static java.util.Collections.emptyList;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.ContextDataAccessor;
 import io.opentelemetry.instrumentation.log4j.appender.v2_17.internal.LogEventMapper;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -35,26 +34,53 @@ public final class Log4jHelper {
   private static final MethodHandle stackTraceMethodHandle = getStackTraceMethodHandle();
 
   static {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
-
     captureExperimentalAttributes =
-        config.getBoolean("otel.instrumentation.log4j-appender.experimental-log-attributes", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental_log_attributes")
+            .orElse(false);
     boolean captureCodeAttributes =
-        config.getBoolean(
-            "otel.instrumentation.log4j-appender.experimental.capture-code-attributes", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental",
+                "capture_code_attributes")
+            .orElse(false);
     boolean captureMapMessageAttributes =
-        config.getBoolean(
-            "otel.instrumentation.log4j-appender.experimental.capture-map-message-attributes",
-            false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental",
+                "capture_map_message_attributes")
+            .orElse(false);
     boolean captureMarkerAttribute =
-        config.getBoolean(
-            "otel.instrumentation.log4j-appender.experimental.capture-marker-attribute", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental",
+                "capture_marker_attribute")
+            .orElse(false);
     List<String> captureContextDataAttributes =
-        config.getList(
-            "otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes", emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental",
+                "capture_mdc_attributes")
+            .orElse(emptyList());
     boolean captureEventName =
-        config.getBoolean(
-            "otel.instrumentation.log4j-appender.experimental.capture-event-name", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "log4j-appender",
+                "experimental",
+                "capture_event_name")
+            .orElse(false);
 
     mapper =
         new LogEventMapper<>(

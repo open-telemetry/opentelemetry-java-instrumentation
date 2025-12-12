@@ -14,8 +14,8 @@ import io.opentelemetry.api.incubator.logs.ExtendedLogRecordBuilder;
 import io.opentelemetry.api.logs.LogRecordBuilder;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.semconv.incubating.ThreadIncubatingAttributes;
 import java.util.List;
 import java.util.Map;
@@ -36,23 +36,34 @@ public final class LoggingEventMapper {
   private final List<String> captureMdcAttributes;
 
   private static final boolean captureExperimentalAttributes =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.jboss-logmanager.experimental-log-attributes", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "jboss-logmanager",
+              "experimental_log_attributes")
+          .orElse(false);
 
   // cached as an optimization
   private final boolean captureAllMdcAttributes;
 
   private final boolean captureEventName =
-      AgentInstrumentationConfig.get()
-          .getBoolean(
-              "otel.instrumentation.jboss-logmanager.experimental.capture-event-name", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(),
+              "java",
+              "jboss-logmanager",
+              "experimental",
+              "capture_event_name")
+          .orElse(false);
 
   private LoggingEventMapper() {
     this.captureMdcAttributes =
-        AgentInstrumentationConfig.get()
-            .getList(
-                "otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes",
-                emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "jboss-logmanager",
+                "experimental",
+                "capture_mdc_attributes")
+            .orElse(emptyList());
     this.captureAllMdcAttributes =
         captureMdcAttributes.size() == 1 && captureMdcAttributes.get(0).equals("*");
   }

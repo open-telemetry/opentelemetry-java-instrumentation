@@ -13,7 +13,6 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +24,9 @@ import org.apache.logging.log4j.util.StringMap;
 
 public final class SpanDecoratingContextDataInjector implements ContextDataInjector {
   private static final boolean BAGGAGE_ENABLED =
-      AgentInstrumentationConfig.get()
-          .getBoolean("otel.instrumentation.log4j-context-data.add-baggage", false);
+      DeclarativeConfigUtil.getBoolean(
+              GlobalOpenTelemetry.get(), "java", "log4j-context-data", "add_baggage")
+          .orElse(false);
   private static final String TRACE_ID_KEY =
       DeclarativeConfigUtil.getString(GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
           .orElse(LoggingContextConstants.TRACE_ID);

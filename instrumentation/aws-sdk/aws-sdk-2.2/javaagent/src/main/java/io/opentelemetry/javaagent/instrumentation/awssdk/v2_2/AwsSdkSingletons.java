@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.awssdk.v2_2;
 
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.awssdk.v2_2.AwsSdkTelemetry;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AbstractAwsSdkTelemetryFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
 
@@ -33,7 +34,15 @@ public final class AwsSdkSingletons {
 
     @Override
     protected boolean getBoolean(String name, boolean defaultValue) {
-      return AgentInstrumentationConfig.get().getBoolean(name, defaultValue);
+      // Convert otel.instrumentation.xxx.yyy to java/xxx/yyy format
+      String converted = name.replace("otel.instrumentation.", "").replace(".", "_").replace("-", "_");
+      String[] parts = converted.split("_", 2);
+      if (parts.length == 2) {
+        return DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(), "java", parts[0].replace("_", "-"), parts[1])
+            .orElse(defaultValue);
+      }
+      return defaultValue;
     }
   }
 

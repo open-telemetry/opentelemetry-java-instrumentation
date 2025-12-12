@@ -9,7 +9,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
 
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.tooling.config.MethodsConfigurationParser;
 import java.util.Map;
 import java.util.Set;
@@ -32,7 +33,12 @@ public final class AnnotationExcludedMethods {
 
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
-            AgentInstrumentationConfig.get().getString(TRACE_ANNOTATED_METHODS_EXCLUDE_CONFIG));
+            DeclarativeConfigUtil.getString(
+                    GlobalOpenTelemetry.get(),
+                    "java",
+                    "opentelemetry-instrumentation-annotations",
+                    "exclude_methods")
+                .orElse(null));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
       ElementMatcher.Junction<ByteCodeElement> matcher =

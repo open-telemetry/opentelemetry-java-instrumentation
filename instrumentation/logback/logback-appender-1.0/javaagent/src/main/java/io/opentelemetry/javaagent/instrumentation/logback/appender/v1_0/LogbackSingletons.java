@@ -7,10 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.logback.appender.v1_0.internal.LoggingEventMapper;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
-import io.opentelemetry.javaagent.bootstrap.internal.DeprecatedConfigProperties;
 import java.util.List;
 
 public final class LogbackSingletons {
@@ -18,48 +17,93 @@ public final class LogbackSingletons {
   private static final LoggingEventMapper mapper;
 
   static {
-    InstrumentationConfig config = AgentInstrumentationConfig.get();
-
     boolean captureExperimentalAttributes =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental-log-attributes", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental_log_attributes")
+            .orElse(false);
     boolean captureCodeAttributes =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_code_attributes")
+            .orElse(false);
     boolean captureMarkerAttribute =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-marker-attribute", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_marker_attribute")
+            .orElse(false);
     boolean captureKeyValuePairAttributes =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-key-value-pair-attributes",
-            false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_key_value_pair_attributes")
+            .orElse(false);
     boolean captureLoggerContext =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes",
-            false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_logger_context_attributes")
+            .orElse(false);
     boolean captureTemplate =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-template", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_template")
+            .orElse(false);
     boolean captureArguments =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-arguments", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_arguments")
+            .orElse(false);
     boolean captureLogstashMarkerAttributes =
-        DeprecatedConfigProperties.getBoolean(
-            config,
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-attributes",
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-marker-attributes",
-            false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_logstash_marker_attributes")
+            .orElse(false);
     boolean captureLogstashStructuredArguments =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-logstash-structured-arguments",
-            false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_logstash_structured_arguments")
+            .orElse(false);
     List<String> captureMdcAttributes =
-        config.getList(
-            "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes",
-            emptyList());
+        DeclarativeConfigUtil.getList(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_mdc_attributes")
+            .orElse(emptyList());
     boolean captureEventName =
-        config.getBoolean(
-            "otel.instrumentation.logback-appender.experimental.capture-event-name", false);
+        DeclarativeConfigUtil.getBoolean(
+                GlobalOpenTelemetry.get(),
+                "java",
+                "logback-appender",
+                "experimental",
+                "capture_event_name")
+            .orElse(false);
 
     mapper =
         LoggingEventMapper.builder()
