@@ -13,11 +13,8 @@ import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import java.util.Arrays;
-import java.util.ConcurrentModificationException;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
@@ -93,7 +90,7 @@ public final class ConfigPropertiesUtil {
    */
   @Nullable
   public static String getString(String propertyName) {
-    return ConfigUtil.getString(normalizePropertyKey(propertyName));
+    return ConfigUtil.getString(ConfigUtil.normalizePropertyKey(propertyName));
   }
 
   /**
@@ -172,29 +169,6 @@ public final class ConfigPropertiesUtil {
       }
     }
     return "otel.instrumentation." + String.join(".", propertyName).replace('_', '-');
-  }
-
-  /**
-   * Normalize an environment variable key by converting to lower case and replacing "_" with ".".
-   */
-  public static String normalizeEnvironmentVariableKey(String key) {
-    return key.toLowerCase(Locale.ROOT).replace("_", ".");
-  }
-
-  /** Normalize a property key by converting to lower case and replacing "-" with ".". */
-  public static String normalizePropertyKey(String key) {
-    return key.toLowerCase(Locale.ROOT).replace("-", ".");
-  }
-
-  /**
-   * Returns a copy of system properties which is safe to iterate over.
-   *
-   * <p>In java 8 and android environments, iterating through system properties may trigger {@link
-   * ConcurrentModificationException}. This method ensures callers can iterate safely without risk
-   * of exception. See https://github.com/open-telemetry/opentelemetry-java/issues/6732 for details.
-   */
-  public static Properties safeSystemProperties() {
-    return (Properties) System.getProperties().clone();
   }
 
   private ConfigPropertiesUtil() {}
