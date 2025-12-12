@@ -173,6 +173,7 @@ tasks {
 
   val uploadReleaseBundle by registering {
     dependsOn(generateReleaseBundle)
+    val bundleFile = generateReleaseBundle.flatMap { it.archiveFile }
     doFirst {
       val username = System.getenv("SONATYPE_USER") ?: throw GradleException("Sonatype user not set")
       val password = System.getenv("SONATYPE_KEY") ?: throw GradleException("Sonatype key not set")
@@ -181,7 +182,7 @@ tasks {
       var query = "?name=opentelemetry-java-instrumentation-$stableVersion"
       query += "&publishingType=AUTOMATIC"
 
-      val bundle = generateReleaseBundle.get().outputs.files.singleFile
+      val bundle = bundleFile.get().asFile
       val httpClient = OkHttpClient()
 
       val request = okhttp3.Request.Builder()
