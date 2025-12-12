@@ -1,0 +1,11 @@
+# This file is generated and should not be manually edited.
+groups:
+  - id: registry.activej-http-6.0
+    type: attribute_group
+    display_name: ActiveJ Attributes
+    brief: Attributes captured by ActiveJ instrumentation.
+    attributes:
+      - ref: http.request.method
+      - ref: http.response.status_code
+      - ref: network.protocol.version
+      - ref: url.scheme
