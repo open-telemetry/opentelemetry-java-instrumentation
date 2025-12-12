@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rxjava.v3_0;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import io.opentelemetry.instrumentation.rxjava.v3.TracingAssembly;
+import io.opentelemetry.instrumentation.rxjava.v3_0.TracingAssembly;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class TracingAssemblyActivation {

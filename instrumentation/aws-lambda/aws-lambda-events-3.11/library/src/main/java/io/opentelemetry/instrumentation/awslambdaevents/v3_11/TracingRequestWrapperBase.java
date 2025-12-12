@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.TracingRequestHandler;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
@@ -49,7 +48,7 @@ abstract class TracingRequestWrapperBase<I, O> extends TracingRequestHandler<I, 
         openTelemetrySdk,
         WrapperConfiguration.flushTimeout(),
         AwsLambdaEventsInstrumenterFactory.createInstrumenter(
-            openTelemetrySdk, INSTRUMENTATION_NAME, HttpConstants.KNOWN_METHODS));
+            openTelemetrySdk, INSTRUMENTATION_NAME));
     this.wrappedLambda = wrappedLambda;
     this.targetMethod = wrappedLambda.getRequestTargetMethod();
     this.parameterMapper = parameterMapper;
