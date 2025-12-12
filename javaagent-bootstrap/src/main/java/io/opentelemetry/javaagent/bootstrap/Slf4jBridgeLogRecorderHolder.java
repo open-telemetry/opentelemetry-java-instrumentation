@@ -21,7 +21,8 @@ public final class Slf4jBridgeLogRecorderHolder {
       new AtomicReference<>(NOOP_OTEL_LOGGER);
 
   public static void initialize(Slf4jLogRecorder slf4JLogRecorder) {
-    if (!Slf4jBridgeLogRecorderHolder.otelLogger.compareAndSet(NOOP_OTEL_LOGGER, slf4JLogRecorder)) {
+    if (!Slf4jBridgeLogRecorderHolder.otelLogger.compareAndSet(
+        NOOP_OTEL_LOGGER, slf4JLogRecorder)) {
       slf4JLogRecorder.record(
           Context.root(),
           Slf4jLogRecorder.class.getName(),
