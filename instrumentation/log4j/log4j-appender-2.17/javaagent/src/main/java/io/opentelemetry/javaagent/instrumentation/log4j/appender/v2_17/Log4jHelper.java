@@ -36,7 +36,7 @@ public final class Log4jHelper {
   static {
     captureExperimentalAttributes =
         DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(), "java", "log4j-appender", "experimental_log_attributes")
+                GlobalOpenTelemetry.get(), "java", "log4j_appender", "experimental_log_attributes")
             .orElse(false);
     boolean captureCodeAttributes =
         DeclarativeConfigUtil.getBoolean(

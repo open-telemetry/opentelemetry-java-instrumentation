@@ -15,7 +15,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 public final class LogbackSingletons {
   private static final boolean ADD_BAGGAGE =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "logback-mdc", "add_baggage")
+              GlobalOpenTelemetry.get(), "java", "logback_mdc", "add_baggage")
           .orElse(false);
   private static final String TRACE_ID_KEY =
       DeclarativeConfigUtil.getString(

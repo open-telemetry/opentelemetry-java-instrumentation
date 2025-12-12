@@ -26,7 +26,7 @@ public final class JavaUtilLoggingHelper {
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "java-util-logging", "experimental_log_attributes")
+              GlobalOpenTelemetry.get(), "java", "java_util_logging", "experimental_log_attributes")
           .orElse(false);
 
   public static void capture(Logger logger, LogRecord logRecord) {

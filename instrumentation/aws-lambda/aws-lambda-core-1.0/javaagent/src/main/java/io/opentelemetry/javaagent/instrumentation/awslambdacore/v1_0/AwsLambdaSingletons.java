@@ -19,7 +19,7 @@ public final class AwsLambdaSingletons {
   private static final Duration FLUSH_TIMEOUT =
       Duration.ofMillis(
           DeclarativeConfigUtil.getInt(
-                  GlobalOpenTelemetry.get(), "java", "aws-lambda", "flush_timeout")
+                  GlobalOpenTelemetry.get(), "java", "aws_lambda", "flush_timeout")
               .orElse((int) WrapperConfiguration.OTEL_LAMBDA_FLUSH_TIMEOUT_DEFAULT.toMillis()));
 
   public static AwsLambdaFunctionInstrumenter functionInstrumenter() {

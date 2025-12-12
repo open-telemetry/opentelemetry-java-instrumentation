@@ -25,7 +25,7 @@ import org.apache.logging.log4j.util.StringMap;
 public final class SpanDecoratingContextDataInjector implements ContextDataInjector {
   private static final boolean BAGGAGE_ENABLED =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "log4j-context-data", "add_baggage")
+              GlobalOpenTelemetry.get(), "java", "log4j_context_data", "add_baggage")
           .orElse(false);
   private static final String TRACE_ID_KEY =
       DeclarativeConfigUtil.getString(

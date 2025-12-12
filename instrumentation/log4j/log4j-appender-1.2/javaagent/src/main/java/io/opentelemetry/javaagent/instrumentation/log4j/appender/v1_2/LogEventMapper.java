@@ -49,7 +49,7 @@ public final class LogEventMapper {
 
   private static final boolean captureExperimentalAttributes =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "log4j-appender", "experimental_log_attributes")
+              GlobalOpenTelemetry.get(), "java", "log4j_appender", "experimental_log_attributes")
           .orElse(false);
 
   private final Map<String, AttributeKey<String>> captureMdcAttributes;

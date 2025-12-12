@@ -21,14 +21,14 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental_log_attributes")
             .orElse(false);
     boolean captureCodeAttributes =
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_code_attributes")
             .orElse(false);
@@ -36,7 +36,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_marker_attribute")
             .orElse(false);
@@ -44,7 +44,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_key_value_pair_attributes")
             .orElse(false);
@@ -52,7 +52,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_logger_context_attributes")
             .orElse(false);
@@ -60,7 +60,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_template")
             .orElse(false);
@@ -68,7 +68,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_arguments")
             .orElse(false);
@@ -76,7 +76,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_logstash_marker_attributes")
             .orElse(false);
@@ -84,7 +84,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_logstash_structured_arguments")
             .orElse(false);
@@ -92,7 +92,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getList(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_mdc_attributes")
             .orElse(emptyList());
@@ -100,7 +100,7 @@ public final class LogbackSingletons {
         DeclarativeConfigUtil.getBoolean(
                 GlobalOpenTelemetry.get(),
                 "java",
-                "logback-appender",
+                "logback_appender",
                 "experimental",
                 "capture_event_name")
             .orElse(false);

@@ -56,7 +56,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   // whether to check the transformed bytecode with asm CheckClassAdapter
   private static final boolean CHECK_CLASS =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "java", "kotlinx-coroutines", "check_class")
+              GlobalOpenTelemetry.get(), "java", "kotlinx_coroutines", "check_class")
           .orElseGet(
               () ->
                   DeclarativeConfigUtil.getBoolean(

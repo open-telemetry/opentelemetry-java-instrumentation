@@ -76,7 +76,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
   public ExternalAnnotationInstrumentation() {
     String configString =
         DeclarativeConfigUtil.getString(
-                GlobalOpenTelemetry.get(), "java", "external-annotations", "include")
+                GlobalOpenTelemetry.get(), "java", "external_annotations", "include")
             .orElse(null);
     Set<String> additionalTraceAnnotations = configureAdditionalTraceAnnotations(configString);
 
@@ -146,7 +146,7 @@ public class ExternalAnnotationInstrumentation implements TypeInstrumentation {
     Map<String, Set<String>> excludedMethods =
         MethodsConfigurationParser.parse(
             DeclarativeConfigUtil.getString(
-                    GlobalOpenTelemetry.get(), "java", "external-annotations", "exclude_methods")
+                    GlobalOpenTelemetry.get(), "java", "external_annotations", "exclude_methods")
                 .orElse(null));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
