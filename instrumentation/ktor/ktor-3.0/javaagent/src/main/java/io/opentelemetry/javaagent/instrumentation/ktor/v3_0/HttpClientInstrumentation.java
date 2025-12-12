@@ -16,7 +16,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.ktor.v2_0.common.internal.KtorBuilderUtil;
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorClientTelemetry;
 import io.opentelemetry.instrumentation.ktor.v3_0.KtorClientTelemetryBuilder;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import kotlin.Unit;
@@ -55,7 +54,7 @@ public class HttpClientInstrumentation implements TypeInstrumentation {
     @Override
     public Unit invoke(KtorClientTelemetryBuilder builder) {
       builder.setOpenTelemetry(GlobalOpenTelemetry.get());
-      KtorBuilderUtil.clientBuilderExtractor.invoke(builder).configure(AgentCommonConfig.get());
+      KtorBuilderUtil.clientBuilderExtractor.invoke(builder).configure(GlobalOpenTelemetry.get());
       return Unit.INSTANCE;
     }
   }

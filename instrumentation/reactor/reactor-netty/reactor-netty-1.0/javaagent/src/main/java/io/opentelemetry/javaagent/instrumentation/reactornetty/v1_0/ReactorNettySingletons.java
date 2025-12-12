@@ -17,7 +17,6 @@ import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyC
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyClientInstrumenterFactory;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumentationFlag;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.client.NettyConnectionInstrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpClientInstrumenters;
 import reactor.netty.http.client.HttpClientRequest;
@@ -48,7 +47,7 @@ public final class ReactorNettySingletons {
     DefaultHttpClientInstrumenterBuilder<NettyRequest, HttpResponse> builder =
         NettyClientInstrumenterBuilderFactory.create(
                 INSTRUMENTATION_NAME, GlobalOpenTelemetry.get())
-            .configure(AgentCommonConfig.get());
+            .configure(GlobalOpenTelemetry.get());
     NettyClientInstrumenterFactory instrumenterFactory =
         new NettyClientInstrumenterFactory(
             builder,

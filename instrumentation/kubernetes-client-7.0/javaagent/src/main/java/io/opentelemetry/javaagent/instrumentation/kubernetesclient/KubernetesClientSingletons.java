@@ -11,7 +11,6 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import okhttp3.Request;
 
@@ -29,7 +28,7 @@ public class KubernetesClientSingletons {
                 "io.opentelemetry.kubernetes-client-7.0",
                 GlobalOpenTelemetry.get(),
                 new KubernetesHttpAttributesGetter())
-            .configure(AgentCommonConfig.get())
+            .configure(GlobalOpenTelemetry.get())
             .setBuilderCustomizer(
                 instrumenterBuilder -> {
                   if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {

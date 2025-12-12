@@ -10,7 +10,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapSetter;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientPeerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 
@@ -265,22 +263,25 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   @CanIgnoreReturnValue
-  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(CommonConfig config) {
-    set(config::getKnownHttpRequestMethods, this::setKnownMethods);
-    set(config::getClientRequestHeaders, this::setCapturedRequestHeaders);
-    set(config::getClientResponseHeaders, this::setCapturedResponseHeaders);
-    set(config::getPeerServiceResolver, this::setPeerServiceResolver);
-    set(
-        config::shouldEmitExperimentalHttpClientTelemetry,
-        this::setEmitExperimentalHttpClientTelemetry);
-    set(config::redactQueryParameters, this::setRedactQueryParameters);
+  public DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> configure(
+      OpenTelemetry openTelemetry) {
+    DeclarativeConfigUtil.getList(openTelemetry, "general", "http", "known_methods")
+        .ifPresent(this::setKnownMethods);
+    DeclarativeConfigUtil.getList(
+            openTelemetry, "general", "http", "client", "request_captured_headers")
+        .ifPresent(this::setCapturedRequestHeaders);
+    DeclarativeConfigUtil.getList(
+            openTelemetry, "general", "http", "client", "response_captured_headers")
+        .ifPresent(this::setCapturedResponseHeaders);
+    setPeerServiceResolver(PeerServiceResolver.create(openTelemetry));
+    setEmitExperimentalHttpClientTelemetry(
+        DeclarativeConfigUtil.getBoolean(
+                openTelemetry, "general", "http", "client", "emit_telemetry/development")
+            .orElse(false));
+    setRedactQueryParameters(
+        DeclarativeConfigUtil.getBoolean(
+                openTelemetry, "general", "http", "client", "redact_query_parameters/development")
+            .orElse(true));
     return this;
-  }
-
-  private static <T> void set(Supplier<T> supplier, Consumer<T> consumer) {
-    T t = supplier.get();
-    if (t != null) {
-      consumer.accept(t);
-    }
   }
 }

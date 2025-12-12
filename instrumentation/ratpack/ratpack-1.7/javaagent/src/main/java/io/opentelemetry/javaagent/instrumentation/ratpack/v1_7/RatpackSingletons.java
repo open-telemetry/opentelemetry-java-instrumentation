@@ -12,7 +12,6 @@ import io.opentelemetry.instrumentation.netty.v4_1.internal.AttributeKeys;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.ContextHolder;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.OpenTelemetryHttpClient;
 import io.opentelemetry.instrumentation.ratpack.v1_7.internal.RatpackClientInstrumenterBuilderFactory;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import ratpack.exec.Execution;
 
 public final class RatpackSingletons {
@@ -22,7 +21,7 @@ public final class RatpackSingletons {
         new OpenTelemetryHttpClient(
             RatpackClientInstrumenterBuilderFactory.create(
                     "io.opentelemetry.ratpack-1.7", GlobalOpenTelemetry.get())
-                .configure(AgentCommonConfig.get())
+                .configure(GlobalOpenTelemetry.get())
                 .build());
   }
 

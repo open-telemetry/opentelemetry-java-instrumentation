@@ -17,7 +17,7 @@ public final class NettyServerSingletons {
     NettyServerTelemetryBuilder builder = NettyServerTelemetry.builder(GlobalOpenTelemetry.get());
     NettyServerInstrumenterBuilderUtil.getBuilderExtractor()
         .apply(builder)
-        .configure(AgentCommonConfig.get());
+        .configure(GlobalOpenTelemetry.get());
     if (DeclarativeConfigUtil.getBoolean(
             GlobalOpenTelemetry.get(), "general", "http", "server", "emit_telemetry/development")
         .orElse(false)) {

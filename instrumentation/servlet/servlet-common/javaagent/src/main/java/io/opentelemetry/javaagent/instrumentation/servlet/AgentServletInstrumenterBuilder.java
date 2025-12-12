@@ -21,7 +21,6 @@ import io.opentelemetry.instrumentation.servlet.internal.ServletHttpAttributesGe
 import io.opentelemetry.instrumentation.servlet.internal.ServletInstrumenterBuilder;
 import io.opentelemetry.instrumentation.servlet.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentInstrumentationConfig;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -84,7 +83,7 @@ public final class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
     if (propagateOperationListenersToOnEnd) {
       builder.propagateOperationListenersToOnEnd();
     }
-    builder.getBuilder().configure(AgentCommonConfig.get());
+    builder.getBuilder().configure(GlobalOpenTelemetry.get());
 
     return builder.build(spanNameExtractor);
   }
