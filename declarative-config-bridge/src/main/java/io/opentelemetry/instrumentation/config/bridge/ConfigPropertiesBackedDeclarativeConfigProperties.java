@@ -127,12 +127,12 @@ public final class ConfigPropertiesBackedDeclarativeConfigProperties
 
     String translatedPath = translatePath(fullPath);
 
-    // Handle javaagent prefix specially: otel.javaagent.* instead of otel.instrumentation.javaagent.*
-    if (translatedPath.startsWith("javaagent.")) {
-      return "otel." + translatedPath;
+    // Handle agent prefix specially: java.agent.* → otel.javaagent.*
+    if (translatedPath.startsWith("agent.")) {
+      return "otel.java" + translatedPath;
     }
 
-    // Handle jmx prefix specially: otel.jmx.* instead of otel.instrumentation.jmx.*
+    // Handle jmx prefix specially: java.jmx.* → otel.jmx.*
     if (translatedPath.startsWith("jmx.")) {
       return "otel." + translatedPath;
     }

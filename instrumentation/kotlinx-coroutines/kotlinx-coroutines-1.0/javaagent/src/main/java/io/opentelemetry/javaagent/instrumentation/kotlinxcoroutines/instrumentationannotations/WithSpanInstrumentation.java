@@ -60,7 +60,7 @@ class WithSpanInstrumentation implements TypeInstrumentation {
           .orElseGet(
               () ->
                   DeclarativeConfigUtil.getBoolean(
-                          GlobalOpenTelemetry.get(), "java", "javaagent", "debug") // FIXME
+                          GlobalOpenTelemetry.get(), "java", "agent", "debug") // FIXME
                       .orElse(false));
 
   private final ElementMatcher.Junction<AnnotationSource> annotatedMethodMatcher;

@@ -163,7 +163,7 @@ public abstract class InstrumentationModule implements Ordered {
     static {
       indyEnabled =
           DeclarativeConfigUtil.getBoolean(
-                  GlobalOpenTelemetry.get(), "java", "javaagent", "indy/development")
+                  GlobalOpenTelemetry.get(), "java", "agent", "indy/development")
               .orElse(false);
       if (indyEnabled) {
         logger.info("Enabled indy for instrumentation modules");
