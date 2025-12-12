@@ -49,11 +49,6 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
 
   private static final Logger logger = Logger.getLogger(InstrumenterBuilder.class.getName());
 
-  private static final SpanSuppressionStrategy spanSuppressionStrategy =
-      SpanSuppressionStrategy.fromConfig(
-          ConfigPropertiesUtil.getString(
-              "otel.instrumentation.experimental.span-suppression-strategy"));
-
   final OpenTelemetry openTelemetry;
   final String instrumentationName;
   SpanNameExtractor<? super REQUEST> spanNameExtractor;
@@ -373,8 +368,17 @@ public final class InstrumenterBuilder<REQUEST, RESPONSE> {
   }
 
   SpanSuppressor buildSpanSuppressor() {
+    // otel.instrumentation.experimental.* doesn't fit the usual pattern of configuration properties
+    // for instrumentations, so we need to handle both declarative and non-declarative configs here
+    String value =
+        ConfigPropertiesUtil.isDeclarativeConfig(openTelemetry)
+            ? ConfigPropertiesUtil.getString(
+                    openTelemetry, "common", "experimental", "span_suppression_strategy")
+                .orElse(null)
+            : ConfigPropertiesUtil.getString(
+                "otel.instrumentation.experimental.span-suppression-strategy");
     return new SpanSuppressors.ByContextKey(
-        spanSuppressionStrategy.create(getSpanKeysFromAttributesExtractors()));
+        SpanSuppressionStrategy.fromConfig(value).create(getSpanKeysFromAttributesExtractors()));
   }
 
   private Set<SpanKey> getSpanKeysFromAttributesExtractors() {
