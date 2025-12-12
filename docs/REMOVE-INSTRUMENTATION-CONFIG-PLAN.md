@@ -31,40 +31,13 @@ Provides methods:
 
 1. **Spring Boot Autoconfiguration**: `InstrumentationConfig` is a Spring bean injected into instrumentation configurations
 2. **Helper utilities**: `InstrumentationConfigUtil` wraps config access for HTTP client/server builders
-3. **Enduser config**: `EnduserConfig` reads properties via `InstrumentationConfig`
-4. **Deprecated property warnings**: `DeprecatedConfigProperties` reads via `InstrumentationConfig`
+3. **Deprecated property warnings**: `DeprecatedConfigProperties` reads via `InstrumentationConfig`
 
 ---
 
 ## Migration Plan
 
-### Phase 1: Migrate instrumentation-api-incubator Internal Uses
-
-#### 1.1 EnduserConfig
-**File**: `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/EnduserConfig.java`
-
-**Current**:
-```java
-EnduserConfig(InstrumentationConfig instrumentationConfig) {
-  this.idEnabled = instrumentationConfig.getBoolean("otel.instrumentation.common.enduser.id.enabled", false);
-  // ...
-}
-```
-
-**Target**: Change constructor to accept `OpenTelemetry` and use `DeclarativeConfigUtil`:
-```java
-EnduserConfig(OpenTelemetry openTelemetry) {
-  this.idEnabled = DeclarativeConfigUtil.getBoolean(openTelemetry, "common", "enduser", "id_enabled")
-      .orElse(false);
-  // ...
-}
-```
-
-**Note**: Need to define the declarative config schema mapping for enduser settings.
-
----
-
-### Phase 2: Migrate Spring Boot Autoconfigure
+### Phase 1: Migrate Spring Boot Autoconfigure
 
 #### 2.1 Remove InstrumentationConfig Bean
 **Files**:
@@ -138,7 +111,7 @@ Update all auto-configuration classes that inject `InstrumentationConfig`:
 
 ---
 
-### Phase 3: Migrate Javaagent Extension API
+### Phase 2: Migrate Javaagent Extension API
 
 #### 3.1 DeprecatedConfigProperties
 **File**: `javaagent-extension-api/src/main/java/io/opentelemetry/javaagent/bootstrap/internal/DeprecatedConfigProperties.java`
@@ -165,7 +138,7 @@ public static boolean getBoolean(
 
 ---
 
-### Phase 4: Update Tests
+### Phase 3: Update Tests
 
 Update all test files that reference `InstrumentationConfig`:
 
@@ -185,7 +158,7 @@ Update all test files that reference `InstrumentationConfig`:
 
 ---
 
-### Phase 5: Delete InstrumentationConfig
+### Phase 4: Delete InstrumentationConfig
 
 #### 5.1 Delete Files
 - `instrumentation-api-incubator/src/main/java/io/opentelemetry/instrumentation/api/incubator/config/internal/InstrumentationConfig.java`
@@ -232,11 +205,10 @@ Spring Boot autoconfigure exposes a `ConfigProperties` bean. This should remain 
 
 ## Migration Order
 
-1. **Phase 1**: `EnduserConfig` (internal, limited blast radius)
-2. **Phase 2**: Spring Boot auto-configurations (bulk of changes)
-3. **Phase 3**: Javaagent extension API (`DeprecatedConfigProperties`)
-4. **Phase 4**: Tests
-5. **Phase 5**: Delete `InstrumentationConfig` interface and `ConfigPropertiesBridge`
+1. **Phase 1**: Spring Boot auto-configurations (bulk of changes)
+2. **Phase 2**: Javaagent extension API (`DeprecatedConfigProperties`)
+3. **Phase 3**: Tests
+4. **Phase 4**: Delete `InstrumentationConfig` interface and `ConfigPropertiesBridge`
 
 ---
 
@@ -246,7 +218,6 @@ Spring Boot autoconfigure exposes a `ConfigProperties` bean. This should remain 
 
 | Module | File | Change Type |
 |--------|------|-------------|
-| instrumentation-api-incubator | `EnduserConfig.java` | Change constructor signature |
 | spring-boot-autoconfigure | `OpenTelemetryAutoConfiguration.java` | Remove `InstrumentationConfig` beans |
 | spring-boot-autoconfigure | `InstrumentationConfigUtil.java` | Remove `InstrumentationConfig` param |
 | spring-boot-autoconfigure | `SpringWebfluxInstrumentationAutoConfiguration.java` | Remove `InstrumentationConfig` |

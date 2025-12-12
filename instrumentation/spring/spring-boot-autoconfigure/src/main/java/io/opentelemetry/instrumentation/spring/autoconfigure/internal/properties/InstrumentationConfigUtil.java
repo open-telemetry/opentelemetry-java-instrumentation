@@ -9,7 +9,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
+import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import java.util.function.Function;
 
 /**
@@ -22,7 +22,6 @@ public final class InstrumentationConfigUtil {
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureClientBuilder(
       OpenTelemetry openTelemetry,
-      InstrumentationConfig config,
       T builder,
       Function<T, DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
     getBuilder.apply(builder).configure(openTelemetry);
@@ -32,14 +31,13 @@ public final class InstrumentationConfigUtil {
   @CanIgnoreReturnValue
   public static <T, REQUEST, RESPONSE> T configureServerBuilder(
       OpenTelemetry openTelemetry,
-      InstrumentationConfig config,
       T builder,
       Function<T, DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE>> getBuilder) {
     getBuilder.apply(builder).configure(openTelemetry);
     return builder;
   }
 
-  public static boolean isStatementSanitizationEnabled(InstrumentationConfig config, String key) {
+  public static boolean isStatementSanitizationEnabled(ConfigProperties config, String key) {
     return config.getBoolean(
         key, config.getBoolean("otel.instrumentation.common.db-statement-sanitizer.enabled", true));
   }
