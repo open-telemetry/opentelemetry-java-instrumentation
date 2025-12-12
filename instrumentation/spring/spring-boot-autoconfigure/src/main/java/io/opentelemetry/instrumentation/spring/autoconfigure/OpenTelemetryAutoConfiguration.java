@@ -11,7 +11,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.trace.TracerProvider;
 import io.opentelemetry.common.ComponentLoader;
-import io.opentelemetry.instrumentation.api.incubator.config.internal.InstrumentationConfig;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.config.bridge.ConfigPropertiesBackedConfigProvider;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigPropertiesBridgeBuilder;
@@ -20,7 +19,6 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.internal.Declarativ
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelDisabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelMapConverter;
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.ConfigPropertiesBridge;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelResourceProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtelSpringProperties;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.properties.OtlpExporterProperties;
@@ -141,12 +139,6 @@ public class OpenTelemetryAutoConfiguration {
         return ConfigPropertiesBackedConfigProvider.create(properties);
       }
 
-      @Bean
-      public InstrumentationConfig instrumentationConfig(
-          ConfigProperties properties, ConfigProvider configProvider) {
-        return new ConfigPropertiesBridge(properties, configProvider);
-      }
-
       /**
        * Expose the {@link ConfigProperties} bean for use in other auto-configurations.
        *
@@ -201,12 +193,6 @@ public class OpenTelemetryAutoConfiguration {
       }
 
       @Bean
-      public InstrumentationConfig instrumentationConfig(
-          ConfigProperties properties, ConfigProvider configProvider) {
-        return new ConfigPropertiesBridge(properties, configProvider);
-      }
-
-      @Bean
       public DeclarativeConfigurationCustomizerProvider distroConfigurationCustomizerProvider() {
         return new ResourceCustomizerProvider();
       }
@@ -242,11 +228,6 @@ public class OpenTelemetryAutoConfiguration {
       return DefaultConfigProperties.createFromMap(Collections.emptyMap());
     }
 
-    @Bean
-    public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
-      return new ConfigPropertiesBridge(properties, null);
-    }
-
     @Configuration
     @Conditional(DeclarativeConfigDisabled.class)
     static class PropertiesConfig {
@@ -271,16 +252,6 @@ public class OpenTelemetryAutoConfiguration {
     public ConfigProperties otelProperties(ApplicationContext applicationContext) {
       return DefaultConfigProperties.create(
           Collections.emptyMap(), new OpenTelemetrySdkComponentLoader(applicationContext));
-    }
-  }
-
-  @Configuration
-  @ConditionalOnBean(OpenTelemetry.class)
-  @ConditionalOnMissingBean({InstrumentationConfig.class})
-  static class FallbackInstrumentationConfig {
-    @Bean
-    public InstrumentationConfig instrumentationConfig(ConfigProperties properties) {
-      return new ConfigPropertiesBridge(properties, null);
     }
   }
 
