@@ -2,12 +2,10 @@ plugins {
   id("otel.java-conventions")
 }
 
-val sofaRpcVersion = "5.4.0"
-
 dependencies {
   api("io.opentelemetry.javaagent:opentelemetry-testing-common")
 
-  api("com.alipay.sofa:sofa-rpc-all:$sofaRpcVersion")
+  api("com.alipay.sofa:sofa-rpc-all:5.4.0")
 
   implementation("javax.annotation:javax.annotation-api:1.3.2")
   implementation("com.google.guava:guava")

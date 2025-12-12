@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.alipay.sofa.rpc.api.GenericService;
 import com.alipay.sofa.rpc.api.future.SofaResponseFuture;
@@ -40,7 +41,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
-import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -374,7 +374,7 @@ public abstract class AbstractSofaRpcTest {
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
-    Assertions.assertThatThrownBy(() -> runWithSpan("parent", errorService::throwException))
+    assertThatThrownBy(() -> runWithSpan("parent", errorService::throwException))
         .isInstanceOf(SofaRpcRuntimeException.class);
 
     testing()
@@ -500,7 +500,7 @@ public abstract class AbstractSofaRpcTest {
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
-    Assertions.assertThatThrownBy(() -> runWithSpan("parent", errorService::throwBusinessException))
+    assertThatThrownBy(() -> runWithSpan("parent", errorService::throwBusinessException))
         .isInstanceOf(IllegalStateException.class);
 
     testing()
@@ -580,7 +580,7 @@ public abstract class AbstractSofaRpcTest {
     cleanup.deferCleanup(consumerConfig::unRefer);
     ErrorService errorService = consumerConfig.refer();
 
-    Assertions.assertThatThrownBy(() -> runWithSpan("parent", errorService::timeout))
+    assertThatThrownBy(() -> runWithSpan("parent", errorService::timeout))
         .isInstanceOf(SofaTimeOutException.class);
     testing()
         .waitAndAssertTraces(

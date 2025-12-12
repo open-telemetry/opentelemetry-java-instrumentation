@@ -9642,6 +9642,85 @@ libraries:
       - io.reactivex.rxjava3:rxjava:[3.1.1,)
       library:
       - io.reactivex.rxjava3:rxjava:3.1.1
+  sofastack:
+  - name: sofa-rpc-5.4
+    display_name: SOFARPC
+    description: |
+      The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and metrics for Apache SOFARPC RPC calls.
+    semantic_conventions:
+      - RPC_CLIENT_SPANS
+      - RPC_CLIENT_METRICS
+      - RPC_SERVER_SPANS
+      - RPC_SERVER_METRICS
+    library_link: https://github.com/sofastack/sofa-rpc/
+    source_path: instrumentation/sofa-rpc-5.4
+    scope:
+      name: io.opentelemetry.sofa-rpc-5.4
+    target_versions:
+      javaagent:
+        - com.alipay.sofa:sofa-rpc-all:[5.4.0,)
+    configurations:
+      - name: otel.instrumentation.common.peer-service-mapping
+        description: Used to specify a mapping from host names or IP addresses to peer
+          services.
+        type: map
+        default: ''
+    telemetry:
+      - when: default
+        metrics:
+          - name: rpc.client.duration
+            description: The duration of an outbound RPC invocation.
+            type: HISTOGRAM
+            unit: ms
+            attributes:
+              - name: rpc.method
+                type: STRING
+              - name: rpc.service
+                type: STRING
+              - name: rpc.system
+                type: STRING
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+          - name: rpc.server.duration
+            description: The duration of an inbound RPC invocation.
+            type: HISTOGRAM
+            unit: ms
+            attributes:
+              - name: rpc.method
+                type: STRING
+              - name: rpc.service
+                type: STRING
+              - name: rpc.system
+                type: STRING
+        spans:
+          - span_kind: CLIENT
+            attributes:
+              - name: peer.service
+                type: STRING
+              - name: rpc.method
+                type: STRING
+              - name: rpc.service
+                type: STRING
+              - name: rpc.system
+                type: STRING
+              - name: server.address
+                type: STRING
+              - name: server.port
+                type: LONG
+          - span_kind: SERVER
+            attributes:
+              - name: network.peer.address
+                type: STRING
+              - name: network.peer.port
+                type: LONG
+              - name: rpc.method
+                type: STRING
+              - name: rpc.service
+                type: STRING
+              - name: rpc.system
+                type: STRING
   scala:
   - name: scala-fork-join-2.8
     source_path: instrumentation/scala-fork-join-2.8

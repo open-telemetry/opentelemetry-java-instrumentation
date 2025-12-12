@@ -37,7 +37,9 @@ public class SofaRpcInstrumentationModule extends InstrumentationModule
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
-    return hasClassesNamed("com.alipay.sofa.rpc.filter.Filter");
+    return hasClassesNamed("com.alipay.sofa.rpc.filter.Filter")
+        // Class was added in 5.4.0
+        .and(hasClassesNamed("com.alipay.sofa.rpc.transport.ClientHandler"));
   }
 
   @Override

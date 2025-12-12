@@ -2,30 +2,14 @@ display_name: SOFARPC
 description: >
   The SOFARPC instrumentation provides RPC client spans and metrics, and RPC server spans and
   metrics for SOFARPC RPC calls.
-  
-  **Version compatibility**: 
-  
-  This instrumentation uses Muzzle to verify compatibility with SOFARPC versions 5.0.0 and above.
-  The instrumentation has been tested and verified with SOFARPC 5.4.0 through 5.12.0+.
-  
-  - **Minimum supported version**: 5.0.0 (required for requestBaggage support used in context propagation)
-  - **Recommended for production**: 5.4.0 and above
-  - **Tested versions**: 5.4.0 (primary test version) and latest.release (via testLatestDeps)
-  
-  While the instrumentation may work with versions between 5.0.0 and 5.4.0, these versions are not
-  actively tested and may have compatibility issues. For production deployments, we strongly
-  recommend using SOFARPC 5.4.0 or later.
 semantic_conventions:
   - RPC_CLIENT_SPANS
   - RPC_CLIENT_METRICS
   - RPC_SERVER_SPANS
   - RPC_SERVER_METRICS
-library_link: https://github.com/sofastack/sofa-rpc
-supported_versions:
-  - "5.4.0 - 5.12.0+"
+library_link: https://github.com/sofastack/sofa-rpc/
 configurations:
   - name: otel.instrumentation.common.peer-service-mapping
     description: Used to specify a mapping from host names or IP addresses to peer services.
     type: map
     default: ''
-

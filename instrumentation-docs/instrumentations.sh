@@ -187,6 +187,7 @@ readonly INSTRUMENTATIONS=(
   "play:play-ws:play-ws-2.1:javaagent:test"
   "reactor:reactor-netty:reactor-netty-0.9:javaagent:test"
   "reactor:reactor-netty:reactor-netty-1.0:javaagent:test"
+  "sofa-rpc-5.4:javaagent:testSofaRpc"
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-data:spring-data-1.8:javaagent:test"
   "spring:spring-integration-4.1:javaagent:test"
