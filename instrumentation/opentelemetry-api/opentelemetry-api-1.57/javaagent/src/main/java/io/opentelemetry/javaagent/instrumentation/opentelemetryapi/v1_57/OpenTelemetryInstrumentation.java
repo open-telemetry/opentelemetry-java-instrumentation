@@ -54,11 +54,6 @@ public class OpenTelemetryInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class GetOrNoopAdvice {
-    @Advice.OnMethodEnter(skipOn = Advice.OnDefaultValue.class)
-    public static Object onEnter() {
-      return null;
-    }
-
     @AssignReturned.ToReturned
     @Advice.OnMethodExit
     public static application.io.opentelemetry.api.OpenTelemetry methodExit() {
