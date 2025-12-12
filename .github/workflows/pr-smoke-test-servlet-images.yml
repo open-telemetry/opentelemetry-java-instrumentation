@@ -2,9 +2,8 @@ name: PR build Servlet images for smoke tests
 
 on:
   pull_request:
-    paths:
-      - "smoke-tests/images/servlet/**"
-      - ".github/workflows/pr-smoke-test-servlet-images.yml"
+    branches:
+      - main
 
 permissions:
   contents: read

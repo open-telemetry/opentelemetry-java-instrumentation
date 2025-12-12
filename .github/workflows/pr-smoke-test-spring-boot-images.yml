@@ -2,10 +2,6 @@ name: PR build Spring Boot images for smoke tests
 
 on:
   pull_request:
-    paths:
-      - "smoke-tests/images/spring-boot/**"
-      - ".github/workflows/pr-smoke-test-spring-boot-images.yml"
-      - ".github/workflows/reusable-pr-smoke-test-images.yml"
     branches:
       - main
 

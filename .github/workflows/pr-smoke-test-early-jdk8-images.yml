@@ -2,9 +2,8 @@ name: PR build early jdk8 images for smoke tests
 
 on:
   pull_request:
-    paths:
-      - "smoke-tests/images/early-jdk8/**"
-      - ".github/workflows/pr-smoke-test-early-jdk8-images.yml"
+    branches:
+      - main
 
 permissions:
   contents: read

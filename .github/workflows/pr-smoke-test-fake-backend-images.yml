@@ -2,9 +2,8 @@ name: PR build fake backend images for smoke tests
 
 on:
   pull_request:
-    paths:
-      - "smoke-tests/images/fake-backend/**"
-      - ".github/workflows/pr-smoke-test-fake-backend-images.yml"
+    branches:
+      - main
 
 permissions:
   contents: read
