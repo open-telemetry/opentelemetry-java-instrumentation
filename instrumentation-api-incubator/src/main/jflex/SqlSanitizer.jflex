@@ -437,6 +437,20 @@ WHITESPACE           = [ \t\r\n]+
           appendCurrentFragment();
           if (isOverLimit()) return YYEOF;
       }
+  "CONNECT" {
+          appendCurrentFragment();
+          // sanitize SAP HANA CONNECT statement
+          // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+          // we check that operation is not set to avoid triggering sanitization when a field named
+          // connect is used or CONNECT BY clause is used in a SELECT statement
+          if (!insideComment && operation == NoOp.INSTANCE) {
+            // CONNECT statement could contain an unquoted password. We are not going to try
+            // figuring out whether that is the case or not, just sanitize the whole statement.
+            builder.append(" ?");
+            return YYEOF;
+          }
+          if (isOverLimit()) return YYEOF;
+      }
   "FROM" {
           if (!insideComment && !extractionDone) {
             if (operation == NoOp.INSTANCE) {
@@ -483,6 +497,19 @@ WHITESPACE           = [ \t\r\n]+
             }
           }
           appendCurrentFragment();
+          if (isOverLimit()) return YYEOF;
+      }
+  "USER" {
+          appendCurrentFragment();
+          if (!insideComment && (operation instanceof Create || operation instanceof Alter)) {
+            // CREATE USER and ALTER USER statements could contain an unquoted password. We are not
+            // going to try figuring out whether that is the case or not, just sanitize the whole
+            // statement.
+            // https://docs.oracle.com/cd/B13789_01/server.101/b10759/statements_8003.htm
+            // https://help.sap.com/docs/SAP_HANA_PLATFORM/4fe29514fd584807ac9f2a04f6754767/20d3b9ad751910148cdccc8205563a87.html?locale=en-US
+            builder.append(" ?");
+            return YYEOF;
+          }
           if (isOverLimit()) return YYEOF;
       }
 
