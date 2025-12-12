@@ -173,7 +173,6 @@ class ConfigPropertiesUtilTest {
 
   @Test
   void toSystemProperty() {
-    // todo test for prop that has both experimental and /development
     assertThat(ConfigPropertiesUtil.toSystemProperty(new String[] {"a_b", "c", "d"}))
         .isEqualTo("otel.instrumentation.a-b.c.d");
     assertThat(ConfigPropertiesUtil.toSystemProperty(new String[] {"a_b/development", "c", "d"}))
