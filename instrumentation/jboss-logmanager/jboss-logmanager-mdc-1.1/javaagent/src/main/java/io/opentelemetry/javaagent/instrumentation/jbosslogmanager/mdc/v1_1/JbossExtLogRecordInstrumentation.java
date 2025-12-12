@@ -61,15 +61,15 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
 
       String traceIdKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "trace_id")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
               .orElse(LoggingContextConstants.TRACE_ID);
       String spanIdKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "span_id")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "span_id")
               .orElse(LoggingContextConstants.SPAN_ID);
       String traceFlagsKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "trace_flags")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_flags")
               .orElse(LoggingContextConstants.TRACE_FLAGS);
       boolean traceId = traceIdKey.equals(key);
       boolean spanId = spanIdKey.equals(key);
@@ -109,15 +109,15 @@ public class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
 
       String traceIdKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "trace_id")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
               .orElse(LoggingContextConstants.TRACE_ID);
       String spanIdKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "span_id")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "span_id")
               .orElse(LoggingContextConstants.SPAN_ID);
       String traceFlagsKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "trace_flags")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_flags")
               .orElse(LoggingContextConstants.TRACE_FLAGS);
 
       if (value.containsKey(traceIdKey)

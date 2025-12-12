@@ -14,23 +14,23 @@ import io.opentelemetry.instrumentation.graphql.v20_0.GraphQLTelemetry;
 public final class GraphqlSingletons {
 
   private static final boolean CAPTURE_QUERY =
-      DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "graphql", "capture_query")
+      DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "java", "graphql", "capture_query")
           .orElse(true);
   private static final boolean QUERY_SANITIZATION_ENABLED =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "graphql", "query_sanitizer", "enabled")
+              GlobalOpenTelemetry.get(), "java", "graphql", "query_sanitizer", "enabled")
           .orElse(true);
   private static final boolean DATA_FETCHER_ENABLED =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "graphql", "data_fetcher", "enabled")
+              GlobalOpenTelemetry.get(), "java", "graphql", "data_fetcher", "enabled")
           .orElse(false);
   private static final boolean TRIVIAL_DATA_FETCHER_ENABLED =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "graphql", "trivial_data_fetcher", "enabled")
+              GlobalOpenTelemetry.get(), "java", "graphql", "trivial_data_fetcher", "enabled")
           .orElse(false);
   private static final boolean ADD_OPERATION_NAME_TO_SPAN_NAME =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "graphql", "add_operation_name_to_span_name", "enabled")
+              GlobalOpenTelemetry.get(), "java", "graphql", "add_operation_name_to_span_name", "enabled")
           .orElse(false);
 
   private static final GraphQLTelemetry TELEMETRY =

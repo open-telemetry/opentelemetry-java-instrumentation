@@ -21,7 +21,7 @@ public abstract class JedisRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DeclarativeConfigUtil.getBoolean(
-                  GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+                  GlobalOpenTelemetry.get(), "java", "common", "db", "statement_sanitizer", "enabled")
               .orElse(true));
 
   public static JedisRequest create(

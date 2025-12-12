@@ -14,12 +14,12 @@ public final class SpringBatchInstrumentationConfig {
 
   // the item level instrumentation is very chatty so it's disabled by default
   private static final boolean ITEM_TRACING_ENABLED =
-      DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "spring_batch", "item", "enabled")
+      DeclarativeConfigUtil.getBoolean(GlobalOpenTelemetry.get(), "java", "spring_batch", "item", "enabled")
           .orElse(false);
 
   private static final boolean CREATE_ROOT_SPAN_FOR_CHUNK =
       DeclarativeConfigUtil.getBoolean(
-              GlobalOpenTelemetry.get(), "spring_batch", "chunk/development", "new_trace")
+              GlobalOpenTelemetry.get(), "java", "spring_batch", "chunk/development", "new_trace")
           .orElse(false);
 
   public static String instrumentationName() {

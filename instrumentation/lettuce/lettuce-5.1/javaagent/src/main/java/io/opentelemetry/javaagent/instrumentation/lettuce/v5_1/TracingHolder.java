@@ -22,7 +22,7 @@ public final class TracingHolder {
       LettuceTelemetry.builder(GlobalOpenTelemetry.get())
           .setStatementSanitizationEnabled(
               DeclarativeConfigUtil.getBoolean(
-                      GlobalOpenTelemetry.get(), "general", "db", "statement_sanitizer", "enabled")
+                      GlobalOpenTelemetry.get(), "java", "common", "db", "statement_sanitizer", "enabled")
                   .orElse(true))
           .setEncodingSpanEventsEnabled(CAPTURE_COMMAND_ENCODING_EVENTS)
           .build()

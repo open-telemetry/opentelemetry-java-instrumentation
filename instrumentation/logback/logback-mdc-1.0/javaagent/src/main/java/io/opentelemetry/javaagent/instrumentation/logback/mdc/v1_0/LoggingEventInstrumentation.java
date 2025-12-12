@@ -67,7 +67,7 @@ public class LoggingEventInstrumentation implements TypeInstrumentation {
 
       String traceIdKey =
           DeclarativeConfigUtil.getString(
-                  GlobalOpenTelemetry.get(), "general", "logging", "trace_id")
+                  GlobalOpenTelemetry.get(), "java", "common", "logging", "trace_id")
               .orElse(LoggingContextConstants.TRACE_ID);
       if (contextData != null && contextData.containsKey(traceIdKey)) {
         // Assume already instrumented event if traceId is present.

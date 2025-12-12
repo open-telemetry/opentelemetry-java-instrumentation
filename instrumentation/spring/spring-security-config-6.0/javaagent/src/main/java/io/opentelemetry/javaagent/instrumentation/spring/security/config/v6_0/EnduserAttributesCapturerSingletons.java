@@ -25,15 +25,15 @@ public class EnduserAttributesCapturerSingletons {
     EnduserAttributesCapturer capturer = new EnduserAttributesCapturer();
     capturer.setEnduserIdEnabled(
         DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(), "general", "enduser", "id", "enabled")
+                GlobalOpenTelemetry.get(), "java", "common", "enduser", "id", "enabled")
             .orElse(false));
     capturer.setEnduserRoleEnabled(
         DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(), "general", "enduser", "role", "enabled")
+                GlobalOpenTelemetry.get(), "java", "common", "enduser", "role", "enabled")
             .orElse(false));
     capturer.setEnduserScopeEnabled(
         DeclarativeConfigUtil.getBoolean(
-                GlobalOpenTelemetry.get(), "general", "enduser", "scope", "enabled")
+                GlobalOpenTelemetry.get(), "java", "common", "enduser", "scope", "enabled")
             .orElse(false));
 
     String rolePrefix =

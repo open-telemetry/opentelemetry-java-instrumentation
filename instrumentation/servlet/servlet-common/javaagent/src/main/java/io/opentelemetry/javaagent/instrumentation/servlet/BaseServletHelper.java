@@ -169,7 +169,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
    */
   private void captureEnduserId(Span serverSpan, REQUEST request) {
     if (!DeclarativeConfigUtil.getBoolean(
-            GlobalOpenTelemetry.get(), "general", "enduser", "id", "enabled")
+            GlobalOpenTelemetry.get(), "java", "common", "enduser", "id", "enabled")
         .orElse(false)) {
       return;
     }

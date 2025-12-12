@@ -116,7 +116,7 @@ public final class JdbcSingletons {
             .getBoolean(
                 "otel.instrumentation.jdbc.experimental.sqlcommenter.enabled",
                 DeclarativeConfigUtil.getBoolean(
-                        GlobalOpenTelemetry.get(), "general", "db", "sqlcommenter/development")
+                        GlobalOpenTelemetry.get(), "java", "common", "db", "sqlcommenter/development")
                     .orElse(false)));
     SqlCommenterCustomizerHolder.getCustomizer().customize(builder);
     return builder.build();

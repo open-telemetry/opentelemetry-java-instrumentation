@@ -42,11 +42,11 @@ public class SpringSecurityConfigWebFluxInstrumentationModule extends Instrument
 
   private static boolean isAnyEnduserAttributeEnabled() {
     var otel = GlobalOpenTelemetry.get();
-    return DeclarativeConfigUtil.getBoolean(otel, "general", "enduser", "id", "enabled")
+    return DeclarativeConfigUtil.getBoolean(otel, "java", "common", "enduser", "id", "enabled")
             .orElse(false)
-        || DeclarativeConfigUtil.getBoolean(otel, "general", "enduser", "role", "enabled")
+        || DeclarativeConfigUtil.getBoolean(otel, "java", "common", "enduser", "role", "enabled")
             .orElse(false)
-        || DeclarativeConfigUtil.getBoolean(otel, "general", "enduser", "scope", "enabled")
+        || DeclarativeConfigUtil.getBoolean(otel, "java", "common", "enduser", "scope", "enabled")
             .orElse(false);
   }
 

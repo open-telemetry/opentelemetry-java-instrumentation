@@ -80,7 +80,7 @@ public final class DeclarativeConfigUtil {
     if (instrumentationConfig == null) {
       return empty();
     }
-    DeclarativeConfigProperties node = instrumentationConfig.getStructured("java", empty());
+    DeclarativeConfigProperties node = instrumentationConfig;
     for (int i = 0; i < propertyPath.length - 1; i++) {
       node = node.getStructured(propertyPath[i], empty());
     }
